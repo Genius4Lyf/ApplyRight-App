@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
@@ -29,7 +30,13 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden"
+        >
             {/* Subtle Geometric Pattern */}
             <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#4F46E5 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
 
@@ -112,7 +119,7 @@ const Login = () => {
                     &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
                 </p>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

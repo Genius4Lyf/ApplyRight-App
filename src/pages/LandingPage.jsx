@@ -206,7 +206,13 @@ const LandingPage = () => {
     });
 
     return (
-        <div className="min-h-screen font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900"
+        >
 
             {/* Fixed Background Layer */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -230,8 +236,10 @@ const LandingPage = () => {
                         width: "100%",
                         top: 0,
                         borderRadius: 0,
-                        borderBottomWidth: 1,
-                        borderBottomColor: "rgba(241, 245, 249, 1)", // slate-200
+                        borderBottomWidth: 0,
+                        borderBottomColor: "rgba(241, 245, 249, 0)",
+                        backgroundColor: "rgba(255, 255, 255, 0)",
+                        backdropFilter: "blur(0px)"
                     }}
                     animate={scrolled ? {
                         width: "90%",
@@ -239,17 +247,23 @@ const LandingPage = () => {
                         top: 20,
                         borderRadius: "100px",
                         borderBottomWidth: 1,
-                        borderBottomColor: "rgba(241, 245, 249, 0)", // transparent
+                        borderBottomColor: "rgba(241, 245, 249, 1)", // visible border when floating
+                        backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        backdropFilter: "blur(12px)",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
                     } : {
                         width: "100%",
                         maxWidth: "100%",
                         top: 0,
                         borderRadius: 0,
-                        borderBottomWidth: 1,
-                        borderBottomColor: "rgba(241, 245, 249, 1)", // slate-200
+                        borderBottomWidth: 0,
+                        borderBottomColor: "rgba(241, 245, 249, 0)",
+                        backgroundColor: "rgba(255, 255, 255, 0)",
+                        backdropFilter: "blur(0px)",
+                        boxShadow: "none"
                     }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className={`fixed z-50 left-0 right-0 mx-auto bg-white/80 backdrop-blur-md overflow-hidden ${scrolled ? 'shadow-xl shadow-indigo-500/10 border border-slate-200/60' : 'border-b border-slate-100'}`}
+                    className={`fixed z-50 left-0 right-0 mx-auto overflow-hidden`}
                 >
                     <div className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}>
                         <Link to="/" className="flex items-center gap-2 group">
@@ -625,7 +639,7 @@ const LandingPage = () => {
                     </div>
                 </footer>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
