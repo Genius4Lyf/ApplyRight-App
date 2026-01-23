@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
 
 const TiltStack = () => {
     const x = useMotionValue(0);
@@ -132,6 +132,13 @@ const LandingPage = () => {
     const [textIndex, setTextIndex] = useState(0);
     const phrases = ["the ATS", "the Robots", "the Black Hole", "Rejection"];
 
+    const { scrollY } = useScroll();
+    const [scrolled, setScrolled] = useState(false);
+
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        setScrolled(latest > 50);
+    });
+
     useEffect(() => {
         const interval = setInterval(() => {
             setTextIndex((prev) => (prev + 1) % phrases.length);
@@ -217,8 +224,34 @@ const LandingPage = () => {
             {/* Scrollable Content Layer */}
             <div className="relative z-10">
                 {/* Navigation */}
-                <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-                    <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                {/* Floating Navigation */}
+                <motion.nav
+                    initial={{
+                        width: "100%",
+                        top: 0,
+                        borderRadius: 0,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(241, 245, 249, 1)", // slate-200
+                    }}
+                    animate={scrolled ? {
+                        width: "90%",
+                        maxWidth: "1080px",
+                        top: 20,
+                        borderRadius: "100px",
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(241, 245, 249, 0)", // transparent
+                    } : {
+                        width: "100%",
+                        maxWidth: "100%",
+                        top: 0,
+                        borderRadius: 0,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(241, 245, 249, 1)", // slate-200
+                    }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className={`fixed z-50 left-0 right-0 mx-auto bg-white/80 backdrop-blur-md overflow-hidden ${scrolled ? 'shadow-xl shadow-indigo-500/10 border border-slate-200/60' : 'border-b border-slate-100'}`}
+                >
+                    <div className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}>
                         <Link to="/" className="flex items-center gap-2 group">
                             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
                                 <Layers size={18} />
@@ -232,7 +265,7 @@ const LandingPage = () => {
                             </Link>
                         </div>
                     </div>
-                </nav>
+                </motion.nav>
 
                 {/* Hero Section */}
                 <section className="pt-32 pb-20 lg:pt-40 lg:pb-24 relative px-6 text-center">
@@ -251,9 +284,7 @@ const LandingPage = () => {
                         </div>
 
                         <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight text-slate-900 mb-6 leading-tight">
-                            Beat <span className="relative inline-block text-left min-w-[300px] md:min-w-[420px] align-top">
-                                {/* Invisible spacer */}
-                                <span className="invisible h-0">the Resume Black Hole.</span>
+                            Beat <span className="inline-flex justify-center min-w-[1ch]">
                                 <AnimatePresence mode="wait">
                                     <motion.span
                                         key={textIndex}
@@ -261,7 +292,7 @@ const LandingPage = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -20 }}
                                         transition={{ duration: 0.3 }}
-                                        className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600"
+                                        className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 px-2"
                                     >
                                         {phrases[textIndex]}.
                                     </motion.span>
