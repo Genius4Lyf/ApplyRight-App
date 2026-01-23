@@ -285,6 +285,142 @@ const LandingPage = () => {
                     </div>
                 </section>
 
+                {/* TEMPLATES SECTION: Visual Proof */}
+                <section className="py-24 bg-white relative overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+
+                            {/* Text Content */}
+                            <div className="relative z-10 order-2 lg:order-1">
+                                <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">Professional Output</h2>
+                                <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">
+                                    Optimized for Robots. <br />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Designed for Humans.</span>
+                                </h3>
+                                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                                    Don't settle for ugly, plain text files. ApplyRight generates beautifully formatted, professional PDFs that recruiters love to read.
+                                </p>
+
+                                <ul className="space-y-4 mb-10">
+                                    {[
+                                        "Clean, modern layouts recruiter-approved",
+                                        "Perfect formatting maintained after keyword injection",
+                                        "Download as PDF, ready to submit instantly"
+                                    ].map((item, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
+                                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                                                <CheckCircle size={14} />
+                                            </div>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <Link to="/register" className="btn-primary py-3 px-8 bg-slate-900 text-white hover:bg-slate-800 rounded-xl inline-flex items-center gap-2">
+                                    See Example Templates <ArrowRight size={18} />
+                                </Link>
+                            </div>
+
+                            {/* Visual Stack */}
+                            <div className="relative h-[500px] flex items-center justify-center order-1 lg:order-2 perspective-[1000px]">
+                                {/* Abstract Decor */}
+                                <div className="absolute inset-0 bg-indigo-50/50 rounded-full blur-3xl scale-75"></div>
+
+                                {/* Card 1 (Back Left) */}
+                                <motion.div
+                                    initial={{ opacity: 0, rotate: -15, x: -50 }}
+                                    whileInView={{ opacity: 1, rotate: -6, x: -40 }}
+                                    transition={{ duration: 0.8, delay: 0.1 }}
+                                    className="absolute w-[280px] h-[380px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden transform"
+                                >
+                                    <div className="h-4 bg-indigo-100 w-full mb-4"></div>
+                                    <div className="px-6 space-y-3">
+                                        <div className="flex gap-4 mb-6">
+                                            <div className="w-12 h-12 rounded-full bg-slate-100"></div>
+                                            <div className="space-y-2 flex-1">
+                                                <div className="h-3 bg-slate-100 rounded w-3/4"></div>
+                                                <div className="h-2 bg-slate-50 rounded w-1/2"></div>
+                                            </div>
+                                        </div>
+                                        <div className="h-2 bg-slate-50 rounded w-full"></div>
+                                        <div className="h-2 bg-slate-50 rounded w-5/6"></div>
+                                        <div className="h-2 bg-slate-50 rounded w-4/5"></div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Card 2 (Back Right) */}
+                                <motion.div
+                                    initial={{ opacity: 0, rotate: 15, x: 50 }}
+                                    whileInView={{ opacity: 1, rotate: 6, x: 40 }}
+                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                    className="absolute w-[280px] h-[380px] bg-slate-50 rounded-xl shadow-2xl border border-slate-200 overflow-hidden transform"
+                                >
+                                    <div className="px-6 py-8">
+                                        <div className="w-16 h-16 rounded-lg bg-indigo-100 mb-6 mx-auto"></div>
+                                        <div className="space-y-4">
+                                            <div className="h-3 bg-slate-200 rounded w-full"></div>
+                                            <div className="h-2 bg-slate-200 rounded w-5/6 mx-auto"></div>
+                                            <div className="h-2 bg-slate-200 rounded w-4/6 mx-auto"></div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Card 3 (Center Front) */}
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    whileInView={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.3 }}
+                                    className="absolute w-[300px] h-[400px] bg-white rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden z-20"
+                                >
+                                    {/* Header */}
+                                    <div className="p-8 border-b border-slate-100 flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl ring-4 ring-indigo-50">AR</div>
+                                        <div>
+                                            <div className="h-4 bg-slate-800 rounded w-32 mb-2"></div>
+                                            <div className="h-2 bg-indigo-100 rounded w-24"></div>
+                                        </div>
+                                    </div>
+                                    {/* Body */}
+                                    <div className="p-8 space-y-6">
+                                        {/* Experience Block */}
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <div className="h-3 bg-slate-200 rounded w-24"></div>
+                                                <div className="h-3 bg-slate-100 rounded w-12"></div>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                                            <div className="h-2 bg-slate-100 rounded w-11/12"></div>
+                                            <div className="h-2 bg-indigo-50 rounded w-10/12"></div> {/* Highlighted line */}
+                                        </div>
+
+                                        {/* Experience Block 2 */}
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <div className="h-3 bg-slate-200 rounded w-28"></div>
+                                                <div className="h-3 bg-slate-100 rounded w-12"></div>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                                            <div className="h-2 bg-slate-100 rounded w-11/12"></div>
+                                        </div>
+
+                                        <div className="pt-4 flex gap-2">
+                                            <div className="h-6 w-16 bg-slate-100 rounded-full"></div>
+                                            <div className="h-6 w-20 bg-slate-100 rounded-full"></div>
+                                            <div className="h-6 w-12 bg-indigo-100 rounded-full text-indigo-600 flex items-center justify-center text-[10px] font-bold">100%</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Badge */}
+                                    <div className="absolute top-4 right-4 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm">
+                                        ATS Verified
+                                    </div>
+                                </motion.div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* CTA Section */}
                 <section className="py-20 bg-slate-900 text-white overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
