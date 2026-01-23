@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Mail, Download, Copy, Check, ArrowDownToLine, Share2, Sparkles } from 'lucide-react';
 
-const Preview = ({ application }) => {
+const Preview = ({ application, templateId = 'modern' }) => {
     const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'cl'
     const [copied, setCopied] = useState(false);
 
@@ -73,9 +73,19 @@ const Preview = ({ application }) => {
                         </button>
                     </div>
 
-                    <div className="bg-slate-50 rounded-xl p-8 min-h-[500px] border border-slate-100 relative group">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 group-hover:bg-indigo-600 transition-colors"></div>
-                        <div className="whitespace-pre-wrap text-slate-700 font-serif leading-relaxed text-sm">
+                    <div className={`bg-slate-50 rounded-xl p-8 min-h-[500px] border border-slate-100 relative group
+                         ${templateId === 'classic' ? 'font-serif' :
+                            templateId === 'tech' ? 'font-mono' :
+                                templateId === 'creative' ? 'font-sans' : ''}
+                    `}>
+                        <div className={`absolute top-0 left-0 w-full h-1 transition-colors
+                            ${templateId === 'modern' ? 'bg-indigo-600' :
+                                templateId === 'classic' ? 'bg-slate-800' :
+                                    templateId === 'creative' ? 'bg-purple-600' :
+                                        templateId === 'tech' ? 'bg-blue-600' :
+                                            'bg-slate-400'}
+                        `}></div>
+                        <div className="whitespace-pre-wrap text-slate-700 leading-relaxed text-sm">
                             {activeTab === 'cv' ? application.optimizedCV : application.coverLetter}
                         </div>
                     </div>

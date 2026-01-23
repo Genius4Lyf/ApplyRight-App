@@ -4,8 +4,10 @@ import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
-import { Sparkles, LogOut, ChevronRight, CheckCircle, User } from 'lucide-react';
+import { Sparkles, LogOut, ChevronRight, CheckCircle, User, Briefcase } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import FitScoreCard from '../components/FitScoreCard';
+import TemplateSelector from '../components/TemplateSelector';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -13,9 +15,37 @@ const Dashboard = () => {
     const [job, setJob] = useState(null);
     const [application, setApplication] = useState(null);
     const [generating, setGenerating] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [fitResult, setFitResult] = useState(null);
+    const [selectedTemplate, setSelectedTemplate] = useState('modern');
 
     // Get user from local storage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Auto-analyze when both resume and job are available
+    React.useEffect(() => {
+        const analyzeFit = async () => {
+            if (resume && job && !fitResult) {
+                setAnalyzing(true);
+                try {
+                    const res = await api.post('/analysis/analyze', {
+                        resumeId: resume._id,
+                        jobId: job._id
+                    });
+                    setFitResult(res.data);
+                    // If application is created/updated, we can set it here too if needed, 
+                    // but usually 'application' state in Dashboard implies the *generated* assets.
+                    // We'll keep them separate for now or merge if the API returns the same shape.
+                } catch (error) {
+                    console.error("Analysis failed", error);
+                } finally {
+                    setAnalyzing(false);
+                }
+            }
+        };
+
+        analyzeFit();
+    }, [resume, job]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -30,6 +60,7 @@ const Dashboard = () => {
             const res = await api.post('/ai/generate', {
                 resumeId: resume._id,
                 jobId: job._id,
+                templateId: selectedTemplate
             });
             setApplication(res.data);
             // Construct URL to jump to preview
@@ -101,10 +132,44 @@ const Dashboard = () => {
                 </div>
 
                 {/* Main Workflow Steps */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                     <CVUploader onUploadSuccess={setResume} />
                     <JobLinkInput onJobExtracted={setJob} />
                 </div>
+
+                {/* Fit Analysis Section */}
+                {(analyzing || fitResult) && (
+                    <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Sparkles className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-bold text-slate-900">AI Compatibility Analysis</h3>
+                        </div>
+
+                        {analyzing ? (
+                            <div className="w-full h-48 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center p-8">
+                                <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                                <p className="text-slate-500 font-medium">Analyzing your profile against role requirements...</p>
+                            </div>
+                        ) : (
+                            <FitScoreCard fitScore={fitResult.fitScore} fitAnalysis={fitResult.fitAnalysis} />
+                        )}
+                    </div>
+                )}
+
+                {/* Template Selection Section */}
+                {(fitResult) && (
+                    <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Briefcase className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-bold text-slate-900">Choose Your Professional Style</h3>
+                        </div>
+                        <TemplateSelector
+                            selectedTemplate={selectedTemplate}
+                            onSelect={setSelectedTemplate}
+                            userPlan={user.plan || 'free'}
+                        />
+                    </div>
+                )}
 
                 {/* Final Generation Stage */}
                 <div className="relative pt-8 flex flex-col items-center">
@@ -147,7 +212,7 @@ const Dashboard = () => {
                         </div>
                     ) : (
                         <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4" /> Ready for optimization
+                            {!fitResult && <><CheckCircle className="w-4 h-4" /> Ready for optimization</>}
                         </p>
                     )}
                 </div>

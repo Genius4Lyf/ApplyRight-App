@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import Modal from '../components/Modal';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const Register = () => {
         confirmPassword: '',
     });
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeModal, setActiveModal] = useState(null);
     const navigate = useNavigate();
 
     const { email, password, confirmPassword } = formData;
@@ -25,6 +28,9 @@ const Register = () => {
             return;
         }
 
+        setIsLoading(true);
+        setError('');
+
         try {
             const res = await api.post('/auth/register', { email, password });
             localStorage.setItem('token', res.data.token);
@@ -32,6 +38,7 @@ const Register = () => {
             navigate('/onboarding');
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
+            setIsLoading(false);
         }
     };
 
@@ -82,6 +89,7 @@ const Register = () => {
                                     placeholder="name@company.com"
                                     value={email}
                                     onChange={onChange}
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div>
@@ -94,6 +102,7 @@ const Register = () => {
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={onChange}
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div>
@@ -106,22 +115,35 @@ const Register = () => {
                                     placeholder="••••••••"
                                     value={confirmPassword}
                                     onChange={onChange}
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
 
                         <div className="flex items-start">
                             <div className="flex items-center h-5">
-                                <input id="terms" type="checkbox" required className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-primary/20 accent-primary" />
+                                <input id="terms" type="checkbox" required disabled={isLoading} className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-primary/20 accent-primary disabled:opacity-50" />
                             </div>
                             <label htmlFor="terms" className="ml-2 text-xs text-slate-500 leading-relaxed">
-                                I agree to the <a href="#" className="font-medium text-primary hover:underline">Terms of Service</a> and <a href="#" className="font-medium text-primary hover:underline">Privacy Policy</a>.
+                                I agree to the <button type="button" onClick={() => setActiveModal('terms')} className="font-medium text-primary hover:underline">Terms of Service</button> and <button type="button" onClick={() => setActiveModal('privacy')} className="font-medium text-primary hover:underline">Privacy Policy</button>.
                             </label>
                         </div>
 
-                        <button type="submit" className="btn-primary w-full group">
-                            Create Account
-                            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <button type="submit" disabled={isLoading} className="btn-primary w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">
+                            {isLoading ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Creating Account...
+                                </>
+                            ) : (
+                                <>
+                                    Create Account
+                                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
                         </button>
 
                         <div className="relative py-4">
@@ -143,6 +165,48 @@ const Register = () => {
                     &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
                 </p>
             </div>
+            {/* Legal Modals */}
+            <Modal
+                isOpen={!!activeModal}
+                onClose={() => setActiveModal(null)}
+                title={activeModal === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            >
+                {activeModal === 'terms' ? (
+                    <div className="space-y-4 text-sm text-slate-600">
+                        <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
+                        <p>Welcome to ApplyRight. By accessing or using our website, you agree to be bound by these Terms of Service.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">1. Acceptance of Terms</h4>
+                        <p>By creating an account, you agree to comply with all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">2. Use License</h4>
+                        <p>Permission is granted to temporarily download one copy of the materials (information or software) on ApplyRight's website for personal, non-commercial transitory viewing only.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">3. Resume Generation</h4>
+                        <p>Our service uses AI to optimize resumes. While we strive for accuracy, we do not guarantee employment or specific interview results. The generated content is a suggestion and should be reviewed by the user.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">4. Prohibited Acts</h4>
+                        <p>You may not verify false information, attempt to reverse engineer our AI, or use the service for any illegal purpose.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4 text-sm text-slate-600">
+                        <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
+                        <p>Your privacy is important to us. It is ApplyRight's policy to respect your privacy regarding any information we may collect from you across our website.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">1. Information We Collect</h4>
+                        <p>We collect personal information that you voluntarily provide to us when registering for the Services, such as your email address, resume data, and job history.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">2. How We Use Your Data</h4>
+                        <p>We use your data solely to provide and improve our resume optimization services. <strong>We do not sell your personal data to third parties.</strong></p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">3. Data Security</h4>
+                        <p>We implement appropriate technical and organizational security measures designed to protect the security of any personal information we process.</p>
+
+                        <h4 className="font-bold text-slate-900 mt-4">4. Third-Party Services</h4>
+                        <p>We may share data with trusted third-party service providers (like payment processors or cloud hosting) strictly for operational purposes.</p>
+                    </div>
+                )}
+            </Modal>
         </motion.div>
     );
 };
