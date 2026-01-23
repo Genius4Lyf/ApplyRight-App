@@ -3,7 +3,129 @@ import { Link } from 'react-router-dom';
 import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+
+const TiltStack = () => {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rotateX = useTransform(y, [-100, 100], [15, -15]); // Reduced rotation for subtlety
+    const rotateY = useTransform(x, [-100, 100], [-15, 15]);
+
+    function handleMouse(event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        x.set(event.clientX - rect.left - rect.width / 2);
+        y.set(event.clientY - rect.top - rect.height / 2);
+    }
+
+    return (
+        <motion.div
+            style={{ perspective: 1000 }}
+            onMouseMove={handleMouse}
+            onMouseLeave={() => { x.set(0); y.set(0); }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="relative h-[500px] flex items-center justify-center order-1 lg:order-2 cursor-pointer"
+        >
+            {/* Abstract Decor */}
+            <div className="absolute inset-0 bg-indigo-50/50 rounded-full blur-3xl scale-75 pointer-events-none"></div>
+
+            {/* Tilt Container */}
+            <motion.div
+                style={{ rotateX, rotateY, z: 100, transformStyle: "preserve-3d" }}
+                className="relative w-[300px] h-[400px]"
+            >
+                {/* Card 1 (Back Left) */}
+                <motion.div
+                    initial={{ x: 0, y: 0, rotate: 0 }}
+                    whileInView={{ x: -60, y: 10, rotate: -12 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="absolute inset-0 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                    style={{ transform: "translateZ(-40px)" }}
+                >
+                    <div className="h-4 bg-indigo-50 w-full mb-4"></div>
+                    <div className="px-6 space-y-3 opacity-40">
+                        <div className="flex gap-4 mb-6">
+                            <div className="w-12 h-12 rounded-full bg-slate-200"></div>
+                            <div className="space-y-2 flex-1">
+                                <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                                <div className="h-2 bg-slate-100 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded w-full"></div>
+                        <div className="h-2 bg-slate-100 rounded w-5/6"></div>
+                    </div>
+                </motion.div>
+
+                {/* Card 2 (Back Right) */}
+                <motion.div
+                    initial={{ x: 0, y: 0, rotate: 0 }}
+                    whileInView={{ x: 60, y: -10, rotate: 12 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="absolute inset-0 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                    style={{ transform: "translateZ(-20px)" }}
+                >
+                    <div className="px-6 py-8 opacity-40">
+                        <div className="w-16 h-16 rounded-lg bg-indigo-50 mb-6 mx-auto"></div>
+                        <div className="space-y-4">
+                            <div className="h-3 bg-slate-200 rounded w-full"></div>
+                            <div className="h-2 bg-slate-200 rounded w-5/6 mx-auto"></div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Card 3 (Center Front - Main) */}
+                <div
+                    className="absolute inset-0 bg-white rounded-xl shadow-[0_20px_50px_-12px_rgba(79,70,229,0.3)] border border-slate-100 overflow-hidden z-20"
+                    style={{ transform: "translateZ(20px)" }}
+                >
+                    {/* Header */}
+                    <div className="p-8 border-b border-slate-100 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl ring-4 ring-indigo-50 shadow-inner">AR</div>
+                        <div>
+                            <div className="h-4 bg-slate-800 rounded w-32 mb-2"></div>
+                            <div className="h-2 bg-indigo-100 rounded w-24"></div>
+                        </div>
+                    </div>
+                    {/* Body */}
+                    <div className="p-8 space-y-6">
+                        {/* Experience Block */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between">
+                                <div className="h-3 bg-slate-200 rounded w-24"></div>
+                                <div className="h-3 bg-slate-100 rounded w-12"></div>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                            <div className="h-2 bg-slate-100 rounded w-11/12"></div>
+                            <div className="h-2 bg-indigo-50 rounded w-10/12"></div>
+                        </div>
+
+                        {/* Experience Block 2 */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between">
+                                <div className="h-3 bg-slate-200 rounded w-28"></div>
+                                <div className="h-3 bg-slate-100 rounded w-12"></div>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                            <div className="h-2 bg-slate-100 rounded w-11/12"></div>
+                        </div>
+
+                        <div className="pt-4 flex gap-2">
+                            <div className="h-6 w-16 bg-slate-100 rounded-full"></div>
+                            <div className="h-6 w-20 bg-slate-100 rounded-full"></div>
+                            <div className="h-6 w-12 bg-indigo-100 rounded-full text-indigo-600 flex items-center justify-center text-[10px] font-bold">100%</div>
+                        </div>
+                    </div>
+
+                    {/* Badge */}
+                    <div className="absolute top-4 right-4 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm flex items-center gap-1">
+                        <CheckCircle size={10} /> ATS Verified
+                    </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
 
 const LandingPage = () => {
     const [init, setInit] = useState(false);
@@ -123,6 +245,9 @@ const LandingPage = () => {
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wide mb-8">
                             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
                             Did you know? 75% of resumes are never read.
+                            <a href="#education" className="ml-1 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-900 transition-colors">
+                                Find out why
+                            </a>
                         </div>
 
                         <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight text-slate-900 mb-6 leading-tight">
@@ -163,7 +288,14 @@ const LandingPage = () => {
                 </section>
 
                 {/* EDUCATIONAL SECTION: The Problem */}
-                <section id="education" className="py-24 bg-slate-50/80 backdrop-blur-sm border-y border-slate-200">
+                <motion.section
+                    id="education"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                    className="py-24 bg-slate-50/80 backdrop-blur-sm border-y border-slate-200"
+                >
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center mb-16">
                             <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">The Invisible Barrier</h2>
@@ -240,10 +372,16 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* SOLUTION SECTION: "Why ApplyRight" */}
-                <section className="py-24 relative">
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                    className="py-24 relative"
+                >
                     {/* Add a subtle glass effect or just keep transparent (particles visible) */}
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center mb-16">
@@ -283,11 +421,16 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* TEMPLATES SECTION: Visual Proof */}
-                <section className="py-24 bg-white relative overflow-hidden">
-                    <div className="max-w-7xl mx-auto px-6">
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                    className="py-24 bg-white relative overflow-hidden"
+                >                <div className="max-w-7xl mx-auto px-6">
                         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
                             {/* Text Content */}
@@ -419,13 +562,13 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* CTA Section */}
                 <section className="py-20 bg-slate-900 text-white overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                     <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Stop Guessing. Start Interviewing.</h2>
+                        <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">Stop Guessing. Start Interviewing.</h2>
                         <p className="text-xl text-indigo-200 mb-10">
                             Join thousands of job seekers who stopped fighting the system and started making it work for them.
                         </p>
