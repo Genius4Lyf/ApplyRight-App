@@ -226,18 +226,6 @@ const Dashboard = () => {
                     </div>
                 )}
             </main>
-
-            <footer className="mt-auto border-t border-slate-200 bg-white py-8">
-                <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2 text-slate-400">
-                        <Sparkles className="w-4 h-4" />
-                        <span className="text-sm font-semibold uppercase tracking-widest">ApplyRight</span>
-                    </div>
-                    <p className="text-sm text-slate-500">
-                        &copy; 2026 Professional Career Suite. All rights reserved.
-                    </p>
-                </div>
-            </footer>
         </div>
     );
 };

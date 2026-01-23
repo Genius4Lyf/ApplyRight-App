@@ -17,6 +17,7 @@ const JobHistory = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [applicationToDelete, setApplicationToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
 
     // Get user from local storage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -66,7 +67,7 @@ const JobHistory = () => {
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <Navbar />
 
-            <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+            <main className="flex-1 max-w-7xl mx-auto w-full px-4 pt-8 pb-0">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-slate-900">Application History</h1>
                     <p className="text-slate-500">Track and manage your generated applications.</p>
@@ -86,9 +87,9 @@ const JobHistory = () => {
                         <p className="text-slate-500 mb-6 max-w-sm mx-auto">Start by generating your first tailored CV and cover letter in the "Get Hired" section.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         {/* List Column: Hidden on mobile if an app is selected */}
-                        <div className={`lg:col-span-1 space-y-4 ${selectedApp ? 'hidden lg:block' : 'block'}`}>
+                        <div className={`lg:col-span-1 space-y-4 ${selectedApp ? 'hidden lg:block' : 'block'} lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-8`}>
                             {applications.map((app) => (
                                 <div
                                     key={app._id}
@@ -96,7 +97,9 @@ const JobHistory = () => {
                                         setSelectedApp(app);
                                         setSelectedTemplate(app.templateId || 'modern');
                                         // Scroll to top on mobile when selecting
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        if (window.innerWidth < 1024) {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
                                     }}
                                     className={`
                                         p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md
@@ -152,10 +155,10 @@ const JobHistory = () => {
                         </div>
 
                         {/* Preview Column: Hidden on mobile if NO app is selected */}
-                        <div className={`lg:col-span-2 ${selectedApp ? 'block' : 'hidden lg:block'}`}>
+                        <div className={`lg:col-span-2 ${selectedApp ? 'block' : 'hidden lg:block'} lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)]`}>
                             {selectedApp ? (
-                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none">
-                                    <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center gap-4">
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none lg:h-full lg:flex lg:flex-col lg:mb-8">
+                                    <div className={`p-4 border-b transition-all duration-200 z-10 ${isScrolled ? 'shadow-md border-transparent bg-white/95 backdrop-blur-sm' : 'border-slate-200 bg-slate-50'} flex items-center gap-4 sticky top-0`}>
                                         {/* Back Button (Mobile Only) */}
                                         <button
                                             onClick={() => setSelectedApp(null)}
@@ -171,7 +174,10 @@ const JobHistory = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="p-6 space-y-8">
+                                    <div
+                                        className="p-6 space-y-8 lg:overflow-y-auto custom-scrollbar lg:flex-1"
+                                        onScroll={(e) => setIsScrolled(e.target.scrollTop > 0)}
+                                    >
                                         {selectedApp.fitAnalysis && (
                                             <div className="mb-8">
                                                 <h3 className="text-lg font-bold text-slate-900 mb-4 items-center flex gap-2">
