@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import Preview from './Preview';
-import { Calendar, Briefcase, Building, Sparkles } from 'lucide-react';
+import { Calendar, Briefcase, Building, Sparkles, ArrowLeft, Trash2 } from 'lucide-react';
+
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const JobHistory = () => {
     const [applications, setApplications] = useState([]);
@@ -12,6 +14,9 @@ const JobHistory = () => {
     const [loading, setLoading] = useState(true);
     const [regenerating, setRegenerating] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState('modern');
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [applicationToDelete, setApplicationToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Get user from local storage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -28,6 +33,32 @@ const JobHistory = () => {
             console.error('Failed to fetch history', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = (e, appId) => {
+        e.stopPropagation();
+        setApplicationToDelete(appId);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!applicationToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await api.delete(`/applications/${applicationToDelete}`);
+            setApplications(applications.filter(app => app._id !== applicationToDelete));
+            if (selectedApp?._id === applicationToDelete) {
+                setSelectedApp(null);
+            }
+            setDeleteModalOpen(false);
+            setApplicationToDelete(null);
+        } catch (error) {
+            console.error('Failed to delete application', error);
+            alert('Failed to delete application. Please try again.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -56,14 +87,16 @@ const JobHistory = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* List */}
-                        <div className="lg:col-span-1 space-y-4">
+                        {/* List Column: Hidden on mobile if an app is selected */}
+                        <div className={`lg:col-span-1 space-y-4 ${selectedApp ? 'hidden lg:block' : 'block'}`}>
                             {applications.map((app) => (
                                 <div
                                     key={app._id}
                                     onClick={() => {
                                         setSelectedApp(app);
                                         setSelectedTemplate(app.templateId || 'modern');
+                                        // Scroll to top on mobile when selecting
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                     className={`
                                         p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md
@@ -75,7 +108,11 @@ const JobHistory = () => {
                                     <div className="flex items-start justify-between mb-2">
                                         <h3 className="font-semibold text-slate-900 line-clamp-1">{app.jobId?.title || 'Unknown Role'}</h3>
                                         <span className="text-xs font-medium text-slate-400 whitespace-nowrap">
-                                            {new Date(app.createdAt).toLocaleDateString()}
+                                            {new Date(app.createdAt).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
@@ -103,19 +140,36 @@ const JobHistory = () => {
                                             </span>
                                         )}
                                     </div>
+                                    <button
+                                        onClick={(e) => handleDelete(e, app._id)}
+                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-2 w-full flex justify-center items-center bg-slate-50 border border-slate-100"
+                                        title="Delete application"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Preview */}
-                        <div className="lg:col-span-2">
+                        {/* Preview Column: Hidden on mobile if NO app is selected */}
+                        <div className={`lg:col-span-2 ${selectedApp ? 'block' : 'hidden lg:block'}`}>
                             {selectedApp ? (
-                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px]">
-                                    <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                                        <h2 className="font-semibold text-slate-900">Application Details</h2>
-                                        <span className="text-xs text-slate-500">
-                                            Generated on {new Date(selectedApp.createdAt).toLocaleString()}
-                                        </span>
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none">
+                                    <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center gap-4">
+                                        {/* Back Button (Mobile Only) */}
+                                        <button
+                                            onClick={() => setSelectedApp(null)}
+                                            className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-full transition-colors"
+                                        >
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </button>
+
+                                        <div className="flex-1 flex justify-between items-center">
+                                            <h2 className="font-semibold text-slate-900">Application Details</h2>
+                                            <span className="text-xs text-slate-500 hidden sm:inline">
+                                                Generated on {new Date(selectedApp.createdAt).toLocaleString()}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="p-6 space-y-8">
                                         {selectedApp.fitAnalysis && (
@@ -127,6 +181,7 @@ const JobHistory = () => {
                                                 <FitScoreCard
                                                     fitScore={selectedApp.fitScore}
                                                     fitAnalysis={selectedApp.fitAnalysis}
+                                                    actionPlan={selectedApp.actionPlan}
                                                 />
                                             </div>
                                         )}
@@ -195,6 +250,18 @@ const JobHistory = () => {
                         </div>
                     </div>
                 )}
+
+                <DeleteConfirmationModal
+                    isOpen={deleteModalOpen}
+                    onClose={() => {
+                        if (!isDeleting) {
+                            setDeleteModalOpen(false);
+                            setApplicationToDelete(null);
+                        }
+                    }}
+                    onConfirm={confirmDelete}
+                    isDeleting={isDeleting}
+                />
             </main>
         </div>
     );

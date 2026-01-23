@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, History, Zap } from 'lucide-react';
+import { Sparkles, LogOut, History, Zap, User } from 'lucide-react';
 
 const Navbar = () => {
     const location = useLocation();
@@ -16,7 +16,7 @@ const Navbar = () => {
     const isActive = (path) => location.pathname === path;
 
     return (
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -46,16 +46,26 @@ const Navbar = () => {
                     <div className="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
 
                     <div className="flex items-center gap-4">
-                        <div className="hidden md:flex flex-col items-end">
+                        <div className="hidden md:flex flex-col items-end cursor-pointer" onClick={() => navigate('/profile')}>
                             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account</span>
-                            <span className="text-sm font-medium text-slate-700">{user.firstName ? `${user.firstName} ${user.lastName}` : user.email?.split('@')[0]}</span>
+                            <span className="text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors">
+                                {user.firstName ? `${user.firstName} ${user.lastName}` : user.email?.split('@')[0]}
+                            </span>
                         </div>
+
+                        <div
+                            onClick={() => navigate('/profile')}
+                            className="h-10 w-10 rounded-full bg-indigo-100 border-2 border-indigo-50 flex items-center justify-center text-indigo-700 font-bold cursor-pointer hover:border-indigo-200 transition-colors"
+                        >
+                            {user.firstName ? user.firstName[0].toUpperCase() : <User className="w-5 h-5" />}
+                        </div>
+
                         <button
                             onClick={handleLogout}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors group"
+                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                            title="Sign Out"
                         >
-                            <LogOut className="w-4 h-4 mr-2 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                            <span className="hidden sm:inline">Sign Out</span>
+                            <LogOut className="w-5 h-5" />
                         </button>
                     </div>
                 </div>

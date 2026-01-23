@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import JobHistory from './pages/JobHistory';
+import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import { useState, useEffect } from 'react';
 
@@ -51,6 +52,14 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <JobHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

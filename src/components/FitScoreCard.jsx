@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertTriangle, XCircle, Info, Target, Award, Briefcase, GraduationCap } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, Info, Target, Award, Briefcase, GraduationCap, Lightbulb } from 'lucide-react';
 
-const FitScoreCard = ({ fitScore, fitAnalysis }) => {
+const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
     // Determine color based on score
     const getScoreColor = (score) => {
         if (score >= 80) return 'text-emerald-500';
@@ -47,7 +47,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis }) => {
                             strokeWidth="12"
                             fill="transparent"
                             strokeDasharray={351.86} // 2 * PI * 56
-                            strokeDashoffset={351.86 - (351.86 * fitScore) / 100}
+                            strokeDashoffset={351.86 - (351.86 * (fitScore || 0)) / 100}
                             className={`${textColor} transition-all duration-1000 ease-out`}
                             strokeLinecap="round"
                         />
@@ -154,7 +154,38 @@ const FitScoreCard = ({ fitScore, fitAnalysis }) => {
                     </div>
                 </motion.div>
             </div>
-        </div>
+
+            {/* Smart Action Plan (NEW) */}
+            {
+                actionPlan && actionPlan.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-indigo-50 rounded-xl p-6 border border-indigo-100"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <Lightbulb className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-bold text-slate-900">Smart Action Plan</h3>
+                        </div>
+                        <p className="text-sm text-slate-600 mb-4">Based on your gaps, here are specific steps to improve your fit:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {actionPlan.map((item, idx) => (
+                                <div key={idx} className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm flex items-start gap-3">
+                                    <div className="mt-1 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-xs font-bold text-indigo-700">
+                                        {idx + 1}
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{item.skill}</span>
+                                        <p className="text-sm text-slate-800 font-medium mt-0.5">{item.action}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )
+            }
+        </div >
     );
 };
 
