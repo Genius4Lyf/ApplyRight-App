@@ -107,12 +107,16 @@ const Dashboard = () => {
         // Step 2: Re-Generate / Update (If user clicks again)
         setGenerating(true);
         try {
-            const res = await api.post('/ai/generate', {
+            const res = await api.post('/analysis/analyze', {
                 resumeId: resume._id,
                 jobId: job._id,
                 templateId: selectedTemplate
             });
+            setFitResult(res.data);
             setApplication(res.data);
+            if (res.data.job) {
+                setJob(res.data.job);
+            }
             toast.success("Assets updated successfully!");
 
             // Step 3: Prompt for Auto-Analysis if currently disabled
@@ -263,7 +267,7 @@ const Dashboard = () => {
                             {generating ? (
                                 <>
                                     <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                                    {analyzing ? 'Analyzing Match...' : 'Updating Assets...'}
+                                    {analyzing ? 'Analyzing Match...' : 'Optimizing Application...'}
                                 </>
                             ) : (
                                 <>

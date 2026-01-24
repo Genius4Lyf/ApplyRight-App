@@ -202,7 +202,7 @@ const JobHistory = () => {
                                                     onClick={async () => {
                                                         setRegenerating(true);
                                                         try {
-                                                            const res = await api.post('/ai/generate', {
+                                                            const res = await api.post('/analysis/analyze', {
                                                                 resumeId: selectedApp.resumeId,
                                                                 jobId: selectedApp.jobId,
                                                                 templateId: selectedTemplate
