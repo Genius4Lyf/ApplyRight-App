@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
-import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard } from 'lucide-react';
+import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Profile = () => {
@@ -28,18 +28,25 @@ const Profile = () => {
     const fetchProfile = async () => {
         try {
             const res = await api.get('/auth/me');
-            setUser(res.data);
+            const userData = res.data || {};
+            setUser(userData);
+
+            // Safe access to nested properties
+            const education = userData.education || {};
+            const settings = userData.settings || {};
+
             setFormData({
-                firstName: res.data.firstName || '',
-                lastName: res.data.lastName || '',
-                currentStatus: res.data.currentStatus || 'student',
-                graduationYear: res.data.education?.graduationYear || '',
-                university: res.data.education?.university || '',
-                discipline: res.data.education?.discipline || '',
-                autoGenerateAnalysis: res.data.settings?.autoGenerateAnalysis || false
+                firstName: userData.firstName || '',
+                lastName: userData.lastName || '',
+                currentStatus: userData.currentStatus || 'student',
+                graduationYear: education.graduationYear || '',
+                university: education.university || '',
+                discipline: education.discipline || '',
+                autoGenerateAnalysis: settings.autoGenerateAnalysis || false
             });
         } catch (error) {
             console.error('Failed to load profile', error);
+            toast.error("Failed to load profile data");
         } finally {
             setLoading(false);
         }
@@ -99,6 +106,17 @@ const Profile = () => {
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+        </div>
+    );
+
+    if (!user) return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+            <Navbar />
+            <div className="text-center mt-12">
+                <h2 className="text-xl font-bold text-slate-800">Failed to load profile</h2>
+                <p className="text-slate-500 mb-6">We couldn't retrieve your user data.</p>
+                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Try Again</button>
+            </div>
         </div>
     );
 

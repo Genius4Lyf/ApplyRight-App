@@ -5,7 +5,13 @@ import { Sparkles, LogOut, History, Zap, User } from 'lucide-react';
 const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    let user = {};
+    try {
+        user = JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (e) {
+        console.error("Failed to parse user from local storage", e);
+    }
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -49,7 +55,7 @@ const Navbar = () => {
                         <div className="hidden md:flex flex-col items-end cursor-pointer" onClick={() => navigate('/profile')}>
                             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account</span>
                             <span className="text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors">
-                                {user.firstName ? `${user.firstName} ${user.lastName}` : user.email?.split('@')[0]}
+                                {user && user.firstName ? `${user.firstName} ${user.lastName}` : (user?.email?.split('@')[0] || 'User')}
                             </span>
                         </div>
 
@@ -57,7 +63,7 @@ const Navbar = () => {
                             onClick={() => navigate('/profile')}
                             className="h-10 w-10 rounded-full bg-indigo-100 border-2 border-indigo-50 flex items-center justify-center text-indigo-700 font-bold cursor-pointer hover:border-indigo-200 transition-colors"
                         >
-                            {user.firstName ? user.firstName[0].toUpperCase() : <User className="w-5 h-5" />}
+                            {user && user.firstName && user.firstName.length > 0 ? user.firstName[0].toUpperCase() : <User className="w-5 h-5" />}
                         </div>
 
                         <button

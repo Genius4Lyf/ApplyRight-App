@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import JobHistory from './pages/JobHistory';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useState, useEffect } from 'react';
 
 // Protected Route Component
@@ -59,7 +60,9 @@ const AnimatedRoutes = () => {
           path="/profile"
           element={
             <ProtectedRoute>
-              <Profile />
+              <ErrorBoundary>
+                <Profile />
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         />
