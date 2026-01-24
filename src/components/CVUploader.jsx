@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
@@ -6,6 +6,7 @@ const CVUploader = ({ onUploadSuccess }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState(null);
+    const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -33,8 +34,9 @@ const CVUploader = ({ onUploadSuccess }) => {
                 onUploadSuccess(res.data);
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Upload failed.' });
             console.error(error);
+            const errorMsg = error.response?.data?.message || error.message || 'Upload failed.';
+            setMessage({ type: 'error', text: errorMsg });
         } finally {
             setUploading(false);
         }
@@ -57,9 +59,10 @@ const CVUploader = ({ onUploadSuccess }) => {
                     flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-200 relative
                     ${uploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer border-slate-200 hover:border-indigo-400 bg-slate-50/30'}
                 `}
-                onClick={() => !uploading && document.getElementById('cv-upload').click()}
+                onClick={() => !uploading && fileInputRef.current.click()}
             >
                 <input
+                    ref={fileInputRef}
                     id="cv-upload"
                     type="file"
                     className="hidden"
@@ -87,7 +90,12 @@ const CVUploader = ({ onUploadSuccess }) => {
                                 <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                             </div>
                             <button
-                                onClick={(e) => { e.stopPropagation(); setFile(null); setMessage(null); }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFile(null);
+                                    setMessage(null);
+                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                }}
                                 className="p-2 text-slate-400 hover:text-red-500 transition-colors"
                             >
                                 <XCircle className="w-4 h-4" />
@@ -108,8 +116,8 @@ const CVUploader = ({ onUploadSuccess }) => {
 
             {message && (
                 <div className={`mt-4 flex items-center p-3 rounded-lg border text-sm ${message.type === 'success'
-                        ? 'bg-green-50 border-green-100 text-green-700'
-                        : 'bg-red-50 border-red-100 text-red-700'
+                    ? 'bg-green-50 border-green-100 text-green-700'
+                    : 'bg-red-50 border-red-100 text-red-700'
                     }`}>
                     {message.type === 'success' ? <CheckCircle className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
                     <span>{message.text}</span>
@@ -120,8 +128,8 @@ const CVUploader = ({ onUploadSuccess }) => {
                 onClick={handleUpload}
                 disabled={!file || uploading}
                 className={`mt-4 w-full h-12 rounded-lg font-semibold transition-all ${!file || uploading
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        : 'btn-primary'
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'btn-primary'
                     }`}
             >
                 {uploading ? 'Processing...' : 'Confirm Upload'}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -16,7 +17,8 @@ const Profile = () => {
         currentStatus: 'student',
         graduationYear: '',
         university: '',
-        discipline: ''
+        discipline: '',
+        autoGenerateAnalysis: false
     });
 
     useEffect(() => {
@@ -33,7 +35,8 @@ const Profile = () => {
                 currentStatus: res.data.currentStatus || 'student',
                 graduationYear: res.data.education?.graduationYear || '',
                 university: res.data.education?.university || '',
-                discipline: res.data.education?.discipline || ''
+                discipline: res.data.education?.discipline || '',
+                autoGenerateAnalysis: res.data.settings?.autoGenerateAnalysis || false
             });
         } catch (error) {
             console.error('Failed to load profile', error);
@@ -58,6 +61,9 @@ const Profile = () => {
                     graduationYear: formData.graduationYear,
                     university: formData.university,
                     discipline: formData.discipline
+                },
+                settings: {
+                    autoGenerateAnalysis: formData.autoGenerateAnalysis
                 }
             };
 
@@ -67,10 +73,11 @@ const Profile = () => {
             localStorage.setItem('user', JSON.stringify(res.data));
 
             setSuccessMsg('Profile updated successfully!');
+            toast.success('Profile updated successfully');
             setTimeout(() => setSuccessMsg(''), 3000);
         } catch (error) {
             console.error('Failed to update profile', error);
-            alert('Failed to update profile');
+            toast.error('Failed to update profile');
         } finally {
             setSaving(false);
         }
@@ -82,7 +89,7 @@ const Profile = () => {
                 const res = await api.put('/auth/profile', { plan: 'paid' });
                 setUser(res.data);
                 localStorage.setItem('user', JSON.stringify(res.data));
-                alert("Welcome to ApplyRight Pro!");
+                toast.success("Welcome to ApplyRight Pro!");
             } catch (error) {
                 console.error(error);
             }
@@ -153,6 +160,27 @@ const Profile = () => {
                                     <option value="career_switcher">Career Switcher</option>
                                 </select>
                                 <p className="text-xs text-slate-400 mt-1">This helps the AI adjust the tone of your CV.</p>
+                            </div>
+
+                            <div className="border-t border-slate-100 my-6 pt-6">
+                                <h3 className="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                                    Automation Preferences
+                                </h3>
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <input
+                                        type="checkbox"
+                                        id="autoGenerate"
+                                        name="autoGenerateAnalysis"
+                                        checked={formData.autoGenerateAnalysis}
+                                        onChange={(e) => setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })}
+                                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                                    />
+                                    <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
+                                        <div className="text-sm font-semibold text-slate-900">Auto-Run Match Analysis</div>
+                                        <div className="text-xs text-slate-500">Automatically analyze compatibility when job and resume are uploaded.</div>
+                                    </label>
+                                </div>
                             </div>
 
                             <div className="border-t border-slate-100 my-6 pt-6">

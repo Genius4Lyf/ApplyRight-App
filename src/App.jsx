@@ -71,9 +71,12 @@ const AnimatedRoutes = () => {
   );
 };
 
+import { Toaster } from 'sonner';
+
 function App() {
   return (
     <Router>
+      <Toaster position="bottom-right" richColors />
       <AnimatedRoutes />
     </Router>
   );

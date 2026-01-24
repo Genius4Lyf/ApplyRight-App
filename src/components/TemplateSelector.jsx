@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { TEMPLATES } from '../data/templates';
 import { CheckCircle, Lock, Sparkles, Star } from 'lucide-react';
 
+import { toast } from 'sonner';
+
 const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free' }) => {
 
     const handleSelect = (template) => {
         if (template.isPro && userPlan === 'free') {
             // In a real app, this would trigger an upgrade modal
-            alert("This is a Premium Template. Upgrade to ApplyRight Pro to unlock!");
+            toast.warning("This is a Premium Template. Upgrade to ApplyRight Pro to unlock!");
             return;
         }
         onSelect(template.id);

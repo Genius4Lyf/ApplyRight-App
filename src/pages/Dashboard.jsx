@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
@@ -8,6 +8,7 @@ import { Sparkles, LogOut, ChevronRight, CheckCircle, User, Briefcase } from 'lu
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -18,34 +19,61 @@ const Dashboard = () => {
     const [analyzing, setAnalyzing] = useState(false);
     const [fitResult, setFitResult] = useState(null);
     const [selectedTemplate, setSelectedTemplate] = useState('modern');
+    const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
 
     // Get user from local storage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
 
-    // Auto-analyze when both resume and job are available
-    React.useEffect(() => {
+    // Auto-analyze when both resume and job are available AND setting is enabled
+    useEffect(() => {
         const analyzeFit = async () => {
-            if (resume && job && !fitResult) {
-                setAnalyzing(true);
-                try {
-                    const res = await api.post('/analysis/analyze', {
-                        resumeId: resume._id,
-                        jobId: job._id
-                    });
-                    setFitResult(res.data);
-                    // If application is created/updated, we can set it here too if needed, 
-                    // but usually 'application' state in Dashboard implies the *generated* assets.
-                    // We'll keep them separate for now or merge if the API returns the same shape.
-                } catch (error) {
-                    console.error("Analysis failed", error);
-                } finally {
-                    setAnalyzing(false);
-                }
+            // Check if setting is explicitly true. Default is false (manual)
+            const shouldAutoRun = user?.settings?.autoGenerateAnalysis === true;
+
+            if (resume && job && !fitResult && shouldAutoRun) {
+                performAnalysis();
             }
         };
 
         analyzeFit();
     }, [resume, job]);
+
+    const performAnalysis = async () => {
+        setAnalyzing(true);
+        try {
+            const res = await api.post('/analysis/analyze', {
+                resumeId: resume._id,
+                jobId: job._id
+            });
+            setFitResult(res.data);
+            return res.data;
+        } catch (error) {
+            console.error("Analysis failed", error);
+            throw error; // Re-throw to handle in caller
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
+    const enableAutoAnalysis = async () => {
+        try {
+            const updatedSettings = { ...user.settings, autoGenerateAnalysis: true };
+            const res = await api.put('/auth/profile', {
+                settings: updatedSettings
+            });
+
+            // Update local state and storage
+            const updatedUser = { ...user, settings: res.data.settings };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            toast.success("Auto-analysis enabled for future jobs!");
+            setShowAutoAnalyzeModal(false);
+        } catch (error) {
+            console.error("Failed to update settings", error);
+            toast.error("Failed to save setting");
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -55,6 +83,26 @@ const Dashboard = () => {
 
     const handleGenerate = async () => {
         if (!resume || !job) return;
+
+        // Step 1: Analyze if not done
+        if (!fitResult) {
+            try {
+                await performAnalysis();
+                // We stop here to let the user see the "How it did" (Fit Score) 
+                // and choose a Professional Style (Template)
+                toast.success("Analysis complete. Select a style and generate.");
+
+                // Scroll to the results
+                setTimeout(() => {
+                    document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            } catch (err) {
+                // Error handled in performAnalysis
+            }
+            return;
+        }
+
+        // Step 2: Generate Assets (Only if analysis is already done)
         setGenerating(true);
         try {
             const res = await api.post('/ai/generate', {
@@ -63,6 +111,13 @@ const Dashboard = () => {
                 templateId: selectedTemplate
             });
             setApplication(res.data);
+            toast.success("Professional assets generated successfully!");
+
+            // Step 3: Prompt for Auto-Analysis if currently disabled
+            if (!user?.settings?.autoGenerateAnalysis) {
+                setShowAutoAnalyzeModal(true);
+            }
+
             // Construct URL to jump to preview
             setTimeout(() => {
                 document.getElementById('preview-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -70,9 +125,9 @@ const Dashboard = () => {
         } catch (error) {
             console.error('Generation failed', error);
             if (error.response?.status === 403) {
-                alert(error.response.data.message); // Simple alert for now, can be upgraded to modal
+                toast.error(error.response.data.message);
             } else {
-                alert('Failed to generate application. Please try again.');
+                toast.error('Failed to generate application. Please try again.');
             }
         } finally {
             setGenerating(false);
@@ -100,7 +155,7 @@ const Dashboard = () => {
         <div className="min-h-screen bg-background flex flex-col">
             <Navbar />
 
-            <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12">
+            <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
                 {!user.onboardingCompleted && (
                     <div
                         onClick={() => navigate('/onboarding')}
@@ -139,7 +194,7 @@ const Dashboard = () => {
 
                 {/* Fit Analysis Section */}
                 {(analyzing || fitResult) && (
-                    <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div id="analysis-section" className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="flex items-center gap-2 mb-6">
                             <Sparkles className="w-5 h-5 text-indigo-600" />
                             <h3 className="text-lg font-bold text-slate-900">AI Compatibility Analysis</h3>
@@ -193,12 +248,12 @@ const Dashboard = () => {
                             {generating ? (
                                 <>
                                     <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                                    Generating Documents...
+                                    {analyzing ? 'Analyzing Match...' : 'Generating Documents...'}
                                 </>
                             ) : (
                                 <>
                                     <Sparkles className="w-5 h-5 mr-3" />
-                                    Generate Professional Assets
+                                    {!fitResult ? "Generate Professional Assets" : "Create Application"}
                                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -222,6 +277,39 @@ const Dashboard = () => {
                     <div id="preview-section" className="mt-24 pb-24 border-t border-slate-200 pt-24">
                         <div className="max-w-4xl mx-auto">
                             <Preview application={application} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Auto-Analysis Modal */}
+                {showAutoAnalyzeModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2">Enable Auto-Analysis?</h3>
+                                    <p className="text-slate-600 leading-relaxed">
+                                        We can automatically analyze the compatibility between your resume and job description as soon as you upload them in the future.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowAutoAnalyzeModal(false)}
+                                    className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                    No, keep it manual
+                                </button>
+                                <button
+                                    onClick={enableAutoAnalysis}
+                                    className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:scale-105"
+                                >
+                                    Yes, enable auto-analysis
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

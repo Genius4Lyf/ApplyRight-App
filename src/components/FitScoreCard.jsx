@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertTriangle, XCircle, Info, Target, Award, Briefcase, GraduationCap, Lightbulb } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, Info, Target, Award, Briefcase, GraduationCap, Lightbulb, Sparkles, Wrench, Bot } from 'lucide-react';
 
 const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
     // Determine color based on score
@@ -18,6 +18,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
 
     const textColor = getScoreColor(fitScore);
     const bgColor = getScoreBg(fitScore);
+    const isAIMode = fitAnalysis?.mode === 'AI';
 
     return (
         <div className="w-full space-y-6">
@@ -60,7 +61,16 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
 
                 {/* Score Summary & Recommendation */}
                 <div className="flex-1 space-y-3">
-                    <h3 className="text-xl font-bold text-slate-900">Application Fit Analysis</h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-slate-900">Application Fit Analysis</h3>
+
+                        {/* AI / Standard Badge */}
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${isAIMode ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                            {isAIMode ? <Bot className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
+                            {isAIMode ? 'AI-Powered Analysis' : 'Standard Match (Beta)'}
+                        </div>
+                    </div>
+
                     <p className="text-slate-600">
                         {fitAnalysis.overallFeedback}
                     </p>

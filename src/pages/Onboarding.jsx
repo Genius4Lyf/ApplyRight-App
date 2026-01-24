@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { ArrowRight, CheckCircle, Sparkles, User, GraduationCap, Target } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -44,10 +45,11 @@ const Onboarding = () => {
 
             const res = await api.put('/users/profile', payload);
             localStorage.setItem('user', JSON.stringify(res.data));
+            toast.success("Profile completed successfully!");
             navigate('/dashboard');
         } catch (error) {
             console.error('Onboarding failed', error);
-            alert('Failed to save profile. Please try again.');
+            toast.error('Failed to save profile. Please try again.');
         } finally {
             setLoading(false);
         }
