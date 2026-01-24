@@ -189,9 +189,16 @@ const Dashboard = () => {
                 {/* Fit Analysis Section */}
                 {(analyzing || fitResult) && (
                     <div id="analysis-section" className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="flex items-center gap-2 mb-6">
-                            <Sparkles className="w-5 h-5 text-indigo-600" />
-                            <h3 className="text-lg font-bold text-slate-900">AI Compatibility Analysis</h3>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-indigo-600" />
+                                <h3 className="text-lg font-bold text-slate-900">AI Compatibility Analysis</h3>
+                            </div>
+                            {job && (job.title || job.company) && (
+                                <div className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                                    For: <span className="text-slate-900 font-bold">{job.title || 'Role'}</span> {job.company && <span>at {job.company}</span>}
+                                </div>
+                            )}
                         </div>
 
                         {analyzing ? (
