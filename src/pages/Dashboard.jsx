@@ -46,6 +46,7 @@ const Dashboard = () => {
                 jobId: job._id
             });
             setFitResult(res.data);
+            setApplication(res.data); // NEW: Set application immediately since it contains assets
             return res.data;
         } catch (error) {
             console.error("Analysis failed", error);
@@ -84,13 +85,11 @@ const Dashboard = () => {
     const handleGenerate = async () => {
         if (!resume || !job) return;
 
-        // Step 1: Analyze if not done
+        // Step 1: Analyze if not done (This now also generates assets)
         if (!fitResult) {
             try {
                 await performAnalysis();
-                // We stop here to let the user see the "How it did" (Fit Score) 
-                // and choose a Professional Style (Template)
-                toast.success("Analysis complete. Select a style and generate.");
+                toast.success("Analysis and Assets generated!");
 
                 // Scroll to the results
                 setTimeout(() => {
@@ -102,7 +101,7 @@ const Dashboard = () => {
             return;
         }
 
-        // Step 2: Generate Assets (Only if analysis is already done)
+        // Step 2: Re-Generate / Update (If user clicks again)
         setGenerating(true);
         try {
             const res = await api.post('/ai/generate', {
@@ -111,17 +110,12 @@ const Dashboard = () => {
                 templateId: selectedTemplate
             });
             setApplication(res.data);
-            toast.success("Professional assets generated successfully!");
+            toast.success("Assets updated successfully!");
 
             // Step 3: Prompt for Auto-Analysis if currently disabled
             if (!user?.settings?.autoGenerateAnalysis) {
                 setShowAutoAnalyzeModal(true);
             }
-
-            // Construct URL to jump to preview
-            setTimeout(() => {
-                document.getElementById('preview-section')?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
         } catch (error) {
             console.error('Generation failed', error);
             if (error.response?.status === 403) {
@@ -230,6 +224,13 @@ const Dashboard = () => {
                     </div>
                 )}
 
+                {/* Preview Section (Moved Here) */}
+                {application && (
+                    <div id="preview-section" className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                        <Preview application={application} templateId={selectedTemplate} />
+                    </div>
+                )}
+
                 {/* Final Generation Stage */}
                 <div className="relative pt-8 flex flex-col items-center">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
@@ -252,12 +253,12 @@ const Dashboard = () => {
                             {generating ? (
                                 <>
                                     <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                                    {analyzing ? 'Analyzing Match...' : 'Generating Documents...'}
+                                    {analyzing ? 'Analyzing Match...' : 'Updating Assets...'}
                                 </>
                             ) : (
                                 <>
                                     <Sparkles className="w-5 h-5 mr-3" />
-                                    {!fitResult ? "Generate Professional Assets" : "Create Application"}
+                                    {!fitResult ? "Generate Professional Assets" : "Regenerate Assets"}
                                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -275,15 +276,6 @@ const Dashboard = () => {
                         </p>
                     )}
                 </div>
-
-                {/* Preview Section */}
-                {application && (
-                    <div id="preview-section" className="mt-24 pb-24 border-t border-slate-200 pt-24">
-                        <div className="max-w-4xl mx-auto">
-                            <Preview application={application} />
-                        </div>
-                    </div>
-                )}
 
                 {/* Auto-Analysis Modal */}
                 {showAutoAnalyzeModal && (
