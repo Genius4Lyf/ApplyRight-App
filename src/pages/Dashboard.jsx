@@ -46,7 +46,10 @@ const Dashboard = () => {
                 jobId: job._id
             });
             setFitResult(res.data);
-            setApplication(res.data); // NEW: Set application immediately since it contains assets
+            setApplication(res.data);
+            if (res.data.job) {
+                setJob(res.data.job); // NEW: Update job state if backend refined it
+            }
             return res.data;
         } catch (error) {
             console.error("Analysis failed", error);
