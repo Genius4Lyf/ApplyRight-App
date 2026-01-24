@@ -99,12 +99,7 @@ const Preview = ({ application, templateId = 'modern' }) => {
                                     {application.interviewQuestions && application.interviewQuestions.length > 0 ? (
                                         <div className="space-y-4">
                                             {application.interviewQuestions.map((q, idx) => (
-                                                <div key={idx} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded mb-2 inline-block
-                                                        ${q.type === 'behavioral' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}
-                                                    `}>
-                                                        {q.type}
-                                                    </span>
+                                                <div key={idx} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-indigo-500">
                                                     <p className="text-slate-800 font-medium">{q.question}</p>
                                                 </div>
                                             ))}
