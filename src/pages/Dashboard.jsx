@@ -206,7 +206,11 @@ const Dashboard = () => {
                                 <p className="text-slate-500 font-medium">Analyzing your profile against role requirements...</p>
                             </div>
                         ) : (
-                            <FitScoreCard fitScore={fitResult.fitScore} fitAnalysis={fitResult.fitAnalysis} />
+                            <FitScoreCard
+                                fitScore={fitResult.fitScore}
+                                fitAnalysis={fitResult.fitAnalysis}
+                                actionPlan={fitResult.actionPlan}
+                            />
                         )}
                     </div>
                 )}
