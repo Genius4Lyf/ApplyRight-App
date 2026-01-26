@@ -7,6 +7,13 @@ export const TEMPLATES = [
         thumbnail: 'bg-white border-2 border-slate-200'
     },
     {
+        id: 'student-ats',
+        name: 'Student ATS',
+        isPro: false,
+        description: 'Academic-focused layout with education first, perfect for students.',
+        thumbnail: 'bg-slate-50 border-2 border-[#2C3E50]'
+    },
+    {
         id: 'modern-professional',
         name: 'Modern Professional',
         isPro: false,
@@ -20,13 +27,6 @@ export const TEMPLATES = [
         description: 'Clean and professional, perfect for corporate roles.',
         thumbnail: 'bg-indigo-50 border-indigo-200'
         // In a real app, thumbnail would be an image URL. Using CSS classes for colorful placeholders.
-    },
-    {
-        id: 'student-ats',
-        name: 'Student ATS',
-        isPro: false,
-        description: 'Academic-focused layout with education first, perfect for students.',
-        thumbnail: 'bg-slate-50 border-2 border-[#2C3E50]'
     },
     {
         id: 'minimal',
