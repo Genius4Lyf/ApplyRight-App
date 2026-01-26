@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
-const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
+const ModernCleanTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
     if (!markdown || typeof markdown !== 'string') {
         return (
@@ -13,18 +13,15 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     }
 
     // Extract name from markdown (first H1) or use profile
-    // Logic: If markdown has valid name (not generic placeholder), use it. Else fallback to profile.
     let name = 'YOUR NAME';
     try {
         const nameMatch = markdown.match(/^#\s+(.+)/m);
-        // Basic heuristic: if match is generic, ignore it
         const extractedName = nameMatch ? nameMatch[1] : null;
         const isGeneric = extractedName && (extractedName.includes('YOUR NAME') || extractedName.includes('[Full Name'));
 
         if (extractedName && !isGeneric) {
             name = extractedName;
         } else if (userProfile?.firstName) {
-            // FALLBACK TO PROFILE
             const parts = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean);
             name = parts.join(' ').toUpperCase();
         }
@@ -32,18 +29,14 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
         console.error('Error extracting name:', error);
     }
 
-    // Get role title from profile (safely)
+    // Get role title from profile
     const roleTitle = userProfile?.currentJobTitle || '';
 
-    // Build contact info line from profile (safely)
-    // PRIORITIZE PROFILE DATA as it is verified/onboarded
+    // Build contact info from profile
     const contactParts = [];
     try {
         if (userProfile?.email) contactParts.push(userProfile.email);
         if (userProfile?.phone) contactParts.push(userProfile.phone);
-        // Location is not in onboarding yet but good to keep if available
-        if (userProfile?.location) contactParts.push(userProfile.location);
-
         if (userProfile?.portfolioUrl) {
             contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
         }
@@ -55,7 +48,7 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     }
     const contactInfo = contactParts.join(' | ');
 
-    // Remove first H1 from markdown body as we render it in the header
+    // Remove first H1 from markdown body as we'll render it in the header
     let bodyMarkdown = markdown;
     try {
         bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
@@ -64,36 +57,34 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-10 font-['Inter',sans-serif] text-[#333333] leading-relaxed text-[10.5pt]">
+        <div className="bg-white max-w-[800px] mx-auto font-['Inter',sans-serif] text-slate-900 leading-relaxed">
             {/* INJECT FONTS */}
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             `}</style>
 
             {/* HEADER */}
-            <header className="border-b-2 border-[#e5e5e5] pb-6 mb-6">
-                <h1 className="text-[28pt] font-bold uppercase tracking-tight text-[#111111] mb-2">
+            <header className="mb-8 pb-6">
+                <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight leading-none">
                     {name}
                 </h1>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between text-[#666666]">
-                    {roleTitle && (
-                        <div className="text-[12pt] font-semibold uppercase tracking-wider mb-2 md:mb-0">
-                            {roleTitle}
-                        </div>
-                    )}
+                {roleTitle && (
+                    <div className="text-lg font-medium text-indigo-600 mb-3 uppercase tracking-wide">
+                        {roleTitle}
+                    </div>
+                )}
 
-                    {contactInfo && (
-                        <div className="text-[10pt] flex flex-wrap gap-x-2">
-                            {contactParts.map((part, i) => (
-                                <React.Fragment key={i}>
-                                    <span className="whitespace-nowrap">{part}</span>
-                                    {i < contactParts.length - 1 && <span className="text-[#cccccc]">|</span>}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {contactInfo && (
+                    <div className="text-sm text-slate-600 flex flex-wrap gap-2">
+                        {contactParts.map((part, i) => (
+                            <React.Fragment key={i}>
+                                <span className="whitespace-nowrap">{part}</span>
+                                {i < contactParts.length - 1 && <span className="text-slate-300">|</span>}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                )}
             </header>
 
             {/* BODY */}
@@ -104,43 +95,47 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
                         h1: () => null,
 
                         // H2 = Section Headers
-                        // Grey background block for headers as a "modern" touch without using colors
                         h2: ({ node, ...props }) => (
-                            <h2 className="text-[11pt] font-bold uppercase tracking-widest text-[#111111] bg-[#f5f5f5] py-2 px-3 mt-8 mb-4 border-l-4 border-[#999999]" {...props} />
+                            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
                         ),
 
                         // H3 = Job Titles / Project Names
                         h3: ({ node, ...props }) => (
-                            <h3 className="text-[11pt] font-bold text-[#111111] mt-5 mb-1" {...props} />
+                            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />
                         ),
 
                         // H4 = Company / Degrees
                         h4: ({ node, ...props }) => (
-                            <h4 className="text-[11pt] font-medium text-[#444444] mb-2 italic" {...props} />
+                            <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />
                         ),
 
                         // Paragraphs
                         p: ({ node, ...props }) => (
-                            <p className="mb-3 text-justify text-[#333333]" {...props} />
+                            <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />
                         ),
 
                         // Lists
                         ul: ({ node, ...props }) => (
-                            <ul className="list-disc ml-5 mb-4 space-y-1" {...props} />
+                            <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />
                         ),
 
                         li: ({ node, ...props }) => (
-                            <li className="pl-1 marker:text-[#888888]" {...props} />
+                            <li className="pl-1 leading-normal" {...props} />
                         ),
 
                         // Strong
                         strong: ({ node, ...props }) => (
-                            <strong className="font-semibold text-[#111111]" {...props} />
+                            <strong className="font-semibold text-slate-900" {...props} />
                         ),
 
                         // Links
                         a: ({ node, ...props }) => (
-                            <a className="text-[#333333] underline decoration-[#cccccc] decoration-1 underline-offset-2" {...props} />
+                            <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />
+                        ),
+
+                        // Horizontal rule
+                        hr: ({ node, ...props }) => (
+                            <hr className="my-6 border-slate-100" {...props} />
                         ),
                     }}
                 >
@@ -151,4 +146,4 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     );
 };
 
-export default ModernProfessionalTemplate;
+export default ModernCleanTemplate;

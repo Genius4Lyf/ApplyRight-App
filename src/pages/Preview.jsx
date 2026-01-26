@@ -4,7 +4,7 @@ import { FileText, Mail, Download, Copy, Check, ArrowDownToLine, Share2, Sparkle
 
 import Modal from '../components/Modal';
 
-const Preview = ({ application, templateId = 'modern', isResumeModalOpen, onClose }) => {
+const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
     const [copied, setCopied] = useState(false);
 

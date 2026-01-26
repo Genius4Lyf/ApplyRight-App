@@ -1,11 +1,10 @@
 export const TEMPLATES = [
     {
-        id: 'modern',
-        name: 'Modern Clean',
+        id: 'ats-clean',
+        name: 'ATS Clean',
         isPro: false,
-        description: 'Clean and professional, perfect for corporate roles.',
-        thumbnail: 'bg-indigo-50 border-indigo-200'
-        // In a real app, thumbnail would be an image URL. Using CSS classes for colorful placeholders.
+        description: 'Minimal, single-column design optimized for ATS parsing.',
+        thumbnail: 'bg-white border-2 border-slate-200'
     },
     {
         id: 'modern-professional',
@@ -15,11 +14,12 @@ export const TEMPLATES = [
         thumbnail: 'bg-stone-100 border-l-4 border-stone-400'
     },
     {
-        id: 'ats-clean',
-        name: 'ATS Clean',
+        id: 'modern',
+        name: 'Modern Clean',
         isPro: false,
-        description: 'Minimal, single-column design optimized for ATS parsing.',
-        thumbnail: 'bg-white border-2 border-slate-200'
+        description: 'Clean and professional, perfect for corporate roles.',
+        thumbnail: 'bg-indigo-50 border-indigo-200'
+        // In a real app, thumbnail would be an image URL. Using CSS classes for colorful placeholders.
     },
     {
         id: 'student-ats',
@@ -27,13 +27,6 @@ export const TEMPLATES = [
         isPro: false,
         description: 'Academic-focused layout with education first, perfect for students.',
         thumbnail: 'bg-slate-50 border-2 border-[#2C3E50]'
-    },
-    {
-        id: 'classic',
-        name: 'Classic Serif',
-        isPro: false,
-        description: 'Traditional layout with serif fonts for academic or legal roles.',
-        thumbnail: 'bg-slate-50 border-slate-200'
     },
     {
         id: 'minimal',
@@ -55,6 +48,20 @@ export const TEMPLATES = [
         isPro: true,
         description: 'Sophisticated layout emphasizing experience and leadership.',
         thumbnail: 'bg-slate-800 border-slate-600'
+    },
+    {
+        id: 'swiss',
+        name: 'ApplyRight Swiss',
+        isPro: true,
+        description: 'Bold, grid-based design with ApplyRight gradient branding.',
+        thumbnail: 'bg-red-50 border-indigo-600' // Placeholder
+    },
+    {
+        id: 'luxury',
+        name: 'Elegant Luxury',
+        isPro: true,
+        description: 'High-end, prestigious design with serif fonts and gold accents.',
+        thumbnail: 'bg-amber-50 border-amber-300' // Placeholder
     },
     {
         id: 'tech',

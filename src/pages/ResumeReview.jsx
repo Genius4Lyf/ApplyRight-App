@@ -8,6 +8,13 @@ import { toast } from 'sonner';
 import ATSCleanTemplate from '../components/templates/ATSCleanTemplate';
 import StudentATSTemplate from '../components/templates/StudentATSTemplate';
 import ModernProfessionalTemplate from '../components/templates/ModernProfessionalTemplate';
+import ModernCleanTemplate from '../components/templates/ModernCleanTemplate';
+import MinimalistTemplate from '../components/templates/MinimalistTemplate';
+import CreativePortfolioTemplate from '../components/templates/CreativePortfolioTemplate';
+import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate';
+import TechStackTemplate from '../components/templates/TechStackTemplate';
+import SwissModernTemplate from '../components/templates/SwissModernTemplate';
+import ElegantLuxuryTemplate from '../components/templates/ElegantLuxuryTemplate';
 import { TEMPLATES } from '../data/templates';
 
 const ResumeReview = () => {
@@ -15,7 +22,7 @@ const ResumeReview = () => {
     const navigate = useNavigate();
     const [application, setApplication] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [templateId, setTemplateId] = useState('modern'); // Default to modern
+    const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
     const [userProfile, setUserProfile] = useState(null);
 
     useEffect(() => {
@@ -70,12 +77,26 @@ const ResumeReview = () => {
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex justify-center bg-slate-100/50">
                     <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
                         {/* THE CV CONTENT */}
-                        {templateId === 'modern-professional' ? (
+                        {templateId === 'modern' ? (
+                            <ModernCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'modern-professional' ? (
                             <ModernProfessionalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'ats-clean' ? (
                             <ATSCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'student-ats' ? (
                             <StudentATSTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'minimal' ? (
+                            <MinimalistTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'creative' ? (
+                            <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'executive' ? (
+                            <ExecutiveLeadTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'tech' ? (
+                            <TechStackTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'swiss' ? (
+                            <SwissModernTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'luxury' ? (
+                            <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : (
                             /* DEFAULT / OTHER TEMPLATES FALLBACK */
                             <ReactMarkdown

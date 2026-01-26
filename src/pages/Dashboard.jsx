@@ -18,7 +18,7 @@ const Dashboard = () => {
     const [generating, setGenerating] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [fitResult, setFitResult] = useState(null);
-    const [selectedTemplate, setSelectedTemplate] = useState('modern');
+    const [selectedTemplate, setSelectedTemplate] = useState('ats-clean');
     const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
 
     // Get user from local storage
@@ -234,6 +234,16 @@ const Dashboard = () => {
                             selectedTemplate={selectedTemplate}
                             onSelect={setSelectedTemplate}
                             userPlan={user.plan || 'free'}
+                            onPreview={() => {
+                                console.log("Attempting navigation. App:", application);
+                                if (application?._id || application?.id || application?.applicationId) {
+                                    navigate(`/resume/${application._id || application.id || application.applicationId}`);
+                                } else {
+                                    console.error("Navigation failed: No Application ID", application);
+                                    const keys = application ? Object.keys(application).join(', ') : 'null';
+                                    toast.error(`Error: ID missing. Available data: ${keys.substring(0, 50)}...`);
+                                }
+                            }}
                         />
                     </div>
                 )}

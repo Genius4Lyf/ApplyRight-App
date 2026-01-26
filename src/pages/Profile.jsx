@@ -62,8 +62,40 @@ const Profile = () => {
         }
     };
 
+    // Clean LinkedIn URL by removing UTM parameters and other tracking data
+    const cleanLinkedInUrl = (url) => {
+        if (!url) return url;
+
+        try {
+            // Check if it's a LinkedIn URL
+            if (!url.includes('linkedin.com')) return url;
+
+            // Add https:// if missing
+            let cleanUrl = url.trim();
+            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                cleanUrl = 'https://' + cleanUrl;
+            }
+
+            // Parse the URL and remove query parameters
+            const urlObj = new URL(cleanUrl);
+            // Keep only the protocol, hostname, and pathname (no query params)
+            return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
+        } catch (error) {
+            // If URL parsing fails, return as-is
+            return url;
+        }
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        // Clean LinkedIn URL on change
+        if (name === 'linkedinUrl') {
+            const cleanedUrl = cleanLinkedInUrl(value);
+            setFormData({ ...formData, [name]: cleanedUrl });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSave = async (e) => {

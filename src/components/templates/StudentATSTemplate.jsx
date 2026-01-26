@@ -49,19 +49,19 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[8.5in] mx-auto py-[0.75in] px-[0.75in] font-[Arial,sans-serif] text-black leading-[1.6] text-[11pt]">
+        <div className="bg-white max-w-[800px] mx-auto p-8 font-[Arial,sans-serif] text-black leading-[1.6] text-[11pt]">
             {/* HEADER - Matches HTML template exactly */}
-            <header className="text-center mb-5">
-                <h1 className="text-[16pt] font-bold mb-2 tracking-[1px] uppercase">
+            <header className="text-center mb-6">
+                <h1 className="text-[24pt] font-bold mb-3 tracking-tight uppercase">
                     {name}
                 </h1>
 
                 {contactInfo && (
-                    <div className="text-[11pt] mb-5">
+                    <div className="text-[10pt] text-[#555555] flex justify-center flex-wrap gap-2">
                         {contactParts.map((part, i) => (
                             <React.Fragment key={i}>
-                                {part}
-                                {i < contactParts.length - 1 && ' | '}
+                                <span className="whitespace-nowrap">{part}</span>
+                                {i < contactParts.length - 1 && <span className="text-[#cccccc]">|</span>}
                             </React.Fragment>
                         ))}
                     </div>

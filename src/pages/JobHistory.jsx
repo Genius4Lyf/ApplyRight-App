@@ -97,7 +97,7 @@ const JobHistory = () => {
                                     key={app._id}
                                     onClick={() => {
                                         setSelectedApp(app);
-                                        setSelectedTemplate(app.templateId || 'modern');
+                                        setSelectedTemplate(app.templateId || 'ats-clean');
                                         // Scroll to top on mobile when selecting
                                         if (window.innerWidth < 1024) {
                                             window.scrollTo({ top: 0, behavior: 'smooth' });
