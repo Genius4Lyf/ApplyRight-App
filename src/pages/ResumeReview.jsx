@@ -10,6 +10,7 @@ import StudentATSTemplate from '../components/templates/StudentATSTemplate';
 import ModernProfessionalTemplate from '../components/templates/ModernProfessionalTemplate';
 import ModernCleanTemplate from '../components/templates/ModernCleanTemplate';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
+import TemplateThumbnail from '../components/TemplateThumbnail';
 import CreativePortfolioTemplate from '../components/templates/CreativePortfolioTemplate';
 import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate';
 import TechStackTemplate from '../components/templates/TechStackTemplate';
@@ -182,7 +183,9 @@ const ResumeReview = () => {
                                         onClick={() => setTemplateId(t.id)}
                                         className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${templateId === t.id ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-slate-300'}`}
                                     >
-                                        <div className={`w-8 h-10 rounded border border-slate-200 mr-3 ${t.thumbnail.includes('bg-') ? t.thumbnail : 'bg-slate-50'}`}></div>
+                                        <div className="w-10 h-14 mr-3 flex-shrink-0">
+                                            <TemplateThumbnail type={t.id} className="rounded-sm" />
+                                        </div>
                                         <span className="text-sm font-medium text-slate-700 flex-1">{t.name}</span>
                                         {templateId === t.id && <Check size={16} className="text-indigo-600" />}
                                     </div>

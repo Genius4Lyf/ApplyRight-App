@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { TEMPLATES } from '../data/templates';
 import { CheckCircle, Lock, Sparkles, Star, FileText } from 'lucide-react';
 
+import TemplateThumbnail from './TemplateThumbnail';
+
 import { toast } from 'sonner';
+
 
 const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPreview }) => {
 
@@ -51,16 +54,11 @@ const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPre
                                 </div>
                             )}
                             {/* Mock Thumbnail / Preview Area */}
-                            <div className={`h-40 w-full ${template.thumbnail} flex items-center justify-center relative`}>
-                                {/* Abstract lines for "document" look */}
-                                <div className="w-16 h-20 bg-white shadow-sm flex flex-col gap-2 p-2">
-                                    <div className="w-full h-2 bg-slate-200 rounded-full"></div>
-                                    <div className="w-2/3 h-2 bg-slate-100 rounded-full"></div>
-                                    <div className="w-full h-2 bg-slate-100 rounded-full mt-2"></div>
-                                </div>
+                            <div className={`h-40 w-full bg-slate-50 flex items-center justify-center relative overflow-hidden group-hover:bg-indigo-50/30 transition-colors`}>
+                                <TemplateThumbnail type={template.id} />
 
                                 {template.isPro && (
-                                    <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full flex items-center shadow-sm">
+                                    <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full flex items-center shadow-sm z-10">
                                         <Star className="w-3 h-3 mr-1 fill-white" /> Pro
                                     </div>
                                 )}
