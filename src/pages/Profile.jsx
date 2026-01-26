@@ -14,6 +14,11 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        otherName: '',
+        phone: '',
+        portfolioUrl: '',
+        linkedinUrl: '',
+        currentJobTitle: '',
         currentStatus: 'student',
         graduationYear: '',
         university: '',
@@ -27,7 +32,7 @@ const Profile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await api.get('/auth/me');
+            const res = await api.get('/users/profile');
             const userData = res.data || {};
             setUser(userData);
 
@@ -38,6 +43,11 @@ const Profile = () => {
             setFormData({
                 firstName: userData.firstName || '',
                 lastName: userData.lastName || '',
+                otherName: userData.otherName || '',
+                phone: userData.phone || '',
+                portfolioUrl: userData.portfolioUrl || '',
+                linkedinUrl: userData.linkedinUrl || '',
+                currentJobTitle: userData.currentJobTitle || '',
                 currentStatus: userData.currentStatus || 'student',
                 graduationYear: education.graduationYear || '',
                 university: education.university || '',
@@ -63,6 +73,11 @@ const Profile = () => {
             const updatePayload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
+                otherName: formData.otherName,
+                phone: formData.phone,
+                portfolioUrl: formData.portfolioUrl,
+                linkedinUrl: formData.linkedinUrl,
+                currentJobTitle: formData.currentJobTitle,
                 currentStatus: formData.currentStatus,
                 education: {
                     graduationYear: formData.graduationYear,
@@ -74,7 +89,7 @@ const Profile = () => {
                 }
             };
 
-            const res = await api.put('/auth/profile', updatePayload);
+            const res = await api.put('/users/profile', updatePayload);
             setUser(res.data);
             // Update local storage to keep session in sync
             localStorage.setItem('user', JSON.stringify(res.data));
@@ -93,7 +108,7 @@ const Profile = () => {
     const handleUpgrade = async () => {
         if (confirm("Confirm upgrade to ApplyRight Pro? (Mock Payment)")) {
             try {
-                const res = await api.put('/auth/profile', { plan: 'paid' });
+                const res = await api.put('/users/profile', { plan: 'paid' });
                 setUser(res.data);
                 localStorage.setItem('user', JSON.stringify(res.data));
                 toast.success("Welcome to ApplyRight Pro!");
@@ -163,6 +178,70 @@ const Profile = () => {
                                         className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Other Name</label>
+                                    <input
+                                        type="text"
+                                        name="otherName"
+                                        value={formData.otherName}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="Optional"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Current Job Title</label>
+                                <input
+                                    type="text"
+                                    name="currentJobTitle"
+                                    value={formData.currentJobTitle}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Field Operator | Full Stack Developer"
+                                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Displayed prominently on your CV header.</p>
+                            </div>
+
+                            <div className="border-t border-slate-100 my-6 pt-6">
+                                <h3 className="text-md font-bold text-slate-900 mb-4">Contact Information</h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            placeholder="e.g. 09017134882"
+                                            className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Portfolio URL</label>
+                                        <input
+                                            type="url"
+                                            name="portfolioUrl"
+                                            value={formData.portfolioUrl}
+                                            onChange={handleChange}
+                                            placeholder="https://yourportfolio.com"
+                                            className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">LinkedIn Profile</label>
+                                        <input
+                                            type="url"
+                                            name="linkedinUrl"
+                                            value={formData.linkedinUrl}
+                                            onChange={handleChange}
+                                            placeholder="https://linkedin.com/in/yourprofile"
+                                            className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="mb-4">
@@ -216,6 +295,17 @@ const Profile = () => {
                                             value={formData.university}
                                             onChange={handleChange}
                                             placeholder="e.g. Stanford University"
+                                            className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Discipline</label>
+                                        <input
+                                            type="text"
+                                            name="discipline"
+                                            value={formData.discipline}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Computer Science"
                                             className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                         />
                                     </div>

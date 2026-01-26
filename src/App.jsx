@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import JobHistory from './pages/JobHistory';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
+import ResumeReview from './pages/ResumeReview';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useState, useEffect } from 'react';
 
@@ -63,6 +64,14 @@ const AnimatedRoutes = () => {
               <ErrorBoundary>
                 <Profile />
               </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume/:id"
+          element={
+            <ProtectedRoute>
+              <ResumeReview />
             </ProtectedRoute>
           }
         />

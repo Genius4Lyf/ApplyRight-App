@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarah Johnson - CV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #000;
+            background-color: #fff;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .contact-info {
+            font-size: 11pt;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #2C3E50;
+            padding-bottom: 4px;
+        }
+        
+        .job-title, .project-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        
+        .job-details, .education-details {
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+        
+        .job-details span, .education-details span {
+            font-style: normal;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 4px;
+        }
+        
+        .skills-row {
+            margin-bottom: 8px;
+        }
+        
+        .skills-label {
+            font-weight: bold;
+            display: inline;
+        }
+        
+        .skills-content {
+            display: inline;
+        }
+        
+        @media print {
+            body {
+                padding: 0.5in;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <h1>SARAH JOHNSON</h1>
+        <div class="contact-info">
+            123 University Ave, Boston, MA 02215 | (555) 123-4567 | sarah.johnson@email.com | linkedin.com/in/sarahjohnson
+        </div>
+    </div>
+
+    <!-- EDUCATION SECTION -->
+    <div class="section">
+        <h2 class="section-title">EDUCATION</h2>
+        <div class="job-title">Bachelor of Science in Computer Science</div>
+        <div class="education-details">Boston University, Boston, MA <span>| Expected Graduation: May 2026</span></div>
+        <ul>
+            <li>GPA: 3.7/4.0</li>
+            <li>Relevant Coursework: Data Structures, Algorithms, Database Systems, Web Development, Software Engineering, Machine Learning</li>
+        </ul>
+    </div>
+
+    <!-- EXPERIENCE SECTION -->
+    <div class="section">
+        <h2 class="section-title">EXPERIENCE</h2>
+        
+        <div class="job-title">Software Engineering Intern</div>
+        <div class="job-details">TechCorp Solutions, Cambridge, MA <span>| June 2025 - August 2025</span></div>
+        <ul>
+            <li>Developed and deployed a customer analytics dashboard using React and Node.js, improving data visualization efficiency by 40%</li>
+            <li>Collaborated with cross-functional team of 5 developers to implement RESTful APIs serving 10,000+ daily users</li>
+            <li>Reduced application load time by 25% through code optimization and database query improvements</li>
+        </ul>
+
+        <div class="job-title">Teaching Assistant - Introduction to Programming</div>
+        <div class="job-details">Boston University, Boston, MA <span>| September 2024 - Present</span></div>
+        <ul>
+            <li>Conduct weekly lab sessions for 30+ students, teaching Python fundamentals and problem-solving techniques</li>
+            <li>Grade assignments and provide detailed feedback to help students improve coding skills</li>
+            <li>Hold office hours to assist students with debugging and understanding core programming concepts</li>
+        </ul>
+    </div>
+
+    <!-- PROJECTS SECTION -->
+    <div class="section">
+        <h2 class="section-title">PROJECTS</h2>
+        
+        <div class="project-title">Campus Event Finder | React, Firebase, Google Maps API</div>
+        <ul>
+            <li>Built a web application for students to discover and share campus events with real-time updates</li>
+            <li>Implemented user authentication, event filtering by category, and location-based search functionality</li>
+        </ul>
+
+        <div class="project-title">Machine Learning Stock Predictor | Python, scikit-learn, pandas</div>
+        <ul>
+            <li>Developed a predictive model using historical stock data to forecast price trends with 72% accuracy</li>
+            <li>Utilized feature engineering and cross-validation techniques to optimize model performance</li>
+        </ul>
+    </div>
+
+    <!-- SKILLS SECTION -->
+    <div class="section">
+        <h2 class="section-title">SKILLS</h2>
+        
+        <div class="skills-row">
+            <div class="skills-label">Programming Languages:</div>
+            <div class="skills-content">Python, Java, JavaScript, SQL, C++, HTML/CSS</div>
+        </div>
+        
+        <div class="skills-row">
+            <div class="skills-label">Frameworks & Libraries:</div>
+            <div class="skills-content">React, Node.js, Express, Django, Flask, NumPy, pandas, scikit-learn</div>
+        </div>
+        
+        <div class="skills-row">
+            <div class="skills-label">Tools & Technologies:</div>
+            <div class="skills-content">Git, GitHub, Docker, MongoDB, PostgreSQL, Firebase, AWS, Agile/Scrum</div>
+        </div>
+        
+        <div class="skills-row">
+            <div class="skills-label">Soft Skills:</div>
+            <div class="skills-content">Problem-solving, Team collaboration, Communication, Time management, Leadership</div>
+        </div>
+    </div>
+
+    <!-- LEADERSHIP & ACTIVITIES SECTION -->
+    <div class="section">
+        <h2 class="section-title">LEADERSHIP & ACTIVITIES</h2>
+        
+        <div class="job-title">President, Computer Science Student Association</div>
+        <div class="job-details">Boston University <span>| September 2024 - Present</span></div>
+        <ul>
+            <li>Lead a team of 10 officers to organize hackathons, workshops, and networking events for 200+ members</li>
+        </ul>
+
+        <div class="job-title">Volunteer Tutor, Code for Good Initiative</div>
+        <div class="job-details">Community Center, Boston, MA <span>| January 2024 - Present</span></div>
+        <ul>
+            <li>Teach basic coding skills to underprivileged high school students, helping bridge the digital divide</li>
+        </ul>
+    </div>
+</body>
+</html>

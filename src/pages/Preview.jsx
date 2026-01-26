@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { FileText, Mail, Download, Copy, Check, ArrowDownToLine, Share2, Sparkles, MessageCircle, HelpCircle } from 'lucide-react';
 
-const Preview = ({ application, templateId = 'modern' }) => {
-    const [activeTab, setActiveTab] = useState('cl'); // 'cv' or 'cl'
+import Modal from '../components/Modal';
+
+const Preview = ({ application, templateId = 'modern', isResumeModalOpen, onClose }) => {
+    const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
     const [copied, setCopied] = useState(false);
 
     if (!application) return null;
 
     const handleCopy = () => {
-        const textToCopy = activeTab === 'cv' ? application.optimizedCV : application.coverLetter;
+        const textToCopy = activeTab === 'cl' ? application.coverLetter : (application.interviewQuestions?.map(q => q.question).join('\n') || '');
         navigator.clipboard.writeText(textToCopy);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -36,20 +38,8 @@ const Preview = ({ application, templateId = 'modern' }) => {
                 </div>
             </div>
 
-            <div className="clean-card p-0 overflow-hidden border-slate-200">
+            <div className="clean-card p-0 overflow-hidden border-slate-200 relative group">
                 <div className="flex border-b border-slate-200 bg-slate-50/50">
-                    {/*
-                    <button
-                        className={`flex-1 py-4 px-6 text-center font-semibold text-sm flex items-center justify-center transition-all ${activeTab === 'cv'
-                            ? 'text-indigo-600 bg-white border-b-2 border-indigo-600'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                            }`}
-                        onClick={() => setActiveTab('cv')}
-                    >
-                        <FileText className="w-4 h-4 mr-2" />
-                        ApplyRight AI Resume
-                    </button>
-                    */}
                     <button
                         className={`flex-1 py-4 px-6 text-center font-semibold text-sm flex items-center justify-center transition-all ${activeTab === 'cl'
                             ? 'text-indigo-600 bg-white border-b-2 border-indigo-600'
@@ -75,7 +65,7 @@ const Preview = ({ application, templateId = 'modern' }) => {
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-6">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {activeTab === 'cv' ? 'ApplyRight AI Resume Strategy' : 'Document Preview'}
+                            {activeTab === 'cl' ? 'Tailored Cover Letter' : 'Interview Preparation'}
                         </span>
                         <button
                             onClick={handleCopy}
@@ -146,21 +136,7 @@ const Preview = ({ application, templateId = 'modern' }) => {
                                                 'bg-slate-400'}
                          `}></div>
                             <div className="text-slate-700 leading-relaxed">
-                                {activeTab === 'cv' ? (
-                                    <ReactMarkdown
-                                        components={{
-                                            h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3 mt-6 text-slate-900 border-b pb-2" {...props} />,
-                                            h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-3 mt-6 text-slate-800" {...props} />,
-                                            h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2 mt-4 text-slate-800" {...props} />,
-                                            p: ({ node, ...props }) => <p className="mb-4 text-slate-700 leading-relaxed" {...props} />,
-                                            ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-4 space-y-1" {...props} />,
-                                            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                                        }}
-                                    >
-                                        {application.optimizedCV}
-                                    </ReactMarkdown>
-                                ) : (
+                                {activeTab === 'cl' && (
                                     <ReactMarkdown
                                         components={{
                                             h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />,
@@ -176,6 +152,51 @@ const Preview = ({ application, templateId = 'modern' }) => {
                     )}
                 </div>
             </div>
+
+            <Modal
+                isOpen={isResumeModalOpen}
+                onClose={onClose}
+                title="ApplyRight AI Resume"
+                maxWidth="max-w-4xl"
+                footer={
+                    <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={() => window.print()}
+                            className="btn-primary flex items-center"
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download as PDF
+                        </button>
+                    </div>
+                }
+            >
+                <div id="resume-content" className="p-8 bg-white min-h-[1000px]">
+                    <ReactMarkdown
+                        components={{
+                            h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
+                            h2: ({ node, ...props }) => (
+                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
+                            ),
+                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
+                            h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
+                            p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
+                            li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
+                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                            a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
+                            hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+                        }}
+                    >
+                        {application.optimizedCV}
+                    </ReactMarkdown>
+                </div>
+            </Modal>
         </div>
     );
 };

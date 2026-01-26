@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import Preview from './Preview';
@@ -9,6 +10,7 @@ import TemplateSelector from '../components/TemplateSelector';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const JobHistory = () => {
+    const navigate = useNavigate();
     const [applications, setApplications] = useState([]);
     const [selectedApp, setSelectedApp] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -240,10 +242,14 @@ const JobHistory = () => {
                                                     selectedTemplate={selectedTemplate}
                                                     onSelect={setSelectedTemplate}
                                                     userPlan={user.plan || 'free'}
+                                                    onPreview={() => navigate(`/resume/${selectedApp._id}`)}
                                                 />
                                             </div>
 
-                                            <Preview application={selectedApp} templateId={selectedTemplate} />
+                                            <Preview
+                                                application={selectedApp}
+                                                templateId={selectedTemplate}
+                                            />
                                         </div>
                                     </div>
                                 </div>

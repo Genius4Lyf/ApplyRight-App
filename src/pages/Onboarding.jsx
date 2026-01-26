@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { ArrowRight, CheckCircle, Sparkles, User, GraduationCap, Target } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles, User, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Onboarding = () => {
@@ -11,12 +11,14 @@ const Onboarding = () => {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        otherName: '',
+        phone: '',
+        linkedinUrl: '',
+        portfolioUrl: '',
         currentStatus: 'student',
         university: '',
         discipline: '',
-        graduationYear: '',
-        careerGoals: '',
-        skills: ''
+        graduationYear: ''
     });
 
     const handleChange = (e) => {
@@ -37,9 +39,18 @@ const Onboarding = () => {
         try {
             // Process comma-separated lists
             const payload = {
-                ...formData,
-                careerGoals: formData.careerGoals.split(',').map(item => item.trim()).filter(Boolean),
-                skills: formData.skills.split(',').map(item => item.trim()).filter(Boolean),
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                otherName: formData.otherName,
+                phone: formData.phone,
+                linkedinUrl: formData.linkedinUrl,
+                portfolioUrl: formData.portfolioUrl,
+                currentStatus: formData.currentStatus,
+                education: {
+                    university: formData.university,
+                    discipline: formData.discipline,
+                    graduationYear: formData.graduationYear
+                },
                 onboardingCompleted: true
             };
 
@@ -61,7 +72,7 @@ const Onboarding = () => {
                 {/* Progress Bar */}
                 <div className="mb-8">
                     <div className="flex justify-between mb-2">
-                        {['Basic Info', 'Education', 'Goals'].map((label, index) => (
+                        {['Basic Info', 'Education'].map((label, index) => (
                             <span
                                 key={label}
                                 className={`text-sm font-medium ${step > index ? 'text-primary' : step === index + 1 ? 'text-slate-900' : 'text-slate-400'}`}
@@ -73,28 +84,38 @@ const Onboarding = () => {
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-primary transition-all duration-500 ease-in-out"
-                            style={{ width: `${(step / 3) * 100}%` }}
+                            style={{ width: `${(step / 2) * 100}%` }}
                         ></div>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div className="bg-primary/5 p-8 text-center border-b border-primary/10">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-4 shadow-sm text-primary">
-                            {step === 1 && <User className="w-6 h-6" />}
-                            {step === 2 && <GraduationCap className="w-6 h-6" />}
-                            {step === 3 && <Target className="w-6 h-6" />}
+                    <div className="relative bg-primary/5 border-b border-primary/10 overflow-hidden">
+                        {/* Educational Background Pattern */}
+                        <div
+                            className="absolute inset-0 opacity-[0.15] z-0 pointer-events-none"
+                            style={{
+                                backgroundImage: `url('/educational-bg.png')`,
+                                backgroundSize: '400px', // Adjust size for better visibility of vector elements
+                                backgroundRepeat: 'repeat',
+                                backgroundPosition: 'center'
+                            }}
+                        />
+
+                        <div className="relative z-10 p-8 text-center">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-4 shadow-sm text-primary">
+                                {step === 1 && <User className="w-6 h-6" />}
+                                {step === 2 && <GraduationCap className="w-6 h-6" />}
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-900">
+                                {step === 1 && "Let's get to know you"}
+                                {step === 2 && "Your Academic Journey"}
+                            </h2>
+                            <p className="text-slate-500 mt-2">
+                                {step === 1 && "Tell us a bit about yourself to get started."}
+                                {step === 2 && "Help us tailor resources to your field of study."}
+                            </p>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900">
-                            {step === 1 && "Let's get to know you"}
-                            {step === 2 && "Your Academic Journey"}
-                            {step === 3 && "Career Aspirations"}
-                        </h2>
-                        <p className="text-slate-500 mt-2">
-                            {step === 1 && "Tell us a bit about yourself to get started."}
-                            {step === 2 && "Help us tailor resources to your field of study."}
-                            {step === 3 && "What kind of role are you aiming for?"}
-                        </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -123,6 +144,50 @@ const Onboarding = () => {
                                             required
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Other Name (Optional)</label>
+                                    <input
+                                        name="otherName"
+                                        value={formData.otherName}
+                                        onChange={handleChange}
+                                        className="input-field w-full"
+                                        placeholder="Middle Name"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                        <input
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="input-field w-full"
+                                            placeholder="+1 (555) 000-0000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Website (Optional)</label>
+                                        <input
+                                            name="portfolioUrl"
+                                            value={formData.portfolioUrl}
+                                            onChange={handleChange}
+                                            className="input-field w-full"
+                                            placeholder="https://portfolio.com"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">LinkedIn URL</label>
+                                    <input
+                                        name="linkedinUrl"
+                                        value={formData.linkedinUrl}
+                                        onChange={handleChange}
+                                        className="input-field w-full"
+                                        placeholder="https://linkedin.com/in/jane-doe"
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
@@ -178,32 +243,6 @@ const Onboarding = () => {
                             </div>
                         )}
 
-                        {step === 3 && (
-                            <div className="space-y-4 animate-fadeIn">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Target Roles (comma separated)</label>
-                                    <input
-                                        name="careerGoals"
-                                        value={formData.careerGoals}
-                                        onChange={handleChange}
-                                        className="input-field w-full"
-                                        placeholder="e.g. Software Engineer, Product Manager"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Key Skills (comma separated)</label>
-                                    <textarea
-                                        name="skills"
-                                        value={formData.skills}
-                                        onChange={handleChange}
-                                        className="input-field w-full h-24 resize-none"
-                                        placeholder="e.g. React, Python, Data Analysis..."
-                                    />
-                                </div>
-                            </div>
-                        )}
-
                         <div className="flex justify-between pt-6 border-t border-slate-100">
                             {step > 1 ? (
                                 <button
@@ -217,14 +256,13 @@ const Onboarding = () => {
                                 <div></div>
                             )}
 
-                            {step < 3 ? (
+                            {step < 2 ? (
                                 <button
                                     type="button"
                                     onClick={handleNext}
-                                    className="btn-primary"
+                                    className="btn-primary px-6 py-2 flex items-center"
                                 >
-                                    Continue
-                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                    Next <ArrowRight className="ml-2 w-4 h-4" />
                                 </button>
                             ) : (
                                 <button

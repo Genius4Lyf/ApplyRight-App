@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { TEMPLATES } from '../data/templates';
-import { CheckCircle, Lock, Sparkles, Star } from 'lucide-react';
+import { CheckCircle, Lock, Sparkles, Star, FileText } from 'lucide-react';
 
 import { toast } from 'sonner';
 
-const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free' }) => {
+const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPreview }) => {
 
     const handleSelect = (template) => {
         if (template.isPro && userPlan === 'free') {
@@ -34,6 +34,22 @@ const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free' }) => 
                                 ${isLocked ? 'opacity-90' : ''}
                             `}
                         >
+                            {/* Unlocked Overlay with "View CV" Trigger */}
+                            {!isLocked && (
+                                <div className="absolute inset-0 z-20 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-300 flex items-center justify-center">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSelect(template); // Ensure it selects too
+                                            if (onPreview) onPreview();
+                                        }}
+                                        className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-4 py-2 rounded-full shadow-lg font-bold text-sm flex items-center hover:scale-105"
+                                    >
+                                        <FileText className="w-4 h-4 mr-2 text-indigo-600" />
+                                        View CV
+                                    </button>
+                                </div>
+                            )}
                             {/* Mock Thumbnail / Preview Area */}
                             <div className={`h-40 w-full ${template.thumbnail} flex items-center justify-center relative`}>
                                 {/* Abstract lines for "document" look */}

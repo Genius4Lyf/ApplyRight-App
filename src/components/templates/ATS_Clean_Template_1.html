@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Clean CV Template</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --muted-color: #666666;
+            --accent-color: #666666; /* Same as muted per requirements */
+            --spacing-unit: 1.5rem;
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--primary-color);
+            background-color: #ffffff;
+            line-height: 1.5;
+            font-size: 11pt; /* Standard readable size */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 24pt;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .role-title {
+            font-size: 11pt;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .contact-info {
+            font-size: 10pt;
+            color: var(--accent-color);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .contact-info span:not(:last-child)::after {
+            content: "|";
+            margin-left: 0.5rem;
+            color: #cccccc;
+        }
+
+        /* SECTIONS */
+        section {
+            margin-bottom: var(--spacing-unit);
+        }
+
+        h2 {
+            font-size: 12pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary-color);
+            border-bottom: 1px solid #e5e5e5;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* CONTENT STYLES */
+        .entry {
+            margin-bottom: 1rem;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.25rem;
+        }
+
+        .entry-title {
+            font-weight: 700;
+            font-size: 11pt;
+        }
+
+        .entry-meta {
+            color: var(--muted-color);
+            font-size: 10pt;
+            font-weight: 500;
+        }
+
+        .entry-subtitle {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        p {
+            margin-bottom: 0.5rem;
+        }
+
+        ul {
+            list-style-type: disc;
+            margin-left: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* PRINT OPTIMIZATION */
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>UDOFIA DANIEL ANDIKAN</h1>
+            <div class="role-title">Field Operator | Full Stack Developer</div>
+            <div class="contact-info">
+                <span>udofiadaniel07@gmail.com</span>
+                <span>09017134882</span>
+                <span>https://genius4lyf.github.io/myportfolio</span>
+                <span>linkedin.com/in/udofiad</span>
+            </div>
+        </header>
+
+        <section>
+            <h2>Professional Summary</h2>
+            <p>
+                Dynamic and self-motivated professional with a strong foundation in both front-end and back-end development, 
+                including expertise in HTML, CSS, JavaScript, Node.js, Express.js, and MongoDB with Mongoose. 
+                Demonstrates excellent time management and communication abilities, both written and oral. 
+                Known for thinking outside the box to find innovative solutions and excelling as a team player. 
+                Committed to leveraging skills in software development to contribute effectively to collaborative projects 
+                while pursuing opportunities for continuous learning and growth.
+            </p>
+        </section>
+
+        <section>
+            <h2>Work History</h2>
+            
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Field Operator</div>
+                    <div class="entry-meta">Jan 2023 - Present</div>
+                </div>
+                <div class="entry-subtitle">SLB</div>
+                <ul>
+                    <li>Committed to prioritizing the safety and well-being of my team while leveraging cutting-edge technologies to optimize operational efficiency and performance by diligently following Safety Working Instructions.</li>
+                    <li>Utilizing innovative technologies Ensure that job executions are not only efficient but also conducted with utmost safety, reflecting SLB's commitment to excellence.</li>
+                </ul>
+            </div>
+
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Haulage Maintenance Officer</div>
+                    <div class="entry-meta">Jan 2021 - Jan 2023</div>
+                </div>
+                <div class="entry-subtitle">Matrix Energy Group</div>
+                <ul>
+                    <li>Operating of Plants to power up the building and equipments.</li>
+                    <li>Ensuring that my team of mechanics carry out their work effectively to ensure trucks are working properly for loading of products.</li>
+                </ul>
+            </div>
+            
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Maintenance Engineer</div>
+                    <div class="entry-meta">Jan 2015 - Jan 2017</div>
+                </div>
+                <div class="entry-subtitle">Cletus Electrical & Electronic Foundation</div>
+                <ul>
+                    <li>Wiring Design of Buildings and Installation of Electrical & Electronic appliances in homes & offices.</li>
+                    <li>Rewinding and Repairs of Electrical motors.</li>
+                    <li>Maintenance of Generators and Household appliances.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Skills</h2>
+            <ul>
+                <li><strong>Front-End Development:</strong> HTML, CSS, JavaScript, React</li>
+                <li><strong>Back-End Development:</strong> Node.js, Express.js, MongoDB with Mongoose</li>
+                <li>Self Motivated and a quick learner</li>
+                <li>Thinking outside the box to find solutions</li>
+                <li>Team player with excellent time management abilities</li>
+                <li>Strong communication abilities, including written and oral</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Projects</h2>
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Opsline Field Operator Web Tool (Opsline)</div>
+                </div>
+                <ul>
+                    <li>Developed specifically to support field operators in their ongoing learning and operational readiness.</li>
+                    <li>Intended as a supplementary tool to help new and existing field operators quickly adapt to job responsibilities ahead of formal GlobalTOPS training.</li>
+                    <li>Serves as a knowledge aid for self-paced learning and job preparation.</li>
+                    <li><strong>Scope:</strong> Faster Onboarding of New Operators, Increased Operational Efficiency via streamlined access to resources (Learning modules, job mobilization tools).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Education</h2>
+            
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Certification: Node.js, Express, MongoDB & More</div>
+                    <div class="entry-meta">Jan 2025</div>
+                </div>
+                <div class="entry-subtitle">Udemy</div>
+            </div>
+
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Electrical & Electronic Engineering</div>
+                    <div class="entry-meta">Jan 2019 - Jan 2021</div>
+                </div>
+                <div class="entry-subtitle">Petroleum Training Institute</div>
+                <div>GPA: 3.72/4.0</div>
+            </div>
+
+            <div class="entry">
+                <div class="entry-header">
+                    <div class="entry-title">Senior Secondary School Leaving Certificate</div>
+                    <div class="entry-meta">Jan 2012 - Jan 2015</div>
+                </div>
+                <div class="entry-subtitle">Twin Fountain School</div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

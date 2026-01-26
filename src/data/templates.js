@@ -8,6 +8,27 @@ export const TEMPLATES = [
         // In a real app, thumbnail would be an image URL. Using CSS classes for colorful placeholders.
     },
     {
+        id: 'modern-professional',
+        name: 'Modern Professional',
+        isPro: false,
+        description: 'Strict ATS-optimized layout. Single column, clean, and factual.',
+        thumbnail: 'bg-stone-100 border-l-4 border-stone-400'
+    },
+    {
+        id: 'ats-clean',
+        name: 'ATS Clean',
+        isPro: false,
+        description: 'Minimal, single-column design optimized for ATS parsing.',
+        thumbnail: 'bg-white border-2 border-slate-200'
+    },
+    {
+        id: 'student-ats',
+        name: 'Student ATS',
+        isPro: false,
+        description: 'Academic-focused layout with education first, perfect for students.',
+        thumbnail: 'bg-slate-50 border-2 border-[#2C3E50]'
+    },
+    {
         id: 'classic',
         name: 'Classic Serif',
         isPro: false,
