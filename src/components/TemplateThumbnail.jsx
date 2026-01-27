@@ -101,6 +101,59 @@ const TemplateThumbnail = ({ type, className = "" }) => {
                 </div>
             );
 
+        case 'minimal-serif':
+            return (
+                <div className={`${cardBase} p-3 items-center text-center`}>
+                    {/* Serif header vibe */}
+                    <div className="w-3/4 h-3 bg-slate-900 mb-2 font-serif"></div>
+                    <div className="w-1/4 h-1 bg-slate-400 mb-4 italic"></div>
+                    <div className="w-full space-y-1.5 text-justify">
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-5/6 h-1 bg-slate-300 mx-auto"></div>
+                        <div className="w-full h-1 bg-slate-300 mt-2"></div>
+                    </div>
+                </div>
+            );
+
+        case 'minimal-grid':
+            return (
+                <div className={`${cardBase} flex-row`}>
+                    {/* Sidebar Grid */}
+                    <div className="w-1/3 bg-slate-50 h-full border-r border-slate-200 p-1 pt-2">
+                        <div className="w-full h-2 bg-slate-900 mb-2"></div>
+                        <div className="w-1/2 h-1 bg-indigo-200 mb-4"></div>
+                        <div className="w-full h-0.5 bg-slate-200 mb-0.5"></div>
+                        <div className="w-3/4 h-0.5 bg-slate-200 mb-0.5"></div>
+                    </div>
+                    {/* Content */}
+                    <div className="w-2/3 p-2">
+                        <div className="w-1/4 h-1 bg-slate-400 mb-2 mt-2 uppercase"></div>
+                        <div className="w-full h-1 bg-slate-300 mb-1"></div>
+                        <div className="w-3/4 h-1 bg-slate-300 mb-1"></div>
+                        <div className="w-1/4 h-1 bg-slate-400 mb-2 mt-3 uppercase"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                    </div>
+                </div>
+            );
+
+        case 'minimal-mono':
+            return (
+                <div className={`${cardBase} p-2 font-mono`}>
+                    <div className="border-b border-dashed border-slate-300 pb-2 mb-2">
+                        <div className="w-3/4 h-2 bg-slate-900 mb-1"></div>
+                        <div className="w-1/2 h-1 bg-slate-500"></div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="bg-slate-50 p-0.5 w-1/3 h-1.5 mb-1"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="pl-1 border-l-2 border-slate-300">
+                            <div className="w-3/4 h-1 bg-slate-300"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
         case 'creative':
             return (
                 <div className={`${cardBase} p-2`}>

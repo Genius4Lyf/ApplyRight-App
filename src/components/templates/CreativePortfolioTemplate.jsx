@@ -1,5 +1,15 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+
+// Link detection helper
+const getIconForValue = (value) => {
+    if (value.includes('@')) return <Mail size={12} />;
+    if (value.match(/^\+?[\d\s\-\(\)]+$/) && value.length > 7) return <Phone size={12} />;
+    if (value.toLowerCase().includes('linkedin')) return <Linkedin size={12} />;
+    if (value.toLowerCase().includes('github')) return <Github size={12} />;
+    return <Globe size={12} />;
+};
 
 const CreativePortfolioTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
@@ -67,27 +77,28 @@ const CreativePortfolioTemplate = ({ markdown, userProfile }) => {
 
             {/* HEADER - Modern & Bold */}
             <header className="px-12 pt-10 pb-10 bg-slate-50 border-b border-indigo-100 mb-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="flex flex-col gap-6">
                     <div>
                         <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2 leading-tight">
                             {name}
                         </h1>
                         {roleTitle && (
-                            <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider rounded-full">
+                            <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider rounded-full mb-6">
                                 {roleTitle}
                             </div>
                         )}
-                    </div>
 
-                    {contactParts.length > 0 && (
-                        <div className="flex flex-col items-start md:items-end gap-1 text-sm text-slate-600 font-medium">
-                            {contactParts.map((part, i) => (
-                                <span key={i} className="hover:text-indigo-600 transition-colors">
-                                    {part}
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                        {contactParts.length > 0 && (
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600 font-medium">
+                                {contactParts.map((part, i) => (
+                                    <div key={i} className="flex items-center gap-2 hover:text-indigo-600 transition-colors bg-white px-2 py-1 rounded border border-slate-100 shadow-sm">
+                                        <span className="text-purple-500">{getIconForValue(part)}</span>
+                                        <span>{part}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -132,7 +143,7 @@ const CreativePortfolioTemplate = ({ markdown, userProfile }) => {
 
                         // Strong
                         strong: ({ node, ...props }) => (
-                            <strong className="font-bold text-slate-900 bg-indigo-50 px-1 rounded-sm" {...props} />
+                            <strong className="font-bold text-slate-900" {...props} />
                         ),
 
                         // Links

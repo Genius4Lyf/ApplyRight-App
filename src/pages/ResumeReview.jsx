@@ -10,6 +10,9 @@ import StudentATSTemplate from '../components/templates/StudentATSTemplate';
 import ModernProfessionalTemplate from '../components/templates/ModernProfessionalTemplate';
 import ModernCleanTemplate from '../components/templates/ModernCleanTemplate';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
+import MinimalistSerifTemplate from '../components/templates/MinimalistSerifTemplate';
+import MinimalistGridTemplate from '../components/templates/MinimalistGridTemplate';
+import MinimalistMonoTemplate from '../components/templates/MinimalistMonoTemplate';
 import TemplateThumbnail from '../components/TemplateThumbnail';
 import CreativePortfolioTemplate from '../components/templates/CreativePortfolioTemplate';
 import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate';
@@ -88,6 +91,12 @@ const ResumeReview = () => {
                             <StudentATSTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'minimal' ? (
                             <MinimalistTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'minimal-serif' ? (
+                            <MinimalistSerifTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'minimal-grid' ? (
+                            <MinimalistGridTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'minimal-mono' ? (
+                            <MinimalistMonoTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'creative' ? (
                             <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'executive' ? (

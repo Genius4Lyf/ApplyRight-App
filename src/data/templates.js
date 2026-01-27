@@ -30,14 +30,35 @@ export const TEMPLATES = [
     },
     {
         id: 'minimal',
-        name: 'Minimalist',
+        name: 'Minimalist Standard',
         isPro: false,
         description: 'Distraction-free design that focuses purely on content.',
         thumbnail: 'bg-stone-50 border-stone-200'
     },
     {
+        id: 'minimal-serif',
+        name: 'The Author',
+        isPro: false,
+        description: 'Elegant, book-like styling with serif typography.',
+        thumbnail: 'bg-stone-50 border-stone-200'
+    },
+    {
+        id: 'minimal-grid',
+        name: 'Nordic Grid',
+        isPro: false,
+        description: 'Structured 2-column layout with clean, swiss alignment.',
+        thumbnail: 'bg-stone-50 border-stone-200'
+    },
+    {
+        id: 'minimal-mono',
+        name: 'Typewriter',
+        isPro: false,
+        description: 'Raw, monospaced aesthetic for a technical feel.',
+        thumbnail: 'bg-stone-50 border-stone-200'
+    },
+    {
         id: 'creative',
-        name: 'Creative Portfolio',
+        name: 'ApplyRight Brilliance',
         isPro: true,
         description: 'Bold headers and colorful accents for design and marketing.',
         thumbnail: 'bg-purple-50 border-purple-200'
