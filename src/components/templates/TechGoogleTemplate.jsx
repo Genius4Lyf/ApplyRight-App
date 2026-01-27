@@ -13,11 +13,12 @@ const TechGoogleTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -52,14 +53,15 @@ const TechGoogleTemplate = ({ markdown, userProfile }) => {
 
                 {/* Contact Pills */}
                 <div className="mt-6 flex flex-wrap gap-3">
-                    {contactParts.map((part, i) => (
+                    {contactItems.map((item, i) => (
                         <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f1f3f4] text-xs font-medium text-[#5f6368] hover:bg-[#e8eaed] transition-colors">
                             {/* Icon Logic based on content if possible, simplistic here */}
-                            {i === 0 ? <span className="text-[#4285F4]">●</span> :
-                                i === 1 ? <span className="text-[#DB4437]">●</span> :
-                                    i === 2 ? <span className="text-[#F4B400]">●</span> :
-                                        <span className="text-[#0F9D58]">●</span>}
-                            {part}
+                            {i % 4 === 0 ? <item.icon size={14} className="text-[#4285F4]" /> :
+                                i % 4 === 1 ? <item.icon size={14} className="text-[#DB4437]" /> :
+                                    i % 4 === 2 ? <item.icon size={14} className="text-[#F4B400]" /> :
+                                        <item.icon size={14} className="text-[#0F9D58]" />}
+
+                            <span>{item.value}</span>
                         </div>
                     ))}
                 </div>

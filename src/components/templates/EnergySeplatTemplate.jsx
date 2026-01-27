@@ -13,11 +13,12 @@ const EnergySeplatTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -42,9 +43,10 @@ const EnergySeplatTemplate = ({ markdown, userProfile }) => {
             </header>
 
             <div className="bg-[#f8f9fa] px-10 py-3 text-sm flex flex-wrap gap-6 text-slate-500 font-medium">
-                {contactParts.map((part, i) => (
+                {contactItems.map((item, i) => (
                     <div key={i} className="flex items-center gap-2 hover:text-[#008751] transition-colors">
-                        <span className="text-[#008751] font-bold">›</span> {part}
+                        <item.icon size={16} className="text-[#008751]" />
+                        <span>{item.value}</span>
                     </div>
                 ))}
             </div>
