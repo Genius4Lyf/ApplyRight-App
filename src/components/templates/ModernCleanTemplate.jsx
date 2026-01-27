@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const ModernCleanTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
@@ -33,20 +34,17 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Build contact info from profile
-    const contactParts = [];
+    // Build contact info from profile
+    const contactItems = [];
     try {
-        if (userProfile?.email) contactParts.push(userProfile.email);
-        if (userProfile?.phone) contactParts.push(userProfile.phone);
-        if (userProfile?.portfolioUrl) {
-            contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-        }
-        if (userProfile?.linkedinUrl) {
-            contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
-        }
+        if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+        if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+        if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+        if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '') });
+        if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
     } catch (error) {
         console.error('Error building contact info:', error);
     }
-    const contactInfo = contactParts.join(' | ');
 
     // Remove first H1 from markdown body as we'll render it in the header
     let bodyMarkdown = markdown;
@@ -75,13 +73,14 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
                     </div>
                 )}
 
-                {contactInfo && (
-                    <div className="text-sm text-slate-600 flex flex-wrap gap-2">
-                        {contactParts.map((part, i) => (
-                            <React.Fragment key={i}>
-                                <span className="whitespace-nowrap">{part}</span>
-                                {i < contactParts.length - 1 && <span className="text-slate-300">|</span>}
-                            </React.Fragment>
+                {contactItems.length > 0 && (
+                    <div className="text-sm text-slate-600 flex flex-wrap gap-x-4 gap-y-2">
+                        {contactItems.map((item, i) => (
+                            <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+                                <item.icon size={13} className="text-indigo-500" />
+                                <span>{item.value}</span>
+                                {i < contactItems.length - 1 && <span className="text-slate-300 ml-2">|</span>}
+                            </div>
                         ))}
                     </div>
                 )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const MinimalistGridTemplate = ({ markdown, userProfile }) => {
     // Basic checks
@@ -20,12 +21,12 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Contact Info
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.location) contactParts.push(userProfile.location);
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
 
     // Remove first H1
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
@@ -45,10 +46,13 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
                     )}
 
                     <div className="space-y-4 text-[10px] font-medium text-slate-500 uppercase tracking-wider">
-                        {contactParts.map((part, i) => (
+                        {contactItems.map((item, i) => (
                             <div key={i} className="break-words">
-                                <span className="block text-slate-300 text-[8px] mb-0.5">Contact</span>
-                                {part}
+                                <span className="block text-slate-300 text-[8px] mb-0.5 flex items-center gap-1">
+                                    <item.icon size={8} className="text-slate-300" />
+                                    Contact
+                                </span>
+                                {item.value}
                             </div>
                         ))}
                     </div>

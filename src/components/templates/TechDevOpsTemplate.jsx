@@ -13,11 +13,12 @@ const TechDevOpsTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -46,10 +47,11 @@ const TechDevOpsTemplate = ({ markdown, userProfile }) => {
                         </div>
                     )}
 
-                    <div className="text-[#6a9955] text-xs">
-                        {contactParts.map((part, i) => (
-                            <span key={i} className="mr-6">
-                                // {part}
+                    <div className="text-[#6a9955] text-xs flex flex-wrap gap-6">
+                        {contactItems.map((item, i) => (
+                            <span key={i} className="flex items-center gap-2">
+                                <item.icon size={14} className="text-[#6a9955]" />
+                                // {item.value}
                             </span>
                         ))}
                     </div>

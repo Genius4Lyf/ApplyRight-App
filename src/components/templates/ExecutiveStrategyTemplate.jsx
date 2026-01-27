@@ -13,11 +13,12 @@ const ExecutiveStrategyTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -40,9 +41,10 @@ const ExecutiveStrategyTemplate = ({ markdown, userProfile }) => {
                     )}
 
                     <div className="flex flex-col gap-4 text-xs font-medium text-[#64748b]">
-                        {contactParts.map((part, i) => (
-                            <div key={i} className="break-words">
-                                {part}
+                        {contactItems.map((item, i) => (
+                            <div key={i} className="break-words flex items-center justify-end gap-2 text-right">
+                                <span>{item.value}</span>
+                                <item.icon size={14} className="text-[#0ea5e9]" />
                             </div>
                         ))}
                     </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const MinimalistMonoTemplate = ({ markdown, userProfile }) => {
     // Basic checks
@@ -20,11 +21,12 @@ const MinimalistMonoTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Contact Info
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
 
     // Remove first H1
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
@@ -47,9 +49,11 @@ const MinimalistMonoTemplate = ({ markdown, userProfile }) => {
                 )}
 
                 <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-                    {contactParts.map((part, i) => (
+                    {contactItems.map((item, i) => (
                         <div key={i} className="flex items-center gap-2">
-                            <span className="text-slate-400">[*]</span> {part}
+                            <span className="text-slate-400">[*]</span>
+                            <item.icon size={12} className="text-slate-500" />
+                            {item.value}
                         </div>
                     ))}
                 </div>

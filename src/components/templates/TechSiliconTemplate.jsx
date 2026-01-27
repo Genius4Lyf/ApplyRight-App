@@ -13,11 +13,12 @@ const TechSiliconTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -45,8 +46,11 @@ const TechSiliconTemplate = ({ markdown, userProfile }) => {
                     </div>
 
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 font-medium">
-                        {contactParts.map((part, i) => (
-                            <span key={i} className="hover:text-indigo-500 transition-colors cursor-pointer">{part}</span>
+                        {contactItems.map((item, i) => (
+                            <div key={i} className="flex items-center gap-2 hover:text-indigo-500 transition-colors cursor-pointer">
+                                <item.icon size={15} className="text-indigo-500 opacity-80" />
+                                {item.value}
+                            </div>
                         ))}
                     </div>
                 </div>

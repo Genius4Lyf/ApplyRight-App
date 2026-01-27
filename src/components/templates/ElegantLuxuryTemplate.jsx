@@ -33,16 +33,14 @@ const ElegantLuxuryTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Build contact info from profile
-    const contactParts = [];
+    // Build contact info from profile
+    const contactItems = [];
     try {
-        if (userProfile?.email) contactParts.push(userProfile.email);
-        if (userProfile?.phone) contactParts.push(userProfile.phone);
-        if (userProfile?.portfolioUrl) {
-            contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-        }
-        if (userProfile?.linkedinUrl) {
-            contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
-        }
+        if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+        if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+        if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+        if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '') });
+        if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
     } catch (error) {
         console.error('Error building contact info:', error);
     }
@@ -82,8 +80,11 @@ const ElegantLuxuryTemplate = ({ markdown, userProfile }) => {
 
                         {contactParts.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6 text-[11px] font-bold uppercase tracking-widest text-slate-400 px-8">
-                                {contactParts.map((part, i) => (
-                                    <span key={i} className="hover:text-[#c5a059] transition-colors">{part}</span>
+                                {contactItems.map((item, i) => (
+                                    <div key={i} className="flex items-center gap-1 hover:text-[#c5a059] transition-colors">
+                                        <item.icon size={11} className="text-[#c5a059]" />
+                                        <span>{item.value}</span>
+                                    </div>
                                 ))}
                             </div>
                         )}

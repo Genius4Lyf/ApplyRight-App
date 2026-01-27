@@ -13,11 +13,12 @@ const ExecutiveBoardTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -41,9 +42,10 @@ const ExecutiveBoardTemplate = ({ markdown, userProfile }) => {
                         )}
                     </div>
                     <div className="text-right text-xs font-['Merriweather_Sans',sans-serif] text-[#cbd5e1] leading-5">
-                        {contactParts.map((part, i) => (
+                        {contactItems.map((item, i) => (
                             <div key={i} className="flex items-center justify-end gap-2">
-                                <span>{part}</span>
+                                <span>{item.value}</span>
+                                <item.icon size={12} className="text-[#cbd5e1] opacity-70" />
                             </div>
                         ))}
                     </div>

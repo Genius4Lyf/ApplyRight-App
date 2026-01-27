@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
@@ -37,23 +38,17 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
 
     // Build contact info line from profile (safely)
     // PRIORITIZE PROFILE DATA as it is verified/onboarded
-    const contactParts = [];
+    // Build contact info from profile
+    const contactItems = [];
     try {
-        if (userProfile?.email) contactParts.push(userProfile.email);
-        if (userProfile?.phone) contactParts.push(userProfile.phone);
-        // Location is not in onboarding yet but good to keep if available
-        if (userProfile?.location) contactParts.push(userProfile.location);
-
-        if (userProfile?.portfolioUrl) {
-            contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-        }
-        if (userProfile?.linkedinUrl) {
-            contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
-        }
+        if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+        if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+        if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+        if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '') });
+        if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
     } catch (error) {
         console.error('Error building contact info:', error);
     }
-    const contactInfo = contactParts.join(' | ');
 
     // Remove first H1 from markdown body as we render it in the header
     let bodyMarkdown = markdown;
@@ -83,13 +78,14 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
                         </div>
                     )}
 
-                    {contactInfo && (
-                        <div className="text-[10pt] flex flex-wrap gap-x-2">
-                            {contactParts.map((part, i) => (
-                                <React.Fragment key={i}>
-                                    <span className="whitespace-nowrap">{part}</span>
-                                    {i < contactParts.length - 1 && <span className="text-[#cccccc]">|</span>}
-                                </React.Fragment>
+                    {contactItems.length > 0 && (
+                        <div className="text-[10pt] flex flex-wrap gap-x-4 gap-y-2">
+                            {contactItems.map((item, i) => (
+                                <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+                                    <item.icon size={12} className="text-[#666666]" />
+                                    <span>{item.value}</span>
+                                    {i < contactItems.length - 1 && <span className="text-[#cccccc] ml-2">|</span>}
+                                </div>
                             ))}
                         </div>
                     )}

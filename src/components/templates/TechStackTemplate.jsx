@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const TechStackTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
@@ -33,16 +34,14 @@ const TechStackTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Build contact info from profile
-    const contactParts = [];
+    // Build contact info from profile
+    const contactItems = [];
     try {
-        if (userProfile?.email) contactParts.push(userProfile.email);
-        if (userProfile?.phone) contactParts.push(userProfile.phone);
-        if (userProfile?.portfolioUrl) {
-            contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-        }
-        if (userProfile?.linkedinUrl) {
-            contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
-        }
+        if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+        if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+        if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+        if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '') });
+        if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
     } catch (error) {
         console.error('Error building contact info:', error);
     }
@@ -78,12 +77,13 @@ const TechStackTemplate = ({ markdown, userProfile }) => {
                     </div>
                 </div>
 
-                {contactParts.length > 0 && (
+                {contactItems.length > 0 && (
                     <div className="flex flex-wrap gap-x-6 gap-y-2 mt-2 text-sm text-slate-600 font-mono">
-                        {contactParts.map((part, i) => (
+                        {contactItems.map((item, i) => (
                             <div key={i} className="flex items-center gap-2">
                                 <span className="text-blue-500">./</span>
-                                {part}
+                                <item.icon size={14} className="text-blue-500" />
+                                {item.value}
                             </div>
                         ))}
                     </div>

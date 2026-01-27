@@ -13,11 +13,12 @@ const LuxuryGoldTemplate = ({ markdown, userProfile }) => {
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
-    const contactParts = [];
-    if (userProfile?.email) contactParts.push(userProfile.email);
-    if (userProfile?.phone) contactParts.push(userProfile.phone);
-    if (userProfile?.linkedinUrl) contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\//, ''));
-    if (userProfile?.portfolioUrl) contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
+    const contactItems = [];
+    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -44,8 +45,11 @@ const LuxuryGoldTemplate = ({ markdown, userProfile }) => {
                     )}
 
                     <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-400 font-medium tracking-wider uppercase">
-                        {contactParts.map((part, i) => (
-                            <span key={i} className="hover:text-amber-500 transition-colors cursor-default">{part}</span>
+                        {contactItems.map((item, i) => (
+                            <div key={i} className="flex items-center gap-1 hover:text-amber-500 transition-colors cursor-default">
+                                <item.icon size={12} className="text-amber-400" />
+                                <span>{item.value}</span>
+                            </div>
                         ))}
                     </div>
                 </div>

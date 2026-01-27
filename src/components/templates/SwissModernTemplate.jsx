@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 
 const SwissModernTemplate = ({ markdown, userProfile }) => {
     // Defensive checks
@@ -33,16 +34,14 @@ const SwissModernTemplate = ({ markdown, userProfile }) => {
     const roleTitle = userProfile?.currentJobTitle || '';
 
     // Build contact info from profile
-    const contactParts = [];
+    // Build contact info from profile
+    const contactItems = [];
     try {
-        if (userProfile?.email) contactParts.push(userProfile.email);
-        if (userProfile?.phone) contactParts.push(userProfile.phone);
-        if (userProfile?.portfolioUrl) {
-            contactParts.push(userProfile.portfolioUrl.replace(/^https?:\/\//, ''));
-        }
-        if (userProfile?.linkedinUrl) {
-            contactParts.push(userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
-        }
+        if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
+        if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
+        if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+        if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '') });
+        if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
     } catch (error) {
         console.error('Error building contact info:', error);
     }
@@ -82,12 +81,13 @@ const SwissModernTemplate = ({ markdown, userProfile }) => {
                                 )}
                             </div>
 
-                            {contactParts.length > 0 && (
+                            {contactItems.length > 0 && (
                                 <div className="flex flex-col items-start gap-1 text-sm font-bold text-slate-500">
-                                    {contactParts.map((part, i) => (
-                                        <span key={i} className="block hover:text-indigo-600 transition-colors cursor-default">
-                                            {part}
-                                        </span>
+                                    {contactItems.map((item, i) => (
+                                        <div key={i} className="flex items-center gap-2 hover:text-indigo-600 transition-colors cursor-default">
+                                            <item.icon size={16} className="text-slate-400 group-hover:text-indigo-600" />
+                                            <span>{item.value}</span>
+                                        </div>
                                     ))}
                                 </div>
                             )}
