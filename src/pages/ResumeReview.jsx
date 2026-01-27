@@ -28,6 +28,13 @@ import ExecutiveStrategyTemplate from '../components/templates/ExecutiveStrategy
 import ExecutiveCorporateTemplate from '../components/templates/ExecutiveCorporateTemplate';
 import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
 import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
+import TechGoogleTemplate from '../components/templates/TechGoogleTemplate';
+import ExecutiveEnergyTemplate from '../components/templates/ExecutiveEnergyTemplate';
+import EnergySLBTemplate from '../components/templates/EnergySLBTemplate';
+import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
+import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
+import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburtonTemplate';
+import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import { TEMPLATES } from '../data/templates';
 
 const ResumeReview = () => {
@@ -134,6 +141,20 @@ const ResumeReview = () => {
                             <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'tech-silicon' ? (
                             <TechSiliconTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'tech-google' ? (
+                            <TechGoogleTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'executive-energy' ? (
+                            <ExecutiveEnergyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'energy-slb' ? (
+                            <EnergySLBTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'energy-total' ? (
+                            <EnergyTotalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'energy-seplat' ? (
+                            <EnergySeplatTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'energy-halliburton' ? (
+                            <EnergyHalliburtonTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'energy-nlng' ? (
+                            <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : (
                             /* DEFAULT / OTHER TEMPLATES FALLBACK */
                             <ReactMarkdown

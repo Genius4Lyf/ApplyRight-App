@@ -375,6 +375,132 @@ const TemplateThumbnail = ({ type, className = "" }) => {
                 </div>
             );
 
+        case 'tech-google':
+            return (
+                <div className={`${cardBase} bg-white text-[0px]`}>
+                    <div className="flex w-full h-1">
+                        <div className="flex-1 bg-[#4285F4]"></div>
+                        <div className="flex-1 bg-[#DB4437]"></div>
+                        <div className="flex-1 bg-[#F4B400]"></div>
+                        <div className="flex-1 bg-[#0F9D58]"></div>
+                    </div>
+                    <div className="p-2.5">
+                        <div className="w-3/4 h-2 bg-[#202124] mb-2"></div>
+                        <div className="flex gap-1 mb-2">
+                            <div className="w-4 h-1 bg-[#f1f3f4] rounded-full"></div>
+                            <div className="w-4 h-1 bg-[#f1f3f4] rounded-full"></div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="w-full h-0.5 bg-[#5f6368]"></div>
+                            <div className="w-full h-0.5 bg-[#5f6368]"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+        case 'executive-energy':
+            return (
+                <div className={`${cardBase} bg-white border-t-2 border-[#003366] text-[0px]`}>
+                    <div className="p-2 border-b border-gray-200 bg-gray-50">
+                        <div className="w-2/3 h-2 bg-[#003366] mb-1"></div>
+                        <div className="w-1/3 h-0.5 bg-[#cc0000]"></div>
+                    </div>
+                    <div className="p-2 space-y-1">
+                        <div className="w-1/4 h-1 bg-[#003366] mb-1"></div>
+                        <div className="w-full h-0.5 bg-slate-400"></div>
+                        <div className="w-full h-0.5 bg-slate-400"></div>
+                    </div>
+                    <div className="absolute bottom-0 w-full h-0.5 bg-[#cc0000]"></div>
+                </div>
+            );
+
+        case 'energy-slb':
+            return (
+                <div className={`${cardBase} bg-white shadow-sm`}>
+                    <div className="bg-[#0114DC] w-full h-8 p-1.5 mb-2">
+                        <div className="w-1/2 h-1.5 bg-white opacity-90"></div>
+                        <div className="w-1/3 h-1 bg-white opacity-70 mt-1"></div>
+                    </div>
+                    <div className="px-2 space-y-1">
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-3/4 h-1 bg-slate-300"></div>
+                    </div>
+                    <div className="absolute bottom-0 w-full h-1.5 bg-[#010A71]"></div>
+                </div>
+            );
+
+        case 'energy-total':
+            return (
+                <div className={`${cardBase} bg-white`}>
+                    <div className="h-1.5 w-full bg-gradient-to-r from-[#D52B1E] via-[#FFD700] via-[#0F9D58] to-[#034EA2]"></div>
+                    <div className="p-2">
+                        <div className="w-2/3 h-2 bg-[#D52B1E] mb-1"></div>
+                        <div className="w-1/3 h-1 bg-[#034EA2] mb-3"></div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                                <div className="w-0.5 h-0.5 bg-[#D52B1E] rounded-full"></div>
+                                <div className="w-full h-0.5 bg-slate-400"></div>
+                            </div>
+                            <div className="w-full h-0.5 bg-slate-400"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+        case 'energy-seplat':
+            return (
+                <div className={`${cardBase} bg-white border-l-[6px] border-[#008751] pl-1`}>
+                    <div className="p-2 border-b border-gray-100 mb-1 flex justify-between items-center">
+                        <div className="w-1/2 h-2 bg-[#2d3436]"></div>
+                        <div className="w-1/4 h-1 bg-[#008751]"></div>
+                    </div>
+                    <div className="p-2 pt-1 space-y-1">
+                        <div className="flex gap-1">
+                            <div className="w-0.5 h-full bg-[#008751]"></div>
+                            <div className="w-full h-1 bg-slate-300"></div>
+                        </div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                    </div>
+                    <div className="absolute bottom-0 h-1 bg-[#008751] w-full ml-[-2px]"></div>
+                </div>
+            );
+
+        case 'energy-halliburton':
+            return (
+                <div className={`${cardBase} bg-white border-t-4 border-[#CC0000]`}>
+                    <div className="p-2 bg-[#f2f2f2] border-b border-slate-200 mb-2">
+                        <div className="w-3/4 h-2 bg-black mb-1"></div>
+                        <div className="w-1/2 h-1 bg-[#CC0000]"></div>
+                    </div>
+                    <div className="px-2 space-y-1">
+                        <div className="border-l-2 border-[#CC0000] pl-1">
+                            <div className="w-full h-1 bg-black mb-0.5"></div>
+                        </div>
+                        <div className="w-full h-1 bg-slate-400"></div>
+                    </div>
+                </div>
+            );
+
+        case 'energy-nlng':
+            return (
+                <div className={`${cardBase} bg-white`}>
+                    <div className="bg-[#23854B] h-2 w-full mb-1"></div>
+                    <div className="p-2">
+                        <div className="w-2/3 h-2 bg-[#23854B] mb-2"></div>
+                        <div className="flex gap-1 mb-2">
+                            <div className="w-1/3 h-1 bg-slate-300"></div>
+                            <div className="w-1/3 h-1 bg-slate-300"></div>
+                        </div>
+                        <div className="space-y-1 border-t border-slate-100 pt-1">
+                            <div className="w-full h-1 bg-slate-400"></div>
+                            <div className="w-3/4 h-1 bg-slate-400"></div>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-0 bg-[#23854B] h-1 w-full"></div>
+                </div>
+            );
+
         default:
             return (
                 <div className={`${cardBase} p-2`}>

@@ -153,5 +153,54 @@ export const TEMPLATES = [
         isPro: true,
         description: 'Modern startup vibe with subtle gradients and clean sans-serif.',
         thumbnail: 'bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-200'
+    },
+    {
+        id: 'tech-google',
+        name: 'Tech Titan',
+        isPro: true,
+        description: 'Clean, colorful design inspired by modern tech giants.',
+        thumbnail: 'bg-white border-t-4 border-blue-500'
+    },
+    {
+        id: 'executive-energy',
+        name: 'Energy Professional',
+        isPro: true,
+        description: 'Industrial strength design for Oil, Gas & Energy sectors.',
+        thumbnail: 'bg-white border-red-700'
+    },
+    {
+        id: 'energy-slb',
+        name: 'Schlumberger Style',
+        isPro: true,
+        description: 'Technical excellence inspired by SLB branding.',
+        thumbnail: 'bg-[#0114DC]'
+    },
+    {
+        id: 'energy-total',
+        name: 'Total Energy',
+        isPro: true,
+        description: 'Dynamic gradient design inspired by TotalEnergies.',
+        thumbnail: 'bg-white border-t-4 border-[#D52B1E]'
+    },
+    {
+        id: 'energy-seplat',
+        name: 'Seplat Green',
+        isPro: true,
+        description: 'Sustainable growth design inspired by Seplat.',
+        thumbnail: 'bg-white border-green-600'
+    },
+    {
+        id: 'energy-halliburton',
+        name: 'Halliburton Red',
+        isPro: true,
+        description: 'Bold industrial design inspired by Halliburton.',
+        thumbnail: 'bg-black border-red-600'
+    },
+    {
+        id: 'energy-nlng',
+        name: 'NLNG Professional',
+        isPro: true,
+        description: 'Clean corporate design inspired by NLNG.',
+        thumbnail: 'bg-white border-green-700'
     }
 ];
