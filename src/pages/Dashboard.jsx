@@ -4,7 +4,8 @@ import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
-import { Sparkles, LogOut, ChevronRight, CheckCircle, User, Briefcase } from 'lucide-react';
+import CVService from '../services/cv.service';
+import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
@@ -21,8 +22,25 @@ const Dashboard = () => {
     const [selectedTemplate, setSelectedTemplate] = useState('ats-clean');
     const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
 
+    // New Feature State
+    const [workflowMode, setWorkflowMode] = useState(null); // 'upload' or 'create'
+    const [myDrafts, setMyDrafts] = useState([]);
+
     // Get user from local storage
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+
+    useEffect(() => {
+        loadDrafts();
+    }, []);
+
+    const loadDrafts = async () => {
+        try {
+            const drafts = await CVService.getMyDrafts();
+            setMyDrafts(drafts);
+        } catch (error) {
+            console.error("Failed to load drafts", error);
+        }
+    };
 
     // Auto-analyze when both resume and job are available AND setting is enabled
     useEffect(() => {
@@ -175,7 +193,7 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                <div className="max-w-3xl mx-auto text-center mb-16 space-y-4">
+                <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
                     <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
                         Tailored for your career
                     </div>
@@ -187,13 +205,105 @@ const Dashboard = () => {
                     </p>
                 </div>
 
-                {/* Main Workflow Steps */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    <CVUploader onUploadSuccess={setResume} />
-                    <JobLinkInput onJobExtracted={setJob} />
-                </div>
+                {/* Workflow Selection Cards */}
+                {!workflowMode && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Option 1: Create New */}
+                        <div
+                            onClick={() => navigate('/cv-builder/new')}
+                            className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                                <PenTool className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Create a new CV</h3>
+                            <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
+                                Build a professional resume from scratch with our AI-powered wizard. We'll guide you step-by-step with tailored content.
+                            </p>
+                            <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
+                                Start Builder <ChevronRight className="w-5 h-5 ml-1" />
+                            </div>
+                        </div>
 
-                {/* Fit Analysis Section */}
+                        {/* Option 2: Upload Existing */}
+                        <div
+                            onClick={() => setWorkflowMode('upload')}
+                            className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                                <UploadIcon className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Upload CV</h3>
+                            <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
+                                Already have a resume? Upload it to get an instant AI analysis and fit score against your target job description.
+                            </p>
+                            <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
+                                Upload PDF <ChevronRight className="w-5 h-5 ml-1" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
+                {!workflowMode && myDrafts.length > 0 && (
+                    <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                        <div className="flex items-center gap-2 mb-6 text-slate-900">
+                            <FileText className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-bold">My Recent CVs</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {myDrafts.map(draft => (
+                                <div
+                                    key={draft._id}
+                                    onClick={() => navigate(`/cv-builder/${draft._id}`)}
+                                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+                                >
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+                                            {new Date(draft.updatedAt).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">
+                                        {draft.title || 'Untitled CV'}
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mb-4 line-clamp-2">
+                                        {draft.professionalSummary || 'No summary yet...'}
+                                    </p>
+                                    <div className="text-xs font-semibold text-indigo-600 flex items-center group-hover:underline decoration-indigo-200 underline-offset-4">
+                                        Continue Editing <ChevronRight className="w-3 h-3 ml-1" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Active Upload Workflow */}
+                {workflowMode === 'upload' && (
+                    <div className="animate-in fade-in zoom-in-95 duration-300">
+                        <button
+                            onClick={() => setWorkflowMode(null)}
+                            className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
+                        </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                            <CVUploader onUploadSuccess={setResume} />
+                            <JobLinkInput onJobExtracted={setJob} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Link to Fit Analysis & Preview only show in 'upload' mode if we have results, 
+                    OR if we just finished analysis. But logic below relies on 'fitResult'.
+                    We only show these sections if we are in 'upload' mode OR if we have results active.
+                    Ideally, if switching to 'create', we clear this state, but for now let's keep it simple.
+                 */}
                 {(analyzing || fitResult) && (
                     <div id="analysis-section" className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -255,51 +365,55 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* Final Generation Stage */}
-                <div className="relative pt-8 flex flex-col items-center">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
+                {/* Final Generation Stage - Only show if in upload mode AND application not generated yet? 
+                    Actually, let's keep it visible if we are working on the upload flow.
+                */}
+                {workflowMode === 'upload' && (
+                    <div className="relative pt-8 flex flex-col items-center">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
 
-                    <div className="relative group">
-                        {(!resume || !job) && (
-                            <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
-                        )}
-
-                        <button
-                            onClick={handleGenerate}
-                            disabled={!resume || !job || generating}
-                            className={`
-                                relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                                ${!resume || !job
-                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                    : 'btn-primary hover:scale-105 active:scale-95'}
-                            `}
-                        >
-                            {generating ? (
-                                <>
-                                    <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                                    {analyzing ? 'Analyzing Match...' : 'Optimizing Application...'}
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="w-5 h-5 mr-3" />
-                                    {!fitResult ? "Generate Professional Assets" : "Regenerate Assets"}
-                                    <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                                </>
+                        <div className="relative group">
+                            {(!resume || !job) && (
+                                <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
                             )}
-                        </button>
-                    </div>
 
-                    {!resume || !job ? (
-                        <div className="mt-8 flex items-center gap-3 text-slate-400 font-medium bg-slate-50 px-6 py-3 rounded-full border border-slate-200">
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center text-[10px]">!</div>
-                            Please complete both steps to proceed
+                            <button
+                                onClick={handleGenerate}
+                                disabled={!resume || !job || generating}
+                                className={`
+                                    relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
+                                    ${!resume || !job
+                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                        : 'btn-primary hover:scale-105 active:scale-95'}
+                                `}
+                            >
+                                {generating ? (
+                                    <>
+                                        <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
+                                        {analyzing ? 'Analyzing Match...' : 'Optimizing Application...'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-5 h-5 mr-3" />
+                                        {!fitResult ? "Generate Professional Assets" : "Regenerate Assets"}
+                                        <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
+                            </button>
                         </div>
-                    ) : (
-                        <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
-                            {!fitResult && <><CheckCircle className="w-4 h-4" /> Ready for optimization</>}
-                        </p>
-                    )}
-                </div>
+
+                        {!resume || !job ? (
+                            <div className="mt-8 flex items-center gap-3 text-slate-400 font-medium bg-slate-50 px-6 py-3 rounded-full border border-slate-200">
+                                <div className="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center text-[10px]">!</div>
+                                Please complete both steps to proceed
+                            </div>
+                        ) : (
+                            <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
+                                {!fitResult && <><CheckCircle className="w-4 h-4" /> Ready for optimization</>}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {/* Auto-Analysis Modal */}
                 {showAutoAnalyzeModal && (

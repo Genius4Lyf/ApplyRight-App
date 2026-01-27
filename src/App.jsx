@@ -8,6 +8,15 @@ import JobHistory from './pages/JobHistory';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import ResumeReview from './pages/ResumeReview';
+import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
+import TargetJob from './pages/CVBuilder/TargetJob';
+import Heading from './pages/CVBuilder/Heading';
+import ProfessionalSummary from './pages/CVBuilder/ProfessionalSummary';
+import History from './pages/CVBuilder/History';
+import Projects from './pages/CVBuilder/Projects';
+import Education from './pages/CVBuilder/Education';
+import Skills from './pages/CVBuilder/Skills';
+import Finalize from './pages/CVBuilder/Finalize';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useState, useEffect } from 'react';
 
@@ -75,6 +84,23 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/cv-builder/:id/*"
+          element={
+            <ProtectedRoute>
+              <CVBuilderLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="target-job" element={<TargetJob />} />
+          <Route path="heading" element={<Heading />} />
+          <Route path="summary" element={<ProfessionalSummary />} />
+          <Route path="history" element={<History />} />
+          <Route path="projects" element={<Projects />} />
+          <Route path="education" element={<Education />} />
+          <Route path="skills" element={<Skills />} />
+          <Route path="finalize" element={<Finalize />} />
+        </Route>
 
         {/* Fallback to Landing Page */}
         <Route path="*" element={<Navigate to="/" replace />} />

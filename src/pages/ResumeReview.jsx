@@ -44,22 +44,63 @@ const ResumeReview = () => {
     const [loading, setLoading] = useState(true);
     const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
     const [userProfile, setUserProfile] = useState(null);
+    const [isDraftMode, setIsDraftMode] = useState(false);
 
     useEffect(() => {
-        const fetchApplication = async () => {
+        const loadData = async () => {
+            // Check if we are in "Draft Mode" (e.g. if the ID is a draft ID, or if we passed a query param, 
+            // but simpler: try fetching application, if fails, try fetching draft? 
+            // OR: distinguish via URL structure? 
+            // The route for drafts was not distinct in App.jsx: `/resume/:id`. 
+            // So we must try both or rely on the ID format.
+            // Strategy: Try Application first. If 404, try Draft.
+
+            setLoading(true);
             try {
-                const res = await api.get('/applications');
-                const app = res.data.find(a => a._id === id);
-                if (app) {
-                    setApplication(app);
-                    if (app.templateId) setTemplateId(app.templateId);
-                } else {
-                    toast.error("Application not found");
-                    navigate('/history');
+                // 1. Try fetching as Application (Standard flow)
+                try {
+                    const res = await api.get('/applications');
+                    const app = res.data.find(a => a._id === id);
+                    if (app) {
+                        setApplication(app);
+                        if (app.templateId) setTemplateId(app.templateId);
+                        return; // Found application, exit
+                    }
+                } catch (e) {
+                    // Ignore error, try next
                 }
+
+                // 2. Try fetching as Draft
+                const CVService = require('../services/cv.service').default;
+                const { generateMarkdownFromDraft } = require('../utils/markdownUtils');
+
+                try {
+                    const draft = await CVService.getDraftById(id);
+                    if (draft) {
+                        setIsDraftMode(true);
+                        // Convert draft to pseudo-application structure for the templates
+                        const { optimizedCV } = generateMarkdownFromDraft(draft);
+
+                        setApplication({
+                            _id: draft._id,
+                            optimizedCV: optimizedCV,
+                            jobId: draft.targetJob ? { title: draft.targetJob.title, company: 'Target Role' } : {},
+                            fitScore: 'N/A', // Drafts don't have fit scores yet usually
+                            status: 'draft',
+                            isDraft: true
+                        });
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Failed to load draft", e);
+                }
+
+                toast.error("Document not found");
+                navigate('/dashboard');
+
             } catch (error) {
-                console.error("Failed to load application", error);
-                toast.error("Failed to load application details");
+                console.error("Failed to load data", error);
+                toast.error("Failed to load document");
             } finally {
                 setLoading(false);
             }
@@ -75,10 +116,12 @@ const ResumeReview = () => {
         };
 
         if (id) {
-            fetchApplication();
+            loadData();
             fetchUserProfile();
         }
     }, [id, navigate]);
+
+
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -192,20 +235,38 @@ const ResumeReview = () => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                        {/* Suggestions Box */}
-                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-1">
-                                    <Sparkles size={18} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-indigo-900 text-sm">CV Suggestions</h3>
-                                    <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
-                                        Your fit score is <strong>{application.fitScore}%</strong>. This CV is optimized for {application.jobId?.title || 'the role'}.
-                                    </p>
+                        {/* Suggestions Box - Hide for drafts if no analysis */}
+                        {!isDraftMode && (
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-1">
+                                        <Sparkles size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-indigo-900 text-sm">CV Suggestions</h3>
+                                        <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+                                            Your fit score is <strong>{application.fitScore}%</strong>. This CV is optimized for {application.jobId?.title || 'the role'}.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+
+                        {isDraftMode && (
+                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600 mt-1">
+                                        <Check size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-emerald-900 text-sm">Draft Preview</h3>
+                                        <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+                                            You are viewing a live preview of your draft. Any changes made in the builder will appear here.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Actions */}
                         <div>
@@ -252,12 +313,21 @@ const ResumeReview = () => {
                     </div>
 
                     <div className="p-6 border-t border-slate-100 bg-slate-50">
-                        <button
-                            onClick={() => navigate('/history')}
-                            className="w-full btn-primary py-3 flex items-center justify-center gap-2"
-                        >
-                            Save & Return to History
-                        </button>
+                        {isDraftMode ? (
+                            <button
+                                onClick={() => navigate(`/cv-builder/${application._id}/finalize`)}
+                                className="w-full btn-secondary py-3 flex items-center justify-center gap-2"
+                            >
+                                <ChevronLeft size={16} /> Back to Edit
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate('/history')}
+                                className="w-full btn-primary py-3 flex items-center justify-center gap-2"
+                            >
+                                Save & Return to History
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

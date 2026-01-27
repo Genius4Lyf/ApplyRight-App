@@ -199,41 +199,21 @@ const Onboarding = () => {
                                             required
                                         />
                                     </div>
+                                    {/* Optional fields removed as per request to handle in Profile/CV Builder */}
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Website (Optional)</label>
-                                        <input
-                                            name="portfolioUrl"
-                                            value={formData.portfolioUrl}
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
+                                        <select
+                                            name="currentStatus"
+                                            value={formData.currentStatus}
                                             onChange={handleChange}
                                             className="input-field w-full"
-                                            placeholder="https://portfolio.com"
-                                        />
+                                        >
+                                            <option value="student">Student</option>
+                                            <option value="graduate">Recent Graduate</option>
+                                            <option value="professional">Professional</option>
+                                            <option value="other">Other</option>
+                                        </select>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">LinkedIn URL</label>
-                                    <input
-                                        name="linkedinUrl"
-                                        value={formData.linkedinUrl}
-                                        onChange={handleChange}
-                                        className="input-field w-full"
-                                        placeholder="https://linkedin.com/in/jane-doe"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
-                                    <select
-                                        name="currentStatus"
-                                        value={formData.currentStatus}
-                                        onChange={handleChange}
-                                        className="input-field w-full"
-                                    >
-                                        <option value="student">Student</option>
-                                        <option value="graduate">Recent Graduate</option>
-                                        <option value="professional">Professional</option>
-                                        <option value="other">Other</option>
-                                    </select>
                                 </div>
                             </div>
                         )}
