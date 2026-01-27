@@ -19,6 +19,15 @@ import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate
 import TechStackTemplate from '../components/templates/TechStackTemplate';
 import SwissModernTemplate from '../components/templates/SwissModernTemplate';
 import ElegantLuxuryTemplate from '../components/templates/ElegantLuxuryTemplate';
+import LuxuryRoyalTemplate from '../components/templates/LuxuryRoyalTemplate';
+import LuxuryChicTemplate from '../components/templates/LuxuryChicTemplate';
+import LuxuryClassicTemplate from '../components/templates/LuxuryClassicTemplate';
+import LuxuryGoldTemplate from '../components/templates/LuxuryGoldTemplate';
+import ExecutiveBoardTemplate from '../components/templates/ExecutiveBoardTemplate';
+import ExecutiveStrategyTemplate from '../components/templates/ExecutiveStrategyTemplate';
+import ExecutiveCorporateTemplate from '../components/templates/ExecutiveCorporateTemplate';
+import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
+import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
 import { TEMPLATES } from '../data/templates';
 
 const ResumeReview = () => {
@@ -107,6 +116,24 @@ const ResumeReview = () => {
                             <SwissModernTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : templateId === 'luxury' ? (
                             <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'luxury-royal' ? (
+                            <LuxuryRoyalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'luxury-chic' ? (
+                            <LuxuryChicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'luxury-classic' ? (
+                            <LuxuryClassicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'luxury-gold' ? (
+                            <LuxuryGoldTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'executive-board' ? (
+                            <ExecutiveBoardTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'executive-strategy' ? (
+                            <ExecutiveStrategyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'executive-corporate' ? (
+                            <ExecutiveCorporateTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'tech-devops' ? (
+                            <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                        ) : templateId === 'tech-silicon' ? (
+                            <TechSiliconTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : (
                             /* DEFAULT / OTHER TEMPLATES FALLBACK */
                             <ReactMarkdown
@@ -185,7 +212,7 @@ const ResumeReview = () => {
                         {/* Templates Selection */}
                         <div>
                             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Template Style</h3>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
                                 {TEMPLATES.map((t) => (
                                     <div
                                         key={t.id}

@@ -82,7 +82,56 @@ export const TEMPLATES = [
         name: 'Elegant Luxury',
         isPro: true,
         description: 'High-end, prestigious design with serif fonts and gold accents.',
-        thumbnail: 'bg-amber-50 border-amber-300' // Placeholder
+        thumbnail: 'bg-amber-50 border-amber-300'
+    },
+    {
+        id: 'luxury-royal',
+        name: 'Royal Elegance',
+        isPro: true,
+        description: 'Heavy serif headers, centered layout, deep gold palette. Traditional luxury.',
+        thumbnail: 'bg-slate-900 border-amber-400'
+    },
+    {
+        id: 'luxury-chic',
+        name: 'Modern Chic',
+        isPro: true,
+        description: 'High contrast, fashion-editorial vibe. Lots of whitespace.',
+        thumbnail: 'bg-white border-black'
+    },
+    {
+        id: 'luxury-classic',
+        name: 'Classic Slate',
+        isPro: true,
+        description: 'Muted tones, very traditional, understated wealth.',
+        thumbnail: 'bg-slate-100 border-slate-300'
+    },
+    {
+        id: 'luxury-gold',
+        name: 'Gilded Minimalist',
+        isPro: true,
+        description: 'Clean minimalist layout with a single, meaningful gold foil accent.',
+        thumbnail: 'bg-white border-b-4 border-amber-400'
+    },
+    {
+        id: 'executive-board',
+        name: 'Boardroom Director',
+        isPro: true,
+        description: 'Dense, structured layout with authoritarian dark blue headers.',
+        thumbnail: 'bg-blue-900 border-blue-700'
+    },
+    {
+        id: 'executive-strategy',
+        name: 'Strategic Vision',
+        isPro: true,
+        description: 'Modern corporate look with distinct sidebar for competencies.',
+        thumbnail: 'bg-slate-50 border-l-8 border-slate-600'
+    },
+    {
+        id: 'executive-corporate',
+        name: 'Corporate Clean',
+        isPro: true,
+        description: 'Authoritative, gray-scale design. Zero fluff, pure business.',
+        thumbnail: 'bg-gray-100 border-gray-400'
     },
     {
         id: 'tech',
@@ -90,5 +139,19 @@ export const TEMPLATES = [
         isPro: true,
         description: 'Optimized to highlight technical skills and project portfolios.',
         thumbnail: 'bg-blue-900 border-blue-500'
+    },
+    {
+        id: 'tech-devops',
+        name: 'DevOps Terminal',
+        isPro: true,
+        description: 'Dark-themed header with monospaced terminal fonts.',
+        thumbnail: 'bg-slate-900 border-green-500'
+    },
+    {
+        id: 'tech-silicon',
+        name: 'Silicon Valley',
+        isPro: true,
+        description: 'Modern startup vibe with subtle gradients and clean sans-serif.',
+        thumbnail: 'bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-200'
     }
 ];

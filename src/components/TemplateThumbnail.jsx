@@ -189,6 +189,52 @@ const TemplateThumbnail = ({ type, className = "" }) => {
                 </div>
             );
 
+        case 'executive-board':
+            return (
+                <div className={`${cardBase} bg-white flex flex-col text-[0px]`}>
+                    <div className="h-1/3 bg-blue-900 w-full p-2 flex flex-col justify-center">
+                        <div className="w-3/4 h-1.5 bg-white mb-1"></div>
+                        <div className="w-1/2 h-1 bg-blue-300"></div>
+                    </div>
+                    <div className="p-2 space-y-1">
+                        <div className="w-1/3 h-1 bg-blue-900 mb-1"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                    </div>
+                </div>
+            );
+
+        case 'executive-strategy':
+            return (
+                <div className={`${cardBase} bg-white flex flex-row text-[0px]`}>
+                    <div className="w-1/3 h-full bg-slate-100 border-r border-slate-300 p-1.5">
+                        <div className="w-full h-1.5 bg-slate-800 mb-2"></div>
+                        <div className="w-full h-px bg-slate-400 mb-1"></div>
+                        <div className="w-3/4 h-px bg-slate-400"></div>
+                    </div>
+                    <div className="w-2/3 p-1.5">
+                        <div className="w-1/4 h-1 bg-blue-500 mb-2 rounded-sm"></div>
+                        <div className="w-full h-1 bg-slate-300 mb-1"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                    </div>
+                </div>
+            );
+
+        case 'executive-corporate':
+            return (
+                <div className={`${cardBase} bg-white p-2 text-[0px]`}>
+                    <div className="border-b-2 border-slate-200 pb-2 mb-2">
+                        <div className="w-1/2 h-2 bg-slate-900 mb-1"></div>
+                        <div className="w-1/4 h-1 bg-slate-500"></div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="w-1/3 h-1 bg-slate-800 mb-1 border-b border-slate-200"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                        <div className="w-full h-1 bg-slate-300"></div>
+                    </div>
+                </div>
+            );
+
         case 'swiss':
             return (
                 <div className={`${cardBase} flex-row `}>
@@ -222,19 +268,109 @@ const TemplateThumbnail = ({ type, className = "" }) => {
                 </div>
             );
 
+        case 'luxury-royal':
+            return (
+                <div className={`${cardBase} bg-slate-900 border-amber-600 p-3 items-center text-center font-serif text-[0px]`}>
+                    <div className="w-10 h-10 rounded-full border border-amber-500 mb-2 mx-auto flex items-center justify-center">
+                        <div className="w-4 h-4 bg-amber-500 rounded-full opacity-50"></div>
+                    </div>
+                    <div className="w-3/4 h-1.5 bg-amber-500 mx-auto mb-1"></div>
+                    <div className="w-1/2 h-0.5 bg-amber-700 mx-auto mb-3"></div>
+                    <div className="w-full space-y-1">
+                        <div className="w-full h-0.5 bg-slate-700 box-border border-b border-amber-900"></div>
+                        <div className="w-full h-0.5 bg-slate-700 box-border border-b border-amber-900"></div>
+                    </div>
+                </div>
+            );
+
+        case 'luxury-chic':
+            return (
+                <div className={`${cardBase} bg-white border-black p-3 text-center flex flex-col justify-center text-[0px]`}>
+                    <div className="w-full flex flex-col justify-between mb-3 gap-0.5">
+                        <div className="w-full h-1 bg-black"></div>
+                        <div className="w-full h-1 bg-black"></div>
+                    </div>
+                    <div className="w-1/2 h-0.5 bg-black mx-auto mb-4"></div>
+                    <div className="space-y-1">
+                        <div className="w-full h-0.5 bg-slate-300"></div>
+                        <div className="w-full h-0.5 bg-slate-300"></div>
+                    </div>
+                </div>
+            );
+
+        case 'luxury-classic':
+            return (
+                <div className={`${cardBase} bg-slate-100 p-2 border-slate-300 text-[0px]`}>
+                    <div className="border-b border-slate-300 pb-2 mb-2 text-center">
+                        <div className="w-2/3 h-1.5 bg-slate-800 mx-auto"></div>
+                        <div className="w-1/3 h-0.5 bg-slate-500 mx-auto mt-1"></div>
+                    </div>
+                    <div className="space-y-1 px-1">
+                        <div className="w-full h-px bg-slate-400"></div>
+                        <div className="w-full h-px bg-slate-400"></div>
+                        <div className="w-3/4 h-px bg-slate-400"></div>
+                    </div>
+                </div>
+            );
+
+        case 'luxury-gold':
+            return (
+                <div className={`${cardBase} bg-white border-b-4 border-amber-400 p-3 text-center text-[0px]`}>
+                    <div className="w-3/4 h-2 bg-slate-900 mx-auto mb-2"></div>
+                    <div className="w-10 h-1 bg-amber-400 mx-auto mb-3 rounded-full"></div>
+                    <div className="bg-slate-50 p-1 space-y-1">
+                        <div className="w-full h-1 bg-slate-200"></div>
+                        <div className="w-full h-1 bg-slate-200"></div>
+                    </div>
+                </div>
+            );
+
         case 'tech':
             return (
-                <div className={`${cardBase} bg-slate-900 border-indigo-500`}>
-                    <div className="bg-slate-800 w-full h-4 mb-2 flex items-center px-1 gap-0.5">
+                <div className={`${cardBase} bg-slate-900 border-indigo-500 text-[0px]`}>
+                    <div className="bg-slate-800 w-full h-3 mb-1 flex items-center px-1 gap-0.5">
                         <div className="w-1 h-1 rounded-full bg-red-500"></div>
                         <div className="w-1 h-1 rounded-full bg-yellow-500"></div>
                         <div className="w-1 h-1 rounded-full bg-green-500"></div>
                     </div>
-                    <div className="px-2 space-y-1.5">
-                        <div className="w-1/2 h-1.5 bg-blue-400"></div>
+                    <div className="px-1.5 space-y-1">
+                        <div className="w-1/2 h-1 bg-blue-400"></div>
                         <div className="w-3/4 h-1 bg-slate-500"></div>
-                        <div className="w-full h-0.5 bg-slate-600 mt-2"></div>
+                        <div className="w-full h-0.5 bg-slate-600 mt-1"></div>
                         <div className="w-5/6 h-1 bg-green-400 opacity-60"></div>
+                    </div>
+                </div>
+            );
+
+        case 'tech-devops':
+            return (
+                <div className={`${cardBase} bg-[#1e1e1e] border-green-500 p-2 font-mono text-[0px]`}>
+                    <div className="text-green-500 text-[4px] mb-1">$ ./cv.sh</div>
+                    <div className="w-3/4 h-1 bg-[#ce9178] mb-1"></div>
+                    <div className="space-y-1">
+                        <div className="flex gap-1">
+                            <div className="w-0.5 h-0.5 bg-green-500 mt-0.5"></div>
+                            <div className="w-full h-0.5 bg-[#cccccc]"></div>
+                        </div>
+                        <div className="flex gap-1">
+                            <div className="w-0.5 h-0.5 bg-green-500 mt-0.5"></div>
+                            <div className="w-3/4 h-0.5 bg-[#cccccc]"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+        case 'tech-silicon':
+            return (
+                <div className={`${cardBase} bg-white overflow-hidden text-[0px]`}>
+                    <div className="absolute top-0 right-0 w-12 h-12 bg-blue-100 rounded-full blur-xl -mr-2 -mt-2"></div>
+                    <div className="p-2 relative z-10">
+                        <div className="w-3/4 h-2 bg-slate-900 mb-1"></div>
+                        <div className="w-8 h-1 bg-indigo-500 rounded-full mb-2"></div>
+                        <div className="space-y-1">
+                            <div className="w-3 h-3 bg-indigo-50 rounded mb-1 flex items-center justify-center text-[4px] text-indigo-500">#</div>
+                            <div className="w-full h-0.5 bg-slate-300"></div>
+                        </div>
                     </div>
                 </div>
             );
