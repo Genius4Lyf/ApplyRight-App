@@ -47,6 +47,7 @@ const ResumeReview = () => {
     const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
     const [userProfile, setUserProfile] = useState(null);
     const [isDraftMode, setIsDraftMode] = useState(false);
+    const [activeTab, setActiveTab] = useState('resume'); // 'resume' or 'cover-letter'
 
     useEffect(() => {
         const loadData = async () => {
@@ -130,99 +131,131 @@ const ResumeReview = () => {
             <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
                 {/* LEFT: Document Preview Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex justify-center bg-slate-100/50">
-                    <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
-                        {/* THE CV CONTENT */}
-                        {templateId === 'modern' ? (
-                            <ModernCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'modern-professional' ? (
-                            <ModernProfessionalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'ats-clean' ? (
-                            <ATSCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'student-ats' ? (
-                            <StudentATSTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'minimal' ? (
-                            <MinimalistTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'minimal-serif' ? (
-                            <MinimalistSerifTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'minimal-grid' ? (
-                            <MinimalistGridTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'minimal-mono' ? (
-                            <MinimalistMonoTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'creative' ? (
-                            <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'executive' ? (
-                            <ExecutiveLeadTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'tech' ? (
-                            <TechStackTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'swiss' ? (
-                            <SwissModernTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'luxury' ? (
-                            <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'luxury-royal' ? (
-                            <LuxuryRoyalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'luxury-chic' ? (
-                            <LuxuryChicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'luxury-classic' ? (
-                            <LuxuryClassicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'luxury-gold' ? (
-                            <LuxuryGoldTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'executive-board' ? (
-                            <ExecutiveBoardTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'executive-strategy' ? (
-                            <ExecutiveStrategyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'executive-corporate' ? (
-                            <ExecutiveCorporateTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'tech-devops' ? (
-                            <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'tech-silicon' ? (
-                            <TechSiliconTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'tech-google' ? (
-                            <TechGoogleTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'executive-energy' ? (
-                            <ExecutiveEnergyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'energy-slb' ? (
-                            <EnergySLBTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'energy-total' ? (
-                            <EnergyTotalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'energy-seplat' ? (
-                            <EnergySeplatTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'energy-halliburton' ? (
-                            <EnergyHalliburtonTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : templateId === 'energy-nlng' ? (
-                            <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={userProfile} />
-                        ) : (
-                            /* DEFAULT / OTHER TEMPLATES FALLBACK */
-                            <>
-                                <div className="bg-white p-12 shadow-sm min-h-screen">
-                                    <div className="mb-8 border-b border-slate-200 pb-6">
-                                        <h1 className="text-4xl font-extrabold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
-                                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                                            {userProfile?.email && <span>{userProfile.email}</span>}
-                                            {userProfile?.phone && <span>{userProfile.phone}</span>}
-                                            {userProfile?.city && <span>{userProfile.city}</span>}
-                                            {userProfile?.linkedin && <span>LinkedIn: {userProfile.linkedin}</span>}
+                    <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden relative">
+
+                        {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
+
+                        {activeTab === 'resume' ? (
+                            /* RESUME TEMPLATE RENDER */
+                            templateId === 'modern' ? (
+                                <ModernCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'modern-professional' ? (
+                                <ModernProfessionalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'ats-clean' ? (
+                                <ATSCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'student-ats' ? (
+                                <StudentATSTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'minimal' ? (
+                                <MinimalistTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'minimal-serif' ? (
+                                <MinimalistSerifTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'minimal-grid' ? (
+                                <MinimalistGridTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'minimal-mono' ? (
+                                <MinimalistMonoTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'creative' ? (
+                                <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'executive' ? (
+                                <ExecutiveLeadTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'tech' ? (
+                                <TechStackTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'swiss' ? (
+                                <SwissModernTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'luxury' ? (
+                                <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'luxury-royal' ? (
+                                <LuxuryRoyalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'luxury-chic' ? (
+                                <LuxuryChicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'luxury-classic' ? (
+                                <LuxuryClassicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'luxury-gold' ? (
+                                <LuxuryGoldTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'executive-board' ? (
+                                <ExecutiveBoardTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'executive-strategy' ? (
+                                <ExecutiveStrategyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'executive-corporate' ? (
+                                <ExecutiveCorporateTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'tech-devops' ? (
+                                <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'tech-silicon' ? (
+                                <TechSiliconTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'tech-google' ? (
+                                <TechGoogleTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'executive-energy' ? (
+                                <ExecutiveEnergyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'energy-slb' ? (
+                                <EnergySLBTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'energy-total' ? (
+                                <EnergyTotalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'energy-seplat' ? (
+                                <EnergySeplatTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'energy-halliburton' ? (
+                                <EnergyHalliburtonTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : templateId === 'energy-nlng' ? (
+                                <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                            ) : (
+                                /* DEFAULT / OTHER TEMPLATES FALLBACK */
+                                <>
+                                    <div className="bg-white p-12 shadow-sm min-h-screen">
+                                        <div className="mb-8 border-b border-slate-200 pb-6">
+                                            <h1 className="text-4xl font-extrabold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                                            <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                                                {userProfile?.email && <span>{userProfile.email}</span>}
+                                                {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                                {userProfile?.city && <span>{userProfile.city}</span>}
+                                                {userProfile?.linkedin && <span>LinkedIn: {userProfile.linkedin}</span>}
+                                            </div>
                                         </div>
+                                        <ReactMarkdown
+                                            components={{
+                                                h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
+                                                h2: ({ node, ...props }) => (
+                                                    <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
+                                                ),
+                                                h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
+                                                h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
+                                                p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
+                                                li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
+                                                strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                                                a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
+                                                hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+                                            }}
+                                        >
+                                            {application.optimizedCV}
+                                        </ReactMarkdown>
                                     </div>
+                                </>
+                            )
+                        ) : (
+                            /* COVER LETTER RENDER */
+                            <div className="bg-white min-h-screen">
+                                <div className="mb-8 border-b border-slate-200 pb-6">
+                                    {/* Simple Header for Cover Letter */}
+                                    <h1 className="text-3xl font-bold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                                    <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                                        {userProfile?.email && <span>{userProfile.email}</span>}
+                                        {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                    </div>
+                                </div>
+                                {application.coverLetter ? (
                                     <ReactMarkdown
                                         components={{
-                                            h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
-                                            h2: ({ node, ...props }) => (
-                                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
-                                            ),
-                                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
-                                            h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
-                                            p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
-                                            ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
-                                            li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
-                                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                                            a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
-                                            hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+                                            h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />,
+                                            h2: ({ node, ...props }) => <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />,
+                                            p: ({ node, ...props }) => <p className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif" {...props} />,
                                         }}
                                     >
-                                        {application.optimizedCV}
+                                        {application.coverLetter}
                                     </ReactMarkdown>
-                                </div>
-                            </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                        <p>No cover letter generated.</p>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -234,12 +267,29 @@ const ResumeReview = () => {
                             <ChevronLeft size={20} />
                         </button>
                         <div>
-                            <h2 className="font-bold text-slate-800">Review your CV</h2>
-                            <p className="text-xs text-slate-500">Final touches before applying</p>
+                            <h2 className="font-bold text-slate-800">Review Application</h2>
+                            <p className="text-xs text-slate-500">Edit and export your documents</p>
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
+
+                        {/* View Toggles */}
+                        <div className="bg-slate-100 p-1 rounded-lg flex">
+                            <button
+                                onClick={() => setActiveTab('resume')}
+                                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'resume' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Resume
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('cover-letter')}
+                                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'cover-letter' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Cover Letter
+                            </button>
+                        </div>
+
                         {/* Suggestions Box - Hide for drafts if no analysis */}
                         {!isDraftMode && (
                             <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
@@ -248,9 +298,9 @@ const ResumeReview = () => {
                                         <Sparkles size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-indigo-900 text-sm">CV Suggestions</h3>
+                                        <h3 className="font-bold text-indigo-900 text-sm">AI Analysis</h3>
                                         <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
-                                            Your fit score is <strong>{application.fitScore}%</strong>. This CV is optimized for {application.jobId?.title || 'the role'}.
+                                            Your fit score is <strong>{application.fitScore}%</strong>. This application is optimized for {application.jobId?.title || 'the role'}.
                                         </p>
                                     </div>
                                 </div>
@@ -284,37 +334,39 @@ const ResumeReview = () => {
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group"
                                 >
                                     <Download className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 mb-2" />
-                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">Download</span>
+                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">Download {activeTab === 'resume' ? 'CV' : 'Letter'}</span>
                                 </button>
                                 <button
                                     onClick={() => window.print()}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group"
                                 >
                                     <Printer className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 mb-2" />
-                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">Print</span>
+                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">Print {activeTab === 'resume' ? 'CV' : 'Letter'}</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Templates Selection */}
-                        <div>
-                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Template Style</h3>
-                            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
-                                {TEMPLATES.map((t) => (
-                                    <div
-                                        key={t.id}
-                                        onClick={() => setTemplateId(t.id)}
-                                        className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${templateId === t.id ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-slate-300'}`}
-                                    >
-                                        <div className="w-10 h-14 mr-3 flex-shrink-0">
-                                            <TemplateThumbnail type={t.id} className="rounded-sm" />
+                        {/* Templates Selection - Only relevant for Resume currently, maybe simple style for Cover Letter later */}
+                        {activeTab === 'resume' && (
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Template Style</h3>
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                                    {TEMPLATES.map((t) => (
+                                        <div
+                                            key={t.id}
+                                            onClick={() => setTemplateId(t.id)}
+                                            className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${templateId === t.id ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-slate-300'}`}
+                                        >
+                                            <div className="w-10 h-14 mr-3 flex-shrink-0">
+                                                <TemplateThumbnail type={t.id} className="rounded-sm" />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-700 flex-1">{t.name}</span>
+                                            {templateId === t.id && <Check size={16} className="text-indigo-600" />}
                                         </div>
-                                        <span className="text-sm font-medium text-slate-700 flex-1">{t.name}</span>
-                                        {templateId === t.id && <Check size={16} className="text-indigo-600" />}
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="p-6 border-t border-slate-100 bg-slate-50">
