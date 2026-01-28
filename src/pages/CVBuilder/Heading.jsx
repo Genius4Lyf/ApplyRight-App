@@ -18,7 +18,9 @@ const Heading = () => {
 
         // Auto-fill logic if fields are empty
         if (!initial.fullName && user?.firstName) {
-            initial.fullName = `${user.firstName} ${user.lastName || ''}`.trim();
+            // Combine First Name + Other Name + Last Name
+            const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
+            initial.fullName = nameParts.join(' ');
         }
         if (!initial.email && user?.email) {
             initial.email = user.email;

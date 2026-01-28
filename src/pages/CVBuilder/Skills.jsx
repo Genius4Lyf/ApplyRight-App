@@ -11,9 +11,9 @@ const Skills = () => {
         return <div className="p-8 text-center text-slate-500">Loading skills...</div>;
     }
 
-    // Parse skills from backend (objects) to string for input
+    // Parse skills from backend (expecting array of strings)
     const [skillsText, setSkillsText] = useState(
-        cvData.skills ? cvData.skills.map(s => (typeof s === 'object' ? s.type : s)).join(', ') : ''
+        cvData.skills ? cvData.skills.map(s => (typeof s === 'object' ? s.type || s.name : s)).join(', ') : ''
     );
 
     const handleChange = (e) => {
@@ -22,12 +22,12 @@ const Skills = () => {
 
     const onSubmit = (e) => {
         e.preventDefault();
-        // Convert string back to array of objects
+        // Convert string back to array of strings
         const skillsArray = skillsText
             .split(',')
             .map(s => s.trim())
-            .filter(s => s.length > 0)
-            .map(s => ({ type: s }));
+            .filter(s => s.length > 0);
+        // No need to map to objects anymore
 
         handleNext({ skills: skillsArray });
     };

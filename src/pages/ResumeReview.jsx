@@ -192,24 +192,37 @@ const ResumeReview = () => {
                             <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={userProfile} />
                         ) : (
                             /* DEFAULT / OTHER TEMPLATES FALLBACK */
-                            <ReactMarkdown
-                                components={{
-                                    h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
-                                    h2: ({ node, ...props }) => (
-                                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
-                                    ),
-                                    h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
-                                    h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
-                                    p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
-                                    ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
-                                    li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
-                                    strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                                    a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
-                                    hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
-                                }}
-                            >
-                                {application.optimizedCV}
-                            </ReactMarkdown>
+                            <>
+                                <div className="bg-white p-12 shadow-sm min-h-screen">
+                                    <div className="mb-8 border-b border-slate-200 pb-6">
+                                        <h1 className="text-4xl font-extrabold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                                            {userProfile?.email && <span>{userProfile.email}</span>}
+                                            {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                            {userProfile?.city && <span>{userProfile.city}</span>}
+                                            {userProfile?.linkedin && <span>LinkedIn: {userProfile.linkedin}</span>}
+                                        </div>
+                                    </div>
+                                    <ReactMarkdown
+                                        components={{
+                                            h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
+                                            h2: ({ node, ...props }) => (
+                                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
+                                            ),
+                                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
+                                            h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
+                                            p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
+                                            ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
+                                            li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
+                                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                                            a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
+                                            hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+                                        }}
+                                    >
+                                        {application.optimizedCV}
+                                    </ReactMarkdown>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>

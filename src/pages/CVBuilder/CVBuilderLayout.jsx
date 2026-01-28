@@ -83,6 +83,12 @@ const CVBuilderLayout = () => {
 
             // Fallback to first step
             if (id && id !== 'new') {
+                // Wait for data load before falling back
+                if (!cvData._id) {
+                    console.log('[CVBuilder Init] Waiting for data load before fallback...');
+                    return;
+                }
+
                 const fallbackPath = `/cv-builder/${id}/target-job`;
                 console.log('[CVBuilder Init] Navigating to fallback:', fallbackPath);
                 navigate(fallbackPath, { replace: true });
