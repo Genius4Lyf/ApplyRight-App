@@ -5,7 +5,15 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 
 const ProfessionalSummary = () => {
-    const { cvData, handleNext, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving } = context || {};
+
+    // Fallback if context is somehow missing (shouldn't happen in valid layout)
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
+    }
+
     const [summary, setSummary] = useState(cvData.professionalSummary || '');
     const [generating, setGenerating] = useState(false);
 
@@ -101,7 +109,7 @@ const ProfessionalSummary = () => {
                     disabled={saving}
                     className="btn-primary px-8 py-3 flex items-center gap-2"
                 >
-                    {saving ? 'Saving...' : 'Next: Work History'} <ArrowRight className="w-4 h-4" />
+                    {saving ? 'Saving...' : 'Review & Finish'} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </form>

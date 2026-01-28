@@ -32,9 +32,22 @@ const ProtectedRoute = ({ children }) => {
 const AnimatedRoutes = () => {
   const location = useLocation();
 
+  // Custom key function to prevent CVBuilderLayout from remounting on step changes
+  const getPageKey = (pathname) => {
+    if (pathname.startsWith('/cv-builder')) {
+      const parts = pathname.split('/');
+      // parts: ['', 'cv-builder', 'id', 'step']
+      // Return /cv-builder/id so switching steps doesn't trigger AnimatePresence remount
+      if (parts.length >= 3) {
+        return `/${parts[1]}/${parts[2]}`;
+      }
+    }
+    return pathname;
+  };
+
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location} key={getPageKey(location.pathname)}>
         {/* Landing Page Route */}
         <Route path="/" element={<LandingPage />} />
 

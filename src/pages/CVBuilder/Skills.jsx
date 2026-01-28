@@ -3,7 +3,14 @@ import { useOutletContext } from 'react-router-dom';
 import { Cpu, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const Skills = () => {
-    const { cvData, handleNext, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving } = context || {};
+
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading skills...</div>;
+    }
+
     // Parse skills from backend (objects) to string for input
     const [skillsText, setSkillsText] = useState(
         cvData.skills ? cvData.skills.map(s => (typeof s === 'object' ? s.type : s)).join(', ') : ''
@@ -65,7 +72,7 @@ const Skills = () => {
                     disabled={saving}
                     className="btn-primary px-8 py-3 flex items-center gap-2"
                 >
-                    {saving ? 'Saving...' : 'Review & Finish'} <ArrowRight className="w-4 h-4" />
+                    {saving ? 'Saving...' : 'Next: Summary'} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </form>

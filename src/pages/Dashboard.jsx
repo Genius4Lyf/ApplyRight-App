@@ -5,7 +5,7 @@ import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
 import CVService from '../services/cv.service';
-import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool } from 'lucide-react';
+import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
@@ -25,6 +25,8 @@ const Dashboard = () => {
     // New Feature State
     const [workflowMode, setWorkflowMode] = useState(null); // 'upload' or 'create'
     const [myDrafts, setMyDrafts] = useState([]);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [draftToDelete, setDraftToDelete] = useState(null);
 
     // Get user from local storage
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -39,6 +41,25 @@ const Dashboard = () => {
             setMyDrafts(drafts);
         } catch (error) {
             console.error("Failed to load drafts", error);
+        }
+    };
+
+    const handleDeleteClick = (e, draft) => {
+        e.stopPropagation(); // Prevent card click navigation
+        setDraftToDelete(draft);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await CVService.deleteDraft(draftToDelete._id);
+            toast.success('CV deleted successfully');
+            setDeleteModalOpen(false);
+            setDraftToDelete(null);
+            loadDrafts(); // Reload the list
+        } catch (error) {
+            console.error('Failed to delete draft', error);
+            toast.error('Failed to delete CV');
         }
     };
 
@@ -257,8 +278,7 @@ const Dashboard = () => {
                             {myDrafts.map(draft => (
                                 <div
                                     key={draft._id}
-                                    onClick={() => navigate(`/cv-builder/${draft._id}`)}
-                                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+                                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group"
                                 >
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
@@ -274,8 +294,20 @@ const Dashboard = () => {
                                     <p className="text-xs text-slate-500 mb-4 line-clamp-2">
                                         {draft.professionalSummary || 'No summary yet...'}
                                     </p>
-                                    <div className="text-xs font-semibold text-indigo-600 flex items-center group-hover:underline decoration-indigo-200 underline-offset-4">
-                                        Continue Editing <ChevronRight className="w-3 h-3 ml-1" />
+                                    <div className="flex items-center justify-between">
+                                        <div
+                                            onClick={() => navigate(`/cv-builder/${draft._id}`)}
+                                            className="text-xs font-semibold text-indigo-600 flex items-center group-hover:underline decoration-indigo-200 underline-offset-4 cursor-pointer"
+                                        >
+                                            Continue Editing <ChevronRight className="w-3 h-3 ml-1" />
+                                        </div>
+                                        <button
+                                            onClick={(e) => handleDeleteClick(e, draft)}
+                                            className="text-xs font-semibold text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors"
+                                            title="Delete CV"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -442,6 +474,43 @@ const Dashboard = () => {
                                     className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:scale-105"
                                 >
                                     Yes, enable auto-analysis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {deleteModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                                    <Trash2 className="w-6 h-6 text-rose-600" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2">Delete CV?</h3>
+                                    <p className="text-sm text-slate-600 leading-relaxed">
+                                        Are you sure you want to delete "{draftToDelete?.title || 'Untitled CV'}"? This action cannot be undone.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => {
+                                        setDeleteModalOpen(false);
+                                        setDraftToDelete(null);
+                                    }}
+                                    className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors"
+                                >
+                                    Delete
                                 </button>
                             </div>
                         </div>

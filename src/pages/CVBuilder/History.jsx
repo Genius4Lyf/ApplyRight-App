@@ -5,7 +5,14 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 
 const History = () => {
-    const { cvData, handleNext, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving } = context || {};
+
+    // Fallback if context is somehow missing
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+    }
     const [history, setHistory] = useState(cvData.experience || []);
     const [generatingIndex, setGeneratingIndex] = useState(null);
 

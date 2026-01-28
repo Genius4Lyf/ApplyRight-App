@@ -5,7 +5,14 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 
 const Projects = () => {
-    const { cvData, handleNext, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving } = context || {};
+
+    // Fallback if context is somehow missing
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
+    }
     const [projects, setProjects] = useState(cvData.projects || []);
     const [generatingIndex, setGeneratingIndex] = useState(null);
 

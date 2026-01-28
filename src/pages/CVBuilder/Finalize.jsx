@@ -4,7 +4,9 @@ import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Finalize = () => {
-    const { cvData, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleBack, saving } = context || {};
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -16,6 +18,10 @@ const Finalize = () => {
         // Navigate to ResumeReview page with the draft ID
         navigate(`/resume/${id}`);
     };
+
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading review...</div>;
+    }
 
     const isComplete = cvData.personalInfo?.fullName && cvData.experience?.length > 0;
 

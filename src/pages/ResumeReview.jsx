@@ -36,6 +36,8 @@ import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
 import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburtonTemplate';
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import { TEMPLATES } from '../data/templates';
+import { generateMarkdownFromDraft } from '../utils/markdownUtils';
+import CVService from '../services/cv.service';
 
 const ResumeReview = () => {
     const { id } = useParams();
@@ -48,13 +50,6 @@ const ResumeReview = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            // Check if we are in "Draft Mode" (e.g. if the ID is a draft ID, or if we passed a query param, 
-            // but simpler: try fetching application, if fails, try fetching draft? 
-            // OR: distinguish via URL structure? 
-            // The route for drafts was not distinct in App.jsx: `/resume/:id`. 
-            // So we must try both or rely on the ID format.
-            // Strategy: Try Application first. If 404, try Draft.
-
             setLoading(true);
             try {
                 // 1. Try fetching as Application (Standard flow)
@@ -71,9 +66,6 @@ const ResumeReview = () => {
                 }
 
                 // 2. Try fetching as Draft
-                const CVService = require('../services/cv.service').default;
-                const { generateMarkdownFromDraft } = require('../utils/markdownUtils');
-
                 try {
                     const draft = await CVService.getDraftById(id);
                     if (draft) {

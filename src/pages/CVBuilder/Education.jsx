@@ -3,7 +3,14 @@ import { useOutletContext } from 'react-router-dom';
 import { GraduationCap, ArrowRight, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 const Education = () => {
-    const { cvData, handleNext, handleBack, saving } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving } = context || {};
+
+    // Fallback if context is somehow missing
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading education...</div>;
+    }
     const [education, setEducation] = useState(cvData.education || []);
 
     const addEducation = () => {

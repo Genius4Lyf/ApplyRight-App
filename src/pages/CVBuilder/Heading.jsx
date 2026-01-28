@@ -3,7 +3,14 @@ import { useOutletContext } from 'react-router-dom';
 import { User, ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
 
 const Heading = () => {
-    const { cvData, handleNext, handleBack, saving, user } = useOutletContext();
+    // Safely destructure context
+    const context = useOutletContext();
+    const { cvData, handleNext, handleBack, saving, user } = context || {};
+
+    // Fallback if context is somehow missing
+    if (!cvData) {
+        return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
+    }
 
     // Initialize form data with draft data OR auto-fill from user profile
     const [formData, setFormData] = useState(() => {
@@ -277,7 +284,7 @@ const Heading = () => {
                     disabled={saving}
                     className="btn-primary px-8 py-3 flex items-center gap-2"
                 >
-                    {saving ? 'Saving...' : 'Next: Summary'} <ArrowRight className="w-4 h-4" />
+                    {saving ? 'Saving...' : 'Next: Work History'} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
 

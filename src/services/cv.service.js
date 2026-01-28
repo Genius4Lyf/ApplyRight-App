@@ -28,6 +28,12 @@ const CVService = {
             targetJob
         });
         return response.data.suggestions;
+    },
+
+    // Delete a draft CV
+    deleteDraft: async (id) => {
+        const response = await api.delete(`/cv/${id}`);
+        return response.data;
     }
 };
 
