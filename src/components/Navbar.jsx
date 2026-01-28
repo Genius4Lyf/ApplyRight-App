@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, History, Zap, User } from 'lucide-react';
+import { Sparkles, LogOut, History, Zap, User, Menu, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     let user = {};
     try {
@@ -24,14 +26,15 @@ const Navbar = () => {
     return (
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 z-50">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                         <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xl font-bold text-slate-900 tracking-tight">ApplyRight</span>
                 </div>
 
-                <div className="flex items-center gap-8">
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center gap-8">
                     <nav className="flex items-center gap-6">
                         <Link
                             to="/dashboard"
@@ -75,7 +78,70 @@ const Navbar = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Mobile Menu Toggle */}
+                <button
+                    className="md:hidden z-50 p-2 text-slate-600"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                    {isMobileMenuOpen ? <X /> : <Menu />}
+                </button>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="md:hidden bg-white border-b border-slate-200 overflow-hidden"
+                    >
+                        <div className="px-4 py-6 space-y-4">
+                            <Link
+                                to="/dashboard"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/dashboard') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                                <Zap className="w-5 h-5" />
+                                <span className="font-medium">Get Hired</span>
+                            </Link>
+                            <Link
+                                to="/history"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/history') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                                <History className="w-5 h-5" />
+                                <span className="font-medium">Job History</span>
+                            </Link>
+
+                            <div className="h-px bg-slate-100 my-2"></div>
+
+                            <Link
+                                to="/profile"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                    {user && user.firstName ? user.firstName[0].toUpperCase() : <User className="w-4 h-4" />}
+                                </div>
+                                <div>
+                                    <p className="font-medium text-slate-900">{user?.firstName || 'User'}</p>
+                                    <p className="text-xs text-slate-500">View Profile</p>
+                                </div>
+                            </Link>
+
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span className="font-medium">Sign Out</span>
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </header>
     );
 };

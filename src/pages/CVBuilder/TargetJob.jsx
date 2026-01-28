@@ -79,7 +79,7 @@ const TargetJob = () => {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="btn-primary px-8 py-3 flex items-center gap-2"
+                        className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
                     >
                         {saving ? 'Saving...' : 'Next Step'} <ArrowRight className="w-4 h-4" />
                     </button>

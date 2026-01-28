@@ -115,18 +115,18 @@ const ProfessionalSummary = () => {
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 flex justify-between">
+                <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
                     <button
                         type="button"
                         onClick={handleBack}
-                        className="px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                        className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
                     >
                         <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                     <button
                         type="submit"
                         disabled={saving}
-                        className="btn-primary px-8 py-3 flex items-center gap-2"
+                        className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
                     >
                         {saving ? 'Saving...' : 'Review & Finish'} <ArrowRight className="w-4 h-4" />
                     </button>

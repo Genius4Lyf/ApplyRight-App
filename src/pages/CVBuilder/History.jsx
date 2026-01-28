@@ -106,7 +106,7 @@ const History = () => {
                         </button>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
+                            <div className="md:col-span-1">
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Job Title</label>
                                 <input
                                     type="text"
@@ -116,7 +116,7 @@ const History = () => {
                                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                             </div>
-                            <div>
+                            <div className="md:col-span-1 pr-8 md:pr-0">
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company</label>
                                 <input
                                     type="text"
@@ -192,18 +192,18 @@ const History = () => {
                 </button>
             </div>
 
-            <div className="pt-6 border-t border-slate-100 flex justify-between">
+            <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
                 <button
                     type="button"
                     onClick={handleBack}
-                    className="px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                    className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
                 >
                     <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary px-8 py-3 flex items-center gap-2"
+                    className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
                 >
                     {saving ? 'Saving...' : 'Next: Projects'} <ArrowRight className="w-4 h-4" />
                 </button>

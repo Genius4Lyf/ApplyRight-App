@@ -273,7 +273,7 @@ const LandingPage = () => {
                             <span className="text-xl font-bold font-heading text-slate-900">ApplyRight</span>
                         </Link>
                         <div className="flex items-center gap-4">
-                            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Login</Link>
+                            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Login</Link>
                             <Link to="/register" className="btn-primary py-2 px-4 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
                                 Get Started
                             </Link>
@@ -297,7 +297,7 @@ const LandingPage = () => {
                             </a>
                         </div>
 
-                        <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight text-slate-900 mb-6 leading-tight">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight text-slate-900 mb-6 leading-tight">
                             Beat <span className="inline-flex justify-center min-w-[1ch]">
                                 <AnimatePresence mode="wait">
                                     <motion.span
@@ -479,7 +479,7 @@ const LandingPage = () => {
                         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
                             {/* Text Content */}
-                            <div className="relative z-10 order-2 lg:order-1">
+                            <div className="relative z-10">
                                 <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">Professional Output</h2>
                                 <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">
                                     Optimized for Robots. <br />
@@ -510,7 +510,7 @@ const LandingPage = () => {
                             </div>
 
                             {/* Visual Stack */}
-                            <div className="relative h-[500px] flex items-center justify-center order-1 lg:order-2 perspective-[1000px]">
+                            <div className="relative h-[500px] flex items-center justify-center perspective-[1000px]">
                                 {/* Abstract Decor */}
                                 <div className="absolute inset-0 bg-indigo-50/50 rounded-full blur-3xl scale-75"></div>
 

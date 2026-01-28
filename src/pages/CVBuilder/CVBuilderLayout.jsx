@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { Outlet, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '../../components/Navbar';
 import ATSGuide from '../../components/ATSGuide';
 import CVService from '../../services/cv.service';
@@ -197,8 +198,11 @@ const CVBuilderLayout = () => {
                     <div className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900">{cvData.title}</h2>
-                                <p className="text-sm text-slate-500">Step {currentStepIndex + 1} of {STEPS.length}: {currentStep?.label}</p>
+                                <h2 className="text-lg md:text-xl font-bold text-slate-900 line-clamp-1">{cvData.title}</h2>
+                                <p className="text-xs md:text-sm text-slate-500">
+                                    <span className="md:hidden">Step {currentStepIndex + 1} / {STEPS.length}</span>
+                                    <span className="hidden md:inline">Step {currentStepIndex + 1} of {STEPS.length}: {currentStep?.label}</span>
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -209,7 +213,7 @@ const CVBuilderLayout = () => {
                                 {showGuide ? 'Hide Guide' : 'Show Guide'}
                             </button>
                             {saving && <span className="text-xs text-indigo-600 animate-pulse flex items-center gap-1"><Save className="w-3 h-3" /> Saving...</span>}
-                            <div className="flex gap-1">
+                            <div className="hidden md:flex gap-1">
                                 {STEPS.map((s, idx) => (
                                     <div
                                         key={s.id}
@@ -221,19 +225,49 @@ const CVBuilderLayout = () => {
                     </div>
 
                     {/* Step Content */}
-                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[500px] p-8">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+                        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[500px] p-4 md:p-8">
                             <Outlet context={{ cvData, handleNext, handleBack, saving, user }} />
                         </div>
                     </div>
                 </div>
 
                 {/* Sidebar - ATS Guide */}
-                {showGuide && (
-                    <div className="w-96 hidden xl:block border-l border-slate-200 bg-white shadow-xl relative z-10 animate-in slide-in-from-right duration-300">
-                        <ATSGuide step={currentStep?.id || 'heading'} />
-                    </div>
-                )}
+                <AnimatePresence mode="wait">
+                    {showGuide && (
+                        <>
+                            {/* Mobile Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 xl:hidden"
+                                onClick={() => setShowGuide(false)}
+                            />
+
+                            {/* Guide Container */}
+                            <motion.div
+                                initial={{ x: '100%', opacity: 0.5 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.8 }}
+                                className="fixed inset-y-0 right-0 z-50 w-[90%] max-w-sm xl:static xl:w-96 xl:block border-l border-slate-200 bg-white shadow-2xl flex flex-col"
+                            >
+                                <div className="xl:hidden p-4 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+                                    <h3 className="font-bold text-indigo-900">ATS Best Practices</h3>
+                                    <button onClick={() => setShowGuide(false)} className="p-2 bg-white rounded-full shadow-sm text-slate-500 hover:text-slate-800">
+                                        <span className="sr-only">Close</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto">
+                                    <ATSGuide step={currentStep?.id || 'heading'} />
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

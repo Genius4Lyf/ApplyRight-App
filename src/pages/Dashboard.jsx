@@ -218,7 +218,7 @@ const Dashboard = () => {
                     <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
                         Tailored for your career
                     </div>
-                    <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
                         {getStatusMessage()}
                     </h2>
                     <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
