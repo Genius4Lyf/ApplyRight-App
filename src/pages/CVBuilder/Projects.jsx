@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { PenTool, ArrowRight, ArrowLeft, Plus, Trash2, Sparkles, RefreshCcw, Link as LinkIcon } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
+import ProjectsTutorial from './ProjectsTutorial';
 
 const Projects = () => {
     // Safely destructure context
@@ -15,6 +16,7 @@ const Projects = () => {
     }
     const [projects, setProjects] = useState(cvData.projects || []);
     const [generatingIndex, setGeneratingIndex] = useState(null);
+    const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
 
     const addProject = () => {
         setProjects([
@@ -35,18 +37,31 @@ const Projects = () => {
         setProjects(newProjects);
     };
 
-    const handleGenerateBullets = async (index) => {
+    const handleGenerateBullets = async (index, customInput = null) => {
         const proj = projects[index];
         if (!proj.title) {
             toast.error("Please enter a project title first.");
             return;
         }
 
+        // Context determination: Use customInput (from paste prompt) OR current text (manual rewrite trigger)
+        const textToRewrite = customInput || proj.description;
+        const lineCount = textToRewrite ? textToRewrite.split('\n').filter(line => line.trim().length > 5).length : 0;
+
+        // Validation for manual trigger (skip if it comes from the Paste Prompt "customInput")
+        if (!customInput && lineCount < 3) {
+            toast.error("Please write at least 3 bullet points before rewriting.");
+            return;
+        }
+
         setGeneratingIndex(index);
         try {
+            // Include custom text if optimized, or just link context
+            const context = `Rewrite/Improve these bullet points: "${textToRewrite}". Project Link: ${proj.link}`;
+
             const suggestions = await CVService.generateBullets(
                 proj.title,
-                `Project Link: ${proj.link}`,
+                context,
                 'project',
                 cvData.targetJob?.description
             );
@@ -55,12 +70,42 @@ const Projects = () => {
                 const formattedBullets = suggestions.map(s => `• ${s}`).join('\n');
                 handleChange(index, 'description', formattedBullets);
                 toast.success("Bullets generated!");
+                setOptimizationCandidate(null); // Clear prompt
             }
         } catch (error) {
             console.error("Failed to gen bullets", error);
             toast.error("Failed to generate project details");
         } finally {
             setGeneratingIndex(null);
+        }
+    };
+
+    const handlePaste = (e, index) => {
+        const pastedText = e.clipboardData.getData('text');
+        if (pastedText && pastedText.length > 30) {
+            setOptimizationCandidate({ index, text: pastedText });
+        }
+    };
+
+    const handleKeyDown = (e, index) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const textarea = e.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const value = textarea.value;
+            const newValue = value.substring(0, start) + '\n• ' + value.substring(end);
+            handleChange(index, 'description', newValue);
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + 3;
+            }, 0);
+        }
+    };
+
+    const handleFocus = (index) => {
+        const proj = projects[index];
+        if (!proj.description || proj.description.trim() === '') {
+            handleChange(index, 'description', '• ');
         }
     };
 
@@ -140,6 +185,38 @@ const Projects = () => {
                         </div>
 
                         <div>
+                            {/* Optimization Prompt */}
+                            {optimizationCandidate?.index === index && (
+                                <div className="mb-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                                    <div className="p-2 bg-emerald-100 rounded-full text-emerald-600">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-semibold text-emerald-900">Optimize Project Details?</h4>
+                                        <p className="text-xs text-emerald-700 mt-1">
+                                            Our AI can structure your rough notes into impressive professional achievements.
+                                        </p>
+                                        <div className="flex gap-2 mt-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleGenerateBullets(index, optimizationCandidate.text)}
+                                                disabled={generatingIndex === index}
+                                                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                                            >
+                                                {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOptimizationCandidate(null)}
+                                                className="text-xs text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-medium transition-colors"
+                                            >
+                                                Dismiss
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center mb-1">
                                 <label className="block text-xs font-bold text-slate-500 uppercase">Description / Bullets</label>
                                 <button
@@ -149,12 +226,24 @@ const Projects = () => {
                                     className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
                                 >
                                     {generatingIndex === index ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                                    {generatingIndex === index ? 'Generating...' : 'AI Suggestions'}
+                                    {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
                                 </button>
                             </div>
                             <textarea
                                 value={proj.description}
-                                onChange={(e) => handleChange(index, 'description', e.target.value)}
+                                onChange={(e) => {
+                                    let val = e.target.value;
+                                    if (val.length === 1 && !val.startsWith('•')) {
+                                        val = '• ' + val;
+                                        setTimeout(() => {
+                                            if (e.target) e.target.selectionStart = e.target.selectionEnd = val.length;
+                                        }, 0);
+                                    }
+                                    handleChange(index, 'description', val);
+                                }}
+                                onPaste={(e) => handlePaste(e, index)}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                onFocus={() => handleFocus(index)}
                                 placeholder="• Developed a full-stack app using..."
                                 className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
                             />
@@ -189,6 +278,9 @@ const Projects = () => {
                     {saving ? 'Saving...' : 'Next: Education'} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
+
+            {/* Tutorial Modal */}
+            <ProjectsTutorial />
         </form>
     );
 };
