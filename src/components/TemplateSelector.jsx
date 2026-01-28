@@ -1,23 +1,37 @@
 import React, { useState } from 'react';
 import { TEMPLATES } from '../data/templates';
-import { CheckCircle, Star, FileText } from 'lucide-react';
+import { CheckCircle, Star, FileText, ArrowRight } from 'lucide-react';
 
 import TemplateThumbnail from './TemplateThumbnail';
 
 import { toast } from 'sonner';
 
 
-const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPreview }) => {
+const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPreview, isCompact = false }) => {
 
     const handleSelect = (template) => {
         // Allow selection of all templates, including pro templates
         onSelect(template.id);
     };
 
+    // Filter templates if isCompact is true
+    const FEATURED_TEMPLATE_IDS = [
+        'ats-clean',
+        'student-ats',
+        'energy-slb',
+        'energy-nlng',
+        'energy-total'
+    ];
+
+    const displayTemplates = isCompact
+        ? TEMPLATES.filter(t => FEATURED_TEMPLATE_IDS.includes(t.id))
+        : TEMPLATES;
+
+
     return (
         <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {TEMPLATES.map((template) => {
+                {displayTemplates.map((template) => {
                     const isSelected = selectedTemplate === template.id;
 
                     return (
@@ -75,6 +89,22 @@ const TemplateSelector = ({ selectedTemplate, onSelect, userPlan = 'free', onPre
                         </div>
                     );
                 })}
+
+                {isCompact && (
+                    <div
+                        onClick={onPreview}
+                        className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all flex flex-col items-center justify-center p-6 h-full min-h-[200px]"
+                    >
+                        <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+                            <FileText className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-bold text-slate-800">View All Architecture</h3>
+                        <p className="text-xs text-slate-500 text-center mt-2 px-4">Browse our full collection of professional templates</p>
+                        <button className="mt-4 text-sm font-semibold text-indigo-600 flex items-center">
+                            See All Templates <ArrowRight className="w-4 h-4 ml-1" />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

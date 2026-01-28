@@ -180,12 +180,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="btn-secondary h-10 px-4 text-sm border-slate-200">
-                        <Share2 className="w-4 h-4 mr-2" /> Share
-                    </button>
-                    <button className="btn-primary h-10 px-4 text-sm">
-                        <Download className="w-4 h-4 mr-2" /> Download All
-                    </button>
+                    {/* Buttons removed as per request */}
                 </div>
             </div>
 

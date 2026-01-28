@@ -386,6 +386,7 @@ const Dashboard = () => {
                                     toast.error(`Error: ID missing. Available data: ${keys.substring(0, 50)}...`);
                                 }
                             }}
+                            isCompact={true}
                         />
                     </div>
                 )}

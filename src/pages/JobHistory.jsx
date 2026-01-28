@@ -198,43 +198,8 @@ const JobHistory = () => {
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="text-lg font-bold text-slate-900 items-center flex gap-2">
                                                     <Briefcase className="w-5 h-5 text-indigo-500" />
-                                                    Generated Documents
+                                                    Generated CV Templates
                                                 </h3>
-                                                <button
-                                                    onClick={async () => {
-                                                        setRegenerating(true);
-                                                        try {
-                                                            const res = await api.post('/analysis/analyze', {
-                                                                resumeId: selectedApp.resumeId,
-                                                                jobId: selectedApp.jobId,
-                                                                templateId: selectedTemplate
-                                                            });
-                                                            // Update local state with new data
-                                                            setSelectedApp({ ...res.data, jobId: selectedApp.jobId });
-                                                            // Refresh list to show updated timestamp if needed (optional)
-                                                            fetchHistory();
-                                                        } catch (error) {
-                                                            console.error("Regeneration failed", error);
-                                                            alert("Failed to regenerate. Please try again.");
-                                                        } finally {
-                                                            setRegenerating(false);
-                                                        }
-                                                    }}
-                                                    disabled={regenerating}
-                                                    className="btn-primary px-4 py-2 text-xs flex items-center"
-                                                >
-                                                    {regenerating ? (
-                                                        <>
-                                                            <div className="w-3 h-3 border-2 border-indigo-200 border-t-white rounded-full animate-spin mr-2"></div>
-                                                            Updating...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Sparkles className="w-3 h-3 mr-2" />
-                                                            Regenerate
-                                                        </>
-                                                    )}
-                                                </button>
                                             </div>
 
                                             <div className="mb-6">
@@ -243,6 +208,7 @@ const JobHistory = () => {
                                                     onSelect={setSelectedTemplate}
                                                     userPlan={user.plan || 'free'}
                                                     onPreview={() => navigate(`/resume/${selectedApp._id}`)}
+                                                    isCompact={true}
                                                 />
                                             </div>
 
