@@ -1,12 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { FileText, Mail, Download, Copy, Check, ArrowDownToLine, Share2, Sparkles, MessageCircle, HelpCircle } from 'lucide-react';
 
 import Modal from '../components/Modal';
 
+// Import Templates
+import ATSCleanTemplate from '../components/templates/ATSCleanTemplate';
+import StudentATSTemplate from '../components/templates/StudentATSTemplate';
+import ModernProfessionalTemplate from '../components/templates/ModernProfessionalTemplate';
+import ModernCleanTemplate from '../components/templates/ModernCleanTemplate';
+import MinimalistTemplate from '../components/templates/MinimalistTemplate';
+import MinimalistSerifTemplate from '../components/templates/MinimalistSerifTemplate';
+import MinimalistGridTemplate from '../components/templates/MinimalistGridTemplate';
+import MinimalistMonoTemplate from '../components/templates/MinimalistMonoTemplate';
+import CreativePortfolioTemplate from '../components/templates/CreativePortfolioTemplate';
+import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate';
+import TechStackTemplate from '../components/templates/TechStackTemplate';
+import SwissModernTemplate from '../components/templates/SwissModernTemplate';
+import ElegantLuxuryTemplate from '../components/templates/ElegantLuxuryTemplate';
+import LuxuryRoyalTemplate from '../components/templates/LuxuryRoyalTemplate';
+import LuxuryChicTemplate from '../components/templates/LuxuryChicTemplate';
+import LuxuryClassicTemplate from '../components/templates/LuxuryClassicTemplate';
+import LuxuryGoldTemplate from '../components/templates/LuxuryGoldTemplate';
+import ExecutiveBoardTemplate from '../components/templates/ExecutiveBoardTemplate';
+import ExecutiveStrategyTemplate from '../components/templates/ExecutiveStrategyTemplate';
+import ExecutiveCorporateTemplate from '../components/templates/ExecutiveCorporateTemplate';
+import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
+import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
+import TechGoogleTemplate from '../components/templates/TechGoogleTemplate';
+import ExecutiveEnergyTemplate from '../components/templates/ExecutiveEnergyTemplate';
+import EnergySLBTemplate from '../components/templates/EnergySLBTemplate';
+import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
+import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
+import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburtonTemplate';
+import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
+
 const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
     const [copied, setCopied] = useState(false);
+
+    // Extract User Profile from Application/Markdown for Templates
+    const userProfile = useMemo(() => {
+        if (!application) return {};
+
+        let profile = {};
+        const markdown = application.optimizedCV || '';
+
+        // Try to extract from Markdown pattern (common in our backend generation)
+        try {
+            // Name: First H1 or line starting with #
+            const nameMatch = markdown.match(/^#\s+(.+)$/m);
+            if (nameMatch) profile.fullName = nameMatch[1].trim();
+
+            // Email extraction
+            const emailMatch = markdown.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6})/);
+            if (emailMatch) profile.email = emailMatch[0];
+
+            // Phone extraction (simple heuristic)
+            const phoneMatch = markdown.match(/(\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+            // Avoid confusing dates (2020-2024) with phones.
+            // But phone usually has specific format.
+            if (phoneMatch) profile.phone = phoneMatch[0];
+
+            // LinkedIn
+            const linkedinMatch = markdown.match(/linkedin\.com\/in\/[a-zA-Z0-9-]+/);
+            if (linkedinMatch) profile.linkedin = linkedinMatch[0];
+
+            // Location - Hard to regex reliably without context, assume city/country might be near email
+        } catch (e) {
+            console.warn("Error extracting profile from markdown", e);
+        }
+
+        return profile;
+    }, [application]);
+
 
     if (!application) return null;
 
@@ -15,6 +82,90 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
         navigator.clipboard.writeText(textToCopy);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const renderTemplate = () => {
+        // Strip the header (Name/Contact) from markdown body because Templates render their own header
+        const rawMarkdown = application.optimizedCV || '';
+        // Remove H1 (# Name) and immediate subsequent lines until the next Header (##)
+        // This is a simple heuristic: remove everything before the first "##"
+        const firstSectionIndex = rawMarkdown.indexOf('##');
+        const markdown = firstSectionIndex !== -1 ? rawMarkdown.substring(firstSectionIndex) : rawMarkdown;
+
+        const props = { markdown, userProfile };
+
+        switch (templateId) {
+            // ATS & Clean
+            case 'ats-clean': return <ATSCleanTemplate {...props} />;
+            case 'modern': return <ModernCleanTemplate {...props} />;
+            case 'minimalist': return <MinimalistTemplate {...props} />;
+            case 'minimalist-serif': return <MinimalistSerifTemplate {...props} />;
+            case 'minimalist-grid': return <MinimalistGridTemplate {...props} />;
+            case 'minimalist-mono': return <MinimalistMonoTemplate {...props} />;
+            case 'student-ats': return <StudentATSTemplate {...props} />;
+            case 'professional': return <ModernProfessionalTemplate {...props} />;
+            case 'swiss': return <SwissModernTemplate {...props} />;
+
+            // Creative & Modern
+            case 'creative': return <CreativePortfolioTemplate {...props} />;
+            case 'tech': return <TechStackTemplate {...props} />;
+            case 'tech-devops': return <TechDevOpsTemplate {...props} />;
+            case 'tech-silicon': return <TechSiliconTemplate {...props} />;
+            case 'tech-google': return <TechGoogleTemplate {...props} />;
+
+            // Luxury
+            case 'luxury': return <ElegantLuxuryTemplate {...props} />;
+            case 'luxury-royal': return <LuxuryRoyalTemplate {...props} />;
+            case 'luxury-chic': return <LuxuryChicTemplate {...props} />;
+            case 'luxury-classic': return <LuxuryClassicTemplate {...props} />;
+            case 'luxury-gold': return <LuxuryGoldTemplate {...props} />;
+
+            // Executive
+            case 'executive': return <ExecutiveLeadTemplate {...props} />;
+            case 'executive-board': return <ExecutiveBoardTemplate {...props} />;
+            case 'executive-strategy': return <ExecutiveStrategyTemplate {...props} />;
+            case 'executive-corporate': return <ExecutiveCorporateTemplate {...props} />;
+            case 'executive-energy': return <ExecutiveEnergyTemplate {...props} />;
+
+            // Energy
+            case 'energy-slb': return <EnergySLBTemplate {...props} />;
+            case 'energy-total': return <EnergyTotalTemplate {...props} />;
+            case 'energy-seplat': return <EnergySeplatTemplate {...props} />;
+            case 'energy-halliburton': return <EnergyHalliburtonTemplate {...props} />;
+            case 'energy-nlng': return <EnergyNLNGTemplate {...props} />;
+
+            default:
+                return (
+                    <div className="bg-white p-12 shadow-sm min-h-screen">
+                        <div className="mb-8 border-b border-slate-200 pb-6">
+                            <h1 className="text-4xl font-extrabold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                            <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                                {userProfile?.email && <span>{userProfile.email}</span>}
+                                {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                {userProfile?.linkedin && <span>{userProfile.linkedin}</span>}
+                            </div>
+                        </div>
+                        <ReactMarkdown
+                            components={{
+                                h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
+                                h2: ({ node, ...props }) => (
+                                    <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
+                                ),
+                                h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
+                                h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
+                                p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
+                                ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
+                                li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
+                                strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                                a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
+                                hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+                            }}
+                        >
+                            {markdown}
+                        </ReactMarkdown>
+                    </div>
+                );
+        }
     };
 
     return (
@@ -157,7 +308,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                 isOpen={isResumeModalOpen}
                 onClose={onClose}
                 title="ApplyRight AI Resume"
-                maxWidth="max-w-4xl"
+                maxWidth="max-w-4xl" // Adjusted to match ResumeReview width better
                 footer={
                     <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                         <button
@@ -176,25 +327,8 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                     </div>
                 }
             >
-                <div id="resume-content" className="p-8 bg-white min-h-[1000px]">
-                    <ReactMarkdown
-                        components={{
-                            h1: ({ node, ...props }) => <h1 className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none" {...props} />,
-                            h2: ({ node, ...props }) => (
-                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200" {...props} />
-                            ),
-                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />,
-                            h4: ({ node, ...props }) => <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />,
-                            p: ({ node, ...props }) => <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />,
-                            ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />,
-                            li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
-                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                            a: ({ node, ...props }) => <a className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2" {...props} />,
-                            hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
-                        }}
-                    >
-                        {application.optimizedCV}
-                    </ReactMarkdown>
+                <div id="resume-content" className="p-0 bg-white min-h-[1000px]">
+                    {renderTemplate()}
                 </div>
             </Modal>
         </div>
