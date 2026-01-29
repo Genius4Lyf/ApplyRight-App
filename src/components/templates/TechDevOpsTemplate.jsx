@@ -26,6 +26,16 @@ const TechDevOpsTemplate = ({ markdown, userProfile }) => {
         <div className="bg-[#1e1e1e] max-w-[800px] mx-auto font-mono text-[#d4d4d4] leading-relaxed shadow-lg border border-[#333]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap');
+                @media print {
+                    body, html {
+                        background-color: #1e1e1e !important;
+                        -webkit-print-color-adjust: exact;
+                        margin: 0;
+                    }
+                    @page {
+                        margin: 0;
+                    }
+                }
             `}</style>
 
             {/* Header - Terminal Style */}
