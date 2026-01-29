@@ -51,7 +51,7 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-8 font-['Inter',system-ui,sans-serif] text-[#1a1a1a] leading-[1.5] text-[11pt]">
+        <div className="bg-white max-w-[800px] mx-auto p-10 font-['Inter',system-ui,sans-serif] text-[#1a1a1a] leading-[1.5] text-[11pt]">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

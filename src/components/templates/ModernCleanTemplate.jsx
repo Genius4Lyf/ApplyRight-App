@@ -55,7 +55,7 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-['Inter',sans-serif] text-slate-900 leading-relaxed">
+        <div className="bg-white max-w-[800px] mx-auto p-10 font-['Inter',sans-serif] text-slate-900 leading-relaxed">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');

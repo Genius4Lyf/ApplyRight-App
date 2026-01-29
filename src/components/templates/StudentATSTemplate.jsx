@@ -51,7 +51,7 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-8 font-[Arial,sans-serif] text-black leading-[1.6] text-[11pt]">
+        <div className="bg-white max-w-[800px] mx-auto p-10 font-[Arial,sans-serif] text-black leading-[1.6] text-[11pt]">
             {/* HEADER - Matches HTML template exactly */}
             <header className="text-center mb-6">
                 <h1 className="text-[24pt] font-bold mb-3 tracking-tight uppercase">
