@@ -99,32 +99,59 @@ const CVBuilderLayout = () => {
         }
     }, [location.pathname, navigate, id, cvData.currentStep, currentStepIndex]);
 
-    // Load Draft Data if ID is present
+    // Load Draft Data and Restore Backup
     useEffect(() => {
         if (id && id !== 'new') {
             const loadDraft = async () => {
                 try {
-                    const draft = await CVService.getDraftById(id);
-                    setCvData(draft);
+                    // 1. Fetch latest from Backend
+                    const backendDraft = await CVService.getDraftById(id);
+
+                    // 2. Check for Local Backup
+                    const backupKey = `applyright_backup_${id}`;
+                    const localBackup = localStorage.getItem(backupKey);
+
+                    if (localBackup) {
+                        try {
+                            const parsedBackup = JSON.parse(localBackup);
+                            // Simple check: Use backup if it looks valid
+                            // Ideally we'd check timestamps, but for now assumption is local is newer/dirty
+                            console.log('[CVBuilder] Restoring local backup found for ID:', id);
+                            setCvData({ ...backendDraft, ...parsedBackup });
+                        } catch (e) {
+                            console.error("Failed to parse local backup", e);
+                            setCvData(backendDraft);
+                        }
+                    } else {
+                        setCvData(backendDraft);
+                    }
+
                 } catch (error) {
                     console.error("Error loading draft", error);
                     const status = error.response?.status;
-
-                    if (status === 404) {
-                        toast.error("CV not found");
-                        navigate('/dashboard');
-                    } else if (status === 401) {
-                        toast.error("Unauthorized access");
+                    if (status === 404 || status === 401) {
                         navigate('/dashboard');
                     } else {
-                        toast.error("Failed to load CV data. Please refresh.");
-                        // Don't redirect on other errors, let user retry
+                        toast.error("Failed to load CV data.");
                     }
                 }
             };
             loadDraft();
         }
     }, [id, navigate]);
+
+    // Auto-Backup Method
+    useEffect(() => {
+        if (id && id !== 'new' && cvData._id) {
+            const backupKey = `applyright_backup_${id}`;
+            localStorage.setItem(backupKey, JSON.stringify(cvData));
+        }
+    }, [cvData, id]);
+
+    // Helper for children to sync state without persisting to DB immediately
+    const updateCvData = (partialData) => {
+        setCvData(prev => ({ ...prev, ...partialData }));
+    };
 
     const handleNext = async (stepData) => {
         // Prepare updated data
@@ -171,6 +198,9 @@ const CVBuilderLayout = () => {
             toast.error("Failed to save progress. Please try again.");
         } finally {
             setSaving(false);
+            // Optional: Clear backup on successful save? 
+            // Better to keep it until they leave or explicitly finish, 
+            // but for now we keep it to ensure safety against crashes.
         }
     };
 
@@ -227,7 +257,7 @@ const CVBuilderLayout = () => {
                     {/* Step Content */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[500px] p-4 md:p-8">
-                            <Outlet context={{ cvData, handleNext, handleBack, saving, user }} />
+                            <Outlet context={{ cvData, handleNext, handleBack, saving, user, updateCvData }} />
                         </div>
                     </div>
                 </div>

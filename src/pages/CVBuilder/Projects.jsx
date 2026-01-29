@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { PenTool, ArrowRight, ArrowLeft, Plus, Trash2, Sparkles, RefreshCcw, Link as LinkIcon } from 'lucide-react';
 import CVService from '../../services/cv.service';
@@ -8,7 +8,7 @@ import ProjectsTutorial from './ProjectsTutorial';
 const Projects = () => {
     // Safely destructure context
     const context = useOutletContext();
-    const { cvData, handleNext, handleBack, saving } = context || {};
+    const { cvData, handleNext, handleBack, saving, updateCvData, user } = context || {};
 
     // Fallback if context is somehow missing
     if (!cvData) {
@@ -17,6 +17,14 @@ const Projects = () => {
     const [projects, setProjects] = useState(cvData.projects || []);
     const [generatingIndex, setGeneratingIndex] = useState(null);
     const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
+    const [showTutorial, setShowTutorial] = useState(false);
+
+    // Auto-show tutorial based on user settings
+    useEffect(() => {
+        if (user?.settings?.showOnboardingTutorials !== false) {
+            setShowTutorial(true);
+        }
+    }, [user]);
 
     const addProject = () => {
         setProjects([
@@ -36,6 +44,16 @@ const Projects = () => {
         newProjects[index] = { ...newProjects[index], [field]: value };
         setProjects(newProjects);
     };
+
+    // Auto-sync to parent context for persistence
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            if (updateCvData) {
+                updateCvData({ projects: projects });
+            }
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timer);
+    }, [projects, updateCvData]);
 
     const handleGenerateBullets = async (index, customInput = null) => {
         const proj = projects[index];
@@ -116,14 +134,24 @@ const Projects = () => {
 
     return (
         <form onSubmit={onSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <PenTool className="w-5 h-5" />
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        <PenTool className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800">Projects</h2>
+                        <p className="text-slate-500">Showcase your practical work and initiatives.</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Projects</h2>
-                    <p className="text-slate-500">Showcase your practical work and initiatives.</p>
-                </div>
+                <button
+                    type="button"
+                    onClick={() => setShowTutorial(true)}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden md:inline">How AI Works</span>
+                </button>
             </div>
 
             {projects.length === 0 && (
@@ -280,7 +308,11 @@ const Projects = () => {
             </div>
 
             {/* Tutorial Modal */}
-            <ProjectsTutorial />
+            <ProjectsTutorial
+                isOpen={showTutorial}
+                onClose={() => setShowTutorial(false)}
+                user={user}
+            />
         </form>
     );
 };

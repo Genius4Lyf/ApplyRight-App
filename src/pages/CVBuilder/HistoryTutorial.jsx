@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Building2, ClipboardPaste, X, ArrowRight } from 'lucide-react';
+import UserService from '../../services/user.service';
 
-const HistoryTutorial = ({ onClose }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const HistoryTutorial = ({ isOpen, onClose, user }) => {
+    const [dontShowAgain, setDontShowAgain] = useState(false);
 
-    useEffect(() => {
-        // Check if user has seen this tutorial
-        const hasSeen = localStorage.getItem('hasSeenHistoryTutorial');
-        if (!hasSeen) {
-            setIsOpen(true);
-        }
-    }, []);
-
-    const handleDismiss = () => {
-        setIsOpen(false);
-        localStorage.setItem('hasSeenHistoryTutorial', 'true');
+    const handleDismiss = async () => {
         if (onClose) onClose();
+
+        if (dontShowAgain && user) {
+            try {
+                // Merge existing settings to avoid overwriting other keys
+                const currentSettings = user.settings || {};
+                await UserService.updateSettings({ ...currentSettings, showOnboardingTutorials: false });
+            } catch (error) {
+                console.error("Failed to update tutorial usage", error);
+            }
+        }
     };
 
     if (!isOpen) return null;
@@ -72,7 +73,21 @@ const HistoryTutorial = ({ onClose }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={dontShowAgain}
+                                onChange={(e) => setDontShowAgain(e.target.checked)}
+                                className="peer h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 transition-all cursor-pointer"
+                            />
+                        </div>
+                        <span className="text-sm text-slate-500 group-hover:text-slate-700 select-none">
+                            Don't show this again
+                        </span>
+                    </label>
+
                     <button
                         onClick={handleDismiss}
                         className="btn-primary px-6 py-2.5 flex items-center gap-2 shadow-lg shadow-indigo-200"
