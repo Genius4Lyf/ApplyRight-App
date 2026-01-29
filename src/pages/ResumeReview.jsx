@@ -50,9 +50,12 @@ const ResumeReview = () => {
     const [activeTab, setActiveTab] = useState('resume'); // 'resume' or 'cover-letter'
     const [isDownloading, setIsDownloading] = useState(false);
 
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
+            setError(null);
             try {
                 // 1. Try fetching as Application (Standard flow)
                 try {
@@ -89,12 +92,12 @@ const ResumeReview = () => {
                     console.error("Failed to load draft", e);
                 }
 
-                toast.error("Document not found");
-                navigate('/dashboard');
+                setError("Document not found");
+                // toast.error("Document not found"); // Optional: Keep or remove toast if UI is enough
 
             } catch (error) {
                 console.error("Failed to load data", error);
-                toast.error("Failed to load document");
+                setError("Failed to load document");
             } finally {
                 setLoading(false);
             }
@@ -120,6 +123,24 @@ const ResumeReview = () => {
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
             <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+            <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                    <LayoutTemplate size={32} />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Unavailable</h2>
+                <p className="text-slate-600 mb-6">{error}</p>
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full btn-primary py-3"
+                >
+                    Return to Dashboard
+                </button>
+            </div>
         </div>
     );
 

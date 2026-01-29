@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { FileText, Mail, Download, Copy, Check, ArrowDownToLine, Share2, Sparkles, MessageCircle, HelpCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import CVService from '../services/cv.service';
 
 import Modal from '../components/Modal';
 
