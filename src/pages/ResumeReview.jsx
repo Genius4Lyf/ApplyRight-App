@@ -276,19 +276,32 @@ const ResumeReview = () => {
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
 
                         {/* View Toggles */}
-                        <div className="bg-slate-100 p-1 rounded-lg flex">
-                            <button
-                                onClick={() => setActiveTab('resume')}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'resume' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Resume
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('cover-letter')}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'cover-letter' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Cover Letter
-                            </button>
+                        <div>
+                            <div className="bg-slate-100 p-1 rounded-lg flex">
+                                <button
+                                    onClick={() => setActiveTab('resume')}
+                                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'resume' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Resume
+                                </button>
+                                <button
+                                    onClick={() => !isDraftMode && setActiveTab('cover-letter')}
+                                    disabled={isDraftMode}
+                                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${activeTab === 'cover-letter' ? 'bg-white shadow text-indigo-600' : isDraftMode ? 'text-slate-400 cursor-not-allowed' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Cover Letter
+                                </button>
+                            </div>
+                            {isDraftMode && (
+                                <div className="mt-3 bg-slate-50 border border-slate-100 rounded-lg p-3 flex gap-2">
+                                    <div className="text-slate-400 flex-shrink-0 mt-0.5">
+                                        <Sparkles size={14} />
+                                    </div>
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        Cover letters are generated during the <strong>Application Fit</strong> analysis when you upload an existing CV.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Suggestions Box - Hide for drafts if no analysis */}
