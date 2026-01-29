@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FileText, ArrowRight, ArrowLeft, Sparkles, RefreshCcw, Wand2 } from 'lucide-react';
 import CVService from '../../services/cv.service';
@@ -18,6 +18,19 @@ const ProfessionalSummary = () => {
     const [summary, setSummary] = useState(cvData.professionalSummary || '');
     const [generating, setGenerating] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
+    const hasAutoOpened = useRef(false);
+
+    // Auto-prompt for AI Summary if empty
+    useEffect(() => {
+        // Only run if summary is empty/short and we haven't asked yet
+        if (cvData && (!summary || summary.trim().length < 10) && !hasAutoOpened.current) {
+            hasAutoOpened.current = true;
+            // Small timeout to allow UI to settle/animate in
+            setTimeout(() => {
+                setShowAiModal(true);
+            }, 500);
+        }
+    }, [cvData, summary]);
 
     const handleGenerateClick = () => {
         if (!cvData.targetJob?.title && !cvData.personalInfo?.fullName) {
@@ -133,40 +146,50 @@ const ProfessionalSummary = () => {
                 </div>
             </form>
 
-            <Modal
-                isOpen={showAiModal}
-                onClose={() => setShowAiModal(false)}
-                title="Generate AI Summary"
-                maxWidth="max-w-md"
-                footer={
-                    <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                        <button
-                            onClick={() => setShowAiModal(false)}
-                            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={confirmGenerate}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 flex items-center gap-2"
-                        >
-                            <Wand2 className="w-4 h-4" /> Generate
-                        </button>
+            {showAiModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white text-center">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 animate-in bounce-in duration-700">
+                                <Sparkles className="w-6 h-6 text-yellow-300" />
+                            </div>
+                            <h2 className="text-xl font-bold mb-2">We've got some ideas for your summary</h2>
+                            <p className="text-indigo-100 text-sm">
+                                Let AI craft your elevator pitch based on your experience.
+                            </p>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-8">
+                            <p className="text-slate-600 mb-6 text-center leading-relaxed">
+                                Generate an AI-personalised summary: the AI will analyse your <strong>work history</strong> and <strong>skills</strong> to provide the result.
+                            </p>
+                            <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 text-center">
+                                <p className="text-slate-500 text-sm">
+                                    If you're unhappy with the AI's response, you can simply discard it and write your own.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <button
+                                onClick={() => setShowAiModal(false)}
+                                className="px-4 py-2 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg font-medium transition-colors"
+                            >
+                                Not now
+                            </button>
+                            <button
+                                onClick={confirmGenerate}
+                                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center gap-2 shadow-lg shadow-indigo-200 transform transition-all hover:-translate-y-0.5"
+                            >
+                                <Wand2 className="w-4 h-4" /> Yes, generate
+                            </button>
+                        </div>
                     </div>
-                }
-            >
-                <div>
-                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4 mx-auto">
-                        <Sparkles className="w-6 h-6" />
-                    </div>
-                    <p className="text-slate-600 mb-4 text-center leading-relaxed">
-                        Generate an AI-personalised summary: the AI will analyse your <strong>work history</strong> and <strong>skills</strong> and the <strong>job description</strong> to provide the result.
-                    </p>
-                    <p className="text-slate-500 text-sm text-center">
-                        If you're unhappy with AI's response, you can write your own as you see fit.
-                    </p>
                 </div>
-            </Modal>
+            )}
         </>
     );
 };
