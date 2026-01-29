@@ -39,6 +39,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
     const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
     const [copied, setCopied] = useState(false);
     const [scale, setScale] = useState(1);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Dynamic Scale for Mobile "Paper View"
     useEffect(() => {
@@ -338,11 +339,71 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                             Close
                         </button>
                         <button
-                            onClick={() => window.print()}
-                            className="btn-primary flex items-center"
+                            disabled={isDownloading}
+                            onClick={async () => {
+                                try {
+                                    setIsDownloading(true);
+                                    toast.info('Generating High-Quality PDF...', { duration: 2000 });
+
+                                    const element = document.getElementById('resume-content');
+                                    if (!element) throw new Error('Resume content not found');
+
+                                    // 1. Serialization
+                                    const contentHtml = element.outerHTML;
+                                    const fullHtml = `
+                                        <!DOCTYPE html>
+                                        <html>
+                                        <head>
+                                            <meta charset="UTF-8">
+                                            <script src="https://cdn.tailwindcss.com"></script>
+                                            <style>
+                                                @page { size: A4; margin: 0; }
+                                                body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+                                                #resume-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
+                                                /* Hide scaling container transform for PDF generation if needed, 
+                                                   but since we capture outerHTML of the element (which is the container or wrapper?), 
+                                                   we might capture the scale transform. 
+                                                   Actually, 'resume-content' is the wrapper. 
+                                                   Inside is .scale-container. 
+                                                   We want to force scale(1) for the PDF. */
+                                                .scale-container { transform: none !important; margin: 0 !important; height: auto !important; }
+                                            </style>
+                                        </head>
+                                        <body>
+                                            ${contentHtml}
+                                        </body>
+                                        </html>
+                                    `;
+
+                                    // 2. Call Backend
+                                    const blob = await CVService.generatePdf(fullHtml);
+
+                                    // 3. Download
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${userProfile?.fullName || 'Resume'}_CV.pdf`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+
+                                    toast.success('PDF Downloaded');
+                                } catch (error) {
+                                    console.error("PDF Download failed", error);
+                                    toast.error("Failed to generate PDF");
+                                } finally {
+                                    setIsDownloading(false);
+                                }
+                            }}
+                            className={`btn-primary flex items-center ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
                         >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download as PDF
+                            {isDownloading ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            ) : (
+                                <Download className="w-4 h-4 mr-2" />
+                            )}
+                            {isDownloading ? 'Processing...' : 'Download as PDF'}
                         </button>
                     </div>
                 }

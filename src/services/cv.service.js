@@ -34,6 +34,14 @@ const CVService = {
     deleteDraft: async (id) => {
         const response = await api.delete(`/cv/${id}`);
         return response.data;
+    },
+
+    // Generate PDF (Puppeteer)
+    generatePdf: async (htmlContent) => {
+        const response = await api.post('/pdf/generate', { html: htmlContent }, {
+            responseType: 'blob'
+        });
+        return response.data;
     }
 };
 

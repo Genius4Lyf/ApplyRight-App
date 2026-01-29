@@ -48,6 +48,7 @@ const ResumeReview = () => {
     const [userProfile, setUserProfile] = useState(null);
     const [isDraftMode, setIsDraftMode] = useState(false);
     const [activeTab, setActiveTab] = useState('resume'); // 'resume' or 'cover-letter'
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -131,7 +132,7 @@ const ResumeReview = () => {
             <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
                 {/* LEFT: Document Preview Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex justify-center bg-slate-100/50">
-                    <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden relative">
+                    <div id="resume-content" className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden relative">
 
                         {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 
@@ -231,7 +232,7 @@ const ResumeReview = () => {
                             )
                         ) : (
                             /* COVER LETTER RENDER */
-                            <div className="bg-white min-h-screen">
+                            <div id="cover-letter-content" className="bg-white min-h-screen">
                                 <div className="mb-8 border-b border-slate-200 pb-6">
                                     {/* Simple Header for Cover Letter */}
                                     <h1 className="text-3xl font-bold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
@@ -330,11 +331,66 @@ const ResumeReview = () => {
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => window.print()}
-                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group"
+                                    disabled={isDownloading}
+                                    onClick={async () => {
+                                        try {
+                                            setIsDownloading(true);
+                                            setIsDownloading(true);
+                                            toast.info('Generating High-Quality PDF...', { duration: 2000 });
+
+                                            const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
+                                            const element = document.getElementById(elementId);
+                                            if (!element) throw new Error(`${activeTab === 'resume' ? 'Resume' : 'Cover letter'} content not found`);
+
+                                            // 1. Serialization with Tailwind injection
+                                            const contentHtml = element.outerHTML;
+                                            const fullHtml = `
+                                                <!DOCTYPE html>
+                                                <html>
+                                                <head>
+                                                    <meta charset="UTF-8">
+                                                    <script src="https://cdn.tailwindcss.com"></script>
+                                                    <style>
+                                                        @page { size: A4; margin: 0; }
+                                                        body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+                                                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
+                                                    </style>
+                                                </head>
+                                                <body>
+                                                    ${contentHtml}
+                                                </body>
+                                                </html>
+                                            `;
+
+                                            // 2. Call Backend
+                                            const blob = await CVService.generatePdf(fullHtml);
+
+                                            // 3. Download
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `${userProfile?.fullName || 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            window.URL.revokeObjectURL(url);
+                                            document.body.removeChild(a);
+
+                                            toast.success('PDF Downloaded');
+                                        } catch (e) {
+                                            console.error(e);
+                                            toast.error("Download failed");
+                                        } finally {
+                                            setIsDownloading(false);
+                                        }
+                                    }}
+                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
                                 >
-                                    <Download className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 mb-2" />
-                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">Download {activeTab === 'resume' ? 'CV' : 'Letter'}</span>
+                                    {isDownloading ? (
+                                        <div className="w-6 h-6 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin mb-2"></div>
+                                    ) : (
+                                        <Download className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 mb-2" />
+                                    )}
+                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">{isDownloading ? 'Processing...' : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
                                 </button>
                                 <button
                                     onClick={() => window.print()}
