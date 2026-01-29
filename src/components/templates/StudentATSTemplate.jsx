@@ -19,7 +19,7 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
         const nameMatch = markdown.match(/^#\s+(.+)/m);
         name = nameMatch ? nameMatch[1] : (
             userProfile?.firstName && userProfile?.lastName
-                ? `${userProfile.firstName} ${userProfile.lastName}`.toUpperCase()
+                ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ').toUpperCase()
                 : 'YOUR NAME'
         );
     } catch (error) {

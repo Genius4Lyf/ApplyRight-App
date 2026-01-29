@@ -9,7 +9,7 @@ const EnergyHalliburtonTemplate = ({ markdown, userProfile }) => {
     try {
         const nameMatch = markdown.match(/^#\s+(.+)/m);
         if (nameMatch) name = nameMatch[1];
-        else if (userProfile?.firstName) name = [userProfile.firstName, userProfile.lastName].join(' ').toUpperCase();
+        else if (userProfile?.firstName) name = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ').toUpperCase();
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';
@@ -87,9 +87,7 @@ const EnergyHalliburtonTemplate = ({ markdown, userProfile }) => {
             </div>
 
             {/* Footer */}
-            <div className="bg-black text-white px-10 py-4 text-center">
-                <div className="w-12 h-1 bg-[#CC0000] mx-auto mb-2"></div>
-            </div>
+
         </div>
     );
 };

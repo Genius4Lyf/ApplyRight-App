@@ -9,7 +9,7 @@ const LuxuryClassicTemplate = ({ markdown, userProfile }) => {
     try {
         const nameMatch = markdown.match(/^#\s+(.+)/m);
         if (nameMatch) name = nameMatch[1];
-        else if (userProfile?.firstName) name = [userProfile.firstName, userProfile.lastName].join(' ').toUpperCase();
+        else if (userProfile?.firstName) name = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ').toUpperCase();
     } catch (e) { }
 
     const roleTitle = userProfile?.currentJobTitle || '';

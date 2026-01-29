@@ -14,7 +14,7 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
         if (extractedName && !extractedName.includes('YOUR NAME')) {
             name = extractedName;
         } else if (userProfile?.firstName) {
-            name = [userProfile.firstName, userProfile.lastName].join(' ').toUpperCase();
+            name = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ').toUpperCase();
         }
     } catch (e) { }
 

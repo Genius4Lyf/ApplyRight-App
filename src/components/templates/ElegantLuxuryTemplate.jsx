@@ -154,8 +154,7 @@ const ElegantLuxuryTemplate = ({ markdown, userProfile }) => {
                 </div>
             </div>
 
-            {/* BOTTOM BORDER */}
-            <div className="h-2 bg-[#c5a059]"></div>
+
         </div>
     );
 };
