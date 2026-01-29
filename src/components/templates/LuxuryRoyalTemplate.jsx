@@ -32,7 +32,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
                 <div className="w-24 h-24 mx-auto border-2 border-amber-500 rounded-full flex items-center justify-center mb-6">
                     <span className="text-4xl text-amber-500 font-black italic">{name.charAt(0)}</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-amber-500 tracking-wide uppercase mb-4">{name}</h1>
+                <h1 className="text-5xl font-black text-amber-500 tracking-wide uppercase mb-4">{name}</h1>
                 <div className="w-24 h-1 bg-amber-600 mx-auto mb-6"></div>
                 {roleTitle && <div className="text-sm uppercase tracking-[0.3em] text-slate-400 mb-8 font-sans">{roleTitle}</div>}
 

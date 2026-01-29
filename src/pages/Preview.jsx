@@ -38,6 +38,31 @@ import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
     const [copied, setCopied] = useState(false);
+    const [scale, setScale] = useState(1);
+
+    // Dynamic Scale for Mobile "Paper View"
+    useEffect(() => {
+        const calculateScale = () => {
+            const screenWidth = window.innerWidth;
+            const a4WidthPx = 794; // approx 210mm @ 96dpi
+            const padding = 32; // Safety margin
+
+            // If screen is smaller than A4, scale down
+            if (screenWidth < (a4WidthPx + padding)) {
+                const newScale = (screenWidth - padding) / a4WidthPx;
+                setScale(Math.max(newScale, 0.3));
+            } else {
+                setScale(1);
+            }
+        };
+
+        // Initial calc
+        calculateScale();
+
+        // Listener
+        window.addEventListener('resize', calculateScale);
+        return () => window.removeEventListener('resize', calculateScale);
+    }, []);
 
     // Extract User Profile from Application/Markdown for Templates
     const userProfile = useMemo(() => {
@@ -322,8 +347,22 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                     </div>
                 }
             >
-                <div id="resume-content" className="p-0 bg-white min-h-[1000px]">
-                    {renderTemplate()}
+                <div id="resume-content" className="p-0 bg-slate-100 min-h-[500px] flex justify-center overflow-x-hidden overflow-y-auto custom-scrollbar relative">
+                    {/* Scaling Wrapper */}
+                    <div
+                        className="scale-container transition-transform duration-300 origin-top bg-white shadow-2xl my-8"
+                        style={{
+                            transform: `scale(${scale})`,
+                            // Explicit set height to shrink container in DOM flow
+                            height: `${1130 * scale}px`, // ~297mm height scaled
+                            width: '210mm',
+                            minWidth: '210mm' // Force width
+                        }}
+                    >
+                        <div className="a4-page">
+                            {renderTemplate()}
+                        </div>
+                    </div>
                 </div>
             </Modal>
         </div>

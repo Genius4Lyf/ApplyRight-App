@@ -146,4 +146,60 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-slate-200 rounded-full hover:bg-slate-300;
   }
+
+  /* A4 Paper & Scaling Logic */
+  .a4-page {
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    margin: 0 auto;
+    position: relative;
+    /* Ensure exact A4 rendering context */
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Prevent spillover */
+  }
+
+  @media print {
+    @page {
+      margin: 0;
+      size: auto;
+    }
+
+    body {
+      background: white;
+    }
+
+    /* Reset scaling for print to ensure 1:1 output */
+    .scale-container {
+      transform: none !important;
+      height: auto !important;
+      width: 100% !important;
+      margin: 0 !important;
+      overflow: visible !important;
+    }
+
+    .a4-page {
+      margin: 0;
+      width: 100%;
+      min-height: auto;
+      box-shadow: none;
+      border: none;
+    }
+
+    /* Hide non-printable elements */
+    .no-print {
+      display: none !important;
+    }
+
+    /* Ensure Modal content takes over */
+    #resume-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  }
 }

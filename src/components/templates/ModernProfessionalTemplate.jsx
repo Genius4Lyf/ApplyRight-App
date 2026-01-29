@@ -71,9 +71,9 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
                     {name}
                 </h1>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between text-[#666666]">
+                <div className="flex flex-row items-center justify-between text-[#666666]">
                     {roleTitle && (
-                        <div className="text-[12pt] font-semibold uppercase tracking-wider mb-2 md:mb-0">
+                        <div className="text-[12pt] font-semibold uppercase tracking-wider mb-0">
                             {roleTitle}
                         </div>
                     )}
