@@ -4,11 +4,13 @@ import api from '../services/api';
 import { ArrowRight, CheckCircle, Sparkles, User, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
+import WelcomeModal from '../components/onboarding/WelcomeModal';
 
 const Onboarding = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -91,8 +93,10 @@ const Onboarding = () => {
             localStorage.setItem('user', JSON.stringify(res.data));
             // Dispatch custom event to notify other components
             window.dispatchEvent(new Event('userDataUpdated'));
-            toast.success("Profile completed successfully!");
-            navigate('/dashboard');
+
+            // Show welcome modal instead of immediate navigation
+            setShowWelcome(true);
+
         } catch (error) {
             console.error('Onboarding failed', error);
             toast.error('Failed to save profile. Please try again.');
@@ -101,8 +105,18 @@ const Onboarding = () => {
         }
     };
 
+    const handleWelcomeComplete = () => {
+        navigate('/dashboard');
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+            <WelcomeModal
+                isOpen={showWelcome}
+                firstName={formData.firstName}
+                onComplete={handleWelcomeComplete}
+            />
+
             <div className="w-full max-w-2xl">
                 {/* Progress Bar */}
                 <div className="mb-8">
