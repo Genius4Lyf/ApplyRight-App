@@ -136,7 +136,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
                         )}
                         <span className="text-slate-600">
-                            {fitAnalysis.experienceMatch ? "Meets requirements" : "Less than preferred"}
+                            {fitAnalysis.experienceFeedback || (fitAnalysis.experienceMatch ? "Meets requirements" : "Less than preferred")}
                         </span>
                     </div>
                 </motion.div>
@@ -159,7 +159,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan }) => {
                             <Info className="w-4 h-4 text-slate-400" />
                         )}
                         <span className="text-slate-600">
-                            {fitAnalysis.seniorityMatch ? "Aligned with role" : "Role may vary from level"}
+                            {fitAnalysis.seniorityFeedback || (fitAnalysis.seniorityMatch ? "Aligned with role" : "Role may vary from level")}
                         </span>
                     </div>
                 </motion.div>
