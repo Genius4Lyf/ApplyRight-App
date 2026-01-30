@@ -25,7 +25,7 @@ const Projects = () => {
         if (user?.settings?.showOnboardingTutorials !== false) {
             const timer = setTimeout(() => {
                 setShowTutorial(true);
-            }, 1500); // 1.5s delay for better UX
+            }, 800); // 0.8s delay for better UX
             return () => clearTimeout(timer);
         }
     }, [user]);
