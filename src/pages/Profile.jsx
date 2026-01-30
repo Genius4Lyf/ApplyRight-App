@@ -24,6 +24,7 @@ const Profile = () => {
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingTx, setPendingTx] = useState(null); // To store the blocked navigation transition
 
+
     // Form State
     const [formData, setFormData] = useState({
         firstName: '',
@@ -208,17 +209,8 @@ const Profile = () => {
         }
     };
 
-    const handleUpgrade = async () => {
-        if (confirm("Confirm upgrade to ApplyRight Pro? (Mock Payment)")) {
-            try {
-                const res = await api.put('/users/profile', { plan: 'paid' });
-                setUser(res.data);
-                localStorage.setItem('user', JSON.stringify(res.data));
-                toast.success("Welcome to ApplyRight Pro!");
-            } catch (error) {
-                console.error(error);
-            }
-        }
+    const handleUpgrade = () => {
+        navigate('/upgrade');
     }
 
     if (loading) return (

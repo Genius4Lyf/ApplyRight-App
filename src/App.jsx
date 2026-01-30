@@ -14,6 +14,7 @@ import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
 import TargetJob from './pages/CVBuilder/TargetJob';
 import Heading from './pages/CVBuilder/Heading';
 import ProfessionalSummary from './pages/CVBuilder/ProfessionalSummary';
+import Upgrade from './pages/Upgrade';
 import History from './pages/CVBuilder/History';
 import Projects from './pages/CVBuilder/Projects';
 import Education from './pages/CVBuilder/Education';
@@ -105,6 +106,14 @@ const router = createBrowserRouter([
             <ErrorBoundary>
               <Profile />
             </ErrorBoundary>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/upgrade",
+        element: (
+          <ProtectedRoute>
+            <Upgrade />
           </ProtectedRoute>
         ),
       },
