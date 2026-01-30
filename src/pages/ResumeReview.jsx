@@ -391,7 +391,7 @@ const ResumeReview = () => {
                                                     <meta charset="UTF-8">
                                                     <script src="https://cdn.tailwindcss.com"></script>
                                                     <style>
-                                                        @page { size: A4; margin: 0; }
+                                                        @page { size: A4; margin: 15mm 0mm; }
                                                         body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
                                                         #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
                                                     </style>
