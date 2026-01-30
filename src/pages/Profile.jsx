@@ -7,12 +7,16 @@ import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
 import Modal from '../components/ui/Modal'; // Assuming Modal is created or exists
 
+import CVService from '../services/cv.service';
+import ApplicationService from '../services/application.service';
+
 const Profile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+    const [stats, setStats] = useState({ drafts: 0, applications: 0 });
 
     // Unsaved Changes State
     const [initialFormData, setInitialFormData] = useState(null);
@@ -528,14 +532,40 @@ const Profile = () => {
                                 <Award className="w-4 h-4 text-indigo-500" />
                                 Usage Stats
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-6">
+                                {/* Resumes Stat */}
                                 <div>
-                                    <div className="flex justify-between text-sm mb-1">
-                                        <span className="text-slate-600">Applications Created</span>
-                                        <span className="font-medium text-slate-900">2 / {user?.plan === 'paid' ? '∞' : '5'}</span>
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-slate-600 font-medium">Original Resumes</span>
+                                        <span className="font-bold text-slate-900">
+                                            {stats.drafts} <span className="text-slate-400 font-normal">/ {user?.plan === 'paid' ? '∞' : '1'}</span>
+                                        </span>
                                     </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2">
-                                        <div className="bg-indigo-500 h-2 rounded-full" style={{ width: '40%' }}></div>
+                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ${user?.plan === 'paid' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
+                                                stats.drafts >= 1 ? 'bg-rose-500' : 'bg-indigo-500'
+                                                }`}
+                                            style={{ width: user?.plan === 'paid' ? '100%' : `${Math.min((stats.drafts / 1) * 100, 100)}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {/* Applications Stat */}
+                                <div>
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-slate-600 font-medium">Job Optimizations</span>
+                                        <span className="font-bold text-slate-900">
+                                            {stats.applications} <span className="text-slate-400 font-normal">/ {user?.plan === 'paid' ? '∞' : '3'}</span>
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 delay-150 ${user?.plan === 'paid' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
+                                                stats.applications >= 3 ? 'bg-rose-500' : 'bg-indigo-500'
+                                                }`}
+                                            style={{ width: user?.plan === 'paid' ? '100%' : `${Math.min((stats.applications / 3) * 100, 100)}%` }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
