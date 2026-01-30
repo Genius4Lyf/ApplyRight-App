@@ -222,7 +222,9 @@ const ResumeReview = () => {
                                 <>
                                     <div className="bg-white p-12 shadow-sm min-h-screen">
                                         <div className="mb-8 border-b border-slate-200 pb-6">
-                                            <h1 className="text-4xl font-extrabold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                                            <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
+                                                {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
+                                            </h1>
                                             <div className="text-sm text-slate-500 flex flex-wrap gap-4">
                                                 {userProfile?.email && <span>{userProfile.email}</span>}
                                                 {userProfile?.phone && <span>{userProfile.phone}</span>}
@@ -256,7 +258,9 @@ const ResumeReview = () => {
                             <div id="cover-letter-content" className="bg-white min-h-screen">
                                 <div className="mb-8 border-b border-slate-200 pb-6">
                                     {/* Simple Header for Cover Letter */}
-                                    <h1 className="text-3xl font-bold text-slate-900 mb-2">{userProfile?.fullName || 'Your Name'}</h1>
+                                    <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                                        {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
+                                    </h1>
                                     <div className="text-sm text-slate-500 flex flex-wrap gap-4">
                                         {userProfile?.email && <span>{userProfile.email}</span>}
                                         {userProfile?.phone && <span>{userProfile.phone}</span>}
@@ -403,7 +407,7 @@ const ResumeReview = () => {
                                             const url = window.URL.createObjectURL(blob);
                                             const a = document.createElement('a');
                                             a.href = url;
-                                            a.download = `${userProfile?.fullName || 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
+                                            a.download = `${(userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document')}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
                                             document.body.appendChild(a);
                                             a.click();
                                             window.URL.revokeObjectURL(url);
