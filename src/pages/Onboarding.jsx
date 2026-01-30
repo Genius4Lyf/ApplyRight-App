@@ -88,6 +88,8 @@ const Onboarding = () => {
 
             const res = await api.put('/users/profile', payload);
             localStorage.setItem('user', JSON.stringify(res.data));
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new Event('userDataUpdated'));
             toast.success("Profile completed successfully!");
             navigate('/dashboard');
         } catch (error) {

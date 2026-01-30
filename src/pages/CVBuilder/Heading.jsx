@@ -46,6 +46,49 @@ const Heading = () => {
         address: !!formData.address
     });
 
+    // Auto-fill effect to handle cases where user data loads after initial render
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => {
+                const newData = { ...prev };
+                let hasChanges = false;
+
+                if (!newData.fullName && user.firstName) {
+                    const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
+                    newData.fullName = nameParts.join(' ');
+                    hasChanges = true;
+                }
+                if (!newData.email && user.email) {
+                    newData.email = user.email;
+                    hasChanges = true;
+                }
+                if (!newData.phone && user.phone) {
+                    newData.phone = user.phone;
+                    hasChanges = true;
+                }
+                if (!newData.linkedin && user.linkedinUrl) {
+                    newData.linkedin = user.linkedinUrl;
+                    hasChanges = true;
+                }
+                if (!newData.website && user.portfolioUrl) {
+                    newData.website = user.portfolioUrl;
+                    hasChanges = true;
+                }
+
+                // Only update visibility if we added new optional fields
+                if (hasChanges) {
+                    setVisibleFields(prevVis => ({
+                        ...prevVis,
+                        linkedin: !!newData.linkedin,
+                        website: !!newData.website
+                    }));
+                }
+
+                return hasChanges ? newData : prev;
+            });
+        }
+    }, [user]);
+
     const [showExample, setShowExample] = useState(false);
 
     const handleChange = (e) => {

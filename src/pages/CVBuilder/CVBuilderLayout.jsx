@@ -24,8 +24,25 @@ const CVBuilderLayout = () => {
     const location = useLocation();
     const { id } = useParams(); // Draft ID if editing
 
-    // Get user for auto-fill
-    const [user] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+    // Get user for auto-fill - make reactive to localStorage updates
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+
+    // Listen for localStorage updates (e.g., when profile is updated)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const updatedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            setUser(updatedUser);
+        };
+
+        // Listen for storage events (cross-tab) and custom events (same-tab)
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('userDataUpdated', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('userDataUpdated', handleStorageChange);
+        };
+    }, []);
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [cvData, setCvData] = useState({

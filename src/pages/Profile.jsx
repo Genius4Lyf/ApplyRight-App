@@ -125,6 +125,8 @@ const Profile = () => {
             setUser(res.data);
             // Update local storage to keep session in sync
             localStorage.setItem('user', JSON.stringify(res.data));
+            // Dispatch custom event to notify other components (e.g., CVBuilder)
+            window.dispatchEvent(new Event('userDataUpdated'));
 
             setSuccessMsg('Profile updated successfully!');
             toast.success('Profile updated successfully');
