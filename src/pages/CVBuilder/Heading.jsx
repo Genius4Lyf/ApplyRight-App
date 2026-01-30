@@ -1,95 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useCVBuilder } from '../../context/CVContext';
 import { User, ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
 
 const Heading = () => {
-    // Safely destructure context
-    const context = useOutletContext();
-    const { cvData, handleNext, handleBack, saving, user } = context || {};
+    // Use the custom hook for context
+    const { cvData, handleNext, handleBack, saving, user } = useCVBuilder();
 
-    // Fallback if context is somehow missing
-    if (!cvData) {
-        return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
-    }
-
-    // Initialize form data with draft data OR auto-fill from user profile
-    const [formData, setFormData] = useState(() => {
-        const initial = cvData.personalInfo || {};
-
-        // Auto-fill logic if fields are empty
-        if (!initial.fullName && user?.firstName) {
-            // Combine First Name + Other Name + Last Name
-            const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
-            initial.fullName = nameParts.join(' ');
-        }
-        if (!initial.email && user?.email) {
-            initial.email = user.email;
-        }
-        if (!initial.phone && user?.phone) {
-            initial.phone = user.phone;
-        }
-        // Auto-fill optional fields if they exist in user profile (assuming user object has these fields)
-        if (!initial.linkedin && user?.linkedinUrl) {
-            initial.linkedin = user.linkedinUrl;
-        }
-        if (!initial.website && user?.portfolioUrl) {
-            initial.website = user.portfolioUrl;
-        }
-        return initial;
-    });
+    // Initialize form data - start with empty then populate via useEffect
+    const [formData, setFormData] = useState({});
 
     // Track visibility of optional fields
     const [visibleFields, setVisibleFields] = useState({
-        linkedin: !!formData.linkedin,
-        website: !!formData.website,
-        nationality: !!formData.nationality,
-        address: !!formData.address
+        linkedin: false,
+        website: false,
+        nationality: false,
+        address: false
     });
 
-    // Auto-fill effect to handle cases where user data loads after initial render
-    useEffect(() => {
-        if (user) {
-            setFormData(prev => {
-                const newData = { ...prev };
-                let hasChanges = false;
-
-                if (!newData.fullName && user.firstName) {
-                    const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
-                    newData.fullName = nameParts.join(' ');
-                    hasChanges = true;
-                }
-                if (!newData.email && user.email) {
-                    newData.email = user.email;
-                    hasChanges = true;
-                }
-                if (!newData.phone && user.phone) {
-                    newData.phone = user.phone;
-                    hasChanges = true;
-                }
-                if (!newData.linkedin && user.linkedinUrl) {
-                    newData.linkedin = user.linkedinUrl;
-                    hasChanges = true;
-                }
-                if (!newData.website && user.portfolioUrl) {
-                    newData.website = user.portfolioUrl;
-                    hasChanges = true;
-                }
-
-                // Only update visibility if we added new optional fields
-                if (hasChanges) {
-                    setVisibleFields(prevVis => ({
-                        ...prevVis,
-                        linkedin: !!newData.linkedin,
-                        website: !!newData.website
-                    }));
-                }
-
-                return hasChanges ? newData : prev;
-            });
-        }
-    }, [user]);
-
     const [showExample, setShowExample] = useState(false);
+
+    // Initialize and Auto-fill effect
+    useEffect(() => {
+        // First, set from cvData if available
+        const draftData = cvData?.personalInfo || {};
+
+        // Then merge with user profile data (only for empty fields)
+        const mergedData = { ...draftData };
+        let needsUpdate = false;
+
+        if (user) {
+            // Auto-fill name if empty
+            if (!mergedData.fullName && user.firstName) {
+                const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
+                mergedData.fullName = nameParts.join(' ');
+                needsUpdate = true;
+            }
+
+            // Auto-fill email if empty
+            if (!mergedData.email && user.email) {
+                mergedData.email = user.email;
+                needsUpdate = true;
+            }
+
+            // Auto-fill phone if empty
+            if (!mergedData.phone && user.phone) {
+                mergedData.phone = user.phone;
+                needsUpdate = true;
+            }
+
+            // Auto-fill LinkedIn if empty
+            if (!mergedData.linkedin && user.linkedinUrl) {
+                mergedData.linkedin = user.linkedinUrl;
+                needsUpdate = true;
+            }
+
+            // Auto-fill website if empty
+            if (!mergedData.website && user.portfolioUrl) {
+                mergedData.website = user.portfolioUrl;
+                needsUpdate = true;
+            }
+        }
+
+        // Always set the form data (either from draft or merged)
+        setFormData(mergedData);
+
+        // Update visibility based on what we have
+        setVisibleFields({
+            linkedin: !!mergedData.linkedin,
+            website: !!mergedData.website,
+            nationality: !!mergedData.nationality,
+            address: !!mergedData.address
+        });
+
+    }, [user, cvData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
