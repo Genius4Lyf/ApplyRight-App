@@ -28,7 +28,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
             `}</style>
 
             {/* Header */}
-            <header className="text-center py-16 px-10 bg-slate-900 border-b border-amber-500/30 relative">
+            <header className="text-center pt-16 pb-6 px-10 bg-slate-900 relative">
                 <div className="w-24 h-24 mx-auto border-2 border-amber-500 rounded-full flex items-center justify-center mb-6">
                     <span className="text-4xl text-amber-500 font-black italic">{name.charAt(0)}</span>
                 </div>
@@ -47,12 +47,12 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
             </header>
 
             {/* Body */}
-            <div className="p-12 font-['Lato',sans-serif]">
+            <div className="px-12 pb-12 pt-2 font-['Lato',sans-serif]">
                 <ReactMarkdown
                     components={{
                         h1: () => null,
                         h2: ({ node, ...props }) => (
-                            <h2 className="text-2xl font-['Playfair_Display',serif] text-amber-500 mt-10 mb-6 pb-2 border-b border-amber-900/50 text-center italic" {...props} />
+                            <h2 className="text-2xl font-['Playfair_Display',serif] text-amber-500 mt-6 mb-6 pb-2 border-b border-amber-900/50 text-center italic" {...props} />
                         ),
                         h3: ({ node, ...props }) => (
                             <h3 className="text-lg font-bold text-amber-100 mt-8 mb-1 text-center" {...props} />
@@ -61,13 +61,13 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
                             <h4 className="text-xs uppercase tracking-widest text-slate-500 mb-4 text-center" {...props} />
                         ),
                         p: ({ node, ...props }) => (
-                            <p className="mb-4 text-justify font-light opacity-90 leading-7" {...props} />
+                            <p className="mb-4 text-center font-light opacity-90 leading-7" {...props} />
                         ),
                         ul: ({ node, ...props }) => (
-                            <ul className="list-none space-y-2 mb-6 text-center" {...props} />
+                            <ul className="list-none space-y-2 mb-6" {...props} />
                         ),
                         li: ({ node, ...props }) => (
-                            <li className="opacity-90" {...props}>
+                            <li className="opacity-90 text-center block" {...props}>
                                 <span className="text-amber-700 mr-2">❖</span>
                                 {props.children}
                             </li>
