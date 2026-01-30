@@ -256,31 +256,33 @@ const ResumeReview = () => {
                         ) : (
                             /* COVER LETTER RENDER */
                             <div id="cover-letter-content" className="bg-white min-h-screen">
-                                <div className="mb-8 border-b border-slate-200 pb-6">
-                                    {/* Simple Header for Cover Letter */}
-                                    <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                                        {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
-                                    </h1>
-                                    <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                                        {userProfile?.email && <span>{userProfile.email}</span>}
-                                        {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                <div className="p-12">
+                                    <div className="mb-8 border-b border-slate-200 pb-6">
+                                        {/* Simple Header for Cover Letter */}
+                                        <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                                            {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
+                                        </h1>
+                                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                                            {userProfile?.email && <span>{userProfile.email}</span>}
+                                            {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                        </div>
                                     </div>
+                                    {application.coverLetter ? (
+                                        <ReactMarkdown
+                                            components={{
+                                                h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />,
+                                                p: ({ node, ...props }) => <p className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif" {...props} />,
+                                            }}
+                                        >
+                                            {application.coverLetter}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                            <p>No cover letter generated.</p>
+                                        </div>
+                                    )}
                                 </div>
-                                {application.coverLetter ? (
-                                    <ReactMarkdown
-                                        components={{
-                                            h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />,
-                                            h2: ({ node, ...props }) => <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />,
-                                            p: ({ node, ...props }) => <p className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif" {...props} />,
-                                        }}
-                                    >
-                                        {application.coverLetter}
-                                    </ReactMarkdown>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                        <p>No cover letter generated.</p>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>
