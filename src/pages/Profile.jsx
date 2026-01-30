@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useBlocker, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
-import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles, AlertTriangle } from 'lucide-react';
+import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles, AlertTriangle, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
 import Modal from '../components/ui/Modal'; // Assuming Modal is created or exists
 
 import CVService from '../services/cv.service';
 import ApplicationService from '../services/application.service';
+import { billingService } from '../services';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Profile = () => {
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
     const [stats, setStats] = useState({ drafts: 0, applications: 0 });
+    const [credits, setCredits] = useState(0);
 
     // Unsaved Changes State
     const [initialFormData, setInitialFormData] = useState(null);
@@ -98,6 +100,14 @@ const Profile = () => {
             const res = await api.get('/users/profile');
             const userData = res.data || {};
             setUser(userData);
+
+            // Fetch Credits
+            try {
+                const creditData = await billingService.getBalance();
+                setCredits(creditData.credits || 0);
+            } catch (err) {
+                console.error("Failed to fetch credits", err);
+            }
 
             // Safe access to nested properties
             const education = userData.education || {};
@@ -484,39 +494,43 @@ const Profile = () => {
 
                     {/* Right Column: Plan Info */}
                     <div className="space-y-6">
-                        <div className={`rounded-xl shadow-sm border p-6 relative overflow-hidden transition-colors duration-200
-                            ${user?.plan === 'paid'
-                                ? 'bg-indigo-900 border-indigo-700 text-white'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white'}
-                        `}>
-                            {user?.plan === 'paid' && (
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Crown className="w-24 h-24" />
+                        {/* Credit Wallet Card */}
+                        <div className="rounded-2xl shadow-lg border border-indigo-100 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 relative overflow-hidden group">
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/15 transition-colors"></div>
+                            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
+
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-100 flex items-center gap-2">
+                                        Available Credits
+                                    </h3>
+                                    {user?.plan === 'paid' && (
+                                        <span className="flex items-center gap-1 text-[10px] font-bold bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full text-amber-300 border border-white/10">
+                                            <Crown className="w-3 h-3" /> PRO
+                                        </span>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className="flex items-center gap-3 mb-4">
-                                {user?.plan === 'paid' ? <Crown className="w-6 h-6 text-yellow-400" /> : <User className="w-6 h-6 text-slate-400" />}
-                                <h3 className="text-lg font-bold">Current Plan</h3>
-                            </div>
+                                <div className="flex flex-col mb-8">
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className="w-8 h-8 text-indigo-300" />
+                                        <span className="text-5xl font-extrabold tracking-tight">{credits}</span>
+                                        <span className="text-lg text-indigo-200 font-medium self-end mb-2">credits</span>
+                                    </div>
+                                    <p className="text-xs text-indigo-200 mt-2 pl-1">
+                                        Use credits to generate CVs and Cover Letters.
+                                    </p>
+                                </div>
 
-                            <div className="mb-6">
-                                <p className={`text-3xl font-bold ${user?.plan === 'paid' ? 'text-white' : 'text-slate-900'}`}>
-                                    {user?.plan === 'paid' ? 'Pro Plan' : 'Free Plan'}
-                                </p>
-                                <p className={`text-sm mt-1 ${user?.plan === 'paid' ? 'text-indigo-200' : 'text-slate-500'}`}>
-                                    {user?.plan === 'paid' ? 'Unlimited access to all features' : 'Basic access. Upgrade for more.'}
-                                </p>
-                            </div>
-
-                            {user?.plan !== 'paid' && (
                                 <button
-                                    onClick={handleUpgrade}
-                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center"
+                                    onClick={() => navigate('/credits')}
+                                    className="w-full py-3.5 bg-white text-indigo-700 hover:bg-slate-50 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
                                 >
-                                    <CreditCard className="w-4 h-4 mr-2" /> Upgrade to Pro
+                                    <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 group-hover/btn:scale-110 transition-transform" />
+                                    Buy More Credits
                                 </button>
-                            )}
+                            </div>
                         </div>
 
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">

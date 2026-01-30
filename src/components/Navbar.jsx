@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, LogOut, History, Zap, User, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { billingService } from '../services';
 
 const Navbar = () => {
     const location = useLocation();
@@ -14,6 +15,20 @@ const Navbar = () => {
     } catch (e) {
         console.error("Failed to parse user from local storage", e);
     }
+
+    const [credits, setCredits] = useState(null);
+
+    React.useEffect(() => {
+        const fetchCredits = async () => {
+            try {
+                const data = await billingService.getBalance();
+                setCredits(data.credits);
+            } catch (error) {
+                console.error("Failed to fetch credits", error);
+            }
+        };
+        fetchCredits();
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -55,6 +70,11 @@ const Navbar = () => {
                     <div className="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
 
                     <div className="flex items-center gap-4">
+                        <Link to="/credits" className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors">
+                            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+                            <span className="text-sm font-bold text-amber-700">{credits !== null ? credits : '...'}</span>
+                        </Link>
+
                         <div className="hidden md:flex flex-col items-end cursor-pointer" onClick={() => navigate('/profile')}>
                             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account</span>
                             <span className="text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors">
@@ -113,6 +133,17 @@ const Navbar = () => {
                             >
                                 <History className="w-5 h-5" />
                                 <span className="font-medium">Job History</span>
+                            </Link>
+
+                            <div className="h-px bg-slate-100 my-2"></div>
+
+                            <Link
+                                to="/credits"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/credits') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                                <Sparkles className="w-5 h-5 text-amber-500 fill-amber-500" />
+                                <span className="font-medium">Credits: {credits !== null ? credits : '...'}</span>
                             </Link>
 
                             <div className="h-px bg-slate-100 my-2"></div>
