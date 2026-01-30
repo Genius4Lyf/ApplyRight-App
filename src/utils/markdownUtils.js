@@ -93,7 +93,7 @@ const generateMarkdownFromDraft = (draft) => {
         md += `## Projects\n`;
         projects.forEach(proj => {
             md += `### ${proj.title}\n`;
-            if (proj.link) {
+            if (proj.link && (proj.link.startsWith('http') || proj.link.startsWith('www'))) {
                 md += `Link: [${proj.link}](${proj.link})\n\n`;
             } else {
                 md += '\n'; // Ensure space before bullets if no link

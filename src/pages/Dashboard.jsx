@@ -24,10 +24,13 @@ const Dashboard = () => {
     const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
 
     // New Feature State
-    const [workflowMode, setWorkflowMode] = useState(null); // 'upload' or 'create'
+    const [workflowMode, setWorkflowMode] = useState(null); // 'upload' (optimize), 'create-upload' (new feature)
     const [myDrafts, setMyDrafts] = useState([]);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [draftToDelete, setDraftToDelete] = useState(null);
+    const [showCreateOptions, setShowCreateOptions] = useState(false);
+    const [scanSuccessDraftId, setScanSuccessDraftId] = useState(null);
+    const [scanning, setScanning] = useState(false);
 
     // Get user from local storage
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -232,7 +235,7 @@ const Dashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* Option 1: Create New */}
                         <div
-                            onClick={() => navigate('/cv-builder/new')}
+                            onClick={() => setShowCreateOptions(true)}
                             className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
@@ -241,7 +244,7 @@ const Dashboard = () => {
                             </div>
                             <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Create a new CV</h3>
                             <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
-                                Build a professional resume from scratch with our AI-powered wizard. We'll guide you step-by-step with tailored content.
+                                Build a professional resume. Start from scratch or upload an existing CV to let our AI do the heavy lifting.
                             </p>
                             <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
                                 Start Builder <ChevronRight className="w-5 h-5 ml-1" />
@@ -263,6 +266,54 @@ const Dashboard = () => {
                             </p>
                             <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
                                 Upload PDF <ChevronRight className="w-5 h-5 ml-1" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Create Options Modal */}
+                {showCreateOptions && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+                            <button
+                                onClick={() => setShowCreateOptions(false)}
+                                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                            >
+                                <LogOut className="w-5 h-5 rotate-45" />
+                            </button>
+
+                            <h3 className="text-2xl font-bold text-slate-900 mb-2 text-center">How would you like to start?</h3>
+                            <p className="text-slate-500 text-center mb-8">Choose the best way to build your professional CV.</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <button
+                                    onClick={() => navigate('/cv-builder/new')}
+                                    className="flex flex-col items-center p-6 border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition-all group text-center"
+                                >
+                                    <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-indigo-600 shadow-sm">
+                                        <Plus className="w-8 h-8" />
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 mb-2">Start from Scratch</h4>
+                                    <p className="text-sm text-slate-500">
+                                        Use our step-by-step wizard to build a resume from the ground up.
+                                    </p>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setShowCreateOptions(false);
+                                        setWorkflowMode('create-upload');
+                                    }}
+                                    className="flex flex-col items-center p-6 border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 rounded-xl transition-all group text-center"
+                                >
+                                    <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-emerald-600 shadow-sm">
+                                        <UploadIcon className="w-8 h-8" />
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 mb-2">Upload Existing CV</h4>
+                                    <p className="text-sm text-slate-500">
+                                        We'll scan your PDF and auto-fill the builder with your details.
+                                    </p>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -343,6 +394,80 @@ const Dashboard = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                             <CVUploader onUploadSuccess={setResume} />
                             <JobLinkInput onJobExtracted={setJob} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Create from Upload Workflow */}
+                {workflowMode === 'create-upload' && (
+                    <div className="animate-in fade-in zoom-in-95 duration-300 max-w-2xl mx-auto">
+                        <button
+                            onClick={() => setWorkflowMode(null)}
+                            className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
+                        </button>
+
+                        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+                            <div className="text-center mb-8">
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Upload your Resume</h3>
+                                <p className="text-slate-500">Upload your existing CV (PDF) and we'll convert it into our editable format.</p>
+                            </div>
+
+                            {scanning ? (
+                                <div className="py-12 flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+                                    <h4 className="text-lg font-bold text-slate-800 animate-pulse">Scanning Document...</h4>
+                                    <p className="text-slate-500 mt-2">Extracting your experience and skills</p>
+                                </div>
+                            ) : (
+                                <CVUploader onUploadSuccess={async (resumeData) => {
+                                    setScanning(true);
+                                    try {
+                                        const res = await api.post('/analysis/analyze', {
+                                            resumeId: resumeData._id
+                                        });
+                                        if (res.data.draftId) {
+                                            setScanSuccessDraftId(res.data.draftId);
+                                        } else {
+                                            toast.error("Failed to parse resume.");
+                                            setScanning(false);
+                                        }
+                                    } catch (err) {
+                                        console.error(err);
+                                        toast.error("Error analyzing resume.");
+                                        setScanning(false);
+                                    }
+                                }} />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Scan Success Modal */}
+                {scanSuccessDraftId && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
+                            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-2">CV Scanned Successfully!</h3>
+                            <p className="text-slate-500 mb-8">We've extracted your details. How would you like to proceed?</p>
+
+                            <div className="flex flex-col gap-4">
+                                <button
+                                    onClick={() => navigate(`/resume/${scanSuccessDraftId}`)}
+                                    className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all hover:scale-[1.02] shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                                >
+                                    <Eye className="w-5 h-5" /> View ATS Preview
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/cv-builder/${scanSuccessDraftId}`)}
+                                    className="w-full py-4 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <PenTool className="w-5 h-5" /> Edit in Builder
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
