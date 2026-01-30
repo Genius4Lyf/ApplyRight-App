@@ -10,6 +10,7 @@ import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefca
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
+import DashboardTour from '../components/dashboard/DashboardTour';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -659,6 +660,9 @@ const Dashboard = () => {
                     </div>
                 )}
             </main>
+
+            {/* New User Tour */}
+            <DashboardTour />
         </div>
     );
 };
