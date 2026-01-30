@@ -299,7 +299,7 @@ const CVBuilderLayout = () => {
                                 animate={{ x: 0, opacity: 1 }}
                                 exit={{ x: '100%', opacity: 0 }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.8 }}
-                                className="fixed inset-y-0 right-0 z-50 w-[90%] max-w-sm xl:static xl:w-96 xl:block border-l border-slate-200 bg-white shadow-2xl flex flex-col"
+                                className="fixed inset-y-0 right-0 z-50 w-[90%] max-w-sm xl:static xl:w-96 xl:block border-l border-slate-200 bg-slate-50 shadow-2xl flex flex-col"
                             >
                                 <div className="xl:hidden p-4 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
                                     <h3 className="font-bold text-indigo-900">ATS Best Practices</h3>
@@ -308,7 +308,7 @@ const CVBuilderLayout = () => {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto">
+                                <div className="flex-1 overflow-y-auto bg-slate-50">
                                     <ATSGuide step={currentStep?.id || 'heading'} />
                                 </div>
                             </motion.div>
