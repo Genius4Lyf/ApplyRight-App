@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { ArrowRight, CheckCircle, Sparkles, User, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
+import CustomSelect from '../components/ui/CustomSelect';
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -203,18 +204,18 @@ const Onboarding = () => {
                                     </div>
                                     {/* Optional fields removed as per request to handle in Profile/CV Builder */}
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
-                                        <select
+                                        <CustomSelect
+                                            label="Current Status"
                                             name="currentStatus"
                                             value={formData.currentStatus}
-                                            onChange={handleChange}
-                                            className="input-field w-full"
-                                        >
-                                            <option value="student">Student</option>
-                                            <option value="graduate">Recent Graduate</option>
-                                            <option value="professional">Professional</option>
-                                            <option value="other">Other</option>
-                                        </select>
+                                            onChange={(e) => handleChange(e)}
+                                            options={[
+                                                { value: 'student', label: 'Student' },
+                                                { value: 'graduate', label: 'Recent Graduate' },
+                                                { value: 'professional', label: 'Professional' },
+                                                { value: 'other', label: 'Other' }
+                                            ]}
+                                        />
                                     </div>
                                 </div>
                             </div>

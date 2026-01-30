@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import CustomSelect from '../components/ui/CustomSelect';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -280,16 +281,16 @@ const Profile = () => {
 
                             <div className="mb-4">
                                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Career Stage</label>
-                                <select
+                                <CustomSelect
                                     name="currentStatus"
                                     value={formData.currentStatus}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                                >
-                                    <option value="student">Student / New Grad</option>
-                                    <option value="professional">Working Professional</option>
-                                    <option value="career_switcher">Career Switcher</option>
-                                </select>
+                                    onChange={(e) => handleChange(e)}
+                                    options={[
+                                        { value: 'student', label: 'Student / New Grad' },
+                                        { value: 'professional', label: 'Working Professional' },
+                                        { value: 'career_switcher', label: 'Career Switcher' }
+                                    ]}
+                                />
                                 <p className="text-xs text-slate-400 mt-1">This helps the AI adjust the tone of your CV.</p>
                             </div>
 
