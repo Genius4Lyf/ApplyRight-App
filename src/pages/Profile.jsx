@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useBlocker, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
-import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles } from 'lucide-react';
+import { User, Award, BookOpen, Settings, Save, CheckCircle, Crown, CreditCard, Sparkles, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
+import Modal from '../components/ui/Modal'; // Assuming Modal is created or exists
 
 const Profile = () => {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+
+    // Unsaved Changes State
+    const [initialFormData, setInitialFormData] = useState(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+    const [pendingTx, setPendingTx] = useState(null); // To store the blocked navigation transition
 
     // Form State
     const [formData, setFormData] = useState({
@@ -31,6 +40,54 @@ const Profile = () => {
         fetchProfile();
     }, []);
 
+    // Check for dirty state whenever formData changes
+    useEffect(() => {
+        if (!initialFormData) return;
+
+        const isFormChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+        setIsDirty(isFormChanged);
+
+        // Handle browser level blocking (refresh, closing tab)
+        const handleBeforeUnload = (e) => {
+            if (isFormChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+
+    }, [formData, initialFormData]);
+
+    // Use Router Blocker for in-app navigation
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            isDirty && currentLocation.pathname !== nextLocation.pathname
+    );
+
+    useEffect(() => {
+        if (blocker.state === "blocked") {
+            setShowUnsavedModal(true);
+        } else {
+            setShowUnsavedModal(false);
+        }
+    }, [blocker]);
+
+    const handleConfirmExit = () => {
+        if (blocker.state === "blocked") {
+            blocker.proceed();
+        }
+        setShowUnsavedModal(false);
+    };
+
+    const handleCancelExit = () => {
+        if (blocker.state === "blocked") {
+            blocker.reset();
+        }
+        setShowUnsavedModal(false);
+    };
+
     const fetchProfile = async () => {
         try {
             const res = await api.get('/users/profile');
@@ -41,7 +98,7 @@ const Profile = () => {
             const education = userData.education || {};
             const settings = userData.settings || {};
 
-            setFormData({
+            const loadedData = {
                 firstName: userData.firstName || '',
                 lastName: userData.lastName || '',
                 otherName: userData.otherName || '',
@@ -54,7 +111,10 @@ const Profile = () => {
                 university: education.university || '',
                 discipline: education.discipline || '',
                 autoGenerateAnalysis: settings.autoGenerateAnalysis || false
-            });
+            };
+
+            setFormData(loadedData);
+            setInitialFormData(loadedData); // Set initial state for comparison
         } catch (error) {
             console.error('Failed to load profile', error);
             toast.error("Failed to load profile data");
@@ -93,9 +153,9 @@ const Profile = () => {
         // Clean LinkedIn URL on change
         if (name === 'linkedinUrl') {
             const cleanedUrl = cleanLinkedInUrl(value);
-            setFormData({ ...formData, [name]: cleanedUrl });
+            setFormData(prev => ({ ...prev, [name]: cleanedUrl }));
         } else {
-            setFormData({ ...formData, [name]: value });
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
 
@@ -128,6 +188,10 @@ const Profile = () => {
             localStorage.setItem('user', JSON.stringify(res.data));
             // Dispatch custom event to notify other components (e.g., CVBuilder)
             window.dispatchEvent(new Event('userDataUpdated'));
+
+            // Update initial form data to new state
+            setInitialFormData(formData);
+            setIsDirty(false); // Reset dirty state
 
             setSuccessMsg('Profile updated successfully!');
             toast.success('Profile updated successfully');
@@ -174,6 +238,40 @@ const Profile = () => {
         <div className="min-h-screen bg-slate-50">
             <Navbar />
 
+            {/* Unsaved Changes Modal */}
+            <Modal
+                isOpen={showUnsavedModal}
+                onClose={handleCancelExit}
+                title="Unsaved Changes"
+                size="sm"
+            >
+                <div className="flex flex-col items-center text-center p-2">
+                    <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mb-4 ring-8 ring-amber-50/50">
+                        <AlertTriangle className="w-6 h-6 text-amber-500" />
+                    </div>
+
+                    <h4 className="text-lg font-bold text-slate-900 mb-2">You have unsaved changes</h4>
+                    <p className="text-sm text-slate-500 leading-relaxed mb-1 max-w-[260px] mx-auto">
+                        If you leave now, you'll lose the changes you've made to your profile.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3 w-full mt-8">
+                        <button
+                            onClick={handleConfirmExit}
+                            className="px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors"
+                        >
+                            Discard
+                        </button>
+                        <button
+                            onClick={handleCancelExit}
+                            className="px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 transition-all hover:shadow-indigo-300 transform active:scale-[0.98]"
+                        >
+                            Keep Editing
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <main className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-8 flex items-center gap-3">
                     <User className="w-8 h-8 text-indigo-600" />
@@ -186,7 +284,15 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Left Column: Settings Form */}
                     <div className="md:col-span-2 space-y-6">
-                        <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative">
+                            {/* Dirty Indicator */}
+                            {isDirty && (
+                                <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1 rounded-full text-xs font-medium animate-in fade-in">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                                    Unsaved Changes
+                                </div>
+                            )}
+
                             <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                                 <Settings className="w-5 h-5 text-slate-400" />
                                 General Settings
@@ -367,8 +473,8 @@ const Profile = () => {
                                 )}
                                 <button
                                     type="submit"
-                                    disabled={saving}
-                                    className="btn-primary ml-auto px-6 py-2 flex items-center"
+                                    disabled={saving || !isDirty} // Disable if clean
+                                    className={`btn-primary ml-auto px-6 py-2 flex items-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     {saving ? 'Saving...' : (
                                         <>

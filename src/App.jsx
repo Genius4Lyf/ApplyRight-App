@@ -1,5 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { cloneElement } from 'react';
+import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
@@ -18,7 +20,6 @@ import Education from './pages/CVBuilder/Education';
 import Skills from './pages/CVBuilder/Skills';
 import Finalize from './pages/CVBuilder/Finalize';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useState, useEffect } from 'react';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -29,8 +30,10 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const AnimatedRoutes = () => {
+// Root Layout to handle global providers and animations
+const RootLayout = () => {
   const location = useLocation();
+  const element = useOutlet();
 
   // Custom key function to prevent CVBuilderLayout from remounting on step changes
   const getPageKey = (pathname) => {
@@ -46,91 +49,101 @@ const AnimatedRoutes = () => {
   };
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={getPageKey(location.pathname)}>
-        {/* Landing Page Route */}
-        <Route path="/" element={<LandingPage />} />
-
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <JobHistory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ErrorBoundary>
-                <Profile />
-              </ErrorBoundary>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/resume/:id"
-          element={
-            <ProtectedRoute>
-              <ResumeReview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cv-builder/:id/*"
-          element={
-            <ProtectedRoute>
-              <CVBuilderLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="target-job" element={<TargetJob />} />
-          <Route path="heading" element={<Heading />} />
-          <Route path="summary" element={<ProfessionalSummary />} />
-          <Route path="history" element={<History />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="education" element={<Education />} />
-          <Route path="skills" element={<Skills />} />
-          <Route path="finalize" element={<Finalize />} />
-        </Route>
-
-        {/* Fallback to Landing Page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AnimatePresence>
+    <>
+      <Toaster position="bottom-right" richColors />
+      <AnimatePresence mode="wait">
+        {element && cloneElement(element, { key: getPageKey(location.pathname) })}
+      </AnimatePresence>
+    </>
   );
 };
 
-import { Toaster } from 'sonner';
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <LandingPage />,
+      },
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/onboarding",
+        element: (
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/history",
+        element: (
+          <ProtectedRoute>
+            <JobHistory />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Profile />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/resume/:id",
+        element: (
+          <ProtectedRoute>
+            <ResumeReview />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/cv-builder/:id",
+        element: (
+          <ProtectedRoute>
+            <CVBuilderLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          { path: "target-job", element: <TargetJob /> },
+          { path: "heading", element: <Heading /> },
+          { path: "summary", element: <ProfessionalSummary /> },
+          { path: "history", element: <History /> },
+          { path: "projects", element: <Projects /> },
+          { path: "education", element: <Education /> },
+          { path: "skills", element: <Skills /> },
+          { path: "finalize", element: <Finalize /> },
+        ],
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
+    ],
+  },
+]);
 
 function App() {
-  return (
-    <Router>
-      <Toaster position="bottom-right" richColors />
-      <AnimatedRoutes />
-    </Router>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
