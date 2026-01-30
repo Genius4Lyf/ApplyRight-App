@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, History, Zap, User, Menu, X } from 'lucide-react';
+import { Sparkles, LogOut, History, Zap, User, Menu, X, PlayCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 
@@ -17,6 +17,21 @@ const Navbar = () => {
     }
 
     const [credits, setCredits] = useState(null);
+    const [showCreditPopover, setShowCreditPopover] = useState(false);
+    const popoverRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+                setShowCreditPopover(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     React.useEffect(() => {
         const fetchCredits = async () => {
@@ -70,10 +85,52 @@ const Navbar = () => {
                     <div className="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
 
                     <div className="flex items-center gap-4">
-                        <Link to="/credits" className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors">
-                            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                            <span className="text-sm font-bold text-amber-700">{credits !== null ? credits : '...'}</span>
-                        </Link>
+                        <div className="relative" ref={popoverRef}>
+                            <button
+                                onClick={() => setShowCreditPopover(!showCreditPopover)}
+                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                            >
+                                <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600" />
+                                <span className="text-sm font-bold text-indigo-700">{credits !== null ? credits : '...'}</span>
+                            </button>
+
+                            <AnimatePresence>
+                                {showCreditPopover && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95, x: "-50%" }}
+                                        animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95, x: "-50%" }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-1/2 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 p-4"
+                                    >
+
+
+                                        <div className="space-y-1">
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/credits');
+                                                    setShowCreditPopover(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
+                                            >
+                                                <Zap className="w-4 h-4 text-indigo-500" />
+                                                Buy Credits
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/credits');
+                                                    setShowCreditPopover(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-green-600 transition-colors flex items-center gap-2"
+                                            >
+                                                <PlayCircle className="w-4 h-4 text-green-500" />
+                                                Watch Ad (+5)
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
 
                         <div className="hidden md:flex flex-col items-end cursor-pointer" onClick={() => navigate('/profile')}>
                             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account</span>
@@ -142,7 +199,7 @@ const Navbar = () => {
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/credits') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
-                                <Sparkles className="w-5 h-5 text-amber-500 fill-amber-500" />
+                                <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600" />
                                 <span className="font-medium">Credits: {credits !== null ? credits : '...'}</span>
                             </Link>
 
