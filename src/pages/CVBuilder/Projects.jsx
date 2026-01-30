@@ -20,9 +20,13 @@ const Projects = () => {
     const [showTutorial, setShowTutorial] = useState(false);
 
     // Auto-show tutorial based on user settings
+    // Auto-show tutorial based on user settings
     useEffect(() => {
         if (user?.settings?.showOnboardingTutorials !== false) {
-            setShowTutorial(true);
+            const timer = setTimeout(() => {
+                setShowTutorial(true);
+            }, 1500); // 1.5s delay for better UX
+            return () => clearTimeout(timer);
         }
     }, [user]);
 

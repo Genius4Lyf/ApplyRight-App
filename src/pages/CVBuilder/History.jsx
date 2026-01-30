@@ -23,7 +23,10 @@ const History = () => {
     useEffect(() => {
         // Only show if user settings allow it
         if (user?.settings?.showOnboardingTutorials !== false) {
-            setShowTutorial(true);
+            const timer = setTimeout(() => {
+                setShowTutorial(true);
+            }, 1500); // 1.5s delay for better UX
+            return () => clearTimeout(timer);
         }
     }, [user]); // user dependency ensures it runs when user is loaded
 

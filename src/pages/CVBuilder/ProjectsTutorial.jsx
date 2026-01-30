@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, FlaskConical, ClipboardPaste, X, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import UserService from '../../services/user.service';
 
 const ProjectsTutorial = ({ isOpen, onClose, user }) => {
@@ -22,7 +23,12 @@ const ProjectsTutorial = ({ isOpen, onClose, user }) => {
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+            >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white relative">
                     <button
@@ -94,8 +100,8 @@ const ProjectsTutorial = ({ isOpen, onClose, user }) => {
                         Got it! Start Adding <ArrowRight className="w-4 h-4" />
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </div >
     );
 };
 
