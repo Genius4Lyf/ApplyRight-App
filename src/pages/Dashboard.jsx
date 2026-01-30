@@ -5,7 +5,8 @@ import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
 import CVService from '../services/cv.service';
-import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2 } from 'lucide-react';
+import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2, Eye } from 'lucide-react';
+
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
@@ -275,42 +276,57 @@ const Dashboard = () => {
                             <h3 className="text-lg font-bold">My Recent CVs</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            {myDrafts.map(draft => (
-                                <div
-                                    key={draft._id}
-                                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group"
-                                >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                                            <FileText className="w-5 h-5" />
+                            {myDrafts.map(draft => {
+                                // Check completeness: Name, Summary, Experience, Education, Skills, and Projects
+                                const isComplete =
+                                    draft.personalInfo?.fullName &&
+                                    draft.professionalSummary &&
+                                    draft.experience?.length > 0 &&
+                                    draft.education?.length > 0 &&
+                                    draft.skills?.length > 0 &&
+                                    draft.projects?.length > 0;
+
+                                return (
+                                    <div
+                                        key={draft._id}
+                                        className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group"
+                                    >
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isComplete ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                {isComplete ? <CheckCircle className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                                            </div>
+                                            <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+                                                {new Date(draft.updatedAt).toLocaleDateString()}
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
-                                            {new Date(draft.updatedAt).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <h4 className="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">
-                                        {draft.title || 'Untitled CV'}
-                                    </h4>
-                                    <p className="text-xs text-slate-500 mb-4 line-clamp-2">
-                                        {draft.professionalSummary || 'No summary yet...'}
-                                    </p>
-                                    <div className="flex items-center justify-between">
-                                        <div
-                                            onClick={() => navigate(`/cv-builder/${draft._id}`)}
-                                            className="text-xs font-semibold text-indigo-600 flex items-center group-hover:underline decoration-indigo-200 underline-offset-4 cursor-pointer"
-                                        >
-                                            Continue Editing <ChevronRight className="w-3 h-3 ml-1" />
+                                        <h4 className="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">
+                                            {draft.title || 'Untitled CV'}
+                                        </h4>
+                                        <p className="text-xs text-slate-500 mb-4 line-clamp-2">
+                                            {draft.professionalSummary || 'No summary yet...'}
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <div
+                                                onClick={() => navigate(isComplete ? `/resume/${draft._id}` : `/cv-builder/${draft._id}`)}
+                                                className={`text-xs font-semibold flex items-center group-hover:underline decoration-indigo-200 underline-offset-4 cursor-pointer ${isComplete ? 'text-emerald-600' : 'text-indigo-600'}`}
+                                            >
+                                                {isComplete ? (
+                                                    <>Review CV <Eye className="w-3 h-3 ml-1" /></>
+                                                ) : (
+                                                    <>Continue Editing <ChevronRight className="w-3 h-3 ml-1" /></>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={(e) => handleDeleteClick(e, draft)}
+                                                className="text-xs font-semibold text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors"
+                                                title="Delete CV"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={(e) => handleDeleteClick(e, draft)}
-                                            className="text-xs font-semibold text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors"
-                                            title="Delete CV"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
