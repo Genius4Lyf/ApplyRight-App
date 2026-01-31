@@ -10,13 +10,23 @@ const Register = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        referralCode: '', // NEW
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
     const navigate = useNavigate();
 
-    const { email, password, confirmPassword } = formData;
+    const { email, password, confirmPassword, referralCode } = formData;
+
+    // Check URL for referral code on component mount
+    React.useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        if (refCode) {
+            setFormData(prev => ({ ...prev, referralCode: refCode.toUpperCase() }));
+        }
+    }, []);
 
     const onChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,7 +42,7 @@ const Register = () => {
         setError('');
 
         try {
-            const res = await api.post('/auth/register', { email, password });
+            const res = await api.post('/auth/register', { email, password, referralCode });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data));
             navigate('/onboarding');
@@ -118,6 +128,18 @@ const Register = () => {
                                     disabled={isLoading}
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Referral Code (Optional)</label>
+                                <input
+                                    name="referralCode"
+                                    type="text"
+                                    className="input-field w-full uppercase"
+                                    placeholder="e.g. SAVE50"
+                                    value={referralCode}
+                                    onChange={onChange}
+                                    disabled={isLoading}
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-start">
@@ -159,14 +181,14 @@ const Register = () => {
                             Sign In to Existing Account
                         </Link>
                     </form>
-                </div>
+                </div >
 
                 <p className="text-center mt-8 text-sm text-slate-400">
                     &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
                 </p>
-            </div>
+            </div >
             {/* Legal Modals */}
-            <Modal
+            < Modal
                 isOpen={!!activeModal}
                 onClose={() => setActiveModal(null)}
                 title={activeModal === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
@@ -206,8 +228,8 @@ const Register = () => {
                         <p>We may share data with trusted third-party service providers (like payment processors or cloud hosting) strictly for operational purposes.</p>
                     </div>
                 )}
-            </Modal>
-        </motion.div>
+            </Modal >
+        </motion.div >
     );
 };
 

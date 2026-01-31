@@ -1,13 +1,95 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Star, Crown, Gift, Share2, PlayCircle, Check, Loader, X } from 'lucide-react';
+import { Zap, Star, Crown, Gift, Share2, PlayCircle, Check, Loader, X, Clock } from 'lucide-react';
 import { billingService } from '../services';
+import AdPlayer from '../components/AdPlayer';
 
 const CreditStore = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [purchaseStatus, setPurchaseStatus] = useState(null); // 'success' | 'error'
+
+    // Ad State
+    const [showAdPlayer, setShowAdPlayer] = useState(false);
+    const [adStats, setAdStats] = useState({ watchCount: 0, maxDaily: 3, lastWatch: null, streak: 0 });
+    const [showReward, setShowReward] = useState(false);
+    const [rewardMessage, setRewardMessage] = useState('');
+
+    // Referral State
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [referralCode, setReferralCode] = useState('');
+    const [copySuccess, setCopySuccess] = useState('');
+    const [loadingCode, setLoadingCode] = useState(true);
+
+    React.useEffect(() => {
+        const fetchAdStats = async () => {
+            try {
+                const stats = await billingService.getAdStats();
+                setAdStats(stats);
+            } catch (error) {
+                console.error("Failed to fetch ad stats", error);
+            }
+        };
+        fetchAdStats();
+
+        // Fetch user profile to get referral code from backend
+        const fetchReferralCode = async () => {
+            try {
+                setLoadingCode(true);
+                // Get fresh user data from localStorage (updated on login)
+                const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                if (storedUser.referralCode) {
+                    setReferralCode(storedUser.referralCode);
+                }
+                setLoadingCode(false);
+            } catch (e) {
+                console.error(e);
+                setLoadingCode(false);
+            }
+        };
+        fetchReferralCode();
+    }, []);
+
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(referralCode);
+        setCopySuccess('Copied!');
+        setTimeout(() => setCopySuccess(''), 2000);
+    };
+
+    const handleCopyLink = () => {
+        const link = `${window.location.origin}/register?ref=${referralCode}`;
+        navigator.clipboard.writeText(link);
+        setCopySuccess('Link Copied!');
+        setTimeout(() => setCopySuccess(''), 2000);
+    };
+
+    const handleAdSuccess = async () => {
+        try {
+            const result = await billingService.watchAd();
+
+            // Dispatch update event for Navbar
+            window.dispatchEvent(new CustomEvent('credit_updated', { detail: result.credits }));
+
+            setAdStats(prev => ({
+                ...prev,
+                watchCount: result.watchCount,
+                streak: result.streak
+            }));
+
+            setRewardMessage(result.streakMessage || '');
+            setShowAdPlayer(false);
+            setShowReward(true);
+            setTimeout(() => {
+                setShowReward(false);
+                setRewardMessage('');
+            }, 4000);
+        } catch (error) {
+            console.error("Ad reward failed", error);
+            alert("Failed to claim reward. Please try again.");
+            setShowAdPlayer(false);
+        }
+    };
 
     const tiers = [
         {
@@ -135,30 +217,212 @@ const CreditStore = () => {
                 {/* Earn Free Credits */}
                 <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+
                     <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
                         <div className="space-y-6">
-                            <h2 className="text-3xl font-bold text-white">Want Free Credits?</h2>
-                            <p className="text-white text-lg">
-                                Short on cash? No problem. Watch a quick video or invite a friend to earn credits instantly.
-                            </p>
-                            <div className="flex flex-wrap gap-4">
-                                <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-5 py-3 rounded-xl transition-colors backdrop-blur-sm">
-                                    <PlayCircle className="w-5 h-5 text-amber-400" />
-                                    <span>Watch Ad (+5 Credits)</span>
+                            <div>
+                                <h2 className="text-3xl font-bold text-white mb-2">Want Free Credits?</h2>
+                                <p className="text-indigo-200 text-lg">
+                                    Short on cash? Watch a quick video to power up your search.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-4 max-w-sm">
+                                <button
+                                    onClick={() => {
+                                        if (adStats.watchCount >= adStats.maxDaily) return;
+                                        setShowAdPlayer(true);
+                                    }}
+                                    disabled={adStats.watchCount >= adStats.maxDaily}
+                                    className={`
+                                        flex items-center gap-3 px-6 py-4 rounded-xl transition-all border
+                                        ${adStats.watchCount >= adStats.maxDaily
+                                            ? 'bg-white/5 border-white/5 text-slate-400 cursor-not-allowed'
+                                            : 'bg-white/10 hover:bg-white/20 border-white/20 hover:scale-105 backdrop-blur-sm shadow-xl'}
+                                    `}
+                                >
+                                    <div className={`p-2 rounded-full ${adStats.watchCount >= adStats.maxDaily ? 'bg-white/5' : 'bg-amber-500/20 text-amber-400'}`}>
+                                        <PlayCircle className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold">Watch Ad (+5 Credits)</div>
+                                        <div className="text-xs opacity-70 flex items-center gap-2">
+                                            {adStats.watchCount >= adStats.maxDaily ? (
+                                                <span>Daily limit reached</span>
+                                            ) : (
+                                                <span>{adStats.watchCount}/{adStats.maxDaily} watched today</span>
+                                            )}
+                                            {adStats.streak > 0 && (
+                                                <span className="bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                                                    🔥 {adStats.streak} Day Streak
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </button>
-                                <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-5 py-3 rounded-xl transition-colors backdrop-blur-sm">
-                                    <Share2 className="w-5 h-5 text-green-400" />
-                                    <span>Invite Friend (+50 Credits)</span>
+
+                                <button
+                                    onClick={() => setShowInviteModal(true)}
+                                    className="flex items-center gap-3 px-6 py-4 rounded-xl transition-all border bg-white/10 hover:bg-white/20 border-white/20 hover:scale-105 backdrop-blur-sm shadow-xl"
+                                >
+                                    <div className="p-2 rounded-full bg-green-500/20 text-green-400">
+                                        <Share2 className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold">Invite Friend (+50)</div>
+                                        <div className="text-xs opacity-70">
+                                            You earn 50 credits per friend
+                                        </div>
+                                    </div>
                                 </button>
                             </div>
                         </div>
-                        <div className="hidden md:flex justify-center">
-                            <Gift className="w-48 h-48 text-white/20 rotate-12" />
+
+                        <div className="hidden md:flex justify-center relative">
+                            {/* 3D Gift Icon */}
+                            <motion.div
+                                animate={{ rotate: [0, 10, -10, 0] }}
+                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <Gift className="w-48 h-48 text-white/20" />
+                            </motion.div>
+
+                            {/* Floating Coins Animation (for decoration) */}
+                            <motion.div
+                                animate={{ y: [0, -20, 0] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute top-0 right-10"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-yellow-400/20 blur-md"></div>
+                            </motion.div>
                         </div>
                     </div>
                 </div>
 
+                {/* Ad Player Modal */}
+                {showAdPlayer && (
+                    <AdPlayer
+                        onComplete={handleAdSuccess}
+                        onClose={() => setShowAdPlayer(false)}
+                    />
+                )}
+
+                {/* Reward Celebration Overlay */}
+                <AnimatePresence>
+                    {showReward && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            className="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none"
+                        >
+                            <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20 shadow-2xl flex flex-col items-center text-center">
+                                <motion.div
+                                    initial={{ scale: 0, rotate: -180 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: "spring", bounce: 0.5 }}
+                                    className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-yellow-400/50"
+                                >
+                                    <Zap className="w-12 h-12 text-white fill-white" />
+                                </motion.div>
+                                <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">+5 Credits!</h2>
+                                {rewardMessage && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-orange-500 text-white px-3 py-1 rounded-full font-bold text-sm mb-2 shadow-lg"
+                                    >
+                                        {rewardMessage}
+                                    </motion.div>
+                                )}
+                                <p className="text-white/80 font-medium">Reward Claimed Successfully</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
             </div>
+
+            {/* Invite Friend Modal */}
+            <AnimatePresence>
+                {showInviteModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setShowInviteModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white rounded-2xl p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => setShowInviteModal(false)}
+                                className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+
+                            <div className="text-center space-y-6">
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                                    <Share2 className="w-8 h-8 text-green-600" />
+                                </div>
+
+                                <div>
+                                    <h3 className="text-2xl font-bold text-slate-900">Invite Friends & Earn</h3>
+                                    <p className="text-slate-600 mt-2">
+                                        Share your code with friends. When they sign up, <b>you get</b> <span className="text-green-600 font-bold">50 Credits</span>!
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {/* Referral Code */}
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 mb-2">YOUR REFERRAL CODE</label>
+                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
+                                            <div className="font-mono text-xl font-bold text-slate-800 tracking-wider">
+                                                {loadingCode ? 'LOADING...' : referralCode || 'ERROR'}
+                                            </div>
+                                            <button
+                                                onClick={handleCopyCode}
+                                                disabled={loadingCode || !referralCode}
+                                                className={`${copySuccess === 'Copied!' ? 'bg-green-500 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'} px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {copySuccess === 'Copied!' ? 'Copied!' : 'Copy'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Share Link */}
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 mb-2">OR SHARE THIS LINK</label>
+                                        <button
+                                            onClick={handleCopyLink}
+                                            disabled={loadingCode || !referralCode}
+                                            className="w-full bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <div className="text-sm text-indigo-600 font-medium truncate">
+                                                {loadingCode ? 'Loading...' : `${window.location.origin}/register?ref=${referralCode}`}
+                                            </div>
+                                            <div className={`${copySuccess === 'Link Copied!' ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white'} px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap`}>
+                                                {copySuccess === 'Link Copied!' ? '✓ Copied' : 'Copy Link'}
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="text-xs text-slate-400">
+                                    Credits are valid for CV analysis and optimizations.
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Success/Error Toast (Simple) */}
             <AnimatePresence>

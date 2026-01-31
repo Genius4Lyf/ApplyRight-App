@@ -17,6 +17,18 @@ const billingService = {
     getTransactions: async () => {
         const response = await api.get('/billing/transactions');
         return response.data;
+    },
+
+    // Watch Ad Reward
+    watchAd: async () => {
+        const response = await api.post('/billing/watch-ad');
+        return response.data;
+    },
+
+    // Get Ad Stats
+    getAdStats: async () => {
+        const response = await api.get('/billing/ad-stats');
+        return response.data;
     }
 };
 
