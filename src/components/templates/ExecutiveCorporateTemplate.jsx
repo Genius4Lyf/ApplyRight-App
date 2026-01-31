@@ -29,7 +29,7 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
             `}</style>
 
             {/* Header */}
-            <header className="px-12 py-10 border-b-2 border-gray-200">
+            <header className="px-12 py-6">
                 <div className="flex justify-between items-start">
                     <div>
                         <h1 className="text-4xl font-['Inter',sans-serif] font-extrabold tracking-tighter text-slate-900 mb-2 uppercase">
@@ -54,7 +54,7 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
             </header>
 
             {/* Body */}
-            <div className="p-12 font-['Inter',sans-serif]">
+            <div className="px-12 pt-6 pb-12 font-['Inter',sans-serif]">
                 <ReactMarkdown
                     components={{
                         h1: () => null,
