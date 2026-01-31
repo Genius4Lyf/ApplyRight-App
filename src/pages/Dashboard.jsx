@@ -96,6 +96,12 @@ const Dashboard = () => {
             }
             return res.data;
         } catch (error) {
+            if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
+                handleInsufficientCredits(error.response.data.required, error.response.data.current);
+                // Don't re-throw if handled by modal, but we need to stop caller
+                setAnalyzing(false);
+                return;
+            }
             console.error("Analysis failed", error);
             throw error; // Re-throw to handle in caller
         } finally {
@@ -169,7 +175,9 @@ const Dashboard = () => {
             }
         } catch (error) {
             console.error('Generation failed', error);
-            if (error.response?.status === 403) {
+            if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
+                handleInsufficientCredits(error.response.data.required, error.response.data.current);
+            } else if (error.response?.status === 403) {
                 toast.error(error.response.data.message);
             } else {
                 toast.error('Failed to generate application. Please try again.');
@@ -177,6 +185,15 @@ const Dashboard = () => {
         } finally {
             setGenerating(false);
         }
+    };
+
+    // New: Insufficient Credits Modal
+    const [showCreditModal, setShowCreditModal] = useState(false);
+    const [requiredCredits, setRequiredCredits] = useState(0);
+
+    const handleInsufficientCredits = (required, current) => {
+        setRequiredCredits(required);
+        setShowCreditModal(true);
     };
 
     const getStatusMessage = () => {
@@ -570,7 +587,17 @@ const Dashboard = () => {
                                 ) : (
                                     <>
                                         <Sparkles className="w-5 h-5 mr-3" />
-                                        {!fitResult ? "Generate Professional Assets" : "Regenerate Assets"}
+                                        {!fitResult ? (
+                                            <span className="flex flex-col items-start leading-tight">
+                                                <span>Generate Professional Assets</span>
+                                                <span className="text-xs font-normal opacity-80">Cost: 15 Credits</span>
+                                            </span>
+                                        ) : (
+                                            <span className="flex flex-col items-start leading-tight">
+                                                <span>Regenerate Assets</span>
+                                                <span className="text-xs font-normal opacity-80">Cost: 15 Credits</span>
+                                            </span>
+                                        )}
                                         <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -660,6 +687,51 @@ const Dashboard = () => {
                     </div>
                 )}
             </main>
+
+            {/* Insufficient Credits Modal */}
+            {showCreditModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center relative">
+                        <button
+                            onClick={() => setShowCreditModal(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Zap className="w-8 h-8" />
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Insufficient Credits</h3>
+                        <p className="text-slate-500 mb-6">
+                            You need <span className="font-bold text-slate-900">{requiredCredits} credits</span> to perform this action, but you only have <span className="font-bold text-slate-900">{user.credits || 0}</span>.
+                        </p>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => navigate('/credits')}
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                            >
+                                <Zap className="w-4 h-4" /> Get More Credits
+                            </button>
+
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase font-bold">OR</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                            </div>
+
+                            <button
+                                onClick={() => navigate('/credits')} // For now direct to store where ad option lives
+                                className="w-full py-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                            >
+                                <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free Credits
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* New User Tour */}
             <DashboardTour />
