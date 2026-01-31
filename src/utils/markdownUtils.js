@@ -22,8 +22,25 @@ const generateMarkdownFromDraft = (draft) => {
     if (experience.length > 0) {
         md += `## Work History\n`;
         experience.forEach(role => {
-            md += `### ${role.title || 'Role'}\n`;
-            md += `${role.company || 'Company'} | ${role.startDate || ''} - ${role.isCurrent ? 'Present' : (role.endDate || '')}\n\n`;
+            let displayTitle = role.title || 'Role';
+            let displayCompany = role.company || 'Company';
+            let displayDate = `${role.startDate || ''} - ${role.isCurrent ? 'Present' : (role.endDate || '')}`;
+
+            // Robustness: If company is missing/empty but title contains '|', split it
+            if ((!role.company || role.company === 'Company') && displayTitle.includes('|')) {
+                const parts = displayTitle.split('|').map(p => p.trim());
+                if (parts.length >= 2) {
+                    displayTitle = parts[0];
+                    displayCompany = parts[1];
+                    // Attempt to extract date from 3rd part or 2nd part if it looks like a date
+                    if (parts.length > 2) {
+                        displayDate = parts[2];
+                    }
+                }
+            }
+
+            md += `### ${displayTitle}\n\n`;
+            md += `#### ${displayCompany} | ${displayDate}\n\n`;
 
             // Handle bullet points
             if (role.description) {
@@ -79,8 +96,8 @@ const generateMarkdownFromDraft = (draft) => {
     if (education.length > 0) {
         md += `## Education\n`;
         education.forEach(edu => {
-            md += `### ${edu.degree || 'Degree'}\n`;
-            md += `${edu.school || 'School'} | ${edu.graduationDate || ''}\n`;
+            md += `### ${edu.degree || 'Degree'}\n\n`;
+            md += `#### ${edu.school || 'School'} | ${edu.graduationDate || ''}\n\n`;
             if (edu.description) {
                 md += `- ${edu.description}\n`;
             }
