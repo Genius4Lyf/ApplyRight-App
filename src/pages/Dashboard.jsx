@@ -68,6 +68,23 @@ const Dashboard = () => {
         }
     };
 
+    // Helper to update credits globally (Navbar + Local State)
+    const updateCredits = (newBalance) => {
+        console.log('🔄 Dashboard: Updating credits to:', newBalance);
+
+        // 1. Dispatch event for Navbar
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: newBalance }));
+        console.log('📡 Dashboard: Dispatched credit_updated event with:', newBalance);
+
+        // 2. Update local state
+        setUser(prev => ({ ...prev, credits: newBalance }));
+
+        // 3. Update local storage (so it persists on refresh)
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        currentUser.credits = newBalance;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+    };
+
     // Auto-analyze when both resume and job are available AND setting is enabled
     useEffect(() => {
         const analyzeFit = async () => {
@@ -93,6 +110,12 @@ const Dashboard = () => {
             setApplication(res.data);
             if (res.data.job) {
                 setJob(res.data.job); // NEW: Update job state if backend refined it
+            }
+            console.log('✅ Dashboard: Analysis response:', res.data);
+            if (res.data.remainingCredits !== undefined) {
+                updateCredits(res.data.remainingCredits);
+            } else {
+                console.warn('⚠️ Dashboard: No remainingCredits in response');
             }
             return res.data;
         } catch (error) {
@@ -166,6 +189,12 @@ const Dashboard = () => {
             setApplication(res.data);
             if (res.data.job) {
                 setJob(res.data.job);
+            }
+            console.log('✅ Dashboard: Regenerate response:', res.data);
+            if (res.data.remainingCredits !== undefined) {
+                updateCredits(res.data.remainingCredits);
+            } else {
+                console.warn('⚠️ Dashboard: No remainingCredits in regenerate response');
             }
             toast.success("Assets updated successfully!");
 
@@ -557,10 +586,8 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* Final Generation Stage - Only show if in upload mode AND application not generated yet? 
-                    Actually, let's keep it visible if we are working on the upload flow.
-                */}
-                {workflowMode === 'upload' && (
+                {/* Final Generation Stage - Only show if in upload mode AND assets NOT generated yet */}
+                {workflowMode === 'upload' && !fitResult && (
                     <div className="relative pt-8 flex flex-col items-center">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
 
@@ -571,15 +598,15 @@ const Dashboard = () => {
 
                             <button
                                 onClick={handleGenerate}
-                                disabled={!resume || !job || generating}
+                                disabled={!resume || !job || generating || analyzing}
                                 className={`
                                     relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                                    ${!resume || !job
+                                    ${!resume || !job || generating || analyzing
                                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                         : 'btn-primary hover:scale-105 active:scale-95'}
                                 `}
                             >
-                                {generating ? (
+                                {generating || analyzing ? (
                                     <>
                                         <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
                                         {analyzing ? 'Analyzing Match...' : 'Optimizing Application...'}
@@ -587,17 +614,10 @@ const Dashboard = () => {
                                 ) : (
                                     <>
                                         <Sparkles className="w-5 h-5 mr-3" />
-                                        {!fitResult ? (
-                                            <span className="flex flex-col items-start leading-tight">
-                                                <span>Generate Professional Assets</span>
-                                                <span className="text-xs font-normal opacity-80">Cost: 15 Credits</span>
-                                            </span>
-                                        ) : (
-                                            <span className="flex flex-col items-start leading-tight">
-                                                <span>Regenerate Assets</span>
-                                                <span className="text-xs font-normal opacity-80">Cost: 15 Credits</span>
-                                            </span>
-                                        )}
+                                        <span className="flex flex-col items-start leading-tight">
+                                            <span>Generate Professional Assets</span>
+                                            <span className="text-xs font-normal opacity-80">Cost: 15 Credits</span>
+                                        </span>
                                         <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -611,7 +631,7 @@ const Dashboard = () => {
                             </div>
                         ) : (
                             <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
-                                {!fitResult && <><CheckCircle className="w-4 h-4" /> Ready for optimization</>}
+                                {!analyzing && <><CheckCircle className="w-4 h-4" /> Ready for optimization</>}
                             </p>
                         )}
                     </div>
