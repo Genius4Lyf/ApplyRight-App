@@ -16,9 +16,9 @@ const LuxuryChicTemplate = ({ markdown, userProfile }) => {
     const contactItems = [];
     if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
     if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-    if (userProfile?.linkedinUrl) contactItems.push({ icon: Linkedin, value: userProfile.linkedinUrl.replace(/^https?:\/\//, '') });
-    if (userProfile?.portfolioUrl) contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
+    if (userProfile?.location || userProfile?.city) contactItems.push({ icon: MapPin, value: userProfile.location || userProfile.city });
+    if (userProfile?.linkedinUrl || userProfile?.linkedin) contactItems.push({ icon: Linkedin, value: (userProfile.linkedinUrl || userProfile.linkedin).replace(/^https?:\/\/(www\.)?/, '') });
+    if (userProfile?.portfolioUrl || userProfile?.website) contactItems.push({ icon: Globe, value: (userProfile.portfolioUrl || userProfile.website).replace(/^https?:\/\//, '') });
 
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
@@ -29,7 +29,7 @@ const LuxuryChicTemplate = ({ markdown, userProfile }) => {
             `}</style>
 
             {/* Header - Editorial Style */}
-            <header className="pt-20 pb-16 px-16 text-center">
+            <header className="pt-20 pb-8 px-16 text-center">
                 <h1 className="text-6xl font-['Cinzel',serif] font-black tracking-widest uppercase mb-4 leading-none">
                     {name.split(' ').map((n, i) => (
                         <span key={i} className="block">{n}</span>
@@ -58,7 +58,7 @@ const LuxuryChicTemplate = ({ markdown, userProfile }) => {
                     components={{
                         h1: () => null,
                         h2: ({ node, ...props }) => (
-                            <h2 className="text-2xl font-['Cinzel',serif] text-black mt-16 mb-8 text-center" {...props} />
+                            <h2 className="text-2xl font-['Cinzel',serif] text-black mt-8 mb-8 text-center" {...props} />
                         ),
                         h3: ({ node, ...props }) => (
                             <h3 className="text-sm font-['Montserrat',sans-serif] font-bold uppercase tracking-widest text-black mt-10 mb-2 text-center" {...props} />
@@ -67,7 +67,7 @@ const LuxuryChicTemplate = ({ markdown, userProfile }) => {
                             <h4 className="text-xs font-['Montserrat',sans-serif] font-light italic text-slate-500 mb-6 text-center" {...props} />
                         ),
                         p: ({ node, ...props }) => (
-                            <p className="mb-6 text-justify font-['Montserrat',sans-serif] font-light text-sm leading-8 tracking-wide text-slate-800" {...props} />
+                            <p className="mb-6 text-center font-['Montserrat',sans-serif] font-light text-sm leading-8 tracking-wide text-slate-800" {...props} />
                         ),
                         ul: ({ node, ...props }) => (
                             <ul className="list-none space-y-3 mb-8 text-center font-['Montserrat',sans-serif] font-light text-sm" {...props} />

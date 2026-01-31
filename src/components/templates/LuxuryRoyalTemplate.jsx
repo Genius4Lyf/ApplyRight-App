@@ -22,7 +22,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-slate-900 max-w-[800px] mx-auto font-['Playfair_Display',serif] text-slate-300 leading-relaxed border-8 border-slate-800">
+        <div className="bg-slate-900 max-w-[800px] mx-auto font-['Playfair_Display',serif] text-slate-300 leading-relaxed min-h-[297mm]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lato:wght@300;400&display=swap');
             `}</style>
@@ -52,7 +52,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
                     components={{
                         h1: () => null,
                         h2: ({ node, ...props }) => (
-                            <h2 className="text-2xl font-['Playfair_Display',serif] text-amber-500 mt-6 mb-6 pb-2 border-b border-amber-900/50 text-center italic" {...props} />
+                            <h2 className="text-2xl font-['Playfair_Display',serif] text-amber-500 mt-6 mb-6 pb-2 border-b border-amber-900/50 text-center italic break-after-avoid" {...props} />
                         ),
                         h3: ({ node, ...props }) => (
                             <h3 className="text-lg font-bold text-amber-100 mt-8 mb-1 text-center" {...props} />
@@ -67,7 +67,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
                             <ul className="list-none space-y-2 mb-6" {...props} />
                         ),
                         li: ({ node, ...props }) => (
-                            <li className="opacity-90 text-center block" {...props}>
+                            <li className="opacity-90 text-center block break-inside-avoid" {...props}>
                                 <span className="text-amber-700 mr-2">❖</span>
                                 {props.children}
                             </li>

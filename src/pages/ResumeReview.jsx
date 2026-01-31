@@ -384,6 +384,11 @@ const ResumeReview = () => {
 
                                             // 1. Serialization with Tailwind injection
                                             const contentHtml = element.outerHTML;
+
+                                            // Apply dark background only for Royal Elegance template
+                                            const isDarkTemplate = templateId === 'luxury-royal';
+                                            const bgColor = isDarkTemplate ? '#0f172a' : 'transparent';
+
                                             const fullHtml = `
                                                 <!DOCTYPE html>
                                                 <html>
@@ -391,19 +396,59 @@ const ResumeReview = () => {
                                                     <meta charset="UTF-8">
                                                     <script src="https://cdn.tailwindcss.com"></script>
                                                     <style>
-                                                        @page { size: A4; margin: 15mm 0mm; }
-                                                        body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-                                                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
+                                                        html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
+                                                        
+                                                        /* Table Layout Method for Print Margins */
+                                                        .print-container {
+                                                            width: 100%;
+                                                            border-collapse: collapse;
+                                                            border: 0 none;
+                                                            margin-top: -5mm; /* Pull up to hide first page header */
+                                                        }
+                                                        .print-container td, .print-container th {
+                                                            border: 0 none;
+                                                            padding: 0;
+                                                            margin: 0;
+                                                        }
+                                                        thead, tfoot { 
+                                                            height: 5mm; 
+                                                            display: table-header-group; /* Ensure repeat on break */
+                                                        }
+                                                        tfoot { display: table-footer-group; }  
+                                                        
+                                                        /* Spacer divs - transparent to show background */
+                                                        .margin-spacer { height: 5mm; background: transparent; }
+                                                        
+                                                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
                                                     </style>
                                                 </head>
                                                 <body>
-                                                    ${contentHtml}
+                                                    <table class="print-container">
+                                                        <thead>
+                                                            <tr><td><div class="margin-spacer"></div></td></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr><td>
+                                                                ${contentHtml}
+                                                            </td></tr>
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr><td><div class="margin-spacer"></div></td></tr>
+                                                        </tfoot>
+                                                    </table>
                                                 </body>
                                                 </html>
                                             `;
 
-                                            // 2. Call Backend
-                                            const blob = await CVService.generatePdf(fullHtml);
+                                            // 2. Call Backend with margin options (10mm margins for consistent page break spacing)
+                                            const blob = await CVService.generatePdf(fullHtml, {
+                                                margin: {
+                                                    top: '0mm',
+                                                    right: '0mm',
+                                                    bottom: '0mm',
+                                                    left: '0mm'
+                                                }
+                                            });
 
                                             // 3. Download
                                             const url = window.URL.createObjectURL(blob);
