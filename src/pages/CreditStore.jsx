@@ -260,6 +260,9 @@ const CreditStore = () => {
                                 <p className="text-indigo-200 text-lg">
                                     Short on cash? Watch a quick video to power up your search.
                                 </p>
+                                <p className="text-indigo-200/80 text-sm mt-2 font-medium">
+                                    We use ads to keep ApplyRight free for everyone. Thank you for your support! 💚
+                                </p>
                             </div>
 
                             <div className="flex flex-col gap-4 max-w-sm">
@@ -489,7 +492,7 @@ const CreditStore = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

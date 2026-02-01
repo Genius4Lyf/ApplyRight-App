@@ -321,15 +321,16 @@ const ResumeReview = () => {
             return;
         }
 
-        // 2. Check Ad requirement (Every 3rd download)
+        // 2. Check Ad requirement (Alternating: Ad, Free, Ad, Free...)
         if (userProfile?.plan !== 'paid') {
             const downloadCount = parseInt(localStorage.getItem('download_count') || '0');
-            const nextDownload = downloadCount + 1;
+            // const nextDownload = downloadCount + 1; // Removed for new logic
 
-            console.log(`Download count: ${downloadCount} -> Next: ${nextDownload}`);
+            console.log(`Download count: ${downloadCount} -> Next check: ${downloadCount % 2 === 0 ? 'Ad Required' : 'Free'}`);
 
-            if (nextDownload % 3 === 0) {
-                console.log("Ad required for 3rd download");
+            // New Policy: 0 (1st) = Ad, 1 (2nd) = Free, 2 (3rd) = Ad, etc.
+            if (downloadCount % 2 === 0) {
+                console.log("Ad required for this download");
                 setDownloadAdOpen(true);
                 return;
             }

@@ -9,6 +9,8 @@ const AdPlayer = ({ onComplete, onClose }) => {
     const adContainerRef = useRef(null);
     const rewardedAdRef = useRef(null);
 
+    const intervalRef = useRef(null);
+
     // AdMob Configuration
     const ADMOB_APP_ID = import.meta.env.VITE_ADMOB_APP_ID;
     const AD_UNIT_ID = import.meta.env.VITE_ADMOB_REWARDED_AD_UNIT_ID;
@@ -26,6 +28,10 @@ const AdPlayer = ({ onComplete, onClose }) => {
                 } catch (e) {
                     console.error('Error destroying ad:', e);
                 }
+            }
+            // Clear interval to prevent onComplete from firing after close
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
             }
         };
     }, []);
@@ -72,12 +78,13 @@ const AdPlayer = ({ onComplete, onClose }) => {
         let countdown = 30;
         setTimeLeft(countdown);
 
-        const interval = setInterval(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => {
             countdown -= 1;
             setTimeLeft(countdown);
 
             if (countdown <= 0) {
-                clearInterval(interval);
+                if (intervalRef.current) clearInterval(intervalRef.current);
                 handleAdComplete();
             }
         }, 1000);
@@ -91,12 +98,13 @@ const AdPlayer = ({ onComplete, onClose }) => {
         let countdown = 15;
         setTimeLeft(countdown);
 
-        const interval = setInterval(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => {
             countdown -= 1;
             setTimeLeft(countdown);
 
             if (countdown <= 0) {
-                clearInterval(interval);
+                if (intervalRef.current) clearInterval(intervalRef.current);
                 handleAdComplete();
             }
         }, 1000);
@@ -105,6 +113,7 @@ const AdPlayer = ({ onComplete, onClose }) => {
     const handleAdComplete = () => {
         setAdState('completed');
         setTimeout(() => {
+            // Ensure component is still mounted/valid before calling back
             onComplete();
         }, 1500);
     };
