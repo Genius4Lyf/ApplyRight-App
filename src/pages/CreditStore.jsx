@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Star, Crown, Gift, Share2, PlayCircle, Check, Loader, X, Clock } from 'lucide-react';
 import { billingService } from '../services';
 import AdPlayer from '../components/AdPlayer';
+import { usePaystackPayment } from 'react-paystack';
 
 const CreditStore = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
+    const [loadingId, setLoadingId] = useState(null);
     const [purchaseStatus, setPurchaseStatus] = useState(null); // 'success' | 'error'
 
     // Ad State
     const [showAdPlayer, setShowAdPlayer] = useState(false);
-    const [adStats, setAdStats] = useState({ watchCount: 0, maxDaily: 3, lastWatch: null, streak: 0 });
+    const [adStats, setAdStats] = useState({ watchCount: 0, maxDaily: 999, lastWatch: null, streak: 0 });
     const [showReward, setShowReward] = useState(false);
     const [rewardMessage, setRewardMessage] = useState('');
 
@@ -93,30 +94,33 @@ const CreditStore = () => {
 
     const tiers = [
         {
-            id: 'starter',
+            id: 1,
             name: 'Starter Pack',
-            price: '₦1,000',
-            credits: 100,
+            price: '₦500',
+            credits: 20,
+            amountKobo: 50000,
             icon: Zap,
             color: 'bg-blue-50 text-blue-600',
             popular: false,
-            desc: 'Perfect for a quick CV polish.'
+            desc: 'Perfect for a quick resume polish and check.'
         },
         {
-            id: 'pro',
+            id: 2,
             name: 'Pro Bundle',
-            price: '₦2,000',
-            credits: 220,
+            price: '₦1,000',
+            credits: 50,
+            amountKobo: 100000,
             icon: Star,
-            color: 'bg-indigo-50 text-indigo-600',
+            color: 'bg-purple-50 text-purple-600',
             popular: true,
-            desc: 'Best value for active job seekers.'
+            desc: 'Best value for serious job seekers.'
         },
         {
-            id: 'power',
-            name: 'Power User',
-            price: '₦3,000',
-            credits: 350,
+            id: 3,
+            name: 'Career Max',
+            price: '₦2,000',
+            credits: 120,
+            amountKobo: 200000,
             icon: Crown,
             color: 'bg-amber-50 text-amber-600',
             popular: false,
@@ -124,26 +128,53 @@ const CreditStore = () => {
         }
     ];
 
-    const handlePurchase = async (tier) => {
-        setLoading(true);
+    // Get user email usage lazy initializer to ensure it's available on first render
+    const [userEmail] = useState(() => {
+        try {
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            return stored.email || '';
+        } catch (e) {
+            return '';
+        }
+    });
+
+    // Paystack Config Helper
+    const getPaystackConfig = (tier) => ({
+        reference: (new Date()).getTime().toString() + '_' + tier.id,
+        email: userEmail,
+        amount: tier.amountKobo,
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        currency: 'NGN',
+        metadata: {
+            credits: tier.credits,
+            custom_fields: []
+        }
+    });
+
+    const handlePaystackSuccess = useCallback(async (reference) => {
         setPurchaseStatus(null);
         try {
-            // Simulate Payment Gateway Delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Call API
-            await billingService.addCredits(tier.credits, `Purchase: ${tier.name}`);
-
+            await billingService.verifyPayment(reference.reference);
             setPurchaseStatus('success');
-            // Reload page or update context (simple reload for now to refresh Navbar)
             setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
             console.error(error);
             setPurchaseStatus('error');
-        } finally {
-            setLoading(false);
+            setLoadingId(null);
         }
-    };
+    }, []);
+
+    const handlePaystackClose = useCallback(() => {
+        console.log('Payment closed');
+        setPurchaseStatus('cancelled');
+        setLoadingId(null);
+        setTimeout(() => setPurchaseStatus(null), 3000);
+    }, []);
+
+    // Internal Buy Button Component (Moved logic to render directly or external component)
+    // To avoid re-mounting issues, we will render the button logic directly in the map or use a stable component.
+    // For simplicity and stability, using the external helper defined below.
+
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative">
@@ -164,12 +195,12 @@ const CreditStore = () => {
                         Power Up Your Career Search
                     </h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        Get credits to unlock AI-powered CV analysis, automated improvements, and custom cover letters.
+                        Earn free credits to unlock AI-powered CV analysis, automated improvements, and custom cover letters.
                     </p>
                 </div>
 
-                {/* Pricing Tiers */}
-                <div className="grid md:grid-cols-3 gap-8">
+                {/* Pricing Tiers - COMMENTED OUT */}
+                {/* <div className="grid md:grid-cols-3 gap-8">
                     {tiers.map((tier) => (
                         <div key={tier.id} className={`relative bg-white rounded-2xl shadow-sm border ${tier.popular ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-200'} p-8 flex flex-col hover:shadow-lg transition-shadow duration-300`}>
                             {tier.popular && (
@@ -200,19 +231,23 @@ const CreditStore = () => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => handlePurchase(tier)}
-                                disabled={loading}
+                            <BuyButton
+                                tier={tier}
+                                userEmail={userEmail}
+                                loadingId={loadingId}
+                                setLoadingId={setLoadingId}
+                                onSuccess={handlePaystackSuccess}
+                                onClose={handlePaystackClose}
                                 className={`mt-8 w-full py-3 px-4 rounded-xl font-semibold transition-all ${tier.popular
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-xl shadow-indigo-200'
-                                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-xl shadow-indigo-200'
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
                                     } flex items-center justify-center gap-2`}
                             >
-                                {loading ? <Loader className="w-5 h-5 animate-spin" /> : 'Buy Now'}
-                            </button>
+                                Buy Now
+                            </BuyButton>
                         </div>
                     ))}
-                </div>
+                </div> */}
 
                 {/* Earn Free Credits */}
                 <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
@@ -229,37 +264,28 @@ const CreditStore = () => {
 
                             <div className="flex flex-col gap-4 max-w-sm">
                                 <button
-                                    onClick={() => {
-                                        if (adStats.watchCount >= adStats.maxDaily) return;
-                                        setShowAdPlayer(true);
-                                    }}
-                                    disabled={adStats.watchCount >= adStats.maxDaily}
-                                    className={`
-                                        flex items-center gap-3 px-6 py-4 rounded-xl transition-all border
-                                        ${adStats.watchCount >= adStats.maxDaily
-                                            ? 'bg-white/5 border-white/5 text-slate-400 cursor-not-allowed'
-                                            : 'bg-white/10 hover:bg-white/20 border-white/20 hover:scale-105 backdrop-blur-sm shadow-xl'}
-                                    `}
+                                    onClick={() => setShowAdPlayer(true)}
+                                    className="flex items-center gap-3 px-6 py-4 rounded-xl transition-all border bg-white/10 hover:bg-white/20 border-white/20 hover:scale-105 backdrop-blur-sm shadow-xl"
                                 >
-                                    <div className={`p-2 rounded-full ${adStats.watchCount >= adStats.maxDaily ? 'bg-white/5' : 'bg-amber-500/20 text-amber-400'}`}>
+                                    <div className="p-2 rounded-full bg-amber-500/20 text-amber-400">
                                         <PlayCircle className="w-6 h-6" />
                                     </div>
                                     <div className="text-left">
                                         <div className="font-bold">Watch Ad (+5 Credits)</div>
-                                        <div className="text-xs opacity-70 flex items-center gap-2">
-                                            {adStats.watchCount >= adStats.maxDaily ? (
-                                                <span>Daily limit reached</span>
-                                            ) : (
-                                                <span>{adStats.watchCount}/{adStats.maxDaily} watched today</span>
-                                            )}
-                                            {adStats.streak > 0 && (
+                                        {adStats.streak > 0 && (
+                                            <div className="text-xs opacity-70">
                                                 <span className="bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
                                                     🔥 {adStats.streak} Day Streak
                                                 </span>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </button>
+
+                                {/* Streak Bonus Hint */}
+                                <div className="text-xs text-indigo-200/60 text-center -mt-2 px-2">
+                                    💡 Watch daily to build a streak and get bonus credits on day 3!
+                                </div>
 
                                 <button
                                     onClick={() => setShowInviteModal(true)}
@@ -269,9 +295,9 @@ const CreditStore = () => {
                                         <Share2 className="w-6 h-6" />
                                     </div>
                                     <div className="text-left">
-                                        <div className="font-bold">Invite Friend (+50)</div>
+                                        <div className="font-bold">Invite Friend (+10)</div>
                                         <div className="text-xs opacity-70">
-                                            You earn 50 credits per friend
+                                            You earn 10 credits per friend
                                         </div>
                                     </div>
                                 </button>
@@ -375,7 +401,7 @@ const CreditStore = () => {
                                 <div>
                                     <h3 className="text-2xl font-bold text-slate-900">Invite Friends & Earn</h3>
                                     <p className="text-slate-600 mt-2">
-                                        Share your code with friends. When they sign up, <b>you get</b> <span className="text-green-600 font-bold">50 Credits</span>!
+                                        Share your code with friends. When they sign up, <b>you get</b> <span className="text-green-600 font-bold">10 Credits</span>!
                                     </p>
                                 </div>
 
@@ -431,7 +457,9 @@ const CreditStore = () => {
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 50 }}
-                        className={`fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${purchaseStatus === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white z-50`}
+                        className={`fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${purchaseStatus === 'success' ? 'bg-green-600' :
+                            purchaseStatus === 'cancelled' ? 'bg-slate-700' : 'bg-red-600'
+                            } text-white z-50`}
                     >
                         {purchaseStatus === 'success' ? (
                             <>
@@ -439,6 +467,14 @@ const CreditStore = () => {
                                 <div>
                                     <p className="font-bold">Purchase Successful!</p>
                                     <p className="text-sm opacity-90">Your credits have been added.</p>
+                                </div>
+                            </>
+                        ) : purchaseStatus === 'cancelled' ? (
+                            <>
+                                <X className="w-6 h-6" />
+                                <div>
+                                    <p className="font-bold">Purchase Cancelled</p>
+                                    <p className="text-sm opacity-90">Please try again.</p>
                                 </div>
                             </>
                         ) : (
@@ -454,6 +490,70 @@ const CreditStore = () => {
                 )}
             </AnimatePresence>
         </div>
+    );
+};
+
+// Extracted BuyButton Component to prevent re-mounts on state change
+const BuyButton = ({ tier, userEmail, loadingId, setLoadingId, onSuccess, onClose, children, className }) => {
+    // Generate config with useMemo to keep it stable unless dependencies change
+    const config = React.useMemo(() => {
+        // Generate unique reference only when tier changes
+        const timestamp = Date.now();
+        return {
+            reference: `${timestamp}_${tier.id}`,
+            email: userEmail,
+            amount: tier.amountKobo,
+            publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+            currency: 'NGN',
+            metadata: {
+                credits: tier.credits,
+                custom_fields: []
+            },
+            onSuccess: (ref) => onSuccess(ref),
+            onClose: () => onClose()
+        };
+    }, [tier.id, tier.amountKobo, tier.credits, userEmail, onSuccess, onClose]);
+
+    const initializePayment = usePaystackPayment(config);
+    const isCurrentLoading = loadingId === tier.id;
+
+    // Debug logging
+    if (!config.publicKey) console.error("Missing Paystack Public Key");
+
+    return (
+        <button
+            onClick={() => {
+                if (!userEmail) {
+                    alert("Please log in to purchase credits.");
+                    return;
+                }
+                if (!config.publicKey) {
+                    alert("Configuration Error: Missing API Key. Please restart developer server.");
+                    return;
+                }
+
+                // Directly initialize payment without setting loading state first
+                // This prevents React re-renders from interfering with the Paystack script
+                initializePayment(
+                    (reference) => {
+                        setLoadingId(tier.id); // Start loading only after success for verification
+                        onSuccess(reference);
+                    },
+                    onClose
+                );
+            }}
+            className={className}
+            disabled={loadingId !== null}
+        >
+            {isCurrentLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                    <Loader className="w-5 h-5 animate-spin" />
+                    <span>Verifying...</span>
+                </span>
+            ) : (
+                children
+            )}
+        </button>
     );
 };
 

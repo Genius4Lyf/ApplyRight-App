@@ -5,7 +5,7 @@ import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
 import CVService from '../services/cv.service';
-import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2, Eye } from 'lucide-react';
+import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2, Eye, X, Zap, PlayCircle } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
@@ -164,13 +164,17 @@ const Dashboard = () => {
         // Step 1: Analyze if not done (This now also generates assets)
         if (!fitResult) {
             try {
-                await performAnalysis();
-                toast.success("Analysis and Assets generated!");
+                const result = await performAnalysis();
 
-                // Scroll to the results
-                setTimeout(() => {
-                    document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
+                // Only show success if we actually got data back (not aborted due to insufficient credits)
+                if (result) {
+                    toast.success("Analysis and Assets generated!");
+
+                    // Scroll to the results
+                    setTimeout(() => {
+                        document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                }
             } catch (err) {
                 // Error handled in performAnalysis
             }

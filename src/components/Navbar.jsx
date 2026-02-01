@@ -125,7 +125,8 @@ const Navbar = () => {
 
 
                                         <div className="space-y-1">
-                                            <button
+                                            {/* Buy Credits - COMMENTED OUT */}
+                                            {/* <button
                                                 onClick={() => {
                                                     navigate('/credits');
                                                     setShowCreditPopover(false);
@@ -134,7 +135,7 @@ const Navbar = () => {
                                             >
                                                 <Zap className="w-4 h-4 text-indigo-500" />
                                                 Buy Credits
-                                            </button>
+                                            </button> */}
                                             <button
                                                 onClick={() => {
                                                     navigate('/credits');

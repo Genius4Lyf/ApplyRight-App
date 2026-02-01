@@ -134,7 +134,7 @@ const Register = () => {
                                     name="referralCode"
                                     type="text"
                                     className="input-field w-full uppercase"
-                                    placeholder="e.g. SAVE50"
+                                    placeholder="SAVE50"
                                     value={referralCode}
                                     onChange={onChange}
                                     disabled={isLoading}

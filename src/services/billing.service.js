@@ -29,6 +29,11 @@ const billingService = {
     getAdStats: async () => {
         const response = await api.get('/billing/ad-stats');
         return response.data;
+    },
+
+    verifyPayment: async (reference) => {
+        const response = await api.post('/billing/verify-payment', { reference });
+        return response.data;
     }
 };
 
