@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle, PenTool, Mic } from 'lucide-react';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
@@ -492,20 +492,37 @@ const LandingPage = () => {
                                     Don't settle for ugly, plain text files. ApplyRight generates beautifully formatted, professional PDFs that recruiters love to read.
                                 </p>
 
-                                <ul className="space-y-4 mb-10">
-                                    {[
-                                        "Clean, modern layouts recruiter-approved",
-                                        "Perfect formatting maintained after keyword injection",
-                                        "Download as PDF, ready to submit instantly"
-                                    ].map((item, i) => (
-                                        <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
-                                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
-                                                <CheckCircle size={14} />
-                                            </div>
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ul>
+                                <div className="space-y-6 mb-10">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                            <FileText size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 text-lg">CV Templates</h4>
+                                            <p className="text-slate-600">Industry-approved layouts that pass the ATS every time.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                                            <PenTool size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 text-lg">Cover Letters</h4>
+                                            <p className="text-slate-600">Auto-generated, persuasive letters tailored to the job description.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                                            <Mic size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 text-lg">Interview Prep</h4>
+                                            <p className="text-slate-600">AI-generated questions and coaching based on your actual resume.</p>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <Link to="/register" className="btn-primary py-3 px-8 bg-slate-900 text-white hover:bg-slate-800 rounded-xl inline-flex items-center gap-2">
                                     Create CV <ArrowRight size={18} />
