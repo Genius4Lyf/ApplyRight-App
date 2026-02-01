@@ -328,7 +328,7 @@ const LandingPage = () => {
                             <Link to="/register" className="btn-primary py-4 px-8 text-lg w-full sm:w-auto bg-indigo-600 text-white rounded-xl shadow-lg hover:shadow-indigo-500/20 transition-all">
                                 Optimize My CV Free
                             </Link>
-                            <Link to="#education" className="btn-secondary py-4 px-8 text-lg w-full sm:w-auto border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all">
+                            <Link to="/how-it-works" className="btn-secondary py-4 px-8 text-lg w-full sm:w-auto border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all">
                                 How Application Review Works
                             </Link>
                         </div>

@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { cloneElement } from 'react';
+import { cloneElement, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import JobHistory from './pages/JobHistory';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
+import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
 import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
 import TargetJob from './pages/CVBuilder/TargetJob';
@@ -51,6 +52,11 @@ const RootLayout = () => {
     return pathname;
   };
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <>
       <Toaster position="bottom-right" richColors />
@@ -65,6 +71,10 @@ const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
+      {
+        path: "/how-it-works",
+        element: <ApplicationReview />,
+      },
       {
         path: "/",
         element: <LandingPage />,
