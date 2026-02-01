@@ -121,16 +121,42 @@ export const CVBuilderProvider = ({ children }) => {
 
     // Handle URL / Step Sync
     useEffect(() => {
+        // Only handle redirects if we're actually on a CV builder route
+        if (!location.pathname.includes('/cv-builder')) return;
+
+        // Wait for loading to complete before redirecting (so cvData.currentStep is available)
+        if (loading) return;
+
         const pathParts = location.pathname.split('/');
         const currentPath = pathParts[pathParts.length - 1];
         const index = STEPS.findIndex(s => s.path === currentPath);
 
         if (index !== -1) {
             setCurrentStepIndex(index);
-        } else if (id === 'new' && currentPath !== 'target-job') {
-            navigate(`/cv-builder/new/target-job`, { replace: true });
+
+            // Auto-save currentStep to DB so "Continue Editing" resumes from here
+            const currentStepId = STEPS[index].id;
+            if (id && id !== 'new' && cvData.currentStep !== currentStepId) {
+                // Silently update currentStep in the background
+                CVService.saveDraft({
+                    ...cvData,
+                    _id: id,
+                    currentStep: currentStepId
+                }).catch(err => console.error('Failed to update currentStep:', err));
+            }
+        } else {
+            // If no valid step in URL, redirect to appropriate step
+            if (id && id !== 'new') {
+                // For existing drafts, go to saved currentStep or default to target-job
+                const savedStep = cvData.currentStep || 'target_job';
+                const stepToNavigate = STEPS.find(s => s.id === savedStep) || STEPS[0];
+                navigate(`/cv-builder/${id}/${stepToNavigate.path}`, { replace: true });
+            } else if (id === 'new' && currentPath !== 'target-job') {
+                // For new CVs, always start at target-job
+                navigate(`/cv-builder/new/target-job`, { replace: true });
+            }
         }
-    }, [location.pathname, id, navigate]);
+    }, [location.pathname, id, navigate, cvData.currentStep, loading]);
 
 
     // Helper to update local state without saving yet
