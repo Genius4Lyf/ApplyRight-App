@@ -241,17 +241,27 @@ const ApplicationReview = () => {
                             transition={{ duration: 0.8 }}
                             className="order-2 md:order-1 flex justify-center"
                         >
-                            <div className="w-[300px] h-[300px] rounded-full border-[12px] border-slate-200 flex items-center justify-center relative bg-white shadow-xl">
-                                <div className="text-center">
-                                    <span className="block text-8xl font-black text-slate-900 tracking-tighter">6</span>
-                                    <span className="text-xl font-bold text-slate-500 uppercase tracking-widest">Seconds</span>
+                            <div className="w-[300px] h-[300px] rounded-full flex items-center justify-center relative bg-white shadow-2xl">
+                                <div className="text-center z-10">
+                                    <span className="block text-9xl font-black text-slate-900 tracking-tighter leading-none">6</span>
+                                    <span className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 block">Seconds</span>
                                 </div>
                                 {/* Progress Indicator */}
-                                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none overflow-visible">
+                                    {/* Background Track */}
                                     <circle
                                         cx="150" cy="150" r="138"
+                                        fill="none" stroke="#f1f5f9" strokeWidth="12"
+                                    />
+                                    {/* Animated Progress */}
+                                    <motion.circle
+                                        cx="150" cy="150" r="138"
                                         fill="none" stroke="#4f46e5" strokeWidth="12"
-                                        strokeDasharray="867" strokeDashoffset="750"
+                                        strokeDasharray="867"
+                                        initial={{ strokeDashoffset: 867 }}
+                                        whileInView={{ strokeDashoffset: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 6, ease: "linear" }}
                                         strokeLinecap="round"
                                         className="drop-shadow-lg"
                                     />
