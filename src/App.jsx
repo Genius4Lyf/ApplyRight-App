@@ -4,6 +4,7 @@ import { cloneElement } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import JobHistory from './pages/JobHistory';
@@ -75,6 +76,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
       {
         path: "/dashboard",

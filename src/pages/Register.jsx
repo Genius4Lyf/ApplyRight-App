@@ -8,6 +8,7 @@ import Modal from '../components/Modal';
 const Register = () => {
     const [formData, setFormData] = useState({
         email: '',
+        phone: '',
         password: '',
         confirmPassword: '',
         referralCode: '', // NEW
@@ -17,7 +18,7 @@ const Register = () => {
     const [activeModal, setActiveModal] = useState(null);
     const navigate = useNavigate();
 
-    const { email, password, confirmPassword, referralCode } = formData;
+    const { email, phone, password, confirmPassword, referralCode } = formData;
 
     // Check URL for referral code on component mount
     React.useEffect(() => {
@@ -42,7 +43,7 @@ const Register = () => {
         setError('');
 
         try {
-            const res = await api.post('/auth/register', { email, password, referralCode });
+            const res = await api.post('/auth/register', { email, phone, password, referralCode });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data));
             navigate('/onboarding');
@@ -98,6 +99,19 @@ const Register = () => {
                                     className="input-field w-full"
                                     placeholder="name@company.com"
                                     value={email}
+                                    onChange={onChange}
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Phone Number</label>
+                                <input
+                                    name="phone"
+                                    type="tel"
+                                    required
+                                    className="input-field w-full"
+                                    placeholder="+1234567890"
+                                    value={phone}
                                     onChange={onChange}
                                     disabled={isLoading}
                                 />
