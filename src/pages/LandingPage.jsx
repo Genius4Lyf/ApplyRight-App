@@ -4,6 +4,8 @@ import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XC
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
+import { TEMPLATES } from '../data/templates';
+import TemplateThumbnail from '../components/TemplateThumbnail';
 
 const TiltStack = () => {
     const x = useMotionValue(0);
@@ -608,6 +610,65 @@ const LandingPage = () => {
                         </div>
                     </div>
                 </motion.section>
+
+                {/* TEMPLATES GRID SECTION */}
+                <section className="py-24 bg-slate-50 relative overflow-hidden">
+                    {/* Creative Background Elements */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                    <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white to-transparent"></div>
+                    <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-slate-900 to-transparent opacity-10"></div>
+
+                    <div className="max-w-7xl mx-auto px-6 relative z-10">
+                        <div className="text-center mb-16">
+                            <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">Premium Collection</h2>
+                            <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
+                                Choose Your Look
+                            </h3>
+                            <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto">
+                                From corporate energy giants to luxury fashion houses, we have a template that fits your industry perfectly.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+                            {['energy-slb', 'energy-total', 'energy-nlng', 'luxury', 'luxury-royal', 'luxury-chic', 'luxury-classic', 'luxury-gold'].map((templateId, index) => {
+                                const template = TEMPLATES.find(t => t.id === templateId) || { name: templateId, id: templateId };
+                                return (
+                                    <motion.div
+                                        key={template.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                                        whileHover={{ y: -10 }}
+                                        className="group cursor-pointer"
+                                    >
+                                        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-slate-200 group-hover:shadow-2xl group-hover:border-indigo-200 transition-all duration-300 bg-white">
+                                            <div className="absolute inset-0 p-4 transition-transform duration-500 group-hover:scale-105">
+                                                <TemplateThumbnail type={template.id} className="w-full h-full shadow-inner rounded-lg ring-1 ring-slate-100" />
+                                            </div>
+
+                                            {/* Hover Overlay */}
+                                            <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                <div className="bg-white/90 backdrop-blur text-indigo-600 px-4 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                                                    Preview
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-center mt-4">
+                                            <h4 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{template.name}</h4>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-16 text-center">
+                            <Link to="/register" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-700 hover:gap-3 transition-all">
+                                View all 20+ templates <ArrowRight size={20} />
+                            </Link>
+                        </div>
+                    </div>
+                </section>
 
                 {/* CTA Section */}
                 <section className="py-20 bg-slate-900 text-white overflow-hidden relative">
