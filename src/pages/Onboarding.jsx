@@ -106,7 +106,7 @@ const Onboarding = () => {
     };
 
     const handleWelcomeComplete = () => {
-        navigate('/dashboard');
+        navigate('/dashboard', { state: { showProfilePrompt: true } });
     };
 
     return (

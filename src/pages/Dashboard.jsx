@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
@@ -15,6 +15,17 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [showProfileBanner, setShowProfileBanner] = useState(false);
+
+    useEffect(() => {
+        if (location.state?.showProfilePrompt) {
+            setShowProfileBanner(true);
+            // Clear the state without reloading to prevent persisting on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
     const [resume, setResume] = useState(null);
     const [job, setJob] = useState(null);
     const [application, setApplication] = useState(null);
@@ -251,6 +262,32 @@ const Dashboard = () => {
             <Navbar />
 
             <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
+                {showProfileBanner && (
+                    <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
+                        <div
+                            onClick={() => navigate('/profile')}
+                            className="flex items-center gap-3 cursor-pointer flex-1 group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+                                <User className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-indigo-900">Enhance Your Profile</h3>
+                                <p className="text-sm text-indigo-700">Complete setting up your profile to improve CV optimization.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowProfileBanner(false);
+                            }}
+                            className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
+
                 {!user.onboardingCompleted && (
                     <div
                         onClick={() => navigate('/onboarding')}
