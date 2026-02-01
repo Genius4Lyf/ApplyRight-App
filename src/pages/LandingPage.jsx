@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
@@ -130,6 +130,7 @@ const TiltStack = () => {
 };
 
 const LandingPage = () => {
+    const navigate = useNavigate();
     const [init, setInit] = useState(false);
     const [textIndex, setTextIndex] = useState(0);
     const phrases = ["the ATS", "the Robots", "the Black Hole", "Rejection"];
@@ -507,7 +508,7 @@ const LandingPage = () => {
                                 </ul>
 
                                 <Link to="/register" className="btn-primary py-3 px-8 bg-slate-900 text-white hover:bg-slate-800 rounded-xl inline-flex items-center gap-2">
-                                    See Example Templates <ArrowRight size={18} />
+                                    Create CV <ArrowRight size={18} />
                                 </Link>
                             </div>
 
@@ -641,6 +642,7 @@ const LandingPage = () => {
                                         transition={{ duration: 0.5, delay: index * 0.1 }}
                                         whileHover={{ y: -10 }}
                                         className="group cursor-pointer"
+                                        onClick={() => navigate('/login')}
                                     >
                                         <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-slate-200 group-hover:shadow-2xl group-hover:border-indigo-200 transition-all duration-300 bg-white">
                                             <div className="absolute inset-0 p-4 transition-transform duration-500 group-hover:scale-105">
