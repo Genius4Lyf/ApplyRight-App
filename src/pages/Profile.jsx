@@ -528,7 +528,7 @@ const Profile = () => {
                                     className="w-full py-3.5 bg-white text-indigo-700 hover:bg-slate-50 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
                                 >
                                     <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 group-hover/btn:scale-110 transition-transform" />
-                                    Buy More Credits
+                                    Get More Credits
                                 </button>
                             </div>
                         </div>
