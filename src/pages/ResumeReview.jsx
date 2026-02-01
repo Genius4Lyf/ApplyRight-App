@@ -38,6 +38,8 @@ import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import { TEMPLATES } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import CVService from '../services/cv.service';
+import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
+import { Lock, Zap, PlayCircle, X, Loader } from 'lucide-react'; // Import extra icons
 
 const ResumeReview = () => {
     const { id } = useParams();
@@ -51,6 +53,24 @@ const ResumeReview = () => {
     const [isDownloading, setIsDownloading] = useState(false);
 
     const [error, setError] = useState(null);
+
+    // Ad & Unlock State
+    const [downloadAdOpen, setDownloadAdOpen] = useState(false);
+    const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+    const [templateToUnlock, setTemplateToUnlock] = useState(null);
+    const [unlocking, setUnlocking] = useState(false);
+    const [adForCreditsOpen, setAdForCreditsOpen] = useState(false); // For earning credits within unlock modal
+    const [creditSuccessModalOpen, setCreditSuccessModalOpen] = useState(false); // New success modal state
+
+    // Listen for global user updates
+    useEffect(() => {
+        const handleUserUpdate = (e) => {
+            console.log("ResumeReview received user update", e.detail);
+            setUserProfile(prev => ({ ...prev, ...e.detail }));
+        };
+        window.addEventListener('userDataUpdated', handleUserUpdate);
+        return () => window.removeEventListener('userDataUpdated', handleUserUpdate);
+    }, []);
 
     useEffect(() => {
         const loadData = async () => {
@@ -118,6 +138,223 @@ const ResumeReview = () => {
         }
     }, [id, navigate]);
 
+    // Unlocking Logic
+    const isUnlocked = (templateId) => {
+        const template = TEMPLATES.find(t => t.id === templateId);
+        if (!template) return true;
+        if (!template.isPro) return true;
+        if (userProfile?.plan === 'paid') return true;
+        if (userProfile?.unlockedTemplates && userProfile.unlockedTemplates.includes(templateId)) return true;
+        return false;
+    };
+
+    const handleUnlock = async () => {
+        if (!templateToUnlock) return;
+        setUnlocking(true);
+        try {
+            const res = await api.post('/billing/unlock-template', {
+                templateId: templateToUnlock.id,
+                cost: templateToUnlock.cost
+            });
+
+            if (res.data.success) {
+                toast.success("Template unlocked!");
+                // Update local profile
+                setUserProfile(prev => ({
+                    ...prev,
+                    credits: res.data.credits,
+                    unlockedTemplates: res.data.unlockedTemplates
+                }));
+
+                // Dispatch global event to update navbar and other components
+                window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: { credits: res.data.credits, unlockedTemplates: res.data.unlockedTemplates } }));
+                window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.credits }));
+
+                setTemplateId(templateToUnlock.id); // Select it
+                setUnlockModalOpen(false);
+                setTemplateToUnlock(null);
+            }
+        } catch (error) {
+            console.error("Unlock failed", error);
+            if (error.response?.data?.error === 'INSUFFICIENT_CREDITS') {
+                toast.error("Insufficient credits.");
+            } else {
+                toast.error("Failed to unlock template");
+            }
+        } finally {
+            setUnlocking(false);
+        }
+    };
+
+    const handleAdForCreditsComplete = async () => {
+        setAdForCreditsOpen(false);
+        try {
+            // Award credits via API
+            await api.post('/billing/watch-ad');
+
+            // Refresh profile
+            const res = await api.get('/auth/me');
+            setUserProfile(res.data);
+
+            // Dispatch global event to update navbar and other components
+            window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: res.data }));
+            window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.credits }));
+
+            // Show success modal instead of toast + unlock modal
+            setCreditSuccessModalOpen(true);
+            // Ensure unlock modal is closed (though it should be already if we closed it before ad)
+            setUnlockModalOpen(false);
+
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to award credits.");
+            // If failed, maybe just reopen unlock modal or do nothing
+            setUnlockModalOpen(true);
+        }
+    };
+
+    // Download Ad Logic
+    const performDownload = async () => {
+        try {
+            setIsDownloading(true);
+            toast.info('Generating High-Quality PDF...', { duration: 2000 });
+
+            const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
+            const element = document.getElementById(elementId);
+            if (!element) throw new Error(`${activeTab === 'resume' ? 'Resume' : 'Cover letter'} content not found`);
+
+            // 1. Serialization with Tailwind injection
+            const contentHtml = element.outerHTML;
+
+            // Apply dark background only for Royal Elegance template
+            const isDarkTemplate = templateId === 'luxury-royal';
+            const bgColor = isDarkTemplate ? '#0f172a' : 'transparent';
+
+            const fullHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>
+                        html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
+                        
+                        /* Table Layout Method for Print Margins */
+                        .print-container {
+                            width: 100%;
+                            border-collapse: collapse;
+                            border: 0 none;
+                            margin-top: -5mm; /* Pull up to hide first page header */
+                        }
+                        .print-container td, .print-container th {
+                            border: 0 none;
+                            padding: 0;
+                            margin: 0;
+                        }
+                        thead, tfoot { 
+                            height: 5mm; 
+                            display: table-header-group; /* Ensure repeat on break */
+                        }
+                        tfoot { display: table-footer-group; }  
+                        
+                        /* Spacer divs - transparent to show background */
+                        .margin-spacer { height: 5mm; background: transparent; }
+                        
+                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+                    </style>
+                </head>
+                <body>
+                    <table class="print-container">
+                        <thead>
+                            <tr><td><div class="margin-spacer"></div></td></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>
+                                ${contentHtml}
+                            </td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr><td><div class="margin-spacer"></div></td></tr>
+                        </tfoot>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            // 2. Call Backend with margin options (10mm margins for consistent page break spacing)
+            const blob = await CVService.generatePdf(fullHtml, {
+                margin: {
+                    top: '0mm',
+                    right: '0mm',
+                    bottom: '0mm',
+                    left: '0mm'
+                }
+            });
+
+            // 3. Download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${(userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document')}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.success('PDF Downloaded');
+        } catch (e) {
+            console.error(e);
+            toast.error("Download failed");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    const handleDownloadClick = () => {
+        console.log("Download clicked. Template:", templateId);
+        // 1. Check if unlocked
+        if (!isUnlocked(templateId)) {
+            console.log("Template locked. Opening modal.");
+            const template = TEMPLATES.find(t => t.id === templateId);
+            setTemplateToUnlock(template);
+            setUnlockModalOpen(true);
+            return;
+        }
+
+        // 2. Check Ad requirement (Every 3rd download)
+        if (userProfile?.plan !== 'paid') {
+            const downloadCount = parseInt(localStorage.getItem('download_count') || '0');
+            const nextDownload = downloadCount + 1;
+
+            console.log(`Download count: ${downloadCount} -> Next: ${nextDownload}`);
+
+            if (nextDownload % 3 === 0) {
+                console.log("Ad required for 3rd download");
+                setDownloadAdOpen(true);
+                return;
+            }
+        }
+
+        // If no ad needed (or user is paid), proceed
+        performDownload();
+        // Increment count after successful download start (or we can do it inside performDownload? 
+        // Better here to avoid double counting if fail? No, performDownload is async but starts immediately.
+        // Let's increment here.
+        if (userProfile?.plan !== 'paid') {
+            const current = parseInt(localStorage.getItem('download_count') || '0');
+            localStorage.setItem('download_count', (current + 1).toString());
+        }
+    };
+
+    const handleDownloadAdComplete = () => {
+        setDownloadAdOpen(false);
+        // Increment count since they "paid" with an ad for this download
+        const current = parseInt(localStorage.getItem('download_count') || '0');
+        localStorage.setItem('download_count', (current + 1).toString());
+
+        performDownload();
+    };
+
 
 
     if (loading) return (
@@ -147,7 +384,156 @@ const ResumeReview = () => {
     if (!application) return null;
 
     return (
-        <div className="min-h-screen bg-slate-100 flex flex-col">
+        <div className="min-h-screen bg-slate-100 flex flex-col relative">
+            {downloadAdOpen && (
+                <AdPlayer
+                    onComplete={handleDownloadAdComplete}
+                    onClose={() => setDownloadAdOpen(false)} // User can close, but won't get reward
+                />
+            )}
+
+            {adForCreditsOpen && (
+                <AdPlayer
+                    onComplete={handleAdForCreditsComplete}
+                    onClose={() => setAdForCreditsOpen(false)}
+                />
+            )}
+
+            {creditSuccessModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Check className="w-10 h-10 text-green-600" />
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Credits Earned!</h3>
+                        <p className="text-slate-500 mb-6">
+                            You successfully watched the ad.
+                        </p>
+
+                        <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-100">
+                            <span className="text-sm text-slate-500 uppercase tracking-wider font-bold block mb-1">New Balance</span>
+                            <div className="flex items-center justify-center gap-2 text-3xl font-extrabold text-indigo-600">
+                                <Zap className="w-6 h-6 fill-indigo-600" />
+                                {userProfile?.credits || 0}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {templateToUnlock && (userProfile?.credits || 0) >= templateToUnlock.cost ? (
+                                <button
+                                    onClick={() => {
+                                        setCreditSuccessModalOpen(false);
+                                        setUnlockModalOpen(true);
+                                    }}
+                                    className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                                >
+                                    Proceed to Unlock {templateToUnlock.name}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        setCreditSuccessModalOpen(false);
+                                        // If they still don't have enough, maybe offer to watch another?
+                                        // For now just close or maybe reopen unlock modal to see options
+                                        setUnlockModalOpen(true);
+                                    }}
+                                    className="w-full btn-primary py-3 rounded-xl"
+                                >
+                                    Continue
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => {
+                                    setCreditSuccessModalOpen(false);
+                                    setUnlockModalOpen(false);
+                                }}
+                                className="w-full py-3 text-slate-400 hover:text-slate-600 font-medium text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {unlockModalOpen && templateToUnlock && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+                        <button
+                            onClick={() => setUnlockModalOpen(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 mx-auto mb-4 relative">
+                                <TemplateThumbnail type={templateToUnlock.id} className="w-full h-full rounded-lg shadow-md object-cover" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+                                    <Lock className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900">Unlock {templateToUnlock.name}</h3>
+                            <p className="text-slate-500 mt-2">
+                                This is a premium template. Unlock it to download and use for your applications.
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleUnlock}
+                                disabled={unlocking || (userProfile?.credits || 0) < templateToUnlock.cost}
+                                className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${(userProfile?.credits || 0) >= templateToUnlock.cost
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
+                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                {unlocking ? (
+                                    <Loader className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+                                        Unlock for {templateToUnlock.cost} Credits
+                                    </>
+                                )}
+                            </button>
+
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-slate-200"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs">
+                                    <span className="bg-white px-2 text-slate-500">or earn credits</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setUnlockModalOpen(false);
+                                    setAdForCreditsOpen(true);
+                                }}
+                                className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-100"
+                            >
+                                <PlayCircle className="w-5 h-5" />
+                                Watch Ad for +5 Credits
+                            </button>
+
+                            <p className="text-xs text-slate-400 text-center leading-relaxed px-4">
+                                💚 We use ads to keep ApplyRight free for everyone. Thank you for your support!
+                            </p>
+
+                            {(userProfile?.credits || 0) < templateToUnlock.cost && (
+                                <p className="text-xs text-slate-500 text-center mt-2">
+                                    You have {userProfile?.credits || 0} credits. Need {templateToUnlock.cost - (userProfile?.credits || 0)} more.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Navbar />
 
             <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
@@ -372,102 +758,7 @@ const ResumeReview = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     disabled={isDownloading}
-                                    onClick={async () => {
-                                        try {
-                                            setIsDownloading(true);
-                                            setIsDownloading(true);
-                                            toast.info('Generating High-Quality PDF...', { duration: 2000 });
-
-                                            const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
-                                            const element = document.getElementById(elementId);
-                                            if (!element) throw new Error(`${activeTab === 'resume' ? 'Resume' : 'Cover letter'} content not found`);
-
-                                            // 1. Serialization with Tailwind injection
-                                            const contentHtml = element.outerHTML;
-
-                                            // Apply dark background only for Royal Elegance template
-                                            const isDarkTemplate = templateId === 'luxury-royal';
-                                            const bgColor = isDarkTemplate ? '#0f172a' : 'transparent';
-
-                                            const fullHtml = `
-                                                <!DOCTYPE html>
-                                                <html>
-                                                <head>
-                                                    <meta charset="UTF-8">
-                                                    <script src="https://cdn.tailwindcss.com"></script>
-                                                    <style>
-                                                        html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
-                                                        
-                                                        /* Table Layout Method for Print Margins */
-                                                        .print-container {
-                                                            width: 100%;
-                                                            border-collapse: collapse;
-                                                            border: 0 none;
-                                                            margin-top: -5mm; /* Pull up to hide first page header */
-                                                        }
-                                                        .print-container td, .print-container th {
-                                                            border: 0 none;
-                                                            padding: 0;
-                                                            margin: 0;
-                                                        }
-                                                        thead, tfoot { 
-                                                            height: 5mm; 
-                                                            display: table-header-group; /* Ensure repeat on break */
-                                                        }
-                                                        tfoot { display: table-footer-group; }  
-                                                        
-                                                        /* Spacer divs - transparent to show background */
-                                                        .margin-spacer { height: 5mm; background: transparent; }
-                                                        
-                                                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
-                                                    </style>
-                                                </head>
-                                                <body>
-                                                    <table class="print-container">
-                                                        <thead>
-                                                            <tr><td><div class="margin-spacer"></div></td></tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr><td>
-                                                                ${contentHtml}
-                                                            </td></tr>
-                                                        </tbody>
-                                                        <tfoot>
-                                                            <tr><td><div class="margin-spacer"></div></td></tr>
-                                                        </tfoot>
-                                                    </table>
-                                                </body>
-                                                </html>
-                                            `;
-
-                                            // 2. Call Backend with margin options (10mm margins for consistent page break spacing)
-                                            const blob = await CVService.generatePdf(fullHtml, {
-                                                margin: {
-                                                    top: '0mm',
-                                                    right: '0mm',
-                                                    bottom: '0mm',
-                                                    left: '0mm'
-                                                }
-                                            });
-
-                                            // 3. Download
-                                            const url = window.URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = `${(userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document')}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            window.URL.revokeObjectURL(url);
-                                            document.body.removeChild(a);
-
-                                            toast.success('PDF Downloaded');
-                                        } catch (e) {
-                                            console.error(e);
-                                            toast.error("Download failed");
-                                        } finally {
-                                            setIsDownloading(false);
-                                        }
-                                    }}
+                                    onClick={handleDownloadClick}
                                     className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
                                 >
                                     {isDownloading ? (
@@ -495,19 +786,37 @@ const ResumeReview = () => {
                             <div>
                                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Template Style</h3>
                                 <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-                                    {TEMPLATES.map((t) => (
-                                        <div
-                                            key={t.id}
-                                            onClick={() => setTemplateId(t.id)}
-                                            className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${templateId === t.id ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-slate-300'}`}
-                                        >
-                                            <div className="w-10 h-14 mr-3 flex-shrink-0">
-                                                <TemplateThumbnail type={t.id} className="rounded-sm" />
+                                    {TEMPLATES.map((t) => {
+                                        const locked = !isUnlocked(t.id);
+                                        return (
+                                            <div
+                                                key={t.id}
+                                                onClick={() => setTemplateId(t.id)}
+                                                className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${templateId === t.id
+                                                    ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
+                                                    : 'border-slate-200 hover:border-slate-300'
+                                                    } ${locked ? 'bg-slate-50/50' : ''}`}
+                                            >
+                                                <div className="w-10 h-14 mr-3 flex-shrink-0 relative">
+                                                    <TemplateThumbnail type={t.id} className="rounded-sm" />
+                                                    {locked && (
+                                                        <div className="absolute top-0 right-0 p-0.5 bg-slate-800 rounded-bl-sm">
+                                                            <Lock size={8} className="text-white" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-sm font-medium text-slate-700 block truncate">{t.name}</span>
+                                                    {locked && (
+                                                        <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                            {t.cost} Credits
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {templateId === t.id && <Check size={16} className="text-indigo-600" />}
                                             </div>
-                                            <span className="text-sm font-medium text-slate-700 flex-1">{t.name}</span>
-                                            {templateId === t.id && <Check size={16} className="text-indigo-600" />}
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

@@ -567,7 +567,7 @@ const Dashboard = () => {
                         <TemplateSelector
                             selectedTemplate={selectedTemplate}
                             onSelect={setSelectedTemplate}
-                            userPlan={user.plan || 'free'}
+                            user={user}
                             onPreview={() => {
                                 console.log("Attempting navigation. App:", application);
                                 if (application?._id || application?.id || application?.applicationId) {

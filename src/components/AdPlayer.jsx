@@ -141,14 +141,18 @@ const AdPlayer = ({ onComplete, onClose }) => {
 
                 {/* Ready/Playing State */}
                 {(adState === 'ready' || adState === 'playing') && (
-                    <div className="text-center space-y-4 animate-pulse">
-                        <div className="w-24 h-24 bg-neutral-800 rounded-xl mx-auto flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                        <div className="w-24 h-24 bg-neutral-800 rounded-xl mx-auto flex items-center justify-center animate-pulse">
                             <PlayCircle className="w-12 h-12 text-neutral-600" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-neutral-400">
+                            <h3 className="text-xl font-bold text-neutral-400 mb-1">
                                 {USE_TEST_ADS ? 'Demo Advertisement' : 'Sponsored Content'}
                             </h3>
+                            <p className="text-neutral-500 text-xs max-w-xs mx-auto leading-relaxed mb-4">
+                                💚 We use ads to keep ApplyRight free for everyone. Thank you for supporting our platform!
+                            </p>
+
                             <p className="text-neutral-600 text-sm">
                                 {adState === 'playing' ? 'Advertisement playing...' : 'Starting ad...'}
                             </p>
