@@ -218,7 +218,7 @@ const AdPlayer = ({ onComplete, onClose }) => {
                         <div className="flex flex-col items-center">
                             <Loader className="w-10 h-10 text-green-500 animate-spin mb-4" />
                             <h3 className="text-2xl font-bold text-green-400">Verifying Reward...</h3>
-                            <p className="text-neutral-400 text-sm mt-2">Adding 5 credits to your account</p>
+                            <p className="text-neutral-400 text-sm mt-2">Adding 10 credits to your account</p>
                         </div>
                     </motion.div>
                 )}

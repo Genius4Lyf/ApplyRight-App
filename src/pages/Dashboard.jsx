@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
 import DashboardTour from '../components/dashboard/DashboardTour';
+import AdSenseBanner from '../components/AdSenseBanner';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -262,6 +263,8 @@ const Dashboard = () => {
             <Navbar />
 
             <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
+                {/* AdSense Banner - Top */}
+                <AdSenseBanner slot="1234567890" style={{ marginBottom: '2rem' }} />
                 {showProfileBanner && (
                     <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
                         <div
@@ -317,6 +320,8 @@ const Dashboard = () => {
                         {getRecommendedAction()}
                     </p>
                 </div>
+
+
 
                 {/* Workflow Selection Cards */}
                 {!workflowMode && (
@@ -407,6 +412,11 @@ const Dashboard = () => {
                     </div>
                 )}
 
+                {/* AdSense Banner - Bottom */}
+                {!workflowMode && (
+                    <AdSenseBanner slot="0987654321" style={{ marginBottom: '2rem' }} />
+                )}
+
                 {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
                 {!workflowMode && myDrafts.length > 0 && (
                     <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
@@ -469,6 +479,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 )}
+
+
 
                 {/* Active Upload Workflow */}
                 {workflowMode === 'upload' && (
