@@ -263,8 +263,6 @@ const Dashboard = () => {
             <Navbar />
 
             <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
-                {/* AdSense Banner - Top */}
-                <AdSenseBanner slot="1234567890" style={{ marginBottom: '2rem' }} />
                 {showProfileBanner && (
                     <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
                         <div
@@ -322,6 +320,8 @@ const Dashboard = () => {
                 </div>
 
 
+                {/* AdSense Banner - Top */}
+                <AdSenseBanner slot="1234567890" style={{ marginBottom: '2rem' }} />
 
                 {/* Workflow Selection Cards */}
                 {!workflowMode && (
