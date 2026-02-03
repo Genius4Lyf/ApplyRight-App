@@ -40,11 +40,11 @@ const Contact = () => {
                         </p>
 
                         <a
-                            href="mailto:support@applyright.com"
+                            href="mailto:support@applyright.com.ng"
                             className="inline-flex items-center gap-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-8 py-4 rounded-xl text-lg font-bold transition-colors"
                         >
                             <MessageSquare size={20} />
-                            support@applyright.com
+                            support@applyright.com.ng
                         </a>
 
                         <div className="mt-10 pt-10 border-t border-slate-100 text-sm text-slate-500">
