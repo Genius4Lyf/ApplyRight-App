@@ -713,6 +713,13 @@ const LandingPage = () => {
                             </div>
                             <span className="text-lg font-bold text-slate-900">ApplyRight</span>
                         </div>
+
+                        <div className="flex gap-6 text-sm font-medium text-slate-600">
+                            <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
+                            <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
+                            <Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact Us</Link>
+                        </div>
+
                         <div className="text-slate-500 text-sm">
                             © {new Date().getFullYear()} ApplyRight. All rights reserved.
                         </div>

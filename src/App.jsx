@@ -24,6 +24,9 @@ import Education from './pages/CVBuilder/Education';
 import Skills from './pages/CVBuilder/Skills';
 import Finalize from './pages/CVBuilder/Finalize';
 import ErrorBoundary from './components/ErrorBoundary';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import Contact from './pages/Contact';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -78,6 +81,18 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <LandingPage />,
+      },
+      {
+        path: "/privacy",
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: "/terms",
+        element: <TermsOfService />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
       },
       {
         path: "/login",
