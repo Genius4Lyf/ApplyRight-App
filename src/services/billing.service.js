@@ -20,8 +20,8 @@ const billingService = {
     },
 
     // Watch Ad Reward
-    watchAd: async () => {
-        const response = await api.post('/billing/watch-ad');
+    watchAd: async (type = 'video') => {
+        const response = await api.post('/billing/watch-ad', { type });
         return response.data;
     },
 

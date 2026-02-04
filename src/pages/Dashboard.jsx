@@ -11,7 +11,7 @@ import Navbar from '../components/Navbar';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
 import DashboardTour from '../components/dashboard/DashboardTour';
-import AdSenseBanner from '../components/AdSenseBanner';
+import MonetagBanner from '../components/MonetagBanner';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -320,8 +320,8 @@ const Dashboard = () => {
                 </div>
 
 
-                {/* AdSense Banner - Top */}
-                <AdSenseBanner slot="1234567890" style={{ marginBottom: '2rem' }} />
+                {/* Monetag Banner - Top */}
+                <MonetagBanner style={{ marginBottom: '2rem' }} />
 
                 {/* Workflow Selection Cards */}
                 {!workflowMode && (
@@ -412,9 +412,9 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* AdSense Banner - Bottom */}
+                {/* Monetag Banner - Bottom */}
                 {!workflowMode && (
-                    <AdSenseBanner slot="0987654321" style={{ marginBottom: '2rem' }} />
+                    <MonetagBanner style={{ marginBottom: '2rem' }} />
                 )}
 
                 {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}

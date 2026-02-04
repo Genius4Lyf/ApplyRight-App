@@ -1,228 +1,154 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, PlayCircle, Loader, AlertCircle } from 'lucide-react';
+import { X, ExternalLink, Loader, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdPlayer = ({ onComplete, onClose }) => {
-    const [adState, setAdState] = useState('loading'); // loading, ready, playing, completed, error
-    const [timeLeft, setTimeLeft] = useState(15); // Fallback mock timer
-    const [errorMessage, setErrorMessage] = useState('');
-    const adContainerRef = useRef(null);
-    const rewardedAdRef = useRef(null);
-
+    // States: 'initial', 'verifying', 'completed'
+    const [adState, setAdState] = useState('initial');
+    const [timeLeft, setTimeLeft] = useState(15);
     const intervalRef = useRef(null);
 
-    // AdMob Configuration
-    const ADMOB_APP_ID = import.meta.env.VITE_ADMOB_APP_ID;
-    const AD_UNIT_ID = import.meta.env.VITE_ADMOB_REWARDED_AD_UNIT_ID;
-    const USE_TEST_ADS = !ADMOB_APP_ID || ADMOB_APP_ID.includes('test') || import.meta.env.DEV;
+    // Monetag Direct Link
+    const DIRECT_LINK_URL = "https://otieu.com/4/10562647";
 
     useEffect(() => {
-        // Try to load Google AdMob Ad
-        loadAdMobAd();
-
         return () => {
-            // Cleanup
-            if (rewardedAdRef.current) {
-                try {
-                    rewardedAdRef.current.destroy?.();
-                } catch (e) {
-                    console.error('Error destroying ad:', e);
-                }
-            }
-            // Clear interval to prevent onComplete from firing after close
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, []);
 
-    const loadAdMobAd = async () => {
-        try {
-            // Check if Google Ad Manager is available
-            if (!window.googletag) {
-                console.log('Google Ad Manager not available, using fallback mock ad');
-                useFallbackMockAd();
-                return;
-            }
+    const handleStartAd = () => {
+        // Open Monetag Direct Link in new tab
+        window.open(DIRECT_LINK_URL, '_blank');
 
-            // For rewarded ads, we'll use the Google Publisher Tag (GPT) API
-            // This is a simplified implementation - in production you'd use the full AdMob SDK
-
-            // Use test ad unit if no real ID configured
-            const adUnitId = USE_TEST_ADS ? '/6499/example/rewarded' : AD_UNIT_ID;
-
-            if (!adUnitId) {
-                console.log('No ad unit configured, using mock ad');
-                useFallbackMockAd();
-                return;
-            }
-
-            setAdState('ready');
-
-            // Simulate ad loading and playing (real implementation would use AdMob SDK)
-            setTimeout(() => {
-                setAdState('playing');
-                startAdPlayback();
-            }, 1000);
-
-        } catch (error) {
-            console.error('Error loading AdMob ad:', error);
-            setErrorMessage('Failed to load ad. Using fallback.');
-            useFallbackMockAd();
-        }
+        // Start verification timer
+        setAdState('verifying');
+        startTimer();
     };
 
-    const startAdPlayback = () => {
-        // Real AdMob implementation would play video here
-        // For now, simulate 30-second video ad
-        let countdown = 30;
-        setTimeLeft(countdown);
-
+    const startTimer = () => {
+        setTimeLeft(15);
         if (intervalRef.current) clearInterval(intervalRef.current);
+
         intervalRef.current = setInterval(() => {
-            countdown -= 1;
-            setTimeLeft(countdown);
-
-            if (countdown <= 0) {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                handleAdComplete();
-            }
-        }, 1000);
-    };
-
-    const useFallbackMockAd = () => {
-        // Fallback to mock ad system
-        setAdState('playing');
-        setErrorMessage('Using demo ad (AdMob not configured)');
-
-        let countdown = 15;
-        setTimeLeft(countdown);
-
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = setInterval(() => {
-            countdown -= 1;
-            setTimeLeft(countdown);
-
-            if (countdown <= 0) {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                handleAdComplete();
-            }
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(intervalRef.current);
+                    handleAdComplete();
+                    return 0;
+                }
+                return prev - 1;
+            });
         }, 1000);
     };
 
     const handleAdComplete = () => {
         setAdState('completed');
+        // Small delay to show completion state before closing
         setTimeout(() => {
-            // Ensure component is still mounted/valid before calling back
             onComplete();
-        }, 1500);
+        }, 2000);
     };
 
     const handleClose = () => {
         if (adState === 'completed') {
             onClose();
-        } else {
-            if (window.confirm("Close ad? You won't get your reward.")) {
+        } else if (adState === 'verifying') {
+            if (window.confirm("Cancel verification? You won't receive credits.")) {
                 onClose();
             }
+        } else {
+            onClose();
         }
     };
 
-    const getProgressPercentage = () => {
-        const totalTime = adState === 'playing' && timeLeft <= 30 ? 30 : 15;
-        return ((totalTime - timeLeft) / totalTime) * 100;
-    };
-
     return (
-        <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col items-center justify-center">
-            {/* Ad Container */}
-            <div
-                ref={adContainerRef}
-                className="absolute inset-0 bg-neutral-900 flex items-center justify-center overflow-hidden"
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl relative"
             >
-                {/* Loading State */}
-                {adState === 'loading' && (
-                    <div className="text-center space-y-4">
-                        <Loader className="w-16 h-16 text-indigo-500 animate-spin mx-auto" />
-                        <h3 className="text-xl font-bold text-neutral-300">Loading Advertisement...</h3>
-                    </div>
-                )}
-
-                {/* Ready/Playing State */}
-                {(adState === 'ready' || adState === 'playing') && (
-                    <div className="text-center space-y-4">
-                        <div className="w-24 h-24 bg-neutral-800 rounded-xl mx-auto flex items-center justify-center animate-pulse">
-                            <PlayCircle className="w-12 h-12 text-neutral-600" />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-neutral-400 mb-1">
-                                {USE_TEST_ADS ? 'Demo Advertisement' : 'Sponsored Content'}
-                            </h3>
-                            <p className="text-neutral-500 text-xs max-w-xs mx-auto leading-relaxed mb-4">
-                                💚 We use ads to keep ApplyRight free for everyone. Thank you for supporting our platform!
-                            </p>
-
-                            <p className="text-neutral-600 text-sm">
-                                {adState === 'playing' ? 'Advertisement playing...' : 'Starting ad...'}
-                            </p>
-                            {errorMessage && (
-                                <div className="flex items-center justify-center gap-2 mt-2 text-amber-400 text-xs">
-                                    <AlertCircle className="w-4 h-4" />
-                                    <span>{errorMessage}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Progress Bar */}
-                {adState === 'playing' && (
-                    <div
-                        className="absolute bottom-0 left-0 h-1 bg-indigo-600 transition-all duration-1000 ease-linear"
-                        style={{ width: `${getProgressPercentage()}%` }}
-                    />
-                )}
-            </div>
-
-            {/* Controls */}
-            <div className="absolute top-4 right-4 flex items-center gap-4">
-                {adState === 'playing' && (
-                    <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full font-mono font-bold text-sm border border-white/10">
-                        Reward in {timeLeft}s
-                    </div>
-                )}
-
-                {adState === 'completed' && (
-                    <div className="bg-green-500/20 backdrop-blur-md px-4 py-2 rounded-full font-bold text-sm border border-green-500/30 text-green-400">
-                        Reward Verified ✓
-                    </div>
-                )}
-
+                {/* Close Button */}
                 <button
                     onClick={handleClose}
-                    className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
-                    title="Close Ad"
+                    className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors z-10 text-slate-500"
                 >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                 </button>
-            </div>
 
-            {/* Completion Overlay */}
-            <AnimatePresence>
-                {adState === 'completed' && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20"
-                    >
-                        <div className="flex flex-col items-center">
-                            <Loader className="w-10 h-10 text-green-500 animate-spin mb-4" />
-                            <h3 className="text-2xl font-bold text-green-400">Verifying Reward...</h3>
-                            <p className="text-neutral-400 text-sm mt-2">Adding 10 credits to your account</p>
+                {/* Content */}
+                <div className="p-8 text-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+
+                    {/* Icon State */}
+                    <div className="w-24 h-24 mx-auto mb-6 relative">
+                        {adState === 'initial' && (
+                            <div className="w-full h-full bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center animate-pulse">
+                                <ExternalLink className="w-10 h-10" />
+                            </div>
+                        )}
+                        {adState === 'verifying' && (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <svg className="absolute inset-0 w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+                                    <circle
+                                        cx="50" cy="50" r="45" fill="none" stroke="#4f46e5" strokeWidth="8"
+                                        strokeDasharray="283"
+                                        strokeDashoffset={283 - (283 * ((15 - timeLeft) / 15))}
+                                        className="transition-all duration-1000 ease-linear"
+                                    />
+                                </svg>
+                                <span className="text-2xl font-bold text-indigo-600 font-mono">{timeLeft}</span>
+                            </div>
+                        )}
+                        {adState === 'completed' && (
+                            <div className="w-full h-full bg-green-100 text-green-600 rounded-full flex items-center justify-center scale-110 transition-transform">
+                                <CheckCircle className="w-12 h-12" />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Text State */}
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                        {adState === 'initial' && 'Sponsored Offer'}
+                        {adState === 'verifying' && 'Verifying...'}
+                        {adState === 'completed' && 'Reward Unlocked!'}
+                    </h3>
+
+                    <p className="text-slate-500 mb-8 min-h-[48px]">
+                        {adState === 'initial' && 'View our sponsor\'s offer to unlock your free credits instantly.'}
+                        {adState === 'verifying' && 'Please keep the offer tab open for a few seconds to verify your view.'}
+                        {adState === 'completed' && 'Your 10 credits have been added to your account.'}
+                    </p>
+
+                    {/* Action Button */}
+                    {adState === 'initial' && (
+                        <button
+                            onClick={handleStartAd}
+                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+                        >
+                            View Offer <ArrowRight className="w-5 h-5" />
+                        </button>
+                    )}
+
+                    {adState === 'verifying' && (
+                        <div className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-medium flex items-center justify-center gap-2 cursor-wait">
+                            <Loader className="w-5 h-5 animate-spin" /> Verifying...
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )}
+
+                    {adState === 'completed' && (
+                        <div className="w-full py-4 bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-200 flex items-center justify-center gap-2">
+                            Success!
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="bg-slate-50 p-4 text-xs text-center text-slate-400 border-t border-slate-100">
+                    Trusted Partner Network
+                </div>
+            </motion.div>
         </div>
     );
 };

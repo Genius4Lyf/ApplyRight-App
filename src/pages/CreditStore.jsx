@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Share2, PlayCircle, Loader, X, Gift, AlertCircle, Check } from 'lucide-react';
 import { billingService } from '../services';
 import AdPlayer from '../components/AdPlayer';
-import AdSenseBanner from '../components/AdSenseBanner';
+import MonetagBanner from '../components/MonetagBanner';
 
 const CreditStore = () => {
     const navigate = useNavigate();
@@ -196,10 +196,10 @@ const CreditStore = () => {
                         </div>
                     </div>
 
-                    {/* AdSense Banner (Passive Income) */}
+                    {/* Monetag Banner (Passive Income) */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center overflow-hidden">
                         <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Sponsored</h3>
-                        <AdSenseBanner slot="5678901234" style={{ display: 'block', width: '100%' }} format="rectangle" />
+                        <MonetagBanner title="Partner Offer" subtitle="Support us by checking out this offer" buttonText="View" style={{ width: '100%' }} />
                     </div>
                 </div>
 
