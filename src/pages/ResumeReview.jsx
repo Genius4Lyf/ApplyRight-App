@@ -390,6 +390,11 @@ const ResumeReview = () => {
                 <AdPlayer
                     onComplete={handleDownloadAdComplete}
                     onClose={() => setDownloadAdOpen(false)} // User can close, but won't get reward
+                    title="Unlock High-Quality PDF"
+                    subtitle="View our sponsor's offer to unlock your download instantly."
+                    buttonText="Unlock Download"
+                    successTitle="Ready to Download!"
+                    successMessage="Your PDF will start downloading shortly."
                 />
             )}
 

@@ -2,7 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, ExternalLink, Loader, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AdPlayer = ({ onComplete, onClose }) => {
+const AdPlayer = (props) => {
+    const {
+        onComplete,
+        onClose,
+        title = "Sponsored Offer",
+        subtitle = "View our sponsor's offer to unlock your free credits instantly.",
+        successMessage = "2 credits have been added to your account.",
+        buttonText = "View Offer",
+        successTitle = "+2 Credits Unlocked!"
+    } = props;
+
     // States: 'initial', 'verifying', 'completed'
     const [adState, setAdState] = useState('initial');
     const [timeLeft, setTimeLeft] = useState(15);
@@ -54,7 +64,7 @@ const AdPlayer = ({ onComplete, onClose }) => {
         if (adState === 'completed') {
             onClose();
         } else if (adState === 'verifying') {
-            if (window.confirm("Cancel verification? You won't receive credits.")) {
+            if (window.confirm("Cancel verification? You won't receive the reward.")) {
                 onClose();
             }
         } else {
@@ -110,15 +120,15 @@ const AdPlayer = ({ onComplete, onClose }) => {
 
                     {/* Text State */}
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                        {adState === 'initial' && 'Sponsored Offer'}
+                        {adState === 'initial' && title}
                         {adState === 'verifying' && 'Verifying...'}
-                        {adState === 'completed' && 'Reward Unlocked!'}
+                        {adState === 'completed' && successTitle}
                     </h3>
 
                     <p className="text-slate-500 mb-8 min-h-[48px]">
-                        {adState === 'initial' && 'View our sponsor\'s offer to unlock your free credits instantly.'}
+                        {adState === 'initial' && subtitle}
                         {adState === 'verifying' && 'Please keep the offer tab open for a few seconds to verify your view.'}
-                        {adState === 'completed' && 'Your 10 credits have been added to your account.'}
+                        {adState === 'completed' && successMessage}
                     </p>
 
                     {/* Action Button */}
@@ -127,7 +137,7 @@ const AdPlayer = ({ onComplete, onClose }) => {
                             onClick={handleStartAd}
                             className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
                         >
-                            View Offer <ArrowRight className="w-5 h-5" />
+                            {buttonText} <ArrowRight className="w-5 h-5" />
                         </button>
                     )}
 

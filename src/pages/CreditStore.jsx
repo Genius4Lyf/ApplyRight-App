@@ -126,18 +126,18 @@ const CreditStore = () => {
                         <div className="flex-1 space-y-6 text-center md:text-left">
                             <div>
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-4">
-                                    Most Popular
+                                    Instant Reward
                                 </div>
-                                <h2 className="text-3xl font-bold text-slate-900 mb-2">Watch a Short Ad</h2>
+                                <h2 className="text-3xl font-bold text-slate-900 mb-2">View Sponsored Offer</h2>
                                 <p className="text-slate-500 text-lg">
-                                    Support our platform and instantly earn <span className="text-indigo-600 font-bold">10 Credits</span>.
+                                    Support our platform by viewing an offer and earn <span className="text-indigo-600 font-bold">2 Credits</span>.
                                 </p>
                             </div>
 
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <Check className="w-5 h-5 text-green-500" />
-                                    <span>Only 15-30 seconds</span>
+                                    <span>Takes only 15 seconds</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <Check className="w-5 h-5 text-green-500" />
@@ -145,7 +145,7 @@ const CreditStore = () => {
                                 </div>
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <Check className="w-5 h-5 text-green-500" />
-                                    <span>Unlimited daily watches</span>
+                                    <span>Unlimited daily views</span>
                                 </div>
                             </div>
                         </div>
@@ -157,10 +157,10 @@ const CreditStore = () => {
                             >
                                 <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform">
-                                    <PlayCircle className="w-10 h-10 text-indigo-600 ml-1" />
+                                    <Zap className="w-10 h-10 text-indigo-600 ml-1" />
                                 </div>
-                                <span className="text-white font-bold text-2xl">Watch Ad</span>
-                                <span className="text-indigo-200 font-medium mt-1">+10 Credits</span>
+                                <span className="text-white font-bold text-2xl">View Offer</span>
+                                <span className="text-indigo-200 font-medium mt-1">+2 Credits</span>
 
                                 {adStats.streak > 0 && (
                                     <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
@@ -197,10 +197,7 @@ const CreditStore = () => {
                     </div>
 
                     {/* Monetag Banner (Passive Income) */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center overflow-hidden">
-                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Sponsored</h3>
-                        <MonetagBanner title="Partner Offer" subtitle="Support us by checking out this offer" buttonText="View" style={{ width: '100%' }} />
-                    </div>
+                    <MonetagBanner />
                 </div>
 
                 {/* Info Footer */}

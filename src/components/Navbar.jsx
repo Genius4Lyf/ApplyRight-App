@@ -144,7 +144,7 @@ const Navbar = () => {
                                                 className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-green-600 transition-colors flex items-center gap-2"
                                             >
                                                 <PlayCircle className="w-4 h-4 text-green-500" />
-                                                Watch Ad (+5)
+                                                Get more credits
                                             </button>
                                         </div>
                                     </motion.div>

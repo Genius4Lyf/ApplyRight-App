@@ -321,7 +321,7 @@ const Dashboard = () => {
 
 
                 {/* Monetag Banner - Top */}
-                <MonetagBanner style={{ marginBottom: '2rem' }} />
+                {/* <MonetagBanner style={{ marginBottom: '2rem' }} /> */}
 
                 {/* Workflow Selection Cards */}
                 {!workflowMode && (
@@ -413,9 +413,9 @@ const Dashboard = () => {
                 )}
 
                 {/* Monetag Banner - Bottom */}
-                {!workflowMode && (
+                {/* {!workflowMode && (
                     <MonetagBanner style={{ marginBottom: '2rem' }} />
-                )}
+                )} */}
 
                 {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
                 {!workflowMode && myDrafts.length > 0 && (
