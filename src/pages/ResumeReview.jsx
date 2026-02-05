@@ -224,8 +224,17 @@ const ResumeReview = () => {
             const element = document.getElementById(elementId);
             if (!element) throw new Error(`${activeTab === 'resume' ? 'Resume' : 'Cover letter'} content not found`);
 
+            // Clone and reset transform to ensure PDF is generated at 100% scale
+            const clone = element.cloneNode(true);
+            clone.style.transform = 'none';
+            clone.style.transformOrigin = 'top left'; // Reset origin just in case
+            clone.style.width = '210mm';
+            clone.style.minWidth = '210mm';
+            clone.style.minHeight = '297mm';
+            clone.style.margin = '0 auto'; // Ensure centered if that matters
+
             // 1. Serialization with Tailwind injection
-            const contentHtml = element.outerHTML;
+            const contentHtml = clone.outerHTML;
 
             // Apply dark background only for Royal Elegance template
             const isDarkTemplate = templateId === 'luxury-royal';
