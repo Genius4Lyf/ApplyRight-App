@@ -23,7 +23,7 @@ const EnergyTotalTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-700 leading-relaxed shadow-lg overflow-hidden">
+        <div className="bg-white mx-auto font-sans text-slate-700 leading-relaxed shadow-lg overflow-hidden">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap');
             `}</style>

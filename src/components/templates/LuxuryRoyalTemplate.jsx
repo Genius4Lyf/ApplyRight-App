@@ -22,7 +22,7 @@ const LuxuryRoyalTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-slate-900 max-w-[800px] mx-auto font-['Playfair_Display',serif] text-slate-300 leading-relaxed min-h-[297mm]">
+        <div className="bg-slate-900 mx-auto font-['Playfair_Display',serif] text-slate-300 leading-relaxed min-h-[297mm]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lato:wght@300;400&display=swap');
             `}</style>

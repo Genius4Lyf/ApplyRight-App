@@ -55,7 +55,7 @@ const SwissModernTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-900 leading-tight">
+        <div className="bg-white mx-auto font-sans text-slate-900 leading-tight">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');

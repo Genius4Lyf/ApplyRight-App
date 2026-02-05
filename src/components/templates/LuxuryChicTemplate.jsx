@@ -23,7 +23,7 @@ const LuxuryChicTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-black leading-relaxed">
+        <div className="bg-white mx-auto font-sans text-black leading-relaxed">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;500&display=swap');
             `}</style>

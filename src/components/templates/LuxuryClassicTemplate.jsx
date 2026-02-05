@@ -23,7 +23,7 @@ const LuxuryClassicTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-[#fcfbf9] max-w-[800px] mx-auto font-serif text-[#2c3e50] leading-relaxed border border-[#e0e0e0] shadow-sm">
+        <div className="bg-[#fcfbf9] mx-auto font-serif text-[#2c3e50] leading-relaxed border border-[#e0e0e0] shadow-sm">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap');
             `}</style>

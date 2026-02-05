@@ -23,7 +23,7 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-800 leading-relaxed shadow-lg border-t-8 border-[#003366]">
+        <div className="bg-white mx-auto font-sans text-slate-800 leading-relaxed shadow-lg border-t-8 border-[#003366]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;700&family=Open+Sans:wght@400;600;700&display=swap');
             `}</style>

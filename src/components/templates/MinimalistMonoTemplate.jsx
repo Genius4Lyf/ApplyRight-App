@@ -32,7 +32,7 @@ const MinimalistMonoTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-12 font-['JetBrains_Mono',monospace] text-slate-800 leading-relaxed text-[10pt]">
+        <div className="bg-white mx-auto p-12 font-['JetBrains_Mono',monospace] text-slate-800 leading-relaxed text-[10pt]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
             `}</style>

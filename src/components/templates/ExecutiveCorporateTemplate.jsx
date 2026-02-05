@@ -23,7 +23,7 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-800 leading-snug">
+        <div className="bg-white mx-auto font-sans text-slate-800 leading-snug">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
             `}</style>

@@ -66,7 +66,7 @@ const CreativePortfolioTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-['Poppins',sans-serif] text-slate-800 leading-relaxed overflow-hidden">
+        <div className="bg-white mx-auto font-['Poppins',sans-serif] text-slate-800 leading-relaxed overflow-hidden">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');

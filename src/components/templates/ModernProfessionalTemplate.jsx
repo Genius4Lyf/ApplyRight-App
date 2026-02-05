@@ -59,7 +59,7 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-10 font-['Inter',sans-serif] text-[#333333] leading-relaxed text-[10.5pt]">
+        <div className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-[#333333] leading-relaxed text-[10.5pt]">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

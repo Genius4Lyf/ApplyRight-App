@@ -23,7 +23,7 @@ const EnergySeplatTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-800 leading-relaxed shadow-lg border-l-[12px] border-[#008751]">
+        <div className="bg-white mx-auto font-sans text-slate-800 leading-relaxed shadow-lg border-l-[12px] border-[#008751]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
             `}</style>

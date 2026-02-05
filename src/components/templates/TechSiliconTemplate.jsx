@@ -23,7 +23,7 @@ const TechSiliconTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-900 leading-relaxed relative overflow-hidden">
+        <div className="bg-white mx-auto font-sans text-slate-900 leading-relaxed relative overflow-hidden">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
             `}</style>

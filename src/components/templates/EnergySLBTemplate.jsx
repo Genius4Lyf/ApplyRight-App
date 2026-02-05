@@ -23,7 +23,7 @@ const EnergySLBTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-800 leading-relaxed shadow-lg">
+        <div className="bg-white mx-auto font-sans text-slate-800 leading-relaxed shadow-lg">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&display=swap');
             `}</style>

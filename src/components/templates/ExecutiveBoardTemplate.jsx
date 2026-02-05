@@ -23,7 +23,7 @@ const ExecutiveBoardTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-900 leading-snug">
+        <div className="bg-white mx-auto font-sans text-slate-900 leading-snug">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700;900&family=Merriweather+Sans:wght@300;400;700&display=swap');
             `}</style>

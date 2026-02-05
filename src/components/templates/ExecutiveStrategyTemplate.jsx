@@ -23,7 +23,7 @@ const ExecutiveStrategyTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-700 leading-relaxed flex min-h-[1000px]">
+        <div className="bg-white mx-auto font-sans text-slate-700 leading-relaxed flex min-h-[1000px]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap');
             `}</style>

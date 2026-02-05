@@ -23,7 +23,7 @@ const EnergyHalliburtonTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-black leading-relaxed shadow-lg border-t-[8px] border-[#CC0000]">
+        <div className="bg-white mx-auto font-sans text-black leading-relaxed shadow-lg border-t-[8px] border-[#CC0000]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
             `}</style>

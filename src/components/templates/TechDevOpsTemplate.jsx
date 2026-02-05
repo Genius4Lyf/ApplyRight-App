@@ -23,7 +23,7 @@ const TechDevOpsTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-[#1e1e1e] max-w-[800px] mx-auto font-mono text-[#d4d4d4] leading-relaxed shadow-lg border border-[#333]">
+        <div className="bg-[#1e1e1e] mx-auto font-mono text-[#d4d4d4] leading-relaxed shadow-lg border border-[#333]">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap');
                 @media print {

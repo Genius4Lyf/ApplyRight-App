@@ -55,7 +55,7 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-12 font-['Merriweather',serif] text-slate-800 leading-relaxed text-[11pt]">
+        <div className="bg-white mx-auto p-12 font-['Merriweather',serif] text-slate-800 leading-relaxed text-[11pt]">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');

@@ -55,7 +55,7 @@ const MinimalistTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto p-12 font-['Open_Sans',sans-serif] text-slate-800 leading-relaxed">
+        <div className="bg-white mx-auto p-12 font-['Open_Sans',sans-serif] text-slate-800 leading-relaxed">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap');

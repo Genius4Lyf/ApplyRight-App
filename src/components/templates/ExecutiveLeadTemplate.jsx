@@ -55,7 +55,7 @@ const ExecutiveLeadTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-sans text-slate-900 leading-relaxed shadow-sm">
+        <div className="bg-white mx-auto font-sans text-slate-900 leading-relaxed shadow-sm">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Lato:wght@300;400;700&display=swap');

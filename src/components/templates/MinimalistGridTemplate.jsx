@@ -32,7 +32,7 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
     const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto min-h-[1000px] font-['Inter',sans-serif] text-slate-800 flex">
+        <div className="bg-white mx-auto min-h-[1000px] font-['Inter',sans-serif] text-slate-800 flex">
             {/* Header / Sidebar (Left 30%) */}
             <div className="w-[30%] bg-slate-50 p-8 border-r border-slate-200">
                 <div className="sticky top-8">

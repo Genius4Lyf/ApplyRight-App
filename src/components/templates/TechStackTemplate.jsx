@@ -55,7 +55,7 @@ const TechStackTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-white max-w-[800px] mx-auto font-['Roboto',sans-serif] text-slate-800 leading-relaxed shadow-sm border-t-8 border-blue-600">
+        <div className="bg-white mx-auto font-['Roboto',sans-serif] text-slate-800 leading-relaxed shadow-sm border-t-8 border-blue-600">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');

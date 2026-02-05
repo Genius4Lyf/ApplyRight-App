@@ -55,7 +55,7 @@ const ElegantLuxuryTemplate = ({ markdown, userProfile }) => {
     }
 
     return (
-        <div className="bg-[#fcfbf9] max-w-[800px] mx-auto font-sans text-slate-800 leading-relaxed border border-[#f0eee6]">
+        <div className="bg-[#fcfbf9] mx-auto font-sans text-slate-800 leading-relaxed border border-[#f0eee6]">
             {/* INJECT FONTS */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
