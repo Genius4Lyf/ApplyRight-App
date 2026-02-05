@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, PenTool, BarChart2, X, ChevronRight, Upload } from 'lucide-react';
+import { Sparkles, PenTool, BarChart2, X, ChevronRight, Upload, Zap } from 'lucide-react';
 
 const TOUR_STEPS = [
     {
@@ -11,6 +11,14 @@ const TOUR_STEPS = [
         color: "text-indigo-600",
         bg: "bg-indigo-100",
         image: "/tour-welcome.png" // Placeholder, we'll use CSS shapes/icons if image missing
+    },
+    {
+        id: 'credits',
+        title: "Credits & Support",
+        description: "Start with 15 free credits for your first application. Support us and earn more credits instantly by watching short ads.",
+        icon: Zap,
+        color: "text-amber-500",
+        bg: "bg-amber-100",
     },
     {
         id: 'upload',
@@ -25,8 +33,8 @@ const TOUR_STEPS = [
         title: "Smart CV Builder",
         description: "Create ATS-friendly resumes from scratch or edit existing ones with our intelligent builder.",
         icon: PenTool,
-        color: "text-amber-600",
-        bg: "bg-amber-100",
+        color: "text-blue-600",
+        bg: "bg-blue-100",
     },
     {
         id: 'optimize',
