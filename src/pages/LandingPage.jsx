@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle, PenTool, Mic } from 'lucide-react';
+import logo from '../assets/logo/applyright-icon.png';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
@@ -270,9 +271,7 @@ const LandingPage = () => {
                 >
                     <div className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}>
                         <Link to="/" className="flex items-center gap-2 group">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                                <Layers size={18} />
-                            </div>
+                            <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
                             <span className="text-xl font-bold font-heading text-slate-900">ApplyRight</span>
                         </Link>
                         <div className="flex items-center gap-4">
@@ -708,9 +707,7 @@ const LandingPage = () => {
                 <footer className="bg-white border-t border-slate-200 py-12">
                     <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-white">
-                                <Layers size={14} />
-                            </div>
+                            <img src={logo} alt="ApplyRight Logo" className="h-6 w-auto" />
                             <span className="text-lg font-bold text-slate-900">ApplyRight</span>
                         </div>
 

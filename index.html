@@ -1,49 +1,58 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/src/assets/logo/applyright-favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google Consent Mode -->
+    <script>
+      // Define dataLayer and the gtag function.
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Google Consent Mode -->
-  <script>
-    // Define dataLayer and the gtag function.
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+      // Default consent to 'denied' for all regions
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
+      });
+    </script>
+    <!--Banner script here!-->
 
-    // Default consent to 'denied' for all regions
-    gtag('consent', 'default', {
-      'ad_storage': 'denied',
-      'ad_user_data': 'denied',
-      'ad_personalization': 'denied',
-      'analytics_storage': 'denied'
-    });
-  </script>
-  <!--Banner script here!-->
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-3CHRNYKYLQ"
+    ></script>
+    <script>
+      gtag("js", new Date());
+      gtag("config", "G-3CHRNYKYLQ");
+    </script>
+    <title>ApplyRight - AI Job Application Assistant</title>
+    <meta name="google-adsense-account" content="ca-pub-1755459948491797" />
+    <meta name="monetag" content="2764b21002cfd7cff64646a41678abb7" />
+    <meta
+      name="description"
+      content="ApplyRight helps you create professional CVs and cover letters tailored to job descriptions using AI. Optimize your job application process today."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1755459948491797"
+      crossorigin="anonymous"
+    ></script>
+  </head>
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CHRNYKYLQ"></script>
-  <script>
-    gtag('js', new Date());
-    gtag('config', 'G-3CHRNYKYLQ');
-  </script>
-  <title>ApplyRight - AI Job Application Assistant</title>
-  <meta name="google-adsense-account" content="ca-pub-1755459948491797" />
-  <meta name="monetag" content="2764b21002cfd7cff64646a41678abb7" />
-  <meta name="description"
-    content="ApplyRight helps you create professional CVs and cover letters tailored to job descriptions using AI. Optimize your job application process today." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1755459948491797"
-    crossorigin="anonymous"></script>
-</head>
-
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
