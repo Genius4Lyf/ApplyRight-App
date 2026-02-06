@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layers, ArrowRight, FileText, Search, Zap, CheckCircle, AlertCircle, XCircle, PenTool, Mic } from 'lucide-react';
 import logo from '../assets/logo/applyright-icon.png';
+import Seo from '../components/Seo';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
@@ -217,6 +218,10 @@ const LandingPage = () => {
             transition={{ duration: 0.5 }}
             className="min-h-screen font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900"
         >
+            <Seo
+                title="ApplyRight - AI Resume Builder & CV Optimizer for Job Seekers"
+                description="Beat the ATS with ApplyRight. Our AI-driven resume builder tailors your CV to specific job descriptions, helping you land more interviews. Try it free."
+            />
 
             {/* Fixed Background Layer */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -315,7 +320,7 @@ const LandingPage = () => {
                                 </AnimatePresence>
                             </span>
                             <br className="hidden md:block" />
-                            Land Your Dream Job.
+                            Land Your Dream Job with AI.
                         </h1>
 
                         <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
