@@ -15,7 +15,7 @@ const Onboarding = () => {
         firstName: '',
         lastName: '',
         otherName: '',
-        phone: '',
+
         linkedinUrl: '',
         portfolioUrl: '',
         currentStatus: 'student',
@@ -77,7 +77,7 @@ const Onboarding = () => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 otherName: formData.otherName,
-                phone: formData.phone,
+
                 linkedinUrl: formData.linkedinUrl,
                 portfolioUrl: formData.portfolioUrl,
                 currentStatus: formData.currentStatus,
@@ -205,17 +205,7 @@ const Onboarding = () => {
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                                        <input
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            className="input-field w-full"
-                                            placeholder="+1 (555) 000-0000"
-                                            required
-                                        />
-                                    </div>
+
                                     {/* Optional fields removed as per request to handle in Profile/CV Builder */}
                                     <div>
                                         <CustomSelect
