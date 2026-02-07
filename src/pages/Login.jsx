@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import logo from '../assets/logo/applyright-icon.png';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -57,12 +58,10 @@ const Login = () => {
 
             <div className="relative z-10 w-full max-w-md">
                 <div className="flex justify-center mb-8">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                            <Sparkles className="w-6 h-6 text-white" />
-                        </div>
+                    <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <img src={logo} alt="ApplyRight Logo" className="h-10 w-auto" />
                         <span className="text-2xl font-bold text-slate-900 tracking-tight">ApplyRight</span>
-                    </div>
+                    </Link>
                 </div>
 
                 <div className="clean-card w-full p-8 space-y-8">
