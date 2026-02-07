@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import Modal from '../components/Modal';
+import { PhoneInput } from 'react-international-phone';
+import 'react-international-phone/style.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -31,6 +33,10 @@ const Register = () => {
 
     const onChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const handlePhoneChange = (phone) => {
+        setFormData({ ...formData, phone });
+    };
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -113,15 +119,24 @@ const Register = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Phone Number</label>
-                                <input
-                                    name="phone"
-                                    type="tel"
-                                    required
-                                    className="input-field w-full"
-                                    placeholder="+1234567890"
+                                <PhoneInput
+                                    defaultCountry="us"
                                     value={phone}
-                                    onChange={onChange}
+                                    onChange={handlePhoneChange}
                                     disabled={isLoading}
+                                    inputClassName="input-field w-full"
+                                    countrySelectorStyleProps={{
+                                        buttonClassName: "border border-slate-300 rounded-l-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    }}
+                                    style={{
+                                        '--react-international-phone-border-radius': '0.5rem',
+                                        '--react-international-phone-border-color': 'rgb(203 213 225)',
+                                        '--react-international-phone-background-color': '#fff',
+                                        '--react-international-phone-text-color': 'rgb(15 23 42)',
+                                        '--react-international-phone-selected-dropdown-item-background-color': 'rgb(238 242 255)',
+                                        '--react-international-phone-country-selector-background-color-hover': 'rgb(248 250 252)',
+                                        width: '100%'
+                                    }}
                                 />
                             </div>
                             <div>
