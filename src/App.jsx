@@ -27,6 +27,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
+import ATSGuide from './pages/ATSGuide';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -93,6 +94,10 @@ const router = createBrowserRouter([
       {
         path: "/contact",
         element: <Contact />,
+      },
+      {
+        path: "/ats-guide",
+        element: <ATSGuide />,
       },
       {
         path: "/login",
