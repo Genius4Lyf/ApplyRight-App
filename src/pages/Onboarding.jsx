@@ -169,10 +169,10 @@ const Onboarding = () => {
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
                         {step === 1 && (
-                            <div className="space-y-4 animate-fadeIn">
+                            <div className="space-y-5 animate-fadeIn">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1.5">First Name</label>
                                         <input
                                             name="firstName"
                                             value={formData.firstName}
@@ -183,7 +183,7 @@ const Onboarding = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Last Name</label>
                                         <input
                                             name="lastName"
                                             value={formData.lastName}
@@ -194,8 +194,9 @@ const Onboarding = () => {
                                         />
                                     </div>
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Other Name (Optional)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Other Name (Optional)</label>
                                     <input
                                         name="otherName"
                                         value={formData.otherName}
@@ -204,31 +205,28 @@ const Onboarding = () => {
                                         placeholder="Middle Name"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
 
-                                    {/* Optional fields removed as per request to handle in Profile/CV Builder */}
-                                    <div>
-                                        <CustomSelect
-                                            label="Current Status"
-                                            name="currentStatus"
-                                            value={formData.currentStatus}
-                                            onChange={(e) => handleChange(e)}
-                                            options={[
-                                                { value: 'student', label: 'Student' },
-                                                { value: 'graduate', label: 'Recent Graduate' },
-                                                { value: 'professional', label: 'Professional' },
-                                                { value: 'other', label: 'Other' }
-                                            ]}
-                                        />
-                                    </div>
+                                <div>
+                                    <CustomSelect
+                                        label="Current Status"
+                                        name="currentStatus"
+                                        value={formData.currentStatus}
+                                        onChange={(e) => handleChange(e)}
+                                        options={[
+                                            { value: 'student', label: 'Student' },
+                                            { value: 'graduate', label: 'Recent Graduate' },
+                                            { value: 'professional', label: 'Professional' },
+                                            { value: 'other', label: 'Other' }
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         )}
 
                         {step === 2 && (
-                            <div className="space-y-4 animate-fadeIn">
+                            <div className="space-y-5 animate-fadeIn">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">University / Institution</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">University / Institution</label>
                                     <input
                                         name="university"
                                         value={formData.university}
@@ -238,7 +236,7 @@ const Onboarding = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Discipline / Major</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Discipline / Major</label>
                                     <input
                                         name="discipline"
                                         value={formData.discipline}
@@ -249,7 +247,7 @@ const Onboarding = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Graduation Year (Expected)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Graduation Year (Expected)</label>
                                     <input
                                         name="graduationYear"
                                         value={formData.graduationYear}

@@ -18,6 +18,7 @@ const Register = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
+    const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
     const navigate = useNavigate();
 
     const { email, phone, password, confirmPassword, referralCode } = formData;
@@ -31,15 +32,80 @@ const Register = () => {
         }
     }, []);
 
-    const onChange = (e) =>
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const onChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Check password strength when password field changes
+        if (name === 'password') {
+            checkPasswordStrength(value);
+        }
+    };
 
     const handlePhoneChange = (phone) => {
         setFormData({ ...formData, phone });
     };
 
+    const checkPasswordStrength = (password) => {
+        let score = 0;
+
+        if (!password) {
+            setPasswordStrength({ score: 0, label: '', color: '' });
+            return;
+        }
+
+        // Length check
+        if (password.length >= 8) score++;
+        if (password.length >= 12) score++;
+
+        // Contains lowercase
+        if (/[a-z]/.test(password)) score++;
+
+        // Contains uppercase
+        if (/[A-Z]/.test(password)) score++;
+
+        // Contains number
+        if (/[0-9]/.test(password)) score++;
+
+        // Contains special character
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        // Set strength label and color
+        if (score <= 2) {
+            setPasswordStrength({ score, label: 'Weak', color: 'text-red-600 bg-red-50 border-red-200' });
+        } else if (score <= 4) {
+            setPasswordStrength({ score, label: 'Medium', color: 'text-yellow-600 bg-yellow-50 border-yellow-200' });
+        } else {
+            setPasswordStrength({ score, label: 'Strong', color: 'text-green-600 bg-green-50 border-green-200' });
+        }
+    };
+
+    const validatePassword = (password) => {
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long';
+        }
+        if (!/[a-z]/.test(password)) {
+            return 'Password must contain at least one lowercase letter';
+        }
+        if (!/[A-Z]/.test(password)) {
+            return 'Password must contain at least one uppercase letter';
+        }
+        if (!/[0-9]/.test(password)) {
+            return 'Password must contain at least one number';
+        }
+        return null;
+    };
+
     const onSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate password strength
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            setError(passwordError);
+            return;
+        }
+
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -151,6 +217,14 @@ const Register = () => {
                                     onChange={onChange}
                                     disabled={isLoading}
                                 />
+                                {password && passwordStrength.label && (
+                                    <div className={`mt-2 px-3 py-2 rounded-lg border text-xs font-medium ${passwordStrength.color}`}>
+                                        Password strength: {passwordStrength.label}
+                                    </div>
+                                )}
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    Must be 8+ characters with uppercase, lowercase, and number
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Confirm Password</label>
