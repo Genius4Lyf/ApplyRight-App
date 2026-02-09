@@ -213,6 +213,11 @@ const TemplateSelector = ({ selectedTemplate, onSelect, user = {}, onPreview, is
                                         <Lock className="w-3 h-3 mr-1" /> {template.cost}
                                     </div>
                                 )}
+                                {template.isRecommended && (
+                                    <div className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full flex items-center shadow-sm z-10">
+                                        <Star className="w-3 h-3 mr-1 fill-white" /> Recommended
+                                    </div>
+                                )}
                             </div>
 
                             {/* Content */}

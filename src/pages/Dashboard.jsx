@@ -403,9 +403,10 @@ const Dashboard = () => {
                                         <UploadIcon className="w-8 h-8" />
                                     </div>
                                     <h4 className="font-bold text-slate-800 mb-2">Upload Existing CV</h4>
-                                    <p className="text-sm text-slate-500">
+                                    <p className="text-sm text-slate-500 mb-3">
                                         We'll scan your PDF and auto-fill the builder with your details.
                                     </p>
+                                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Cost: 5 Credits</span>
                                 </button>
                             </div>
                         </div>
@@ -521,24 +522,41 @@ const Dashboard = () => {
                                     <p className="text-slate-500 mt-2">Extracting your experience and skills</p>
                                 </div>
                             ) : (
-                                <CVUploader onUploadSuccess={async (resumeData) => {
-                                    setScanning(true);
-                                    try {
-                                        const res = await api.post('/analysis/analyze', {
-                                            resumeId: resumeData._id
-                                        });
-                                        if (res.data.draftId) {
-                                            setScanSuccessDraftId(res.data.draftId);
-                                        } else {
-                                            toast.error("Failed to parse resume.");
+                                <div className="space-y-4">
+                                    <div className="text-center pb-4">
+                                        <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
+                                            <Zap className="w-4 h-4 inline mr-1" /> Cost: 5 Credits
+                                        </span>
+                                    </div>
+                                    <CVUploader onUploadSuccess={async (resumeData) => {
+                                        setScanning(true);
+                                        try {
+                                            const res = await api.post('/analysis/analyze', {
+                                                resumeId: resumeData._id
+                                            });
+                                            if (res.data.draftId) {
+                                                setScanSuccessDraftId(res.data.draftId);
+                                                // Sync credits
+                                                if (res.data.remainingCredits !== undefined) {
+                                                    updateCredits(res.data.remainingCredits);
+                                                }
+                                            } else {
+                                                toast.error("Failed to parse resume.");
+                                                setScanning(false);
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            // Handle insufficient credits specifically
+                                            if (err.response?.status === 403 && err.response.data.code === 'INSUFFICIENT_CREDITS') {
+                                                handleInsufficientCredits(err.response.data.required, err.response.data.current);
+                                                setScanning(false);
+                                                return;
+                                            }
+                                            toast.error("Error analyzing resume.");
                                             setScanning(false);
                                         }
-                                    } catch (err) {
-                                        console.error(err);
-                                        toast.error("Error analyzing resume.");
-                                        setScanning(false);
-                                    }
-                                }} />
+                                    }} />
+                                </div>
                             )}
                         </div>
                     </div>

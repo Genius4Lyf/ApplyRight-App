@@ -855,9 +855,19 @@ const ResumeReview = () => {
                                                             <Lock size={8} className="text-white" />
                                                         </div>
                                                     )}
+                                                    {t.isRecommended && (
+                                                        <div className="absolute top-0 left-0 p-0.5 bg-emerald-500 rounded-br-sm shadow-sm z-10">
+                                                            <Sparkles size={8} className="text-white fill-white" />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <span className="text-sm font-medium text-slate-700 block truncate">{t.name}</span>
+                                                    {t.isRecommended && (
+                                                        <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                                                            <Sparkles size={10} className="fill-emerald-600" /> Recommended
+                                                        </span>
+                                                    )}
                                                     {locked && (
                                                         <span className="text-[10px] text-slate-500 flex items-center gap-1">
                                                             {t.cost} Credits

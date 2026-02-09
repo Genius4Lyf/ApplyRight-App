@@ -4,14 +4,16 @@ export const TEMPLATES = [
         name: 'ATS Clean',
         isPro: false,
         cost: 0,
+        isRecommended: true, // Recommended
         description: 'Minimal, single-column design optimized for ATS parsing.',
         thumbnail: 'bg-white border-2 border-slate-200'
     },
     {
         id: 'student-ats',
         name: 'Student ATS',
-        isPro: false,
-        cost: 0,
+        isPro: true, // Locked
+        cost: 25,
+        isRecommended: true, // Recommended
         description: 'Academic-focused layout with education first, perfect for students.',
         thumbnail: 'bg-slate-50 border-2 border-[#2C3E50]'
     },
@@ -20,6 +22,7 @@ export const TEMPLATES = [
         name: 'Modern Professional',
         isPro: true,
         cost: 20,
+        isRecommended: true, // Recommended
         description: 'Strict ATS-optimized layout. Single column, clean, and factual.',
         thumbnail: 'bg-stone-100 border-l-4 border-stone-400'
     },
