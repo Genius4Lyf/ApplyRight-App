@@ -28,6 +28,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
 import ATSGuide from './pages/ATSGuide';
+import FeedbackPage from './pages/FeedbackPage';
+import FeedbackDashboard from './pages/FeedbackDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +100,18 @@ const router = createBrowserRouter([
       {
         path: "/ats-guide",
         element: <ATSGuide />,
+      },
+      {
+        path: "/feedback",
+        element: <FeedbackPage />,
+      },
+      {
+        path: "/feedback/dashboard",
+        element: (
+          <ProtectedRoute>
+            <FeedbackDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/login",
@@ -201,6 +215,7 @@ function App() {
   return (
     <HelmetProvider>
       <RouterProvider router={router} />
+      <Toaster position="top-right" richColors />
     </HelmetProvider>
   );
 }
