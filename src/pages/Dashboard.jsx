@@ -346,7 +346,13 @@ const Dashboard = () => {
 
                         {/* Option 2: Upload Existing */}
                         <div
-                            onClick={() => setWorkflowMode('upload')}
+                            onClick={() => {
+                                setResume(null);
+                                setJob(null);
+                                setFitResult(null);
+                                setApplication(null);
+                                setWorkflowMode('upload');
+                            }}
                             className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
@@ -395,6 +401,10 @@ const Dashboard = () => {
                                 <button
                                     onClick={() => {
                                         setShowCreateOptions(false);
+                                        setResume(null);
+                                        setJob(null);
+                                        setFitResult(null);
+                                        setApplication(null);
                                         setWorkflowMode('create-upload');
                                     }}
                                     className="flex flex-col items-center p-6 border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 rounded-xl transition-all group text-center"
@@ -487,7 +497,13 @@ const Dashboard = () => {
                 {workflowMode === 'upload' && (
                     <div className="animate-in fade-in zoom-in-95 duration-300">
                         <button
-                            onClick={() => setWorkflowMode(null)}
+                            onClick={() => {
+                                setResume(null);
+                                setJob(null);
+                                setFitResult(null);
+                                setApplication(null);
+                                setWorkflowMode(null);
+                            }}
                             className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
                         >
                             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
@@ -503,7 +519,13 @@ const Dashboard = () => {
                 {workflowMode === 'create-upload' && (
                     <div className="animate-in fade-in zoom-in-95 duration-300 max-w-2xl mx-auto">
                         <button
-                            onClick={() => setWorkflowMode(null)}
+                            onClick={() => {
+                                setResume(null);
+                                setJob(null);
+                                setFitResult(null);
+                                setApplication(null);
+                                setWorkflowMode(null);
+                            }}
                             className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
                         >
                             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
