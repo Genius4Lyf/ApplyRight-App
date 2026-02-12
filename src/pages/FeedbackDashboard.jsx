@@ -187,17 +187,19 @@ const FeedbackDashboard = () => {
                                             <h3 className="text-slate-900 font-serif font-bold text-lg tracking-tight leading-none">
                                                 {feedback.user?.firstName} {feedback.user?.lastName}
                                             </h3>
-                                            <span className="text-indigo-500/80 text-xs font-medium uppercase tracking-wider">Verified User</span>
+                                            <div className="flex items-center gap-1 text-indigo-500/80 text-xs font-medium uppercase tracking-wider mt-1">
+                                                <span>Verified User</span>
+                                                <Shield className="w-3 h-3" />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="text-indigo-300">
-                                        <Shield className="w-4 h-4" />
+                                        <MessageSquare className="w-5 h-5" />
                                     </div>
                                 </div>
 
                                 {/* Body: Handwritten/Typewriter Vibe */}
                                 <div className="relative z-10 mb-8 min-h-[80px]">
-                                    <MessageSquare className="w-4 h-4 text-indigo-200 mb-2" />
                                     <p className="text-slate-700 text-lg leading-relaxed font-serif italic">
                                         "{feedback.message}"
                                     </p>
