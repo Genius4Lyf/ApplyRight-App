@@ -8,6 +8,8 @@ import { loadSlim } from "@tsparticles/slim";
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
 import { TEMPLATES } from '../data/templates';
 import TemplateThumbnail from '../components/TemplateThumbnail';
+import axios from 'axios';
+import FeedbackCard from '../components/FeedbackCard';
 
 const TiltStack = () => {
     const x = useMotionValue(0);
@@ -139,6 +141,23 @@ const LandingPage = () => {
 
     const { scrollY } = useScroll();
     const [scrolled, setScrolled] = useState(false);
+
+
+    const [featuredFeedbacks, setFeaturedFeedbacks] = useState([]);
+
+    useEffect(() => {
+        const fetchFeatured = async () => {
+            try {
+                const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/feedback/featured`);
+                if (data.success) {
+                    setFeaturedFeedbacks(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching featured feedbacks:', error);
+            }
+        };
+        fetchFeatured();
+    }, []);
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setScrolled(latest > 50);
@@ -692,6 +711,40 @@ const LandingPage = () => {
                         </div>
                     </div>
                 </section>
+
+                {/* What Users Say Section */}
+                {featuredFeedbacks.length >= 3 && (
+                    <section className="py-24 bg-white relative overflow-hidden">
+                        <div className="max-w-7xl mx-auto px-6 relative z-10">
+                            <div className="text-center mb-16">
+                                <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">Community Love</h2>
+                                <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
+                                    What Users Say
+                                </h3>
+                                <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto">
+                                    Join thousands of satisfied job seekers who have transformed their careers with ApplyRight.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {featuredFeedbacks.map((feedback, index) => (
+                                    <FeedbackCard
+                                        key={feedback._id}
+                                        feedback={feedback}
+                                        index={index}
+                                        hideActions={true}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="mt-16 text-center">
+                                <Link to="/feedback" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-700 hover:gap-3 transition-all">
+                                    Share your story <ArrowRight size={20} />
+                                </Link>
+                            </div>
+                        </div>
+                    </section>
+                )}
 
                 {/* CTA Section */}
                 <section className="py-20 bg-slate-900 text-white overflow-hidden relative">
