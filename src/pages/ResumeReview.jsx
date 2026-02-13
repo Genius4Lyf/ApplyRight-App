@@ -557,7 +557,7 @@ const ResumeReview = () => {
                                 className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-100"
                             >
                                 <PlayCircle className="w-5 h-5" />
-                                Watch Ad for +10 Credits
+                                View Offer for +5 Credits
                             </button>
 
                             <p className="text-xs text-slate-400 text-center leading-relaxed px-4">

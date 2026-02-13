@@ -167,15 +167,29 @@ const AdPlayer = (props) => {
                         </button>
                     )}
 
-                    {adState === 'verifying' && (
-                        <div className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-medium flex items-center justify-center gap-2 cursor-wait">
-                            <Loader className="w-5 h-5 animate-spin" /> Verifying...
-                        </div>
-                    )}
-
                     {adState === 'completed' && (
                         <div className="w-full py-4 bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-200 flex items-center justify-center gap-2">
                             Success!
+                        </div>
+                    )}
+
+                    {adState === 'verifying' && (
+                        <div className="space-y-4">
+                            <button
+                                disabled
+                                className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-bold text-lg cursor-wait flex items-center justify-center gap-2"
+                            >
+                                <Loader className="w-5 h-5 animate-spin" />
+                                Verifying...
+                            </button>
+
+                            {/* Supportive Message */}
+                            <div className="flex items-start gap-2 bg-green-50 border border-green-100 rounded-lg p-3">
+                                <span className="text-green-600 text-lg">💚</span>
+                                <p className="text-sm text-green-700 leading-relaxed">
+                                    We use ads to keep ApplyRight free for everyone. Thank you for your support!
+                                </p>
+                            </div>
                         </div>
                     )}
 
