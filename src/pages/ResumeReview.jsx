@@ -216,10 +216,16 @@ const ResumeReview = () => {
         }
     };
 
+
     // Download Ad Logic
     const performDownload = async () => {
         try {
             setIsDownloading(true);
+
+            // PHASE 1: Show tips for 20 seconds BEFORE starting PDF generation
+            await new Promise(resolve => setTimeout(resolve, 20000));
+
+            // PHASE 2: Now start PDF generation (user has seen tips for full 20s)
             toast.info('Generating High-Quality PDF...', { duration: 2000 });
 
             const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
@@ -229,11 +235,11 @@ const ResumeReview = () => {
             // Clone and reset transform to ensure PDF is generated at 100% scale
             const clone = element.cloneNode(true);
             clone.style.transform = 'none';
-            clone.style.transformOrigin = 'top left'; // Reset origin just in case
+            clone.style.transformOrigin = 'top left';
             clone.style.width = '210mm';
             clone.style.minWidth = '210mm';
             clone.style.minHeight = '297mm';
-            clone.style.margin = '0 auto'; // Ensure centered if that matters
+            clone.style.margin = '0 auto';
 
             // 1. Serialization with Tailwind injection
             const contentHtml = clone.outerHTML;
@@ -293,7 +299,7 @@ const ResumeReview = () => {
                 </html>
             `;
 
-            // 2. Call Backend with margin options (10mm margins for consistent page break spacing)
+            // 2. Call Backend with margin options
             const blob = await CVService.generatePdf(fullHtml, {
                 margin: {
                     top: '0mm',
@@ -313,11 +319,11 @@ const ResumeReview = () => {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            // Show success state in the loader
+            // PHASE 3: Show success state in the loader
             setDownloadSuccess(true);
             toast.success('PDF Downloaded');
 
-            // Wait 2.5 seconds before closing the loader
+            // PHASE 4: Wait 2.5 seconds before closing the loader
             setTimeout(() => {
                 setIsDownloading(false);
                 setDownloadSuccess(false);
