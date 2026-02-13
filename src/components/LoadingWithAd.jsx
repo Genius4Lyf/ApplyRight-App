@@ -17,12 +17,13 @@ import { Loader } from 'lucide-react';
 const LoadingWithAd = ({
     messages = ["Processing..."],
     showProgress = false,
-    onComplete = null
+    onComplete = null,
+    duration = 10000 // Default to 10 seconds if not specified
 }) => {
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [progress, setProgress] = useState(0);
 
-    const MIN_DISPLAY_TIME = 10000; // Minimum 10 seconds to ensure ad impression
+    const MIN_DISPLAY_TIME = duration; // Use prop duration
     const MESSAGE_ROTATION_TIME = 3500; // Rotate messages every 3.5 seconds
 
     // TODO: Replace with your actual MoneyTag Zone ID
@@ -47,7 +48,7 @@ const LoadingWithAd = ({
             const elapsed = Date.now() - startTime;
 
             if (showProgress) {
-                const progressPercent = Math.min((elapsed / 10000) * 100, 95);
+                const progressPercent = Math.min((elapsed / duration) * 100, 95);
                 setProgress(progressPercent);
             }
 

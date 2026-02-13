@@ -58,6 +58,7 @@ const ResumeReview = () => {
 
     // Ad & Unlock State
     const [downloadAdOpen, setDownloadAdOpen] = useState(false);
+    const [downloadSuccess, setDownloadSuccess] = useState(false); // Success state for download loader
     const [unlockModalOpen, setUnlockModalOpen] = useState(false);
     const [templateToUnlock, setTemplateToUnlock] = useState(null);
     const [unlocking, setUnlocking] = useState(false);
@@ -312,12 +313,20 @@ const ResumeReview = () => {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
+            // Show success state in the loader
+            setDownloadSuccess(true);
             toast.success('PDF Downloaded');
+
+            // Wait 2.5 seconds before closing the loader
+            setTimeout(() => {
+                setIsDownloading(false);
+                setDownloadSuccess(false);
+            }, 2500);
+
         } catch (e) {
             console.error(e);
             toast.error("Download failed");
-        } finally {
-            setIsDownloading(false);
+            setIsDownloading(false); // Close immediately on error
         }
     };
 
@@ -379,6 +388,7 @@ const ResumeReview = () => {
                 "Almost there..."
             ]}
             showProgress={false}
+            duration={30000}
         />
     );
 
@@ -916,6 +926,8 @@ const ResumeReview = () => {
                 <LoadingWithAd
                     messages={["Generating your high-quality PDF..."]}
                     showProgress={true}
+                    isSuccess={downloadSuccess}
+                    successMessage="Your PDF is ready!"
                 />
             )}
         </div>
