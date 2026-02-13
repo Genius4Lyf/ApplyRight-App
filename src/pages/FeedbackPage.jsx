@@ -242,13 +242,19 @@ const FeedbackPage = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="message" className="block text-sm font-semibold text-slate-700">
-                                                Your Feedback
-                                            </label>
+                                            <div className="flex justify-between items-center">
+                                                <label htmlFor="message" className="block text-sm font-semibold text-slate-700">
+                                                    Your Feedback
+                                                </label>
+                                                <span className={`text-xs ${message.length >= 300 ? 'text-red-500 font-medium' : 'text-slate-400'}`}>
+                                                    {message.length}/300
+                                                </span>
+                                            </div>
                                             <textarea
                                                 id="message"
                                                 rows={5}
                                                 required
+                                                maxLength={300}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 placeholder-slate-400 bg-slate-50 focus:bg-white resize-none"
                                                 placeholder="What's on your mind? We'd love to hear your thoughts..."
                                                 value={message}

@@ -720,6 +720,7 @@ const LandingPage = () => {
                             <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
                             <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
                             <Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact Us</Link>
+                            <Link to="/feedback" className="hover:text-indigo-600 transition-colors">Give Feedback</Link>
                             <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">ATS Guide</Link>
                         </div>
 
