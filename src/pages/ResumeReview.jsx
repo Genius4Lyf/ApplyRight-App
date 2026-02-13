@@ -222,10 +222,10 @@ const ResumeReview = () => {
         try {
             setIsDownloading(true);
 
-            // PHASE 1: Show tips for 20 seconds BEFORE starting PDF generation
-            await new Promise(resolve => setTimeout(resolve, 20000));
+            // PHASE 1: Show tips for 5 seconds BEFORE starting PDF generation
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
-            // PHASE 2: Now start PDF generation (user has seen tips for full 20s)
+            // PHASE 2: Now start PDF generation (user has seen tips for full 5s)
             toast.info('Generating High-Quality PDF...', { duration: 2000 });
 
             const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
@@ -931,7 +931,7 @@ const ResumeReview = () => {
             {isDownloading && (
                 <LoadingWithAd
                     messages={["Generating your high-quality PDF..."]}
-                    showProgress={true}
+                    showProgress={false}
                     isSuccess={downloadSuccess}
                     successMessage="Your PDF is ready!"
                 />
