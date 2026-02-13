@@ -65,7 +65,7 @@ const RootLayout = () => {
 
   return (
     <>
-      <Toaster position="bottom-right" richColors />
+
       <AnimatePresence mode="wait">
         {element && cloneElement(element, { key: getPageKey(location.pathname) })}
       </AnimatePresence>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Crown, Shield, User, MessageSquare, Calendar, Loader2, Lock } from 'lucide-react';
+import { Search, Crown, Shield, User, MessageSquare, Calendar, Loader2, Lock, Download } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { toPng } from 'html-to-image';
 import logo from '../assets/logo/applyright-icon.png';
 
 const FeedbackDashboard = () => {
@@ -64,6 +65,81 @@ const FeedbackDashboard = () => {
             toast.error(error.response?.data?.error || 'Promotion failed');
         } finally {
             setPromoting(false);
+        }
+    };
+
+    const handleDownload = async (feedbackId) => {
+        const cardElement = document.getElementById(`feedback-card-${feedbackId}`);
+        if (!cardElement) {
+            toast.error('Card element not found');
+            return;
+        }
+
+        try {
+            const toastId = toast.loading('Generating high-quality image...');
+
+            // Wait a moment for any animations/renders to settle
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Get element dimensions to ensure correct sizing
+            const rect = cardElement.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            // Create a wrapper to capture the shadow
+            const wrapper = document.createElement('div');
+            wrapper.style.padding = '50px'; // Ample space for shadow
+            wrapper.style.backgroundColor = 'transparent';
+            // Use fixed positioning to keep it in viewport context but hidden
+            wrapper.style.position = 'fixed';
+            wrapper.style.top = '0';
+            wrapper.style.left = '0';
+            wrapper.style.zIndex = '-9999';
+            // Explicitly sizing wrapper prevents collapse
+            wrapper.style.width = `${width + 100}px`;
+            wrapper.style.height = `${height + 100}px`;
+
+            document.body.appendChild(wrapper);
+
+            // Clone the card
+            const clonedCard = cardElement.cloneNode(true);
+            clonedCard.style.transform = 'none'; // reset transforms
+            clonedCard.style.margin = '0';
+            clonedCard.removeAttribute('id'); // Avoid ID conflict
+
+            // Hide download button in clone
+            const downloadBtn = clonedCard.querySelector('.download-btn');
+            if (downloadBtn) downloadBtn.style.display = 'none';
+
+            wrapper.appendChild(clonedCard);
+
+            const dataUrl = await toPng(wrapper, {
+                quality: 1.0,
+                pixelRatio: 3, // High resolution (3x)
+                backgroundColor: null,
+                width: width + 100,
+                height: height + 100,
+            });
+
+            // Cleanup
+            document.body.removeChild(wrapper);
+
+            const link = document.createElement('a');
+
+            // Find feedback to get username for filename
+            const feedback = feedbacks.find(f => f._id === feedbackId);
+            const filename = `ApplyRight-Feedback-${feedback?.user?.firstName || 'User'}-${feedbackId.slice(-4)}.png`;
+
+            link.href = dataUrl;
+            link.download = filename;
+            link.click();
+
+            toast.dismiss(toastId);
+            toast.success('Image downloaded successfully!');
+        } catch (error) {
+            console.error('Download error:', error);
+            toast.dismiss(); // dismiss loading toast
+            toast.error(`Failed: ${error.message || 'Unknown error'}`);
         }
     };
 
@@ -167,7 +243,8 @@ const FeedbackDashboard = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="group relative bg-[#F8FAFC] rounded-sm p-8 shadow-[8px_8px_0px_0px_rgba(79,70,229,0.2)] border-l-4 border-indigo-600 transition-all duration-300 transform -translate-y-1"
+                                className="group relative bg-[#F8FAFC] rounded-sm p-8 shadow-[8px_8px_0px_0px_rgba(79,70,229,0.2)] border-l-4 border-indigo-600 transition-all duration-300 transform -translate-y-1 overflow-hidden"
+                                id={`feedback-card-${feedback._id}`}
                             >
                                 {/* Paper Texture Effect */}
                                 <div className="absolute inset-0 bg-white opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
@@ -193,7 +270,14 @@ const FeedbackDashboard = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-indigo-300">
+                                    <div className="text-indigo-300 flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleDownload(feedback._id)}
+                                            className="download-btn p-2 hover:bg-indigo-50 rounded-full text-indigo-300 hover:text-indigo-600 transition-colors"
+                                            title="Download as Image"
+                                        >
+                                            <Download className="w-5 h-5" />
+                                        </button>
                                         <MessageSquare className="w-5 h-5" />
                                     </div>
                                 </div>
