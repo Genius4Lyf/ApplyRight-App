@@ -39,6 +39,7 @@ import { TEMPLATES } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
+import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
 import { Lock, Zap, PlayCircle, X, Loader, ZoomIn, ZoomOut } from 'lucide-react'; // Import extra icons
 
 const ResumeReview = () => {
@@ -368,10 +369,17 @@ const ResumeReview = () => {
 
 
 
+
     if (loading) return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        </div>
+        <LoadingWithAd
+            messages={[
+                "Loading your CV...",
+                "Preparing templates...",
+                "Getting everything ready...",
+                "Almost there..."
+            ]}
+            showProgress={false}
+        />
     );
 
     if (error) return (
@@ -902,6 +910,14 @@ const ResumeReview = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Loading Overlay with Ad - Shows during PDF generation */}
+            {isDownloading && (
+                <LoadingWithAd
+                    messages={["Generating your high-quality PDF..."]}
+                    showProgress={true}
+                />
+            )}
         </div>
     );
 };

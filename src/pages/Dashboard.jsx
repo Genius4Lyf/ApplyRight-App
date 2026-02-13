@@ -12,6 +12,7 @@ import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MonetagBanner from '../components/MonetagBanner';
+import LoadingWithAd from '../components/LoadingWithAd';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -800,6 +801,20 @@ const Dashboard = () => {
                     </div>
                 )}
             </main>
+
+            {/* Loading Overlay with  Ad - Shows during CV analysis generation */}
+            {generating && (
+                <LoadingWithAd
+                    messages={[
+                        "Getting templates ready...",
+                        "Analyzing your CV...",
+                        "Building your professional documents...",
+                        "Optimizing for ATS compatibility...",
+                        "Almost done..."
+                    ]}
+                    showProgress={false}
+                />
+            )}
 
             {/* Insufficient Credits Modal */}
             {showCreditModal && (

@@ -4,33 +4,37 @@ import { billingService } from '../services';
 
 const MonetagBanner = ({
     title = "Sponsored Offer",
-    subtitle = "View this offer to instantly earn +2 Credits.",
-    buttonText = "View (+2 Credits)",
+    subtitle = "View this offer to instantly earn +5 Credits.",
+    buttonText = "View (+5 Credits)",
     slot,
     style,
     variant = 'default'
 }) => {
     const DIRECT_LINK_URL = "https://otieu.com/4/10562647";
-    const [status, setStatus] = useState('idle'); // idle, verifying, success
+    const [status, setStatus] = useState('idle'); // idle, verifying, success, tab-closed
     const [timeLeft, setTimeLeft] = useState(10);
     const intervalRef = useRef(null);
+    const adWindowRef = useRef(null);
+    const windowCheckInterval = useRef(null);
 
     // Cleanup timer on unmount
     useEffect(() => {
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
+            if (windowCheckInterval.current) clearInterval(windowCheckInterval.current);
         };
     }, []);
 
     const handleClick = () => {
         if (status !== 'idle') return;
 
-        // 1. Open Link
-        window.open(DIRECT_LINK_URL, '_blank');
+        // 1. Open Link and track window
+        adWindowRef.current = window.open(DIRECT_LINK_URL, '_blank');
 
         // 2. Start Verification
         setStatus('verifying');
         startTimer();
+        startWindowCheck();
     };
 
     const startTimer = () => {
@@ -47,7 +51,24 @@ const MonetagBanner = ({
         }, 1000);
     };
 
+    const startWindowCheck = () => {
+        // Check every 500ms if the ad window is still open
+        windowCheckInterval.current = setInterval(() => {
+            if (adWindowRef.current && adWindowRef.current.closed) {
+                // User closed the ad tab early - reset verification
+                clearInterval(intervalRef.current);
+                clearInterval(windowCheckInterval.current);
+                setStatus('tab-closed');
+                // Auto-reset after 5s
+                setTimeout(() => setStatus('idle'), 5000);
+            }
+        }, 500);
+    };
+
     const claimReward = async () => {
+        // Stop window checking
+        if (windowCheckInterval.current) clearInterval(windowCheckInterval.current);
+
         try {
             const result = await billingService.watchAd('banner');
             setStatus('success');
@@ -82,11 +103,14 @@ const MonetagBanner = ({
                     <div>
                         <h4 className="text-white font-bold text-sm">
                             {status === 'verifying' ? 'Verifying...' :
-                                status === 'success' ? '+2 Credits Added!' :
-                                    title}
+                                status === 'success' ? '+5 Credits Added!' :
+                                    status === 'tab-closed' ? 'Tab Closed Early' :
+                                        title}
                         </h4>
                         <p className="text-slate-400 text-xs">
-                            {status === 'verifying' ? `Keep tab open for ${timeLeft}s` : subtitle}
+                            {status === 'verifying' ? <><strong className="text-orange-400">Keep tab open</strong> for {timeLeft}s</> :
+                                status === 'tab-closed' ? 'Please keep tab open next time' :
+                                    subtitle}
                         </p>
                     </div>
                 </div>
@@ -122,9 +146,10 @@ const MonetagBanner = ({
                 </h3>
 
                 <p className="text-slate-500 mb-6 flex-grow">
-                    {status === 'verifying' ? `Keep tab open for ${timeLeft}s...` :
-                        status === 'success' ? '2 Credits have been added!' :
-                            <>View this offer to instantly earn <span className="font-bold text-slate-900">2 Credits</span>.</>}
+                    {status === 'verifying' ? <><strong className="text-orange-600">Keep tab open</strong> for {timeLeft}s...</> :
+                        status === 'success' ? '5 Credits have been added!' :
+                            status === 'tab-closed' ? 'Tab was closed too early. Try again!' :
+                                <>View this offer to instantly earn <span className="font-bold text-slate-900">5 Credits</span>.</>}
                 </p>
 
                 {/* Button */}

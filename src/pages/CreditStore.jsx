@@ -130,7 +130,7 @@ const CreditStore = () => {
                                 </div>
                                 <h2 className="text-3xl font-bold text-slate-900 mb-2">View Sponsored Offer</h2>
                                 <p className="text-slate-500 text-lg">
-                                    Support our platform by viewing an offer and earn <span className="text-indigo-600 font-bold">2 Credits</span>.
+                                    Support our platform by viewing an offer and earn <span className="text-indigo-600 font-bold">5 Credits</span>.
                                 </p>
                             </div>
 
@@ -160,7 +160,7 @@ const CreditStore = () => {
                                     <Zap className="w-10 h-10 text-indigo-600 ml-1" />
                                 </div>
                                 <span className="text-white font-bold text-2xl">View Offer</span>
-                                <span className="text-indigo-200 font-medium mt-1">+2 Credits</span>
+                                <span className="text-indigo-200 font-medium mt-1">+5 Credits</span>
 
                                 {adStats.streak > 0 && (
                                     <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
@@ -235,7 +235,7 @@ const CreditStore = () => {
                             >
                                 <Zap className="w-12 h-12 text-white fill-white" />
                             </motion.div>
-                            <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">+10 Credits!</h2>
+                            <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">+5 Credits!</h2>
                             {rewardMessage && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
