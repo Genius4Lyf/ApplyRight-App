@@ -107,7 +107,8 @@ const ResumeReview = () => {
                             jobId: draft.targetJob ? { title: draft.targetJob.title, company: 'Target Role' } : {},
                             fitScore: 'N/A', // Drafts don't have fit scores yet usually
                             status: 'draft',
-                            isDraft: true
+                            isDraft: true,
+                            personalInfo: draft.personalInfo // Include personal info for contact details merging
                         });
                         return;
                     }
@@ -400,6 +401,36 @@ const ResumeReview = () => {
         performDownload();
     };
 
+    // MERGE PROFILE DATA: Prioritize draft personal info (CV Builder) over user profile
+    const mergedUserProfile = React.useMemo(() => {
+        if (!userProfile) return null;
+
+        // If we have draft data, merge it in
+        if (isDraftMode && application?.personalInfo) {
+            const draftInfo = application.personalInfo;
+            // console.log("Merging draft info:", draftInfo);
+
+            return {
+                ...userProfile,
+                // Direct overrides
+                email: draftInfo.email || userProfile.email,
+                phone: draftInfo.phone || userProfile.phone,
+                location: draftInfo.address || userProfile.location, // Address field maps to location
+
+                // LinkedIn & Website (CV Builder uses 'linkedin'/'website', Profile uses 'linkedinUrl'/'portfolioUrl')
+                linkedinUrl: draftInfo.linkedin || userProfile.linkedinUrl,
+                portfolioUrl: draftInfo.website || userProfile.portfolioUrl,
+
+                // Name splitting if needed (Profile uses first/last, Draft uses fullName)
+                firstName: draftInfo.fullName ? draftInfo.fullName.split(' ')[0] : userProfile.firstName,
+                lastName: draftInfo.fullName ? draftInfo.fullName.split(' ').slice(1).join(' ') : userProfile.lastName,
+                otherName: '', // Draft usually just has full name
+            };
+        }
+
+        return userProfile;
+    }, [userProfile, application, isDraftMode]);
+
 
 
 
@@ -638,76 +669,76 @@ const ResumeReview = () => {
                             {activeTab === 'resume' ? (
                                 /* RESUME TEMPLATE RENDER */
                                 templateId === 'modern' ? (
-                                    <ModernCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ModernCleanTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'modern-professional' ? (
-                                    <ModernProfessionalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ModernProfessionalTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'ats-clean' ? (
-                                    <ATSCleanTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ATSCleanTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'student-ats' ? (
-                                    <StudentATSTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <StudentATSTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'minimal' ? (
-                                    <MinimalistTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <MinimalistTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'minimal-serif' ? (
-                                    <MinimalistSerifTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <MinimalistSerifTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'minimal-grid' ? (
-                                    <MinimalistGridTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <MinimalistGridTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'minimal-mono' ? (
-                                    <MinimalistMonoTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <MinimalistMonoTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'creative' ? (
-                                    <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <CreativePortfolioTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'executive' ? (
-                                    <ExecutiveLeadTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ExecutiveLeadTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'tech' ? (
-                                    <TechStackTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <TechStackTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'swiss' ? (
-                                    <SwissModernTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <SwissModernTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'luxury' ? (
-                                    <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ElegantLuxuryTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'luxury-royal' ? (
-                                    <LuxuryRoyalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <LuxuryRoyalTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'luxury-chic' ? (
-                                    <LuxuryChicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <LuxuryChicTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'luxury-classic' ? (
-                                    <LuxuryClassicTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <LuxuryClassicTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'luxury-gold' ? (
-                                    <LuxuryGoldTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <LuxuryGoldTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'executive-board' ? (
-                                    <ExecutiveBoardTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ExecutiveBoardTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'executive-strategy' ? (
-                                    <ExecutiveStrategyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ExecutiveStrategyTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'executive-corporate' ? (
-                                    <ExecutiveCorporateTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ExecutiveCorporateTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'tech-devops' ? (
-                                    <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <TechDevOpsTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'tech-silicon' ? (
-                                    <TechSiliconTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <TechSiliconTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'tech-google' ? (
-                                    <TechGoogleTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <TechGoogleTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'executive-energy' ? (
-                                    <ExecutiveEnergyTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <ExecutiveEnergyTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'energy-slb' ? (
-                                    <EnergySLBTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <EnergySLBTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'energy-total' ? (
-                                    <EnergyTotalTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <EnergyTotalTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'energy-seplat' ? (
-                                    <EnergySeplatTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <EnergySeplatTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'energy-halliburton' ? (
-                                    <EnergyHalliburtonTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <EnergyHalliburtonTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : templateId === 'energy-nlng' ? (
-                                    <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={userProfile} />
+                                    <EnergyNLNGTemplate markdown={application.optimizedCV} userProfile={mergedUserProfile || userProfile} />
                                 ) : (
                                     /* DEFAULT / OTHER TEMPLATES FALLBACK */
                                     <>
                                         <div className="bg-white p-12 shadow-sm min-h-screen">
                                             <div className="mb-8 border-b border-slate-200 pb-6">
                                                 <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
-                                                    {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
+                                                    {mergedUserProfile?.firstName ? [mergedUserProfile.firstName, mergedUserProfile.otherName, mergedUserProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
                                                 </h1>
                                                 <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                                                    {userProfile?.email && <span>{userProfile.email}</span>}
-                                                    {userProfile?.phone && <span>{userProfile.phone}</span>}
-                                                    {userProfile?.city && <span>{userProfile.city}</span>}
-                                                    {userProfile?.linkedin && <span>LinkedIn: {userProfile.linkedin}</span>}
+                                                    {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
+                                                    {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
+                                                    {mergedUserProfile?.city && <span>{mergedUserProfile.city}</span>}
+                                                    {mergedUserProfile?.linkedin && <span>LinkedIn: {mergedUserProfile.linkedin}</span>}
                                                 </div>
                                             </div>
                                             <ReactMarkdown
@@ -738,11 +769,11 @@ const ResumeReview = () => {
                                         <div className="mb-8 border-b border-slate-200 pb-6">
                                             {/* Simple Header for Cover Letter */}
                                             <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                                                {userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
+                                                {mergedUserProfile?.firstName ? [mergedUserProfile.firstName, mergedUserProfile.otherName, mergedUserProfile.lastName].filter(Boolean).join(' ') : 'Your Name'}
                                             </h1>
                                             <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                                                {userProfile?.email && <span>{userProfile.email}</span>}
-                                                {userProfile?.phone && <span>{userProfile.phone}</span>}
+                                                {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
+                                                {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
                                             </div>
                                         </div>
                                         {application.coverLetter ? (

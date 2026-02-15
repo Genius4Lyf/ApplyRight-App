@@ -18,6 +18,8 @@ const updateSettings = async (settings) => {
     if (response.data) {
         const updatedUser = { ...user, ...response.data };
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Dispatch event for same-tab updates (storage event only fires for other tabs)
+        window.dispatchEvent(new Event('userDataUpdated'));
         return updatedUser;
     }
     return null;
