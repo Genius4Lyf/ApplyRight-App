@@ -192,11 +192,15 @@ const ResumeReview = () => {
     const handleAdForCreditsComplete = async () => {
         setAdForCreditsOpen(false);
         try {
-            // Award credits via API
-            await api.post('/billing/watch-ad');
+            // Award credits via API (using billing service for consistency)
+            console.log('Attempting to award credits via /billing/watch-ad');
+            const watchAdResponse = await api.post('/billing/watch-ad', { type: 'video' });
+            console.log('Credits awarded successfully:', watchAdResponse.data);
 
             // Refresh profile
+            console.log('Refreshing user profile via /auth/me');
             const res = await api.get('/auth/me');
+            console.log('User profile refreshed:', res.data);
             setUserProfile(res.data);
 
             // Dispatch global event to update navbar and other components
@@ -209,9 +213,23 @@ const ResumeReview = () => {
             setUnlockModalOpen(false);
 
         } catch (e) {
-            console.error(e);
-            toast.error("Failed to award credits.");
-            // If failed, maybe just reopen unlock modal or do nothing
+            console.error('Error in handleAdForCreditsComplete:', e);
+            console.error('Error response:', e.response);
+
+            // Provide more specific error message
+            if (e.response?.status === 401) {
+                toast.error("Session expired. Please login again.");
+                // Optionally redirect to login after a delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else if (e.response?.data?.message) {
+                toast.error(`Failed to award credits: ${e.response.data.message}`);
+            } else {
+                toast.error("Failed to award credits. Please try again.");
+            }
+
+            // If failed, reopen unlock modal
             setUnlockModalOpen(true);
         }
     };
