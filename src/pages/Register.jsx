@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import Modal from '../components/Modal';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
@@ -20,6 +20,8 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
     const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const navigate = useNavigate();
 
     const { email, phone, password, confirmPassword, referralCode } = formData;
@@ -206,16 +208,29 @@ const Register = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Password</label>
-                                <input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    className="input-field w-full"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={onChange}
-                                    disabled={isLoading}
-                                />
+                                <div className="relative">
+                                    <input
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        required
+                                        className="input-field w-full pr-10"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={onChange}
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                                 {password && passwordStrength.label && (
                                     <div className={`mt-2 px-3 py-2 rounded-lg border text-xs font-medium ${passwordStrength.color}`}>
                                         Password strength: {passwordStrength.label}
@@ -227,16 +242,29 @@ const Register = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Confirm Password</label>
-                                <input
-                                    name="confirmPassword"
-                                    type="password"
-                                    required
-                                    className="input-field w-full"
-                                    placeholder="••••••••"
-                                    value={confirmPassword}
-                                    onChange={onChange}
-                                    disabled={isLoading}
-                                />
+                                <div className="relative">
+                                    <input
+                                        name="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        required
+                                        className="input-field w-full pr-10"
+                                        placeholder="••••••••"
+                                        value={confirmPassword}
+                                        onChange={onChange}
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showConfirmPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">Referral Code (Optional)</label>

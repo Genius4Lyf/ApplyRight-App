@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo/applyright-icon.png';
 
 const Login = () => {
@@ -12,6 +12,7 @@ const Login = () => {
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const { email, password } = formData;
@@ -97,16 +98,29 @@ const Login = () => {
                                     <label className="block text-sm font-medium text-slate-700">Password</label>
                                     <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
                                 </div>
-                                <input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    className="input-field w-full"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={onChange}
-                                    disabled={isLoading}
-                                />
+                                <div className="relative">
+                                    <input
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        required
+                                        className="input-field w-full pr-10"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={onChange}
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
