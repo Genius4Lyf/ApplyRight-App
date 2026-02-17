@@ -30,6 +30,17 @@ const CVService = {
         return response.data.suggestions;
     },
 
+    // Generate categorized skills
+    generateSkills: async (education, experience, projects, targetJob) => {
+        const response = await api.post('/ai/generate-skills', {
+            education,
+            experience,
+            projects,
+            targetJob
+        });
+        return response.data; // Returns { suggestions, remainingCredits }
+    },
+
     // Delete a draft CV
     deleteDraft: async (id) => {
         const response = await api.delete(`/cv/${id}`);

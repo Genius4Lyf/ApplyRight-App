@@ -64,31 +64,44 @@ const generateMarkdownFromDraft = (draft) => {
     }
 
     // 4. Skills (Categorized)
+    // 4. Skills (Categorized)
     if (skills.length > 0) {
         md += `## Skills\n`;
-        const techKeywords = ['javascript', 'js', 'react', 'node', 'python', 'java', 'c++', 'sql', 'aws', 'docker', 'git', 'html', 'css', 'typescript', 'express', 'mongodb', 'redux', 'api', 'scrum', 'agile', 'linux', 'devops', 'cloud', 'security'];
-        const softKeywords = ['leadership', 'communication', 'team', 'management', 'planning', 'strategy', 'mentoring', 'negotiation', 'problem', 'critical', 'creativity'];
 
-        const techSkills = [];
-        const softSkills = [];
-        const otherSkills = [];
+        // Group by category
+        const categories = {};
 
-        skills.forEach(skillStr => {
-            const s = (typeof skillStr === 'object' ? skillStr.type || skillStr.name : skillStr);
-            if (!s) return;
-            const lower = s.toLowerCase();
-            if (techKeywords.some(k => lower.includes(k))) {
-                techSkills.push(s);
-            } else if (softKeywords.some(k => lower.includes(k))) {
-                softSkills.push(s);
-            } else {
-                otherSkills.push(s);
+        skills.forEach(skill => {
+            // Handle both object (new structure) and string (legacy)
+            const name = typeof skill === 'object' ? skill.name : skill;
+            const category = (typeof skill === 'object' && skill.category) ? skill.category : 'Additional Skills';
+
+            if (!name) return;
+
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            categories[category].push(name);
+        });
+
+        // Priority order for common categories (Optional: keeps them at the top)
+        const priorityOrder = ['Technical Skills', 'Soft Skills', 'Tools', 'Languages', 'Professional Skills'];
+
+        // Output Priority Categories first
+        priorityOrder.forEach(cat => {
+            if (categories[cat] && categories[cat].length > 0) {
+                md += `- **${cat}:** ${categories[cat].join(', ')}\n`;
+                delete categories[cat]; // Remove so we don't duplicate
             }
         });
 
-        if (techSkills.length > 0) md += `- **Technical:** ${techSkills.join(', ')}\n`;
-        if (softSkills.length > 0) md += `- **Professional:** ${softSkills.join(', ')}\n`;
-        if (otherSkills.length > 0) md += `- **Additional Skills:** ${otherSkills.join(', ')}\n`;
+        // Output remaining categories
+        Object.keys(categories).forEach(cat => {
+            if (categories[cat].length > 0) {
+                md += `- **${cat}:** ${categories[cat].join(', ')}\n`;
+            }
+        });
+
         md += '\n';
     }
 
