@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Download, Printer, ChevronLeft, LayoutTemplate, Share2, Sparkles, Check, Mail } from 'lucide-react';
+import { Download, Printer, ChevronLeft, LayoutTemplate, Share2, Sparkles, Check, Mail, PenTool } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -467,6 +467,28 @@ const ResumeReview = () => {
 
     if (!application) return null;
 
+    const handleEdit = async () => {
+        try {
+            // Show loading state
+            const toastId = toast.loading("Preparing your CV for editing...");
+
+            const res = await api.post(`/analysis/${id}/edit`);
+
+            toast.dismiss(toastId);
+
+            if (res.data.draftId) {
+                toast.success("Draft created! Redirecting to builder...");
+                navigate(`/cv-builder/${res.data.draftId}`);
+            } else {
+                toast.error("Failed to create editable draft");
+            }
+        } catch (error) {
+            console.error("Edit failed", error);
+            toast.dismiss();
+            toast.error("Failed to prepare edit mode");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col relative">
             {downloadAdOpen && (
@@ -883,25 +905,38 @@ const ResumeReview = () => {
                                 <button
                                     disabled={isDownloading}
                                     onClick={handleDownloadClick}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
                                 >
                                     {isDownloading ? (
-                                        <div className="w-6 h-6 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin mb-2"></div>
+                                        <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin mb-1"></div>
                                     ) : (
-                                        <Download className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 mb-2" />
+                                        <Download className="w-5 h-5 text-slate-600 group-hover:text-indigo-600 mb-1" />
                                     )}
-                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700">{isDownloading ? 'Processing...' : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 text-center">{isDownloading ? 'Processing...' : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
                                 </button>
+
+                                {/* Edit Button for both Drafts and Applications */}
                                 <button
-                                    disabled
-                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-slate-50 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
+                                    onClick={isDraftMode ? () => navigate(`/cv-builder/${application._id}/finalize`) : handleEdit}
+                                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group"
                                 >
-                                    <div className="absolute top-2 right-2 bg-slate-200 text-slate-500 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                        Soon
-                                    </div>
-                                    <Mail className="w-6 h-6 text-slate-400 mb-2" />
-                                    <span className="text-sm font-semibold text-slate-500">Email Documents</span>
+                                    <PenTool className="w-5 h-5 text-slate-600 group-hover:text-indigo-600 mb-1" />
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 text-center">Edit in Builder</span>
                                 </button>
+
+                                {/* Email placeholder */}
+                                {isDraftMode && (
+                                    <button
+                                        disabled
+                                        className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-1 right-1 bg-slate-200 text-slate-500 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
+                                            Soon
+                                        </div>
+                                        <Mail className="w-5 h-5 text-slate-400 mb-1" />
+                                        <span className="text-xs font-semibold text-slate-500 text-center">Email Docs</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
 
