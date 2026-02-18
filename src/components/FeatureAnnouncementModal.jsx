@@ -68,14 +68,14 @@ const FeatureAnnouncementModal = () => {
                             <div>
                                 <h4 className="font-bold text-slate-900 text-sm">Pricing Update</h4>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    To support this advanced processing, credit costs have been updated:
+                                    To cover the costs of the advanced AI models powering the new Intelligent Skills feature (5 Credits), we have updated our pricing:
                                 </p>
                                 <div className="flex gap-4 mt-2">
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Upload: <span className="text-slate-900">5 → 7 Credits</span>
+                                        Upload: <span className="text-slate-900">5 → 10 Credits</span>
                                     </span>
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Analysis: <span className="text-slate-900">15 → 17 Credits</span>
+                                        Analysis: <span className="text-slate-900">15 → 20 Credits</span>
                                     </span>
                                 </div>
                             </div>

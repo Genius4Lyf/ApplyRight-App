@@ -418,7 +418,7 @@ const Dashboard = () => {
                                     <p className="text-sm text-slate-500 mb-3">
                                         We'll scan your PDF and auto-fill the builder with your details.
                                     </p>
-                                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Cost: 7 Credits</span>
+                                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Cost: 10 Credits</span>
                                 </button>
                             </div>
                         </div>
@@ -549,7 +549,7 @@ const Dashboard = () => {
                                 <div className="space-y-4">
                                     <div className="text-center pb-4">
                                         <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
-                                            <Zap className="w-4 h-4 inline mr-1" /> Cost: 7 Credits
+                                            <Zap className="w-4 h-4 inline mr-1" /> Cost: 10 Credits
                                         </span>
                                     </div>
                                     <CVUploader onUploadSuccess={async (resumeData) => {
@@ -711,7 +711,7 @@ const Dashboard = () => {
                                         <Sparkles className="w-5 h-5 mr-3" />
                                         <span className="flex flex-col items-start leading-tight">
                                             <span>Generate Professional Assets</span>
-                                            <span className="text-xs font-normal opacity-80">Cost: 17 Credits</span>
+                                            <span className="text-xs font-normal opacity-80">Cost: 20 Credits</span>
                                         </span>
                                         <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                     </>
