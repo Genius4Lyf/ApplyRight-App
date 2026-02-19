@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // Use centralized API service
 import { AlertTriangle, Info, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,40 +10,22 @@ const GlobalBanner = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                // Determine API URL based on environment (simplified for now)
-                const apiUrl = 'http://localhost:5000/api/v1/admin/settings';
+                // Fetch public config
+                const res = await api.get('/auth/config');
 
-                // We need a public endpoint or we just use the protected one if user is Admin?
-                // Actually, settings like announcements should be public or accessible via a separate public config endpoint.
-                // For MVP, we'll assume the user is logged in or we make a public config endpoint.
-                // LET'S CREATE A PUBLIC CONFIG ENDPOINT in Auth or similar.
-                // OR: Just hardcode for now if we can't change backend easily? 
-                // No, we must do it right.
-                // For now, let's try to fetch active-banner from a new public route we'll add.
-
-                // TEMPORARY: using the admin endpoint will fail for normal users (401).
-                // So I need to add a public endpoint for "system-config" or similar.
-                // I will add that to the backend plan/task.
-
-                // MOCKING FOR NOW TO SHOW UI
-                // setBanner({
-                //     message: "System maintenance scheduled for Saturday 10 PM UTC.",
-                //     type: "warning"
-                // });
-
-                // Real fetch (once public endpoint exists)
-                const res = await axios.get('http://localhost:5000/api/auth/config');
                 if (res.data.announcement && res.data.announcement.enabled) {
                     setBanner(res.data.announcement);
                 }
-
             } catch (error) {
-                // Silently fail if no config (normal)
-                // console.error(error);
+                console.error("Failed to fetch global banner", error);
             }
         };
 
         fetchSettings();
+
+        // Listen for real-time updates from Admin Settings
+        window.addEventListener('settings_updated', fetchSettings);
+        return () => window.removeEventListener('settings_updated', fetchSettings);
     }, []);
 
     if (!banner || !isVisible) return null;

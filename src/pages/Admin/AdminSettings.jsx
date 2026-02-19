@@ -123,6 +123,9 @@ const AdminSettings = () => {
             setMessage({ type: 'success', text: 'Settings saved successfully!' });
             setShowConfirmModal(false);
 
+            // Dispatch event to update other components immediately
+            window.dispatchEvent(new Event('settings_updated'));
+
             // Clear success message after 3 seconds
             setTimeout(() => setMessage(null), 3000);
         } catch (error) {
@@ -297,7 +300,7 @@ const AdminSettings = () => {
                                                 <h4 className="font-bold text-slate-900">PDF Generation</h4>
                                                 <p className="text-sm text-slate-500">Allow users to download PDFs via Puppeteer service.</p>
                                             </div>
-                                            <div className="relative inline-flex items-center cursor-pointer">
+                                            <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     checked={settings.features.enablePdfGeneration}
@@ -305,7 +308,7 @@ const AdminSettings = () => {
                                                     className="sr-only peer"
                                                 />
                                                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                            </div>
+                                            </label>
                                         </div>
 
                                         <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
@@ -313,7 +316,7 @@ const AdminSettings = () => {
                                                 <h4 className="font-bold text-slate-900">AI Analysis</h4>
                                                 <p className="text-sm text-slate-500">Enable OpenAI integration for Resume reviews.</p>
                                             </div>
-                                            <div className="relative inline-flex items-center cursor-pointer">
+                                            <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     checked={settings.features.enableAiAnalysis}
@@ -321,7 +324,7 @@ const AdminSettings = () => {
                                                     className="sr-only peer"
                                                 />
                                                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                            </div>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -339,7 +342,7 @@ const AdminSettings = () => {
 
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="relative inline-flex items-center cursor-pointer">
+                                            <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     checked={settings.announcement.enabled}
@@ -347,7 +350,7 @@ const AdminSettings = () => {
                                                     className="sr-only peer"
                                                 />
                                                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                            </div>
+                                            </label>
                                             <span className="font-medium text-slate-900">Enable Announcement Banner</span>
                                         </div>
 
