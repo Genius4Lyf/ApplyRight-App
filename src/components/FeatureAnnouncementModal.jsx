@@ -66,16 +66,16 @@ const FeatureAnnouncementModal = () => {
                                 <CheckCircle className="w-4 h-4" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-slate-900 text-sm">Pricing Update</h4>
+                                <h4 className="font-bold text-slate-900 text-sm">Credit Usage</h4>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    To cover the costs of the advanced AI models powering the new Intelligent Skills feature (5 Credits), we have updated our pricing:
+                                    Our advanced AI models now power the Intelligent Skills feature (2 Credits). Here is the current credit usage:
                                 </p>
                                 <div className="flex gap-4 mt-2">
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Upload: <span className="text-slate-900">5 → 10 Credits</span>
+                                        Upload: <span className="text-slate-900">10 Credits</span>
                                     </span>
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Analysis: <span className="text-slate-900">15 → 20 Credits</span>
+                                        Analysis: <span className="text-slate-900">20 Credits</span>
                                     </span>
                                 </div>
                             </div>

@@ -15,7 +15,7 @@ const TOUR_STEPS = [
     {
         id: 'credits',
         title: "Credits & Support",
-        description: "Start with 15 free credits for your first application. Support us and earn more credits instantly by watching short ads.",
+        description: "Start with 20 free credits for your first application. Support us and earn more credits instantly by watching short ads.",
         icon: Zap,
         color: "text-amber-500",
         bg: "bg-amber-100",

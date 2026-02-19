@@ -94,6 +94,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminTransactions from './pages/Admin/AdminTransactions';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
+import AdminSettings from './pages/Admin/AdminSettings';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
 
 // ... existing router configuration ...
@@ -269,6 +270,14 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+      {
+        path: "/admin/settings",
+        element: (
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        ),
+      },
 
       // Secret Admin Auth
       {
@@ -285,12 +294,14 @@ const router = createBrowserRouter([
 ]);
 
 import { HelmetProvider } from 'react-helmet-async';
+import GlobalBanner from './components/GlobalBanner';
 
 function App() {
   return (
     <HelmetProvider>
       <RouterProvider router={router} />
       <Toaster position="top-right" richColors />
+      <GlobalBanner />
     </HelmetProvider>
   );
 }

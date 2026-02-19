@@ -12,6 +12,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', icon: Users, label: 'Users' },
         { path: '/admin/transactions', icon: Coins, label: 'Transactions' },
         { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
+        { path: '/admin/settings', icon: Settings, label: 'Settings' },
     ];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
