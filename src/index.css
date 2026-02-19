@@ -203,3 +203,23 @@
     }
   }
 }
+
+/* Global Recharts overrides */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-responsive-container,
+.recharts-default-tooltip {
+  outline: none !important;
+  border: none !important;
+}
+
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none !important;
+}
+
+/* Remove any potential SVG strokes acting as borders */
+.recharts-surface path[name="background"] {
+  stroke: none !important;
+  fill: none !important;
+}

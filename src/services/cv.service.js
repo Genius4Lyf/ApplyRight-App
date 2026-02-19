@@ -48,10 +48,11 @@ const CVService = {
     },
 
     // Generate PDF (Puppeteer)
-    generatePdf: async (htmlContent, options = {}) => {
+    generatePdf: async (htmlContent, options = {}, metadata = {}) => {
         const response = await api.post('/pdf/generate', {
             html: htmlContent,
-            options
+            options,
+            ...metadata
         }, {
             responseType: 'blob'
         });

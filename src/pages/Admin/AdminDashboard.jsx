@@ -22,7 +22,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     // Filter States
-    const [viewType, setViewType] = useState('monthly'); // 'monthly' (Year View) or 'daily' (Month View)
+    const [viewType, setViewType] = useState('daily'); // 'monthly' (Year View) or 'daily' (Month View)
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
 
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
                     {/* Feature Usage Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         {/* Creation Method & Generation */}
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="bg-white p-6 rounded-xl shadow-sm">
                             <h3 className="text-lg font-bold text-slate-900 mb-6">CV Creation & Activity</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="h-64">
@@ -146,18 +146,22 @@ const AdminDashboard = () => {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart
                                             data={[
-                                                { name: 'Optimized', value: stats.featureUsage?.cvGeneration?.optimizations || 0 },
-                                                { name: 'Downloaded', value: stats.featureUsage?.cvGeneration?.downloads || 0 },
+                                                { name: 'Analysis', value: stats.featureUsage?.cvGeneration?.optimizations || 0 },
+                                                { name: 'Downloads', value: stats.featureUsage?.cvGeneration?.downloads || 0 },
                                             ]}
                                             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                                         >
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                                             <Tooltip
                                                 cursor={{ fill: '#f1f5f9' }}
                                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(value, name, props) => [value, props && props.payload && props.payload.name === 'Analysis' ? 'Total Analysis' : 'Total Downloads']}
                                             />
-                                            <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                                            <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                                                <Cell fill="#8b5cf6" /> {/* Analysis - Violet */}
+                                                <Cell fill="#06b6d4" /> {/* Downloads - Cyan */}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -165,9 +169,9 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Template Popularity */}
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="bg-white p-6 rounded-xl shadow-sm">
                             <h3 className="text-lg font-bold text-slate-900 mb-6">Top Templates</h3>
-                            <div className="space-y-4">
+                            <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
                                 {stats.featureUsage?.templatePopularity?.map((template, index) => (
                                     <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                                         <div className="flex items-center gap-3">
@@ -180,7 +184,7 @@ const AdminDashboard = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-indigo-600">{template.count}</span>
-                                            <span className="text-xs text-slate-500">uses</span>
+                                            <span className="text-xs text-slate-500">downloads</span>
                                         </div>
                                     </div>
                                 ))}
@@ -193,7 +197,7 @@ const AdminDashboard = () => {
 
                     {/* Charts Section */}
                     <div className="grid grid-cols-1 lg:col-span-3 gap-8 mb-8">
-                        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                                 <h3 className="text-lg font-bold text-slate-900">
                                     Credits Overview ({viewType === 'monthly' ? selectedYear : `${months[selectedMonth - 1].label} ${selectedYear}`})
@@ -241,7 +245,7 @@ const AdminDashboard = () => {
                             </div>
                             <div className="h-80 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 10, bottom: 25 }}>
                                         <defs>
                                             <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.8} />
@@ -255,25 +259,41 @@ const AdminDashboard = () => {
                                             tickLine={false}
                                             tick={{ fill: '#64748B', fontSize: 12 }}
                                             tickMargin={10}
+                                            label={{
+                                                value: viewType === 'daily' ? 'Day' : 'Month',
+                                                position: 'bottom',
+                                                offset: 5,
+                                                fill: '#94a3b8',
+                                                fontSize: 12
+                                            }}
                                             tickFormatter={(value) => {
-                                                // Simple heuristic to detect date format and shorten it
                                                 if (value.includes('-')) {
                                                     const parts = value.split('-');
                                                     if (parts.length === 3) {
-                                                        // YYYY-MM-DD -> MM/DD (e.g., 2026-02-18 -> 02/18)
                                                         return `${parts[1]}/${parts[2]}`;
                                                     } else if (parts.length === 2) {
-                                                        // YYYY-MM -> MMM (e.g., 2026-02 -> Feb)
-                                                        const date = new Date(value + '-01'); // Append dummy day
+                                                        const date = new Date(value + '-01');
                                                         return date.toLocaleString('default', { month: 'short' });
                                                     }
                                                 }
                                                 return value;
                                             }}
                                         />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#64748B', fontSize: 12 }}
+                                            label={{
+                                                value: 'Credits',
+                                                angle: -90,
+                                                position: 'insideLeft',
+                                                fill: '#94a3b8',
+                                                fontSize: 12
+                                            }}
+                                        />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            formatter={(value) => [value, 'Credits']}
                                         />
                                         <Area type="monotone" dataKey="credits" stroke="#4F46E5" fillOpacity={1} fill="url(#colorCredits)" strokeWidth={2} />
                                     </AreaChart>

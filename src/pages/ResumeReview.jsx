@@ -142,6 +142,25 @@ const ResumeReview = () => {
         }
     }, [id, navigate]);
 
+    // Auto-save template preference
+    useEffect(() => {
+        if (!application || isDraftMode || !templateId) return;
+
+        const saveTemplate = setTimeout(async () => {
+            try {
+                // Only save if it's different (optional optimization, but backend check is fine)
+                await api.patch(`/applications/${application._id}/template`, { templateId });
+                console.log('Template preference saved:', templateId);
+            } catch (error) {
+                console.error('Failed to save template preference', error);
+            }
+        }, 2000); // 2 second debounce
+
+        return () => clearTimeout(saveTemplate);
+    }, [templateId, application, isDraftMode]);
+
+    // Listen for global user updates
+
     // Unlocking Logic
     const isUnlocked = (templateId) => {
         const template = TEMPLATES.find(t => t.id === templateId);
@@ -326,6 +345,10 @@ const ResumeReview = () => {
                     bottom: '0mm',
                     left: '0mm'
                 }
+            }, {
+                templateId,
+                applicationId: application._id,
+                isDraft: isDraftMode
             });
 
             // 3. Download

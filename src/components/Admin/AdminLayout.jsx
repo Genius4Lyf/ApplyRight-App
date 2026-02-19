@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X, ShieldCheck, Coins, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, Menu, X, Coins, MessageSquare } from 'lucide-react';
+import applyRightIcon from '../../assets/logo/applyright-icon.png';
 
 const AdminLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,7 +30,7 @@ const AdminLayout = ({ children }) => {
             <aside className="hidden md:flex w-64 flex-col bg-white border-r border-slate-200 shadow-sm">
                 <div className="flex items-center justify-center h-16 border-b border-slate-100">
                     <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
-                        <ShieldCheck className="w-6 h-6" />
+                        <img src={applyRightIcon} alt="ApplyRight Logo" className="w-8 h-8 object-contain" />
                         <span>Admin Panel</span>
                     </div>
                 </div>
@@ -76,7 +77,7 @@ const AdminLayout = ({ children }) => {
             >
                 <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
                     <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
-                        <ShieldCheck className="w-6 h-6" />
+                        <img src={applyRightIcon} alt="ApplyRight Logo" className="w-8 h-8 object-contain" />
                         <span>Admin Panel</span>
                     </div>
                     <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500">
