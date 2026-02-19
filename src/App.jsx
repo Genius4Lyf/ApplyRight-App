@@ -30,6 +30,7 @@ import Contact from './pages/Contact';
 import ATSGuide from './pages/ATSGuide';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
+import MaintenanceGuard from './components/MaintenanceGuard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -135,9 +136,11 @@ const router = createBrowserRouter([
       {
         path: "/feedback/dashboard",
         element: (
-          <ProtectedRoute>
-            <FeedbackDashboard />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <FeedbackDashboard />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
@@ -155,67 +158,83 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/onboarding",
         element: (
-          <ProtectedRoute>
-            <Onboarding />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/history",
         element: (
-          <ProtectedRoute>
-            <JobHistory />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <JobHistory />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/profile",
         element: (
-          <ProtectedRoute>
-            <ErrorBoundary>
-              <Profile />
-            </ErrorBoundary>
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <Profile />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/upgrade",
         element: (
-          <ProtectedRoute>
-            <Upgrade />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <Upgrade />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/credits",
         element: (
-          <ProtectedRoute>
-            <CreditStore />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <CreditStore />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/resume/:id",
         element: (
-          <ProtectedRoute>
-            <ResumeReview />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <ResumeReview />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {
         path: "/cv-builder/:id",
         element: (
-          <ProtectedRoute>
-            <CVBuilderLayout />
-          </ProtectedRoute>
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <CVBuilderLayout />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
         children: [
           { path: "target-job", element: <TargetJob /> },
