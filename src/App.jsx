@@ -73,10 +73,36 @@ const RootLayout = () => {
   );
 };
 
+// Admin Protected Route
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+// Lazy load admin pages to avoid bloating main bundle if possible, but for now direct import is fine
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminUsers from './pages/Admin/AdminUsers';
+import AdminTransactions from './pages/Admin/AdminTransactions';
+import AdminUserDetails from './pages/Admin/AdminUserDetails';
+import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
+
+// ... existing router configuration ...
+
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
+      // ... existing routes ...
       {
         path: "/how-it-works",
         element: <ApplicationReview />,
@@ -201,6 +227,55 @@ const router = createBrowserRouter([
           { path: "finalize", element: <Finalize /> },
         ],
       },
+
+      // Admin Routes
+      {
+        path: "/admin",
+        element: (
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/users",
+        element: (
+          <AdminRoute>
+            <AdminUsers />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/transactions",
+        element: (
+          <AdminRoute>
+            <AdminTransactions />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/users/:id",
+        element: (
+          <AdminRoute>
+            <AdminUserDetails />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/feedback",
+        element: (
+          <AdminRoute>
+            <FeedbackDashboard />
+          </AdminRoute>
+        ),
+      },
+
+      // Secret Admin Auth
+      {
+        path: "/secret-access-portal-v1",
+        element: <SecretAdminAuth />
+      },
+
       {
         path: "*",
         element: <Navigate to="/" replace />,
