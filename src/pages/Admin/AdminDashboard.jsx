@@ -3,7 +3,10 @@ import AdminLayout from '../../components/Admin/AdminLayout';
 import DashboardStats from '../../components/Admin/DashboardStats';
 import { Users, DollarSign, FileText, TrendingUp, Coins } from 'lucide-react';
 import axios from 'axios';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
 
 import CustomSelect from '../../components/Admin/CustomSelect';
 
@@ -106,6 +109,86 @@ const AdminDashboard = () => {
                             trend="down"
                             icon={TrendingUp}
                         />
+                    </div>
+
+                    {/* Feature Usage Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        {/* Creation Method & Generation */}
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 className="text-lg font-bold text-slate-900 mb-6">CV Creation & Activity</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="h-64">
+                                    <h4 className="text-sm font-medium text-slate-500 mb-2 text-center">Creation Method</h4>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={[
+                                                    { name: 'Upload', value: stats.featureUsage?.creationMethod?.upload || 0 },
+                                                    { name: 'Scratch', value: stats.featureUsage?.creationMethod?.scratch || 0 },
+                                                ]}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                <Cell fill="#6366f1" /> {/* Indigo */}
+                                                <Cell fill="#ec4899" /> {/* Pink */}
+                                            </Pie>
+                                            <Tooltip />
+                                            <Legend verticalAlign="bottom" height={36} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="h-64">
+                                    <h4 className="text-sm font-medium text-slate-500 mb-2 text-center">Generation Activity</h4>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={[
+                                                { name: 'Optimized', value: stats.featureUsage?.cvGeneration?.optimizations || 0 },
+                                                { name: 'Downloaded', value: stats.featureUsage?.cvGeneration?.downloads || 0 },
+                                            ]}
+                                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                cursor={{ fill: '#f1f5f9' }}
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                            <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Template Popularity */}
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 className="text-lg font-bold text-slate-900 mb-6">Top Templates</h3>
+                            <div className="space-y-4">
+                                {stats.featureUsage?.templatePopularity?.map((template, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-700">
+                                                {index + 1}
+                                            </div>
+                                            <span className="font-medium text-slate-700 capitalize">
+                                                {template.name.replace(/-/g, ' ')}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-indigo-600">{template.count}</span>
+                                            <span className="text-xs text-slate-500">uses</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!stats.featureUsage?.templatePopularity || stats.featureUsage.templatePopularity.length === 0) && (
+                                    <p className="text-center text-slate-500 py-4">No template data yet.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Charts Section */}
