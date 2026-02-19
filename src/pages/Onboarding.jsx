@@ -61,6 +61,16 @@ const Onboarding = () => {
     };
 
     const handleNext = () => {
+        // Validation for Step 1
+        if (step === 1) {
+            if (!formData.firstName || !formData.lastName || !formData.currentStatus) {
+                toast.error("Please fill in all required fields to proceed.", {
+                    description: "It helps us tailor your experience on ApplyRight."
+                });
+                return;
+            }
+        }
+
         setStep(step + 1);
     };
 
