@@ -22,7 +22,7 @@ const CustomSelect = ({ value, options, onChange, className = "" }) => {
         <div className={`relative ${className}`} ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full bg-white border border-slate-200 text-slate-700 text-xs font-medium py-1.5 px-3 rounded-md hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                className="flex items-center justify-between w-full bg-white border border-slate-200 text-slate-700 text-xs font-medium py-1.5 px-3 rounded-md hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50/20 transition-all shadow-sm"
             >
                 <span className="mr-2">{selectedOption.label || selectedOption.value}</span>
                 <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -39,7 +39,7 @@ const CustomSelect = ({ value, options, onChange, className = "" }) => {
                                     setIsOpen(false);
                                 }}
                                 className={`px-3 py-2 text-xs cursor-pointer transition-colors ${value === option.value
-                                        ? 'bg-indigo-50 text-indigo-600 font-medium'
+                                        ? 'bg-primary/5 text-primary font-medium'
                                         : 'text-slate-700 hover:bg-slate-50'
                                     }`}
                             >

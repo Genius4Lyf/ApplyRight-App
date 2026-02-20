@@ -148,7 +148,7 @@ const AdminSettings = () => {
 
     if (loading) return (
         <div className="flex bg-slate-50 min-h-screen items-center justify-center">
-            <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
+            <RefreshCw className="w-8 h-8 text-primary/50 animate-spin" />
         </div>
     );
 
@@ -172,7 +172,7 @@ const AdminSettings = () => {
                     <button
                         onClick={handleSaveClick}
                         disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
                     >
                         {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {saving ? 'Saving...' : 'Save Changes'}
@@ -198,7 +198,7 @@ const AdminSettings = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${activeTab === tab.id ? 'bg-white text-primary shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                             >
                                 <tab.icon className="w-4 h-4" />
                                 {tab.label}
@@ -213,7 +213,7 @@ const AdminSettings = () => {
                             <div className="space-y-8">
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <CreditCard className="w-5 h-5 text-indigo-600" />
+                                        <CreditCard className="w-5 h-5 text-primary" />
                                         Credit Costs & Rewards
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -223,7 +223,7 @@ const AdminSettings = () => {
                                                 type="number"
                                                 value={settings.credits.signupBonus}
                                                 onChange={(e) => handleChange('credits', 'signupBonus', parseInt(e.target.value))}
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
                                             <p className="text-xs text-slate-500">Credits given to new users upon registration.</p>
                                         </div>
@@ -233,7 +233,7 @@ const AdminSettings = () => {
                                                 type="number"
                                                 value={settings.credits.referralBonus}
                                                 onChange={(e) => handleChange('credits', 'referralBonus', parseInt(e.target.value))}
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
                                             <p className="text-xs text-slate-500">Credits awarded to the referrer.</p>
                                         </div>
@@ -243,7 +243,7 @@ const AdminSettings = () => {
                                                 type="number"
                                                 value={settings.credits.analysisCost}
                                                 onChange={(e) => handleChange('credits', 'analysisCost', parseInt(e.target.value))}
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
                                             <p className="text-xs text-slate-500">Cost for full Resume Analysis.</p>
                                         </div>
@@ -253,7 +253,7 @@ const AdminSettings = () => {
                                                 type="number"
                                                 value={settings.credits.uploadCost}
                                                 onChange={(e) => handleChange('credits', 'uploadCost', parseInt(e.target.value))}
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
                                             <p className="text-xs text-slate-500">Cost for simple Resume parsing (no job desc).</p>
                                         </div>
@@ -291,7 +291,7 @@ const AdminSettings = () => {
 
                                 <div className="pt-6 border-t border-slate-100">
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <Cpu className="w-5 h-5 text-indigo-600" />
+                                        <Cpu className="w-5 h-5 text-primary" />
                                         Feature Toggles
                                     </h3>
                                     <div className="space-y-4">
@@ -307,7 +307,7 @@ const AdminSettings = () => {
                                                     onChange={(e) => handleChange('features', 'enablePdfGeneration', e.target.checked)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
@@ -323,7 +323,7 @@ const AdminSettings = () => {
                                                     onChange={(e) => handleChange('features', 'enableAiAnalysis', e.target.checked)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -336,7 +336,7 @@ const AdminSettings = () => {
                             <div className="space-y-8">
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <Globe className="w-5 h-5 text-indigo-600" />
+                                        <Globe className="w-5 h-5 text-primary" />
                                         Global Banner
                                     </h3>
 
@@ -349,7 +349,7 @@ const AdminSettings = () => {
                                                     onChange={(e) => handleChange('announcement', 'enabled', e.target.checked)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                             <span className="font-medium text-slate-900">Enable Announcement Banner</span>
                                         </div>
@@ -359,7 +359,7 @@ const AdminSettings = () => {
                                             <textarea
                                                 value={settings.announcement.message}
                                                 onChange={(e) => handleChange('announcement', 'message', e.target.value)}
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                                 rows="3"
                                                 placeholder="e.g. System maintenance scheduled for Saturday..."
                                             ></textarea>
@@ -407,7 +407,7 @@ const AdminSettings = () => {
                             <div className="space-y-8">
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <Layout className="w-5 h-5 text-indigo-600" />
+                                        <Layout className="w-5 h-5 text-primary" />
                                         Template Management
                                     </h3>
                                     <p className="text-slate-500">Feature disabled templates or set the default here. (Coming Soon)</p>
@@ -431,7 +431,7 @@ const AdminSettings = () => {
                                     <div>
                                         <span className="font-semibold text-slate-700 block">{change.category} - {change.key}</span>
                                         <span className="text-slate-400 line-through mr-2">{change.oldVal}</span>
-                                        <span className="text-indigo-600 font-medium">→ {change.newVal}</span>
+                                        <span className="text-primary font-medium">→ {change.newVal}</span>
                                     </div>
                                 </div>
                             ))}
@@ -447,7 +447,7 @@ const AdminSettings = () => {
                             <button
                                 onClick={executeSave}
                                 disabled={saving}
-                                className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                                className="flex-1 px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                             >
                                 {saving ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
                                 {saving ? 'Saving...' : 'Proceed & Save'}

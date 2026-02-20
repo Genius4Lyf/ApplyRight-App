@@ -9,8 +9,8 @@ const DashboardStats = ({ title, value, change, icon: Icon, trend }) => {
             <div>
                 <div className="flex items-start justify-between mb-4">
                     <p className="text-sm font-medium text-slate-500 mr-2 min-h-[40px] flex items-center">{title}</p>
-                    <div className={`p-3 rounded-lg shrink-0 ${isPositive ? 'bg-indigo-50' : 'bg-slate-50'}`}>
-                        <Icon className={`w-6 h-6 ${isPositive ? 'text-indigo-600' : 'text-slate-600'}`} />
+                    <div className={`p-3 rounded-lg shrink-0 ${isPositive ? 'bg-primary/5' : 'bg-slate-50'}`}>
+                        <Icon className={`w-6 h-6 ${isPositive ? 'text-primary' : 'text-slate-600'}`} />
                     </div>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-1">{value}</h3>

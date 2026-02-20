@@ -34,7 +34,7 @@ const AdminUserDetails = () => {
         return (
             <AdminLayout>
                 <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             </AdminLayout>
         );
@@ -45,7 +45,7 @@ const AdminUserDetails = () => {
             <AdminLayout>
                 <div className="text-center py-12">
                     <h2 className="text-xl font-bold text-slate-900">User not found</h2>
-                    <Link to="/admin/users" className="text-indigo-600 hover:text-indigo-800 mt-4 inline-block">
+                    <Link to="/admin/users" className="text-primary hover:text-primary/95 mt-4 inline-block">
                         Back to Users
                     </Link>
                 </div>
@@ -58,13 +58,13 @@ const AdminUserDetails = () => {
     return (
         <AdminLayout>
             <div className="mb-6">
-                <Link to="/admin/users" className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4">
+                <Link to="/admin/users" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors mb-4">
                     <ArrowLeft className="w-4 h-4" />
                     Back to Users
                 </Link>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold">
+                        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
                             {user.firstName?.charAt(0) || user.email?.charAt(0)}
                         </div>
                         <div>
@@ -81,7 +81,7 @@ const AdminUserDetails = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                    <div className="bg-primary/5 text-primary/90 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Coins className="w-5 h-5" />
                         <span>Credits: {user.credits}</span>
                     </div>
@@ -92,7 +92,7 @@ const AdminUserDetails = () => {
                 {/* Profile Info */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <User className="w-5 h-5 text-indigo-600" />
+                        <User className="w-5 h-5 text-primary" />
                         Profile Details
                     </h3>
                     <div className="space-y-4">
@@ -130,12 +130,12 @@ const AdminUserDetails = () => {
                 {/* Usage Stats */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5 text-indigo-600" />
+                        <Briefcase className="w-5 h-5 text-primary" />
                         Usage Statistics
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-slate-50 rounded-lg text-center">
-                            <FileText className="w-6 h-6 text-indigo-500 mx-auto mb-2" />
+                            <FileText className="w-6 h-6 text-primary/50 mx-auto mb-2" />
                             <p className="text-2xl font-bold text-slate-900">{stats.resumes}</p>
                             <p className="text-xs text-slate-500">Resumes Created</p>
                         </div>
@@ -159,7 +159,7 @@ const AdminUserDetails = () => {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <Coins className="w-5 h-5 text-indigo-600" />
+                        <Coins className="w-5 h-5 text-primary" />
                         Transaction History
                     </h3>
                 </div>

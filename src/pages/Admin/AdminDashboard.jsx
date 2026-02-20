@@ -75,7 +75,7 @@ const AdminDashboard = () => {
 
             {loading ? (
                 <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             ) : (
                 <>
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-indigo-600">{template.count}</span>
+                                            <span className="font-bold text-primary">{template.count}</span>
                                             <span className="text-xs text-slate-500">downloads</span>
                                         </div>
                                     </div>
@@ -208,14 +208,14 @@ const AdminDashboard = () => {
                                     <div className="flex bg-slate-100 p-1 rounded-lg">
                                         <button
                                             onClick={() => setViewType('monthly')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewType === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewType === 'monthly' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                                 }`}
                                         >
                                             Yearly
                                         </button>
                                         <button
                                             onClick={() => setViewType('daily')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewType === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewType === 'daily' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                                 }`}
                                         >
                                             Monthly
@@ -248,8 +248,8 @@ const AdminDashboard = () => {
                                     <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 10, bottom: 25 }}>
                                         <defs>
                                             <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.8} />
+                                                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
@@ -295,7 +295,7 @@ const AdminDashboard = () => {
                                             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                             formatter={(value) => [value, 'Credits']}
                                         />
-                                        <Area type="monotone" dataKey="credits" stroke="#4F46E5" fillOpacity={1} fill="url(#colorCredits)" strokeWidth={2} />
+                                        <Area type="monotone" dataKey="credits" stroke="var(--color-primary)" fillOpacity={1} fill="url(#colorCredits)" strokeWidth={2} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -308,7 +308,7 @@ const AdminDashboard = () => {
                                     stats.recentTransactions.map((tx) => (
                                         <div key={tx._id} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                                     <Coins className="w-4 h-4" />
                                                 </div>
                                                 <div>

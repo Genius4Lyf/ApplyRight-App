@@ -31,7 +31,7 @@ const AdminLayout = ({ children }) => {
             {/* Sidebar (Desktop) */}
             <aside className="hidden md:flex w-64 flex-col bg-white border-r border-slate-200 shadow-sm">
                 <div className="flex items-center justify-center h-16 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+                    <div className="flex items-center gap-2 text-slate-900 font-bold text-xl">
                         <img src={applyRightIcon} alt="ApplyRight Logo" className="w-8 h-8 object-contain" />
                         <span>Admin Panel</span>
                     </div>
@@ -43,7 +43,7 @@ const AdminLayout = ({ children }) => {
                             key={item.path}
                             to={item.path}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === item.path
-                                ? 'bg-indigo-50 text-indigo-600'
+                                ? 'bg-primary/5 text-primary'
                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
@@ -78,7 +78,7 @@ const AdminLayout = ({ children }) => {
                     }`}
             >
                 <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+                    <div className="flex items-center gap-2 text-slate-900 font-bold text-xl">
                         <img src={applyRightIcon} alt="ApplyRight Logo" className="w-8 h-8 object-contain" />
                         <span>Admin Panel</span>
                     </div>
@@ -93,7 +93,7 @@ const AdminLayout = ({ children }) => {
                             to={item.path}
                             onClick={() => setIsSidebarOpen(false)}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === item.path
-                                ? 'bg-indigo-50 text-indigo-600'
+                                ? 'bg-primary/5 text-primary'
                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
@@ -117,7 +117,7 @@ const AdminLayout = ({ children }) => {
                     </button>
 
                     <div className="ml-auto flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm border border-indigo-200">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
                             A
                         </div>
                     </div>

@@ -23,7 +23,7 @@ const UserTable = ({ users, onRoleUpdate, onDelete }) => {
                             <tr key={user._id} className="hover:bg-slate-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200">
+                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary/90 font-bold border border-primary/20">
                                             {user.firstName ? user.firstName[0].toUpperCase() : user.email[0].toUpperCase()}
                                         </div>
                                         <div>
@@ -52,7 +52,7 @@ const UserTable = ({ users, onRoleUpdate, onDelete }) => {
                                     <div className="flex items-center justify-end gap-2">
                                         <Link
                                             to={`/admin/users/${user._id}`}
-                                            className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                                            className="p-1 text-slate-400 hover:text-primary transition-colors"
                                             title="View Details"
                                         >
                                             <Eye className="w-5 h-5" />
