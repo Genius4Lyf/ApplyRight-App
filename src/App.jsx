@@ -31,6 +31,49 @@ import ATSGuide from './pages/ATSGuide';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
 import MaintenanceGuard from './components/MaintenanceGuard';
+import useIdleTimeout from './hooks/useIdleTimeout';
+import SessionTimeoutModal from './components/SessionTimeoutModal';
+
+// Session Manager Component
+const SessionManager = ({ children }) => {
+  const location = useLocation(); // Force re-render on navigation
+  const token = localStorage.getItem('token');
+  // Safe parsing of user
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user'));
+  } catch (e) { }
+
+  const navigate = () => { window.location.href = '/login'; }; // simple redirect
+
+  const handleIdle = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate();
+  };
+
+  const { isWarning, remainingTime, resetTimer } = useIdleTimeout({
+    idleTime: 1 * 60 * 1000,
+    warningTime: 60 * 1000,
+    onIdle: handleIdle,
+    enabled: token && user?.role === 'admin'
+  });
+
+  return (
+    <>
+      {children}
+      {/* Only show warning if user is actually authenticated */}
+      {token && (
+        <SessionTimeoutModal
+          isOpen={isWarning}
+          remainingTime={remainingTime}
+          onExtendSession={resetTimer}
+          onLogout={handleIdle}
+        />
+      )}
+    </>
+  );
+};
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -65,12 +108,11 @@ const RootLayout = () => {
   }, [location.pathname]);
 
   return (
-    <>
-
+    <SessionManager>
       <AnimatePresence mode="wait">
         {element && cloneElement(element, { key: getPageKey(location.pathname) })}
       </AnimatePresence>
-    </>
+    </SessionManager>
   );
 };
 
