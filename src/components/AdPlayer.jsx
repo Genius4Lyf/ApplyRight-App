@@ -15,7 +15,7 @@ const AdPlayer = (props) => {
 
     // States: 'initial', 'verifying', 'completed', 'tab-closed'
     const [adState, setAdState] = useState('initial');
-    const [timeLeft, setTimeLeft] = useState(10);
+    const [timeLeft, setTimeLeft] = useState(5);
     const intervalRef = useRef(null);
     const adWindowRef = useRef(null);
     const windowCheckInterval = useRef(null);
@@ -30,18 +30,26 @@ const AdPlayer = (props) => {
         };
     }, []);
 
+    const completedRef = useRef(false);
+
     const handleStartAd = () => {
         // Open Monetag Direct Link in new tab and track the window
-        adWindowRef.current = window.open(DIRECT_LINK_URL, '_blank');
+        const adWindow = window.open(DIRECT_LINK_URL, '_blank');
+        adWindowRef.current = adWindow;
 
-        // Start verification timer
+        // Start verification timer regardless of whether popup opened
         setAdState('verifying');
+        completedRef.current = false;
         startTimer();
-        startWindowCheck();
+
+        // Only check for window closure if the window actually opened
+        if (adWindow) {
+            startWindowCheck();
+        }
     };
 
     const startTimer = () => {
-        setTimeLeft(10);
+        setTimeLeft(5);
         if (intervalRef.current) clearInterval(intervalRef.current);
 
         intervalRef.current = setInterval(() => {
@@ -59,7 +67,8 @@ const AdPlayer = (props) => {
     const startWindowCheck = () => {
         // Check every 500ms if the ad window is still open
         windowCheckInterval.current = setInterval(() => {
-            if (adWindowRef.current && adWindowRef.current.closed) {
+            // Only trigger tab-closed if we haven't already completed
+            if (adWindowRef.current && adWindowRef.current.closed && !completedRef.current) {
                 // User closed the ad tab early - reset verification
                 clearInterval(intervalRef.current);
                 clearInterval(windowCheckInterval.current);
@@ -69,6 +78,10 @@ const AdPlayer = (props) => {
     };
 
     const handleAdComplete = () => {
+        // Guard against double-completion
+        if (completedRef.current) return;
+        completedRef.current = true;
+
         // Stop window checking
         if (windowCheckInterval.current) clearInterval(windowCheckInterval.current);
 
@@ -81,7 +94,7 @@ const AdPlayer = (props) => {
 
     const handleRetry = () => {
         setAdState('initial');
-        setTimeLeft(10);
+        setTimeLeft(5);
     };
 
     const handleClose = () => {
@@ -128,7 +141,7 @@ const AdPlayer = (props) => {
                                     <circle
                                         cx="50" cy="50" r="45" fill="none" stroke="#4f46e5" strokeWidth="8"
                                         strokeDasharray="283"
-                                        strokeDashoffset={283 - (283 * ((10 - timeLeft) / 10))}
+                                        strokeDashoffset={283 - (283 * ((5 - timeLeft) / 5))}
                                         className="transition-all duration-1000 ease-linear"
                                     />
                                 </svg>

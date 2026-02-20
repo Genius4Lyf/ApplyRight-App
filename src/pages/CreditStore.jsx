@@ -46,11 +46,6 @@ const CreditStore = () => {
         };
         fetchAdStats();
 
-        // Cleanup
-        return () => {
-            window.removeEventListener('settings_updated', fetchConfig);
-        };
-
         // Fetch user profile to get referral code from backend
         const fetchReferralCode = async () => {
             try {
@@ -67,6 +62,11 @@ const CreditStore = () => {
             }
         };
         fetchReferralCode();
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('settings_updated', fetchConfig);
+        };
     }, []);
 
     const handleCopyCode = () => {
@@ -103,8 +103,11 @@ const CreditStore = () => {
                 setRewardMessage('');
             }, 4000);
         } catch (error) {
-            console.error("Ad reward failed", error);
-            alert("Failed to claim reward. Please try again.");
+            console.error("Ad reward failed:", error);
+            console.error("Response data:", error.response?.data);
+            console.error("Response status:", error.response?.status);
+            const serverMsg = error.response?.data?.message || error.message || "Unknown error";
+            alert(`Failed to claim reward: ${serverMsg}`);
             setShowAdPlayer(false);
         }
     };
