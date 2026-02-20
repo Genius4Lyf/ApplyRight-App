@@ -9,6 +9,8 @@ import {
 } from 'recharts';
 
 import CustomSelect from '../../components/Admin/CustomSelect';
+import AdReportTemplate from '../../components/Admin/AdReportTemplate';
+import { toPng } from 'html-to-image';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
@@ -66,11 +68,50 @@ const AdminDashboard = () => {
         fetchStats();
     }, [viewType, selectedYear, selectedMonth]);
 
+    const reportRef = React.useRef(null);
+    const [generatingReport, setGeneratingReport] = useState(false);
+
+    const handleGenerateReport = async () => {
+        if (!reportRef.current) return;
+        setGeneratingReport(true);
+        try {
+            const dataUrl = await toPng(reportRef.current, {
+                pixelRatio: 2, // High resolution
+                backgroundColor: 'transparent',
+                fontEmbedCSS: '', // Bypass CORS issues with external fonts like Google Fonts
+            });
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `applyright-ad-report-${new Date().toISOString().split('T')[0]}.png`;
+            link.click();
+        } catch (error) {
+            console.error('Failed to generate report', error);
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
     return (
         <AdminLayout>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
-                <p className="text-slate-500">Welcome back, Admin. Here's what's happening today.</p>
+            <AdReportTemplate stats={stats} ref={reportRef} />
+
+            <div className="mb-8 flex justify-between items-end">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
+                    <p className="text-slate-500">Welcome back, Admin. Here's what's happening today.</p>
+                </div>
+                <button
+                    onClick={handleGenerateReport}
+                    disabled={generatingReport || loading}
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                >
+                    {generatingReport ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                        <FileText className="w-4 h-4" />
+                    )}
+                    {generatingReport ? 'Generating...' : 'Generate Ad Report'}
+                </button>
             </div>
 
             {loading ? (
