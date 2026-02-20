@@ -313,14 +313,12 @@ const router = createBrowserRouter([
 ]);
 
 import { HelmetProvider } from 'react-helmet-async';
-import GlobalBanner from './components/GlobalBanner';
 
 function App() {
   return (
     <HelmetProvider>
       <RouterProvider router={router} />
       <Toaster position="top-right" richColors />
-      <GlobalBanner />
     </HelmetProvider>
   );
 }

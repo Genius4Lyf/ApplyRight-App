@@ -8,6 +8,7 @@ import CVService from '../services/cv.service';
 import { Sparkles, LogOut, ChevronRight, ChevronLeft, CheckCircle, User, Briefcase, FileText, Plus, Upload as UploadIcon, Clock, PenTool, Trash2, Eye, X, Zap, PlayCircle } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
+import GlobalBanner from '../components/GlobalBanner';
 import FitScoreCard from '../components/FitScoreCard';
 import TemplateSelector from '../components/TemplateSelector';
 import DashboardTour from '../components/dashboard/DashboardTour';
@@ -263,6 +264,7 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Navbar />
+            <GlobalBanner />
 
             <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
                 {showProfileBanner && (
@@ -328,25 +330,7 @@ const Dashboard = () => {
                 {/* Workflow Selection Cards */}
                 {!workflowMode && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* Option 1: Create New */}
-                        <div
-                            onClick={() => setShowCreateOptions(true)}
-                            className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                            <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                                <PenTool className="w-7 h-7" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Create a new CV</h3>
-                            <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
-                                Build a professional resume. Start from scratch or upload an existing CV to let our AI do the heavy lifting.
-                            </p>
-                            <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
-                                Start Builder <ChevronRight className="w-5 h-5 ml-1" />
-                            </div>
-                        </div>
-
-                        {/* Option 2: Upload Existing */}
+                        {/* Option 1: ApplyRight */}
                         <div
                             onClick={() => {
                                 setResume(null);
@@ -361,12 +345,30 @@ const Dashboard = () => {
                             <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
                                 <UploadIcon className="w-7 h-7" />
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Upload CV</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">ApplyRight</h3>
                             <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
                                 Already have a resume? Upload it to get an instant AI analysis and fit score against your target job description.
                             </p>
                             <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
                                 Upload PDF <ChevronRight className="w-5 h-5 ml-1" />
+                            </div>
+                        </div>
+
+                        {/* Option 2: Create New */}
+                        <div
+                            onClick={() => setShowCreateOptions(true)}
+                            className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                                <PenTool className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">Create a new CV</h3>
+                            <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
+                                Build a professional resume. Start from scratch or upload an existing CV to let our AI do the heavy lifting.
+                            </p>
+                            <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
+                                Start Builder <ChevronRight className="w-5 h-5 ml-1" />
                             </div>
                         </div>
                     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Settings, LogOut, Menu, X, Coins, MessageSquare } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon.png';
+import GlobalBanner from '../GlobalBanner';
 
 const AdminLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -121,6 +122,8 @@ const AdminLayout = ({ children }) => {
                         </div>
                     </div>
                 </header>
+
+                <GlobalBanner />
 
                 {/* Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
