@@ -84,6 +84,15 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Guest Route Component (redirects to dashboard if already authenticated)
+const GuestRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
 // Root Layout to handle global providers and animations
 const RootLayout = () => {
   const location = useLocation();
@@ -153,7 +162,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/",
-        element: <LandingPage />,
+        element: (
+          <GuestRoute>
+            <LandingPage />
+          </GuestRoute>
+        ),
       },
       {
         path: "/privacy",
@@ -187,11 +200,19 @@ const router = createBrowserRouter([
       },
       {
         path: "/login",
-        element: <Login />,
+        element: (
+          <GuestRoute>
+            <Login />
+          </GuestRoute>
+        ),
       },
       {
         path: "/register",
-        element: <Register />,
+        element: (
+          <GuestRoute>
+            <Register />
+          </GuestRoute>
+        ),
       },
       {
         path: "/forgot-password",
