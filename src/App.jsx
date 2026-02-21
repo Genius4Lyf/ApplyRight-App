@@ -56,7 +56,7 @@ const SessionManager = ({ children }) => {
     idleTime: 1 * 60 * 1000,
     warningTime: 60 * 1000,
     onIdle: handleIdle,
-    enabled: token && user?.role === 'admin'
+    enabled: token && user?.role === 'admin' && location.pathname.startsWith('/admin')
   });
 
   return (
