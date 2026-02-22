@@ -89,7 +89,7 @@ const Skills = () => {
         } catch (error) {
             console.error(error);
             if (error.response?.data?.code === 'INSUFFICIENT_CREDITS') {
-                toast.error("Insufficient credits (Requires 2 Credits)");
+                toast.error("Insufficient credits (Requires 5 Credits)");
             } else {
                 toast.error("Failed to generate skills. Please try again.");
             }
@@ -194,7 +194,7 @@ const Skills = () => {
                                         className="bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shadow-sm"
                                     >
                                         {loadingAi ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                                        {loadingAi ? 'Analyzing Profile...' : 'Generate Skills (2 Credits)'}
+                                        {loadingAi ? 'Analyzing Profile...' : 'Generate Skills (5 Credits)'}
                                     </button>
 
                                     <button
