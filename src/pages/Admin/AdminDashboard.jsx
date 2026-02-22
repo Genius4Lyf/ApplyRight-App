@@ -77,7 +77,7 @@ const AdminDashboard = () => {
         try {
             const dataUrl = await toPng(reportRef.current, {
                 pixelRatio: 2, // High resolution
-                backgroundColor: 'transparent',
+                backgroundColor: '#0f172a', // Match bg-slate-900
                 fontEmbedCSS: '', // Bypass CORS issues with external fonts like Google Fonts
             });
             const link = document.createElement('a');
