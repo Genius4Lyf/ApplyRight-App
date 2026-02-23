@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { ShieldCheck, Lock, Mail, Phone, User, Key, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import api from '../../services/api';
 import { motion } from 'framer-motion';
 
 const SecretAdminAuth = () => {
@@ -58,7 +58,7 @@ const SecretAdminAuth = () => {
         try {
             if (isLogin) {
                 // Login Flow
-                const { data } = await axios.post('http://localhost:5000/api/auth/login', {
+                const { data } = await api.post('/auth/login', {
                     email: formData.email,
                     password: formData.password
                 });
@@ -78,7 +78,7 @@ const SecretAdminAuth = () => {
                 const config = {
                     headers: { Authorization: `Bearer ${data.token}` }
                 };
-                const meRes = await axios.get('http://localhost:5000/api/auth/me', config);
+                const meRes = await api.get('/auth/me', config);
 
                 if (meRes.data.role !== 'admin') {
                     toast.error('Access Denied. You are not an admin.');
@@ -102,7 +102,7 @@ const SecretAdminAuth = () => {
                     return;
                 }
 
-                const { data } = await axios.post('http://localhost:5000/api/auth/register-secret-admin', {
+                const { data } = await api.post('/auth/register-secret-admin', {
                     email: formData.email,
                     password: formData.password,
                     phone: formData.phone,
@@ -208,8 +208,8 @@ const SecretAdminAuth = () => {
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-gray-600 font-medium">Password strength:</span>
                                                 <span className={`font-semibold ${passwordStrength < 33 ? 'text-red-500' :
-                                                        passwordStrength < 66 ? 'text-yellow-500' :
-                                                            passwordStrength < 100 ? 'text-blue-500' : 'text-green-500'
+                                                    passwordStrength < 66 ? 'text-yellow-500' :
+                                                        passwordStrength < 100 ? 'text-blue-500' : 'text-green-500'
                                                     }`}>
                                                     {getStrengthText(passwordStrength)}
                                                 </span>

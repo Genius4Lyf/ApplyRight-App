@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Maintenance from '../pages/Maintenance';
 
 const MaintenanceGuard = ({ children }) => {
@@ -26,7 +26,7 @@ const MaintenanceGuard = ({ children }) => {
                 }
 
                 // Check system status
-                const { data } = await axios.get('http://localhost:5000/api/system/status');
+                const { data } = await api.get('/system/status');
                 if (data.maintenance) {
                     setIsMaintenance(true);
                 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import DashboardStats from '../../components/Admin/DashboardStats';
 import { Users, DollarSign, FileText, TrendingUp, Coins } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, BarChart, Bar, Legend
@@ -53,7 +53,7 @@ const AdminDashboard = () => {
 
                 // Build Query
                 const query = `period=${viewType}&year=${selectedYear}&month=${selectedMonth}`;
-                const response = await axios.get(`http://localhost:5000/api/admin/stats?${query}`, config);
+                const response = await api.get(`/admin/stats?${query}`, config);
 
                 // Process chart data to be more readable if needed, or rely on backend format
                 // For now backend returns YYYY-MM or YYYY-MM-DD as name

@@ -1,18 +1,10 @@
-import axios from 'axios';
-
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/users'; // Adjust if needed
+import api from './api';
 
 const updateSettings = async (settings) => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.token) return null;
 
-    const config = {
-        headers: {
-            Authorization: `Bearer ${user.token}`,
-        },
-    };
-
-    const response = await axios.put(`${API_URL}/profile`, { settings }, config);
+    const response = await api.put('/users/profile', { settings });
 
     // Update local user object
     if (response.data) {

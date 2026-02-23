@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { Coins, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 import { toast } from 'sonner';
 
 const AdminTransactions = () => {
@@ -18,7 +18,7 @@ const AdminTransactions = () => {
             const config = {
                 headers: { Authorization: `Bearer ${token}` }
             };
-            const { data } = await axios.get(`http://localhost:5000/api/admin/transactions?page=${pageNumber}`, config);
+            const { data } = await api.get(`/admin/transactions?page=${pageNumber}`, config);
 
             setTransactions(data.transactions);
             setPage(data.page);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { User, Mail, Phone, Calendar, ArrowLeft, FileText, Briefcase, Coins, ShieldCheck, CreditCard } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 import { toast } from 'sonner';
 
 const AdminUserDetails = () => {
@@ -17,7 +17,7 @@ const AdminUserDetails = () => {
                 if (!token) return;
 
                 const config = { headers: { Authorization: `Bearer ${token}` } };
-                const { data } = await axios.get(`http://localhost:5000/api/admin/users/${id}`, config);
+                const { data } = await api.get(`/admin/users/${id}`, config);
                 setUserData(data.data);
             } catch (error) {
                 console.error(error);

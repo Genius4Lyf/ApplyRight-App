@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { Save, AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, CreditCard, Cpu, MessageSquare, Layout } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/Admin/AdminLayout';
@@ -26,7 +26,7 @@ const AdminSettings = () => {
             const config = {
                 headers: { Authorization: `Bearer ${token}` }
             };
-            const res = await axios.get('http://localhost:5000/api/admin/settings', config);
+            const res = await api.get('/admin/settings', config);
             setSettings(res.data.data);
             setOriginalSettings(JSON.parse(JSON.stringify(res.data.data))); // Deep copy
             setLoading(false);
@@ -116,7 +116,7 @@ const AdminSettings = () => {
             };
 
             // Send update request
-            const res = await axios.put('http://localhost:5000/api/admin/settings', settings, config);
+            const res = await api.put('/admin/settings', settings, config);
 
             setSettings(res.data.data);
             setOriginalSettings(JSON.parse(JSON.stringify(res.data.data))); // Update original to new state

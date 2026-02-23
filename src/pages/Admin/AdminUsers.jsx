@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import UserTable from '../../components/Admin/UserTable';
 import { Search } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 import { toast } from 'sonner';
 
 const AdminUsers = () => {
@@ -26,7 +26,7 @@ const AdminUsers = () => {
                 }
             };
 
-            const response = await axios.get('http://localhost:5000/api/admin/users', config);
+            const response = await api.get('/admin/users', config);
             setUsers(response.data.users);
             setPage(response.data.page);
             setTotalPages(response.data.pages);
@@ -57,7 +57,7 @@ const AdminUsers = () => {
                 }
             };
 
-            await axios.put(`http://localhost:5000/api/admin/users/${id}/role`, { role: newRole }, config);
+            await api.put(`/admin/users/${id}/role`, { role: newRole }, config);
             toast.success(`User role updated to ${newRole}`);
             fetchUsers();
         } catch (error) {
@@ -76,7 +76,7 @@ const AdminUsers = () => {
                     }
                 };
 
-                await axios.delete(`http://localhost:5000/api/admin/users/${id}`, config);
+                await api.delete(`/admin/users/${id}`, config);
                 toast.success("User deleted successfully");
                 fetchUsers();
             } catch (error) {
