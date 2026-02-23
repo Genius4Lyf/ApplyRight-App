@@ -5,7 +5,7 @@ const FeatureAnnouncementModal = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        const hasSeenUpdate = localStorage.getItem('hasSeenSkillsUpdate_v1');
+        const hasSeenUpdate = localStorage.getItem('hasSeenSkillsUpdate_v2');
         if (!hasSeenUpdate) {
             // Short delay to allow dashboard to load
             const timer = setTimeout(() => {
@@ -17,7 +17,7 @@ const FeatureAnnouncementModal = () => {
 
     const handleClose = () => {
         setIsOpen(false);
-        localStorage.setItem('hasSeenSkillsUpdate_v1', 'true');
+        localStorage.setItem('hasSeenSkillsUpdate_v2', 'true');
     };
 
     if (!isOpen) return null;
@@ -68,14 +68,14 @@ const FeatureAnnouncementModal = () => {
                             <div>
                                 <h4 className="font-bold text-slate-900 text-sm">Credit Usage</h4>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    Our advanced AI models now power the Intelligent Skills feature (2 Credits). Here is the current credit usage:
+                                    Our advanced AI models now power the Intelligent Skills feature (10 Credits). Here is the current credit usage:
                                 </p>
                                 <div className="flex gap-4 mt-2">
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Upload: <span className="text-slate-900">10 Credits</span>
+                                        Upload: <span className="text-slate-900">15 Credits</span>
                                     </span>
                                     <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                                        Analysis: <span className="text-slate-900">20 Credits</span>
+                                        Analysis: <span className="text-slate-900">30 Credits</span>
                                     </span>
                                 </div>
                             </div>
