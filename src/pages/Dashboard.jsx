@@ -241,6 +241,10 @@ const Dashboard = () => {
 
     const handleInsufficientCredits = (required, current) => {
         setRequiredCredits(required);
+        // Sync real balance from backend into local state
+        if (current !== undefined) {
+            updateCredits(current);
+        }
         setShowCreditModal(true);
     };
 
