@@ -130,7 +130,7 @@ const AdminDashboard = () => {
                             icon={Users}
                         />
                         <DashboardStats
-                            title="Total Credits"
+                            title="Total A.I Credits"
                             value={stats.totalCredits}
                             change="+12%" // Mock trend
                             trend="up"
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
                         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                                 <h3 className="text-lg font-bold text-slate-900">
-                                    Credits Overview ({viewType === 'monthly' ? selectedYear : `${months[selectedMonth - 1].label} ${selectedYear}`})
+                                    A.I Credits Overview ({viewType === 'monthly' ? selectedYear : `${months[selectedMonth - 1].label} ${selectedYear}`})
                                 </h3>
 
                                 <div className="flex flex-wrap items-center gap-2">
@@ -325,7 +325,7 @@ const AdminDashboard = () => {
                                             tickLine={false}
                                             tick={{ fill: '#64748B', fontSize: 12 }}
                                             label={{
-                                                value: 'Credits',
+                                                value: 'A.I Credits',
                                                 angle: -90,
                                                 position: 'insideLeft',
                                                 fill: '#94a3b8',
@@ -334,7 +334,7 @@ const AdminDashboard = () => {
                                         />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                            formatter={(value) => [value, 'Credits']}
+                                            formatter={(value) => [value, 'A.I Credits']}
                                         />
                                         <Area type="monotone" dataKey="credits" stroke="var(--color-primary)" fillOpacity={1} fill="url(#colorCredits)" strokeWidth={2} />
                                     </AreaChart>

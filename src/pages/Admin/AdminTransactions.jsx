@@ -41,7 +41,7 @@ const AdminTransactions = () => {
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
-                    <p className="text-slate-500">View and track all credit movements.</p>
+                    <p className="text-slate-500">View and track all A.I credit movements.</p>
                 </div>
                 <div className="bg-primary/5 text-primary/90 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                     <Coins className="w-5 h-5" />

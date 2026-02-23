@@ -147,10 +147,10 @@ const CreditStore = () => {
             <Zap className="w-8 h-8 fill-indigo-600" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Free Credits Store
+            Free A.I Credits Store
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            ApplyRight is 100% free. Watch ads to earn credits for premium
+            ApplyRight is 100% free. Watch ads to earn A.I credits for premium
             templates and AI features.
           </p>
         </div>
@@ -172,7 +172,7 @@ const CreditStore = () => {
                 <p className="text-slate-500 text-lg">
                   Support our platform by viewing an offer and earn{" "}
                   <span className="text-indigo-600 font-bold">
-                    {config?.credits?.adReward || 5} Credits
+                    {config?.credits?.adReward || 5} A.I Credits
                   </span>
                   .
                 </p>
@@ -207,7 +207,7 @@ const CreditStore = () => {
                   View Offer
                 </span>
                 <span className="text-indigo-200 font-medium mt-1">
-                  +{config?.credits?.adReward || 5} Credits
+                  +{config?.credits?.adReward || 5} A.I Credits
                 </span>
 
                 {adStats.streak > 0 && (
@@ -237,7 +237,7 @@ const CreditStore = () => {
               <p className="text-slate-500 mb-6">
                 Get{" "}
                 <span className="font-bold text-slate-900">
-                  {config?.credits?.referralBonus || 10} Credits
+                  {config?.credits?.referralBonus || 10} A.I Credits
                 </span>{" "}
                 for every friend who joins using your link.
               </p>
@@ -289,7 +289,7 @@ const CreditStore = () => {
                 <Zap className="w-12 h-12 text-white fill-white" />
               </motion.div>
               <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                +{config?.credits?.adReward || 5} Credits!
+                +{config?.credits?.adReward || 5} A.I Credits!
               </h2>
               {rewardMessage && (
                 <motion.div
@@ -345,7 +345,7 @@ const CreditStore = () => {
                     Share your code with friends. When they sign up,{" "}
                     <b>you get</b>{" "}
                     <span className="text-green-600 font-bold">
-                      {config?.credits?.referralBonus || 10} Credits
+                      {config?.credits?.referralBonus || 10} A.I Credits
                     </span>
                     !
                   </p>
@@ -398,7 +398,7 @@ const CreditStore = () => {
                 </div>
 
                 <div className="text-xs text-slate-400">
-                  Credits are valid for CV analysis and optimizations.
+                  A.I Credits are valid for CV analysis and optimizations.
                 </div>
               </div>
             </motion.div>

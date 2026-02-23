@@ -15,7 +15,7 @@ const TOUR_STEPS = [
     {
         id: 'credits',
         title: "Credits & Support",
-        description: "Start with 20 free credits. Upload a CV for 15 credits or run a full analysis for 30 credits. Earn more by watching short ads.",
+        description: "Start with 20 free A.I credits. Upload a CV for 15 A.I credits or run a full analysis for 30 A.I credits. Earn more by watching short ads.",
         icon: Zap,
         color: "text-amber-500",
         bg: "bg-amber-100",

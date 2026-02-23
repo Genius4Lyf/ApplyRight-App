@@ -4,8 +4,8 @@ import { billingService } from '../services';
 
 const MonetagBanner = ({
     title = "Sponsored Offer",
-    subtitle = "View this offer to instantly earn +5 Credits.",
-    buttonText = "View (+5 Credits)",
+    subtitle = "View this offer to instantly earn +5 A.I Credits.",
+    buttonText = "View (+5 A.I Credits)",
     slot,
     style,
     variant = 'default'
@@ -103,7 +103,7 @@ const MonetagBanner = ({
                     <div>
                         <h4 className="text-white font-bold text-sm">
                             {status === 'verifying' ? 'Verifying...' :
-                                status === 'success' ? '+5 Credits Added!' :
+                                status === 'success' ? '+5 A.I Credits Added!' :
                                     status === 'tab-closed' ? 'Tab Closed Early' :
                                         title}
                         </h4>
@@ -147,9 +147,9 @@ const MonetagBanner = ({
 
                 <p className="text-slate-500 mb-6 flex-grow">
                     {status === 'verifying' ? <><strong className="text-orange-600">Keep tab open</strong> for {timeLeft}s...</> :
-                        status === 'success' ? '5 Credits have been added!' :
+                        status === 'success' ? '5 A.I Credits have been added!' :
                             status === 'tab-closed' ? 'Tab was closed too early. Try again!' :
-                                <>View this offer to instantly earn <span className="font-bold text-slate-900">5 Credits</span>.</>}
+                                <>View this offer to instantly earn <span className="font-bold text-slate-900">5 A.I Credits</span>.</>}
                 </p>
 
                 {/* Button */}

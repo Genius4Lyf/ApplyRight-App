@@ -83,7 +83,7 @@ const AdminUserDetails = () => {
                     </div>
                     <div className="bg-primary/5 text-primary/90 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Coins className="w-5 h-5" />
-                        <span>Credits: {user.credits}</span>
+                        <span>A.I Credits: {user.credits}</span>
                     </div>
                 </div>
             </div>

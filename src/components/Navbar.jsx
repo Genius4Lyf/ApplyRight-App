@@ -145,7 +145,7 @@ const Navbar = () => {
                                                 className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-green-600 transition-colors flex items-center gap-2"
                                             >
                                                 <PlayCircle className="w-4 h-4 text-green-500" />
-                                                Get more credits
+                                                Get more A.I credits
                                             </button>
                                         </div>
                                     </motion.div>
@@ -221,7 +221,7 @@ const Navbar = () => {
                                 className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/credits') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
                                 <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600" />
-                                <span className="font-medium">Credits: {credits !== null ? credits : '...'}</span>
+                                <span className="font-medium">A.I Credits: {credits !== null ? credits : '...'}</span>
                             </Link>
 
                             <div className="h-px bg-slate-100 my-2"></div>

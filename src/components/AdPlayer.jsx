@@ -7,10 +7,10 @@ const AdPlayer = (props) => {
         onComplete,
         onClose,
         title = "Sponsored Offer",
-        subtitle = "View our sponsor's offer to unlock 5 free credits instantly.",
-        successMessage = "5 credits have been added to your account.",
+        subtitle = "View our sponsor's offer to unlock 5 free A.I credits instantly.",
+        successMessage = "5 A.I credits have been added to your account.",
         buttonText = "View Offer",
-        successTitle = "+5 Credits Unlocked!"
+        successTitle = "+5 A.I Credits Unlocked!"
     } = props;
 
     // States: 'initial', 'verifying', 'completed', 'tab-closed'

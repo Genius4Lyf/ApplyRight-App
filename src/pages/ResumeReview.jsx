@@ -200,7 +200,7 @@ const ResumeReview = () => {
         } catch (error) {
             console.error("Unlock failed", error);
             if (error.response?.data?.error === 'INSUFFICIENT_CREDITS') {
-                toast.error("Insufficient credits.");
+                toast.error("Insufficient A.I credits.");
             } else {
                 toast.error("Failed to unlock template");
             }
@@ -540,7 +540,7 @@ const ResumeReview = () => {
                             <Check className="w-10 h-10 text-green-600" />
                         </div>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Credits Earned!</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">A.I Credits Earned!</h3>
                         <p className="text-slate-500 mb-6">
                             You successfully watched the ad.
                         </p>
@@ -629,7 +629,7 @@ const ResumeReview = () => {
                                 ) : (
                                     <>
                                         <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
-                                        Unlock for {templateToUnlock.cost} Credits
+                                        Unlock for {templateToUnlock.cost} A.I Credits
                                     </>
                                 )}
                             </button>
@@ -639,7 +639,7 @@ const ResumeReview = () => {
                                     <div className="w-full border-t border-slate-200"></div>
                                 </div>
                                 <div className="relative flex justify-center text-xs">
-                                    <span className="bg-white px-2 text-slate-500">or earn credits</span>
+                                    <span className="bg-white px-2 text-slate-500">or earn A.I credits</span>
                                 </div>
                             </div>
 
@@ -651,7 +651,7 @@ const ResumeReview = () => {
                                 className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-100"
                             >
                                 <PlayCircle className="w-5 h-5" />
-                                View Offer for +5 Credits
+                                View Offer for +5 A.I Credits
                             </button>
 
                             <p className="text-xs text-slate-400 text-center leading-relaxed px-4">
@@ -660,7 +660,7 @@ const ResumeReview = () => {
 
                             {(userProfile?.credits || 0) < templateToUnlock.cost && (
                                 <p className="text-xs text-slate-500 text-center mt-2">
-                                    You have {userProfile?.credits || 0} credits. Need {templateToUnlock.cost - (userProfile?.credits || 0)} more.
+                                    You have {userProfile?.credits || 0} A.I credits. Need {templateToUnlock.cost - (userProfile?.credits || 0)} more.
                                 </p>
                             )}
                         </div>
@@ -1001,7 +1001,7 @@ const ResumeReview = () => {
                                                     )}
                                                     {locked && (
                                                         <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                                                            {t.cost} Credits
+                                                            {t.cost} A.I Credits
                                                         </span>
                                                     )}
                                                 </div>

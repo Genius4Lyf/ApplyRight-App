@@ -424,7 +424,7 @@ const Dashboard = () => {
                                     <p className="text-sm text-slate-500 mb-3">
                                         We'll scan your PDF and auto-fill the builder with your details.
                                     </p>
-                                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Cost: 15 Credits</span>
+                                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Cost: 15 A.I Credits</span>
                                 </button>
                             </div>
                         </div>
@@ -555,7 +555,7 @@ const Dashboard = () => {
                                 <div className="space-y-4">
                                     <div className="text-center pb-4">
                                         <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
-                                            <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 Credits
+                                            <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 A.I Credits
                                         </span>
                                     </div>
                                     <CVUploader onUploadSuccess={async (resumeData) => {
@@ -717,7 +717,7 @@ const Dashboard = () => {
                                         <Sparkles className="w-5 h-5 mr-3" />
                                         <span className="flex flex-col items-start leading-tight">
                                             <span>Generate Professional Assets</span>
-                                            <span className="text-xs font-normal opacity-80">Cost: 30 Credits</span>
+                                            <span className="text-xs font-normal opacity-80">Cost: 30 A.I Credits</span>
                                         </span>
                                         <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                                     </>
@@ -838,9 +838,9 @@ const Dashboard = () => {
                             <Zap className="w-8 h-8" />
                         </div>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Insufficient Credits</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Insufficient A.I Credits</h3>
                         <p className="text-slate-500 mb-6">
-                            You need <span className="font-bold text-slate-900">{requiredCredits} credits</span> to perform this action, but you only have <span className="font-bold text-slate-900">{user.credits || 0}</span>.
+                            You need <span className="font-bold text-slate-900">{requiredCredits} A.I credits</span> to perform this action, but you only have <span className="font-bold text-slate-900">{user.credits || 0}</span>.
                         </p>
 
                         <div className="space-y-3">
@@ -848,7 +848,7 @@ const Dashboard = () => {
                                 onClick={() => navigate('/credits')}
                                 className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                             >
-                                <Zap className="w-4 h-4" /> Get More Credits
+                                <Zap className="w-4 h-4" /> Get More A.I Credits
                             </button>
 
                             <div className="relative flex py-2 items-center">
@@ -861,7 +861,7 @@ const Dashboard = () => {
                                 onClick={() => navigate('/credits')} // For now direct to store where ad option lives
                                 className="w-full py-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                             >
-                                <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free Credits
+                                <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free A.I Credits
                             </button>
                         </div>
                     </div>

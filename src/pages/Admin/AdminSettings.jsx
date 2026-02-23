@@ -155,7 +155,7 @@ const AdminSettings = () => {
     if (!settings) return <div className="p-8 text-center">Failed to load settings.</div>;
 
     const tabs = [
-        { id: 'general', label: 'General & Credits', icon: CreditCard },
+        { id: 'general', label: 'General & A.I Credits', icon: CreditCard },
         { id: 'features', label: 'Features & Toggles', icon: Cpu },
         { id: 'announcements', label: 'Announcements', icon: MessageSquare },
         { id: 'templates', label: 'Templates', icon: Layout },
@@ -214,7 +214,7 @@ const AdminSettings = () => {
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                                         <CreditCard className="w-5 h-5 text-primary" />
-                                        Credit Costs & Rewards
+                                        A.I Credit Costs & Rewards
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
@@ -225,7 +225,7 @@ const AdminSettings = () => {
                                                 onChange={(e) => handleChange('credits', 'signupBonus', parseInt(e.target.value))}
                                                 className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
-                                            <p className="text-xs text-slate-500">Credits given to new users upon registration.</p>
+                                            <p className="text-xs text-slate-500">A.I Credits given to new users upon registration.</p>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold text-slate-700">Referral Bonus</label>
@@ -235,7 +235,7 @@ const AdminSettings = () => {
                                                 onChange={(e) => handleChange('credits', 'referralBonus', parseInt(e.target.value))}
                                                 className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                                             />
-                                            <p className="text-xs text-slate-500">Credits awarded to the referrer.</p>
+                                            <p className="text-xs text-slate-500">A.I Credits awarded to the referrer.</p>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold text-slate-700">Analysis Cost</label>

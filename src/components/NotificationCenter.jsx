@@ -33,7 +33,7 @@ const NotificationCenter = () => {
             // Mock Data
             setNotifications([
                 { _id: '1', title: 'Welcome!', message: 'Thanks for joining ApplyRight.', type: 'system', isRead: false, createdAt: new Date() },
-                { _id: '2', title: 'Free Credits', message: 'You earned 5 credits for watching an ad.', type: 'credit', isRead: true, createdAt: new Date(Date.now() - 86400000) }
+                { _id: '2', title: 'Free A.I Credits', message: 'You earned 5 A.I credits for watching an ad.', type: 'credit', isRead: true, createdAt: new Date(Date.now() - 86400000) },
             ]);
             setUnreadCount(1);
 

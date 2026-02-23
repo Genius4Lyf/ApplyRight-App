@@ -139,7 +139,7 @@ const TemplateSelector = ({ selectedTemplate, onSelect, user = {}, onPreview, is
                                 ) : (
                                     <>
                                         <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
-                                        Unlock for {templateToUnlock.cost} Credits
+                                        Unlock for {templateToUnlock.cost} A.I Credits
                                     </>
                                 )}
                             </button>
@@ -147,7 +147,7 @@ const TemplateSelector = ({ selectedTemplate, onSelect, user = {}, onPreview, is
                             {(user.credits || 0) < templateToUnlock.cost && (
                                 <div className="text-center">
                                     <p className="text-sm text-red-500 font-medium mb-3">
-                                        Insufficient credits (Have: {user.credits || 0})
+                                        <span className="text-sm font-medium">Insufficient A.I credits (Have: {user.credits || 0})</span>
                                     </p>
                                     <div className="relative flex py-2 items-center mb-3">
                                         <div className="flex-grow border-t border-slate-200"></div>
@@ -159,7 +159,7 @@ const TemplateSelector = ({ selectedTemplate, onSelect, user = {}, onPreview, is
                                         className="w-full py-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                                     >
                                         <PlayCircle className="w-5 h-5 text-green-500" />
-                                        Watch Ad for +5 Credits
+                                        Watch Ad for +5 A.I Credits
                                     </button>
                                 </div>
                             )}

@@ -503,7 +503,7 @@ const Profile = () => {
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-100 flex items-center gap-2">
-                                        Available Credits
+                                        Available A.I Credits
                                     </h3>
                                     {user?.plan === 'paid' && (
                                         <span className="flex items-center gap-1 text-[10px] font-bold bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full text-amber-300 border border-white/10">
@@ -516,10 +516,10 @@ const Profile = () => {
                                     <div className="flex items-center gap-2">
                                         <Sparkles className="w-8 h-8 text-indigo-300" />
                                         <span className="text-5xl font-extrabold tracking-tight">{credits}</span>
-                                        <span className="text-lg text-indigo-200 font-medium self-end mb-2">credits</span>
+                                        <span className="text-lg text-indigo-200 font-medium self-end mb-2">A.I credits</span>
                                     </div>
                                     <p className="text-xs text-indigo-200 mt-2 pl-1">
-                                        Use credits to generate CVs and Cover Letters.
+                                        Use A.I credits to generate CVs and Cover Letters.
                                     </p>
                                 </div>
 
@@ -528,7 +528,7 @@ const Profile = () => {
                                     className="w-full py-3.5 bg-white text-indigo-700 hover:bg-slate-50 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
                                 >
                                     <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 group-hover/btn:scale-110 transition-transform" />
-                                    Get More Credits
+                                    Get More A.I Credits
                                 </button>
                             </div>
                         </div>
