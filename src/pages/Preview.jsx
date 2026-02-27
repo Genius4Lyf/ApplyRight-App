@@ -378,7 +378,14 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                                     `;
 
                                     // 2. Call Backend
-                                    const blob = await CVService.generatePdf(fullHtml);
+                                    const blob = await CVService.generatePdf(fullHtml, {
+                                        margin: {
+                                            top: '0mm',
+                                            right: '25px',
+                                            bottom: '25px',
+                                            left: '25px'
+                                        }
+                                    });
 
                                     // 3. Download
                                     const url = window.URL.createObjectURL(blob);

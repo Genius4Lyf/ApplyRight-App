@@ -341,9 +341,9 @@ const ResumeReview = () => {
             const blob = await CVService.generatePdf(fullHtml, {
                 margin: {
                     top: '0mm',
-                    right: '0mm',
-                    bottom: '0mm',
-                    left: '0mm'
+                    right: '25px',
+                    bottom: '25px',
+                    left: '25px'
                 }
             }, {
                 templateId,
