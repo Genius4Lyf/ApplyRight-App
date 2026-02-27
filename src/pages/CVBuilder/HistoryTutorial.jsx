@@ -70,9 +70,9 @@ const HistoryTutorial = ({ isOpen, onClose, user }) => {
                             <ClipboardPaste className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">Paste & Optimize</h3>
+                            <h3 className="font-bold text-slate-800">Draft & Optimize</h3>
                             <p className="text-sm text-slate-600 leading-relaxed mt-1">
-                                Have a rough draft or job description? <strong>Paste it into the Description box</strong>. Our AI will automatically offer to rewrite it into ATS-friendly bullet points.
+                                Add <strong>at least 2 bullet points</strong> about what your job role is about in the Description box. Our AI will help you expand and rewrite them into ATS-ready bullet points!
                             </p>
                         </div>
                     </div>

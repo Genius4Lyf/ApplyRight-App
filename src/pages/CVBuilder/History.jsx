@@ -19,6 +19,12 @@ const History = () => {
     const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
     const [showTutorial, setShowTutorial] = useState(false);
 
+    // AI Suggestions Modal State
+    const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+    const [suggestionsList, setSuggestionsList] = useState([]);
+    const [selectedSuggestions, setSelectedSuggestions] = useState([]);
+    const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
+
     // Auto-show tutorial based on user settings
     useEffect(() => {
         // Only show if user settings allow it
@@ -81,10 +87,13 @@ const History = () => {
             );
 
             if (suggestions && suggestions.length > 0) {
-                const formattedBullets = suggestions.map(s => `• ${s}`).join('\n');
-                handleChange(index, 'description', formattedBullets);
-                toast.success("Bullets generated!");
+                setSuggestionsList(suggestions);
+                setSuggestionTargetIndex(index);
+                setSelectedSuggestions([]);
+                setShowSuggestionsModal(true);
                 setOptimizationCandidate(null); // Clear prompt
+            } else {
+                toast.warning("No suggestions generated. Please try again.");
             }
         } catch (error) {
             console.error("Failed to gen bullets", error);
@@ -92,6 +101,33 @@ const History = () => {
         } finally {
             setGeneratingIndex(null);
         }
+    };
+
+    const toggleSuggestionSelection = (suggestion) => {
+        if (selectedSuggestions.includes(suggestion)) {
+            setSelectedSuggestions(selectedSuggestions.filter(s => s !== suggestion));
+        } else {
+            if (selectedSuggestions.length >= 3) {
+                toast.warning("You can select up to 3 bullet points.");
+                return;
+            }
+            setSelectedSuggestions([...selectedSuggestions, suggestion]);
+        }
+    };
+
+    const applySelectedSuggestions = () => {
+        if (selectedSuggestions.length === 0 || suggestionTargetIndex === null) return;
+
+        const formattedBullets = selectedSuggestions.map(s => `• ${s}`).join('\n');
+
+        // Completely overwrite the existing description with the AI generated bullets
+        handleChange(suggestionTargetIndex, 'description', formattedBullets);
+        toast.success("Bullets applied!");
+
+        setShowSuggestionsModal(false);
+        setSuggestionsList([]);
+        setSelectedSuggestions([]);
+        setSuggestionTargetIndex(null);
     };
 
     const handlePaste = (e, index) => {
@@ -273,8 +309,10 @@ const History = () => {
                                 <label className="block text-xs font-bold text-slate-500 uppercase">Description / Bullets</label>
                                 <button
                                     type="button"
-                                    onClick={() => handleGenerateBullets(index)}
-                                    disabled={generatingIndex === index || !role.title}
+                                    onClick={() => handleGenerateBullets(index, role.description)}
+                                    // Ensure role.description has at least 2 bullets (split by \n and filter out empty)
+                                    disabled={generatingIndex === index || !role.title || (role.description || '').split('\n').filter(b => b.trim().length > 2).length < 2}
+                                    title={(role.description || '').split('\n').filter(b => b.trim().length > 2).length < 2 ? "Please write at least 2 bullet points to use AI Suggestions" : "Get AI Suggestions"}
                                     className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
                                 >
                                     {generatingIndex === index ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
@@ -337,6 +375,89 @@ const History = () => {
                 onClose={() => setShowTutorial(false)}
                 user={user}
             />
+
+            {/* AI Suggestions Modal */}
+            {showSuggestionsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                    <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800">AI Bullet Suggestions</h3>
+                                    <p className="text-sm text-slate-500">
+                                        Select up to 3 options to add to your experience.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-sm font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
+                                {selectedSuggestions.length} / 3 Selected
+                            </div>
+                        </div>
+
+                        <div className="p-6 max-h-[45vh] overflow-y-auto bg-slate-50">
+                            <div className="space-y-3">
+                                {suggestionsList.map((suggestion, idx) => {
+                                    const isSelected = selectedSuggestions.includes(suggestion);
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() => toggleSuggestionSelection(suggestion)}
+                                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex gap-3
+                                                ${isSelected
+                                                    ? 'border-indigo-500 bg-indigo-50/50 shadow-sm'
+                                                    : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
+                                                    ${isSelected
+                                                        ? 'bg-indigo-500 border-indigo-500 text-white'
+                                                        : 'border-slate-300 bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {isSelected && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                                </div>
+                                            </div>
+                                            <p className={`text-sm leading-relaxed ${isSelected ? 'text-indigo-900 font-medium' : 'text-slate-700'}`}>
+                                                {suggestion}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-100 bg-white">
+                            <div className="flex items-start gap-2 mb-4 p-3 bg-indigo-50/50 border border-indigo-100/50 rounded-lg">
+                                <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    <strong>Note:</strong> AI can make mistakes or generate generic content. Please review these suggestions and edit them to ensure they accurately reflect your actual, verifiable experience.
+                                </p>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowSuggestionsModal(false)}
+                                    className="px-6 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={applySelectedSuggestions}
+                                    disabled={selectedSuggestions.length === 0}
+                                    className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Apply Selected
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 };
