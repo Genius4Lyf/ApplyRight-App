@@ -372,7 +372,19 @@ const ResumeReview = () => {
             }, 2500);
 
         } catch (e) {
-            console.error(e);
+            console.error("PDF Download Error Details:", e);
+
+            // Because the request uses responseType: 'blob', server errors are returned as blobs
+            if (e.response && e.response.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    console.error("Server Error Response (decoded):", reader.result);
+                };
+                reader.readAsText(e.response.data);
+            } else if (e.response) {
+                console.error("Server Error Response:", e.response.data);
+            }
+
             toast.error("Download failed");
             setIsDownloading(false); // Close immediately on error
         }
