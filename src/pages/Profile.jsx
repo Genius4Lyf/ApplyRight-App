@@ -17,7 +17,6 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
-    const [stats, setStats] = useState({ drafts: 0, applications: 0 });
     const [credits, setCredits] = useState(0);
 
     // Unsaved Changes State
@@ -530,50 +529,6 @@ const Profile = () => {
                                     <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 group-hover/btn:scale-110 transition-transform" />
                                     Get More A.I Credits
                                 </button>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <Award className="w-4 h-4 text-indigo-500" />
-                                Usage Stats
-                            </h3>
-                            <div className="space-y-6">
-                                {/* Resumes Stat */}
-                                <div>
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-slate-600 font-medium">Original Resumes</span>
-                                        <span className="font-bold text-slate-900">
-                                            {stats.drafts} <span className="text-slate-400 font-normal">/ {user?.plan === 'paid' ? '∞' : '1'}</span>
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-1000 ${user?.plan === 'paid' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
-                                                stats.drafts >= 1 ? 'bg-rose-500' : 'bg-indigo-500'
-                                                }`}
-                                            style={{ width: user?.plan === 'paid' ? '100%' : `${Math.min((stats.drafts / 1) * 100, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                {/* Applications Stat */}
-                                <div>
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-slate-600 font-medium">Job Optimizations</span>
-                                        <span className="font-bold text-slate-900">
-                                            {stats.applications} <span className="text-slate-400 font-normal">/ {user?.plan === 'paid' ? '∞' : '3'}</span>
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-1000 delay-150 ${user?.plan === 'paid' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
-                                                stats.applications >= 3 ? 'bg-rose-500' : 'bg-indigo-500'
-                                                }`}
-                                            style={{ width: user?.plan === 'paid' ? '100%' : `${Math.min((stats.applications / 3) * 100, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
