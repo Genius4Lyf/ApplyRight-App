@@ -340,7 +340,7 @@ const ResumeReview = () => {
             // 2. Call Backend with margin options
             const blob = await CVService.generatePdf(fullHtml, {
                 margin: {
-                    top: '0mm',
+                    top: '25px',
                     right: '25px',
                     bottom: '25px',
                     left: '25px'
