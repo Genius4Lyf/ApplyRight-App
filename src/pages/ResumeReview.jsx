@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Download, Printer, ChevronLeft, LayoutTemplate, Share2, Sparkles, Check, Mail, PenTool } from 'lucide-react';
+import { Download, Printer, ChevronLeft, LayoutTemplate, Share2, Sparkles, Check, Mail, PenTool, MessageSquare } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -64,6 +64,7 @@ const ResumeReview = () => {
     const [unlocking, setUnlocking] = useState(false);
     const [adForCreditsOpen, setAdForCreditsOpen] = useState(false); // For earning credits within unlock modal
     const [creditSuccessModalOpen, setCreditSuccessModalOpen] = useState(false); // New success modal state
+    const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false); // Feedback after download
 
     // Listen for global user updates
     useEffect(() => {
@@ -365,10 +366,19 @@ const ResumeReview = () => {
             setDownloadSuccess(true);
             toast.success('PDF Downloaded');
 
-            // PHASE 4: Wait 2.5 seconds before closing the loader
+            // PHASE 4: Wait 2.5 seconds before closing the loader, then show feedback prompt
             setTimeout(() => {
                 setIsDownloading(false);
                 setDownloadSuccess(false);
+
+                // Show feedback prompt once per session
+                const hasSeenFeedback = sessionStorage.getItem('feedback_prompt_shown');
+                if (!hasSeenFeedback) {
+                    setTimeout(() => {
+                        setShowFeedbackPrompt(true);
+                        sessionStorage.setItem('feedback_prompt_shown', 'true');
+                    }, 500);
+                }
             }, 2500);
 
         } catch (e) {
@@ -675,6 +685,48 @@ const ResumeReview = () => {
                                     You have {userProfile?.credits || 0} A.I credits. Need {templateToUnlock.cost - (userProfile?.credits || 0)} more.
                                 </p>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Feedback Prompt Modal - After Download */}
+            {showFeedbackPrompt && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+                        <button
+                            onClick={() => setShowFeedbackPrompt(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <MessageSquare className="w-8 h-8 text-indigo-600" />
+                        </div>
+
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">Enjoying ApplyRight?</h3>
+                        <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                            Your CV is ready! We'd love to hear how your experience was. Your feedback helps us improve.
+                        </p>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    setShowFeedbackPrompt(false);
+                                    window.open('/feedback', '_blank');
+                                }}
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                            >
+                                <MessageSquare className="w-4 h-4" />
+                                Give Feedback
+                            </button>
+                            <button
+                                onClick={() => setShowFeedbackPrompt(false)}
+                                className="w-full py-3 text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors"
+                            >
+                                Maybe Later
+                            </button>
                         </div>
                     </div>
                 </div>
