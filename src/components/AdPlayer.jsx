@@ -15,7 +15,7 @@ const AdPlayer = (props) => {
 
     // States: 'initial', 'verifying', 'completed', 'tab-closed'
     const [adState, setAdState] = useState('initial');
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(10);
     const intervalRef = useRef(null);
     const adWindowRef = useRef(null);
     const windowCheckInterval = useRef(null);
@@ -49,7 +49,7 @@ const AdPlayer = (props) => {
     };
 
     const startTimer = () => {
-        setTimeLeft(5);
+        setTimeLeft(10);
         if (intervalRef.current) clearInterval(intervalRef.current);
 
         intervalRef.current = setInterval(() => {
@@ -94,7 +94,7 @@ const AdPlayer = (props) => {
 
     const handleRetry = () => {
         setAdState('initial');
-        setTimeLeft(5);
+        setTimeLeft(10);
     };
 
     const handleClose = () => {
@@ -141,7 +141,7 @@ const AdPlayer = (props) => {
                                     <circle
                                         cx="50" cy="50" r="45" fill="none" stroke="#4f46e5" strokeWidth="8"
                                         strokeDasharray="283"
-                                        strokeDashoffset={283 - (283 * ((5 - timeLeft) / 5))}
+                                        strokeDashoffset={283 - (283 * ((10 - timeLeft) / 10))}
                                         className="transition-all duration-1000 ease-linear"
                                     />
                                 </svg>
