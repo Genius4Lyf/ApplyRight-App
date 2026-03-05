@@ -738,7 +738,7 @@ const ResumeReview = () => {
                 {/* LEFT: Document Preview Area */}
                 <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar p-8 flex justify-center bg-slate-100/50 relative">
                     {/* Zoom Controls */}
-                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-40 bg-white/90 backdrop-blur shadow-xl border border-slate-200/60 p-1.5 rounded-full flex items-center gap-2">
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-20 bg-white/90 backdrop-blur shadow-xl border border-slate-200/60 p-1.5 rounded-full flex items-center gap-2">
                         <button
                             onClick={() => setScale(s => Math.max(0.3, s - 0.1))}
                             className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
