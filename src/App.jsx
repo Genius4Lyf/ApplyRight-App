@@ -1,4 +1,10 @@
-import { createBrowserRouter, RouterProvider, useLocation, useOutlet, Navigate } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  useLocation,
+  useOutlet,
+  Navigate,
+} from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { cloneElement, useEffect } from 'react';
 import { Toaster } from 'sonner';
@@ -42,9 +48,11 @@ const SessionManager = ({ children }) => {
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem('user'));
-  } catch (e) { }
+  } catch (e) {}
 
-  const navigate = () => { window.location.href = '/login'; }; // simple redirect
+  const navigate = () => {
+    window.location.href = '/login';
+  }; // simple redirect
 
   const handleIdle = () => {
     localStorage.removeItem('token');
@@ -56,7 +64,7 @@ const SessionManager = ({ children }) => {
     idleTime: 1 * 60 * 1000,
     warningTime: 60 * 1000,
     onIdle: handleIdle,
-    enabled: token && user?.role === 'admin' && location.pathname.startsWith('/admin')
+    enabled: token && user?.role === 'admin' && location.pathname.startsWith('/admin'),
   });
 
   return (
@@ -157,11 +165,11 @@ const router = createBrowserRouter([
     children: [
       // ... existing routes ...
       {
-        path: "/how-it-works",
+        path: '/how-it-works',
         element: <ApplicationReview />,
       },
       {
-        path: "/",
+        path: '/',
         element: (
           <GuestRoute>
             <LandingPage />
@@ -169,27 +177,27 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/privacy",
+        path: '/privacy',
         element: <PrivacyPolicy />,
       },
       {
-        path: "/terms",
+        path: '/terms',
         element: <TermsOfService />,
       },
       {
-        path: "/contact",
+        path: '/contact',
         element: <Contact />,
       },
       {
-        path: "/ats-guide",
+        path: '/ats-guide',
         element: <ATSGuide />,
       },
       {
-        path: "/feedback",
+        path: '/feedback',
         element: <FeedbackPage />,
       },
       {
-        path: "/feedback/dashboard",
+        path: '/feedback/dashboard',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -199,7 +207,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/login",
+        path: '/login',
         element: (
           <GuestRoute>
             <Login />
@@ -207,7 +215,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/register",
+        path: '/register',
         element: (
           <GuestRoute>
             <Register />
@@ -215,11 +223,11 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/forgot-password",
+        path: '/forgot-password',
         element: <ForgotPassword />,
       },
       {
-        path: "/dashboard",
+        path: '/dashboard',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -229,7 +237,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/onboarding",
+        path: '/onboarding',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -239,7 +247,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/history",
+        path: '/history',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -249,7 +257,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/profile",
+        path: '/profile',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -261,7 +269,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/upgrade",
+        path: '/upgrade',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -271,7 +279,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/credits",
+        path: '/credits',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -281,7 +289,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/resume/:id",
+        path: '/resume/:id',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -291,7 +299,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/cv-builder/:id",
+        path: '/cv-builder/:id',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
@@ -300,20 +308,20 @@ const router = createBrowserRouter([
           </MaintenanceGuard>
         ),
         children: [
-          { path: "target-job", element: <TargetJob /> },
-          { path: "heading", element: <Heading /> },
-          { path: "summary", element: <ProfessionalSummary /> },
-          { path: "history", element: <History /> },
-          { path: "projects", element: <Projects /> },
-          { path: "education", element: <Education /> },
-          { path: "skills", element: <Skills /> },
-          { path: "finalize", element: <Finalize /> },
+          { path: 'target-job', element: <TargetJob /> },
+          { path: 'heading', element: <Heading /> },
+          { path: 'summary', element: <ProfessionalSummary /> },
+          { path: 'history', element: <History /> },
+          { path: 'projects', element: <Projects /> },
+          { path: 'education', element: <Education /> },
+          { path: 'skills', element: <Skills /> },
+          { path: 'finalize', element: <Finalize /> },
         ],
       },
 
       // Admin Routes
       {
-        path: "/admin",
+        path: '/admin',
         element: (
           <AdminRoute>
             <AdminDashboard />
@@ -321,7 +329,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/users",
+        path: '/admin/users',
         element: (
           <AdminRoute>
             <AdminUsers />
@@ -329,7 +337,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/transactions",
+        path: '/admin/transactions',
         element: (
           <AdminRoute>
             <AdminTransactions />
@@ -337,7 +345,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/users/:id",
+        path: '/admin/users/:id',
         element: (
           <AdminRoute>
             <AdminUserDetails />
@@ -345,7 +353,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/feedback",
+        path: '/admin/feedback',
         element: (
           <AdminRoute>
             <FeedbackDashboard />
@@ -353,7 +361,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/settings",
+        path: '/admin/settings',
         element: (
           <AdminRoute>
             <AdminSettings />
@@ -363,12 +371,12 @@ const router = createBrowserRouter([
 
       // Secret Admin Auth
       {
-        path: "/secret-access-portal-v1",
-        element: <SecretAdminAuth />
+        path: '/secret-access-portal-v1',
+        element: <SecretAdminAuth />,
       },
 
       {
-        path: "*",
+        path: '*',
         element: <Navigate to="/" replace />,
       },
     ],

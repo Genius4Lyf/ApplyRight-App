@@ -1,7 +1,7 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Mail, MessageSquare, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Mail, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Contact = () => {
   return (
@@ -15,9 +15,7 @@ const Contact = () => {
             <ArrowLeft size={20} />
             <span className="font-medium">Back to Home</span>
           </Link>
-          <div className="font-bold text-xl tracking-tight text-indigo-600">
-            ApplyRight
-          </div>
+          <div className="font-bold text-xl tracking-tight text-indigo-600">ApplyRight</div>
         </div>
       </nav>
 
@@ -32,22 +30,17 @@ const Contact = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-indigo-600 text-white mb-6 shadow-xl shadow-indigo-200">
               <Mail size={40} />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Get in Touch
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Get in Touch</h1>
             <p className="text-xl text-slate-600">
               Have questions or feedback? We'd love to hear from you.
             </p>
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">
-              Support & Inquiries
-            </h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Support & Inquiries</h2>
             <p className="text-slate-600 mb-8 leading-relaxed">
-              For all support requests, business inquiries, or if you just want
-              to say hello, please email us directly. We aim to respond to all
-              messages within 24 hours.
+              For all support requests, business inquiries, or if you just want to say hello, please
+              email us directly. We aim to respond to all messages within 24 hours.
             </p>
 
             <a

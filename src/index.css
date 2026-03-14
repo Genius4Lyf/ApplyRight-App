@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
 
@@ -74,21 +74,19 @@
 /* Base Variable Definitions */
 @layer base {
   :root {
-    --color-primary: #4F46E5;
+    --color-primary: #4f46e5;
     /* Indigo 600 */
-    --color-secondary: #0F172A;
+    --color-secondary: #0f172a;
     /* Slate 900 */
-    --color-accent: #F59E0B;
+    --color-accent: #f59e0b;
     /* Amber 500 */
 
-    --color-background: #F8FAFC;
+    --color-background: #f8fafc;
     /* Slate 50 */
-    --color-surface: #FFFFFF;
-    --color-border: #E2E8F0;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
     /* Slate 200 */
   }
-
-
 
   html {
     scroll-behavior: smooth;
@@ -219,7 +217,7 @@
 }
 
 /* Remove any potential SVG strokes acting as borders */
-.recharts-surface path[name="background"] {
+.recharts-surface path[name='background'] {
   stroke: none !important;
   fill: none !important;
 }
