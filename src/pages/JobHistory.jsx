@@ -91,7 +91,7 @@ const JobHistory = () => {
     setGeneratingCV(true);
     try {
       const res = await api.post(`/analysis/${selectedApp._id}/generate-cv`);
-      updateSelectedApp({ optimizedCV: res.data.optimizedCV, skills: res.data.skills });
+      updateSelectedApp({ optimizedCV: res.data.optimizedCV, skills: res.data.skills, draftCVId: res.data.draftId });
       toast.success('CV generated successfully!');
       window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
     } catch (err) {
@@ -321,7 +321,7 @@ const JobHistory = () => {
                           </div>
                           {selectedApp.optimizedCV ? (
                             <button
-                              onClick={() => navigate(`/resume/${selectedApp._id}?tab=resume`)}
+                              onClick={() => navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`)}
                               className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
                             >
                               <Eye className="w-3.5 h-3.5" /> View & Download

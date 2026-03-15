@@ -782,7 +782,7 @@ const Dashboard = () => {
                 </p>
                 {application.optimizedCV ? (
                   <button
-                    onClick={() => navigate(`/resume/${application.applicationId}?tab=resume`)}
+                    onClick={() => navigate(`/resume/${application.draftId || application.applicationId}?tab=resume`)}
                     className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   >
                     <Eye className="w-4 h-4" /> View CV
