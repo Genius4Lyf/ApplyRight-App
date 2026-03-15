@@ -49,7 +49,12 @@ import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburton
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 
 const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState('cl'); // 'cl' or 'interview'
+  const [activeTab, setActiveTab] = useState(() => {
+    // Default to whichever tab has content
+    if (application?.coverLetter) return 'cl';
+    if (application?.interviewQuestions?.length > 0) return 'interview';
+    return 'cl';
+  });
   const [copied, setCopied] = useState(false);
   const [scale, setScale] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -324,6 +329,15 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
 
           {activeTab === 'interview' ? (
             <div className="bg-slate-50 rounded-xl p-8 min-h-[500px] border border-slate-100">
+              {!application.interviewQuestions && !application.questionsToAsk ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
+                  <MessageCircle className="w-12 h-12 text-slate-300 mb-4" />
+                  <h4 className="text-lg font-semibold text-slate-700 mb-2">Interview Prep Not Generated</h4>
+                  <p className="text-sm text-slate-500 max-w-md">
+                    Generate interview prep from the asset cards above to see role-specific questions and strategies.
+                  </p>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Column: Questions to Answer */}
                 <div>
@@ -369,12 +383,13 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                   ) : (
                     <div className="bg-white p-6 rounded-lg border border-dashed border-slate-300 text-center">
                       <p className="text-slate-500">
-                        Regenerate assets to see suggested questions.
+                        No suggested questions available.
                       </p>
                     </div>
                   )}
                 </div>
               </div>
+              )}
             </div>
           ) : (
             <div
@@ -407,24 +422,34 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
               ></div>
               <div className="text-slate-700 leading-relaxed">
                 {activeTab === 'cl' && (
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ node, ...props }) => (
-                        <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
-                      ),
-                      h2: ({ node, ...props }) => (
-                        <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />
-                      ),
-                      p: ({ node, ...props }) => (
-                        <p
-                          className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line"
-                          {...props}
-                        />
-                      ),
-                    }}
-                  >
-                    {application.coverLetter}
-                  </ReactMarkdown>
+                  application.coverLetter ? (
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => (
+                          <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p
+                            className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line"
+                            {...props}
+                          />
+                        ),
+                      }}
+                    >
+                      {application.coverLetter}
+                    </ReactMarkdown>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+                      <Mail className="w-12 h-12 text-slate-300 mb-4" />
+                      <h4 className="text-lg font-semibold text-slate-700 mb-2">Cover Letter Not Generated</h4>
+                      <p className="text-sm text-slate-500 max-w-md">
+                        Generate a cover letter from the asset cards above to see a tailored letter for this role.
+                      </p>
+                    </div>
+                  )
                 )}
               </div>
             </div>

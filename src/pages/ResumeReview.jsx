@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   Download,
@@ -56,12 +56,13 @@ import { Lock, Zap, PlayCircle, X, Loader, ZoomIn, ZoomOut } from 'lucide-react'
 const ResumeReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
   const [userProfile, setUserProfile] = useState(null);
   const [isDraftMode, setIsDraftMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('resume'); // 'resume' or 'cover-letter'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'resume'); // 'resume' or 'cover-letter'
   const [isDownloading, setIsDownloading] = useState(false);
   const [scale, setScale] = useState(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 0.5 : 1
@@ -1075,7 +1076,9 @@ const ResumeReview = () => {
                       </ReactMarkdown>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <p>No cover letter generated.</p>
+                        <Mail className="w-10 h-10 mb-3 text-slate-300" />
+                        <p className="font-medium text-slate-500">Cover letter not yet generated.</p>
+                        <p className="text-sm mt-1">Generate one from the Dashboard to see it here.</p>
                       </div>
                     )}
                   </div>

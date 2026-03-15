@@ -23,15 +23,16 @@ import {
   X,
   Zap,
   PlayCircle,
+  Mail,
+  MessageSquare,
+  RefreshCw,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
 import FitScoreCard from '../components/FitScoreCard';
-import TemplateSelector from '../components/TemplateSelector';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MonetagBanner from '../components/MonetagBanner';
-import LoadingWithAd from '../components/LoadingWithAd';
 import FeatureAnnouncementModal from '../components/FeatureAnnouncementModal';
 import { toast } from 'sonner';
 
@@ -51,11 +52,15 @@ const Dashboard = () => {
   const [resume, setResume] = useState(null);
   const [job, setJob] = useState(null);
   const [application, setApplication] = useState(null);
-  const [generating, setGenerating] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [fitResult, setFitResult] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('ats-clean');
   const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
+
+  // Asset generation loading states
+  const [generatingCV, setGeneratingCV] = useState(false);
+  const [generatingCL, setGeneratingCL] = useState(false);
+  const [generatingInterview, setGeneratingInterview] = useState(false);
 
   // New Feature State
   const [workflowMode, setWorkflowMode] = useState(null); // 'upload' (optimize), 'create-upload' (new feature)
@@ -140,26 +145,23 @@ const Dashboard = () => {
         jobId: job._id,
       });
       setFitResult(res.data);
-      setApplication(res.data);
+      // Store applicationId so we can call asset generation endpoints
+      setApplication({ applicationId: res.data.applicationId });
       if (res.data.job) {
-        setJob(res.data.job); // NEW: Update job state if backend refined it
+        setJob(res.data.job);
       }
-      console.log('✅ Dashboard: Analysis response:', res.data);
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
-      } else {
-        console.warn('⚠️ Dashboard: No remainingCredits in response');
       }
       return res.data;
     } catch (error) {
       if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
         handleInsufficientCredits(error.response.data.required, error.response.data.current);
-        // Don't re-throw if handled by modal, but we need to stop caller
         setAnalyzing(false);
         return;
       }
       console.error('Analysis failed', error);
-      throw error; // Re-throw to handle in caller
+      throw error;
     } finally {
       setAnalyzing(false);
     }
@@ -191,65 +193,88 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const handleGenerate = async () => {
+  const handleAnalyze = async () => {
     if (!resume || !job) return;
-
-    // Step 1: Analyze if not done (This now also generates assets)
-    if (!fitResult) {
-      try {
-        const result = await performAnalysis();
-
-        // Only show success if we actually got data back (not aborted due to insufficient credits)
-        if (result) {
-          toast.success('Analysis and Assets generated!');
-
-          // Scroll to the results
-          setTimeout(() => {
-            document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-        }
-      } catch (err) {
-        // Error handled in performAnalysis
-      }
-      return;
-    }
-
-    // Step 2: Re-Generate / Update (If user clicks again)
-    setGenerating(true);
     try {
-      const res = await api.post('/analysis/analyze', {
-        resumeId: resume._id,
-        jobId: job._id,
+      const result = await performAnalysis();
+      if (result) {
+        toast.success('Analysis complete!');
+        setTimeout(() => {
+          document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+        // Prompt for Auto-Analysis if currently disabled
+        if (!user?.settings?.autoGenerateAnalysis) {
+          setShowAutoAnalyzeModal(true);
+        }
+      }
+    } catch (err) {
+      // Error handled in performAnalysis
+    }
+  };
+
+  // Asset generation handlers
+  const handleGenerateCV = async () => {
+    if (!application?.applicationId) return;
+    setGeneratingCV(true);
+    try {
+      const res = await api.post(`/analysis/${application.applicationId}/generate-cv`, {
         templateId: selectedTemplate,
       });
-      setFitResult(res.data);
-      setApplication(res.data);
-      if (res.data.job) {
-        setJob(res.data.job);
-      }
-      console.log('✅ Dashboard: Regenerate response:', res.data);
+      setApplication((prev) => ({ ...prev, ...res.data }));
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
-      } else {
-        console.warn('⚠️ Dashboard: No remainingCredits in regenerate response');
       }
-      toast.success('Assets updated successfully!');
-
-      // Step 3: Prompt for Auto-Analysis if currently disabled
-      if (!user?.settings?.autoGenerateAnalysis) {
-        setShowAutoAnalyzeModal(true);
-      }
+      toast.success('Optimized CV generated!');
     } catch (error) {
-      console.error('Generation failed', error);
       if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
         handleInsufficientCredits(error.response.data.required, error.response.data.current);
-      } else if (error.response?.status === 403) {
-        toast.error(error.response.data.message);
       } else {
-        toast.error('Failed to generate application. Please try again.');
+        toast.error('Failed to generate CV. Please try again.');
       }
     } finally {
-      setGenerating(false);
+      setGeneratingCV(false);
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!application?.applicationId) return;
+    setGeneratingCL(true);
+    try {
+      const res = await api.post(`/analysis/${application.applicationId}/generate-cover-letter`);
+      setApplication((prev) => ({ ...prev, ...res.data }));
+      if (res.data.remainingCredits !== undefined) {
+        updateCredits(res.data.remainingCredits);
+      }
+      toast.success('Cover letter generated!');
+    } catch (error) {
+      if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
+        handleInsufficientCredits(error.response.data.required, error.response.data.current);
+      } else {
+        toast.error('Failed to generate cover letter. Please try again.');
+      }
+    } finally {
+      setGeneratingCL(false);
+    }
+  };
+
+  const handleGenerateInterview = async () => {
+    if (!application?.applicationId) return;
+    setGeneratingInterview(true);
+    try {
+      const res = await api.post(`/analysis/${application.applicationId}/generate-interview`);
+      setApplication((prev) => ({ ...prev, ...res.data }));
+      if (res.data.remainingCredits !== undefined) {
+        updateCredits(res.data.remainingCredits);
+      }
+      toast.success('Interview prep generated!');
+    } catch (error) {
+      if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
+        handleInsufficientCredits(error.response.data.required, error.response.data.current);
+      } else {
+        toast.error('Failed to generate interview prep. Please try again.');
+      }
+    } finally {
+      setGeneratingInterview(false);
     }
   };
 
@@ -264,6 +289,20 @@ const Dashboard = () => {
       updateCredits(current);
     }
     setShowCreditModal(true);
+  };
+
+  // "Generate New" — keep resume, reset job + analysis
+  const [jobInputKey, setJobInputKey] = useState(0);
+
+  const handleGenerateNew = () => {
+    setJob(null);
+    setFitResult(null);
+    setApplication(null);
+    setJobInputKey((k) => k + 1); // Force JobLinkInput to remount & clear
+    // Scroll back up
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const getStatusMessage = () => {
@@ -560,7 +599,7 @@ const Dashboard = () => {
             </button>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               <CVUploader onUploadSuccess={setResume} />
-              <JobLinkInput onJobExtracted={setJob} />
+              <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
             </div>
           </div>
         )}
@@ -716,45 +755,179 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Template Selection Section */}
-        {fitResult && (
+        {/* Asset Generation Section */}
+        {fitResult && application?.applicationId && (
           <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <div className="flex items-center gap-2 mb-6">
-              <Briefcase className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-slate-900">Choose Your Professional Style</h3>
+              <Zap className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-lg font-bold text-slate-900">Generate Professional Assets</h3>
             </div>
-            <TemplateSelector
-              selectedTemplate={selectedTemplate}
-              onSelect={setSelectedTemplate}
-              user={user}
-              onPreview={() => {
-                console.log('Attempting navigation. App:', application);
-                if (application?._id || application?.id || application?.applicationId) {
-                  navigate(
-                    `/resume/${application._id || application.id || application.applicationId}`
-                  );
-                } else {
-                  console.error('Navigation failed: No Application ID', application);
-                  const keys = application ? Object.keys(application).join(', ') : 'null';
-                  toast.error(`Error: ID missing. Available data: ${keys.substring(0, 50)}...`);
-                }
-              }}
-              isCompact={true}
-            />
+            <p className="text-sm text-slate-500 mb-6">
+              Choose which assets to generate. Each is created independently so you only pay for what you need.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Generate CV Card */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Optimized CV</h4>
+                    <p className="text-xs text-slate-500">ATS-optimized resume</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mb-4 flex-1">
+                  AI rewrites your resume with role-specific keywords, achievement-oriented bullets, and clean formatting.
+                </p>
+                {application.optimizedCV ? (
+                  <button
+                    onClick={() => navigate(`/resume/${application.applicationId}?tab=resume`)}
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  >
+                    <Eye className="w-4 h-4" /> View CV
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGenerateCV}
+                    disabled={generatingCV}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                    }`}
+                  >
+                    {generatingCV ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" /> Generate (10 Credits)
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Generate Cover Letter Card */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Cover Letter</h4>
+                    <p className="text-xs text-slate-500">Tailored to the role</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mb-4 flex-1">
+                  A personalized cover letter connecting your experience to the job requirements.
+                </p>
+                {application.coverLetter ? (
+                  <button
+                    onClick={() => navigate(`/resume/${application.applicationId}?tab=cover-letter`)}
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  >
+                    <Eye className="w-4 h-4" /> View Cover Letter
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGenerateCoverLetter}
+                    disabled={generatingCL}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                    }`}
+                  >
+                    {generatingCL ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" /> Generate (5 Credits)
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Generate Interview Prep Card */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Interview Prep</h4>
+                    <p className="text-xs text-slate-500">Questions & strategies</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mb-4 flex-1">
+                  Role-specific interview questions to practice, plus smart questions to ask the interviewer.
+                </p>
+                {application.interviewQuestions ? (
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('preview-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  >
+                    <Eye className="w-4 h-4" /> View Interview Prep
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGenerateInterview}
+                    disabled={generatingInterview}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      generatingInterview ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                    }`}
+                  >
+                    {generatingInterview ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" /> Generate (5 Credits)
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Preview Section (Moved Here) */}
-        {application && (
+        {/* Generate New Analysis Button */}
+        {fitResult && (
+          <div className="mb-12 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            <button
+              onClick={handleGenerateNew}
+              className="flex items-center gap-3 px-8 py-4 bg-white border-2 border-indigo-200 text-indigo-700 rounded-xl font-semibold hover:bg-indigo-50 hover:border-indigo-300 transition-all hover:scale-[1.02] shadow-sm"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>Generate New Analysis</span>
+                <span className="text-xs font-normal text-slate-500">Same resume, different job</span>
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Interview Preview — only show inline when interview questions exist */}
+        {application?.interviewQuestions && (
           <div
             id="preview-section"
             className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
           >
-            <Preview application={application} templateId={selectedTemplate} />
+            <Preview application={application} templateId="ats-clean" />
           </div>
         )}
 
-        {/* Final Generation Stage - Only show if in upload mode AND assets NOT generated yet */}
+        {/* Analyze Button - Only show if in upload mode AND not yet analyzed */}
         {workflowMode === 'upload' && !fitResult && (
           <div className="relative pt-8 flex flex-col items-center">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
@@ -765,28 +938,28 @@ const Dashboard = () => {
               )}
 
               <button
-                onClick={handleGenerate}
-                disabled={!resume || !job || generating || analyzing}
+                onClick={handleAnalyze}
+                disabled={!resume || !job || analyzing}
                 className={`
-                                    relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                                    ${
-                                      !resume || !job || generating || analyzing
-                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                        : 'btn-primary hover:scale-105 active:scale-95'
-                                    }
-                                `}
+                  relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
+                  ${
+                    !resume || !job || analyzing
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'btn-primary hover:scale-105 active:scale-95'
+                  }
+                `}
               >
-                {generating || analyzing ? (
+                {analyzing ? (
                   <>
                     <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                    {analyzing ? 'Analyzing Match...' : 'Optimizing Application...'}
+                    Analyzing Match...
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-3" />
                     <span className="flex flex-col items-start leading-tight">
-                      <span>Generate Professional Assets</span>
-                      <span className="text-xs font-normal opacity-80">Cost: 30 A.I Credits</span>
+                      <span>Analyze Fit</span>
+                      <span className="text-xs font-normal opacity-80">Cost: 10 A.I Credits</span>
                     </span>
                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </>
@@ -805,7 +978,7 @@ const Dashboard = () => {
               <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
                 {!analyzing && (
                   <>
-                    <CheckCircle className="w-4 h-4" /> Ready for optimization
+                    <CheckCircle className="w-4 h-4" /> Ready for analysis
                   </>
                 )}
               </p>
@@ -885,20 +1058,6 @@ const Dashboard = () => {
           </div>
         )}
       </main>
-
-      {/* Loading Overlay with  Ad - Shows during CV analysis generation */}
-      {generating && (
-        <LoadingWithAd
-          messages={[
-            'Getting templates ready...',
-            'Analyzing your CV...',
-            'Building your professional documents...',
-            'Optimizing for ATS compatibility...',
-            'Almost done...',
-          ]}
-          showProgress={false}
-        />
-      )}
 
       {/* Insufficient Credits Modal */}
       {showCreditModal && (

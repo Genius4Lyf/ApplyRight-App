@@ -3,11 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import Preview from './Preview';
-import { Calendar, Briefcase, Building, Sparkles, ArrowLeft, Trash2 } from 'lucide-react';
+import {
+  Calendar,
+  Briefcase,
+  Building,
+  Sparkles,
+  ArrowLeft,
+  Trash2,
+  FileText,
+  Mail,
+  MessageSquare,
+  CheckCircle,
+  Eye,
+} from 'lucide-react';
 
 import FitScoreCard from '../components/FitScoreCard';
-import TemplateSelector from '../components/TemplateSelector';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import { toast } from 'sonner';
 
 const JobHistory = () => {
   const navigate = useNavigate();
@@ -20,6 +32,9 @@ const JobHistory = () => {
   const [applicationToDelete, setApplicationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [generatingCV, setGeneratingCV] = useState(false);
+  const [generatingCL, setGeneratingCL] = useState(false);
+  const [generatingInterview, setGeneratingInterview] = useState(false);
 
   // Get user from local storage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -62,6 +77,69 @@ const JobHistory = () => {
       alert('Failed to delete application. Please try again.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const updateSelectedApp = (updates) => {
+    const updated = { ...selectedApp, ...updates };
+    setSelectedApp(updated);
+    setApplications((prev) => prev.map((a) => (a._id === updated._id ? updated : a)));
+  };
+
+  const handleGenerateCV = async () => {
+    if (!selectedApp) return;
+    setGeneratingCV(true);
+    try {
+      const res = await api.post(`/analysis/${selectedApp._id}/generate-cv`);
+      updateSelectedApp({ optimizedCV: res.data.optimizedCV, skills: res.data.skills });
+      toast.success('CV generated successfully!');
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+    } catch (err) {
+      if (err.response?.status === 403 && err.response.data.code === 'INSUFFICIENT_CREDITS') {
+        toast.error(`Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`);
+      } else {
+        toast.error('Failed to generate CV.');
+      }
+    } finally {
+      setGeneratingCV(false);
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!selectedApp) return;
+    setGeneratingCL(true);
+    try {
+      const res = await api.post(`/analysis/${selectedApp._id}/generate-cover-letter`);
+      updateSelectedApp({ coverLetter: res.data.coverLetter });
+      toast.success('Cover letter generated successfully!');
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+    } catch (err) {
+      if (err.response?.status === 403 && err.response.data.code === 'INSUFFICIENT_CREDITS') {
+        toast.error(`Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`);
+      } else {
+        toast.error('Failed to generate cover letter.');
+      }
+    } finally {
+      setGeneratingCL(false);
+    }
+  };
+
+  const handleGenerateInterview = async () => {
+    if (!selectedApp) return;
+    setGeneratingInterview(true);
+    try {
+      const res = await api.post(`/analysis/${selectedApp._id}/generate-interview`);
+      updateSelectedApp({ interviewQuestions: res.data.interviewQuestions, questionsToAsk: res.data.questionsToAsk });
+      toast.success('Interview prep generated!');
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+    } catch (err) {
+      if (err.response?.status === 403 && err.response.data.code === 'INSUFFICIENT_CREDITS') {
+        toast.error(`Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`);
+      } else {
+        toast.error('Failed to generate interview prep.');
+      }
+    } finally {
+      setGeneratingInterview(false);
     }
   };
 
@@ -134,13 +212,27 @@ const JobHistory = () => {
                     <span className="line-clamp-1">{app.jobId?.company || 'Unknown Company'}</span>
                   </div>
                   <div className="flex items-center gap-2 justify-between">
-                    <div className="flex gap-2">
-                      <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
-                        CV
-                      </span>
-                      <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
-                        Cover Letter
-                      </span>
+                    <div className="flex gap-2 flex-wrap">
+                      {app.optimizedCV && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-200">
+                          <FileText className="w-3 h-3" /> CV
+                        </span>
+                      )}
+                      {app.coverLetter && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 text-blue-600 text-xs font-medium border border-blue-200">
+                          <Mail className="w-3 h-3" /> Letter
+                        </span>
+                      )}
+                      {app.interviewQuestions && app.interviewQuestions.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-50 text-purple-600 text-xs font-medium border border-purple-200">
+                          <MessageSquare className="w-3 h-3" /> Interview
+                        </span>
+                      )}
+                      {!app.optimizedCV && !app.coverLetter && (!app.interviewQuestions || app.interviewQuestions.length === 0) && (
+                        <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 text-slate-400 text-xs font-medium border border-slate-200">
+                          Analysis only
+                        </span>
+                      )}
                     </div>
                     {app.fitScore !== undefined && (
                       <span
@@ -213,25 +305,108 @@ const JobHistory = () => {
                       </div>
                     )}
 
+                    {/* Generated Assets */}
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-slate-900 items-center flex gap-2">
-                          <Briefcase className="w-5 h-5 text-indigo-500" />
-                          Generated CV Templates
-                        </h3>
+                      <h3 className="text-lg font-bold text-slate-900 items-center flex gap-2 mb-4">
+                        <Briefcase className="w-5 h-5 text-indigo-500" />
+                        Generated Assets
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                        {/* CV Card */}
+                        <div className={`p-4 rounded-xl border ${selectedApp.optimizedCV ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className={`w-4 h-4 ${selectedApp.optimizedCV ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            <span className="text-sm font-semibold text-slate-700">Optimized CV</span>
+                          </div>
+                          {selectedApp.optimizedCV ? (
+                            <button
+                              onClick={() => navigate(`/resume/${selectedApp._id}?tab=resume`)}
+                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> View & Download
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleGenerateCV}
+                              disabled={generatingCV}
+                              className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              }`}
+                            >
+                              {generatingCV ? (
+                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
+                              ) : (
+                                <><Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Cover Letter Card */}
+                        <div className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600' : 'text-slate-400'}`} />
+                            <span className="text-sm font-semibold text-slate-700">Cover Letter</span>
+                          </div>
+                          {selectedApp.coverLetter ? (
+                            <button
+                              onClick={() => navigate(`/resume/${selectedApp._id}?tab=cover-letter`)}
+                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> View & Download
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleGenerateCoverLetter}
+                              disabled={generatingCL}
+                              className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              }`}
+                            >
+                              {generatingCL ? (
+                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
+                              ) : (
+                                <><Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Interview Prep Card */}
+                        <div className={`p-4 rounded-xl border ${selectedApp.interviewQuestions?.length > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className={`w-4 h-4 ${selectedApp.interviewQuestions?.length > 0 ? 'text-purple-600' : 'text-slate-400'}`} />
+                            <span className="text-sm font-semibold text-slate-700">Interview Prep</span>
+                          </div>
+                          {selectedApp.interviewQuestions?.length > 0 ? (
+                            <div className="flex items-center gap-1.5 mt-2 text-xs text-purple-600 font-medium">
+                              <CheckCircle className="w-3.5 h-3.5" /> {selectedApp.interviewQuestions.length} questions ready
+                            </div>
+                          ) : (
+                            <button
+                              onClick={handleGenerateInterview}
+                              disabled={generatingInterview}
+                              className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                generatingInterview ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              }`}
+                            >
+                              {generatingInterview ? (
+                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
+                              ) : (
+                                <><Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)</>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="mb-6">
-                        <TemplateSelector
-                          selectedTemplate={selectedTemplate}
-                          onSelect={setSelectedTemplate}
-                          userPlan={user.plan || 'free'}
-                          onPreview={() => navigate(`/resume/${selectedApp._id}`)}
-                          isCompact={true}
-                        />
-                      </div>
-
-                      <Preview application={selectedApp} templateId={selectedTemplate} />
+                      {/* Interview Questions Inline (since ResumeReview doesn't have interview tab) */}
+                      {selectedApp.interviewQuestions?.length > 0 && (
+                        <div className="mt-6">
+                          <Preview application={selectedApp} templateId={selectedTemplate} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
