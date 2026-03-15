@@ -404,17 +404,17 @@ const Dashboard = () => {
                 setApplication(null);
                 setWorkflowMode('upload');
               }}
-              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden"
+              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden flex flex-col"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
                 <UploadIcon className="w-7 h-7" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">ApplyRight</h3>
-              <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
+              <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
                 Run a check on your target job to see if you are qualified. We will analyze the requirements and tailor your CV to perfectly match the role.
               </p>
-              <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
+              <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
                 Check your CV <ChevronRight className="w-5 h-5 ml-1" />
               </div>
             </div>
@@ -422,7 +422,7 @@ const Dashboard = () => {
             {/* Option 2: Create New */}
             <div
               onClick={() => setShowCreateOptions(true)}
-              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden flex flex-col"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
               <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
@@ -431,11 +431,11 @@ const Dashboard = () => {
               <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
                 Create a new CV
               </h3>
-              <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
+              <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
                 Build a professional resume. Start from scratch or upload an existing CV to let our
                 AI do the heavy lifting.
               </p>
-              <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
+              <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
                 Start Builder <ChevronRight className="w-5 h-5 ml-1" />
               </div>
             </div>
