@@ -387,10 +387,12 @@ import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
   return (
-    <HelmetProvider>
-      <RouterProvider router={router} />
-      <Toaster position="top-right" richColors />
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" richColors />
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 

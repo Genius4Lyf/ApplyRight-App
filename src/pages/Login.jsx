@@ -85,10 +85,14 @@ const Login = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5"
+                >
                   Email Address
                 </label>
                 <input
+                  id="email"
                   name="email"
                   type="email"
                   required
@@ -101,7 +105,9 @@ const Login = () => {
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1.5 ml-0.5">
-                  <label className="block text-sm font-medium text-slate-700">Password</label>
+                  <label htmlFor="password" class="block text-sm font-medium text-slate-700">
+                    Password
+                  </label>
                   <Link
                     to="/forgot-password"
                     className="text-xs text-primary hover:underline font-medium"
@@ -111,6 +117,7 @@ const Login = () => {
                 </div>
                 <div className="relative">
                   <input
+                    id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
