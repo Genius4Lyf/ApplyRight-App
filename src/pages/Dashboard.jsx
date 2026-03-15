@@ -412,11 +412,10 @@ const Dashboard = () => {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">ApplyRight</h3>
               <p className="text-slate-500 leading-relaxed mb-6 relative z-10">
-                Already have a resume? Upload it to get an instant AI analysis and fit score against
-                your target job description.
+                Run a check on your target job to see if you are qualified. We will analyze the requirements and tailor your CV to perfectly match the role.
               </p>
               <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
-                Upload PDF <ChevronRight className="w-5 h-5 ml-1" />
+                Check your CV <ChevronRight className="w-5 h-5 ml-1" />
               </div>
             </div>
 
