@@ -13,6 +13,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import JobSearch from './pages/JobSearch';
 import JobHistory from './pages/JobHistory';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
@@ -242,6 +243,16 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <Onboarding />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/jobs',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <JobSearch />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),

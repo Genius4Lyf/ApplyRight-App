@@ -34,6 +34,7 @@ import FitScoreCard from '../components/FitScoreCard';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MonetagBanner from '../components/MonetagBanner';
 import FeatureAnnouncementModal from '../components/FeatureAnnouncementModal';
+import JobRecommendations from '../components/jobs/JobRecommendations';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -505,6 +506,13 @@ const Dashboard = () => {
         {/* {!workflowMode && (
                     <MonetagBanner style={{ marginBottom: '2rem' }} />
                 )} */}
+
+        {/* Job Recommendations Widget */}
+        {!workflowMode && (
+          <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <JobRecommendations />
+          </div>
+        )}
 
         {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
         {!workflowMode && myDrafts.length > 0 && (

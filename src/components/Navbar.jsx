@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, History, Zap, User, Menu, X, PlayCircle } from 'lucide-react';
+import { Sparkles, LogOut, History, Zap, User, Menu, X, PlayCircle, Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 
@@ -92,6 +92,13 @@ const Navbar = () => {
             >
               <Zap className="w-4 h-4" />
               <span className="hidden sm:inline">Get Hired</span>
+            </Link>
+            <Link
+              to="/jobs"
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/jobs') ? 'text-primary' : 'text-slate-500 hover:text-slate-900'}`}
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Find Jobs</span>
             </Link>
             <Link
               to="/history"
@@ -214,6 +221,14 @@ const Navbar = () => {
               >
                 <Zap className="w-5 h-5" />
                 <span className="font-medium">Get Hired</span>
+              </Link>
+              <Link
+                to="/jobs"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/jobs') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Search className="w-5 h-5" />
+                <span className="font-medium">Find Jobs</span>
               </Link>
               <Link
                 to="/history"
