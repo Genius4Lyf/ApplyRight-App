@@ -105,7 +105,7 @@ const Login = () => {
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1.5 ml-0.5">
-                  <label htmlFor="password" class="block text-sm font-medium text-slate-700">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                     Password
                   </label>
                   <Link
