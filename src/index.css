@@ -202,6 +202,110 @@
   }
 }
 
+/* Job Description Styling */
+.job-description h1,
+.job-description h2,
+.job-description h3,
+.job-description h4,
+.job-description h5,
+.job-description h6 {
+  @apply font-semibold text-slate-800 mt-4 mb-2 first:mt-0;
+}
+
+.job-description h1,
+.job-description h2 {
+  @apply text-base;
+}
+
+.job-description h3,
+.job-description h4 {
+  @apply text-sm;
+}
+
+.job-description h5,
+.job-description h6 {
+  @apply text-xs uppercase tracking-wide text-slate-500;
+}
+
+.job-description p {
+  @apply mb-2 last:mb-0 leading-relaxed;
+}
+
+.job-description svg {
+  @apply inline-block w-4 h-4 mr-1.5 align-middle shrink-0 text-slate-400;
+  max-width: 1rem;
+  max-height: 1rem;
+}
+
+.job-description img {
+  @apply max-w-full h-auto rounded-md my-4;
+}
+
+/* Specific fix for elements losing their flex layouts */
+.job-description > div {
+  @apply my-3;
+}
+
+.job-description ul,
+.job-description ol {
+  @apply my-2 ml-4 space-y-1;
+}
+
+.job-description ul {
+  @apply list-disc;
+}
+
+.job-description ol {
+  @apply list-decimal;
+}
+
+.job-description li {
+  @apply pl-1 leading-relaxed;
+}
+
+.job-description li::marker {
+  @apply text-indigo-400;
+}
+
+.job-description a {
+  @apply text-indigo-600 underline hover:text-indigo-800 transition-colors;
+}
+
+/* Custom styling for Jobberman metadata tags converted to spans */
+.job-description span[data-badge="true"] {
+  @apply inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium mr-2 mb-3 border border-slate-200 transition-colors;
+}
+
+.job-description span[data-badge="true"]:hover {
+  @apply bg-slate-200 text-slate-700;
+}
+
+.job-description strong,
+.job-description b {
+  @apply font-semibold text-slate-700;
+}
+
+.job-description br + br {
+  @apply hidden;
+}
+
+.job-description table {
+  @apply w-full border-collapse my-3 text-xs;
+}
+
+.job-description th,
+.job-description td {
+  @apply border border-slate-200 px-2 py-1.5 text-left;
+}
+
+.job-description th {
+  @apply bg-slate-50 font-semibold text-slate-700;
+}
+
+.job-description hr {
+  @apply my-3 border-slate-200;
+}
+
 /* Global Recharts overrides */
 .recharts-wrapper,
 .recharts-surface,

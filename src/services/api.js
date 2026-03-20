@@ -27,11 +27,13 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Redirect to login
-      window.location.href = '/login';
+      const isAuthRequest = error.config.url?.includes('/auth/login') || error.config.url?.includes('/auth/register');
+      if (!isAuthRequest) {
+        // Token expired or invalid — redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
