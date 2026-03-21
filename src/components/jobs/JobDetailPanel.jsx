@@ -434,6 +434,7 @@ const JobDetailPanel = ({
                 resultId={result._id}
                 jobTitle={result.title}
                 company={result.company}
+                jobDescription={fullDescription || result.snippet}
                 userCVs={userCVs}
                 onSuccess={onTailorSuccess}
               />

@@ -1,14 +1,17 @@
 import React from 'react';
-import { useOutletContext, useNavigate, useParams } from 'react-router-dom';
+import { useOutletContext, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import TailorDiffView from '../../components/cv/TailorDiffView';
 
 const Finalize = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleBack, saving } = context || {};
+  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob } = context || {};
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const atsScores = location.state?.atsScores;
 
   const handlePreview = () => {
     if (!id || id === 'new') {
@@ -119,6 +122,16 @@ const Finalize = () => {
           </div>
         )}
       </div>
+
+      {/* Tailor Diff View (shown for tailored CVs) */}
+      {tailoredFrom && cvData && (
+        <TailorDiffView
+          originalCVId={tailoredFrom}
+          currentCVData={cvData}
+          tailoredForJob={tailoredForJob}
+          atsScores={atsScores}
+        />
+      )}
 
       <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button

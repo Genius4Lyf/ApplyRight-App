@@ -535,7 +535,7 @@ const Dashboard = () => {
                 return (
                   <div
                     key={draft._id}
-                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group"
+                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group flex flex-col h-full"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div
@@ -557,7 +557,7 @@ const Dashboard = () => {
                     <p className="text-xs text-slate-500 mb-4 line-clamp-2">
                       {draft.professionalSummary || 'No summary yet...'}
                     </p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-auto">
                       <div
                         onClick={() =>
                           navigate(isComplete ? `/resume/${draft._id}` : `/cv-builder/${draft._id}`)

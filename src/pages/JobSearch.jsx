@@ -61,7 +61,10 @@ const JobSearch = () => {
   const loadUserCVs = async () => {
     try {
       const drafts = await CVService.getMyDrafts();
-      setUserCVs(drafts.filter((d) => d.isComplete));
+      setUserCVs(drafts.filter((d) =>
+        d.isComplete ||
+        (d.personalInfo?.fullName && d.experience?.length > 0)
+      ));
     } catch (error) {
       console.error('Failed to load CVs', error);
     }
@@ -242,7 +245,9 @@ const JobSearch = () => {
       toast.success('Tailored CV created! View it in your CVs.', {
         action: {
           label: 'Open CV',
-          onClick: () => navigate(`/cv-builder/${result.tailoredCV._id}/finalize`),
+          onClick: () => navigate(`/cv-builder/${result.tailoredCV._id}/finalize`, {
+            state: { atsScores: result.atsScores },
+          }),
         },
       });
     }

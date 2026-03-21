@@ -35,6 +35,10 @@ const jobSearchService = {
   getSavedJobs: (page = 1, limit = 10) =>
     api.get(`/job-search/saved?page=${page}&limit=${limit}`).then((r) => r.data),
 
+  // Quick ATS score (no credits)
+  quickScore: (searchId, resultId, cvId) =>
+    api.post(`/job-search/${searchId}/quick-score/${resultId}`, { cvId }).then((r) => r.data),
+
   // Tailor CV for a job (costs credits)
   tailorCV: (searchId, resultId, cvId) =>
     api.post(`/job-search/${searchId}/tailor/${resultId}`, { cvId }).then((r) => r.data),

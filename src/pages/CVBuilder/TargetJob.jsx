@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Target, ArrowRight, AlertCircle, X } from 'lucide-react';
 
@@ -14,8 +14,20 @@ const TargetJob = () => {
 
   const [formData, setFormData] = useState(cvData.targetJob || { title: '', description: '' });
   const [showModal, setShowModal] = useState(false);
+  const hasUserEdited = useRef(false);
+
+  // Sync prefilled data from CVContext (e.g. when navigating from job search)
+  useEffect(() => {
+    if (!hasUserEdited.current && cvData.targetJob) {
+      const { title, description } = cvData.targetJob;
+      if (title || description) {
+        setFormData({ title: title || '', description: description || '' });
+      }
+    }
+  }, [cvData.targetJob?.title, cvData.targetJob?.description]);
 
   const handleChange = (e) => {
+    hasUserEdited.current = true;
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };

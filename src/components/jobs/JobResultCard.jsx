@@ -16,13 +16,13 @@ const JobResultCard = ({ result, searchId, onViewDetails, onToggleSave, onApplyC
 
   return (
     <div
-      className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
+      className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group flex flex-col h-full"
       onClick={() => onViewDetails(result)}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 h-full">
         <MatchScoreBadge score={result.matchScore} />
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col h-full">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-semibold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">
               {result.title}
@@ -64,7 +64,7 @@ const JobResultCard = ({ result, searchId, onViewDetails, onToggleSave, onApplyC
             <p className="mt-2 text-xs text-slate-500 line-clamp-2">{result.snippet}</p>
           )}
 
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between mt-auto pt-3">
             <div className="flex items-center gap-2">
               <span
                 className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${

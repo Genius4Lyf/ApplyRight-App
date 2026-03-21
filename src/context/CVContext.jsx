@@ -67,6 +67,56 @@ export const CVBuilderProvider = ({ children }) => {
     };
   }, []);
 
+  // W1: Pre-fill job data when creating new CV from job search
+  useEffect(() => {
+    if (id === 'new' && location.state?.prefillJob) {
+      const { title, company, description } = location.state.prefillJob;
+      // Strip HTML tags and collapse whitespace for clean plain text
+      let plainDescription = '';
+      if (description) {
+        const doc = new DOMParser().parseFromString(description, 'text/html');
+        // Remove junk sections (safety tips, share links, apply buttons)
+        doc.querySelectorAll('script, style, iframe, form, button, img, svg').forEach((el) => el.remove());
+        const raw = doc.body.textContent || '';
+        // Lines to strip from Jobberman descriptions
+        const JUNK_LINES = [
+          'log in and apply',
+          'easy apply',
+          'important safety tips',
+          'do not make any payment without confirming',
+          'if you think this advert is not genuine',
+          'report job',
+          'share link',
+          'share on whatsapp',
+          'share on linkedin',
+          'share on facebook',
+          'share on twitter',
+          'job summary',
+        ];
+        // Collapse whitespace, remove junk lines, clean up
+        plainDescription = raw
+          .split(/\n/)
+          .map((line) => line.replace(/\s+/g, ' ').trim())
+          .filter((line) => {
+            if (!line) return false;
+            const lower = line.toLowerCase();
+            return !JUNK_LINES.some((junk) => lower.includes(junk));
+          })
+          .join('\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+      setCvData((prev) => ({
+        ...prev,
+        title: title ? `CV for ${title}${company ? ` at ${company}` : ''}` : prev.title,
+        targetJob: {
+          title: title || '',
+          description: plainDescription,
+        },
+      }));
+    }
+  }, [id, location.state]);
+
   // Load Draft Data
   useEffect(() => {
     const loadDraft = async () => {
@@ -227,6 +277,9 @@ export const CVBuilderProvider = ({ children }) => {
     currentStep: STEPS[currentStepIndex],
     currentStepIndex,
     steps: STEPS,
+    isTailored: !!cvData.tailoredFrom,
+    tailoredFrom: cvData.tailoredFrom,
+    tailoredForJob: cvData.tailoredForJob,
   };
 
   return <CVBuilderContext.Provider value={value}>{children}</CVBuilderContext.Provider>;
