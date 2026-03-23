@@ -1160,7 +1160,7 @@ const ResumeReview = () => {
                     <h3 className="font-bold text-indigo-900 text-sm">AI Analysis</h3>
                     <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
                       Your fit score is <strong>{application.fitScore}%</strong>. This application
-                      is optimized for {application.jobId?.title || 'the role'}.
+                      is optimized for {application.jobId?.title || application.jobTitle || 'the role'}.
                     </p>
                   </div>
                 </div>

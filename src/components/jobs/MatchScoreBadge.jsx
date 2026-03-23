@@ -1,15 +1,16 @@
 import React from 'react';
+import logo from '../../assets/logo/applyright-icon.png';
 
 const MatchScoreBadge = ({ score, size = 'md' }) => {
   if (score === null || score === undefined) {
     return (
       <div
-        className={`inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-400 font-semibold border border-slate-200 ${
-          size === 'sm' ? 'w-8 h-8 text-xs' : size === 'lg' ? 'w-14 h-14 text-base' : 'w-10 h-10 text-sm'
+        className={`inline-flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 overflow-hidden ${
+          size === 'sm' ? 'w-8 h-8' : size === 'lg' ? 'w-14 h-14' : 'w-10 h-10'
         }`}
-        title="No CV available for scoring"
+        title="Pending Match Score"
       >
-        --
+        <img src={logo} alt="ApplyRight" className="w-[60%] h-[60%] object-contain" />
       </div>
     );
   }
