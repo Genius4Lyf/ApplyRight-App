@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, ArrowRight, Loader2, TrendingUp } from 'lucide-react';
+import { Briefcase, ArrowRight, Loader2, TrendingUp, Globe, MapPin } from 'lucide-react';
 import MatchScoreBadge from './MatchScoreBadge';
 import jobSearchService from '../../services/jobSearchService';
 
@@ -96,29 +96,46 @@ const JobRecommendations = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {jobs.slice(0, 6).map((job) => (
-          <div
-            key={job.externalId || job._id}
-            onClick={() => navigate('/jobs')}
-            className="p-3 rounded-lg border border-slate-100 hover:border-indigo-200 hover:shadow-sm cursor-pointer transition-all group"
-          >
-            <div className="flex items-start gap-2">
-              {job.matchScore != null && (
-                <MatchScoreBadge score={job.matchScore} size="sm" />
-              )}
-              <div className="min-w-0">
-                <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                  {job.title}
-                </h4>
-                <p className="text-xs text-slate-500 line-clamp-1">{job.company}</p>
-                {job.location && (
-                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{job.location}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {jobs.slice(0, 6).map((job) => {
+          const isGlobal = job.source !== 'jobberman';
+
+          return (
+            <div
+              key={job.externalId || job._id}
+              onClick={() => navigate('/jobs')}
+              className="bg-white p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 group flex flex-col justify-between min-h-[110px]"
+            >
+              <div className="flex items-start gap-3 mb-3">
+                {job.matchScore != null && (
+                  <MatchScoreBadge score={job.matchScore} size="sm" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                    {job.title}
+                  </h4>
+                  <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{job.company}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
+                <span className="text-xs text-slate-400 line-clamp-1 flex-1 pr-3">
+                  {job.location || 'Location missing'}
+                </span>
+
+                {isGlobal ? (
+                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md shrink-0 border border-indigo-100/50">
+                    <Globe className="w-3 h-3" /> Global
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md shrink-0 border border-emerald-100/50">
+                    <MapPin className="w-3 h-3" /> Local
+                  </span>
                 )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
