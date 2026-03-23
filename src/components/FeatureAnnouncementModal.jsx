@@ -1,37 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, X, CheckCircle, ArrowRight } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Sparkles, X, CheckCircle, ArrowRight, Briefcase, Search } from 'lucide-react';
 
 const FeatureAnnouncementModal = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenUpdate = localStorage.getItem('hasSeenSkillsUpdate_v2');
+    const hasSeenUpdate = localStorage.getItem('hasSeenJobsFeatureUpdate_v1');
     if (!hasSeenUpdate) {
-      // Short delay to allow dashboard to load
+      // Short delay to allow DOM to settle
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 1500);
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, []);
 
   const handleClose = () => {
     setIsOpen(false);
-    localStorage.setItem('hasSeenSkillsUpdate_v2', 'true');
+    localStorage.setItem('hasSeenJobsFeatureUpdate_v1', 'true');
   };
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto overflow-x-hidden relative animate-in zoom-in-95 duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative animate-in zoom-in-95 duration-300">
         {/* Header Background */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-600 to-violet-600"></div>
 
         {/* Content */}
         <div className="relative z-10 pt-12 px-8 pb-8">
           <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-6 mx-auto">
-            <Sparkles className="w-8 h-8 text-indigo-600" />
+            <Briefcase className="w-8 h-8 text-indigo-600" />
           </div>
 
           <button
@@ -41,46 +42,35 @@ const FeatureAnnouncementModal = () => {
             <X className="w-6 h-6" />
           </button>
 
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Intelligent Skills Engine</h2>
-            <p className="text-slate-500">
-              We've upgraded our core analysis engine to provide professional-grade skill
-              categorization automatically.
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Introducing ApplyRight Jobs & Tailoring</h2>
+            <p className="text-slate-500 max-w-lg mx-auto">
+              We've launched a powerful new Jobs platform tightly integrated with One-Click CV Tailoring to help you land more interviews.
             </p>
           </div>
 
-          <div className="space-y-4 mb-8">
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4">
-              <div className="mt-1 bg-indigo-100 p-1.5 rounded-full text-indigo-600">
-                <Sparkles className="w-4 h-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col gap-3">
+              <div className="w-8 h-8 bg-indigo-100 rounded-full text-indigo-600 flex items-center justify-center shrink-0">
+                <Search className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">Automated Categorization</h4>
+                <h4 className="font-bold text-slate-900 text-sm">Global Job Search</h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  Your skills are now automatically extracted, structured, and categorized
-                  (Technical, Soft Skills, Tools) to match industry standards.
+                  Browse thousands of remote, local, and global opportunities. ApplyRight now curates a "For You" feed matching your unique skills and preferences.
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4">
-              <div className="mt-1 bg-emerald-100 p-1.5 rounded-full text-emerald-600">
-                <CheckCircle className="w-4 h-4" />
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col gap-3">
+              <div className="w-8 h-8 bg-emerald-100 rounded-full text-emerald-600 flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">Credit Usage</h4>
+                <h4 className="font-bold text-slate-900 text-sm">One-Click CV Tailoring</h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  Our advanced AI models now power the Intelligent Skills feature (10 A.I Credits).
-                  Here is the current credit usage:
+                  Found a job you like? Our AI instantly analyzes the job description and tailors your CV to highlight the perfect matching skills and experience, dramatically boosting your ATS score.
                 </p>
-                <div className="flex gap-4 mt-2">
-                  <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                    Upload: <span className="text-slate-900">15 A.I Credits</span>
-                  </span>
-                  <span className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600">
-                    Analysis: <span className="text-slate-900">30 A.I Credits</span>
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -93,7 +83,8 @@ const FeatureAnnouncementModal = () => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

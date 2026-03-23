@@ -4,6 +4,7 @@ import { Search, Briefcase, Bookmark, Globe, MapPin, Sparkles, TrendingUp, Chevr
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
 import JobSearchBar from '../components/jobs/JobSearchBar';
+import FeatureAnnouncementModal from '../components/FeatureAnnouncementModal';
 import JobResultCard from '../components/jobs/JobResultCard';
 import JobDetailPanel from '../components/jobs/JobDetailPanel';
 import OnboardingForm from '../components/jobs/OnboardingForm';
@@ -267,6 +268,7 @@ const JobSearch = () => {
     <div className="min-h-screen bg-slate-50">
       <Navbar />
       <GlobalBanner />
+      <FeatureAnnouncementModal />
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
