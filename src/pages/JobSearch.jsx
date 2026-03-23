@@ -241,17 +241,19 @@ const JobSearch = () => {
   };
 
   const handleTailorSuccess = (result) => {
-    if (result.tailoredCV) {
-      toast.success('Tailored CV created! View it in your CVs.', {
-        action: {
-          label: 'Open CV',
-          onClick: () => navigate(`/cv-builder/${result.tailoredCV._id}/finalize`, {
-            state: { atsScores: result.atsScores },
-          }),
-        },
-      });
-    }
     loadUserCVs();
+
+    if (result.tailoredCV) {
+      const isBundle = !!result.applicationId;
+      toast.success(isBundle
+        ? 'Bundle created! Review what changed, then preview your CV + Cover Letter.'
+        : 'Tailored CV created! Redirecting to review...'
+      );
+      navigate(`/cv-builder/${result.tailoredCV._id}/finalize`, {
+        state: { atsScores: result.atsScores, isBundle },
+      });
+      return;
+    }
   };
 
   // Current display data

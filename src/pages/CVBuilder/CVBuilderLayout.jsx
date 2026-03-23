@@ -80,7 +80,7 @@ const CVBuilderInner = () => {
           {/* Step Content */}
           <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[500px] p-4 md:p-8">
-              <Outlet context={{ cvData, handleNext, handleBack, saving, user, updateCvData }} />
+              <Outlet context={{ cvData, handleNext, handleBack, saving, user, updateCvData, tailoredFrom: cvData.tailoredFrom, tailoredForJob: cvData.tailoredForJob }} />
             </div>
           </div>
         </div>

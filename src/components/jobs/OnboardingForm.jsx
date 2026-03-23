@@ -1,32 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target, MapPin, Briefcase, Code, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Country, City } from 'country-state-city';
 import jobSearchService from '../../services/jobSearchService';
-
-const COUNTRIES = [
-  { code: 'NG', label: 'Nigeria' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'US', label: 'United States' },
-  { code: 'CA', label: 'Canada' },
-  { code: 'AU', label: 'Australia' },
-  { code: 'DE', label: 'Germany' },
-  { code: 'FR', label: 'France' },
-  { code: 'IN', label: 'India' },
-  { code: 'ZA', label: 'South Africa' },
-  { code: 'NL', label: 'Netherlands' },
-];
+import CustomSelect from '../ui/CustomSelect';
+import RoleCombobox from '../ui/RoleCombobox';
 
 const POPULAR_SKILLS = [
-  'JavaScript', 'Python', 'React', 'Node.js', 'Java', 'TypeScript',
-  'SQL', 'Excel', 'Project Management', 'Data Analysis',
-  'Communication', 'Marketing', 'Design', 'AWS', 'Machine Learning',
-  'Accounting', 'Customer Service', 'Sales', 'HTML/CSS', 'Git',
+  'JavaScript', 'Python', 'React', 'Project Management', 'Data Analysis',
+  'Marketing', 'Sales', 'Graphic Design', 'Financial Modeling', 'B2B Sales',
+  'AWS', 'SEO', 'Public Relations', 'Copywriting', 'Accounting',
+  'Customer Service', 'Machine Learning', 'Operations', 'HTML/CSS', 'Git'
 ];
 
 const OnboardingForm = ({ onComplete, compact = false }) => {
   const [formData, setFormData] = useState({
     desiredTitle: '',
-    country: 'NG',
+    country: '',
     city: '',
     remote: false,
     jobType: 'fulltime',
@@ -38,6 +28,31 @@ const OnboardingForm = ({ onComplete, compact = false }) => {
   });
   const [skillInput, setSkillInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [cities, setCities] = useState([]);
+
+  useEffect(() => {
+    // Auto-detect country via IP
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.country) {
+          setFormData(prev => prev.country ? prev : { ...prev, country: data.country });
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Load cities when country changes
+    if (formData.country) {
+      const cityData = City.getCitiesOfCountry(formData.country);
+      setCities(cityData.map(c => ({ value: c.name, label: c.name })));
+      // Reset city if it isn't available in newly selected country
+      setFormData(prev => ({ ...prev, city: '' }));
+    } else {
+      setCities([]);
+    }
+  }, [formData.country]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -137,42 +152,36 @@ const OnboardingForm = ({ onComplete, compact = false }) => {
           <Target className="w-4 h-4 inline mr-1" />
           What role are you looking for? *
         </label>
-        <input
-          name="desiredTitle"
+        <RoleCombobox
           value={formData.desiredTitle}
           onChange={handleChange}
-          placeholder="e.g. Frontend Developer, Data Analyst, Marketing Manager"
-          className="input-field w-full"
-          required
+          placeholder="Type a role or select from the list..."
         />
       </div>
 
       {/* Location */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 relative z-40">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             <MapPin className="w-4 h-4 inline mr-1" />
             Country
           </label>
-          <select
+          <CustomSelect
             name="country"
             value={formData.country}
             onChange={handleChange}
-            className="input-field w-full"
-          >
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>{c.label}</option>
-            ))}
-          </select>
+            options={Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name }))}
+            placeholder="Select Country"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">City</label>
-          <input
+          <CustomSelect
             name="city"
             value={formData.city}
             onChange={handleChange}
-            placeholder="e.g. Lagos, London"
-            className="input-field w-full"
+            options={cities}
+            placeholder={cities.length > 0 ? "Select City" : "Select Country first"}
           />
         </div>
       </div>
@@ -189,26 +198,36 @@ const OnboardingForm = ({ onComplete, compact = false }) => {
       </label>
 
       {/* Job Type & Experience */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 relative z-30">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             <Briefcase className="w-4 h-4 inline mr-1" />
             Job Type
           </label>
-          <select name="jobType" value={formData.jobType} onChange={handleChange} className="input-field w-full">
-            <option value="fulltime">Full-time</option>
-            <option value="parttime">Part-time</option>
-            <option value="contract">Contract</option>
-            <option value="internship">Internship</option>
-          </select>
+          <CustomSelect
+            name="jobType"
+            value={formData.jobType}
+            onChange={handleChange}
+            options={[
+              { value: 'fulltime', label: 'Full-time' },
+              { value: 'parttime', label: 'Part-time' },
+              { value: 'contract', label: 'Contract' },
+              { value: 'internship', label: 'Internship' }
+            ]}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Experience Level</label>
-          <select name="experienceLevel" value={formData.experienceLevel} onChange={handleChange} className="input-field w-full">
-            <option value="entry">Entry Level</option>
-            <option value="mid">Mid Level</option>
-            <option value="senior">Senior Level</option>
-          </select>
+          <CustomSelect
+            name="experienceLevel"
+            value={formData.experienceLevel}
+            onChange={handleChange}
+            options={[
+              { value: 'entry', label: 'Entry Level' },
+              { value: 'mid', label: 'Mid Level' },
+              { value: 'senior', label: 'Senior Level' }
+            ]}
+          />
         </div>
       </div>
 

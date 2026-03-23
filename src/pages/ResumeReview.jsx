@@ -98,8 +98,23 @@ const ResumeReview = () => {
         // 1. Try fetching as Application (Standard flow)
         try {
           const res = await api.get('/applications');
-          const app = res.data.find((a) => a._id === id);
+          // Match by application ID or by linked draft CV ID (for bundles)
+          const app = res.data.find((a) => a._id === id || a.draftCVId === id);
           if (app) {
+            // If Application has draftCVId but no optimizedCV (bundle flow),
+            // fetch the draft and generate markdown from it
+            if (!app.optimizedCV && app.draftCVId) {
+              try {
+                const draft = await CVService.getDraftById(app.draftCVId);
+                if (draft) {
+                  const { optimizedCV } = generateMarkdownFromDraft(draft);
+                  app.optimizedCV = optimizedCV;
+                  app.personalInfo = draft.personalInfo;
+                }
+              } catch (e) {
+                console.error('Failed to load draft CV for bundle:', e);
+              }
+            }
             setApplication(app);
             if (app.templateId) setTemplateId(app.templateId);
             return; // Found application, exit
