@@ -10,6 +10,7 @@ import {
   Coins,
   MessageSquare,
   Search,
+  FileImage,
 } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon.png';
 import GlobalBanner from '../GlobalBanner';
@@ -23,6 +24,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/transactions', icon: Coins, label: 'Transactions' },
     { path: '/admin/job-searches', icon: Search, label: 'Job Searches' },
+    { path: '/admin/reports', icon: FileImage, label: 'Ad Reports' },
     { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];

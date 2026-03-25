@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { User, MessageSquare, Download, Star, Shield, Calendar } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { domToPng } from 'modern-screenshot';
 import { toast } from 'sonner';
 import logo from '../assets/logo/applyright-icon.png';
 
@@ -60,9 +60,9 @@ const FeedbackCard = ({
         wrapper.appendChild(clonedCard);
         await new Promise((resolve) => setTimeout(resolve, 50));
 
-        const dataUrl = await toPng(wrapper, {
+        const dataUrl = await domToPng(wrapper, {
           quality: 1.0,
-          pixelRatio: 3,
+          scale: 3,
           backgroundColor: null,
           width: width + 100,
           height: height + 100,

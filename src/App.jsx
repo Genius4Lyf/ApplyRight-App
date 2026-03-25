@@ -156,6 +156,7 @@ import AdminTransactions from './pages/Admin/AdminTransactions';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
 import AdminSettings from './pages/Admin/AdminSettings';
 import AdminJobSearches from './pages/Admin/AdminJobSearches';
+import AdminReportStudio from './pages/Admin/AdminReportStudio';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
 
 // ... existing router configuration ...
@@ -368,6 +369,14 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminJobSearches />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: '/admin/reports',
+        element: (
+          <AdminRoute>
+            <AdminReportStudio />
           </AdminRoute>
         ),
       },
