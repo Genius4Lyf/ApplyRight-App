@@ -1363,7 +1363,10 @@ const ResumeReview = () => {
                     return (
                       <div
                         key={t.id}
-                        onClick={() => setTemplateId(t.id)}
+                        onClick={() => {
+                          setTemplateId(t.id);
+                          setMobileSidebarOpen(false);
+                        }}
                         className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${
                           templateId === t.id
                             ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
