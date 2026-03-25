@@ -71,6 +71,7 @@ const ResumeReview = () => {
   ); // Default 50% on mobile
 
   const [error, setError] = useState(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
@@ -779,11 +780,11 @@ const ResumeReview = () => {
 
       <Navbar />
 
-      <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row lg:h-[calc(100vh-64px)] lg:overflow-hidden overflow-y-auto">
         {/* LEFT: Document Preview Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar p-8 flex justify-center bg-slate-100/50 relative">
+        <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100/50 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
           {/* Zoom Controls */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-20 bg-white/90 backdrop-blur shadow-xl border border-slate-200/60 p-1.5 rounded-full flex items-center gap-2">
+          <div className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 backdrop-blur shadow-xl border border-slate-200/60 p-1.5 rounded-full flex items-center gap-2">
             <button
               onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}
               className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
@@ -1111,19 +1112,61 @@ const ResumeReview = () => {
           </div>
         </div>
 
+        {/* Mobile Toggle Button - Fixed at bottom */}
+        <button
+          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-6 py-3 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <LayoutTemplate size={18} className="text-indigo-600" />
+            <span className="font-semibold text-slate-800 text-sm">Templates & Actions</span>
+          </div>
+          <ChevronLeft size={20} className={`text-slate-400 transition-transform duration-200 ${mobileSidebarOpen ? 'rotate-90' : '-rotate-90'}`} />
+        </button>
+
+        {/* Mobile Sidebar Overlay */}
+        {mobileSidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/40 z-40"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
         {/* RIGHT: Sidebar Tools */}
-        <div className="w-full lg:w-96 bg-white border-l border-slate-200 flex flex-col h-full z-20 shadow-xl">
+        <div className={`
+          fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-20
+          w-full lg:w-96 bg-white border-l border-slate-200 flex flex-col shadow-xl
+          lg:h-full
+          transition-transform duration-300 ease-in-out
+          ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+          max-h-[85vh] lg:max-h-none
+          rounded-t-2xl lg:rounded-none
+        `}>
+          {/* Mobile drag handle */}
+          <div className="lg:hidden flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-slate-300 rounded-full"></div>
+          </div>
+
           <div className="p-6 border-b border-slate-100 flex items-center gap-3">
             <button
-              onClick={() => navigate('/history')}
+              onClick={() => {
+                setMobileSidebarOpen(false);
+                navigate('/history');
+              }}
               className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
             >
               <ChevronLeft size={20} />
             </button>
-            <div>
+            <div className="flex-1">
               <h2 className="font-bold text-slate-800">Review Application</h2>
               <p className="text-xs text-slate-500">Edit and export your documents</p>
             </div>
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
