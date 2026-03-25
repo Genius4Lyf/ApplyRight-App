@@ -40,6 +40,7 @@ import FeedbackDashboard from './pages/FeedbackDashboard';
 import MaintenanceGuard from './components/MaintenanceGuard';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
+import TopProgressBar from './components/TopProgressBar';
 
 // Session Manager Component
 const SessionManager = ({ children }) => {
@@ -127,6 +128,7 @@ const RootLayout = () => {
 
   return (
     <SessionManager>
+      <TopProgressBar />
       <AnimatePresence mode="wait">
         {element && cloneElement(element, { key: getPageKey(location.pathname) })}
       </AnimatePresence>
