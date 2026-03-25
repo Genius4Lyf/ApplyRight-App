@@ -178,7 +178,7 @@ const TailorCVButton = ({ searchId, resultId, jobTitle, company, jobDescription,
           </button>
 
           {showSelector && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
               {userCVs.map((cv) => (
                 <button
                   key={cv._id}
