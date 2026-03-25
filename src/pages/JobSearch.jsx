@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Briefcase, Bookmark, Globe, MapPin, Sparkles, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
@@ -24,6 +24,7 @@ const PAGE_SIZE = 10;
 
 const JobSearch = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
 
   // Tab state
@@ -58,6 +59,18 @@ const JobSearch = () => {
     loadUserCVs();
     loadTabData('all', 1);
   }, []);
+
+  // Auto-open detail panel when navigated from dashboard with a specific job
+  useEffect(() => {
+    if (location.state?.openJob) {
+      const job = location.state.openJob;
+      const navSearchId = location.state.searchId;
+      setSelectedJob(navSearchId ? { ...job, searchId: navSearchId } : job);
+      setDetailOpen(true);
+      // Clear the state so refreshing doesn't re-open
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   const loadUserCVs = async () => {
     try {
@@ -184,6 +197,7 @@ const JobSearch = () => {
   };
 
   const handleViewDetails = (result) => {
+    console.log('[JobSearch] Job clicked:', result);
     setSelectedJob(result);
     setDetailOpen(true);
   };
@@ -289,7 +303,7 @@ const JobSearch = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 p-0.5 bg-slate-100 rounded-lg w-fit overflow-x-auto">
+        <div className="flex gap-1 mb-4 p-0.5 bg-slate-100 rounded-lg w-fit max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (

@@ -225,18 +225,6 @@ const TailorCVButton = ({ searchId, resultId, jobTitle, company, jobDescription,
                   style={{ width: `${atsScore.fitScore}%` }}
                 />
               </div>
-              {atsScore.missingSkills?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {atsScore.missingSkills.slice(0, 3).map((skill) => (
-                    <span key={skill.name} className="text-[10px] px-1.5 py-0.5 rounded bg-black/5 opacity-80">
-                      +{skill.name}
-                    </span>
-                  ))}
-                  {atsScore.missingSkills.length > 3 && (
-                    <span className="text-[10px] opacity-60">+{atsScore.missingSkills.length - 3} more</span>
-                  )}
-                </div>
-              )}
             </>
           )}
         </div>

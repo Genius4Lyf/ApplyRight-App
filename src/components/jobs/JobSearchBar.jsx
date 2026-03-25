@@ -39,7 +39,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Main search bar */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -50,42 +50,49 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
-        <div className="relative w-40">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="City..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowFilters(!showFilters)}
-          className={`p-2.5 rounded-lg border transition-colors ${
-            showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-        </button>
-        <button
-          type="submit"
-          disabled={loading || !keywords.trim()}
-          className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-        {onClear && (
+        
+        <div className="flex gap-2 sm:w-auto">
+          <div className="flex-1 sm:w-40 relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="City..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
           <button
             type="button"
-            onClick={onClear}
-            className="p-2.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors"
-            title="Clear search"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`shrink-0 p-2.5 rounded-lg border transition-colors ${
+              showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
+            }`}
+            title="Toggle filters"
           >
-            <X className="w-4 h-4" />
+            <SlidersHorizontal className="w-4 h-4" />
           </button>
-        )}
+        </div>
+
+        <div className="flex gap-2 sm:w-auto">
+          <button
+            type="submit"
+            disabled={loading || !keywords.trim()}
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Searching...' : 'Search'}
+          </button>
+          {onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="shrink-0 p-2.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters row */}

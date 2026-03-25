@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, LogOut, History, Zap, User, Menu, X, PlayCircle, Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -205,84 +206,127 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-b border-slate-200 overflow-hidden"
-          >
-            <div className="px-4 py-6 space-y-4">
-              <Link
-                to="/dashboard"
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              {/* Backdrop Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/dashboard') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Zap className="w-5 h-5" />
-                <span className="font-medium">Get Hired</span>
-              </Link>
-              <Link
-                to="/jobs"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/jobs') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Search className="w-5 h-5" />
-                <span className="font-medium">Find Jobs</span>
-              </Link>
-              <Link
-                to="/history"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/history') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <History className="w-5 h-5" />
-                <span className="font-medium">Job History</span>
-              </Link>
+                className="md:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100]"
+              />
 
-              <div className="h-px bg-slate-100 my-2"></div>
-
-              <Link
-                to="/credits"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/credits') ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+              {/* Slide-out Drawer */}
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+                className="md:hidden fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[110] shadow-2xl flex flex-col overflow-y-auto"
               >
-                <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600" />
-                <span className="font-medium">
-                  A.I Credits: {credits !== null ? credits : '...'}
-                </span>
-              </Link>
-
-              <div className="h-px bg-slate-100 my-2"></div>
-
-              <Link
-                to="/profile"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50"
-              >
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                  {user && user.firstName ? (
-                    user.firstName[0].toUpperCase()
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <img src={logo} alt="ApplyRight Logo" className="h-7 w-auto" />
+                    <span className="text-lg font-bold text-slate-900">Menu</span>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <div>
-                  <p className="font-medium text-slate-900">{user?.firstName || 'User'}</p>
-                  <p className="text-xs text-slate-500">View Profile</p>
-                </div>
-              </Link>
 
-              <button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {/* Primary Nav Links */}
+                <div className="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <Zap className="w-5 h-5" />
+                    <span className="font-semibold">Get Hired</span>
+                  </Link>
+                  <Link
+                    to="/jobs"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/jobs') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <Search className="w-5 h-5" />
+                    <span className="font-semibold">Find Jobs</span>
+                  </Link>
+                  <Link
+                    to="/history"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <History className="w-5 h-5" />
+                    <span className="font-semibold">Job History</span>
+                  </Link>
+
+                  <div className="h-px bg-slate-100 my-4" />
+
+                  <Link
+                    to="/credits"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/50 ${isActive('/credits') ? 'bg-indigo-50' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600" />
+                      <span className="font-bold text-indigo-900">A.I Credits</span>
+                    </div>
+                    <span className="font-black text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">
+                      {credits !== null ? credits : '...'}
+                    </span>
+                  </Link>
+                </div>
+
+                {/* Bottom Footer Area */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-200 transition-colors mb-3 group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold group-hover:scale-105 transition-transform">
+                      {user && user.firstName ? (
+                        user.firstName[0].toUpperCase()
+                      ) : (
+                        <User className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 truncate">
+                        {user && user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User'}
+                      </p>
+                      <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
+                        {user?.email || 'View Profile Settings'}
+                      </p>
+                    </div>
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setShowLogoutConfirm(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-colors font-bold shadow-sm"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">

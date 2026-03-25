@@ -10,6 +10,7 @@ const JobRecommendations = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isTrending, setIsTrending] = useState(false);
+  const [jobSearchId, setJobSearchId] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const hasProfile = !!user.jobProfile?.desiredTitle;
@@ -25,11 +26,13 @@ const JobRecommendations = () => {
         const data = await jobSearchService.getRecommendations(1, 6);
         setJobs(data.results || []);
         setMessage(data.message || '');
+        setJobSearchId(data.searchId || data._id || null);
         setIsTrending(false);
       } else {
         // Trending jobs for all users
         const data = await jobSearchService.getTrending('mixed', 1, 6);
         setJobs(data.results || []);
+        setJobSearchId(data._id || null);
         setIsTrending(true);
       }
     } catch (error) {
@@ -103,7 +106,7 @@ const JobRecommendations = () => {
           return (
             <div
               key={job.externalId || job._id}
-              onClick={() => navigate('/jobs')}
+              onClick={() => navigate('/jobs', { state: { openJob: job, searchId: jobSearchId } })}
               className="bg-white p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 group flex flex-col justify-between min-h-[110px]"
             >
               <div className="flex items-start gap-3 mb-3">

@@ -43,7 +43,7 @@ const JobResultCard = ({ result, searchId, onViewDetails, onToggleSave, onApplyC
             </button>
           </div>
 
-          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <Building2 className="w-3 h-3" />
               {result.company}

@@ -363,11 +363,29 @@ const JobDetailPanel = ({
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+            <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32">
+              
+              {/* Tailoring & AI Tools - Moved to top of scroll for high visibility without permanently crowding the screen */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  AI Application Tools
+                </h3>
+                <TailorCVButton
+                  searchId={searchId}
+                  resultId={result._id}
+                  jobTitle={result.title}
+                  company={result.company}
+                  jobDescription={fullDescription || result.snippet}
+                  userCVs={userCVs}
+                  onSuccess={onTailorSuccess}
+                />
+              </div>
+
               {/* Match Breakdown */}
               {result.matchBreakdown && result.matchScore !== null && (
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Match Breakdown</h3>
+                <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3">Requirements Match</h3>
                   <MatchBreakdown breakdown={result.matchBreakdown} />
                 </div>
               )}
@@ -406,38 +424,27 @@ const JobDetailPanel = ({
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="p-5 border-t border-slate-200 space-y-2">
-              <div className="flex gap-2">
+            {/* Slim Glassmorphism Action Bar */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200/60 bg-white/85 backdrop-blur-xl z-10 pb-max-safe">
+              <div className="flex gap-3 max-w-lg mx-auto">
                 {result.applyUrl && (
                   <button
                     onClick={() => onApplyClick(searchId, result._id, result.applyUrl)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                   >
                     Apply Now <ExternalLink className="w-4 h-4" />
                   </button>
                 )}
                 <button
                   onClick={() => onToggleSave(searchId, result._id)}
-                  className={`px-3 py-2.5 rounded-lg border transition-colors ${result.saved
+                  className={`px-4 py-3 rounded-xl border-2 shadow-sm transition-all active:scale-[0.96] ${result.saved
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
-                    : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-500'
+                    : 'bg-white border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 hover:border-slate-300'
                     }`}
                 >
-                  {result.saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                  {result.saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                 </button>
               </div>
-
-              {/* Tailor CV Button */}
-              <TailorCVButton
-                searchId={searchId}
-                resultId={result._id}
-                jobTitle={result.title}
-                company={result.company}
-                jobDescription={fullDescription || result.snippet}
-                userCVs={userCVs}
-                onSuccess={onTailorSuccess}
-              />
             </div>
           </motion.div>
         </>
