@@ -382,17 +382,44 @@ const JobSearch = () => {
           </div>
         )}
 
-        {/* Loading */}
+        {/* Loading Skeletons */}
         {isLoading && (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-2 text-sm text-slate-500">
-              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-              {activeTab === 'all' ? 'Loading trending jobs...' :
-               activeTab === 'global' ? 'Loading global jobs...' :
-               activeTab === 'local' ? 'Loading local jobs...' :
-               activeTab === 'foryou' ? 'Finding jobs for you...' :
-               activeTab === 'saved' ? 'Loading saved jobs...' :
-               'Searching jobs...'}
+          <div className="animate-pulse">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-4 bg-slate-200 rounded w-24"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[...Array(PAGE_SIZE)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col h-[180px]">
+                  <div className="flex items-start gap-3">
+                    {/* Ghost Icon / Match Badge */}
+                    <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>
+                    
+                    <div className="flex-1 space-y-3 mt-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                        <div className="w-4 h-4 bg-slate-100 rounded shrink-0"></div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-3 bg-slate-100 rounded w-24"></div>
+                        <div className="h-3 bg-slate-100 rounded w-16"></div>
+                      </div>
+                      <div className="space-y-2 pt-2">
+                        <div className="h-2.5 bg-slate-100 rounded w-full"></div>
+                        <div className="h-2.5 bg-slate-100 rounded w-5/6"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 border-hidden">
+                    <div className="flex gap-2">
+                      <div className="h-4 bg-slate-100 rounded w-12"></div>
+                      <div className="h-4 bg-slate-100 rounded w-16"></div>
+                    </div>
+                    <div className="h-3 bg-slate-200 rounded w-12"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
