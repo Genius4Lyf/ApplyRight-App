@@ -8,6 +8,7 @@ import FeatureAnnouncementModal from '../components/FeatureAnnouncementModal';
 import JobResultCard from '../components/jobs/JobResultCard';
 import JobDetailPanel from '../components/jobs/JobDetailPanel';
 import OnboardingForm from '../components/jobs/OnboardingForm';
+import TailorBetaModal from '../components/jobs/TailorBetaModal';
 import jobSearchService from '../services/jobSearchService';
 import CVService from '../services/cv.service';
 import { toast } from 'sonner';
@@ -283,6 +284,7 @@ const JobSearch = () => {
       <Navbar />
       <GlobalBanner />
       <FeatureAnnouncementModal />
+      <TailorBetaModal />
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
