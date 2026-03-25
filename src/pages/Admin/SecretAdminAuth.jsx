@@ -301,7 +301,7 @@ const SecretAdminAuth = () => {
       {/* Minimalist Footer */}
       <div className="absolute w-full bottom-8">
         <p className="text-center text-xs text-gray-400 font-medium">
-          ApplyRight Secure Portal &copy; {new Date().getFullYear()}
+          &copy; {new Date().getFullYear()} ApplyRight Secure Portal. All rights reserved.
         </p>
       </div>
     </div>

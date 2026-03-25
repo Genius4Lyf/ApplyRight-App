@@ -52,14 +52,11 @@ const SessionManager = ({ children }) => {
     user = JSON.parse(localStorage.getItem('user'));
   } catch (e) {}
 
-  const navigate = () => {
-    window.location.href = '/login';
-  }; // simple redirect
-
   const handleIdle = () => {
+    const isAdmin = user?.role === 'admin';
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate();
+    window.location.href = isAdmin ? '/secret-access-portal-v1' : '/login';
   };
 
   const { isWarning, remainingTime, resetTimer } = useIdleTimeout({
@@ -142,7 +139,7 @@ const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/secret-access-portal-v1" replace />;
   }
 
   if (user.role !== 'admin') {
@@ -158,6 +155,7 @@ import AdminUsers from './pages/Admin/AdminUsers';
 import AdminTransactions from './pages/Admin/AdminTransactions';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
 import AdminSettings from './pages/Admin/AdminSettings';
+import AdminJobSearches from './pages/Admin/AdminJobSearches';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
 
 // ... existing router configuration ...
@@ -362,6 +360,14 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminUserDetails />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: '/admin/job-searches',
+        element: (
+          <AdminRoute>
+            <AdminJobSearches />
           </AdminRoute>
         ),
       },

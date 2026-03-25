@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import DashboardStats from '../../components/Admin/DashboardStats';
-import { Users, DollarSign, FileText, TrendingUp, Coins } from 'lucide-react';
+import { Users, DollarSign, FileText, TrendingUp, Coins, Search, Briefcase, Bookmark, MousePointerClick } from 'lucide-react';
 import api from '../../services/api';
 import {
   AreaChart,
@@ -169,6 +169,34 @@ const AdminDashboard = () => {
               trend="down"
               icon={TrendingUp}
             />
+            <DashboardStats
+              title="Job Searches"
+              value={stats.jobMetrics?.totalSearches || 0}
+              change="new"
+              trend="up"
+              icon={Search}
+            />
+            <DashboardStats
+              title="Job Clicks"
+              value={stats.jobMetrics?.engagement?.totalClicks || 0}
+              change="new"
+              trend="up"
+              icon={MousePointerClick}
+            />
+            <DashboardStats
+              title="Jobs Saved"
+              value={stats.jobMetrics?.engagement?.totalSaved || 0}
+              change="new"
+              trend="up"
+              icon={Bookmark}
+            />
+            <DashboardStats
+              title="CVs Tailored"
+              value={stats.jobMetrics?.funnel?.tailors || 0}
+              change="new"
+              trend="up"
+              icon={Briefcase}
+            />
           </div>
 
           {/* Feature Usage Section */}
@@ -288,6 +316,125 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Job Search Analytics Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Source Distribution */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Searches By Source</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.jobMetrics?.searchesBySource?.map((s) => ({
+                        name: s._id === 'adzuna' ? 'Adzuna' : s._id === 'jobberman' ? 'Jobberman' : s._id,
+                        value: s.count,
+                      })) || []}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      <Cell fill="#3b82f6" /> {/* Blue */}
+                      <Cell fill="#10b981" /> {/* Green */}
+                      <Cell fill="#f59e0b" /> {/* Yellow */}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Keywords */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Top Job Keywords</h3>
+              <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
+                {stats.jobMetrics?.topKeywords?.map((kw, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-700">
+                        {index + 1}
+                      </div>
+                      <span className="font-medium text-slate-700 capitalize">
+                        {kw._id}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-primary">{kw.count}</span>
+                    </div>
+                  </div>
+                ))}
+                {(!stats.jobMetrics?.topKeywords || stats.jobMetrics.topKeywords.length === 0) && (
+                  <p className="text-center text-slate-500 py-4">No keywords data.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Top Locations */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Top Locations</h3>
+              <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
+                {stats.jobMetrics?.topLocations?.map((loc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-700">
+                        {index + 1}
+                      </div>
+                      <span className="font-medium text-slate-700 capitalize">
+                        {loc._id}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-primary">{loc.count}</span>
+                    </div>
+                  </div>
+                ))}
+                {(!stats.jobMetrics?.topLocations || stats.jobMetrics.topLocations.length === 0) && (
+                  <p className="text-center text-slate-500 py-4">No locations data.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Conversion Funnel */}
+          {stats.jobMetrics?.funnel && (
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Job Conversion Funnel</h3>
+              <div className="flex flex-col items-center gap-1">
+                {[
+                  { label: 'Searches', value: stats.jobMetrics.funnel.searches, color: 'bg-blue-500' },
+                  { label: 'Clicks', value: stats.jobMetrics.funnel.clicks, color: 'bg-indigo-500' },
+                  { label: 'Saves', value: stats.jobMetrics.funnel.saves, color: 'bg-violet-500' },
+                  { label: 'Tailored', value: stats.jobMetrics.funnel.tailors, color: 'bg-purple-500' },
+                  { label: 'Applications', value: stats.jobMetrics.funnel.applications, color: 'bg-pink-500' },
+                ].map((step, i, arr) => {
+                  const maxVal = arr[0].value || 1;
+                  const widthPercent = Math.max(((step.value / maxVal) * 100), 15);
+                  const rate = i > 0 && arr[i - 1].value > 0
+                    ? ((step.value / arr[i - 1].value) * 100).toFixed(1)
+                    : null;
+
+                  return (
+                    <div key={step.label} className="w-full flex flex-col items-center">
+                      <div
+                        className={`${step.color} text-white rounded-lg py-3 px-4 flex items-center justify-between transition-all`}
+                        style={{ width: `${widthPercent}%`, minWidth: '180px' }}
+                      >
+                        <span className="font-medium text-sm">{step.label}</span>
+                        <span className="font-bold">{step.value.toLocaleString()}</span>
+                      </div>
+                      {rate !== null && (
+                        <span className="text-xs text-slate-500 my-0.5">{rate}% conversion</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:col-span-3 gap-8 mb-8">

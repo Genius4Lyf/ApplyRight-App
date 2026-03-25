@@ -11,6 +11,7 @@ import {
   Cpu,
   MessageSquare,
   Layout,
+  Briefcase,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/Admin/AdminLayout';
@@ -285,6 +286,72 @@ const AdminSettings = () => {
                         Cost for simple Resume parsing (no job desc).
                       </p>
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">AI Skills Cost</label>
+                      <input
+                        type="number"
+                        value={settings.credits.aiSkillsCost}
+                        onChange={(e) =>
+                          handleChange('credits', 'aiSkillsCost', parseInt(e.target.value))
+                        }
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Cost for AI-powered skills generation.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Ad Reward</label>
+                      <input
+                        type="number"
+                        value={settings.credits.adReward}
+                        onChange={(e) =>
+                          handleChange('credits', 'adReward', parseInt(e.target.value))
+                        }
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Credits earned by watching an ad.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Job Feature Credit Costs */}
+                <div className="pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    Job Feature Credit Costs
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Tailor CV Cost</label>
+                      <input
+                        type="number"
+                        value={settings.credits.tailorCVCost}
+                        onChange={(e) =>
+                          handleChange('credits', 'tailorCVCost', parseInt(e.target.value))
+                        }
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Cost to tailor a CV for a specific job listing.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Tailor Bundle Cost</label>
+                      <input
+                        type="number"
+                        value={settings.credits.tailorBundleCost}
+                        onChange={(e) =>
+                          handleChange('credits', 'tailorBundleCost', parseInt(e.target.value))
+                        }
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Cost for full bundle (CV + Cover Letter + Interview Prep).
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -358,6 +425,26 @@ const AdminSettings = () => {
                           checked={settings.features.enableAiAnalysis}
                           onChange={(e) =>
                             handleChange('features', 'enableAiAnalysis', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">Job Search</h4>
+                        <p className="text-sm text-slate-500">
+                          Enable job search feature (Adzuna, Jobberman, Indeed).
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.enableJobSearch}
+                          onChange={(e) =>
+                            handleChange('features', 'enableJobSearch', e.target.checked)
                           }
                           className="sr-only peer"
                         />
