@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   Download,
@@ -56,7 +56,9 @@ import { Lock, Zap, PlayCircle, X, Loader, ZoomIn, ZoomOut } from 'lucide-react'
 const ResumeReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [atsReadiness, setAtsReadiness] = useState(location.state?.atsReadiness || null);
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
@@ -986,8 +988,14 @@ const ResumeReview = () => {
                           {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
                           {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
                           {mergedUserProfile?.city && <span>{mergedUserProfile.city}</span>}
-                          {mergedUserProfile?.linkedin && (
-                            <span>LinkedIn: {mergedUserProfile.linkedin}</span>
+                          {(mergedUserProfile?.linkedinUrl || mergedUserProfile?.linkedin) && (
+                            <span>
+                              LinkedIn:{' '}
+                              {(mergedUserProfile.linkedinUrl || mergedUserProfile.linkedin).replace(
+                                /^https?:\/\/(www\.)?/,
+                                ''
+                              )}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1167,7 +1175,67 @@ const ResumeReview = () => {
               </div>
             )}
 
-            {isDraftMode && (
+            {isDraftMode && atsReadiness && (
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-extrabold border-[3px] ${
+                      atsReadiness.score >= 75
+                        ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                        : atsReadiness.score >= 50
+                          ? 'border-amber-400 text-amber-700 bg-amber-50'
+                          : 'border-red-400 text-red-700 bg-red-50'
+                    }`}
+                  >
+                    {atsReadiness.score}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm">ATS Readiness Score</h3>
+                    <p className="text-xs text-slate-500">
+                      {atsReadiness.score >= 75
+                        ? 'Well-structured for ATS systems'
+                        : atsReadiness.score >= 50
+                          ? 'Good start — some areas to improve'
+                          : 'Needs more detail for ATS compatibility'}
+                    </p>
+                  </div>
+                </div>
+                {/* Checks */}
+                <div className="space-y-2 mb-4">
+                  {atsReadiness.checks?.map((check, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      {check.passed ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                      )}
+                      <span className={check.passed ? 'text-slate-600' : 'text-slate-500'}>
+                        {check.label}
+                        {check.detail && (
+                          <span className="text-slate-400 ml-1">({check.detail})</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* Tips */}
+                {atsReadiness.tips?.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-amber-800 mb-1.5">Tips to improve:</p>
+                    <ul className="space-y-1">
+                      {atsReadiness.tips.slice(0, 3).map((tip, i) => (
+                        <li key={i} className="text-xs text-amber-700 leading-relaxed flex gap-1.5">
+                          <span className="text-amber-400 flex-shrink-0 mt-0.5">-</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isDraftMode && !atsReadiness && (
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600 mt-1">

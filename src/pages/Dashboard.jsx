@@ -70,6 +70,7 @@ const Dashboard = () => {
   const [draftToDelete, setDraftToDelete] = useState(null);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [scanSuccessDraftId, setScanSuccessDraftId] = useState(null);
+  const [scanATSReadiness, setScanATSReadiness] = useState(null);
   const [scanning, setScanning] = useState(false);
 
   // Get user from local storage
@@ -649,40 +650,28 @@ const Dashboard = () => {
                     <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
                       <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 A.I Credits
                     </span>
+                    {user.credits < 15 && (
+                      <p className="text-sm text-red-500 mt-2 font-medium">
+                        You have {user.credits} credits. You need at least 15 to proceed.
+                      </p>
+                    )}
                   </div>
                   <CVUploader
-                    onUploadSuccess={async (resumeData) => {
-                      setScanning(true);
-                      try {
-                        const res = await api.post('/analysis/analyze', {
-                          resumeId: resumeData._id,
-                        });
-                        if (res.data.draftId) {
-                          setScanSuccessDraftId(res.data.draftId);
-                          // Sync credits
-                          if (res.data.remainingCredits !== undefined) {
-                            updateCredits(res.data.remainingCredits);
-                          }
-                        } else {
-                          toast.error('Failed to parse resume.');
-                          setScanning(false);
+                    endpoint="/resumes/upload-and-create"
+                    onUploadSuccess={(data) => {
+                      if (data.draftId) {
+                        setScanSuccessDraftId(data.draftId);
+                        setScanATSReadiness(data.atsReadiness || null);
+                        if (data.remainingCredits !== undefined) {
+                          updateCredits(data.remainingCredits);
                         }
-                      } catch (err) {
-                        console.error(err);
-                        // Handle insufficient credits specifically
-                        if (
-                          err.response?.status === 403 &&
-                          err.response.data.code === 'INSUFFICIENT_CREDITS'
-                        ) {
-                          handleInsufficientCredits(
-                            err.response.data.required,
-                            err.response.data.current
-                          );
-                          setScanning(false);
-                          return;
-                        }
-                        toast.error('Error analyzing resume.');
-                        setScanning(false);
+                      } else {
+                        toast.error('Failed to parse resume.');
+                      }
+                    }}
+                    onError={(errorData) => {
+                      if (errorData.code === 'INSUFFICIENT_CREDITS') {
+                        handleInsufficientCredits(errorData.required, errorData.current);
                       }
                     }}
                   />
@@ -700,22 +689,76 @@ const Dashboard = () => {
                 <CheckCircle className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">CV Scanned Successfully!</h3>
-              <p className="text-slate-500 mb-8">
-                We've extracted your details. How would you like to proceed?
+              <p className="text-slate-500 mb-4">
+                We've extracted and optimized your details with AI-powered formatting.
               </p>
+
+              {/* ATS Readiness Score */}
+              {scanATSReadiness && (
+                <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div
+                      className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${
+                        scanATSReadiness.score >= 75
+                          ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                          : scanATSReadiness.score >= 50
+                            ? 'border-amber-400 text-amber-700 bg-amber-50'
+                            : 'border-red-400 text-red-700 bg-red-50'
+                      }`}
+                    >
+                      {scanATSReadiness.score}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">ATS Readiness Score</p>
+                      <p className="text-xs text-slate-500">
+                        {scanATSReadiness.score >= 75
+                          ? 'Your resume is well-structured for ATS systems'
+                          : scanATSReadiness.score >= 50
+                            ? 'Good start — a few improvements will boost your score'
+                            : 'Needs work — edit in the builder to improve'}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Quick check summary */}
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {scanATSReadiness.checks?.slice(0, 5).map((check, i) => (
+                      <span
+                        key={i}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          check.passed
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {check.passed ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : (
+                          <X className="w-3 h-3" />
+                        )}
+                        {check.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col gap-4">
                 <button
-                  onClick={() => navigate(`/resume/${scanSuccessDraftId}`)}
+                  onClick={() => navigate(`/cv-builder/${scanSuccessDraftId}`)}
                   className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all hover:scale-[1.02] shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                 >
-                  <Eye className="w-5 h-5" /> View ATS Preview
+                  <PenTool className="w-5 h-5" /> Review & Edit in Builder
+                  <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">Recommended</span>
                 </button>
                 <button
-                  onClick={() => navigate(`/cv-builder/${scanSuccessDraftId}`)}
+                  onClick={() =>
+                    navigate(`/resume/${scanSuccessDraftId}`, {
+                      state: { atsReadiness: scanATSReadiness },
+                    })
+                  }
                   className="w-full py-4 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                 >
-                  <PenTool className="w-5 h-5" /> Edit in Builder
+                  <Eye className="w-5 h-5" /> Skip to ATS Preview
                 </button>
               </div>
             </div>

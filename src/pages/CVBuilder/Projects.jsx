@@ -55,6 +55,16 @@ const Projects = () => {
     setProjects(newProjects);
   };
 
+  // Auto-prepend https:// to link fields on blur if user entered a bare domain
+  const handleLinkBlur = (index) => {
+    const link = projects[index]?.link;
+    if (!link) return;
+    const trimmed = link.trim();
+    if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      handleChange(index, 'link', `https://${trimmed}`);
+    }
+  };
+
   // Auto-sync to parent context for persistence
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -224,10 +234,11 @@ const Projects = () => {
                 <div className="relative">
                   <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                   <input
-                    type="url"
+                    type="text"
                     value={proj.link}
                     onChange={(e) => handleChange(index, 'link', e.target.value)}
-                    placeholder="https://github.com/..."
+                    onBlur={() => handleLinkBlur(index)}
+                    placeholder="github.com/your-project"
                     className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                   />
                 </div>

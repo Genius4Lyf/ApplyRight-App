@@ -78,6 +78,16 @@ const Heading = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Auto-prepend https:// to URL fields on blur if user entered a bare domain
+  const handleUrlBlur = (e) => {
+    const { name, value } = e.target;
+    if (!value) return;
+    const trimmed = value.trim();
+    if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      setFormData((prev) => ({ ...prev, [name]: `https://${trimmed}` }));
+    }
+  };
+
   const toggleField = (field) => {
     setVisibleFields((prev) => ({ ...prev, [field]: !prev[field] }));
   };
@@ -269,10 +279,11 @@ const Heading = () => {
               <div className="relative">
                 <Linkedin className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
-                  type="url"
+                  type="text"
                   name="linkedin"
                   value={formData.linkedin || ''}
                   onChange={handleChange}
+                  onBlur={handleUrlBlur}
                   placeholder="linkedin.com/in/profile"
                   className="w-full pl-9 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
@@ -297,10 +308,11 @@ const Heading = () => {
               <div className="relative">
                 <Globe className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
-                  type="url"
+                  type="text"
                   name="website"
                   value={formData.website || ''}
                   onChange={handleChange}
+                  onBlur={handleUrlBlur}
                   placeholder="your-portfolio.com"
                   className="w-full pl-9 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />

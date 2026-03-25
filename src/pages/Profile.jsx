@@ -183,6 +183,16 @@ const Profile = () => {
     }
   };
 
+  // Auto-prepend https:// to URL fields on blur if user entered a bare domain
+  const handleUrlBlur = (e) => {
+    const { name, value } = e.target;
+    if (!value) return;
+    const trimmed = value.trim();
+    if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      setFormData((prev) => ({ ...prev, [name]: `https://${trimmed}` }));
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -397,11 +407,12 @@ const Profile = () => {
                       Portfolio URL
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       name="portfolioUrl"
                       value={formData.portfolioUrl}
                       onChange={handleChange}
-                      placeholder="https://yourportfolio.com"
+                      onBlur={handleUrlBlur}
+                      placeholder="yourportfolio.com"
                       className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   </div>
@@ -410,11 +421,12 @@ const Profile = () => {
                       LinkedIn Profile
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       name="linkedinUrl"
                       value={formData.linkedinUrl}
                       onChange={handleChange}
-                      placeholder="https://linkedin.com/in/yourprofile"
+                      onBlur={handleUrlBlur}
+                      placeholder="linkedin.com/in/yourprofile"
                       className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   </div>

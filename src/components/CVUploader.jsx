@@ -2,7 +2,9 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
-const CVUploader = ({ onUploadSuccess }) => {
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -10,10 +12,17 @@ const CVUploader = ({ onUploadSuccess }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setMessage(null);
+    if (!selectedFile) return;
+
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setMessage({ type: 'error', text: 'File is too large. Maximum size is 5MB.' });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
+
+    setFile(selectedFile);
+    setMessage(null);
   };
 
   const handleUpload = async () => {
@@ -24,7 +33,7 @@ const CVUploader = ({ onUploadSuccess }) => {
     formData.append('resume', file);
 
     try {
-      const res = await api.post('/resumes/upload', formData, {
+      const res = await api.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -35,8 +44,14 @@ const CVUploader = ({ onUploadSuccess }) => {
       }
     } catch (error) {
       console.error(error);
+      if (error.response?.status === 403 && error.response.data?.code === 'INSUFFICIENT_CREDITS') {
+        setMessage({ type: 'error', text: 'Not enough credits to process this resume.' });
+        if (onError) onError(error.response.data);
+        return;
+      }
       const errorMsg = error.response?.data?.message || error.message || 'Upload failed.';
       setMessage({ type: 'error', text: errorMsg });
+      if (onError) onError({ message: errorMsg });
     } finally {
       setUploading(false);
     }
