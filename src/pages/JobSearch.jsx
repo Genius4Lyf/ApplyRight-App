@@ -198,7 +198,7 @@ const JobSearch = () => {
   };
 
   const handleViewDetails = (result) => {
-    console.log('[JobSearch] Job clicked:', result);
+    // console.log('[JobSearch] Job clicked:', result);
     setSelectedJob(result);
     setDetailOpen(true);
   };

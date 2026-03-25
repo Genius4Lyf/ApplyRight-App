@@ -300,7 +300,7 @@ const JobDetailPanel = ({
 
   const loadFullDescription = async () => {
     setLoadingDesc(true);
-    console.log('📌 [UI] Opening JobDetailPanel for job:', result);
+    // console.log('📌 [UI] Opening JobDetailPanel for job:', result);
     try {
       const detailed = await jobSearchService.getJobDetails(searchId, result._id);
       console.log('📋 [UI] Successfully loaded full description text from backend for:', result.title);

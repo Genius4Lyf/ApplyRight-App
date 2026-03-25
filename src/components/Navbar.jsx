@@ -51,19 +51,19 @@ const Navbar = () => {
 
     // Listen for real-time updates from other components
     const handleCreditUpdate = (event) => {
-      console.log('📥 Navbar: Received credit_updated event:', event.detail);
+      // console.log('📥 Navbar: Received credit_updated event:', event.detail);
       if (typeof event.detail === 'number') {
-        console.log('✅ Navbar: Updating credits display to:', event.detail);
+        // console.log('✅ Navbar: Updating credits display to:', event.detail);
         setCredits(event.detail);
       } else {
         console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
       }
     };
 
-    console.log('👂 Navbar: Listening for credit_updated events');
+    // console.log('👂 Navbar: Listening for credit_updated events');
     window.addEventListener('credit_updated', handleCreditUpdate);
     return () => {
-      console.log('🔇 Navbar: Removing credit_updated listener');
+      // console.log('🔇 Navbar: Removing credit_updated listener');
       window.removeEventListener('credit_updated', handleCreditUpdate);
     };
   }, []);

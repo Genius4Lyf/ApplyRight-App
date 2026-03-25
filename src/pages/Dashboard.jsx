@@ -110,11 +110,11 @@ const Dashboard = () => {
 
   // Helper to update credits globally (Navbar + Local State)
   const updateCredits = (newBalance) => {
-    console.log('🔄 Dashboard: Updating credits to:', newBalance);
+    // console.log('🔄 Dashboard: Updating credits to:', newBalance);
 
     // 1. Dispatch event for Navbar
     window.dispatchEvent(new CustomEvent('credit_updated', { detail: newBalance }));
-    console.log('📡 Dashboard: Dispatched credit_updated event with:', newBalance);
+    // console.log('📡 Dashboard: Dispatched credit_updated event with:', newBalance);
 
     // 2. Update local state
     setUser((prev) => ({ ...prev, credits: newBalance }));

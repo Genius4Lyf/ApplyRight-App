@@ -85,7 +85,7 @@ const ResumeReview = () => {
   // Listen for global user updates
   useEffect(() => {
     const handleUserUpdate = (e) => {
-      console.log('ResumeReview received user update', e.detail);
+      // console.log('ResumeReview received user update', e.detail);
       setUserProfile((prev) => ({ ...prev, ...e.detail }));
     };
     window.addEventListener('userDataUpdated', handleUserUpdate);
@@ -183,7 +183,7 @@ const ResumeReview = () => {
       try {
         // Only save if it's different (optional optimization, but backend check is fine)
         await api.patch(`/applications/${application._id}/template`, { templateId });
-        console.log('Template preference saved:', templateId);
+        // console.log('Template preference saved:', templateId);
       } catch (error) {
         console.error('Failed to save template preference', error);
       }
@@ -251,14 +251,14 @@ const ResumeReview = () => {
     setAdForCreditsOpen(false);
     try {
       // Award credits via API (using billing service for consistency)
-      console.log('Attempting to award credits via /billing/watch-ad');
+      // console.log('Attempting to award credits via /billing/watch-ad');
       const watchAdResponse = await api.post('/billing/watch-ad', { type: 'video' });
-      console.log('Credits awarded successfully:', watchAdResponse.data);
+      // console.log('Credits awarded successfully:', watchAdResponse.data);
 
       // Refresh profile
-      console.log('Refreshing user profile via /auth/me');
+      // console.log('Refreshing user profile via /auth/me');
       const res = await api.get('/auth/me');
-      console.log('User profile refreshed:', res.data);
+      // console.log('User profile refreshed:', res.data);
       setUserProfile(res.data);
 
       // Dispatch global event to update navbar and other components
@@ -440,10 +440,10 @@ const ResumeReview = () => {
   };
 
   const handleDownloadClick = () => {
-    console.log('Download clicked. Template:', templateId);
+    // console.log('Download clicked. Template:', templateId);
     // 1. Check if unlocked
     if (!isUnlocked(templateId)) {
-      console.log('Template locked. Opening modal.');
+      // console.log('Template locked. Opening modal.');
       const template = TEMPLATES.find((t) => t.id === templateId);
       setTemplateToUnlock(template);
       setUnlockModalOpen(true);
@@ -455,13 +455,13 @@ const ResumeReview = () => {
       const downloadCount = parseInt(localStorage.getItem('download_count') || '0');
       // const nextDownload = downloadCount + 1; // Removed for new logic
 
-      console.log(
-        `Download count: ${downloadCount} -> Next check: ${downloadCount % 2 === 0 ? 'Ad Required' : 'Free'}`
-      );
+      // console.log(
+      //   `Download count: ${downloadCount} -> Next check: ${downloadCount % 2 === 0 ? 'Ad Required' : 'Free'}`
+      // );
 
       // New Policy: 0 (1st) = Ad, 1 (2nd) = Free, 2 (3rd) = Ad, etc.
       if (downloadCount % 2 === 0) {
-        console.log('Ad required for this download');
+        // console.log('Ad required for this download');
         setDownloadAdOpen(true);
         return;
       }
