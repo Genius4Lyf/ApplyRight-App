@@ -2,7 +2,7 @@ import React from 'react';
 import { MapPin, Building2, Clock, Bookmark, BookmarkCheck, ExternalLink } from 'lucide-react';
 import MatchScoreBadge from './MatchScoreBadge';
 
-const JobResultCard = ({ result, searchId, onViewDetails, onToggleSave, onApplyClick }) => {
+const JobResultCard = ({ result, searchId, showMatchScore = false, onViewDetails, onToggleSave, onApplyClick }) => {
   const timeAgo = (date) => {
     if (!date) return '';
     const diff = Date.now() - new Date(date).getTime();
@@ -20,7 +20,7 @@ const JobResultCard = ({ result, searchId, onViewDetails, onToggleSave, onApplyC
       onClick={() => onViewDetails(result)}
     >
       <div className="flex items-start gap-3 h-full">
-        <MatchScoreBadge score={result.matchScore} />
+        <MatchScoreBadge score={showMatchScore ? result.matchScore : null} />
 
         <div className="flex-1 min-w-0 flex flex-col h-full">
           <div className="flex items-start justify-between gap-2">

@@ -26,7 +26,16 @@ const PAGE_SIZE = 10;
 const JobSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+
+  // Re-read user data when it changes (e.g. after saving job profile)
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+    };
+    window.addEventListener('userDataUpdated', handleUserUpdate);
+    return () => window.removeEventListener('userDataUpdated', handleUserUpdate);
+  }, []);
 
   // Tab state
   const [activeTab, setActiveTab] = useState('all');
@@ -119,6 +128,7 @@ const JobSearch = () => {
           searchId: data.searchId || data._id,
           categories: data.categories,
           message: data.message,
+          scoredAgainst: data.scoredAgainst || null,
         },
       }));
     } catch (error) {
@@ -148,9 +158,12 @@ const JobSearch = () => {
       setShowOnboarding(true);
     } else {
       setShowOnboarding(false);
-      // Load first page if no data yet, otherwise reload current page
       const page = tabPage[tab] || 1;
-      loadTabData(tab, page);
+      // Always refresh saved/foryou (bookmarks and profile can change);
+      // for trending tabs, only fetch if no cached data exists
+      if (tab === 'saved' || tab === 'foryou' || !tabData[tab]?.results?.length) {
+        loadTabData(tab, page);
+      }
     }
   };
 
@@ -340,30 +353,52 @@ const JobSearch = () => {
           </div>
         )}
 
-        {/* For You — onboarding prompt */}
+        {/* For You — onboarding / edit preferences form */}
         {activeTab === 'foryou' && showOnboarding && !isSearchActive && (
           <div className="bg-white rounded-xl border border-indigo-200 p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
-              <h2 className="font-semibold text-slate-900">Personalize your job feed</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-indigo-600" />
+                <h2 className="font-semibold text-slate-900">
+                  {hasJobProfile ? 'Update your job preferences' : 'Personalize your job feed'}
+                </h2>
+              </div>
+              {hasJobProfile && (
+                <button
+                  onClick={() => setShowOnboarding(false)}
+                  className="text-xs text-slate-400 hover:text-slate-600"
+                >
+                  Cancel
+                </button>
+              )}
             </div>
             <p className="text-sm text-slate-500 mb-4">
-              Tell us what role you're looking for, your preferred location, and top skills so we can find the best job matches for you.
+              {hasJobProfile
+                ? 'Adjust your role, location, or skills to get better job matches.'
+                : 'Tell us what role you\'re looking for, your preferred location, and top skills so we can find the best job matches for you.'}
             </p>
-            <OnboardingForm onComplete={handleOnboardingComplete} compact />
+            <OnboardingForm
+              onComplete={handleOnboardingComplete}
+              initialData={user.jobProfile}
+              compact
+            />
           </div>
         )}
 
         {/* For You — no results message */}
-        {activeTab === 'foryou' && !showOnboarding && !isSearchActive && currentTabData?.message && !currentTabData?.results?.length && !isLoading && (
+        {activeTab === 'foryou' && !showOnboarding && !isSearchActive && !currentTabData?.results?.length && !isLoading && (
           <div className="text-center py-12">
             <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 mb-3">{currentTabData.message}</p>
+            <p className="text-slate-500 mb-3">
+              {hasJobProfile
+                ? 'No matching jobs found for your current preferences. Try updating your role or skills.'
+                : (currentTabData?.message || 'Set up your job preferences to see personalized recommendations')}
+            </p>
             <button
               onClick={() => setShowOnboarding(true)}
               className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
             >
-              Set up job preferences
+              {hasJobProfile ? 'Update preferences' : 'Set up job preferences'}
             </button>
           </div>
         )}
@@ -433,7 +468,43 @@ const JobSearch = () => {
                   ? `Showing ${((displayPagination.page - 1) * displayPagination.limit) + 1}–${Math.min(displayPagination.page * displayPagination.limit, displayPagination.totalCount)} of ${displayPagination.totalCount} jobs`
                   : `${displayResults.length} jobs`}
               </p>
+              {activeTab === 'foryou' && !isSearchActive && hasJobProfile && (
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Update preferences
+                </button>
+              )}
             </div>
+
+            {/* Match score legend — For You tab only */}
+            {activeTab === 'foryou' && !isSearchActive && (
+              <div className="mb-3 px-3 py-2.5 bg-slate-50 rounded-lg border border-slate-100 text-[11px] text-slate-500">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-slate-600">Match scores:</span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      70+ Strong
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      40–69 Good
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-400" />
+                      &lt;40 Weak
+                    </span>
+                  </div>
+                  <span className="text-slate-400">
+                    {currentTabData?.scoredAgainst
+                      ? <>Based on: <span className="font-medium text-slate-500">{currentTabData.scoredAgainst.title}</span></>
+                      : 'Build a CV for match scores'}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {displayResults.map((result) => (
@@ -441,6 +512,7 @@ const JobSearch = () => {
                   key={result._id || result.externalId}
                   result={result}
                   searchId={currentSearchId || result.searchId}
+                  showMatchScore={activeTab === 'foryou' && !isSearchActive}
                   onViewDetails={handleViewDetails}
                   onToggleSave={handleToggleSave}
                   onApplyClick={handleApplyClick}

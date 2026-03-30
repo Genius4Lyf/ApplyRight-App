@@ -29,11 +29,27 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
   const [jobType, setJobType] = useState('');
   const [remote, setRemote] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const doSearch = (overrides = {}) => {
+    const params = { keywords, location, country, jobType, remote, source: 'mixed', ...overrides };
+    if (!params.keywords.trim()) return;
+    onSearch(params);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!keywords.trim()) return;
-    onSearch({ keywords, location, country, jobType, remote, source: 'mixed' });
+    setHasSearched(true);
+    doSearch();
+  };
+
+  // Auto-re-search when a filter changes and user has already searched
+  const handleFilterChange = (setter, value, field) => {
+    setter(value);
+    if (hasSearched && keywords.trim()) {
+      doSearch({ [field]: value });
+    }
   };
 
   return (
@@ -85,7 +101,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
           {onClear && (
             <button
               type="button"
-              onClick={onClear}
+              onClick={() => { setHasSearched(false); onClear(); }}
               className="shrink-0 p-2.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors"
               title="Clear search"
             >
@@ -102,7 +118,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             <Globe className="w-3.5 h-3.5 text-slate-400" />
             <select
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={(e) => handleFilterChange(setCountry, e.target.value, 'country')}
               className="text-sm border border-slate-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               {COUNTRIES.map((c) => (
@@ -113,7 +129,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
 
           <select
             value={jobType}
-            onChange={(e) => setJobType(e.target.value)}
+            onChange={(e) => handleFilterChange(setJobType, e.target.value, 'jobType')}
             className="text-sm border border-slate-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             {JOB_TYPES.map((t) => (
@@ -125,7 +141,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             <input
               type="checkbox"
               checked={remote}
-              onChange={(e) => setRemote(e.target.checked)}
+              onChange={(e) => handleFilterChange(setRemote, e.target.checked, 'remote')}
               className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <Wifi className="w-3.5 h-3.5" />

@@ -13,42 +13,66 @@ const POPULAR_SKILLS = [
   'Customer Service', 'Machine Learning', 'Operations', 'HTML/CSS', 'Git'
 ];
 
-const OnboardingForm = ({ onComplete, compact = false }) => {
-  const [formData, setFormData] = useState({
-    desiredTitle: '',
-    country: '',
-    city: '',
-    remote: false,
-    jobType: 'fulltime',
-    experienceLevel: 'entry',
-    topSkills: [],
-    salaryMin: '',
-    salaryMax: '',
-    currency: 'NGN',
+const OnboardingForm = ({ onComplete, compact = false, initialData = null }) => {
+  const [formData, setFormData] = useState(() => {
+    // Pre-fill from existing job profile if available
+    if (initialData) {
+      return {
+        desiredTitle: initialData.desiredTitle || '',
+        country: initialData.preferredLocation?.country || '',
+        city: initialData.preferredLocation?.city || '',
+        remote: initialData.preferredLocation?.remote || false,
+        jobType: initialData.jobType || 'fulltime',
+        experienceLevel: initialData.experienceLevel || 'entry',
+        topSkills: initialData.topSkills || [],
+        salaryMin: initialData.salaryExpectation?.min || '',
+        salaryMax: initialData.salaryExpectation?.max || '',
+        currency: initialData.salaryExpectation?.currency || 'NGN',
+      };
+    }
+    return {
+      desiredTitle: '',
+      country: '',
+      city: '',
+      remote: false,
+      jobType: 'fulltime',
+      experienceLevel: 'entry',
+      topSkills: [],
+      salaryMin: '',
+      salaryMax: '',
+      currency: 'NGN',
+    };
   });
   const [skillInput, setSkillInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [cities, setCities] = useState([]);
 
   useEffect(() => {
-    // Auto-detect country via IP
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        if (data.country) {
-          setFormData(prev => prev.country ? prev : { ...prev, country: data.country });
-        }
-      })
-      .catch(console.error);
+    // Auto-detect country via IP only if no country is set
+    if (!formData.country) {
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          if (data.country) {
+            setFormData(prev => prev.country ? prev : { ...prev, country: data.country });
+          }
+        })
+        .catch(console.error);
+    }
   }, []);
 
+  const prevCountryRef = React.useRef(formData.country);
   useEffect(() => {
     // Load cities when country changes
     if (formData.country) {
       const cityData = City.getCitiesOfCountry(formData.country);
-      setCities(cityData.map(c => ({ value: c.name, label: c.name })));
-      // Reset city if it isn't available in newly selected country
-      setFormData(prev => ({ ...prev, city: '' }));
+      const cityOptions = cityData.map(c => ({ value: c.name, label: c.name }));
+      setCities(cityOptions);
+      // Only reset city if user actively changed the country (not on initial mount with pre-filled data)
+      if (prevCountryRef.current && prevCountryRef.current !== formData.country) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+      prevCountryRef.current = formData.country;
     } else {
       setCities([]);
     }

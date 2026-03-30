@@ -22,6 +22,13 @@ const TailorCVButton = ({ searchId, resultId, jobTitle, company, jobDescription,
   const [loadingScore, setLoadingScore] = useState(false);
   const progressTimerRef = useRef(null);
 
+  // Keep selectedCV in sync when userCVs changes
+  useEffect(() => {
+    if (userCVs.length && (!selectedCV || !userCVs.find((cv) => cv._id === selectedCV))) {
+      setSelectedCV(userCVs[0]._id);
+    }
+  }, [userCVs]);
+
   // Fetch quick ATS score when selected CV changes
   useEffect(() => {
     if (!selectedCV || !searchId || !resultId) {
