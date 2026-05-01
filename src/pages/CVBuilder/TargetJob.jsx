@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Target, ArrowRight, AlertCircle, X } from 'lucide-react';
+import { Target, ArrowRight, AlertCircle, X, Check } from 'lucide-react';
+import SectionTips from '../../components/SectionTips';
 
 const TargetJob = () => {
   // Safely destructure context
@@ -67,6 +68,18 @@ const TargetJob = () => {
           </div>
         </div>
 
+        <SectionTips
+          sectionKey="cvbuilder_target"
+          title="The clearer the target, the better the CV"
+          intro="Everything we build from here gets tailored to this role."
+          tips={[
+            'Use the exact job title from a posting you\'re considering — even if you don\'t apply yet.',
+            'Paste the full job description (not just the company name) so our AI can pick up the keywords that matter.',
+            'If you\'re open to multiple roles, build separate CVs. One CV per target.',
+            'You can change this later — pick your best guess and move on.',
+          ]}
+        />
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -107,61 +120,75 @@ const TargetJob = () => {
         </div>
       </form>
 
-      {/* Confirmation Modal */}
+      {/* Target-job confirmation modal — restructured for mobile.
+          Old layout crammed icon + title + close-button into one flex row,
+          which on phones forced the title to wrap awkwardly and pushed the
+          body content to the right of the icon. New layout: icon at the top,
+          close in the absolute corner, title and body stacked underneath. */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-amber-600" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {/* Close button — absolute top-right, doesn't compete with the
+                title for horizontal space on mobile. */}
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              aria-label="Close"
+              className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="px-5 pt-7 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
+              {/* Hero icon */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600" />
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Add a Target Job Title?</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Adding a target job helps our AI tailor your CV specifically for that role. You'll
-                  get:
-                </p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-0.5">✓</span>
-                    <span>
-                      <strong>Keyword optimization</strong> matching the job description
+
+              {/* Title + body */}
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 leading-tight">
+                Add a target job title?
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Telling us the role you're targeting lets our AI tailor your CV with the right
+                keywords. Without it you'll get a generic CV.
+              </p>
+
+              {/* Benefits list */}
+              <ul className="mt-4 space-y-2.5">
+                {[
+                  ['Keyword optimization', 'matching the job description'],
+                  ['AI-generated content', 'tailored to your target role'],
+                  ['Higher ATS score', 'for better recruiter visibility'],
+                ].map(([title, body]) => (
+                  <li key={title} className="flex items-start gap-2.5">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mt-0.5">
+                      <Check className="w-3 h-3" strokeWidth={3} />
+                    </span>
+                    <span className="text-sm text-slate-700 leading-relaxed">
+                      <strong className="font-semibold text-slate-900">{title}</strong> {body}
                     </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-0.5">✓</span>
-                    <span>
-                      <strong>AI-generated content</strong> tailored to your target role
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-0.5">✓</span>
-                    <span>
-                      <strong>Higher ATS score</strong> for better visibility
-                    </span>
-                  </li>
-                </ul>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+                ))}
+              </ul>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            {/* Actions — primary on top on mobile (thumb reach), side-by-side on
+                desktop with primary on the right. */}
+            <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 border-t border-slate-100 pt-4">
               <button
+                type="button"
                 onClick={handleSkipAndContinue}
-                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors text-sm"
               >
-                Continue Anyway
+                Continue without it
               </button>
               <button
+                type="button"
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors text-sm shadow-sm"
               >
-                Add Target Job
+                Add target job
               </button>
             </div>
           </div>

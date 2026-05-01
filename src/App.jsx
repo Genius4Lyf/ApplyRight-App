@@ -15,8 +15,15 @@ import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import JobSearch from './pages/JobSearch';
 import JobHistory from './pages/JobHistory';
+import Compare from './pages/Compare';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
+import MobileHomeRedirect from './components/MobileHomeRedirect';
+import MobileWelcome from './pages/mobile/MobileWelcome';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { isMobile, shouldShowBottomNav } from './utils/platform';
+import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
 import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
@@ -123,12 +130,17 @@ const RootLayout = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  const showNav = shouldShowBottomNav(location.pathname);
+
   return (
     <SessionManager>
       <TopProgressBar />
-      <AnimatePresence mode="wait">
-        {element && cloneElement(element, { key: getPageKey(location.pathname) })}
-      </AnimatePresence>
+      <div className={showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}>
+        <AnimatePresence mode="wait">
+          {element && cloneElement(element, { key: getPageKey(location.pathname) })}
+        </AnimatePresence>
+      </div>
+      <MobileBottomNav />
     </SessionManager>
   );
 };
@@ -174,7 +186,15 @@ const router = createBrowserRouter([
         path: '/',
         element: (
           <GuestRoute>
-            <LandingPage />
+            <MobileHomeRedirect />
+          </GuestRoute>
+        ),
+      },
+      {
+        path: '/welcome',
+        element: (
+          <GuestRoute>
+            <MobileWelcome />
           </GuestRoute>
         ),
       },
@@ -250,13 +270,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/jobs',
-        element: (
-          <MaintenanceGuard>
-            <ProtectedRoute>
-              <JobSearch />
-            </ProtectedRoute>
-          </MaintenanceGuard>
-        ),
+        element: <JobSearch />,
       },
       {
         path: '/history',
@@ -264,6 +278,16 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <JobHistory />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/compare/:idA/:idB',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <Compare />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),
@@ -414,6 +438,22 @@ const router = createBrowserRouter([
 import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
+  useEffect(() => {
+    if (!isMobile()) return;
+    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    StatusBar.setBackgroundColor({ color: '#ffffff00' }).catch(() => {}); // fully transparent — page bg shows through
+
+    // Wake the Render backend before showing the app — splash stays up until
+    // the first response lands or 8s passes, whichever happens first.
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const wakeBackend = fetch(apiUrl, { method: 'GET' }).catch(() => {});
+    const timeout = new Promise((resolve) => setTimeout(resolve, 8000));
+    Promise.race([wakeBackend, timeout]).finally(() => {
+      SplashScreen.hide().catch(() => {});
+    });
+  }, []);
+
   return (
     <ErrorBoundary>
       <HelmetProvider>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  CheckCircle, ArrowLeft, ExternalLink, X, Pencil, Search,
+  CheckCircle, ArrowLeft, ExternalLink, X, Pencil,
   ShieldCheck, AlertTriangle, XCircle, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -39,8 +39,7 @@ const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
     color: 'red',
     title: 'Low Match',
     message: 'This role may not align well with your current experience. Even after tailoring, key qualifications are missing.',
-    advice: 'We recommend exploring roles that better match your skills. You can search for jobs based on your CV profile for better-fitting opportunities.',
-    showSearchCTA: true,
+    advice: 'Consider revisiting your experience and skills sections to better align with your target role.',
   };
 };
 
@@ -145,25 +144,12 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, onPreview, atsScores, tail
             >
               Got it
             </button>
-            <div className="flex gap-2">
-              <button
-                onClick={onEdit}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Edit CV
-              </button>
-              {guidance.showSearchCTA && (
-                <button
-                  onClick={() => {
-                    onClose();
-                    window.location.href = '/jobs';
-                  }}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Search className="w-3.5 h-3.5" /> Find Better Fits
-                </button>
-              )}
-            </div>
+            <button
+              onClick={onEdit}
+              className="w-full px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit CV
+            </button>
           </div>
 
           {tailoredForJob && (
@@ -267,14 +253,6 @@ const Finalize = () => {
               {guidance.title} — {afterScore}% match
             </p>
             <p className="text-sm text-slate-600 mt-1">{guidance.advice}</p>
-            {guidance.showSearchCTA && (
-              <button
-                onClick={() => navigate('/jobs')}
-                className="mt-2 text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1"
-              >
-                <Search className="w-3.5 h-3.5" /> Browse better-fitting roles
-              </button>
-            )}
           </div>
         </div>
       )}

@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '../../components/Navbar';
-import ATSGuide from '../../components/ATSGuide';
 import { Save } from 'lucide-react';
 import { CVBuilderProvider, useCVBuilder } from '../../context/CVContext';
 
@@ -20,8 +18,6 @@ const CVBuilderInner = () => {
     loading,
   } = useCVBuilder();
 
-  const [showGuide, setShowGuide] = useState(false);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -37,106 +33,45 @@ const CVBuilderInner = () => {
       <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Progress Bar */}
-          <div className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-slate-900 line-clamp-1">
-                  {cvData.title}
-                </h2>
-                <p className="text-xs md:text-sm text-slate-500">
-                  <span className="md:hidden">
-                    Step {currentStepIndex + 1} / {steps.length}
-                  </span>
-                  <span className="hidden md:inline">
-                    Step {currentStepIndex + 1} of {steps.length}: {currentStep?.label}
-                  </span>
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowGuide(!showGuide)}
-                className={`text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${showGuide ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-              >
-                {showGuide ? 'Hide Guide' : 'Show Guide'}
-              </button>
-              {saving && (
-                <span className="text-xs text-indigo-600 animate-pulse flex items-center gap-1">
-                  <Save className="w-3 h-3" /> Saving...
-                </span>
-              )}
-              <div className="hidden md:flex gap-1">
-                {steps.map((s, idx) => (
-                  <div
-                    key={s.id}
-                    className={`h-2 w-8 rounded-full transition-colors ${idx <= currentStepIndex ? 'bg-indigo-600' : 'bg-slate-200'}`}
-                  />
-                ))}
-              </div>
-            </div>
+          {/* Slim full-width progress strip — visible on every screen size,
+              replacing the desktop-only step dots that were hidden on mobile. */}
+          <div className="bg-slate-100 h-1 w-full overflow-hidden shrink-0">
+            <div
+              className="h-full bg-indigo-600 transition-all duration-500 ease-out"
+              style={{
+                width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
+              }}
+            />
           </div>
 
-          {/* Step Content */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[500px] p-4 md:p-8">
+          {/* Compact header row — title (subtle) on the left, step indicator
+              centered, saving state on the right. ~36px tall vs the old ~80px. */}
+          <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-2 flex items-center gap-3 shrink-0">
+            <p className="text-xs md:text-sm text-slate-500 truncate flex-1 min-w-0">
+              {cvData.title}
+            </p>
+            <p className="text-xs md:text-sm font-semibold text-slate-700 shrink-0">
+              <span className="text-indigo-600">Step {currentStepIndex + 1}</span>
+              <span className="text-slate-400"> of {steps.length}</span>
+              <span className="hidden sm:inline text-slate-500 font-normal"> · {currentStep?.label}</span>
+            </p>
+            {saving && (
+              <span className="text-xs text-indigo-600 animate-pulse flex items-center gap-1 shrink-0">
+                <Save className="w-3 h-3" />
+                <span className="hidden sm:inline">Saving…</span>
+              </span>
+            )}
+          </div>
+
+          {/* Step Content. Outer card framing kicks in only at lg+ so phones
+              get the form edge-to-edge. Inner cards inside each step (role,
+              project, education entries) still keep their own card styling. */}
+          <div className="flex-1 overflow-y-auto p-2 lg:p-8 custom-scrollbar">
+            <div className="max-w-3xl mx-auto bg-white min-h-[500px] p-3 lg:p-8 lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200">
               <Outlet context={{ cvData, handleNext, handleBack, saving, user, updateCvData, tailoredFrom: cvData.tailoredFrom, tailoredForJob: cvData.tailoredForJob }} />
             </div>
           </div>
         </div>
-
-        {/* Sidebar - ATS Guide */}
-        <AnimatePresence mode="wait">
-          {showGuide && (
-            <>
-              {/* Mobile Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 xl:hidden"
-                onClick={() => setShowGuide(false)}
-              />
-
-              {/* Guide Container */}
-              <motion.div
-                initial={{ x: '100%', opacity: 0.5 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: '100%', opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.8 }}
-                className="fixed inset-y-0 right-0 z-50 w-[90%] max-w-sm xl:static xl:w-96 xl:block border-l border-slate-200 bg-slate-50 shadow-2xl flex flex-col"
-              >
-                <div className="xl:hidden p-4 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
-                  <h3 className="font-bold text-indigo-900">ATS Best Practices</h3>
-                  <button
-                    onClick={() => setShowGuide(false)}
-                    className="p-2 bg-white rounded-full shadow-sm text-slate-500 hover:text-slate-800"
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M18 6 6 18" />
-                      <path d="m6 6 12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto bg-slate-50">
-                  <ATSGuide step={currentStep?.id || 'heading'} />
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

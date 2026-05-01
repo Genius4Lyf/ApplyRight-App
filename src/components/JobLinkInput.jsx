@@ -73,14 +73,14 @@ const JobLinkInput = ({ onJobExtracted }) => {
   };
 
   return (
-    <div className="clean-card h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-          <Link2 className="w-6 h-6" />
+    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300">
+      <div className="flex items-center gap-3 mb-4 lg:mb-6">
+        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+          <Link2 className="w-5 h-5 lg:w-6 lg:h-6" />
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">Step 2: Job Listing</h3>
-          <p className="text-sm text-slate-500">Provide the job details for analysis</p>
+        <div className="min-w-0">
+          <h3 className="text-base lg:text-lg font-semibold text-slate-900">Step 2 · Job listing</h3>
+          <p className="text-xs lg:text-sm text-slate-500">Provide the job details for analysis</p>
         </div>
       </div>
 

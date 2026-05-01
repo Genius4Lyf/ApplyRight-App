@@ -4,6 +4,8 @@ import { FileText, ArrowRight, ArrowLeft, Sparkles, RefreshCcw, Wand2 } from 'lu
 import CVService from '../../services/cv.service';
 import Modal from '../../components/Modal';
 import { toast } from 'sonner';
+import SectionTips from '../../components/SectionTips';
+import InlineExample from '../../components/InlineExample';
 
 const ProfessionalSummary = () => {
   // Safely destructure context
@@ -111,6 +113,22 @@ const ProfessionalSummary = () => {
             <h2 className="text-2xl font-bold text-slate-800">Professional Summary</h2>
             <p className="text-slate-500">Your 30-second elevator pitch. Make it count.</p>
           </div>
+        </div>
+
+        <SectionTips
+          sectionKey="cvbuilder_summary"
+          title="2-3 sentences. Specific beats clever."
+          intro="The summary is read first and remembered last. Earn that real estate."
+          tips={[
+            'Sentence 1: who you are professionally and how many years.',
+            'Sentence 2: a concrete win or area of strongest impact.',
+            'Sentence 3 (optional): what you\'re looking for next.',
+            'Avoid generic adjectives ("innovative", "passionate") — show, don\'t tell.',
+          ]}
+        />
+
+        <div className="mt-4 mb-2 flex justify-end">
+          <InlineExample kind="summary" targetTitle={cvData.targetJob?.title} />
         </div>
 
         <div className="relative">

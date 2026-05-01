@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const GlobalBanner = () => {
   const [banner, setBanner] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
+  // Separate piece of state: AI is unavailable if the backend has no API key
+  // configured. Surfaces to the user before they trigger a generation that
+  // would 503 with "you have not been charged."
+  const [aiUnavailable, setAiUnavailable] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -18,6 +22,9 @@ const GlobalBanner = () => {
         } else {
           setBanner(null);
         }
+
+        // aiAvailable defaults to true if the field is missing (older backends).
+        setAiUnavailable(res.data.features?.aiAvailable === false);
       } catch (error) {
         console.error('Failed to fetch global banner', error);
       }
@@ -29,7 +36,9 @@ const GlobalBanner = () => {
     return () => window.removeEventListener('settings_updated', fetchSettings);
   }, []);
 
-  if (!banner || !isVisible) return null;
+  // Compose AI-unavailable banner above the admin announcement banner. We
+  // render both if both are active; nothing if neither.
+  if ((!banner || !isVisible) && !aiUnavailable) return null;
 
   const themes = {
     info: {
@@ -55,12 +64,25 @@ const GlobalBanner = () => {
     },
   };
 
-  const theme = themes[banner.type] || themes.info;
-  const Icon = theme.icon;
+  const theme = banner ? themes[banner.type] || themes.info : null;
+  const Icon = theme ? theme.icon : null;
 
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <>
+      {/* AI-unavailable banner — non-dismissible, server-state-driven */}
+      {aiUnavailable && (
+        <div className="bg-amber-500/95 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              AI is currently unavailable on this server. Generation features are disabled — you won't be charged.
+            </span>
+          </div>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {banner && isVisible && theme && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
@@ -110,7 +132,8 @@ const GlobalBanner = () => {
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 };
 

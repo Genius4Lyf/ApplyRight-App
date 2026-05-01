@@ -5,7 +5,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
-  Trash2,
   Sparkles,
   RefreshCcw,
   Link as LinkIcon,
@@ -13,6 +12,32 @@ import {
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import ProjectsTutorial from './ProjectsTutorial';
+import SectionTips from '../../components/SectionTips';
+import InlineExample from '../../components/InlineExample';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import SortableItem from '../../components/SortableItem';
+
+const newSortId = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+
+const ensureIds = (items) =>
+  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
 const Projects = () => {
   // Safely destructure context
@@ -23,24 +48,42 @@ const Projects = () => {
   if (!cvData) {
     return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
   }
-  const [projects, setProjects] = useState(cvData.projects || []);
+  const [projects, setProjects] = useState(() => ensureIds(cvData.projects));
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Auto-show tutorial based on user settings
-  // Auto-show tutorial based on user settings
-  useEffect(() => {
-    if (user?.settings?.showOnboardingTutorials !== false) {
-      const timer = setTimeout(() => {
-        setShowTutorial(true);
-      }, 800); // 0.8s delay for better UX
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setProjects((items) => {
+      const oldIndex = items.findIndex((it) => it._sortId === active.id);
+      const newIndex = items.findIndex((it) => it._sortId === over.id);
+      if (oldIndex === -1 || newIndex === -1) return items;
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  const moveItem = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= projects.length) return;
+    setProjects((items) => arrayMove(items, index, target));
+  };
+
+  // Auto-show modal removed in favor of inline SectionTips card. The modal
+  // still mounts and can be opened manually via the "How AI Works" button.
 
   const addProject = () => {
-    setProjects([...projects, { title: '', link: '', description: '' }]);
+    setProjects([
+      ...projects,
+      { _sortId: newSortId(), title: '', link: '', description: '' },
+    ]);
   };
 
   const removeProject = (index) => {
@@ -179,6 +222,19 @@ const Projects = () => {
         </button>
       </div>
 
+      <SectionTips
+        sectionKey="cvbuilder_projects"
+        title="Projects show what you do when nobody's asking"
+        intro="Even small side projects matter — they show initiative."
+        tips={[
+          'Pick projects relevant to the role you\'re targeting; cut the rest.',
+          'Each description: what it is, who used it, the most concrete outcome (users, downloads, impact).',
+          'If it was a team project, name your specific contribution — what <em>you</em> built or led.',
+          'Add a link if you have one — GitHub, live demo, write-up, anything.',
+          'Don\'t list languages here — your Skills section already covers that.',
+        ]}
+      />
+
       {projects.length === 0 && (
         <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
           <p className="text-slate-500 mb-4">No projects added yet.</p>
@@ -200,19 +256,27 @@ const Projects = () => {
         </div>
       )}
 
-      <div className="space-y-8">
-        {projects.map((proj, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative group"
-          >
-            <button
-              type="button"
-              onClick={() => removeProject(index)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors p-2"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={projects.map((p) => p._sortId)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-8">
+            {projects.map((proj, index) => (
+              <SortableItem
+                key={proj._sortId}
+                id={proj._sortId}
+                index={index}
+                total={projects.length}
+                onMoveUp={() => moveItem(index, -1)}
+                onMoveDown={() => moveItem(index, 1)}
+                onDelete={() => removeProject(index)}
+              >
+                <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -317,20 +381,29 @@ const Projects = () => {
                 placeholder="• Developed a full-stack app using..."
                 className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
               />
+              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                <p className="text-[11px] text-slate-500">
+                  Tip: 1-3 short bullets is enough. Lead with what it does, not how you built it.
+                </p>
+                <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
+              </div>
             </div>
+                </div>
+              </SortableItem>
+            ))}
           </div>
-        ))}
+        </SortableContext>
+      </DndContext>
 
-        {projects.length > 0 && (
-          <button
-            type="button"
-            onClick={addProject}
-            className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add Another Project
-          </button>
-        )}
-      </div>
+      {projects.length > 0 && (
+        <button
+          type="button"
+          onClick={addProject}
+          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Add Another Project
+        </button>
+      )}
 
       <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button

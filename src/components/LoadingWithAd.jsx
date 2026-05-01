@@ -70,7 +70,10 @@ const LoadingWithAd = ({
     'Save your CV as a PDF to ensure formatting stays consistent.',
   ];
 
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  // Random starting tip on each mount so users see different tips across loads.
+  const [currentTipIndex, setCurrentTipIndex] = useState(() =>
+    Math.floor(Math.random() * tips.length)
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -82,8 +85,8 @@ const LoadingWithAd = ({
   const currentMessage = messages[currentMessageIndex];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-3xl w-full p-8 m-4 shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-white sm:bg-black/80 sm:backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-3xl p-2 sm:bg-white sm:rounded-3xl sm:p-8 sm:m-4 sm:shadow-2xl">
         {/* Loading indicator */}
         <div className="flex flex-col items-center mb-8">
           <Loader className="w-12 h-12 text-indigo-600 animate-spin mb-4" />

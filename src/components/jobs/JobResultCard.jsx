@@ -1,8 +1,7 @@
 import React from 'react';
-import { MapPin, Building2, Clock, Bookmark, BookmarkCheck, ExternalLink } from 'lucide-react';
-import MatchScoreBadge from './MatchScoreBadge';
+import { MapPin, Building2, Clock, ExternalLink } from 'lucide-react';
 
-const JobResultCard = ({ result, searchId, showMatchScore = false, onViewDetails, onToggleSave, onApplyClick }) => {
+const JobResultCard = ({ result, searchId, onViewDetails, onApplyClick }) => {
   const timeAgo = (date) => {
     if (!date) return '';
     const diff = Date.now() - new Date(date).getTime();
@@ -20,28 +19,14 @@ const JobResultCard = ({ result, searchId, showMatchScore = false, onViewDetails
       onClick={() => onViewDetails(result)}
     >
       <div className="flex items-start gap-3 h-full">
-        <MatchScoreBadge score={showMatchScore ? result.matchScore : null} />
+        <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+          <Building2 className="w-5 h-5 text-indigo-500" />
+        </div>
 
         <div className="flex-1 min-w-0 flex flex-col h-full">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">
-              {result.title}
-            </h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSave(searchId, result._id);
-              }}
-              className="shrink-0 p-1 text-slate-300 hover:text-indigo-500 transition-colors"
-              title={result.saved ? 'Remove bookmark' : 'Bookmark job'}
-            >
-              {result.saved ? (
-                <BookmarkCheck className="w-4 h-4 text-indigo-500 fill-indigo-500" />
-              ) : (
-                <Bookmark className="w-4 h-4" />
-              )}
-            </button>
-          </div>
+          <h3 className="font-semibold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">
+            {result.title}
+          </h3>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
             <span className="flex items-center gap-1">

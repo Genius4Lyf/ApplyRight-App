@@ -1,6 +1,31 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { GraduationCap, ArrowRight, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { GraduationCap, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
+import SectionTips from '../../components/SectionTips';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import SortableItem from '../../components/SortableItem';
+
+const newSortId = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+
+const ensureIds = (items) =>
+  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
 const Education = () => {
   // Safely destructure context
@@ -11,10 +36,36 @@ const Education = () => {
   if (!cvData) {
     return <div className="p-8 text-center text-slate-500">Loading education...</div>;
   }
-  const [education, setEducation] = useState(cvData.education || []);
+  const [education, setEducation] = useState(() => ensureIds(cvData.education));
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setEducation((items) => {
+      const oldIndex = items.findIndex((it) => it._sortId === active.id);
+      const newIndex = items.findIndex((it) => it._sortId === over.id);
+      if (oldIndex === -1 || newIndex === -1) return items;
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  const moveItem = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= education.length) return;
+    setEducation((items) => arrayMove(items, index, target));
+  };
 
   const addEducation = () => {
-    setEducation([...education, { degree: '', school: '', graduationDate: '', description: '' }]);
+    setEducation([
+      ...education,
+      { _sortId: newSortId(), degree: '', school: '', graduationDate: '', description: '' },
+    ]);
   };
 
   const removeEducation = (index) => {
@@ -49,6 +100,18 @@ const Education = () => {
         </div>
       </div>
 
+      <SectionTips
+        sectionKey="cvbuilder_education"
+        title="Keep education tight and relevant"
+        intro="Most readers spend a couple of seconds on this section."
+        tips={[
+          'List your most recent or highest qualification first.',
+          'Honors, GPA, or thesis only if it strengthens your application — otherwise skip it.',
+          'For experienced candidates (5+ years), education sits below work history.',
+          'Skip the high school once you have a degree — it\'s implied.',
+        ]}
+      />
+
       {education.length === 0 && (
         <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
           <p className="text-slate-500 mb-4">No education added.</p>
@@ -62,19 +125,27 @@ const Education = () => {
         </div>
       )}
 
-      <div className="space-y-6">
-        {education.map((edu, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative group"
-          >
-            <button
-              type="button"
-              onClick={() => removeEducation(index)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors p-2"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={education.map((e) => e._sortId)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-6">
+            {education.map((edu, index) => (
+              <SortableItem
+                key={edu._sortId}
+                id={edu._sortId}
+                index={index}
+                total={education.length}
+                onMoveUp={() => moveItem(index, -1)}
+                onMoveDown={() => moveItem(index, 1)}
+                onDelete={() => removeEducation(index)}
+              >
+                <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -126,19 +197,22 @@ const Education = () => {
                 />
               </div>
             </div>
+                </div>
+              </SortableItem>
+            ))}
           </div>
-        ))}
+        </SortableContext>
+      </DndContext>
 
-        {education.length > 0 && (
-          <button
-            type="button"
-            onClick={addEducation}
-            className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add Another
-          </button>
-        )}
-      </div>
+      {education.length > 0 && (
+        <button
+          type="button"
+          onClick={addEducation}
+          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Add Another
+        </button>
+      )}
 
       <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button

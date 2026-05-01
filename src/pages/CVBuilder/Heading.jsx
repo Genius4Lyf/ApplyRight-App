@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCVBuilder } from '../../context/CVContext';
 import { User, ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
+import SectionTips from '../../components/SectionTips';
 
 const Heading = () => {
   // Use the custom hook for context
@@ -16,8 +17,6 @@ const Heading = () => {
     nationality: false,
     address: false,
   });
-
-  const [showExample, setShowExample] = useState(false);
 
   // Initialize and Auto-fill effect
   useEffect(() => {
@@ -116,42 +115,20 @@ const Heading = () => {
             <p className="text-slate-500">Your professional header. Keep it accurate and simple.</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowExample(!showExample)}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-        >
-          {showExample ? 'Hide Example' : 'Best Practice Example'}
-        </button>
       </div>
 
-      {showExample && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-8 animate-in slide-in-from-top-2">
-          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-            Best Practice Example
-          </h4>
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-slate-900">Alexander James</h3>
-            <div className="text-sm text-slate-600 mt-1 flex flex-wrap justify-center gap-y-1 gap-x-3">
-              <span>London, UK</span>
-              <span className="text-slate-300">|</span>
-              <span>alex.james@email.com</span>
-              <span className="text-slate-300">|</span>
-              <span>+44 7123 456 789</span>
-              <span className="text-slate-300">|</span>
-              <span className="text-indigo-600">linkedin.com/in/alexjames</span>
-            </div>
-          </div>
-          <div className="mt-4 text-xs text-slate-500 bg-white p-3 rounded border border-slate-100 flex gap-2">
-            <div className="min-w-[4px] bg-emerald-500 rounded-full"></div>
-            <p>
-              <strong>Why this works:</strong> It's clean, minimal, and only includes contact info
-              relevant to recruiters (Location, Email, Phone, LinkedIn). No full address or
-              unnecessary labels.
-            </p>
-          </div>
-        </div>
-      )}
+      <SectionTips
+        sectionKey="cvbuilder_heading"
+        title="Keep the header clean and recruiter-ready"
+        intro="Your header is the first thing they see. A few small choices make a big difference."
+        tips={[
+          'Use a professional email — <code class="text-[11px] bg-white/60 px-1 rounded">firstname.lastname@email.com</code> beats a nickname.',
+          'City and country is enough — no need for a full street address.',
+          'Include your LinkedIn URL if you have one; recruiters click it.',
+          'Skip the photo unless you\'re applying in a region where it\'s standard.',
+          'Example: <em>Jane Doe · London, UK · jane.doe@email.com · +44 7123 456 789 · linkedin.com/in/janedoe</em>',
+        ]}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">

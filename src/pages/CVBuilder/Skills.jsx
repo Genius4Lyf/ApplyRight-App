@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
   Cpu,
@@ -9,11 +9,15 @@ import {
   Sparkles,
   BrainCircuit,
   GripVertical,
+  ChevronDown,
+  Check,
+  FolderPlus,
 } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import UserService from '../../services/user.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import SectionTips from '../../components/SectionTips';
 
 const Skills = () => {
   const context = useOutletContext();
@@ -26,12 +30,40 @@ const Skills = () => {
   // State
   const [skillsData, setSkillsData] = useState([]);
   const [loadingAi, setLoadingAi] = useState(false);
-  const [showAiBanner, setShowAiBanner] = useState(true);
+  // Default false; flipped on once user is loaded and the preference allows.
+  // Initializing to true would cause the banner to flash for a moment on every
+  // mount before the user fetch resolves with `hideSkillsAiPrompt: true`.
+  const [showAiBanner, setShowAiBanner] = useState(false);
 
   // Manual Entry State
   const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillCategory, setNewSkillCategory] = useState('');
+  const [newSkillCategory, setNewSkillCategory] = useState('Uncategorized');
   const [availableCategories, setAvailableCategories] = useState(['Uncategorized']);
+  // Inline "new category" mode replaces the dropdown with a text input so
+  // users can name a category without a separate modal or extra screen.
+  const [creatingNewCategory, setCreatingNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
+  // Close the custom category dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!categoryDropdownOpen) return;
+    const handleClick = (e) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setCategoryDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [categoryDropdownOpen]);
 
   // Initialize Data
   useEffect(() => {
@@ -52,18 +84,26 @@ const Skills = () => {
     }
   }, [cvData]);
 
-  // Update available categories based on current skills
+  // Update available categories based on current skills. Default the new-skill
+  // category to the most common existing category when one exists — most
+  // additions go into a category the user already has.
   useEffect(() => {
     const cats = new Set(['Uncategorized']);
     skillsData.forEach((s) => cats.add(s.category));
-    setAvailableCategories(Array.from(cats));
+    const list = Array.from(cats);
+    setAvailableCategories(list);
+    // If the currently selected category no longer exists (e.g., last skill in
+    // it was deleted), fall back to a valid one.
+    if (!list.includes(newSkillCategory)) {
+      setNewSkillCategory(list[0] || 'Uncategorized');
+    }
   }, [skillsData]);
 
-  // Check User Preference for Banner
+  // Check user preference once the profile has loaded — wait for `user` so
+  // we don't flash the banner before the saved `hideSkillsAiPrompt` arrives.
   useEffect(() => {
-    if (user?.settings?.hideSkillsAiPrompt) {
-      setShowAiBanner(false);
-    }
+    if (!user) return;
+    setShowAiBanner(!user.settings?.hideSkillsAiPrompt);
   }, [user]);
 
   // AI Generation Handler
@@ -125,26 +165,42 @@ const Skills = () => {
         toast.success('Preference saved.');
       } catch (error) {
         console.error('Failed to save preference', error);
+        toast.error("Couldn't save preference — banner may show again");
       }
     }
   };
 
-  // Manual Add
+  // Manual Add — accepts both button click and Enter key in the skill input.
   const addSkill = (e) => {
-    e.preventDefault();
-    if (!newSkillName.trim()) return;
+    if (e?.preventDefault) e.preventDefault();
+    const name = newSkillName.trim();
+    if (!name) return;
 
-    const category = newSkillCategory.trim() || 'Uncategorized';
+    // If we're in "create new category" mode, finalize the name first.
+    let category = newSkillCategory;
+    if (creatingNewCategory) {
+      const candidate = newCategoryName.trim();
+      if (!candidate) {
+        toast.error('Give the new category a name first.');
+        return;
+      }
+      category = candidate;
+      setCreatingNewCategory(false);
+      setNewCategoryName('');
+      setNewSkillCategory(candidate);
+    }
+    if (!category) category = 'Uncategorized';
+
+    // Avoid duplicate names (case-insensitive)
+    if (skillsData.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
+      toast.error(`"${name}" is already in your list.`);
+      return;
+    }
 
     setSkillsData([
       ...skillsData,
-      {
-        name: newSkillName.trim(),
-        category: category,
-        isAutoGenerated: false,
-      },
+      { name, category, isAutoGenerated: false },
     ]);
-
     setNewSkillName('');
   };
 
@@ -181,103 +237,206 @@ const Skills = () => {
         </div>
       </div>
 
-      {/* AI Banner */}
+      <SectionTips
+        sectionKey="cvbuilder_skills"
+        title="Skills are scanned, not read"
+        intro="Recruiters and resume software (the systems recruiters use) match keywords here."
+        tips={[
+          'Mirror the language from the job description — exact wording matters.',
+          'Group related skills (Languages, Frameworks, Tools) so it\'s scannable.',
+          'Lead with hard skills (tools, tech, languages); soft skills like "good communicator" need evidence elsewhere or skip them here.',
+          'List things you can confidently discuss in an interview — nothing more.',
+          'Aim for 15-25 total. Long lists dilute the strong ones.',
+        ]}
+      />
+
+      {/* Compact AI auto-fill card. Replaces the old full-width gradient banner
+          which dominated the page. Now a single line with one clear CTA and
+          a small dismiss link. Once dismissed it doesn't render at all. */}
       <AnimatePresence>
         {showAiBanner && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg overflow-hidden relative"
+            className="overflow-hidden"
           >
-            <button
-              type="button"
-              onClick={() => handleDismissBanner(false)}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Mobile stacks: icon+text on top, full-width CTA below.
+                Desktop keeps the single-row layout.
+                X dismiss is absolute-positioned so it never competes with
+                title/subtitle/CTA for horizontal space on phones. */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 sm:px-4 sm:py-3 relative">
+              <button
+                type="button"
+                onClick={() => handleDismissBanner(true)}
+                title="Don't show this again"
+                aria-label="Don't show this again"
+                className="absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 hover:bg-white/70 p-1.5 rounded-md transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
 
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
-                <BrainCircuit className="w-6 h-6 text-yellow-300" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1">Let AI Write Your Skills</h3>
-                <p className="text-indigo-100 text-sm mb-4 max-w-md">
-                  We'll analyze your education, experience, and projects to automatically suggest
-                  and categorize your top skills.
-                </p>
-
-                <div className="flex flex-wrap gap-3 items-center">
-                  <button
-                    type="button"
-                    onClick={handleGenerateSkills}
-                    disabled={loadingAi}
-                    className="bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shadow-sm"
-                  >
-                    {loadingAi ? (
-                      <Sparkles className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-4 h-4" />
-                    )}
-                    {loadingAi ? 'Analyzing Profile...' : 'Generate Skills (10 A.I Credits)'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDismissBanner(true)}
-                    className="text-xs text-indigo-200 hover:text-white underline underline-offset-4 decoration-indigo-300/50"
-                  >
-                    Don't show this again
-                  </button>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 pr-8 sm:pr-10">
+                <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <BrainCircuit className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-indigo-900">Auto-fill from your profile</p>
+                    <p className="text-xs text-indigo-700/80 leading-snug">
+                      Pulls skills from your work history, projects, and education — categorized.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateSkills}
+                  disabled={loadingAi}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0 transition-colors w-full sm:w-auto"
+                >
+                  {loadingAi ? (
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  <span>{loadingAi ? 'Generating…' : 'Auto-fill'}</span>
+                  <span className="text-indigo-200 font-normal">·</span>
+                  <span className="font-normal">10 cr</span>
+                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Add Skill Form */}
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row gap-3 items-end md:items-center">
-        <div className="flex-1 w-full">
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-            Skill Name
-          </label>
+      {/* Add Skill — single row: category selector + skill input + Add button.
+          Press Enter in the skill input to add, no need to reach for the button.
+          "+ New category" inline mode swaps the dropdown for a text input. */}
+      <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+          {/* Category control */}
+          {creatingNewCategory ? (
+            <div className="sm:w-44 flex items-center gap-1">
+              <input
+                type="text"
+                autoFocus
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Category name"
+                className="flex-1 p-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setCreatingNewCategory(false);
+                  setNewCategoryName('');
+                }}
+                title="Cancel"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-md"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="sm:w-44 relative" ref={categoryDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setCategoryDropdownOpen((v) => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={categoryDropdownOpen}
+                className={`w-full p-2.5 pr-8 border rounded-lg outline-none text-sm bg-white text-left transition-colors flex items-center ${
+                  categoryDropdownOpen
+                    ? 'border-indigo-500 ring-1 ring-indigo-500'
+                    : 'border-slate-300 hover:border-slate-400'
+                }`}
+              >
+                <span className="truncate text-slate-700">{newSkillCategory}</span>
+              </button>
+              <ChevronDown
+                className={`w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-transform ${
+                  categoryDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+
+              <AnimatePresence>
+                {categoryDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    role="listbox"
+                    className="absolute z-30 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
+                  >
+                    {availableCategories.map((cat) => {
+                      const selected = cat === newSkillCategory;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => {
+                            setNewSkillCategory(cat);
+                            setCategoryDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                            selected
+                              ? 'bg-indigo-50 text-indigo-700 font-medium'
+                              : 'text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="flex-1 truncate">{cat}</span>
+                          {selected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                    {/* Visually-distinct "create new" row at the bottom */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryDropdownOpen(false);
+                        setCreatingNewCategory(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-indigo-600 hover:bg-indigo-50 border-t border-slate-100 font-medium"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5 shrink-0" />
+                      <span>New category…</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Skill input — Enter submits */}
           <input
             type="text"
             value={newSkillName}
             onChange={(e) => setNewSkillName(e.target.value)}
-            placeholder="e.g. React.js"
-            className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill();
+              }
+            }}
+            placeholder="Add a skill…"
+            className="flex-1 p-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
           />
+
+          <button
+            type="button"
+            onClick={addSkill}
+            disabled={!newSkillName.trim()}
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </button>
         </div>
-        <div className="w-full md:w-1/3">
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-            Category (Optional)
-          </label>
-          <input
-            type="text"
-            value={newSkillCategory}
-            onChange={(e) => setNewSkillCategory(e.target.value)}
-            placeholder="e.g. Frontend"
-            list="category-suggestions"
-            className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-          />
-          <datalist id="category-suggestions">
-            {availableCategories.map((cat) => (
-              <option key={cat} value={cat} />
-            ))}
-          </datalist>
-        </div>
-        <button
-          type="button"
-          onClick={addSkill}
-          disabled={!newSkillName.trim()}
-          className="w-full md:w-auto p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
+        <p className="text-[11px] text-slate-400 px-1">
+          Press <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">Enter</kbd> to add. Pick a category or create a new one.
+        </p>
       </div>
 
       {/* Skills List */}
@@ -300,20 +459,22 @@ const Skills = () => {
                   return (
                     <div
                       key={index}
-                      className={`
-                                                group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all
-                                                ${
-                                                  skill.isAutoGenerated
-                                                    ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
-                                                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                                                }
-                                            `}
+                      className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                        skill.isAutoGenerated
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:border-indigo-300'
+                          : 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:border-emerald-300'
+                      }`}
                     >
                       <span className="cursor-default">{skill.name}</span>
                       <button
                         type="button"
                         onClick={() => removeSkill(globalIndex)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        aria-label={`Remove ${skill.name}`}
+                        className={`transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${
+                          skill.isAutoGenerated
+                            ? 'text-indigo-400 hover:text-rose-500'
+                            : 'text-emerald-500 hover:text-rose-500'
+                        }`}
                       >
                         <X className="w-3 h-3" />
                       </button>

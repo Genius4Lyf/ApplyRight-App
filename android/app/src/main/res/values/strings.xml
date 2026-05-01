@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ApplyRight</string>
+    <string name="title_activity_main">ApplyRight</string>
+    <string name="package_name">com.applyright.app</string>
+    <string name="custom_url_scheme">com.applyright.app</string>
+</resources>

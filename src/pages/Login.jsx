@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import api from '../services/api';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo/applyright-icon.png';
+import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -24,16 +23,9 @@ const Login = () => {
     setError('');
     setIsLoading(true);
 
-    // Validate email format and domain
-    const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu|gov|mil|co|io|ai|tech|dev|app|uk|ca|au|de|fr|jp|cn|in|br|mx|es|it|nl|se|no|dk|fi|ch|at|be|ie|nz|sg|hk|my|ph|th|vn|id|kr|tw|za|ae|sa|eg|ng|ke|gh|tz|ug|zm|zw|bw|mw|na|sz|ls|gm|sl|lr|sn|ml|bf|ne|td|cf|cm|ga|cg|cd|ao|mz|mg|sc|mu|re|yt|km|dj|so|et|er|sd|ss|ly|tn|dz|ma|eh|mr|cv|st|gq|gw|bi|rw|vu|fj|pg|sb|nc|pf|ws|to|tv|ki|nr|fm|mh|pw|mp|gu|as|vi|pr|do|jm|tt|bb|gd|lc|vc|ag|kn|dm|bs|ky|bm|tc|vg|ai|ms|gl|fo|is|li|mc|sm|va|ad|mt|cy|tr|gr|bg|ro|hu|cz|sk|pl|ua|by|ru|lt|lv|ee|md|ge|am|az|kz|uz|tm|kg|tj|mn|kp|mm|la|kh|bn|mv|bt|np|lk|bd|pk|af|ir|iq|sy|lb|jo|il|ps|ye|om|kw|bh|qa|info|biz|name|pro|coop|aero|museum|travel|jobs|mobi|tel|xxx|asia|cat|post|xxx)$/i;
-
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address with a recognized domain');
-      setIsLoading(false);
-      return;
-    }
-
+    // HTML5 type="email" handles format validation. The previous TLD whitelist
+    // regex was fragile (missing TLDs, duplicate entries) and added no value
+    // beyond what the browser already gives us. Server-side checks remain.
     try {
       const res = await api.post('/auth/login', formData);
       localStorage.setItem('token', res.data.token);
@@ -46,155 +38,123 @@ const Login = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden"
+    <AuthShell
+      formTitle="Welcome back"
+      formSubtitle="Sign in to pick up where you left off."
+      leftHeading="Land more interviews with a CV that's actually built for the job."
+      leftSubcopy="ApplyRight tailors your resume to every role you apply for, scores your fit, and writes the cover letter — all in minutes."
+      valueProps={DEFAULT_VALUE_PROPS}
+      trustSignals={['Free to start', 'No card needed', 'Encrypted']}
     >
-      {/* Subtle Geometric Pattern */}
-      <div
-        className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(#4F46E5 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      ></div>
-
-      <div className="relative z-10 w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="ApplyRight Logo" className="h-10 w-auto" />
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">ApplyRight</span>
-          </Link>
-        </div>
-
-        <div className="clean-card w-full p-8 space-y-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500">Sign in to continue to your professional workspace</p>
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            {error}
           </div>
+        )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="input-field w-full"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={onChange}
-                  disabled={isLoading}
-                />
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-1.5 ml-0.5">
-                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-primary hover:underline font-medium"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    className="input-field w-full pr-10"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={onChange}
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Signing In...
-                </>
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-
-            <div className="relative py-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200"></span>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400">New to ApplyRight?</span>
-              </div>
-            </div>
-
-            <Link to="/register" className="btn-secondary w-full">
-              Create Professional Account
-            </Link>
-          </form>
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-slate-700 mb-1.5"
+          >
+            Email address
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            className="input-field w-full"
+            placeholder="name@company.com"
+            value={email}
+            onChange={onChange}
+            disabled={isLoading}
+          />
         </div>
 
-        <p className="text-center mt-8 text-sm text-slate-400">
-          &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
+        <div>
+          <div className="flex justify-between items-center mb-1.5">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              Password
+            </label>
+            <Link
+              to="/forgot-password"
+              className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
+              className="input-field w-full pr-10"
+              placeholder="••••••••"
+              value={password}
+              onChange={onChange}
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="btn-primary w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Signing in...
+            </>
+          ) : (
+            <>
+              Sign in
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </>
+          )}
+        </button>
+
+        <p className="text-center text-sm text-slate-500">
+          New to ApplyRight?{' '}
+          <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+            Create an account
+          </Link>
         </p>
-      </div>
-    </motion.div>
+      </form>
+    </AuthShell>
   );
 };
 

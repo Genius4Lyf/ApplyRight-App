@@ -1,9 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Briefcase, ArrowRight, ArrowLeft, Plus, Trash2, Sparkles, RefreshCcw } from 'lucide-react';
+import { Briefcase, ArrowRight, ArrowLeft, Plus, Sparkles, RefreshCcw } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
+import SectionTips from '../../components/SectionTips';
+import InlineExample from '../../components/InlineExample';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import SortableItem from '../../components/SortableItem';
+
+// Stable per-item ID for drag-and-drop. Persists with the data so order is
+// stable across renders even after the auto-save round-trip.
+const newSortId = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+
+const ensureIds = (items) =>
+  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
 const History = () => {
   // Safely destructure context
@@ -14,7 +42,32 @@ const History = () => {
   if (!cvData) {
     return <div className="p-8 text-center text-slate-500">Loading history...</div>;
   }
-  const [history, setHistory] = useState(cvData.experience || []);
+  const [history, setHistory] = useState(() => ensureIds(cvData.experience));
+
+  // Sensors: pointer for mouse/trackpad, touch with a small activation distance
+  // so vertical scrolling on mobile isn't accidentally hijacked by a drag.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setHistory((items) => {
+      const oldIndex = items.findIndex((it) => it._sortId === active.id);
+      const newIndex = items.findIndex((it) => it._sortId === over.id);
+      if (oldIndex === -1 || newIndex === -1) return items;
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  const moveItem = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= history.length) return;
+    setHistory((items) => arrayMove(items, index, target));
+  };
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
   const [showTutorial, setShowTutorial] = useState(false);
@@ -25,21 +78,23 @@ const History = () => {
   const [selectedSuggestions, setSelectedSuggestions] = useState([]);
   const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
 
-  // Auto-show tutorial based on user settings
-  useEffect(() => {
-    // Only show if user settings allow it
-    if (user?.settings?.showOnboardingTutorials !== false) {
-      const timer = setTimeout(() => {
-        setShowTutorial(true);
-      }, 800); // 0.8s delay for better UX
-      return () => clearTimeout(timer);
-    }
-  }, [user]); // user dependency ensures it runs when user is loaded
+  // The auto-show tutorial modal was removed in favor of the inline SectionTips
+  // card rendered at the top of the form below. Modal still mounts and can be
+  // opened manually via the "How AI Works" button for users who want a fuller
+  // walkthrough.
 
   const addRole = () => {
     setHistory([
       ...history,
-      { title: '', company: '', startDate: '', endDate: '', isCurrent: false, description: '' },
+      {
+        _sortId: newSortId(),
+        title: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        isCurrent: false,
+        description: '',
+      },
     ]);
   };
 
@@ -198,6 +253,19 @@ const History = () => {
         </button>
       </div>
 
+      <SectionTips
+        sectionKey="cvbuilder_history"
+        title="Make every role count"
+        intro="Recruiters skim — your bullets do most of the work."
+        tips={[
+          'List your most recent role first, working backwards (reverse chronological).',
+          'Start each bullet with a strong action verb (Built, Led, Reduced, Launched).',
+          'Use the format <strong>Action + Context + Result</strong> — what you did, where, what changed.',
+          'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
+          'Use the AI rewrite button after writing 2+ bullets — it sharpens what you already have.',
+        ]}
+      />
+
       {history.length === 0 && (
         <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
           <p className="text-slate-500 mb-4">No work history added yet.</p>
@@ -211,19 +279,27 @@ const History = () => {
         </div>
       )}
 
-      <div className="space-y-8">
-        {history.map((role, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative group"
-          >
-            <button
-              type="button"
-              onClick={() => removeRole(index)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors p-2"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={history.map((r) => r._sortId)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-8">
+            {history.map((role, index) => (
+              <SortableItem
+                key={role._sortId}
+                id={role._sortId}
+                index={index}
+                total={history.length}
+                onMoveUp={() => moveItem(index, -1)}
+                onMoveDown={() => moveItem(index, 1)}
+                onDelete={() => removeRole(index)}
+              >
+                <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="md:col-span-1">
@@ -372,10 +448,24 @@ const History = () => {
                 placeholder="• Achieved X by doing Y..."
                 className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
               />
+              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                <p className="text-[11px] text-slate-500">
+                  Tip: 3-5 bullets is the sweet spot. One per impact, not per task.
+                </p>
+                <InlineExample
+                  kind="bullet"
+                  targetTitle={cvData.targetJob?.title || role.title}
+                />
+              </div>
             </div>
+                </div>
+              </SortableItem>
+            ))}
           </div>
-        ))}
+        </SortableContext>
+      </DndContext>
 
+      {history.length > 0 && (
         <button
           type="button"
           onClick={addRole}
@@ -383,7 +473,7 @@ const History = () => {
         >
           <Plus className="w-4 h-4" /> Add Another Position
         </button>
-      </div>
+      )}
 
       <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button

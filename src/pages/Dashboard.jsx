@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
@@ -31,10 +31,11 @@ import {
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
 import FitScoreCard from '../components/FitScoreCard';
+import NextBestAction from '../components/NextBestAction';
+import JobRequirementsCard from '../components/JobRequirementsCard';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MonetagBanner from '../components/MonetagBanner';
-import FeatureAnnouncementModal from '../components/FeatureAnnouncementModal';
-import JobRecommendations from '../components/jobs/JobRecommendations';
+import MetricCaptureModal from '../components/MetricCaptureModal';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -62,6 +63,26 @@ const Dashboard = () => {
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCL, setGeneratingCL] = useState(false);
   const [generatingInterview, setGeneratingInterview] = useState(false);
+  // Live progress from the async CV generation pipeline (stage, %, message).
+  const [cvGenStatus, setCvGenStatus] = useState(null);
+  // Poll handle for the CV generation status endpoint
+  const cvPollRef = useRef(null);
+
+  // Metric-capture modal — shown between Generate click and the actual request
+  // when the preflight surfaces bullets that lack concrete numbers. `mode`
+  // remembers which generate path to resume after the user submits/cancels.
+  const [metricCapture, setMetricCapture] = useState({
+    isOpen: false,
+    vagueBullets: [],
+    mode: null, // 'cv' | 'bundle'
+  });
+
+  // Cleanup any in-flight poll on unmount
+  useEffect(() => {
+    return () => {
+      if (cvPollRef.current) clearInterval(cvPollRef.current);
+    };
+  }, []);
 
   // New Feature State
   const [workflowMode, setWorkflowMode] = useState(null); // 'upload' (optimize), 'create-upload' (new feature)
@@ -215,27 +236,169 @@ const Dashboard = () => {
   };
 
   // Asset generation handlers
-  const handleGenerateCV = async () => {
+  // Maps API errors to user-facing toasts/modals consistently across asset gen.
+  const handleAssetGenError = (error, fallbackMessage) => {
+    const code = error.response?.data?.code;
+    if (error.response?.status === 403 && code === 'INSUFFICIENT_CREDITS') {
+      handleInsufficientCredits(error.response.data.required, error.response.data.current);
+      return;
+    }
+    if (error.response?.status === 503 && code === 'AI_UNAVAILABLE') {
+      toast.error('AI is temporarily unavailable. You have not been charged. Please try again in a moment.');
+      return;
+    }
+    if (error.response?.status === 409 && code === 'GENERATION_IN_PROGRESS') {
+      toast.error('A CV generation is already running for this application.');
+      return;
+    }
+    toast.error(fallbackMessage);
+  };
+
+  // Polls /applications/:id every 1.5s for CV generation progress. Stops on
+  // completed/failed, applies the final result to local state, refreshes the
+  // credit balance, and surfaces a score-lift toast on success.
+  const startCVPoll = (applicationId) => {
+    if (cvPollRef.current) clearInterval(cvPollRef.current);
+    cvPollRef.current = setInterval(async () => {
+      try {
+        const res = await api.get(`/applications/${applicationId}`);
+        const fresh = res.data;
+        const status = fresh.generationStatus;
+        if (status) setCvGenStatus(status);
+
+        if (status?.stage === 'completed') {
+          clearInterval(cvPollRef.current);
+          cvPollRef.current = null;
+          setApplication((prev) => ({
+            ...prev,
+            optimizedCV: fresh.optimizedCV,
+            draftId: fresh.draftCVId,
+            draftCVId: fresh.draftCVId,
+            skills: fresh.skills,
+            templateId: fresh.templateId,
+            fitScoreBefore: fresh.fitScore,
+            fitScoreAfter: fresh.optimizedFitScore,
+            optimizedFitScore: fresh.optimizedFitScore,
+            status: fresh.status,
+            statusUpdatedAt: fresh.statusUpdatedAt,
+          }));
+          // Sync credits from /billing/balance — pipeline already deducted.
+          try {
+            const bal = await api.get('/billing/balance');
+            if (bal.data?.credits !== undefined) updateCredits(bal.data.credits);
+          } catch (e) {
+            // Non-critical — UI will still re-fetch credits on next interaction.
+          }
+          const before = fresh.fitScore;
+          const after = fresh.optimizedFitScore;
+          if (typeof before === 'number' && typeof after === 'number' && after > before) {
+            toast.success(`Match lifted ${before}% → ${after}%`);
+          } else {
+            toast.success('Optimized CV generated!');
+          }
+          setGeneratingCV(false);
+          setCvGenStatus(null);
+        } else if (status?.stage === 'failed') {
+          clearInterval(cvPollRef.current);
+          cvPollRef.current = null;
+          toast.error(status.error || 'CV generation failed. You have not been charged.');
+          setGeneratingCV(false);
+          setCvGenStatus(null);
+        }
+      } catch (e) {
+        // Transient network failures — keep polling. We only stop on terminal
+        // states reported by the server.
+        console.error('CV poll error (will retry):', e.message);
+      }
+    }, 1500);
+  };
+
+  // Actual CV generation request. Split out from handleGenerateCV so the
+  // metric-capture modal can resume the same call after the user submits.
+  const startCVGeneration = async (providedMetrics) => {
     if (!application?.applicationId) return;
     setGeneratingCV(true);
+    setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: 'Starting…' });
     try {
       const res = await api.post(`/analysis/${application.applicationId}/generate-cv`, {
         templateId: selectedTemplate,
+        providedMetrics,
       });
-      setApplication((prev) => ({ ...prev, ...res.data }));
-      if (res.data.remainingCredits !== undefined) {
-        updateCredits(res.data.remainingCredits);
-      }
-      toast.success('Optimized CV generated!');
+      if (res.data.generationStatus) setCvGenStatus(res.data.generationStatus);
+      startCVPoll(application.applicationId);
     } catch (error) {
-      if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
-        handleInsufficientCredits(error.response.data.required, error.response.data.current);
-      } else {
-        toast.error('Failed to generate CV. Please try again.');
-      }
-    } finally {
       setGeneratingCV(false);
+      setCvGenStatus(null);
+      handleAssetGenError(error, 'Failed to start CV generation. Please try again.');
     }
+  };
+
+  const startBundleGeneration = async (providedMetrics) => {
+    if (!application?.applicationId) return;
+    setGeneratingCV(true);
+    setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: 'Starting bundle…' });
+    try {
+      const res = await api.post(`/analysis/${application.applicationId}/generate-bundle`, {
+        templateId: selectedTemplate,
+        providedMetrics,
+      });
+      if (res.data.generationStatus) setCvGenStatus(res.data.generationStatus);
+      startCVPoll(application.applicationId);
+    } catch (error) {
+      setGeneratingCV(false);
+      setCvGenStatus(null);
+      handleAssetGenError(error, 'Failed to start bundle generation. Please try again.');
+    }
+  };
+
+  // Hits the preflight to find vague bullets. If any are flagged, opens the
+  // metric-capture modal and defers the actual generate call until submit.
+  // Preflight is best-effort: any failure falls through to direct generation.
+  const handleGenerateCV = async () => {
+    if (!application?.applicationId || generatingCV) return;
+    try {
+      const { data } = await api.post(`/analysis/${application.applicationId}/preflight-metrics`);
+      const vague = data?.vagueBullets || [];
+      if (vague.length > 0) {
+        setMetricCapture({ isOpen: true, vagueBullets: vague, mode: 'cv' });
+        return;
+      }
+    } catch (err) {
+      console.error('Preflight failed (proceeding without metrics):', err.message);
+    }
+    startCVGeneration(undefined);
+  };
+
+  // Bundle: kicks off the same async pipeline as CV but the backend will also
+  // generate cover letter + interview prep before charging once at 18 credits.
+  const handleGenerateBundle = async () => {
+    if (!application?.applicationId || generatingCV) return;
+    try {
+      const { data } = await api.post(`/analysis/${application.applicationId}/preflight-metrics`);
+      const vague = data?.vagueBullets || [];
+      if (vague.length > 0) {
+        setMetricCapture({ isOpen: true, vagueBullets: vague, mode: 'bundle' });
+        return;
+      }
+    } catch (err) {
+      console.error('Preflight failed (proceeding without metrics):', err.message);
+    }
+    startBundleGeneration(undefined);
+  };
+
+  const handleMetricCaptureSubmit = (metrics) => {
+    const { mode } = metricCapture;
+    setMetricCapture({ isOpen: false, vagueBullets: [], mode: null });
+    const payload = metrics && Object.keys(metrics).length > 0 ? metrics : undefined;
+    if (mode === 'bundle') {
+      startBundleGeneration(payload);
+    } else {
+      startCVGeneration(payload);
+    }
+  };
+
+  const handleMetricCaptureCancel = () => {
+    setMetricCapture({ isOpen: false, vagueBullets: [], mode: null });
   };
 
   const handleGenerateCoverLetter = async () => {
@@ -247,13 +410,19 @@ const Dashboard = () => {
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
       }
-      toast.success('Cover letter generated!');
-    } catch (error) {
-      if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
-        handleInsufficientCredits(error.response.data.required, error.response.data.current);
+      const warnings = res.data.coverLetterWarnings || [];
+      if (warnings.length > 0) {
+        // Surface fact-check warnings immediately so the user verifies before
+        // sending. Non-blocking — the letter is still generated and saved.
+        toast.warning(
+          `Cover letter generated, but ${warnings.length} claim${warnings.length === 1 ? '' : 's'} may not be supported by your resume — verify before sending.`,
+          { duration: 8000 }
+        );
       } else {
-        toast.error('Failed to generate cover letter. Please try again.');
+        toast.success('Cover letter generated!');
       }
+    } catch (error) {
+      handleAssetGenError(error, 'Failed to generate cover letter. Please try again.');
     } finally {
       setGeneratingCL(false);
     }
@@ -270,11 +439,7 @@ const Dashboard = () => {
       }
       toast.success('Interview prep generated!');
     } catch (error) {
-      if (error.response?.status === 403 && error.response.data.code === 'INSUFFICIENT_CREDITS') {
-        handleInsufficientCredits(error.response.data.required, error.response.data.current);
-      } else {
-        toast.error('Failed to generate interview prep. Please try again.');
-      }
+      handleAssetGenError(error, 'Failed to generate interview prep. Please try again.');
     } finally {
       setGeneratingInterview(false);
     }
@@ -379,17 +544,22 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
-          <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-            Tailored for your career
+        {/* Welcome heading — only on the dashboard landing state. Once the
+            user picks a workflow we hide it so the upload/job inputs aren't
+            pushed below the fold by ~180px of intro copy. */}
+        {!workflowMode && (
+          <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
+            <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+              Tailored for your career
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+              {getStatusMessage()}
+            </h2>
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+              {getRecommendedAction()}
+            </p>
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-            {getStatusMessage()}
-          </h2>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            {getRecommendedAction()}
-          </p>
-        </div>
+        )}
 
         {/* Monetag Banner - Top */}
         {/* <MonetagBanner style={{ marginBottom: '2rem' }} /> */}
@@ -405,6 +575,9 @@ const Dashboard = () => {
                 setFitResult(null);
                 setApplication(null);
                 setWorkflowMode('upload');
+                // Scroll to top so the upload area lands at the top of the
+                // viewport instead of wherever the user clicked the card.
+                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
               }}
               className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden flex flex-col"
             >
@@ -446,37 +619,50 @@ const Dashboard = () => {
 
         {/* Create Options Modal */}
         {showCreateOptions && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+          /* Bottom-sheet on mobile, centered card on desktop. Compact
+             horizontal-row options on mobile (icon left, content right);
+             stacked grid on desktop. */
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
               <button
+                type="button"
                 onClick={() => setShowCreateOptions(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                aria-label="Close"
+                className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10"
               >
-                <LogOut className="w-5 h-5 rotate-45" />
+                <X className="w-4 h-4" />
               </button>
 
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-                How would you like to start?
-              </h3>
-              <p className="text-slate-500 text-center mb-8">
-                Choose the best way to build your professional CV.
-              </p>
+              <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
+                <h3 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1 sm:mb-2 sm:text-center">
+                  How would you like to start?
+                </h3>
+                <p className="text-sm text-slate-500 sm:text-center">
+                  Pick the path that fits where you are now.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="px-5 pb-5 sm:px-8 sm:pb-8 flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-6">
+                {/* Start from Scratch */}
                 <button
+                  type="button"
                   onClick={() => navigate('/cv-builder/new')}
-                  className="flex flex-col items-center p-6 border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition-all group text-center"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 sm:border-2 sm:border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition-all group"
                 >
-                  <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-indigo-600 shadow-sm">
-                    <Plus className="w-8 h-8" />
+                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-indigo-50 sm:bg-white sm:border sm:border-slate-200 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-indigo-600 shrink-0 sm:shadow-sm">
+                    <Plus className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
-                  <h4 className="font-bold text-slate-800 mb-2">Start from Scratch</h4>
-                  <p className="text-sm text-slate-500">
-                    Use our step-by-step wizard to build a resume from the ground up.
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-2">Start from scratch</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-snug">
+                      Step-by-step wizard, build a resume from the ground up.
+                    </p>
+                  </div>
                 </button>
 
+                {/* Upload Existing */}
                 <button
+                  type="button"
                   onClick={() => {
                     setShowCreateOptions(false);
                     setResume(null);
@@ -484,19 +670,24 @@ const Dashboard = () => {
                     setFitResult(null);
                     setApplication(null);
                     setWorkflowMode('create-upload');
+                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                   }}
-                  className="flex flex-col items-center p-6 border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 rounded-xl transition-all group text-center"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 sm:border-2 sm:border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 rounded-xl transition-all group"
                 >
-                  <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-emerald-600 shadow-sm">
-                    <UploadIcon className="w-8 h-8" />
+                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-emerald-50 sm:bg-white sm:border sm:border-slate-200 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-emerald-600 shrink-0 sm:shadow-sm">
+                    <UploadIcon className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
-                  <h4 className="font-bold text-slate-800 mb-2">Upload Existing CV</h4>
-                  <p className="text-sm text-slate-500 mb-3">
-                    We'll scan your PDF and auto-fill the builder with your details.
-                  </p>
-                  <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
-                    Cost: 15 A.I Credits
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-1">Upload existing CV</h4>
+                      <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold rounded-full shrink-0">
+                        15 cr
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-snug sm:mt-1">
+                      We'll scan your PDF and auto-fill the builder with your details.
+                    </p>
+                  </div>
                 </button>
               </div>
             </div>
@@ -507,13 +698,6 @@ const Dashboard = () => {
         {/* {!workflowMode && (
                     <MonetagBanner style={{ marginBottom: '2rem' }} />
                 )} */}
-
-        {/* Job Recommendations Widget */}
-        {!workflowMode && (
-          <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <JobRecommendations />
-          </div>
-        )}
 
         {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
         {!workflowMode && myDrafts.length > 0 && (
@@ -683,32 +867,31 @@ const Dashboard = () => {
 
         {/* Scan Success Modal */}
         {scanSuccessDraftId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">CV Scanned Successfully!</h3>
-              <p className="text-slate-500 mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">CV Scanned Successfully!</h3>
+              <p className="text-sm sm:text-base text-slate-500 mb-4">
                 We've extracted and optimized your details with AI-powered formatting.
               </p>
 
               {/* ATS Readiness Score */}
               {scanATSReadiness && (
                 <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
-                  <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="flex flex-col sm:flex-row items-center sm:justify-center gap-3 mb-3">
                     <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${
-                        scanATSReadiness.score >= 75
-                          ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
-                          : scanATSReadiness.score >= 50
-                            ? 'border-amber-400 text-amber-700 bg-amber-50'
-                            : 'border-red-400 text-red-700 bg-red-50'
-                      }`}
+                      className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${scanATSReadiness.score >= 75
+                        ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                        : scanATSReadiness.score >= 50
+                          ? 'border-amber-400 text-amber-700 bg-amber-50'
+                          : 'border-red-400 text-red-700 bg-red-50'
+                        }`}
                     >
                       {scanATSReadiness.score}
                     </div>
-                    <div className="text-left">
+                    <div className="text-center sm:text-left">
                       <p className="text-sm font-bold text-slate-800">ATS Readiness Score</p>
                       <p className="text-xs text-slate-500">
                         {scanATSReadiness.score >= 75
@@ -724,11 +907,10 @@ const Dashboard = () => {
                     {scanATSReadiness.checks?.slice(0, 5).map((check, i) => (
                       <span
                         key={i}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          check.passed
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${check.passed
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-700'
+                          }`}
                       >
                         {check.passed ? (
                           <CheckCircle className="w-3 h-3" />
@@ -742,13 +924,12 @@ const Dashboard = () => {
                 </div>
               )}
 
-              <div className="flex flex-col gap-4">
+              <div className="space-y-2">
                 <button
                   onClick={() => navigate(`/cv-builder/${scanSuccessDraftId}`)}
-                  className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all hover:scale-[1.02] shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                 >
                   <PenTool className="w-5 h-5" /> Review & Edit in Builder
-                  <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">Recommended</span>
                 </button>
                 <button
                   onClick={() =>
@@ -756,9 +937,9 @@ const Dashboard = () => {
                       state: { atsReadiness: scanATSReadiness },
                     })
                   }
-                  className="w-full py-4 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                  className="w-full text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1.5 py-2"
                 >
-                  <Eye className="w-5 h-5" /> Skip to ATS Preview
+                  <Eye className="w-4 h-4" /> Skip to ATS Preview
                 </button>
               </div>
             </div>
@@ -796,11 +977,34 @@ const Dashboard = () => {
                 </p>
               </div>
             ) : (
-              <FitScoreCard
-                fitScore={fitResult.fitScore}
-                fitAnalysis={fitResult.fitAnalysis}
-                actionPlan={fitResult.actionPlan}
-              />
+              <div className="space-y-4">
+                <NextBestAction
+                  fitScore={fitResult.fitScore}
+                  fitAnalysis={fitResult.fitAnalysis}
+                  application={application}
+                  onGenerateCV={handleGenerateCV}
+                  onGenerateCoverLetter={handleGenerateCoverLetter}
+                  onGenerateInterview={handleGenerateInterview}
+                  onGenerateBundle={handleGenerateBundle}
+                  onView={() => navigate(`/resume/${application?.draftId || application?.applicationId}`)}
+                  generatingCV={generatingCV}
+                  generatingCL={generatingCL}
+                  generatingInterview={generatingInterview}
+                  cvGenStatus={cvGenStatus}
+                />
+                <JobRequirementsCard
+                  fitAnalysis={fitResult.fitAnalysis}
+                  jobTitle={job?.title}
+                  jobCompany={job?.company}
+                />
+                <FitScoreCard
+                  fitScore={fitResult.fitScore}
+                  fitAnalysis={fitResult.fitAnalysis}
+                  actionPlan={fitResult.actionPlan}
+                  optimizedFitScore={application?.fitScoreAfter ?? application?.optimizedFitScore}
+                  applicationId={application?.applicationId}
+                />
+              </div>
             )}
           </div>
         )}
@@ -841,9 +1045,8 @@ const Dashboard = () => {
                   <button
                     onClick={handleGenerateCV}
                     disabled={generatingCV}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                      generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
-                    }`}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                      }`}
                   >
                     {generatingCV ? (
                       <>
@@ -884,9 +1087,8 @@ const Dashboard = () => {
                   <button
                     onClick={handleGenerateCoverLetter}
                     disabled={generatingCL}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                      generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
-                    }`}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                      }`}
                   >
                     {generatingCL ? (
                       <>
@@ -930,9 +1132,8 @@ const Dashboard = () => {
                   <button
                     onClick={handleGenerateInterview}
                     disabled={generatingInterview}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                      generatingInterview ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
-                    }`}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingInterview ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                      }`}
                   >
                     {generatingInterview ? (
                       <>
@@ -992,10 +1193,9 @@ const Dashboard = () => {
                 disabled={!resume || !job || analyzing}
                 className={`
                   relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                  ${
-                    !resume || !job || analyzing
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      : 'btn-primary hover:scale-105 active:scale-95'
+                  ${!resume || !job || analyzing
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'btn-primary hover:scale-105 active:scale-95'
                   }
                 `}
               >
@@ -1159,11 +1359,16 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Feature Announcement Modal */}
-      <FeatureAnnouncementModal />
-
       {/* New User Tour */}
       <DashboardTour />
+
+      <MetricCaptureModal
+        isOpen={metricCapture.isOpen}
+        vagueBullets={metricCapture.vagueBullets}
+        primaryLabel={metricCapture.mode === 'bundle' ? 'Generate full kit' : 'Generate CV'}
+        onSubmit={handleMetricCaptureSubmit}
+        onCancel={handleMetricCaptureCancel}
+      />
     </div>
   );
 };

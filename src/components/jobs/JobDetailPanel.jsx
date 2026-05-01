@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  X, ExternalLink, Bookmark, BookmarkCheck, Building2, MapPin,
-  Clock, Sparkles, FileText, Package,
-} from 'lucide-react';
+import { X, ExternalLink, Building2, MapPin, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import MatchScoreBadge from './MatchScoreBadge';
-import MatchBreakdown from './MatchBreakdown';
-import TailorCVButton from './TailorCVButton';
 import jobSearchService from '../../services/jobSearchService';
 
 /**
@@ -274,10 +268,7 @@ const JobDetailPanel = ({
   searchId,
   isOpen,
   onClose,
-  onToggleSave,
   onApplyClick,
-  userCVs,
-  onTailorSuccess,
 }) => {
   const [fullDescription, setFullDescription] = useState('');
   const [loadingDesc, setLoadingDesc] = useState(false);
@@ -300,13 +291,10 @@ const JobDetailPanel = ({
 
   const loadFullDescription = async () => {
     setLoadingDesc(true);
-    // console.log('📌 [UI] Opening JobDetailPanel for job:', result);
     try {
       const detailed = await jobSearchService.getJobDetails(searchId, result._id);
-      console.log('📋 [UI] Successfully loaded full description text from backend for:', result.title);
       setFullDescription(detailed.fullDescription || detailed.snippet || '');
     } catch {
-      console.error('❌ [UI] Failed to load full description for:', result.title);
       setFullDescription(result.snippet || 'Failed to load description');
     } finally {
       setLoadingDesc(false);
@@ -338,24 +326,21 @@ const JobDetailPanel = ({
           >
             {/* Header */}
             <div className="flex items-start justify-between p-5 border-b border-slate-200">
-              <div className="flex items-start gap-3">
-                <MatchScoreBadge score={result.matchScore} size="lg" />
-                <div>
-                  <h2 className="font-bold text-lg text-slate-900">{result.title}</h2>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
-                    <Building2 className="w-4 h-4" />
-                    {result.company}
-                  </div>
-                  {result.location && (
-                    <div className="flex items-center gap-2 mt-0.5 text-sm text-slate-500">
-                      <MapPin className="w-4 h-4" />
-                      {result.location}
-                    </div>
-                  )}
-                  {result.salary && (
-                    <div className="mt-1 text-sm font-medium text-emerald-600">{result.salary}</div>
-                  )}
+              <div>
+                <h2 className="font-bold text-lg text-slate-900">{result.title}</h2>
+                <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
+                  <Building2 className="w-4 h-4" />
+                  {result.company}
                 </div>
+                {result.location && (
+                  <div className="flex items-center gap-2 mt-0.5 text-sm text-slate-500">
+                    <MapPin className="w-4 h-4" />
+                    {result.location}
+                  </div>
+                )}
+                {result.salary && (
+                  <div className="mt-1 text-sm font-medium text-emerald-600">{result.salary}</div>
+                )}
               </div>
               <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -364,32 +349,6 @@ const JobDetailPanel = ({
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32">
-              
-              {/* Tailoring & AI Tools - Moved to top of scroll for high visibility without permanently crowding the screen */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]">
-                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
-                  AI Application Tools
-                </h3>
-                <TailorCVButton
-                  searchId={searchId}
-                  resultId={result._id}
-                  jobTitle={result.title}
-                  company={result.company}
-                  jobDescription={fullDescription || result.snippet}
-                  userCVs={userCVs}
-                  onSuccess={onTailorSuccess}
-                />
-              </div>
-
-              {/* Match Breakdown */}
-              {result.matchBreakdown && result.matchScore !== null && (
-                <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-800 mb-3">Requirements Match</h3>
-                  <MatchBreakdown breakdown={result.matchBreakdown} />
-                </div>
-              )}
-
               {/* Job Description */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">Job Description</h3>
@@ -425,27 +384,18 @@ const JobDetailPanel = ({
             </div>
 
             {/* Slim Glassmorphism Action Bar */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200/60 bg-white/85 backdrop-blur-xl z-10 pb-max-safe">
-              <div className="flex gap-3 max-w-lg mx-auto">
-                {result.applyUrl && (
+            {result.applyUrl && (
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200/60 bg-white/85 backdrop-blur-xl z-10 pb-max-safe">
+                <div className="max-w-lg mx-auto">
                   <button
                     onClick={() => onApplyClick(searchId, result._id, result.applyUrl)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                   >
                     Apply Now <ExternalLink className="w-4 h-4" />
                   </button>
-                )}
-                <button
-                  onClick={() => onToggleSave(searchId, result._id)}
-                  className={`px-4 py-3 rounded-xl border-2 shadow-sm transition-all active:scale-[0.96] ${result.saved
-                    ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
-                    : 'bg-white border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 hover:border-slate-300'
-                    }`}
-                >
-                  {result.saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
-                </button>
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </>
       )}
