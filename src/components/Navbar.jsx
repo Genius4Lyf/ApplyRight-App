@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, History, LayoutDashboard, User, Menu, X, PlayCircle, Settings, ChevronDown } from 'lucide-react';
+import { Sparkles, LogOut, History, LayoutDashboard, User, Menu, X, PlayCircle, Settings, ChevronDown, MessageSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 import { isMobile } from '../utils/platform';
@@ -130,6 +130,17 @@ const Navbar = () => {
                 >
                   <History className="w-4 h-4" />
                   My Applications
+                </Link>
+                <Link
+                  to="/interview-prep"
+                  className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                    location.pathname.startsWith('/interview-prep')
+                      ? 'text-indigo-700 bg-indigo-50'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Interview Prep
                 </Link>
               </>
             )}
@@ -288,6 +299,18 @@ const Navbar = () => {
                         role="menuitem"
                         onClick={() => {
                           setShowAccountMenu(false);
+                          navigate('/interview-prep');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4 text-indigo-500" />
+                        Interview Prep
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowAccountMenu(false);
                           navigate('/credits');
                         }}
                         className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -319,19 +342,11 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Toggle (hamburger) — replaced with Sign Out on Capacitor */}
-        {isMobile() ? (
-          isAuthenticated && (
-            <button
-              className="md:hidden z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-rose-600 hover:bg-rose-50 transition-colors"
-              onClick={() => setShowLogoutConfirm(true)}
-              aria-label="Sign out"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="text-sm font-semibold">Sign out</span>
-            </button>
-          )
-        ) : (
+        {/* Mobile chrome:
+            - Capacitor (isMobile): no top-right control. Sign out lives in
+              the Profile tab now, and primary nav happens via the bottom bar.
+            - Mobile-web browser: hamburger opens the slide-out drawer. */}
+        {!isMobile() && (
           <button
             className="md:hidden z-50 p-2 text-slate-600"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -397,6 +412,14 @@ const Navbar = () => {
                       >
                         <History className="w-5 h-5" />
                         <span className="font-semibold">My Applications</span>
+                      </Link>
+                      <Link
+                        to="/interview-prep"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                        <span className="font-semibold">Interview Prep</span>
                       </Link>
                     </>
                   )}

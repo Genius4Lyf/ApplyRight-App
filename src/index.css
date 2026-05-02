@@ -325,3 +325,9 @@
   stroke: none !important;
   fill: none !important;
 }
+
+/* Make page wrappers transparent so the global background shows through */
+.min-h-screen.bg-slate-50,
+.min-h-screen.bg-background {
+  background-color: transparent !important;
+}

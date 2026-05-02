@@ -20,6 +20,8 @@ import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import MobileHomeRedirect from './components/MobileHomeRedirect';
 import MobileWelcome from './pages/mobile/MobileWelcome';
+import InterviewPrepList from './pages/InterviewPrepList';
+import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
@@ -135,7 +137,17 @@ const RootLayout = () => {
   return (
     <SessionManager>
       <TopProgressBar />
-      <div className={showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}>
+
+      {/* Global Educative / AI-themed Background */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-slate-50">
+        {/* Subtle dot matrix pattern - slightly darker/more visible */}
+        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-60"></div>
+        {/* Soft ambient gradients */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/60 rounded-full blur-3xl mix-blend-multiply translate-x-1/3 -translate-y-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl mix-blend-multiply -translate-x-1/4 translate-y-1/4"></div>
+      </div>
+
+      <div className={`relative z-0 ${showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}`}>
         <AnimatePresence mode="wait">
           {element && cloneElement(element, { key: getPageKey(location.pathname) })}
         </AnimatePresence>
@@ -320,6 +332,26 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <CreditStore />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/interview-prep',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <InterviewPrepList />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/interview-prep/:applicationId',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <InterviewPrepDetail />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),

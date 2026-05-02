@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import {
@@ -18,8 +18,7 @@ import {
   Search,
   RefreshCw,
   GitCompare,
-  HelpCircle,
-  MessageCircle,
+  ChevronRight,
 } from 'lucide-react';
 
 /**
@@ -992,114 +991,76 @@ const JobHistory = () => {
                         </div>
                       </div>
 
-                      {/* Interview Prep — full-width, content-rich section.
-                          Unlike CV/cover letter (which open in a dedicated
-                          page), interview questions are most useful seen
-                          right here while reviewing the application. */}
-                      <div className={`rounded-xl border ${selectedApp.interviewQuestions?.length > 0 ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-200'} overflow-hidden`}>
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                              selectedApp.interviewQuestions?.length > 0
-                                ? 'bg-purple-100 text-purple-600'
-                                : 'bg-slate-200 text-slate-500'
-                            }`}>
-                              <MessageSquare className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-sm font-semibold text-slate-900">Interview Prep</h4>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {selectedApp.interviewQuestions?.length > 0
-                                  ? `${selectedApp.interviewQuestions.length} questions tailored to your CV and this role.`
-                                  : 'Likely questions for this role plus smart questions to ask the interviewer.'}
-                              </p>
-                            </div>
+                      {/* Interview Prep entry point — links to the dedicated
+                          /interview-prep/:applicationId page where users can
+                          drill into questions + answers + skill talking points
+                          and add personal notes. Replaces the previously inline
+                          two-column section that lived here. */}
+                      {selectedApp.interviewPrep?.jobQuestions?.length > 0 ||
+                      selectedApp.interviewPrep?.skillsWithEvidence?.length > 0 ||
+                      selectedApp.interviewQuestions?.length > 0 ? (
+                        <Link
+                          to={`/interview-prep/${selectedApp._id}`}
+                          className="rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors p-4 flex items-center gap-3 group"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0">
+                            <MessageSquare className="w-5 h-5" />
                           </div>
-                          {!selectedApp.interviewQuestions?.length && (
-                            <button
-                              onClick={handleGenerateInterview}
-                              disabled={generatingInterview}
-                              className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                                generatingInterview ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                              }`}
-                            >
-                              {generatingInterview ? (
-                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
-                              ) : (
-                                <><Sparkles className="w-3.5 h-3.5" /> Generate (5 cr)</>
-                              )}
-                            </button>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-slate-900">
+                              Interview prep ready
+                            </h4>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              {(selectedApp.interviewPrep?.jobQuestions?.length ||
+                                selectedApp.interviewQuestions?.length ||
+                                0)}{' '}
+                              question
+                              {(selectedApp.interviewPrep?.jobQuestions?.length ||
+                                selectedApp.interviewQuestions?.length ||
+                                0) === 1
+                                ? ''
+                                : 's'}
+                              {selectedApp.interviewPrep?.skillsWithEvidence?.length > 0 &&
+                                ` · ${selectedApp.interviewPrep.skillsWithEvidence.length} skills with talking points`}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
+                        </Link>
+                      ) : (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white text-slate-400 flex items-center justify-center shrink-0">
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-slate-900">
+                              Interview prep
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Generate likely questions + suggested answers tailored to your CV and this role.
+                            </p>
+                          </div>
+                          <button
+                            onClick={handleGenerateInterview}
+                            disabled={generatingInterview}
+                            className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                              generatingInterview
+                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            }`}
+                          >
+                            {generatingInterview ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3.5 h-3.5" /> Generate (5 cr)
+                              </>
+                            )}
+                          </button>
                         </div>
-
-                        {selectedApp.interviewQuestions?.length > 0 && (
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-6 p-5">
-                            {/* Likely questions — left column */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <HelpCircle className="w-4 h-4 text-indigo-600" />
-                                <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                                  Likely questions
-                                </h5>
-                                <span className="text-xs text-slate-400">
-                                  ({selectedApp.interviewQuestions.length})
-                                </span>
-                              </div>
-                              <ol className="space-y-2.5">
-                                {selectedApp.interviewQuestions.map((q, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="flex gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200/80"
-                                  >
-                                    <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
-                                      {idx + 1}
-                                    </span>
-                                    <p className="text-sm text-slate-800 leading-relaxed">
-                                      {q.question}
-                                    </p>
-                                  </li>
-                                ))}
-                              </ol>
-                            </div>
-
-                            {/* Questions to ask — right column */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <MessageCircle className="w-4 h-4 text-emerald-600" />
-                                <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                                  Smart questions to ask
-                                </h5>
-                                {selectedApp.questionsToAsk?.length > 0 && (
-                                  <span className="text-xs text-slate-400">
-                                    ({selectedApp.questionsToAsk.length})
-                                  </span>
-                                )}
-                              </div>
-                              {selectedApp.questionsToAsk?.length > 0 ? (
-                                <ol className="space-y-2.5">
-                                  {selectedApp.questionsToAsk.map((q, idx) => (
-                                    <li
-                                      key={idx}
-                                      className="flex gap-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200/80"
-                                    >
-                                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
-                                        {idx + 1}
-                                      </span>
-                                      <p className="text-sm text-slate-800 leading-relaxed">
-                                        {q}
-                                      </p>
-                                    </li>
-                                  ))}
-                                </ol>
-                              ) : (
-                                <p className="text-xs text-slate-500 italic p-3">
-                                  No suggested questions for this role.
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>

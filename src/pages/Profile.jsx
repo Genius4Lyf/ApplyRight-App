@@ -14,6 +14,8 @@ import {
   Sparkles,
   AlertTriangle,
   Wallet,
+  LogOut,
+  MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
@@ -36,6 +38,13 @@ const Profile = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingTx, setPendingTx] = useState(null); // To store the blocked navigation transition
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -596,9 +605,89 @@ const Profile = () => {
                 </button>
               </div>
             </div>
+
+            {/* Quick links — surfaces destinations that previously lived in the
+                Navbar account dropdown so mobile users (where the dropdown is
+                gone) still have one-tap access. */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+              <button
+                type="button"
+                onClick={() => navigate('/interview-prep')}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900">Interview Prep</p>
+                  <p className="text-xs text-slate-500">Questions, answers, talking points</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/credits')}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900">Buy credits</p>
+                  <p className="text-xs text-slate-500">Top up your A.I credit balance</p>
+                </div>
+              </button>
+            </div>
+
+            {/* Sign out — destructive action sits separately, with confirmation. */}
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 font-semibold transition-colors shadow-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
           </div>
         </div>
       </main>
+
+      {/* Sign-out confirmation modal */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowLogoutModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 text-rose-600">
+                <LogOut className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
+              <p className="text-slate-500 mb-6">Are you sure you want to sign out?</p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLogoutModal(false);
+                    handleSignOut();
+                  }}
+                  className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-rose-200"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

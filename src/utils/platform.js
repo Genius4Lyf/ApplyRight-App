@@ -13,6 +13,9 @@ export const markOnboardingComplete = () => {
   localStorage.setItem(ONBOARDING_KEY, 'true');
 };
 
+// Bar visibility allowlist. Includes routes the user reaches via secondary
+// navigation (Credits/Upgrade now live behind the Profile tab) so the bar
+// stays consistent during those flows.
 const BOTTOM_NAV_PATHS = [
   '/dashboard',
   '/jobs',
@@ -20,6 +23,7 @@ const BOTTOM_NAV_PATHS = [
   '/profile',
   '/credits',
   '/upgrade',
+  '/interview-prep',
 ];
 
 export const shouldShowBottomNav = (pathname) =>

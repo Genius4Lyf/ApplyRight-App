@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
@@ -1168,18 +1168,44 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Interview Preview — only show inline when interview questions exist */}
-        {application?.interviewQuestions && (
-          <div
-            id="preview-section"
-            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
-          >
-            <Preview application={application} templateId="ats-clean" />
-          </div>
-        )}
+        {/* Interview Prep entry point — replaces the previous inline preview.
+            Sends users to the dedicated /interview-prep/:id page for the full
+            experience (questions + suggested answers + skill talking points). */}
+        {application?._id &&
+          (application?.interviewPrep?.jobQuestions?.length > 0 ||
+            application?.interviewPrep?.skillsWithEvidence?.length > 0 ||
+            application?.interviewQuestions?.length > 0) && (
+            <Link
+              to={`/interview-prep/${application._id}`}
+              id="preview-section"
+              className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors group"
+            >
+              <div className="w-11 h-11 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm sm:text-base font-semibold text-slate-900">
+                  Interview prep ready
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                  {(application.interviewPrep?.jobQuestions?.length ||
+                    application.interviewQuestions?.length ||
+                    0)}{' '}
+                  question
+                  {(application.interviewPrep?.jobQuestions?.length ||
+                    application.interviewQuestions?.length ||
+                    0) === 1
+                    ? ''
+                    : 's'}{' '}
+                  · tap to review answers and talking points
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
+            </Link>
+          )}
 
         {/* Analyze Button - Only show if in upload mode AND not yet analyzed */}
-        {workflowMode === 'upload' && !fitResult && (
+        {workflowMode === 'upload' && !fitResult && !analyzing && (
           <div className="relative pt-8 flex flex-col items-center">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
 

@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Clock, User, Sparkles } from 'lucide-react';
+import { Home, Clock, User, MessageSquare } from 'lucide-react';
 import { shouldShowBottomNav } from '../utils/platform';
 
 const TABS = [
   { to: '/dashboard', label: 'Home', icon: Home },
   { to: '/history', label: 'History', icon: Clock },
+  { to: '/interview-prep', label: 'Prep', icon: MessageSquare },
   { to: '/profile', label: 'Profile', icon: User },
-  { to: '/credits', label: 'Credits', icon: Sparkles },
 ];
 
 const MobileBottomNav = () => {
