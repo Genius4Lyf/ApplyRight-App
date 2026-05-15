@@ -1,22 +1,42 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
-  ChevronDown,
   MessageSquare,
   Sparkles,
-  BookOpen,
   Eye,
-  Briefcase,
-  Check,
+  CheckCircle2,
+  Circle,
   HelpCircle,
-  RefreshCw,
+  PlayCircle,
+  StickyNote,
+  Plus,
+  Loader,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { useMinVisible } from '../hooks/useMinVisible';
+import { getJobQuestions, getQuestionsToAsk, getSkillPrep } from '../utils/interviewPrep';
+import LinkedCVBanner from '../components/prep/LinkedCVBanner';
+import NotesList from '../components/prep/NotesList';
+import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
+import AdPlayer from '../components/AdPlayer';
+import api from '../services/api';
+
+const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
+const MotionDiv = motion.div;
+
+const readStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+};
 
 const InterviewPrepDetail = () => {
   const { applicationId } = useParams();
@@ -24,23 +44,110 @@ const InterviewPrepDetail = () => {
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [savedHint, setSavedHint] = useState(false);
-  const [savingSkills, setSavingSkills] = useState(false);
+  const [activeTab, setActiveTab] = useState(null);
   const showLoader = useMinVisible(loading, 800);
-  const noteSaveTimer = useRef(null);
+
+  // "Generate more questions" CTA state. When credits run low, the button
+  // becomes a "Watch ad to unlock more questions" CTA that opens AdPlayer.
+  const [generatingMore, setGeneratingMore] = useState(false);
+  const [adForMoreOpen, setAdForMoreOpen] = useState(false);
+  const [newQuestionIndices, setNewQuestionIndices] = useState(() => new Set());
+  // Only needed for AdMob SSV — credit balance is tracked globally via the
+  // navbar, not in this component.
+  const [userId, setUserId] = useState(() => readStoredUser()._id || readStoredUser().id || null);
+
+  useEffect(() => {
+    const refresh = () => {
+      const u = readStoredUser();
+      setUserId(u._id || u.id || null);
+    };
+    window.addEventListener('userDataUpdated', refresh);
+    return () => window.removeEventListener('userDataUpdated', refresh);
+  }, []);
+
+  const reload = async () => {
+    const { application: app } = await InterviewPrepService.getOne(applicationId);
+    setApplication(app);
+    return app;
+  };
+
+  const runGenerateMore = async () => {
+    setGeneratingMore(true);
+    try {
+      const res = await api.post(`/analysis/${applicationId}/generate-more-interview`);
+      const { newQuestionIndices: idxs = [], addedCount = 0, remainingCredits } = res.data || {};
+      setNewQuestionIndices(new Set(idxs));
+      if (typeof remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: remainingCredits }));
+      }
+      await reload();
+      if (addedCount > 0) {
+        toast.success(`${addedCount} new question${addedCount === 1 ? '' : 's'} added`);
+      } else {
+        toast.message('No new questions this round — try again for a different angle.');
+      }
+    } catch (e) {
+      const msg = e.response?.data?.message || 'Failed to generate more questions';
+      const code = e.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        toast.error('Not enough credits. Watch an ad to earn more.');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setGeneratingMore(false);
+    }
+  };
+
+  // Generating more questions is an ad-rewarded action — the user always
+  // watches a short video and gets the new questions for free. We never
+  // charge credits at this entry point, even if the user happens to have a
+  // balance. (The /generate-more-interview endpoint still deducts internally;
+  // the ad rewards more credits than the call costs, so it nets out positive
+  // for the user.)
+  const handleGenerateMoreQuestions = () => setAdForMoreOpen(true);
+
+  const handleAdForMoreComplete = async () => {
+    setAdForMoreOpen(false);
+    try {
+      // On Android the SSV callback has already credited the account. On web
+      // the AdPlayer's onComplete is where we award credits.
+      if (!isAndroidNative()) {
+        await api.post('/billing/watch-ad', { type: 'video' });
+      }
+      const me = await api.get('/auth/me');
+      const fresh = me.data;
+      const credits = fresh?.credits ?? 0;
+      try {
+        const existing = readStoredUser();
+        localStorage.setItem('user', JSON.stringify({ ...existing, ...fresh }));
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: fresh }));
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: credits }));
+
+      // Ad reward should cover the generate-more cost. `runGenerateMore`
+      // surfaces INSUFFICIENT_CREDITS via toast if anything went sideways.
+      await runGenerateMore();
+    } catch (e) {
+      console.error('Ad-for-more failed:', e);
+      toast.error('Failed to claim ad reward.');
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const { application: app } = await InterviewPrepService.getOne(applicationId);
+        const app = await reload();
         if (cancelled) return;
-        setApplication(app);
-        setNotes(app?.interviewPrep?.userNotes || '');
+        // Default tab: Skills if any, otherwise Questions if any, otherwise Notes.
+        const skills = getSkillPrep(app);
+        const questions = getJobQuestions(app);
+        setActiveTab(skills.length ? 'skills' : questions.length ? 'questions' : 'notes');
       } catch (e) {
-        if (!cancelled)
-          setError(e.response?.data?.message || 'Failed to load interview prep');
+        if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -48,35 +155,8 @@ const InterviewPrepDetail = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationId]);
-
-  const persistNotes = async (text) => {
-    try {
-      await InterviewPrepService.updateNotes(applicationId, text);
-      setSavedHint(true);
-      if (noteSaveTimer.current) clearTimeout(noteSaveTimer.current);
-      noteSaveTimer.current = setTimeout(() => setSavedHint(false), 1800);
-    } catch (e) {
-      console.error('Failed to save notes', e);
-    }
-  };
-
-  const handleSaveSkills = async () => {
-    setSavingSkills(true);
-    try {
-      // Server pulls skill metadata from the linked DraftCV — no need to send
-      // skillsWithEvidence from the client.
-      await InterviewPrepService.saveSkills(applicationId);
-      const { application: app } = await InterviewPrepService.getOne(applicationId);
-      setApplication(app);
-      toast.success('Skill talking points saved');
-    } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to save skill prep';
-      toast.error(msg);
-    } finally {
-      setSavingSkills(false);
-    }
-  };
 
   if (showLoader) {
     return (
@@ -100,22 +180,35 @@ const InterviewPrepDetail = () => {
 
   if (!application) return null;
 
-  const prep = application.interviewPrep || {};
   const job = application.jobId || {};
   const isCvOnly = application.source === 'draft' || (!application.jobId && !application.jobTitle);
   const title = job.title || application.jobTitle || (isCvOnly ? 'CV draft' : 'Untitled role');
   const company = job.company || application.jobCompany || '';
-  const jobQuestions = prep.jobQuestions || [];
-  const skillsWithEvidence = prep.skillsWithEvidence || [];
-  const questionsToAsk = prep.questionsToAsk || [];
+  const jobQuestions = getJobQuestions(application);
+  const skillsWithEvidence = getSkillPrep(application);
+  const questionsToAsk = getQuestionsToAsk(application);
+  const notes = Array.isArray(application.interviewPrep?.userNotes)
+    ? application.interviewPrep.userNotes
+    : [];
+
+  const tabs = [
+    { id: 'skills', label: 'Skills', icon: Sparkles, count: skillsWithEvidence.length },
+    { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
+    { id: 'notes', label: 'My notes', icon: StickyNote, count: notes.length },
+  ];
+
+  const startPracticeAllQuestions = () => {
+    navigate(`/interview-prep/${applicationId}/practice`);
+  };
+
+  const startPracticeForSkill = (skillName) => {
+    navigate(`/interview-prep/${applicationId}/practice?skill=${encodeURIComponent(skillName)}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
-      {/* Context header — single compact row: back · title · badge · CTA. The
-          subtitle for CV-only prep tucks under the title row at small text so
-          it doesn't dominate the chrome. */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -143,18 +236,14 @@ const InterviewPrepDetail = () => {
                 )}
                 <span
                   className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                    isCvOnly
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'bg-indigo-50 text-indigo-700'
+                    isCvOnly ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'
                   }`}
                 >
                   {isCvOnly ? 'From CV' : 'Job role'}
                 </span>
               </div>
               {company && (
-                <p className="sm:hidden text-xs text-slate-500 truncate mt-0.5">
-                  {company}
-                </p>
+                <p className="sm:hidden text-xs text-slate-500 truncate mt-0.5">{company}</p>
               )}
               {isCvOnly && (
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
@@ -182,207 +271,407 @@ const InterviewPrepDetail = () => {
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
-        {/* Two-column on desktop, stacked on mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Job-based prep */}
-          {jobQuestions.length > 0 && (
-            <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-              <SectionHeader
-                icon={MessageSquare}
-                title="Job-based prep"
-                subtitle={`${jobQuestions.length} likely question${jobQuestions.length === 1 ? '' : 's'} with rehearsable answers`}
-                iconBg="bg-indigo-50"
-                iconColor="text-indigo-600"
-              />
-              <div className="mt-4 space-y-2">
-                {jobQuestions.map((q, i) => (
-                  <Accordion
-                    key={i}
-                    title={q.question}
-                    type={q.type}
-                  >
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                      {q.suggestedAnswer || 'No suggested answer available.'}
-                    </p>
-                  </Accordion>
-                ))}
-              </div>
+        <LinkedCVBanner applicationId={applicationId} isCvOnly={isCvOnly} onPulled={reload} />
 
-              {questionsToAsk.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-slate-100">
-                  <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-emerald-600" />
-                    Questions to ask the interviewer
-                  </h4>
-                  <ul className="space-y-2">
-                    {questionsToAsk.map((q, i) => (
-                      <li
-                        key={i}
-                        className="text-sm text-slate-700 leading-relaxed pl-3 border-l-2 border-emerald-200"
-                      >
-                        {q}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* Skill-based prep */}
-          {skillsWithEvidence.length === 0 ? (
-            <section className="bg-white border border-dashed border-slate-200 rounded-xl p-5 sm:p-6">
-              <SectionHeader
-                icon={Sparkles}
-                title="Skill-based prep"
-                subtitle="Pull rehearsable talking points from your CV's skills"
-                iconBg="bg-emerald-50"
-                iconColor="text-emerald-600"
-              />
-              <p className="mt-4 text-sm text-slate-600 leading-relaxed">
-                Auto-generated skills on this CV come with evidence (where they came from in
-                your work / education / projects) and talking points you can read aloud in
-                an interview. Save them here for quick access.
-              </p>
-              {isCvOnly && application.draftCVId ? (
-                <Link
-                  to={`/cv-builder/${application.draftCVId}/skills`}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
-                >
-                  <Eye className="w-4 h-4" /> Open CV builder
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSaveSkills}
-                  disabled={savingSkills}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
-                >
-                  {savingSkills ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4" /> Save from CV
-                    </>
-                  )}
-                </button>
-              )}
-            </section>
-          ) : (
-            <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-3">
-                <SectionHeader
-                  icon={Sparkles}
-                  title="Skill-based prep"
-                  subtitle={`${skillsWithEvidence.length} skill${skillsWithEvidence.length === 1 ? '' : 's'} with evidence + talking points`}
-                  iconBg="bg-emerald-50"
-                  iconColor="text-emerald-600"
-                />
-                {!isCvOnly && (
-                  <button
-                    type="button"
-                    onClick={handleSaveSkills}
-                    disabled={savingSkills}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50"
-                    title="Re-pull skill metadata from your latest CV"
+        {/* Tabs */}
+        <nav className="flex items-center gap-1 border-b border-slate-200 mb-6 overflow-x-auto">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  active ? 'text-indigo-700' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+                {tab.count > 0 && (
+                  <span
+                    className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold ${
+                      active ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
+                    }`}
                   >
-                    {savingSkills ? (
-                      <div className="w-3 h-3 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3 h-3" />
-                    )}
-                    Refresh
-                  </button>
+                    {tab.count}
+                  </span>
                 )}
-              </div>
-              <div className="mt-4 space-y-2">
-                {skillsWithEvidence.map((s, i) => (
-                  <Accordion key={i} title={s.name} type={s.category}>
-                    {s.evidence?.length > 0 && (
-                      <div className="space-y-2 mb-3">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
-                          Where this came from
-                        </p>
-                        {s.evidence.map((ev, k) => {
-                          const palette =
-                            ev.type === 'project'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : ev.type === 'education'
-                                ? 'bg-amber-50 text-amber-700'
-                                : 'bg-indigo-50 text-indigo-700';
-                          return (
-                            <div key={k} className="flex gap-2">
-                              <span
-                                className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider h-fit ${palette}`}
-                              >
-                                {ev.type}
-                              </span>
-                              <p className="text-sm text-slate-700 leading-relaxed">
-                                {ev.snippet}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {s.talkingPoint && (
-                      <div className="pt-3 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
-                            Talking point
-                          </p>
-                        </div>
-                        <p className="text-sm italic text-slate-600 leading-relaxed">
-                          "{s.talkingPoint}"
-                        </p>
-                      </div>
-                    )}
-                  </Accordion>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+                {active && (
+                  <motion.span
+                    layoutId="prep-tab-underline"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-        {/* My Notes */}
-        <section className="mt-6 bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-bold text-slate-900">My notes</h3>
-            <AnimatePresence>
-              {savedHint && (
-                <motion.span
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium"
-                >
-                  <Check className="w-3 h-3" /> Saved
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            onBlur={() => persistNotes(notes)}
-            rows={5}
-            placeholder="Jot down anything you want to remember — questions to research, things to practice, follow-ups..."
-            className="w-full text-sm text-slate-800 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 resize-none"
-          />
-        </section>
+        <AnimatePresence mode="wait">
+          {activeTab === 'skills' && (
+            <MotionDiv
+              key="skills"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SkillsTab
+                applicationId={applicationId}
+                isCvOnly={isCvOnly}
+                skills={skillsWithEvidence}
+                draftCVId={application.draftCVId}
+                onChange={reload}
+                onPracticeSkill={startPracticeForSkill}
+              />
+            </MotionDiv>
+          )}
+
+          {activeTab === 'questions' && (
+            <MotionDiv
+              key="questions"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <QuestionsTab
+                jobQuestions={jobQuestions}
+                questionsToAsk={questionsToAsk}
+                onStartPractice={startPracticeAllQuestions}
+                onGenerateMore={handleGenerateMoreQuestions}
+                generatingMore={generatingMore}
+                newQuestionIndices={newQuestionIndices}
+                isCvOnly={isCvOnly}
+              />
+            </MotionDiv>
+          )}
+
+          {activeTab === 'notes' && (
+            <MotionDiv
+              key="notes"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+                <NotesList applicationId={applicationId} initialNotes={notes} />
+              </section>
+            </MotionDiv>
+          )}
+        </AnimatePresence>
       </main>
+
+      {adForMoreOpen && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForMoreComplete}
+          onClose={() => setAdForMoreOpen(false)}
+          title="Unlock More Questions"
+          subtitle="Watch a short ad to earn credits and generate fresh interview questions for this role."
+          buttonText="Watch & Unlock"
+          successTitle="Credits Earned!"
+          successMessage="Generating more questions for you…"
+          androidTitle="Unlock More Questions"
+          androidSubtitle="Watch a quick video to earn credits, then we'll generate fresh questions."
+          androidButtonText="Watch Video"
+          androidSuccessTitle="Credits Earned!"
+          androidSuccessMessage="Generating more questions for you…"
+        />
+      )}
     </div>
   );
 };
 
-const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor }) => (
+const SkillsTab = ({ applicationId, isCvOnly, skills, draftCVId, onChange, onPracticeSkill }) => {
+  const [savingSkills, setSavingSkills] = useState(false);
+
+  const handlePullSkills = async () => {
+    setSavingSkills(true);
+    try {
+      await InterviewPrepService.saveSkills(applicationId);
+      await onChange?.();
+      toast.success('Skill talking points saved');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to save skill prep');
+    } finally {
+      setSavingSkills(false);
+    }
+  };
+
+  if (skills.length === 0) {
+    return (
+      <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8">
+        <SectionHeader
+          icon={Sparkles}
+          title="Skill-based prep"
+          subtitle="Pull rehearsable talking points from your CV's skills"
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+        />
+        <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+          Each AI-generated skill on this CV ships with evidence (where it came from in your
+          history) and a talking point you can read aloud. Save them here to anchor your interview
+          prep.
+        </p>
+        {isCvOnly && draftCVId ? (
+          <Link
+            to={`/cv-builder/${draftCVId}/skills`}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+          >
+            <Eye className="w-4 h-4" /> Open CV builder
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={handlePullSkills}
+            disabled={savingSkills}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+          >
+            {savingSkills ? 'Pulling…' : 'Pull from CV'}
+          </button>
+        )}
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-3">
+      {skills.map((skill, i) => (
+        <SkillCard
+          key={`${skill.name}-${i}`}
+          applicationId={applicationId}
+          skill={skill}
+          onPractice={() => onPracticeSkill(skill.name)}
+          onConfidenceChange={onChange}
+        />
+      ))}
+    </section>
+  );
+};
+
+const SkillCard = ({ applicationId, skill, onPractice, onConfidenceChange }) => {
+  const [confidence, setConfidence] = useState(skill.confidence || null);
+  const [saving, setSaving] = useState(false);
+
+  const handleMark = async (level) => {
+    const next = confidence === level ? null : level;
+    setConfidence(next);
+    setSaving(true);
+    try {
+      await InterviewPrepService.updateSkillConfidence(applicationId, skill.name, next);
+      onConfidenceChange?.();
+    } catch {
+      setConfidence(skill.confidence || null);
+      toast.error('Failed to save confidence');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Mirror of the job-based prep card pattern: hide the study content
+  // (evidence + talking point) on the landing view so the user reaches it
+  // by tapping Prep me on this, which opens the practice runner with the
+  // skill's talking point and related questions one at a time.
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-slate-900">{skill.name}</p>
+            {skill.category && (
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+                {skill.category}
+              </span>
+            )}
+            {confidence && (
+              <span
+                className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
+                  confidence === 'ready'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : confidence === 'almost'
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'bg-rose-50 text-rose-700'
+                }`}
+              >
+                {confidence.replace('_', ' ')}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onPractice}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
+        >
+          <PlayCircle className="w-4 h-4" />
+          Prep me on this
+        </button>
+        <div className="sm:ml-auto flex flex-wrap items-center gap-2">
+          {CONFIDENCE_OPTIONS.map((opt) => {
+            const active = confidence === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleMark(opt.id)}
+                disabled={saving}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+                  active ? opt.activeClasses : opt.classes
+                } disabled:opacity-60`}
+              >
+                {active ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuestionsTab = ({
+  jobQuestions,
+  questionsToAsk,
+  onStartPractice,
+  onGenerateMore,
+  generatingMore,
+  newQuestionIndices,
+  isCvOnly,
+}) => {
+  if (jobQuestions.length === 0 && questionsToAsk.length === 0) {
+    return (
+      <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
+        <MessageSquare className="w-7 h-7 mx-auto text-slate-300 mb-2" />
+        <p className="text-sm text-slate-600">
+          No job-specific questions yet. Run a job analysis to generate them.
+        </p>
+      </section>
+    );
+  }
+
+  // The "Generate more" CTA is only meaningful when the prep is tied to a
+  // job (CV-only drafts have no JD to ground new questions in).
+  const canGenerateMore = !isCvOnly && jobQuestions.length > 0;
+
+  return (
+    <div className="space-y-6">
+      {jobQuestions.length > 0 && (
+        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <SectionHeader
+              icon={MessageSquare}
+              title="Job-based prep"
+              subtitle={`${jobQuestions.length} likely question${jobQuestions.length === 1 ? '' : 's'} with rehearsable answers`}
+              iconBg="bg-indigo-50"
+              iconColor="text-indigo-600"
+            />
+            <button
+              type="button"
+              onClick={onStartPractice}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              Prep me
+            </button>
+          </div>
+
+          {newQuestionIndices && newQuestionIndices.size > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                Just added
+              </p>
+              <ul className="space-y-1.5">
+                {jobQuestions.map((q, i) => {
+                  if (!newQuestionIndices.has(i)) return null;
+                  const text = typeof q === 'string' ? q : q?.question;
+                  if (!text) return null;
+                  return (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed pl-3 border-l-2 border-emerald-300"
+                    >
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
+                        <Sparkles className="w-2.5 h-2.5" /> New
+                      </span>
+                      <span>{text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {canGenerateMore && (
+            <div className="mt-5 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={onGenerateMore}
+                disabled={generatingMore}
+                className="group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              >
+                {generatingMore ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    Get more questions
+                    <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
+                      <PlayCircle className="w-3 h-3" />
+                      Ad video
+                    </span>
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-slate-500 mt-2">
+                Watch a short ad to unlock fresh questions — free, no credits used.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {questionsToAsk.length > 0 && (
+        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+          <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+            <HelpCircle className="w-4 h-4 text-emerald-600" />
+            Questions to ask the interviewer
+          </h4>
+          <ul className="space-y-2">
+            {questionsToAsk.map((q, i) => (
+              <li
+                key={i}
+                className="text-sm text-slate-700 leading-relaxed pl-3 border-l-2 border-emerald-200"
+              >
+                {q}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+};
+
+const SectionHeader = ({ icon, title, subtitle, iconBg, iconColor }) => (
   <div className="flex items-start gap-3">
-    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}>
-      <Icon className="w-5 h-5" />
+    <div
+      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}
+    >
+      {React.createElement(icon, { className: 'w-5 h-5' })}
     </div>
     <div className="min-w-0">
       <h2 className="text-base sm:text-lg font-bold text-slate-900">{title}</h2>
@@ -390,48 +679,5 @@ const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor }) => (
     </div>
   </div>
 );
-
-const Accordion = ({ title, type, children }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border border-slate-100 rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="w-full flex items-start gap-3 p-3 sm:p-4 text-left hover:bg-slate-50 transition-colors min-h-12"
-      >
-        <div className="flex-1 min-w-0">
-          {type && (
-            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
-              {type}
-            </p>
-          )}
-          <p className="text-sm font-semibold text-slate-900 leading-tight">{title}</p>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-slate-400 shrink-0 mt-0.5 transition-transform ${
-            open ? 'rotate-180' : ''
-          }`}
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-          >
-            <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-slate-100 pt-3 border-l-2 border-l-indigo-200 ml-3">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
 
 export default InterviewPrepDetail;

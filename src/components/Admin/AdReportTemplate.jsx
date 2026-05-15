@@ -208,7 +208,11 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
               <div className="mt-4 space-y-2.5">
                 {[
                   { icon: Search, label: 'Search to apply', value: `${report.searchToApplyRate}%` },
-                  { icon: MousePointerClick, label: 'Click to save', value: `${report.clickToSaveRate}%` },
+                  {
+                    icon: MousePointerClick,
+                    label: 'Click to save',
+                    value: `${report.clickToSaveRate}%`,
+                  },
                   { icon: BriefcaseBusiness, label: 'Tailor rate', value: `${report.tailorRate}%` },
                 ].map((item) => (
                   <div
@@ -244,7 +248,11 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
                       <div
                         className={joinClasses(
                           'h-full rounded-full',
-                          index === 0 ? 'bg-cyan-300' : index === 1 ? 'bg-indigo-300' : 'bg-violet-300'
+                          index === 0
+                            ? 'bg-cyan-300'
+                            : index === 1
+                              ? 'bg-indigo-300'
+                              : 'bg-violet-300'
                         )}
                         style={{ width: `${Math.max(source.share, source.count ? 18 : 10)}%` }}
                       />
@@ -351,7 +359,10 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
                 { value: `${fmt(report.applications)}+`, label: 'Applications' },
                 { value: `${fmt(report.tailors)}+`, label: 'CVs tailored' },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-white/80 border border-slate-200/60 px-4 py-4">
+                <div
+                  key={item.label}
+                  className="rounded-2xl bg-white/80 border border-slate-200/60 px-4 py-4"
+                >
                   <div className="font-heading text-[32px] font-semibold tracking-tight text-slate-950">
                     {item.value}
                   </div>
@@ -569,7 +580,10 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
             { value: `${fmt(report.tailors)}+`, label: 'CVs tailored' },
             { value: `${fmt(report.optimizations)}+`, label: 'Analyses' },
           ].map((item) => (
-            <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3.5">
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3.5"
+            >
               <div className="font-heading text-[26px] font-semibold leading-none tracking-tight">
                 {item.value}
               </div>
@@ -770,10 +784,7 @@ const AdReportTemplate = forwardRef(({ stats, context, templateId = 'social-proo
   const { Component } = getTemplateById(templateId);
 
   return (
-    <div
-      className="pointer-events-none fixed inset-0 z-[-1] opacity-0"
-      aria-hidden="true"
-    >
+    <div className="pointer-events-none fixed inset-0 z-[-1] opacity-0" aria-hidden="true">
       <Component stats={stats} context={context} ref={ref} />
     </div>
   );

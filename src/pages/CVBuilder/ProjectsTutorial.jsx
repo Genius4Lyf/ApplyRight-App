@@ -64,9 +64,13 @@ const ProjectsTutorial = ({ isOpen, onClose, user }) => {
                 <FlaskConical className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-slate-900">Name the project, name the goal</h3>
+                <h3 className="font-semibold text-sm text-slate-900">
+                  Name the project, name the goal
+                </h3>
                 <p className="text-sm text-slate-600 leading-relaxed mt-0.5">
-                  Use a clear <strong>project name</strong> and what you set out to achieve (e.g. "Marketing campaign for Q3 launch", "Open-source onboarding tool"). The AI uses this to highlight your impact.
+                  Use a clear <strong>project name</strong> and what you set out to achieve (e.g.
+                  "Marketing campaign for Q3 launch", "Open-source onboarding tool"). The AI uses
+                  this to highlight your impact.
                 </p>
               </div>
             </div>
@@ -76,9 +80,12 @@ const ProjectsTutorial = ({ isOpen, onClose, user }) => {
                 <ClipboardPaste className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-slate-900">Drop in rough notes — the AI polishes</h3>
+                <h3 className="font-semibold text-sm text-slate-900">
+                  Drop in rough notes — the AI polishes
+                </h3>
                 <p className="text-sm text-slate-600 leading-relaxed mt-0.5">
-                  Paste a list of tasks, results, or a quick description. The AI rewrites them into <strong>impressive professional achievements</strong>.
+                  Paste a list of tasks, results, or a quick description. The AI rewrites them into{' '}
+                  <strong>impressive professional achievements</strong>.
                 </p>
               </div>
             </div>

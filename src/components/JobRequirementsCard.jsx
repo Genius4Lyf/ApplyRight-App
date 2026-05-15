@@ -102,9 +102,7 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
                   <p className="text-sm font-semibold text-slate-900">
                     {jobTitle || 'Untitled role'}
                   </p>
-                  {jobCompany && (
-                    <p className="text-xs text-slate-500 mt-0.5">{jobCompany}</p>
-                  )}
+                  {jobCompany && <p className="text-xs text-slate-500 mt-0.5">{jobCompany}</p>}
                 </div>
               )}
 
@@ -161,7 +159,10 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
 
               <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-1">
                 <Sparkles className="w-3 h-3" />
-                <span>Extracted by AI from the job description. Verify against the original posting if anything looks off.</span>
+                <span>
+                  Extracted by AI from the job description. Verify against the original posting if
+                  anything looks off.
+                </span>
               </div>
             </div>
           </motion.div>

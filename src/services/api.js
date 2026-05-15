@@ -27,7 +27,8 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      const isAuthRequest = error.config.url?.includes('/auth/login') || error.config.url?.includes('/auth/register');
+      const isAuthRequest =
+        error.config.url?.includes('/auth/login') || error.config.url?.includes('/auth/register');
       if (!isAuthRequest) {
         // Token expired or invalid — redirect to login
         localStorage.removeItem('token');

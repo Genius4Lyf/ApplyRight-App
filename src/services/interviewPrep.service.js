@@ -31,8 +31,44 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Legacy single-string notes endpoint. Kept for any in-flight client.
+  // Prefer createNote / updateNote / deleteNote for the multi-note UI.
   updateNotes: async (applicationId, notes) => {
     const response = await api.patch(`/interview-prep/${applicationId}/notes`, { notes });
+    return response.data;
+  },
+
+  createNote: async (applicationId, { title = '', body = '', status = 'draft' } = {}) => {
+    const response = await api.post(`/interview-prep/${applicationId}/notes`, {
+      title,
+      body,
+      status,
+    });
+    return response.data;
+  },
+
+  updateNote: async (applicationId, noteId, patch) => {
+    const response = await api.patch(`/interview-prep/${applicationId}/notes/${noteId}`, patch);
+    return response.data;
+  },
+
+  deleteNote: async (applicationId, noteId) => {
+    const response = await api.delete(`/interview-prep/${applicationId}/notes/${noteId}`);
+    return response.data;
+  },
+
+  updateSkillConfidence: async (applicationId, skillName, confidence) => {
+    const response = await api.patch(`/interview-prep/${applicationId}/skill-confidence`, {
+      skillName,
+      confidence,
+    });
+    return response.data;
+  },
+
+  // Returns { exists, draftCVId, generatedAt, skillCount, alreadySynced } when
+  // the linked DraftCV has skills with evidence available to pull into prep.
+  detectGeneratedCV: async (applicationId) => {
+    const response = await api.get(`/interview-prep/${applicationId}/linked-cv`);
     return response.data;
   },
 

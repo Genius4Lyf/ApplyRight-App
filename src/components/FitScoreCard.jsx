@@ -48,32 +48,61 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
 
   if (!applicationId) return null;
 
+  // Once submitted: collapse to a tidy "thanks" pill so the card doesn't keep
+  // shouting after the user has already replied.
+  if (submitted) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5"
+      >
+        {submitted === 'up' ? (
+          <ThumbsUp className="w-3.5 h-3.5" />
+        ) : (
+          <ThumbsDown className="w-3.5 h-3.5" />
+        )}
+        Thanks for the feedback
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-500">
-      <span>{label}</span>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.4, ease: 'easeOut' }}
+      className="inline-flex items-center gap-2 text-xs text-slate-600 bg-white border border-slate-200 rounded-full pl-3 pr-1.5 py-1 shadow-sm"
+    >
+      <motion.div
+        // One-time wiggle to draw attention. Loops 2x then stops so it's
+        // noticeable on first arrival without becoming visual noise.
+        animate={{ rotate: [0, -10, 10, -8, 8, 0] }}
+        transition={{ delay: 1.2, duration: 0.9, repeat: 1, repeatDelay: 4 }}
+        className="text-indigo-500"
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+      </motion.div>
+      <span className="font-medium">{label}</span>
       <button
         type="button"
         onClick={() => submit('up')}
-        disabled={submitting || !!submitted}
-        className={`p-1 rounded hover:bg-emerald-50 transition-colors ${
-          submitted === 'up' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400 hover:text-emerald-600'
-        } disabled:cursor-default`}
+        disabled={submitting}
+        className="ml-1 p-1.5 rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 active:scale-90 transition-all"
         aria-label="Helpful"
       >
-        <ThumbsUp className="w-3.5 h-3.5" />
+        <ThumbsUp className="w-4 h-4" />
       </button>
       <button
         type="button"
         onClick={() => submit('down')}
-        disabled={submitting || !!submitted}
-        className={`p-1 rounded hover:bg-red-50 transition-colors ${
-          submitted === 'down' ? 'bg-red-50 text-red-600' : 'text-slate-400 hover:text-red-500'
-        } disabled:cursor-default`}
+        disabled={submitting}
+        className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-90 transition-all"
         aria-label="Not helpful"
       >
-        <ThumbsDown className="w-3.5 h-3.5" />
+        <ThumbsDown className="w-4 h-4" />
       </button>
-    </div>
+    </motion.div>
   );
 };
 
@@ -117,10 +146,19 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
 
   const levelLabel = (level) => {
     const labels = {
-      intern: 'Intern', entry: 'Entry', junior: 'Junior', mid: 'Mid-Level',
-      'mid-senior': 'Mid-Senior', senior: 'Senior', staff: 'Staff',
-      lead: 'Lead', principal: 'Principal', manager: 'Manager',
-      director: 'Director', vp: 'VP', executive: 'Executive',
+      intern: 'Intern',
+      entry: 'Entry',
+      junior: 'Junior',
+      mid: 'Mid-Level',
+      'mid-senior': 'Mid-Senior',
+      senior: 'Senior',
+      staff: 'Staff',
+      lead: 'Lead',
+      principal: 'Principal',
+      manager: 'Manager',
+      director: 'Director',
+      vp: 'VP',
+      executive: 'Executive',
       'not specified': 'Not Specified',
     };
     return labels[level] || level || 'Unknown';
@@ -172,9 +210,22 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
         {/* Circular Score */}
         <div className="relative flex-shrink-0 w-32 h-32 flex items-center justify-center">
           <svg className="w-full h-full transform -rotate-90">
-            <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100" />
             <circle
-              cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent"
+              cx="64"
+              cy="64"
+              r="56"
+              stroke="currentColor"
+              strokeWidth="12"
+              fill="transparent"
+              className="text-slate-100"
+            />
+            <circle
+              cx="64"
+              cy="64"
+              r="56"
+              stroke="currentColor"
+              strokeWidth="12"
+              fill="transparent"
               strokeDasharray={351.86}
               strokeDashoffset={351.86 - (351.86 * (fitScore || 0)) / 100}
               className={`${textColor} transition-all duration-1000 ease-out`}
@@ -213,102 +264,108 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
 
       {/* Score Breakdown — collapsible. Closed by default; the score itself is
           the headline, this is "show me the math" for users who want to verify. */}
-      {breakdown.skillsScore != null && (() => {
-        const dimensions = [
-          { label: 'Skills', score: breakdown.skillsScore, weight: '40%' },
-          { label: 'Experience', score: breakdown.experienceScore, weight: '25%' },
-          { label: 'Education', score: breakdown.educationScore, weight: '15%' },
-          { label: 'Seniority', score: breakdown.seniorityScore, weight: '10%' },
-          { label: 'Profile Strength', score: breakdown.overallScore, weight: '10%' },
-        ].filter(({ score }) => score != null);
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-          >
-            <button
-              type="button"
-              onClick={() => setBreakdownOpen((v) => !v)}
-              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
-              aria-expanded={breakdownOpen}
+      {breakdown.skillsScore != null &&
+        (() => {
+          const dimensions = [
+            { label: 'Skills', score: breakdown.skillsScore, weight: '40%' },
+            { label: 'Experience', score: breakdown.experienceScore, weight: '25%' },
+            { label: 'Education', score: breakdown.educationScore, weight: '15%' },
+            { label: 'Seniority', score: breakdown.seniorityScore, weight: '10%' },
+            { label: 'Profile Strength', score: breakdown.overallScore, weight: '10%' },
+          ].filter(({ score }) => score != null);
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
             >
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h4 className="font-semibold text-slate-800">Score Breakdown</h4>
-                  {/* Tooltip — explains the fixed weights so users understand why,
+              <button
+                type="button"
+                onClick={() => setBreakdownOpen((v) => !v)}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
+                aria-expanded={breakdownOpen}
+              >
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-semibold text-slate-800">Score Breakdown</h4>
+                    {/* Tooltip — explains the fixed weights so users understand why,
                       not just what. Click target is the icon; hover/focus reveals. */}
-                  <div className="relative group">
-                    <HelpCircle
-                      className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-help"
-                      tabIndex={0}
-                    />
-                    <div
-                      role="tooltip"
-                      className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all pointer-events-none z-10"
-                    >
-                      <p className="font-semibold mb-1">Why these weights?</p>
-                      <p className="leading-relaxed text-slate-200">
-                        Skills (40%) are the strongest predictor of fit, followed by experience (25%) and education (15%). Seniority and profile strength (10% each) round out the picture. Fixed across every analysis so scores are directly comparable.
-                      </p>
-                      <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-900" />
+                    <div className="relative group">
+                      <HelpCircle
+                        className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-help"
+                        tabIndex={0}
+                      />
+                      <div
+                        role="tooltip"
+                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all pointer-events-none z-10"
+                      >
+                        <p className="font-semibold mb-1">Why these weights?</p>
+                        <p className="leading-relaxed text-slate-200">
+                          Skills (40%) are the strongest predictor of fit, followed by experience
+                          (25%) and education (15%). Seniority and profile strength (10% each) round
+                          out the picture. Fixed across every analysis so scores are directly
+                          comparable.
+                        </p>
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-900" />
+                      </div>
                     </div>
                   </div>
+                  {!breakdownOpen && (
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">
+                      {dimensions.map((d) => `${d.label} ${d.score}`).join(' · ')}
+                    </p>
+                  )}
                 </div>
-                {!breakdownOpen && (
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    {dimensions.map((d) => `${d.label} ${d.score}`).join(' · ')}
-                  </p>
-                )}
-              </div>
-              <motion.div
-                animate={{ rotate: breakdownOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-slate-400 shrink-0"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </motion.div>
-            </button>
-            <AnimatePresence initial={false}>
-              {breakdownOpen && (
                 <motion.div
-                  key="content"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="overflow-hidden"
+                  animate={{ rotate: breakdownOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-slate-400 shrink-0"
                 >
-                  <div className="px-5 pb-5 pt-1 border-t border-slate-100 space-y-3">
-                    {dimensions.map(({ label, score, weight }) => (
-                      <div key={label}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-slate-600">
-                            {label} <span className="text-slate-400">({weight})</span>
-                          </span>
-                          <span className={`font-semibold ${getScoreColor(score)}`}>{score}/100</span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${score}%` }}
-                            transition={{ duration: 0.6, ease: 'easeOut' }}
-                            className={`h-2 rounded-full ${getBarColor(score)}`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ChevronDown className="w-5 h-5" />
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        );
-      })()}
+              </button>
+              <AnimatePresence initial={false}>
+                {breakdownOpen && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-5 pt-1 border-t border-slate-100 space-y-3">
+                      {dimensions.map(({ label, score, weight }) => (
+                        <div key={label}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-slate-600">
+                              {label} <span className="text-slate-400">({weight})</span>
+                            </span>
+                            <span className={`font-semibold ${getScoreColor(score)}`}>
+                              {score}/100
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${score}%` }}
+                              transition={{ duration: 0.6, ease: 'easeOut' }}
+                              className={`h-2 rounded-full ${getBarColor(score)}`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })()}
 
       {/* Top Gaps panel — prominent, severity-ordered. Replaces the cramped
           Skills card so missing must-haves drive the user's attention to the
@@ -396,7 +453,11 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                   {matchedSkills.length} skill{matchedSkills.length === 1 ? '' : 's'} matched
                 </span>
-                {skillsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {skillsExpanded ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
               </button>
             )}
             {skillsExpanded && matchedSkills.length > 0 && (
@@ -483,14 +544,18 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                         <div className="text-lg font-bold text-slate-800">
                           {expAnalysis.candidateYears ?? '?'}
                         </div>
-                        <div className="text-[10px] uppercase text-slate-400 font-semibold">Your Years</div>
+                        <div className="text-[10px] uppercase text-slate-400 font-semibold">
+                          Your Years
+                        </div>
                       </div>
                       <span className="text-slate-300 text-sm">vs</span>
                       <div className="text-center flex-1 p-2 rounded-lg bg-slate-50">
                         <div className="text-lg font-bold text-slate-800">
                           {expAnalysis.requiredYears ?? '?'}
                         </div>
-                        <div className="text-[10px] uppercase text-slate-400 font-semibold">Required</div>
+                        <div className="text-[10px] uppercase text-slate-400 font-semibold">
+                          Required
+                        </div>
                       </div>
                     </div>
                   )}
@@ -501,7 +566,8 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                     )}
                     <span className="text-slate-600">
-                      {expAnalysis.feedback || (expAnalysis.match ? 'Meets requirements' : 'Less than preferred')}
+                      {expAnalysis.feedback ||
+                        (expAnalysis.match ? 'Meets requirements' : 'Less than preferred')}
                     </span>
                   </div>
                 </div>
@@ -532,7 +598,8 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                 <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 truncate">
                   {(senAnalysis.candidateLevel || senAnalysis.requiredLevel) && (
                     <>
-                      {levelLabel(senAnalysis.candidateLevel)} vs {levelLabel(senAnalysis.requiredLevel)}
+                      {levelLabel(senAnalysis.candidateLevel)} vs{' '}
+                      {levelLabel(senAnalysis.requiredLevel)}
                       <span className="text-slate-300">·</span>
                     </>
                   )}
@@ -573,14 +640,18 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                         <div className="text-sm font-bold text-slate-800">
                           {levelLabel(senAnalysis.candidateLevel)}
                         </div>
-                        <div className="text-[10px] uppercase text-slate-400 font-semibold">You</div>
+                        <div className="text-[10px] uppercase text-slate-400 font-semibold">
+                          You
+                        </div>
                       </div>
                       <span className="text-slate-300 text-sm">vs</span>
                       <div className="text-center flex-1 p-2 rounded-lg bg-slate-50">
                         <div className="text-sm font-bold text-slate-800">
                           {levelLabel(senAnalysis.requiredLevel)}
                         </div>
-                        <div className="text-[10px] uppercase text-slate-400 font-semibold">Required</div>
+                        <div className="text-[10px] uppercase text-slate-400 font-semibold">
+                          Required
+                        </div>
                       </div>
                     </div>
                   )}
@@ -591,7 +662,8 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                       <Info className="w-4 h-4 text-slate-400" />
                     )}
                     <span className="text-slate-600">
-                      {senAnalysis.feedback || (senAnalysis.match ? 'Aligned with role' : 'Role may vary from level')}
+                      {senAnalysis.feedback ||
+                        (senAnalysis.match ? 'Aligned with role' : 'Role may vary from level')}
                     </span>
                   </div>
                 </div>
@@ -638,7 +710,9 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-800 font-medium mt-0.5">{item.task || item.action}</p>
+                  <p className="text-sm text-slate-800 font-medium mt-0.5">
+                    {item.task || item.action}
+                  </p>
                 </div>
               </div>
             ))}

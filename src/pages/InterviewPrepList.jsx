@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, Briefcase, Sparkles, BookOpen, ChevronRight, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Briefcase, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { useMinVisible } from '../hooks/useMinVisible';
+import { getJobQuestions, getSkillPrep } from '../utils/interviewPrep';
+
+const MotionDiv = motion.div;
 
 const InterviewPrepList = () => {
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,8 +23,7 @@ const InterviewPrepList = () => {
         const { items: list } = await InterviewPrepService.list();
         if (!cancelled) setItems(list || []);
       } catch (e) {
-        if (!cancelled)
-          setError(e.response?.data?.message || 'Failed to load interview prep');
+        if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -54,14 +55,14 @@ const InterviewPrepList = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map((app, i) => (
-              <motion.div
+              <MotionDiv
                 key={app._id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.25 }}
               >
                 <PrepCard app={app} />
-              </motion.div>
+              </MotionDiv>
             ))}
           </div>
         )}
@@ -72,8 +73,8 @@ const InterviewPrepList = () => {
 
 const PrepCard = ({ app }) => {
   const prep = app.interviewPrep || {};
-  const skillsCount = prep.skillsWithEvidence?.length || 0;
-  const questionsCount = prep.jobQuestions?.length || 0;
+  const skillsCount = getSkillPrep(app).length;
+  const questionsCount = getJobQuestions(app).length;
   const job = app.jobId || {};
   const isCvOnly = app.source === 'draft';
   const title = job.title || app.jobTitle || (isCvOnly ? 'CV draft' : 'Untitled role');
@@ -146,10 +147,7 @@ const PrepCard = ({ app }) => {
 const SkeletonGrid = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     {[0, 1, 2].map((i) => (
-      <div
-        key={i}
-        className="bg-white border border-slate-200 rounded-xl p-5 animate-pulse"
-      >
+      <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 animate-pulse">
         <div className="h-5 w-20 bg-slate-100 rounded mb-3" />
         <div className="h-5 bg-slate-100 rounded mb-2" />
         <div className="h-4 w-2/3 bg-slate-100 rounded mb-4" />
@@ -164,12 +162,10 @@ const EmptyState = () => (
     <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5">
       <MessageSquare className="w-8 h-8" />
     </div>
-    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
-      No interview prep yet
-    </h2>
+    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">No interview prep yet</h2>
     <p className="text-sm text-slate-500 max-w-sm mb-6">
-      Run a job analysis to auto-generate prep, or save skills with talking points
-      from your CV builder.
+      Run a job analysis to auto-generate prep, or save skills with talking points from your CV
+      builder.
     </p>
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
       <Link

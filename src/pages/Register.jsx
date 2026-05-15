@@ -143,9 +143,7 @@ const Register = () => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email address
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
             <input
               name="email"
               type="email"
@@ -160,9 +158,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Phone number
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Phone number</label>
             <PhoneInput
               defaultCountry="us"
               value={phone}
@@ -188,9 +184,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
             <div className="relative">
               <input
                 name="password"
@@ -336,7 +330,10 @@ const Register = () => {
 
           <p className="text-center text-sm text-slate-500">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+            <Link
+              to="/login"
+              className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+            >
               Sign in
             </Link>
           </p>

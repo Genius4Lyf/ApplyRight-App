@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
+import { signalReady } from '../utils/splash';
 
 const Login = () => {
+  // Logged-out cold start lands here; let the Capacitor splash drop as soon
+  // as the form is on screen (no remote data to wait on).
+  useEffect(() => {
+    signalReady();
+  }, []);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,10 +60,7 @@ const Login = () => {
         )}
 
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-slate-700 mb-1.5"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
             Email address
           </label>
           <input
@@ -149,7 +152,10 @@ const Login = () => {
 
         <p className="text-center text-sm text-slate-500">
           New to ApplyRight?{' '}
-          <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+          <Link
+            to="/register"
+            className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+          >
             Create an account
           </Link>
         </p>

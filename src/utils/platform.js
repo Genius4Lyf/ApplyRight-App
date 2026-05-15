@@ -18,7 +18,7 @@ export const markOnboardingComplete = () => {
 // stays consistent during those flows.
 const BOTTOM_NAV_PATHS = [
   '/dashboard',
-  '/jobs',
+  '/my-cvs',
   '/history',
   '/profile',
   '/credits',
@@ -27,5 +27,4 @@ const BOTTOM_NAV_PATHS = [
 ];
 
 export const shouldShowBottomNav = (pathname) =>
-  isMobile() &&
-  BOTTOM_NAV_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  isMobile() && BOTTOM_NAV_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));

@@ -1,34 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Target, ArrowRight, AlertCircle, X, Check } from 'lucide-react';
+import { Target, ArrowRight, ArrowLeft, AlertCircle, X, Check } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 
 const TargetJob = () => {
-  // Safely destructure context
+  // Safely destructure context — fallback ensures hooks below see stable
+  // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, saving } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
 
-  // Fallback if context is somehow missing
-  if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading...</div>;
-  }
-
-  const [formData, setFormData] = useState(cvData.targetJob || { title: '', description: '' });
+  const [formData, setFormData] = useState(cvData?.targetJob || { title: '', description: '' });
   const [showModal, setShowModal] = useState(false);
   const hasUserEdited = useRef(false);
 
   // Sync prefilled data from CVContext (e.g. when navigating from job search)
   useEffect(() => {
-    if (!hasUserEdited.current && cvData.targetJob) {
+    if (!hasUserEdited.current && cvData?.targetJob) {
       const { title, description } = cvData.targetJob;
       if (title || description) {
         setFormData({ title: title || '', description: description || '' });
       }
     }
-  }, [cvData.targetJob?.title, cvData.targetJob?.description]);
+  }, [cvData?.targetJob?.title, cvData?.targetJob?.description]);
+
+  // Render guard lives below the hooks so the hook call order is stable
+  // across renders (rules-of-hooks).
+  if (!cvData) {
+    return <div className="p-8 text-center text-slate-500">Loading...</div>;
+  }
 
   const handleChange = (e) => {
     hasUserEdited.current = true;
+    setStepDirty?.(true);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -42,11 +45,13 @@ const TargetJob = () => {
       return;
     }
 
+    setStepDirty?.(false);
     handleNext({ targetJob: formData });
   };
 
   const handleSkipAndContinue = () => {
     setShowModal(false);
+    setStepDirty?.(false);
     handleNext({ targetJob: formData });
   };
 
@@ -73,19 +78,23 @@ const TargetJob = () => {
           title="The clearer the target, the better the CV"
           intro="Everything we build from here gets tailored to this role."
           tips={[
-            'Use the exact job title from a posting you\'re considering — even if you don\'t apply yet.',
+            "Use the exact job title from a posting you're considering — even if you don't apply yet.",
             'Paste the full job description (not just the company name) so our AI can pick up the keywords that matter.',
-            'If you\'re open to multiple roles, build separate CVs. One CV per target.',
+            "If you're open to multiple roles, build separate CVs. One CV per target.",
             'You can change this later — pick your best guess and move on.',
           ]}
         />
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="target-job-title"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Target Job Title
             </label>
             <input
+              id="target-job-title"
               type="text"
               name="title"
               value={formData.title}
@@ -96,10 +105,14 @@ const TargetJob = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="target-job-description"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Job Description (Optional)
             </label>
             <textarea
+              id="target-job-description"
               name="description"
               value={formData.description}
               onChange={handleChange}
@@ -109,7 +122,14 @@ const TargetJob = () => {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 flex justify-end">
+        <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
           <button
             type="submit"
             disabled={saving}

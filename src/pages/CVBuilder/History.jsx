@@ -26,9 +26,9 @@ import SortableItem from '../../components/SortableItem';
 // Stable per-item ID for drag-and-drop. Persists with the data so order is
 // stable across renders even after the auto-save round-trip.
 const newSortId = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID
+  typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const ensureIds = (items) =>
   (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
@@ -36,13 +36,10 @@ const ensureIds = (items) =>
 const History = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, updateCvData, user } = context || {};
+  const { cvData, handleNext, handleBack, saving, updateCvData, user, setStepDirty } =
+    context || {};
 
-  // Fallback if context is somehow missing
-  if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading history...</div>;
-  }
-  const [history, setHistory] = useState(() => ensureIds(cvData.experience));
+  const [history, setHistory] = useState(() => ensureIds(cvData?.experience));
 
   // Sensors: pointer for mouse/trackpad, touch with a small activation distance
   // so vertical scrolling on mobile isn't accidentally hijacked by a drag.
@@ -84,6 +81,7 @@ const History = () => {
   // walkthrough.
 
   const addRole = () => {
+    setStepDirty?.(true);
     setHistory([
       ...history,
       {
@@ -99,12 +97,14 @@ const History = () => {
   };
 
   const removeRole = (index) => {
+    setStepDirty?.(true);
     const newHistory = [...history];
     newHistory.splice(index, 1);
     setHistory(newHistory);
   };
 
   const handleChange = (index, field, value) => {
+    setStepDirty?.(true);
     const newHistory = [...history];
     newHistory[index] = { ...newHistory[index], [field]: value };
     setHistory(newHistory);
@@ -119,6 +119,13 @@ const History = () => {
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
   }, [history, updateCvData]);
+
+  // Render guard lives below the hooks so the hook call order is stable
+  // across renders (rules-of-hooks). Returning before this point would skip
+  // some of the useState/useSensor calls above on subsequent renders.
+  if (!cvData) {
+    return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+  }
 
   const handleGenerateBullets = async (index, customInput = null) => {
     const role = history[index];
@@ -225,6 +232,7 @@ const History = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    setStepDirty?.(false);
     handleNext({ experience: history });
   };
 
@@ -279,11 +287,7 @@ const History = () => {
         </div>
       )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={history.map((r) => r._sortId)}
           strategy={verticalListSortingStrategy}
@@ -300,164 +304,188 @@ const History = () => {
                 onDelete={() => removeRole(index)}
               >
                 <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="md:col-span-1">
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Job Title
-                </label>
-                <input
-                  type="text"
-                  value={role.title}
-                  onChange={(e) => handleChange(index, 'title', e.target.value)}
-                  placeholder="e.g. Senior Product Manager"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div className="md:col-span-1 pr-8 md:pr-0">
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Company
-                </label>
-                <input
-                  type="text"
-                  value={role.company}
-                  onChange={(e) => handleChange(index, 'company', e.target.value)}
-                  placeholder="e.g. Acme Corp"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Start Date
-                </label>
-                <input
-                  type="text"
-                  value={role.startDate}
-                  onChange={(e) => handleChange(index, 'startDate', e.target.value)}
-                  placeholder="e.g. Jan 2020"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  End Date
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={role.isCurrent ? 'Present' : role.endDate}
-                    onChange={(e) => handleChange(index, 'endDate', e.target.value)}
-                    disabled={role.isCurrent}
-                    placeholder={role.isCurrent ? 'Present' : 'e.g. Dec 2023'}
-                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-400"
-                  />
-                  <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={role.isCurrent || false}
-                      onChange={(e) => handleChange(index, 'isCurrent', e.target.checked)}
-                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                    />
-                    <span className="text-xs text-slate-600">Current</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              {/* Optimization Prompt */}
-              {optimizationCandidate?.index === index && (
-                <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-indigo-900">Optimize with AI?</h4>
-                    <p className="text-xs text-indigo-700 mt-1">
-                      We detected a pasted description. Our AI can rewrite this into professional,
-                      ATS-friendly bullet points.
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        type="button"
-                        onClick={() => handleGenerateBullets(index, optimizationCandidate.text)}
-                        disabled={generatingIndex === index}
-                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="md:col-span-1">
+                      <label
+                        htmlFor={`history-title-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
                       >
-                        {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOptimizationCandidate(null)}
-                        className="text-xs text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-md font-medium transition-colors"
+                        Job Title
+                      </label>
+                      <input
+                        id={`history-title-${index}`}
+                        type="text"
+                        value={role.title}
+                        onChange={(e) => handleChange(index, 'title', e.target.value)}
+                        placeholder="e.g. Senior Product Manager"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-1 pr-8 md:pr-0">
+                      <label
+                        htmlFor={`history-company-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
                       >
-                        Dismiss
-                      </button>
+                        Company
+                      </label>
+                      <input
+                        id={`history-company-${index}`}
+                        type="text"
+                        value={role.company}
+                        onChange={(e) => handleChange(index, 'company', e.target.value)}
+                        placeholder="e.g. Acme Corp"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`history-start-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        Start Date
+                      </label>
+                      <input
+                        id={`history-start-${index}`}
+                        type="text"
+                        value={role.startDate}
+                        onChange={(e) => handleChange(index, 'startDate', e.target.value)}
+                        placeholder="e.g. Jan 2020"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`history-end-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        End Date
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          id={`history-end-${index}`}
+                          type="text"
+                          value={role.isCurrent ? 'Present' : role.endDate}
+                          onChange={(e) => handleChange(index, 'endDate', e.target.value)}
+                          disabled={role.isCurrent}
+                          placeholder={role.isCurrent ? 'Present' : 'e.g. Dec 2023'}
+                          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                        />
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={role.isCurrent || false}
+                            onChange={(e) => handleChange(index, 'isCurrent', e.target.checked)}
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-slate-600">Current</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs font-bold text-slate-500 uppercase">
-                  Description / Bullets
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleGenerateBullets(index, role.description)}
-                  // Ensure role.description has at least 2 bullets (split by \n and filter out empty)
-                  disabled={
-                    generatingIndex === index ||
-                    !role.title ||
-                    (role.description || '').split('\n').filter((b) => b.trim().length > 2).length <
-                      2
-                  }
-                  title={
-                    (role.description || '').split('\n').filter((b) => b.trim().length > 2).length <
-                    2
-                      ? 'Please write at least 2 bullet points to use AI Suggestions'
-                      : 'Get AI Suggestions'
-                  }
-                  className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
-                >
-                  {generatingIndex === index ? (
-                    <RefreshCcw className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3 h-3" />
-                  )}
-                  {generatingIndex === index ? 'Generating...' : 'AI Suggestions'}
-                </button>
-              </div>
-              <textarea
-                value={role.description}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  // Auto-bullet on first character input if it's not already a bullet
-                  if (val.length === 1 && !val.startsWith('•')) {
-                    val = '• ' + val;
-                    // Need to adjust cursor in next tick
-                    setTimeout(() => {
-                      if (e.target) e.target.selectionStart = e.target.selectionEnd = val.length;
-                    }, 0);
-                  }
-                  handleChange(index, 'description', val);
-                }}
-                onPaste={(e) => handlePaste(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onFocus={() => handleFocus(index)}
-                placeholder="• Achieved X by doing Y..."
-                className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
-              />
-              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-[11px] text-slate-500">
-                  Tip: 3-5 bullets is the sweet spot. One per impact, not per task.
-                </p>
-                <InlineExample
-                  kind="bullet"
-                  targetTitle={cvData.targetJob?.title || role.title}
-                />
-              </div>
-            </div>
+                  <div>
+                    {/* Optimization Prompt */}
+                    {optimizationCandidate?.index === index && (
+                      <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-indigo-900">
+                            Optimize with AI?
+                          </h4>
+                          <p className="text-xs text-indigo-700 mt-1">
+                            We detected a pasted description. Our AI can rewrite this into
+                            professional, ATS-friendly bullet points.
+                          </p>
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleGenerateBullets(index, optimizationCandidate.text)
+                              }
+                              disabled={generatingIndex === index}
+                              className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                            >
+                              {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setOptimizationCandidate(null)}
+                              className="text-xs text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-md font-medium transition-colors"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center mb-1">
+                      <label
+                        htmlFor={`history-description-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase"
+                      >
+                        Description / Bullets
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateBullets(index, role.description)}
+                        // Ensure role.description has at least 2 bullets (split by \n and filter out empty)
+                        disabled={
+                          generatingIndex === index ||
+                          !role.title ||
+                          (role.description || '').split('\n').filter((b) => b.trim().length > 2)
+                            .length < 2
+                        }
+                        title={
+                          (role.description || '').split('\n').filter((b) => b.trim().length > 2)
+                            .length < 2
+                            ? 'Please write at least 2 bullet points to use AI Suggestions'
+                            : 'Get AI Suggestions'
+                        }
+                        className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
+                      >
+                        {generatingIndex === index ? (
+                          <RefreshCcw className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        {generatingIndex === index ? 'Generating...' : 'AI Suggestions'}
+                      </button>
+                    </div>
+                    <textarea
+                      id={`history-description-${index}`}
+                      value={role.description}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        // Auto-bullet on first character input if it's not already a bullet
+                        if (val.length === 1 && !val.startsWith('•')) {
+                          val = '• ' + val;
+                          // Need to adjust cursor in next tick
+                          setTimeout(() => {
+                            if (e.target)
+                              e.target.selectionStart = e.target.selectionEnd = val.length;
+                          }, 0);
+                        }
+                        handleChange(index, 'description', val);
+                      }}
+                      onPaste={(e) => handlePaste(e, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      onFocus={() => handleFocus(index)}
+                      placeholder="• Achieved X by doing Y..."
+                      className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                    />
+                    <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-[11px] text-slate-500">
+                        Tip: 3-5 bullets is the sweet spot. One per impact, not per task.
+                      </p>
+                      <InlineExample
+                        kind="bullet"
+                        targetTitle={cvData.targetJob?.title || role.title}
+                      />
+                    </div>
+                  </div>
                 </div>
               </SortableItem>
             ))}

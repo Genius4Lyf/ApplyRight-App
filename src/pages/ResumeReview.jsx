@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import { Capacitor } from '@capacitor/core';
+import useInterstitial from '../hooks/useInterstitial';
 import {
   Download,
   Printer,
@@ -13,6 +15,7 @@ import {
   Mail,
   PenTool,
   MessageSquare,
+  AlertTriangle,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -54,13 +57,27 @@ import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
-import { Lock, Zap, PlayCircle, X, Loader, ZoomIn, ZoomOut, Maximize2, MoreHorizontal, Expand, Shrink, SlidersHorizontal } from 'lucide-react'; // Import extra icons
+import {
+  Lock,
+  Zap,
+  PlayCircle,
+  X,
+  Loader,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  MoreHorizontal,
+  Expand,
+  Shrink,
+  SlidersHorizontal,
+} from 'lucide-react'; // Import extra icons
 
 const ResumeReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { triggerInterstitial } = useInterstitial();
   const [atsReadiness, setAtsReadiness] = useState(location.state?.atsReadiness || null);
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +95,19 @@ const ResumeReview = () => {
   // the CV gets the whole viewport.
   const [immersive, setImmersive] = useState(false);
   const toggleImmersive = () => setImmersive((v) => !v);
+
+  // Accuracy advisory — reminds users that AI-generated content can include
+  // claims that don't match their real experience. Dismissal persists in
+  // localStorage so power users only see it once, but the celebration card on
+  // the dashboard still surfaces a fresh reminder after each generation.
+  const ACCURACY_ADVISORY_KEY = 'accuracy_advisory_dismissed';
+  const [advisoryDismissed, setAdvisoryDismissed] = useState(
+    () => localStorage.getItem(ACCURACY_ADVISORY_KEY) === 'true'
+  );
+  const dismissAdvisory = () => {
+    localStorage.setItem(ACCURACY_ADVISORY_KEY, 'true');
+    setAdvisoryDismissed(true);
+  };
 
   // Collapsible controls pill — expanded shows zoom + fit + fullscreen toggle;
   // collapsed shows just a single icon. Auto-collapses on entering immersive.
@@ -325,13 +355,13 @@ const ResumeReview = () => {
   const handleAdForCreditsComplete = async () => {
     setAdForCreditsOpen(false);
     try {
-      // Award credits via API (using billing service for consistency)
-      // console.log('Attempting to award credits via /billing/watch-ad');
-      const watchAdResponse = await api.post('/billing/watch-ad', { type: 'video' });
-      // console.log('Credits awarded successfully:', watchAdResponse.data);
+      // On Android, AdMob SSV has already credited the account server-side.
+      // Skip the /watch-ad call and just refresh the user profile.
+      const isAndroidNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+      if (!isAndroidNative) {
+        await api.post('/billing/watch-ad', { type: 'video' });
+      }
 
-      // Refresh profile
-      // console.log('Refreshing user profile via /auth/me');
       const res = await api.get('/auth/me');
       // console.log('User profile refreshed:', res.data);
       setUserProfile(res.data);
@@ -479,6 +509,10 @@ const ResumeReview = () => {
       setTimeout(() => {
         setIsDownloading(false);
         setDownloadSuccess(false);
+
+        // Fire interstitial here — completion moment, before any feedback
+        // prompt. No-op on web / paid / non-eligible users.
+        triggerInterstitial('pdf_download_success');
 
         // Show feedback prompt once per session
         const hasSeenFeedback = sessionStorage.getItem('feedback_prompt_shown');
@@ -652,8 +686,7 @@ const ResumeReview = () => {
         const drafts = await CVService.getMyDrafts();
         const recent = (drafts || []).find(
           (d) =>
-            d.sourceApplicationId === applicationId ||
-            d.sourceApplicationId?._id === applicationId
+            d.sourceApplicationId === applicationId || d.sourceApplicationId?._id === applicationId
         );
         if (recent && recent._id) {
           toast.success('Resuming the draft we already created…');
@@ -679,6 +712,7 @@ const ResumeReview = () => {
     <div className="min-h-screen bg-slate-100 flex flex-col relative">
       {downloadAdOpen && (
         <AdPlayer
+          userId={userProfile?._id || userProfile?.id}
           onComplete={handleDownloadAdComplete}
           onClose={() => setDownloadAdOpen(false)} // User can close, but won't get reward
           title="Unlock High-Quality PDF"
@@ -691,6 +725,7 @@ const ResumeReview = () => {
 
       {adForCreditsOpen && (
         <AdPlayer
+          userId={userProfile?._id || userProfile?.id}
           onComplete={handleAdForCreditsComplete}
           onClose={() => setAdForCreditsOpen(false)}
         />
@@ -883,74 +918,94 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-      <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
-        <button
-          type="button"
-          onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
-          className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 shrink-0"
-          aria-label="Back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className="flex-1 min-w-0">
-          {isDraftMode ? (
-            <>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Draft CV</p>
-              <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
-                {application?.title || 'Untitled draft'}
-              </h1>
-            </>
-          ) : (
-            <>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                Application
-              </p>
-              <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
-                {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
-                {(application?.jobId?.company || application?.jobCompany) && (
-                  <span className="text-slate-500 font-normal">
-                    {' '}
-                    at {application?.jobId?.company || application?.jobCompany}
-                  </span>
-                )}
-              </h1>
-            </>
-          )}
-        </div>
-        {/* Resume / Cover Letter tab toggle — single source of truth in the
+        <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
+            className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 shrink-0"
+            aria-label="Back"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex-1 min-w-0">
+            {isDraftMode ? (
+              <>
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                  Draft CV
+                </p>
+                <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
+                  {application?.title || 'Untitled draft'}
+                </h1>
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                  Application
+                </p>
+                <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
+                  {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
+                  {(application?.jobId?.company || application?.jobCompany) && (
+                    <span className="text-slate-500 font-normal">
+                      {' '}
+                      at {application?.jobId?.company || application?.jobCompany}
+                    </span>
+                  )}
+                </h1>
+              </>
+            )}
+          </div>
+          {/* Resume / Cover Letter tab toggle — single source of truth in the
             header for all screen sizes. Labels collapse to "CV"/"Letter" on
             phones to keep the row compact alongside the back button + title.
             The dedicated 52px mobile tab strip we used to render below the
             header was eating into the CV preview height — gone now. */}
-        {!isDraftMode && (
-          <div className="flex bg-slate-100 p-0.5 rounded-lg shrink-0">
-            <button
-              type="button"
-              onClick={() => setActiveTab('resume')}
-              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                activeTab === 'resume'
-                  ? 'bg-white shadow text-indigo-600'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <span className="sm:hidden">CV</span>
-              <span className="hidden sm:inline">Resume</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('cover-letter')}
-              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                activeTab === 'cover-letter'
-                  ? 'bg-white shadow text-indigo-600'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <span className="sm:hidden">Letter</span>
-              <span className="hidden sm:inline">Cover Letter</span>
-            </button>
-          </div>
-        )}
-      </div>
+          {!isDraftMode && (
+            <div className="flex bg-slate-100 p-0.5 rounded-lg shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab('resume')}
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  activeTab === 'resume'
+                    ? 'bg-white shadow text-indigo-600'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <span className="sm:hidden">CV</span>
+                <span className="hidden sm:inline">Resume</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('cover-letter')}
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  activeTab === 'cover-letter'
+                    ? 'bg-white shadow text-indigo-600'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <span className="sm:hidden">Letter</span>
+                <span className="hidden sm:inline">Cover Letter</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!immersive && !advisoryDismissed && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 md:px-6 py-2.5 flex items-start gap-2.5 text-amber-900">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+          <p className="text-[12px] sm:text-[13px] leading-snug flex-1">
+            AI can introduce inaccuracies. Review every claim against your real experience and edit
+            anything that overstates what you did — before you download, print, or submit.
+          </p>
+          <button
+            type="button"
+            onClick={dismissAdvisory}
+            aria-label="Dismiss"
+            className="p-1 -m-1 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded transition-colors shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       )}
 
       {/* Mobile: no internal overflow — let the page document scroll naturally
@@ -1045,9 +1100,7 @@ const ResumeReview = () => {
             className="shrink-0 transition-[width,height] duration-200 origin-top"
             style={{
               width: `calc(210mm * ${scale})`,
-              height: contentHeight
-                ? `${contentHeight * scale}px`
-                : `calc(297mm * ${scale})`,
+              height: contentHeight ? `${contentHeight * scale}px` : `calc(297mm * ${scale})`,
             }}
           >
             <div
@@ -1231,10 +1284,9 @@ const ResumeReview = () => {
                           {(mergedUserProfile?.linkedinUrl || mergedUserProfile?.linkedin) && (
                             <span>
                               LinkedIn:{' '}
-                              {(mergedUserProfile.linkedinUrl || mergedUserProfile.linkedin).replace(
-                                /^https?:\/\/(www\.)?/,
-                                ''
-                              )}
+                              {(
+                                mergedUserProfile.linkedinUrl || mergedUserProfile.linkedin
+                              ).replace(/^https?:\/\/(www\.)?/, '')}
                             </span>
                           )}
                         </div>
@@ -1340,8 +1392,12 @@ const ResumeReview = () => {
                     ) : (
                       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                         <Mail className="w-10 h-10 mb-3 text-slate-300" />
-                        <p className="font-medium text-slate-500">Cover letter not yet generated.</p>
-                        <p className="text-sm mt-1">Generate one from the Dashboard to see it here.</p>
+                        <p className="font-medium text-slate-500">
+                          Cover letter not yet generated.
+                        </p>
+                        <p className="text-sm mt-1">
+                          Generate one from the Dashboard to see it here.
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1356,42 +1412,46 @@ const ResumeReview = () => {
             "More" button opens the existing sidebar drawer for templates etc.
             Hidden in fullscreen so the CV truly fills the screen. */}
         {!immersive && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
-          <button
-            type="button"
-            disabled={isDownloading}
-            onClick={handleDownloadClick}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
-          >
-            {isDownloading ? (
-              <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            <span>{isDownloading ? 'Working…' : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
-          </button>
-          <button
-            type="button"
-            onClick={
-              isDraftMode
-                ? () => navigate(`/cv-builder/${application?._id}/finalize`)
-                : handleEdit
-            }
-            className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
-            aria-label="Edit"
-          >
-            <PenTool className="w-4 h-4" />
-            <span>Edit</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileSidebarOpen(true)}
-            className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isDownloading}
+              onClick={handleDownloadClick}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>
+                {isDownloading
+                  ? 'Working…'
+                  : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={
+                isDraftMode
+                  ? () => navigate(`/cv-builder/${application?._id}/finalize`)
+                  : handleEdit
+              }
+              className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+              aria-label="Edit"
+            >
+              <PenTool className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
+              aria-label="More options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
         )}
 
         {/* Mobile Sidebar Overlay */}
@@ -1403,7 +1463,8 @@ const ResumeReview = () => {
         )}
 
         {/* RIGHT: Sidebar Tools */}
-        <div className={`
+        <div
+          className={`
           fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-20
           w-full lg:w-96 bg-white border-l border-slate-200 flex flex-col shadow-xl
           lg:h-full
@@ -1411,7 +1472,8 @@ const ResumeReview = () => {
           ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
           max-h-[85vh] lg:max-h-none
           rounded-t-2xl lg:rounded-none
-        `}>
+        `}
+        >
           {/* Mobile drag handle */}
           <div className="lg:hidden flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 bg-slate-300 rounded-full"></div>
@@ -1456,7 +1518,8 @@ const ResumeReview = () => {
                     <h3 className="font-bold text-indigo-900 text-sm">AI Analysis</h3>
                     <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
                       Your fit score is <strong>{application.fitScore}%</strong>. This application
-                      is optimized for {application.jobId?.title || application.jobTitle || 'the role'}.
+                      is optimized for{' '}
+                      {application.jobId?.title || application.jobTitle || 'the role'}.
                     </p>
                   </div>
                 </div>
@@ -1634,8 +1697,8 @@ const ResumeReview = () => {
                               t.cost === 0
                                 ? 'bg-emerald-500 text-white'
                                 : locked
-                                ? 'bg-slate-800 text-white'
-                                : 'bg-indigo-100 text-indigo-700'
+                                  ? 'bg-slate-800 text-white'
+                                  : 'bg-indigo-100 text-indigo-700'
                             }`}
                           >
                             {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}

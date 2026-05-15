@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ArrowRight, Hash } from 'lucide-react';
+import { Sparkles, X, ArrowRight, Hash, ShieldCheck } from 'lucide-react';
 
 /**
  * MetricCaptureModal
@@ -22,7 +22,11 @@ const MetricCaptureModal = ({
   const [values, setValues] = useState({});
 
   const setVal = (id, v) => setValues((prev) => ({ ...prev, [id]: v }));
-  const skip = (id) => setValues((prev) => ({ ...prev, [id]: '' }));
+
+  const filledCount = useMemo(
+    () => Object.values(values).filter((v) => (v || '').trim().length > 0).length,
+    [values]
+  );
 
   const handleSubmit = (skipAll = false) => {
     const cleaned = {};
@@ -37,111 +41,140 @@ const MetricCaptureModal = ({
 
   if (!isOpen) return null;
 
+  const total = vagueBullets.length;
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden"
         >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5 text-white relative shrink-0">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-              aria-label="Cancel"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="p-1.5 bg-white/15 rounded-lg">
-                <Hash className="w-4 h-4 text-yellow-200" />
-              </div>
-              <h2 className="text-lg font-bold">Add numbers to stand out (optional)</h2>
-            </div>
-            <p className="text-indigo-100 text-sm leading-relaxed">
-              We spotted {vagueBullets.length} bullet{vagueBullets.length === 1 ? '' : 's'} that could pop with concrete numbers. Fill in what you remember — skip the rest.
-            </p>
+          {/* Drag-handle on mobile (visual affordance for the bottom-sheet) */}
+          <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
+            <div className="w-10 h-1 rounded-full bg-slate-300" />
           </div>
 
-          {/* Bullets */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {/* Header — softer, info-first instead of decorative gradient */}
+          <div className="px-5 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-5 border-b border-slate-100 shrink-0">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Hash className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0 pr-8">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+                  Quick step before we generate
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+                  We spotted{' '}
+                  <span className="font-semibold text-slate-800">
+                    {total} bullet{total === 1 ? '' : 's'}
+                  </span>{' '}
+                  that say what you did but not the impact. Recruiters scan for numbers — adding one
+                  or two makes your CV instantly stronger.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                aria-label="Cancel"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Progress chip — gives the user a sense of how much they've done */}
+            <div className="mt-3 flex items-center gap-2 text-xs">
+              <span className="font-semibold text-slate-700">
+                {filledCount} of {total} filled
+              </span>
+              <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${total > 0 ? (filledCount / total) * 100 : 0}%` }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full bg-indigo-500 rounded-full"
+                />
+              </div>
+              <span className="text-slate-400">All optional</span>
+            </div>
+          </div>
+
+          {/* Bullets — each in a card so they don't blur into one wall of text */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-3 bg-slate-50/40">
             {vagueBullets.map((b) => {
-              const isSkipped = values[b.bulletId] === '';
-              const hasValue = (values[b.bulletId] || '').trim().length > 0;
+              const value = values[b.bulletId] ?? '';
+              const hasValue = value.trim().length > 0;
               return (
-                <div key={b.bulletId} className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-slate-700">{b.roleTitle}</span>
-                    {b.company && (
-                      <>
-                        <span className="text-slate-300">·</span>
-                        <span className="text-slate-500">{b.company}</span>
-                      </>
-                    )}
+                <div
+                  key={b.bulletId}
+                  className={`rounded-xl border p-3 sm:p-4 transition-colors bg-white ${
+                    hasValue ? 'border-indigo-300 ring-1 ring-indigo-200/40' : 'border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-[11px] mb-1.5">
+                    <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                      {b.roleTitle}
+                    </span>
+                    {b.company && <span className="text-slate-500 truncate">{b.company}</span>}
                   </div>
-                  <p className="text-sm text-slate-600 italic leading-snug">
-                    "{b.original}"
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      maxLength={200}
-                      value={values[b.bulletId] ?? ''}
-                      onChange={(e) => setVal(b.bulletId, e.target.value)}
-                      placeholder={b.placeholder}
-                      className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        hasValue
-                          ? 'border-indigo-300 bg-indigo-50/30'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    />
-                    {!isSkipped && !hasValue && (
-                      <button
-                        type="button"
-                        onClick={() => skip(b.bulletId)}
-                        className="text-xs font-medium text-slate-500 hover:text-slate-700 px-2 shrink-0"
-                      >
-                        Skip
-                      </button>
-                    )}
-                  </div>
+                  <p className="text-sm text-slate-700 italic leading-snug mb-3">"{b.original}"</p>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
+                    Add a number (optional)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={200}
+                    value={value}
+                    onChange={(e) => setVal(b.bulletId, e.target.value)}
+                    placeholder={b.placeholder || 'e.g., 5-person team, 30% faster, $100K'}
+                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 placeholder-slate-400 ${
+                      hasValue ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-white'
+                    }`}
+                  />
                 </div>
               );
             })}
 
-            <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mt-2">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-              <span>
-                These won't change facts in your CV — they'll be woven into the matching bullet only if they truly apply to your experience.
+            {/* Reassurance — clearer pact with the user */}
+            <div className="flex items-start gap-2.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">
+                <strong className="font-semibold">Your numbers stay yours.</strong> We only weave
+                them into the matching bullet — nothing else gets fabricated, and your skills and
+                roles are preserved exactly.
               </span>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+          {/* Footer — actions stack on mobile, inline on desktop */}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => handleSubmit(true)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              Skip all & generate
+              Skip — just generate now
             </button>
             <button
               type="button"
               onClick={() => handleSubmit(false)}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 text-sm"
+              className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 text-sm"
             >
-              {primaryLabel}
+              {filledCount > 0
+                ? `${primaryLabel} with ${filledCount} number${filledCount === 1 ? '' : 's'}`
+                : primaryLabel}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

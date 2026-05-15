@@ -6,7 +6,10 @@ import api from '../services/api';
 
 const CVBuilderContext = createContext(null);
 
-export const STEPS = [
+// STEPS is internal to this provider — consumers read the same array via
+// `useCVBuilder().steps`. Kept unexported so React Fast Refresh treats this
+// file as a pure component module.
+const STEPS = [
   { id: 'target_job', label: 'Target Job', path: 'target-job' },
   { id: 'heading', label: 'Heading', path: 'heading' },
   { id: 'history', label: 'History', path: 'history' },
@@ -36,6 +39,11 @@ export const CVBuilderProvider = ({ children }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  // True when the current step has user input that hasn't been persisted via
+  // handleNext yet. Steps opt in by calling setStepDirty(true) on change and
+  // setStepDirty(false) on successful submit. Drives the beforeunload warning
+  // and the Exit-with-confirm flow in the layout.
+  const [stepDirty, setStepDirty] = useState(false);
 
   // Fetch full user profile from API on mount
   useEffect(() => {
@@ -76,7 +84,9 @@ export const CVBuilderProvider = ({ children }) => {
       if (description) {
         const doc = new DOMParser().parseFromString(description, 'text/html');
         // Remove junk sections (safety tips, share links, apply buttons)
-        doc.querySelectorAll('script, style, iframe, form, button, img, svg').forEach((el) => el.remove());
+        doc
+          .querySelectorAll('script, style, iframe, form, button, img, svg')
+          .forEach((el) => el.remove());
         const raw = doc.body.textContent || '';
         // Lines to strip from Jobberman descriptions
         const JUNK_LINES = [
@@ -134,25 +144,11 @@ export const CVBuilderProvider = ({ children }) => {
         // but we can check if local backup has a newer timestamp if we added timestamps.
         // For now, let's use the pattern of: Backend > Backup
 
-        const backupKey = `applyright_backup_${id}`;
-        const localBackup = localStorage.getItem(backupKey);
-
-        if (localBackup) {
-          try {
-            const parsedBackup = JSON.parse(localBackup);
-            // Optional: Compare updated dates
-            // if (new Date(parsedBackup.updatedAt) > new Date(backendDraft.updatedAt)) ...
-            // For this implementation, we will merge, preferring backend ID but maybe local fields?
-            // Let's just use backend to avoid sync issues for now, or keep existing logic.
-            // Existing logic used backup. Let's stick to Backend consistency for "Robustness" phase.
-            // setCvData({ ...backendDraft, ...parsedBackup }); // OLD
-            setCvData(backendDraft); // NEW: Strict Source of Truth
-          } catch (e) {
-            setCvData(backendDraft);
-          }
-        } else {
-          setCvData(backendDraft);
-        }
+        // Local backup reconciliation was removed in favour of strict
+        // backend-as-source-of-truth — keeping a single setCvData here.
+        // If we ever revive merge-with-local-newer-than-backend, this is
+        // the place to re-introduce it (compare updatedAt timestamps).
+        setCvData(backendDraft);
       } catch (error) {
         console.error('Error loading draft', error);
         const status = error.response?.status;
@@ -206,6 +202,10 @@ export const CVBuilderProvider = ({ children }) => {
         navigate(`/cv-builder/new/target-job`, { replace: true });
       }
     }
+    // Including the full `cvData` here would loop: every save changes cvData,
+    // which would re-fire this effect, which writes another save. We only
+    // care about path/step transitions and the loaded flag.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, id, navigate, cvData.currentStep, loading]);
 
   // Helper to update local state without saving yet
@@ -237,18 +237,13 @@ export const CVBuilderProvider = ({ children }) => {
         throw new Error('Invalid save response');
       }
 
-      // 3. Navigate
+      // 3. Navigate. When `id === 'new'` we just got back the freshly-created
+      // draft's _id from the save response, so future navigations use that.
       if (nextStep) {
         const targetId = id === 'new' ? savedDraft._id : id;
         navigate(`/cv-builder/${targetId}/${nextStep.path}`);
-      } else {
-        // Determine where to go if no next step (probably finalize)
-        const targetId = id === 'new' ? savedDraft._id : id;
-        // verify if we are already at finalize
-        if (location.pathname.includes('finalize')) {
-          // Do nothing or go to dashboard?
-        }
       }
+      // No next step means we're already on finalize — stay put.
     } catch (error) {
       console.error('Save failed', error);
       toast.error('Failed to save progress.');
@@ -266,17 +261,29 @@ export const CVBuilderProvider = ({ children }) => {
     }
   };
 
+  // Exit the wizard. Completed steps were already persisted by handleNext on
+  // each transition; this just drops in-flight typing in the current step (if
+  // any) and sends the user to their CV listing where they can pick this draft
+  // back up. Clears stepDirty so the beforeunload listener doesn't fire.
+  const exitWizard = useCallback(() => {
+    setStepDirty(false);
+    navigate('/my-cvs');
+  }, [navigate]);
+
   const value = {
     cvData,
     updateCvData,
     handleNext,
     handleBack,
+    exitWizard,
     saving,
     loading,
     user,
     currentStep: STEPS[currentStepIndex],
     currentStepIndex,
     steps: STEPS,
+    stepDirty,
+    setStepDirty,
     isTailored: !!cvData.tailoredFrom,
     tailoredFrom: cvData.tailoredFrom,
     tailoredForJob: cvData.tailoredForJob,
@@ -285,6 +292,10 @@ export const CVBuilderProvider = ({ children }) => {
   return <CVBuilderContext.Provider value={value}>{children}</CVBuilderContext.Provider>;
 };
 
+// Co-located with the provider for proximity; the react-refresh rule wants
+// hooks in their own file, but splitting here doesn't pay off — extracting
+// the hook to a separate module would just require synchronised re-exports.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCVBuilder = () => {
   const context = useContext(CVBuilderContext);
   if (!context) {

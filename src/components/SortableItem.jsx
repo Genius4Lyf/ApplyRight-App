@@ -17,14 +17,9 @@ import { GripVertical, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
  * The card body should not render its own trash button; pass `onDelete` here.
  */
 const SortableItem = ({ id, index, total, onMoveUp, onMoveDown, onDelete, children }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),

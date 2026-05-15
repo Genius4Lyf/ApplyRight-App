@@ -75,7 +75,10 @@ const AuthShell = ({
             line and the content block. */}
         <div className="relative z-10 flex flex-col h-full w-full px-12 py-12 max-w-xl mx-auto">
           {/* Brand mark */}
-          <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+          >
             <img src={logo} alt="ApplyRight" className="h-8 w-auto" />
             <span className="text-lg font-semibold">ApplyRight</span>
           </Link>
@@ -102,9 +105,7 @@ const AuthShell = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-slate-50">{vp.title}</p>
-                        <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
-                          {vp.body}
-                        </p>
+                        <p className="text-xs text-slate-400 leading-relaxed mt-0.5">{vp.body}</p>
                       </div>
                     </li>
                   ))}
@@ -135,9 +136,7 @@ const AuthShell = ({
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{formTitle}</h2>
-              {formSubtitle && (
-                <p className="text-sm text-slate-500 mt-1.5">{formSubtitle}</p>
-              )}
+              {formSubtitle && <p className="text-sm text-slate-500 mt-1.5">{formSubtitle}</p>}
             </div>
             {children}
           </div>

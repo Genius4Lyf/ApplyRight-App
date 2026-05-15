@@ -30,12 +30,23 @@ import {
 
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
+import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
+import CreditGate from '../components/CreditGate';
+import { CREDIT_COSTS } from '../lib/credits';
+import { isMobile } from '../utils/platform';
+import { signalReady } from '../utils/splash';
 import FitScoreCard from '../components/FitScoreCard';
 import NextBestAction from '../components/NextBestAction';
 import JobRequirementsCard from '../components/JobRequirementsCard';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MonetagBanner from '../components/MonetagBanner';
 import MetricCaptureModal from '../components/MetricCaptureModal';
+import {
+  getPrepId,
+  getPrepSummary,
+  hasInterviewPrep,
+  mergeInterviewPrepResponse,
+} from '../utils/interviewPrep';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
@@ -56,13 +67,19 @@ const Dashboard = () => {
   const [application, setApplication] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [fitResult, setFitResult] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState('ats-clean');
+  // Template choice was state in an earlier iteration; the picker UI was
+  // removed but the value is still threaded into PDF generation calls below.
+  const selectedTemplate = 'ats-clean';
   const [showAutoAnalyzeModal, setShowAutoAnalyzeModal] = useState(false);
 
   // Asset generation loading states
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCL, setGeneratingCL] = useState(false);
   const [generatingInterview, setGeneratingInterview] = useState(false);
+  // Holds the asset that was *just* generated so NextBestAction can show a
+  // dedicated completion card instead of immediately rotating to the next
+  // action. User dismisses explicitly via View or Next.
+  const [justCompleted, setJustCompleted] = useState(null); // 'cv' | 'coverLetter' | 'interview'
   // Live progress from the async CV generation pipeline (stage, %, message).
   const [cvGenStatus, setCvGenStatus] = useState(null);
   // Poll handle for the CV generation status endpoint
@@ -87,33 +104,39 @@ const Dashboard = () => {
   // New Feature State
   const [workflowMode, setWorkflowMode] = useState(null); // 'upload' (optimize), 'create-upload' (new feature)
   const [myDrafts, setMyDrafts] = useState([]);
+  // True until the first drafts fetch resolves. Drives the dashboard skeleton
+  // and also gates the Capacitor splash (via signalReady) on mobile so the app
+  // doesn't flash an empty dashboard between splash-hide and first paint.
+  const [initialLoading, setInitialLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [draftToDelete, setDraftToDelete] = useState(null);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [scanSuccessDraftId, setScanSuccessDraftId] = useState(null);
   const [scanATSReadiness, setScanATSReadiness] = useState(null);
-  const [scanning, setScanning] = useState(false);
+  // Scanning indicator below was wired to a setter that was removed when the
+  // upload-and-create flow went async; keeping the variable as a constant
+  // preserves the (currently dead) loading branch in case it's resurrected.
+  const scanning = false;
 
   // Get user from local storage
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
 
   useEffect(() => {
-    loadDrafts();
+    loadDrafts({ initial: true });
   }, []);
 
-  const loadDrafts = async () => {
+  const loadDrafts = async ({ initial = false } = {}) => {
     try {
       const drafts = await CVService.getMyDrafts();
       setMyDrafts(drafts);
     } catch (error) {
       console.error('Failed to load drafts', error);
+    } finally {
+      if (initial) {
+        setInitialLoading(false);
+        signalReady();
+      }
     }
-  };
-
-  const handleDeleteClick = (e, draft) => {
-    e.stopPropagation(); // Prevent card click navigation
-    setDraftToDelete(draft);
-    setDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -146,10 +169,13 @@ const Dashboard = () => {
     localStorage.setItem('user', JSON.stringify(currentUser));
   };
 
-  // Auto-analyze when both resume and job are available AND setting is enabled
+  // Auto-analyze when both resume and job are available AND setting is enabled.
+  // Deliberately depends only on [resume, job] — we want a single auto-trigger
+  // when the upload pair completes, not extra re-runs when fitResult clears
+  // (which would loop) or when the user setting flips (the user is consenting
+  // ahead of time, not retroactively).
   useEffect(() => {
     const analyzeFit = async () => {
-      // Check if setting is explicitly true. Default is false (manual)
       const shouldAutoRun = user?.settings?.autoGenerateAnalysis === true;
 
       if (resume && job && !fitResult && shouldAutoRun) {
@@ -158,6 +184,7 @@ const Dashboard = () => {
     };
 
     analyzeFit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume, job]);
 
   const performAnalysis = async () => {
@@ -169,7 +196,7 @@ const Dashboard = () => {
       });
       setFitResult(res.data);
       // Store applicationId so we can call asset generation endpoints
-      setApplication({ applicationId: res.data.applicationId });
+      setApplication({ _id: res.data.applicationId, applicationId: res.data.applicationId });
       if (res.data.job) {
         setJob(res.data.job);
       }
@@ -210,12 +237,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   const handleAnalyze = async () => {
     if (!resume || !job) return;
     try {
@@ -230,7 +251,7 @@ const Dashboard = () => {
           setShowAutoAnalyzeModal(true);
         }
       }
-    } catch (err) {
+    } catch {
       // Error handled in performAnalysis
     }
   };
@@ -244,7 +265,9 @@ const Dashboard = () => {
       return;
     }
     if (error.response?.status === 503 && code === 'AI_UNAVAILABLE') {
-      toast.error('AI is temporarily unavailable. You have not been charged. Please try again in a moment.');
+      toast.error(
+        'AI is temporarily unavailable. You have not been charged. Please try again in a moment.'
+      );
       return;
     }
     if (error.response?.status === 409 && code === 'GENERATION_IN_PROGRESS') {
@@ -286,7 +309,7 @@ const Dashboard = () => {
           try {
             const bal = await api.get('/billing/balance');
             if (bal.data?.credits !== undefined) updateCredits(bal.data.credits);
-          } catch (e) {
+          } catch {
             // Non-critical — UI will still re-fetch credits on next interaction.
           }
           const before = fresh.fitScore;
@@ -298,6 +321,7 @@ const Dashboard = () => {
           }
           setGeneratingCV(false);
           setCvGenStatus(null);
+          setJustCompleted('cv');
         } else if (status?.stage === 'failed') {
           clearInterval(cvPollRef.current);
           cvPollRef.current = null;
@@ -421,6 +445,7 @@ const Dashboard = () => {
       } else {
         toast.success('Cover letter generated!');
       }
+      setJustCompleted('coverLetter');
     } catch (error) {
       handleAssetGenError(error, 'Failed to generate cover letter. Please try again.');
     } finally {
@@ -433,11 +458,12 @@ const Dashboard = () => {
     setGeneratingInterview(true);
     try {
       const res = await api.post(`/analysis/${application.applicationId}/generate-interview`);
-      setApplication((prev) => ({ ...prev, ...res.data }));
+      setApplication((prev) => mergeInterviewPrepResponse(prev, res.data));
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
       }
       toast.success('Interview prep generated!');
+      setJustCompleted('interview');
     } catch (error) {
       handleAssetGenError(error, 'Failed to generate interview prep. Please try again.');
     } finally {
@@ -472,6 +498,17 @@ const Dashboard = () => {
     }, 100);
   };
 
+  // "Change Resume" from the collapsed summary — reset resume + analysis,
+  // keep the job so the user only needs to swap one input.
+  const handleChangeResume = () => {
+    setResume(null);
+    setFitResult(null);
+    setApplication(null);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
   const getStatusMessage = () => {
     if (!user.firstName) return 'Optimize Your Professional Presence';
     return `Welcome back, ${user.firstName}. Let's get you hired.`;
@@ -500,7 +537,16 @@ const Dashboard = () => {
           <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
             <div
               onClick={() => navigate('/profile')}
-              className="flex items-center gap-3 cursor-pointer flex-1 group"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate('/profile');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Enhance your profile"
+              className="flex items-center gap-3 cursor-pointer flex-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg"
             >
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
                 <User className="w-5 h-5" />
@@ -527,7 +573,16 @@ const Dashboard = () => {
         {!user.onboardingCompleted && (
           <div
             onClick={() => navigate('/onboarding')}
-            className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-100 transition-colors group"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/onboarding');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Complete your profile"
+            className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-100 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
@@ -544,10 +599,12 @@ const Dashboard = () => {
           </div>
         )}
 
+        {!workflowMode && initialLoading && <DashboardSkeleton />}
+
         {/* Welcome heading — only on the dashboard landing state. Once the
             user picks a workflow we hide it so the upload/job inputs aren't
             pushed below the fold by ~180px of intro copy. */}
-        {!workflowMode && (
+        {!workflowMode && !initialLoading && (
           <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
             <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
               Tailored for your career
@@ -564,65 +621,116 @@ const Dashboard = () => {
         {/* Monetag Banner - Top */}
         {/* <MonetagBanner style={{ marginBottom: '2rem' }} /> */}
 
-        {/* Workflow Selection Cards */}
-        {!workflowMode && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Option 1: ApplyRight */}
-            <div
-              onClick={() => {
-                setResume(null);
-                setJob(null);
-                setFitResult(null);
-                setApplication(null);
-                setWorkflowMode('upload');
-                // Scroll to top so the upload area lands at the top of the
-                // viewport instead of wherever the user clicked the card.
-                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-              }}
-              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer group relative overflow-hidden flex flex-col"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                <UploadIcon className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">ApplyRight</h3>
-              <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
-                Run a check on your target job to see if you are qualified. We will analyze the requirements and tailor your CV to perfectly match the role.
-              </p>
-              <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
-                Check your CV <ChevronRight className="w-5 h-5 ml-1" />
-              </div>
-            </div>
+        {/* Workflow Selection Cards
+            New users (no CVs yet) need to build one before they can ApplyRight
+            against a job, so we surface "Create" as the recommended path.
+            Returning users with at least one draft most often want to tailor
+            an existing CV — recommend "ApplyRight". The non-recommended card
+            stays equally accessible; we're removing paralysis, not removing
+            choice. */}
+        {!workflowMode &&
+          !initialLoading &&
+          (() => {
+            const recommendedWorkflow = myDrafts.length === 0 ? 'create' : 'apply';
+            const RecommendedBadge = () => (
+              <span className="absolute top-4 right-4 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                <Sparkles className="w-3 h-3" />
+                Recommended
+              </span>
+            );
+            const applyIsRecommended = recommendedWorkflow === 'apply';
+            const createIsRecommended = recommendedWorkflow === 'create';
 
-            {/* Option 2: Create New */}
-            <div
-              onClick={() => setShowCreateOptions(true)}
-              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden flex flex-col"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-              <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                <PenTool className="w-7 h-7" />
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Option 1: ApplyRight */}
+                <div
+                  onClick={() => {
+                    setResume(null);
+                    setJob(null);
+                    setFitResult(null);
+                    setApplication(null);
+                    setWorkflowMode('upload');
+                    // Scroll to top so the upload area lands at the top of the
+                    // viewport instead of wherever the user clicked the card.
+                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.currentTarget.click();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Start ApplyRight workflow"
+                  className={`bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                    applyIsRecommended
+                      ? 'border-2 border-indigo-300 ring-2 ring-indigo-100 hover:border-indigo-400'
+                      : 'border border-slate-200 hover:border-emerald-200'
+                  }`}
+                >
+                  {applyIsRecommended && <RecommendedBadge />}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                  <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    <UploadIcon className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
+                    ApplyRight
+                  </h3>
+                  <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
+                    Run a check on your target job to see if you are qualified. We will analyze the
+                    requirements and tailor your CV to perfectly match the role.
+                  </p>
+                  <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
+                    Check your CV <ChevronRight className="w-5 h-5 ml-1" />
+                  </div>
+                </div>
+
+                {/* Option 2: Create New */}
+                <div
+                  onClick={() => setShowCreateOptions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowCreateOptions(true);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Create a new CV"
+                  className={`bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                    createIsRecommended
+                      ? 'border-2 border-indigo-300 ring-2 ring-indigo-100 hover:border-indigo-400'
+                      : 'border border-slate-200 hover:border-indigo-200'
+                  }`}
+                >
+                  {createIsRecommended && <RecommendedBadge />}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                  <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    <PenTool className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
+                    Create a new CV
+                  </h3>
+                  <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
+                    Build a professional resume. Start from scratch or upload an existing CV to let
+                    our AI do the heavy lifting.
+                  </p>
+                  <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
+                    Start Builder <ChevronRight className="w-5 h-5 ml-1" />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
-                Create a new CV
-              </h3>
-              <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
-                Build a professional resume. Start from scratch or upload an existing CV to let our
-                AI do the heavy lifting.
-              </p>
-              <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
-                Start Builder <ChevronRight className="w-5 h-5 ml-1" />
-              </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
 
         {/* Create Options Modal */}
         {showCreateOptions && (
           /* Bottom-sheet on mobile, centered card on desktop. Compact
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
               <button
                 type="button"
@@ -653,7 +761,9 @@ const Dashboard = () => {
                     <Plus className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-2">Start from scratch</h4>
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-2">
+                      Start from scratch
+                    </h4>
                     <p className="text-xs sm:text-sm text-slate-500 leading-snug">
                       Step-by-step wizard, build a resume from the ground up.
                     </p>
@@ -679,7 +789,9 @@ const Dashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-1">Upload existing CV</h4>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-1">
+                        Upload existing CV
+                      </h4>
                       <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold rounded-full shrink-0">
                         15 cr
                       </span>
@@ -699,84 +811,18 @@ const Dashboard = () => {
                     <MonetagBanner style={{ marginBottom: '2rem' }} />
                 )} */}
 
-        {/* My Drafts / Recent CVs - Show only if not in active workflow mode */}
-        {!workflowMode && myDrafts.length > 0 && (
-          <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-            <div className="flex items-center gap-2 mb-6 text-slate-900">
-              <FileText className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold">My Recent CVs</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {myDrafts.map((draft) => {
-                // Check completeness: Name, Summary, Experience, Education, Skills, and Projects
-                const isComplete =
-                  draft.personalInfo?.fullName &&
-                  draft.professionalSummary &&
-                  draft.experience?.length > 0 &&
-                  draft.education?.length > 0 &&
-                  draft.skills?.length > 0 &&
-                  draft.projects?.length > 0;
-
-                return (
-                  <div
-                    key={draft._id}
-                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group flex flex-col h-full"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center ${isComplete ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}
-                      >
-                        {isComplete ? (
-                          <CheckCircle className="w-5 h-5" />
-                        ) : (
-                          <FileText className="w-5 h-5" />
-                        )}
-                      </div>
-                      <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
-                        {new Date(draft.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">
-                      {draft.title || 'Untitled CV'}
-                    </h4>
-                    <p className="text-xs text-slate-500 mb-4 line-clamp-2">
-                      {draft.professionalSummary || 'No summary yet...'}
-                    </p>
-                    <div className="flex items-center justify-between mt-auto">
-                      <div
-                        onClick={() =>
-                          navigate(isComplete ? `/resume/${draft._id}` : `/cv-builder/${draft._id}`)
-                        }
-                        className={`text-xs font-semibold flex items-center group-hover:underline decoration-indigo-200 underline-offset-4 cursor-pointer ${isComplete ? 'text-emerald-600' : 'text-indigo-600'}`}
-                      >
-                        {isComplete ? (
-                          <>
-                            Review CV <Eye className="w-3 h-3 ml-1" />
-                          </>
-                        ) : (
-                          <>
-                            Continue Editing <ChevronRight className="w-3 h-3 ml-1" />
-                          </>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => handleDeleteClick(e, draft)}
-                        className="text-xs font-semibold text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors"
-                        title="Delete CV"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* My Recent CVs widget was removed — /my-cvs is now the canonical
+            home for CV listings (linked from the Navbar and mobile bottom
+            nav). Keeping it here duplicated the surface and competed with
+            the workflow cards above it on the landing screen. */}
 
         {/* Active Upload Workflow */}
         {workflowMode === 'upload' && (
-          <div className="animate-in fade-in zoom-in-95 duration-300">
+          <div
+            className={`animate-in fade-in zoom-in-95 duration-300 ${
+              !fitResult && !analyzing ? 'pb-32 md:pb-0' : ''
+            }`}
+          >
             <button
               onClick={() => {
                 setResume(null);
@@ -789,10 +835,65 @@ const Dashboard = () => {
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <CVUploader onUploadSuccess={setResume} />
-              <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
-            </div>
+            {!fitResult ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-12">
+                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                  <CVUploader onUploadSuccess={setResume} />
+                </div>
+                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                  <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                {resume && (
+                  <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                        <CheckCircle className="w-3 h-3 text-emerald-500" /> Resume uploaded
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {resume.parsedData?.experience?.[0]?.role || 'Your resume'}
+                        {resume.parsedData?.skills?.length
+                          ? ` · ${resume.parsedData.skills.length} skills`
+                          : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleChangeResume}
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+                {job && (
+                  <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                        <CheckCircle className="w-3 h-3 text-emerald-500" /> Target job
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {job.title}
+                        {job.company ? ` · ${job.company}` : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleGenerateNew}
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -834,31 +935,28 @@ const Dashboard = () => {
                     <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
                       <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 A.I Credits
                     </span>
-                    {user.credits < 15 && (
-                      <p className="text-sm text-red-500 mt-2 font-medium">
-                        You have {user.credits} credits. You need at least 15 to proceed.
-                      </p>
-                    )}
                   </div>
-                  <CVUploader
-                    endpoint="/resumes/upload-and-create"
-                    onUploadSuccess={(data) => {
-                      if (data.draftId) {
-                        setScanSuccessDraftId(data.draftId);
-                        setScanATSReadiness(data.atsReadiness || null);
-                        if (data.remainingCredits !== undefined) {
-                          updateCredits(data.remainingCredits);
+                  <CreditGate cost={CREDIT_COSTS.CREATE_FROM_UPLOAD}>
+                    <CVUploader
+                      endpoint="/resumes/upload-and-create"
+                      onUploadSuccess={(data) => {
+                        if (data.draftId) {
+                          setScanSuccessDraftId(data.draftId);
+                          setScanATSReadiness(data.atsReadiness || null);
+                          if (data.remainingCredits !== undefined) {
+                            updateCredits(data.remainingCredits);
+                          }
+                        } else {
+                          toast.error('Failed to parse resume.');
                         }
-                      } else {
-                        toast.error('Failed to parse resume.');
-                      }
-                    }}
-                    onError={(errorData) => {
-                      if (errorData.code === 'INSUFFICIENT_CREDITS') {
-                        handleInsufficientCredits(errorData.required, errorData.current);
-                      }
-                    }}
-                  />
+                      }}
+                      onError={(errorData) => {
+                        if (errorData.code === 'INSUFFICIENT_CREDITS') {
+                          handleInsufficientCredits(errorData.required, errorData.current);
+                        }
+                      }}
+                    />
+                  </CreditGate>
                 </div>
               )}
             </div>
@@ -872,7 +970,9 @@ const Dashboard = () => {
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">CV Scanned Successfully!</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                CV Scanned Successfully!
+              </h3>
               <p className="text-sm sm:text-base text-slate-500 mb-4">
                 We've extracted and optimized your details with AI-powered formatting.
               </p>
@@ -882,12 +982,13 @@ const Dashboard = () => {
                 <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
                   <div className="flex flex-col sm:flex-row items-center sm:justify-center gap-3 mb-3">
                     <div
-                      className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${scanATSReadiness.score >= 75
-                        ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
-                        : scanATSReadiness.score >= 50
-                          ? 'border-amber-400 text-amber-700 bg-amber-50'
-                          : 'border-red-400 text-red-700 bg-red-50'
-                        }`}
+                      className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${
+                        scanATSReadiness.score >= 75
+                          ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                          : scanATSReadiness.score >= 50
+                            ? 'border-amber-400 text-amber-700 bg-amber-50'
+                            : 'border-red-400 text-red-700 bg-red-50'
+                      }`}
                     >
                       {scanATSReadiness.score}
                     </div>
@@ -907,10 +1008,11 @@ const Dashboard = () => {
                     {scanATSReadiness.checks?.slice(0, 5).map((check, i) => (
                       <span
                         key={i}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${check.passed
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-red-100 text-red-700'
-                          }`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          check.passed
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
                       >
                         {check.passed ? (
                           <CheckCircle className="w-3 h-3" />
@@ -986,11 +1088,30 @@ const Dashboard = () => {
                   onGenerateCoverLetter={handleGenerateCoverLetter}
                   onGenerateInterview={handleGenerateInterview}
                   onGenerateBundle={handleGenerateBundle}
-                  onView={() => navigate(`/resume/${application?.draftId || application?.applicationId}`)}
+                  onView={() =>
+                    navigate(`/resume/${application?.draftId || application?.applicationId}`)
+                  }
                   generatingCV={generatingCV}
                   generatingCL={generatingCL}
                   generatingInterview={generatingInterview}
                   cvGenStatus={cvGenStatus}
+                  justCompleted={justCompleted}
+                  onDismissCompletion={() => setJustCompleted(null)}
+                  onViewCV={() => {
+                    setJustCompleted(null);
+                    navigate(
+                      `/resume/${application?.draftId || application?.applicationId}?tab=resume`
+                    );
+                  }}
+                  onViewCoverLetter={() => {
+                    setJustCompleted(null);
+                    navigate(`/resume/${application?.applicationId}?tab=cover-letter`);
+                  }}
+                  onViewInterviewPrep={() => {
+                    setJustCompleted(null);
+                    const prepId = getPrepId(application);
+                    if (prepId) navigate(`/interview-prep/${prepId}`);
+                  }}
                 />
                 <JobRequirementsCard
                   fitAnalysis={fitResult.fitAnalysis}
@@ -1017,7 +1138,8 @@ const Dashboard = () => {
               <h3 className="text-lg font-bold text-slate-900">Generate Professional Assets</h3>
             </div>
             <p className="text-sm text-slate-500 mb-6">
-              Choose which assets to generate. Each is created independently so you only pay for what you need.
+              Choose which assets to generate. Each is created independently so you only pay for
+              what you need.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Generate CV Card */}
@@ -1032,33 +1154,43 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 mb-4 flex-1">
-                  AI rewrites your resume with role-specific keywords, achievement-oriented bullets, and clean formatting.
+                  AI rewrites your resume with role-specific keywords, achievement-oriented bullets,
+                  and clean formatting.
                 </p>
                 {application.optimizedCV ? (
                   <button
-                    onClick={() => navigate(`/resume/${application.draftId || application.applicationId}?tab=resume`)}
+                    onClick={() =>
+                      navigate(
+                        `/resume/${application.draftId || application.applicationId}?tab=resume`
+                      )
+                    }
                     className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   >
                     <Eye className="w-4 h-4" /> View CV
                   </button>
                 ) : (
-                  <button
-                    onClick={handleGenerateCV}
-                    disabled={generatingCV}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                    <button
+                      onClick={handleGenerateCV}
+                      disabled={generatingCV}
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        generatingCV
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'btn-primary'
                       }`}
-                  >
-                    {generatingCV ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" /> Generate (10 Credits)
-                      </>
-                    )}
-                  </button>
+                    >
+                      {generatingCV ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" /> Generate (10 Credits)
+                        </>
+                      )}
+                    </button>
+                  </CreditGate>
                 )}
               </div>
 
@@ -1078,29 +1210,36 @@ const Dashboard = () => {
                 </p>
                 {application.coverLetter ? (
                   <button
-                    onClick={() => navigate(`/resume/${application.applicationId}?tab=cover-letter`)}
+                    onClick={() =>
+                      navigate(`/resume/${application.applicationId}?tab=cover-letter`)
+                    }
                     className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   >
                     <Eye className="w-4 h-4" /> View Cover Letter
                   </button>
                 ) : (
-                  <button
-                    onClick={handleGenerateCoverLetter}
-                    disabled={generatingCL}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER}>
+                    <button
+                      onClick={handleGenerateCoverLetter}
+                      disabled={generatingCL}
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        generatingCL
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'btn-primary'
                       }`}
-                  >
-                    {generatingCL ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" /> Generate (5 Credits)
-                      </>
-                    )}
-                  </button>
+                    >
+                      {generatingCL ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" /> Generate (5 Credits)
+                        </>
+                      )}
+                    </button>
+                  </CreditGate>
                 )}
               </div>
 
@@ -1116,36 +1255,42 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 mb-4 flex-1">
-                  Role-specific interview questions to practice, plus smart questions to ask the interviewer.
+                  Role-specific interview questions to practice, plus smart questions to ask the
+                  interviewer.
                 </p>
-                {application.interviewQuestions ? (
+                {hasInterviewPrep(application) ? (
                   <button
                     onClick={() => {
-                      const el = document.getElementById('preview-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      const prepId = getPrepId(application);
+                      if (prepId) navigate(`/interview-prep/${prepId}`);
                     }}
                     className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   >
                     <Eye className="w-4 h-4" /> View Interview Prep
                   </button>
                 ) : (
-                  <button
-                    onClick={handleGenerateInterview}
-                    disabled={generatingInterview}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${generatingInterview ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_INTERVIEW}>
+                    <button
+                      onClick={handleGenerateInterview}
+                      disabled={generatingInterview}
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        generatingInterview
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'btn-primary'
                       }`}
-                  >
-                    {generatingInterview ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" /> Generate (5 Credits)
-                      </>
-                    )}
-                  </button>
+                    >
+                      {generatingInterview ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" /> Generate (5 Credits)
+                        </>
+                      )}
+                    </button>
+                  </CreditGate>
                 )}
               </div>
             </div>
@@ -1162,7 +1307,9 @@ const Dashboard = () => {
               <RefreshCw className="w-5 h-5" />
               <span className="flex flex-col items-start leading-tight">
                 <span>Generate New Analysis</span>
-                <span className="text-xs font-normal text-slate-500">Same resume, different job</span>
+                <span className="text-xs font-normal text-slate-500">
+                  Same resume, different job
+                </span>
               </span>
             </button>
           </div>
@@ -1171,77 +1318,72 @@ const Dashboard = () => {
         {/* Interview Prep entry point — replaces the previous inline preview.
             Sends users to the dedicated /interview-prep/:id page for the full
             experience (questions + suggested answers + skill talking points). */}
-        {application?._id &&
-          (application?.interviewPrep?.jobQuestions?.length > 0 ||
-            application?.interviewPrep?.skillsWithEvidence?.length > 0 ||
-            application?.interviewQuestions?.length > 0) && (
-            <Link
-              to={`/interview-prep/${application._id}`}
-              id="preview-section"
-              className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors group"
-            >
-              <div className="w-11 h-11 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm sm:text-base font-semibold text-slate-900">
-                  Interview prep ready
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                  {(application.interviewPrep?.jobQuestions?.length ||
-                    application.interviewQuestions?.length ||
-                    0)}{' '}
-                  question
-                  {(application.interviewPrep?.jobQuestions?.length ||
-                    application.interviewQuestions?.length ||
-                    0) === 1
-                    ? ''
-                    : 's'}{' '}
-                  · tap to review answers and talking points
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
-            </Link>
-          )}
+        {getPrepId(application) && hasInterviewPrep(application) && (
+          <Link
+            to={`/interview-prep/${getPrepId(application)}`}
+            id="preview-section"
+            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors group"
+          >
+            <div className="w-11 h-11 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm sm:text-base font-semibold text-slate-900">
+                Interview prep ready
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                {getPrepSummary(application)} - tap to review answers and talking points
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
+          </Link>
+        )}
 
-        {/* Analyze Button - Only show if in upload mode AND not yet analyzed */}
+        {/* Analyze Button (desktop) — Only show if in upload mode AND not yet
+            analyzed. The mobile equivalent is a sticky bottom bar rendered
+            outside <main> so it survives scroll. Mobile users get a more
+            compact step-checklist + cost summary in that bar; desktop keeps
+            the hero treatment. */}
         {workflowMode === 'upload' && !fitResult && !analyzing && (
-          <div className="relative pt-8 flex flex-col items-center">
+          <div className="relative pt-8 hidden md:flex flex-col items-center">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
 
-            <div className="relative group">
-              {(!resume || !job) && (
-                <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
-              )}
-
-              <button
-                onClick={handleAnalyze}
-                disabled={!resume || !job || analyzing}
-                className={`
-                  relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                  ${!resume || !job || analyzing
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'btn-primary hover:scale-105 active:scale-95'
-                  }
-                `}
-              >
-                {analyzing ? (
-                  <>
-                    <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                    Analyzing Match...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-3" />
-                    <span className="flex flex-col items-start leading-tight">
-                      <span>Analyze Fit</span>
-                      <span className="text-xs font-normal opacity-80">Cost: 10 A.I Credits</span>
-                    </span>
-                    <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </>
+            <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS} className="w-full max-w-xl">
+              <div className="relative group flex justify-center">
+                {(!resume || !job) && (
+                  <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
                 )}
-              </button>
-            </div>
+
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!resume || !job || analyzing}
+                  className={`
+                    relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
+                    ${
+                      !resume || !job || analyzing
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'btn-primary hover:scale-105 active:scale-95'
+                    }
+                  `}
+                >
+                  {analyzing ? (
+                    <>
+                      <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
+                      Analyzing Match...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-3" />
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>Analyze Fit</span>
+                        <span className="text-xs font-normal opacity-80">Cost: 10 A.I Credits</span>
+                      </span>
+                      <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </CreditGate>
 
             {!resume || !job ? (
               <div className="mt-8 flex items-center gap-3 text-slate-400 font-medium bg-slate-50 px-6 py-3 rounded-full border border-slate-200">
@@ -1262,34 +1404,95 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Mobile sticky Analyze CTA — replaces the desktop hero button on
+            small screens. Always visible at the bottom while in upload mode
+            so users don't have to scroll to discover the action or the cost.
+            On Capacitor we offset above the bottom nav; on mobile web we sit
+            flush with the safe-area inset. */}
+        {workflowMode === 'upload' && !fitResult && !analyzing && (
+          <div
+            className="md:hidden fixed left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            style={
+              isMobile() ? { bottom: 'calc(4rem + env(safe-area-inset-bottom))' } : { bottom: 0 }
+            }
+          >
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <span
+                  className={`flex items-center gap-1 ${resume ? 'text-emerald-700' : 'text-slate-400'}`}
+                >
+                  {resume ? (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                  )}
+                  Resume
+                </span>
+                <ChevronRight className="w-3 h-3 text-slate-300" />
+                <span
+                  className={`flex items-center gap-1 ${job ? 'text-emerald-700' : 'text-slate-400'}`}
+                >
+                  {job ? (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                  )}
+                  Job
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                10 cr
+              </span>
+            </div>
+            <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS}>
+              <button
+                onClick={handleAnalyze}
+                disabled={!resume || !job || analyzing}
+                className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
+                  !resume || !job || analyzing
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                {!resume || !job ? 'Complete both steps to continue' : 'Analyze Fit'}
+              </button>
+            </CreditGate>
+          </div>
+        )}
+
         {/* Auto-Analysis Modal */}
         {showAutoAnalyzeModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
+            <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+              {/* Mobile: stacked + centered. Desktop (sm+): icon left, copy right. */}
+              <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left sm:gap-4 mb-5 sm:mb-4">
+                <div className="p-3 bg-indigo-100 rounded-full text-indigo-600 mb-3 sm:mb-0 shrink-0">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Enable Auto-Analysis?</h3>
-                  <p className="text-slate-600 leading-relaxed">
-                    We can automatically analyze the compatibility between your resume and job
-                    description as soon as you upload them in the future.
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1.5 sm:mb-2">
+                    Enable Auto-Analysis?
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                    Automatically analyze your resume against any job you upload — no extra taps
+                    needed.
                   </p>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 mt-6">
+              {/* Mobile: stacked, full-width, primary on top. Desktop: inline right-aligned. */}
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-2 sm:mt-6">
                 <button
                   onClick={() => setShowAutoAnalyzeModal(false)}
-                  className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
                 >
-                  No, keep it manual
+                  Keep it manual
                 </button>
                 <button
                   onClick={enableAutoAnalysis}
-                  className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:scale-105"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all sm:hover:scale-105"
                 >
-                  Yes, enable auto-analysis
+                  Enable auto-analysis
                 </button>
               </div>
             </div>

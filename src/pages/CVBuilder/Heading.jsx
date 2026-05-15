@@ -5,7 +5,7 @@ import SectionTips from '../../components/SectionTips';
 
 const Heading = () => {
   // Use the custom hook for context
-  const { cvData, handleNext, handleBack, saving, user } = useCVBuilder();
+  const { cvData, handleNext, handleBack, saving, user, setStepDirty } = useCVBuilder();
 
   // Initialize form data - start with empty then populate via useEffect
   const [formData, setFormData] = useState({});
@@ -73,6 +73,7 @@ const Heading = () => {
   }, [user, cvData]);
 
   const handleChange = (e) => {
+    setStepDirty?.(true);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -83,6 +84,7 @@ const Heading = () => {
     if (!value) return;
     const trimmed = value.trim();
     if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      setStepDirty?.(true);
       setFormData((prev) => ({ ...prev, [name]: `https://${trimmed}` }));
     }
   };
@@ -97,6 +99,7 @@ const Heading = () => {
     const titleUpdate =
       !cvData.title || cvData.title === 'Untitled CV' ? { title: `${formData.fullName}'s CV` } : {};
 
+    setStepDirty?.(false);
     handleNext({ personalInfo: formData, ...titleUpdate });
   };
 
@@ -125,15 +128,21 @@ const Heading = () => {
           'Use a professional email — <code class="text-[11px] bg-white/60 px-1 rounded">firstname.lastname@email.com</code> beats a nickname.',
           'City and country is enough — no need for a full street address.',
           'Include your LinkedIn URL if you have one; recruiters click it.',
-          'Skip the photo unless you\'re applying in a region where it\'s standard.',
+          "Skip the photo unless you're applying in a region where it's standard.",
           'Example: <em>Jane Doe · London, UK · jane.doe@email.com · +44 7123 456 789 · linkedin.com/in/janedoe</em>',
         ]}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+          <label
+            htmlFor="heading-fullName"
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            Full Name
+          </label>
           <input
+            id="heading-fullName"
             type="text"
             name="fullName"
             value={formData.fullName || ''}
@@ -145,10 +154,11 @@ const Heading = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="heading-email" className="block text-sm font-medium text-slate-700 mb-1">
             Email (Professional)
           </label>
           <input
+            id="heading-email"
             type="email"
             name="email"
             value={formData.email || ''}
@@ -160,8 +170,11 @@ const Heading = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+          <label htmlFor="heading-phone" className="block text-sm font-medium text-slate-700 mb-1">
+            Phone Number
+          </label>
           <input
+            id="heading-phone"
             type="tel"
             name="phone"
             value={formData.phone || ''}
@@ -216,7 +229,10 @@ const Heading = () => {
           {visibleFields.address && (
             <div className="relative group">
               <div className="flex justify-between mb-1">
-                <label className="block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="heading-address"
+                  className="block text-sm font-medium text-slate-700"
+                >
                   Location (City, Country)
                 </label>
                 <button
@@ -230,6 +246,7 @@ const Heading = () => {
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
+                  id="heading-address"
                   type="text"
                   name="address"
                   value={formData.address || ''}
@@ -244,7 +261,12 @@ const Heading = () => {
           {visibleFields.linkedin && (
             <div className="relative group">
               <div className="flex justify-between mb-1">
-                <label className="block text-sm font-medium text-slate-700">LinkedIn URL</label>
+                <label
+                  htmlFor="heading-linkedin"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  LinkedIn URL
+                </label>
                 <button
                   type="button"
                   onClick={() => toggleField('linkedin')}
@@ -256,6 +278,7 @@ const Heading = () => {
               <div className="relative">
                 <Linkedin className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
+                  id="heading-linkedin"
                   type="text"
                   name="linkedin"
                   value={formData.linkedin || ''}
@@ -271,7 +294,10 @@ const Heading = () => {
           {visibleFields.website && (
             <div className="relative group">
               <div className="flex justify-between mb-1">
-                <label className="block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="heading-website"
+                  className="block text-sm font-medium text-slate-700"
+                >
                   Website / Portfolio
                 </label>
                 <button
@@ -285,6 +311,7 @@ const Heading = () => {
               <div className="relative">
                 <Globe className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
+                  id="heading-website"
                   type="text"
                   name="website"
                   value={formData.website || ''}
@@ -300,7 +327,12 @@ const Heading = () => {
           {visibleFields.nationality && (
             <div className="relative group">
               <div className="flex justify-between mb-1">
-                <label className="block text-sm font-medium text-slate-700">Nationality</label>
+                <label
+                  htmlFor="heading-nationality"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Nationality
+                </label>
                 <button
                   type="button"
                   onClick={() => toggleField('nationality')}
@@ -312,6 +344,7 @@ const Heading = () => {
               <div className="relative">
                 <Flag className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
                 <input
+                  id="heading-nationality"
                   type="text"
                   name="nationality"
                   value={formData.nationality || ''}

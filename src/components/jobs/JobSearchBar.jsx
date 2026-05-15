@@ -66,7 +66,7 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
-        
+
         <div className="flex gap-2 sm:w-auto">
           <div className="flex-1 sm:w-40 relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -82,7 +82,9 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             className={`shrink-0 p-2.5 rounded-lg border transition-colors ${
-              showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
+              showFilters
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
             }`}
             title="Toggle filters"
           >
@@ -101,7 +103,10 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
           {onClear && (
             <button
               type="button"
-              onClick={() => { setHasSearched(false); onClear(); }}
+              onClick={() => {
+                setHasSearched(false);
+                onClear();
+              }}
               className="shrink-0 p-2.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors"
               title="Clear search"
             >
@@ -122,7 +127,9 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
               className="text-sm border border-slate-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>{c.label}</option>
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
               ))}
             </select>
           </div>
@@ -133,7 +140,9 @@ const JobSearchBar = ({ onSearch, loading, onClear }) => {
             className="text-sm border border-slate-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             {JOB_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
 

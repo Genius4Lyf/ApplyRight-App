@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { markOnboardingComplete } from '../../utils/platform';
+import { signalReady } from '../../utils/splash';
 
 const SCREENS = [
   {
@@ -28,6 +29,12 @@ const MobileWelcome = () => {
   const [index, setIndex] = useState(0);
   const navigate = useNavigate();
 
+  // First-install cold start lands here; release the splash once the first
+  // onboarding card is on screen.
+  useEffect(() => {
+    signalReady();
+  }, []);
+
   const finish = () => {
     markOnboardingComplete();
     navigate('/login', { replace: true });
@@ -43,10 +50,7 @@ const MobileWelcome = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex justify-end p-4">
-        <button
-          onClick={finish}
-          className="text-gray-500 text-sm font-medium px-3 py-1"
-        >
+        <button onClick={finish} className="text-gray-500 text-sm font-medium px-3 py-1">
           Skip
         </button>
       </div>
@@ -61,13 +65,7 @@ const MobileWelcome = () => {
             transition={{ duration: 0.3 }}
             className="space-y-6 flex flex-col items-center"
           >
-            {screen.image && (
-              <img
-                src={screen.image}
-                alt=""
-                className="w-64 h-64 object-contain"
-              />
-            )}
+            {screen.image && <img src={screen.image} alt="" className="w-64 h-64 object-contain" />}
             <h1 className="text-3xl font-bold text-gray-900">{screen.title}</h1>
             <p className="text-base text-gray-600 max-w-sm mx-auto">{screen.body}</p>
           </motion.div>

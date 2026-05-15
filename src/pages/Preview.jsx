@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CVService from '../services/cv.service';
+import { getJobQuestions, getQuestionsToAsk, hasInterviewPrep } from '../utils/interviewPrep';
 
 import Modal from '../components/Modal';
 
@@ -52,7 +53,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
   const [activeTab, setActiveTab] = useState(() => {
     // Default to whichever tab has content
     if (application?.coverLetter) return 'cl';
-    if (application?.interviewQuestions?.length > 0) return 'interview';
+    if (hasInterviewPrep(application)) return 'interview';
     return 'cl';
   });
   const [copied, setCopied] = useState(false);
@@ -120,11 +121,19 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
 
   if (!application) return null;
 
+  const interviewQuestions = getJobQuestions(application);
+  const questionsToAsk = getQuestionsToAsk(application);
+
   const handleCopy = () => {
     const textToCopy =
       activeTab === 'cl'
         ? application.coverLetter
-        : application.interviewQuestions?.map((q) => q.question).join('\n') || '';
+        : [
+            ...interviewQuestions.map((q) =>
+              [q.question, q.suggestedAnswer].filter(Boolean).join('\n')
+            ),
+            ...questionsToAsk.map((q) => `Ask: ${q}`),
+          ].join('\n\n');
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -329,66 +338,74 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
 
           {activeTab === 'interview' ? (
             <div className="bg-slate-50 rounded-xl p-8 min-h-[500px] border border-slate-100">
-              {!application.interviewQuestions && !application.questionsToAsk ? (
+              {!hasInterviewPrep(application) ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
                   <MessageCircle className="w-12 h-12 text-slate-300 mb-4" />
-                  <h4 className="text-lg font-semibold text-slate-700 mb-2">Interview Prep Not Generated</h4>
+                  <h4 className="text-lg font-semibold text-slate-700 mb-2">
+                    Interview Prep Not Generated
+                  </h4>
                   <p className="text-sm text-slate-500 max-w-md">
-                    Generate interview prep from the asset cards above to see role-specific questions and strategies.
+                    Generate interview prep from the asset cards above to see role-specific
+                    questions and strategies.
                   </p>
                 </div>
               ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column: Questions to Answer */}
-                <div>
-                  <div className="flex items-center gap-2 mb-6">
-                    <HelpCircle className="w-5 h-5 text-indigo-600" />
-                    <h3 className="text-lg font-bold text-slate-800">Likely Interview Questions</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Column: Questions to Answer */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-6">
+                      <HelpCircle className="w-5 h-5 text-indigo-600" />
+                      <h3 className="text-lg font-bold text-slate-800">
+                        Likely Interview Questions
+                      </h3>
+                    </div>
+
+                    {interviewQuestions.length > 0 ? (
+                      <div className="space-y-4">
+                        {interviewQuestions.map((q, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-indigo-500"
+                          >
+                            <p className="text-slate-800 font-medium">{q.question}</p>
+                            {q.suggestedAnswer && (
+                              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                                {q.suggestedAnswer}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-sm">No specific questions generated.</p>
+                    )}
                   </div>
 
-                  {application.interviewQuestions && application.interviewQuestions.length > 0 ? (
-                    <div className="space-y-4">
-                      {application.interviewQuestions.map((q, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-indigo-500"
-                        >
-                          <p className="text-slate-800 font-medium">{q.question}</p>
-                        </div>
-                      ))}
+                  {/* Right Column: Questions to Ask */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-6">
+                      <MessageCircle className="w-5 h-5 text-emerald-600" />
+                      <h3 className="text-lg font-bold text-slate-800">Questions You Should Ask</h3>
                     </div>
-                  ) : (
-                    <p className="text-slate-500 text-sm">No specific questions generated.</p>
-                  )}
-                </div>
 
-                {/* Right Column: Questions to Ask */}
-                <div>
-                  <div className="flex items-center gap-2 mb-6">
-                    <MessageCircle className="w-5 h-5 text-emerald-600" />
-                    <h3 className="text-lg font-bold text-slate-800">Questions You Should Ask</h3>
+                    {questionsToAsk.length > 0 ? (
+                      <div className="space-y-4">
+                        {questionsToAsk.map((q, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-emerald-500"
+                          >
+                            <p className="text-slate-800 font-medium">{q}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-white p-6 rounded-lg border border-dashed border-slate-300 text-center">
+                        <p className="text-slate-500">No suggested questions available.</p>
+                      </div>
+                    )}
                   </div>
-
-                  {application.questionsToAsk && application.questionsToAsk.length > 0 ? (
-                    <div className="space-y-4">
-                      {application.questionsToAsk.map((q, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-emerald-500"
-                        >
-                          <p className="text-slate-800 font-medium">{q}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-white p-6 rounded-lg border border-dashed border-slate-300 text-center">
-                      <p className="text-slate-500">
-                        No suggested questions available.
-                      </p>
-                    </div>
-                  )}
                 </div>
-              </div>
               )}
             </div>
           ) : (
@@ -421,15 +438,18 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                          `}
               ></div>
               <div className="text-slate-700 leading-relaxed">
-                {activeTab === 'cl' && (
-                  application.coverLetter ? (
+                {activeTab === 'cl' &&
+                  (application.coverLetter ? (
                     <ReactMarkdown
                       components={{
                         h1: ({ node, ...props }) => (
                           <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
                         ),
                         h2: ({ node, ...props }) => (
-                          <h2 className="text-lg font-semibold mb-3 mt-4 text-slate-800" {...props} />
+                          <h2
+                            className="text-lg font-semibold mb-3 mt-4 text-slate-800"
+                            {...props}
+                          />
                         ),
                         p: ({ node, ...props }) => (
                           <p
@@ -444,13 +464,15 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                   ) : (
                     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
                       <Mail className="w-12 h-12 text-slate-300 mb-4" />
-                      <h4 className="text-lg font-semibold text-slate-700 mb-2">Cover Letter Not Generated</h4>
+                      <h4 className="text-lg font-semibold text-slate-700 mb-2">
+                        Cover Letter Not Generated
+                      </h4>
                       <p className="text-sm text-slate-500 max-w-md">
-                        Generate a cover letter from the asset cards above to see a tailored letter for this role.
+                        Generate a cover letter from the asset cards above to see a tailored letter
+                        for this role.
                       </p>
                     </div>
-                  )
-                )}
+                  ))}
               </div>
             </div>
           )}

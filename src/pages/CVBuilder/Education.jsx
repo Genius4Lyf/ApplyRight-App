@@ -20,29 +20,32 @@ import {
 import SortableItem from '../../components/SortableItem';
 
 const newSortId = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID
+  typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const ensureIds = (items) =>
   (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
 const Education = () => {
-  // Safely destructure context
+  // Safely destructure context — fallback ensures hooks below see stable
+  // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
 
-  // Fallback if context is somehow missing
-  if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading education...</div>;
-  }
-  const [education, setEducation] = useState(() => ensureIds(cvData.education));
+  const [education, setEducation] = useState(() => ensureIds(cvData?.education));
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  // Render guard lives below the hooks so the hook call order is stable
+  // across renders (rules-of-hooks).
+  if (!cvData) {
+    return <div className="p-8 text-center text-slate-500">Loading education...</div>;
+  }
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -62,6 +65,7 @@ const Education = () => {
   };
 
   const addEducation = () => {
+    setStepDirty?.(true);
     setEducation([
       ...education,
       { _sortId: newSortId(), degree: '', school: '', graduationDate: '', description: '' },
@@ -69,12 +73,14 @@ const Education = () => {
   };
 
   const removeEducation = (index) => {
+    setStepDirty?.(true);
     const newEd = [...education];
     newEd.splice(index, 1);
     setEducation(newEd);
   };
 
   const handleChange = (index, field, value) => {
+    setStepDirty?.(true);
     const newEd = [...education];
     newEd[index] = { ...newEd[index], [field]: value };
     setEducation(newEd);
@@ -82,6 +88,7 @@ const Education = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    setStepDirty?.(false);
     handleNext({ education: education });
   };
 
@@ -108,7 +115,7 @@ const Education = () => {
           'List your most recent or highest qualification first.',
           'Honors, GPA, or thesis only if it strengthens your application — otherwise skip it.',
           'For experienced candidates (5+ years), education sits below work history.',
-          'Skip the high school once you have a degree — it\'s implied.',
+          "Skip the high school once you have a degree — it's implied.",
         ]}
       />
 
@@ -125,11 +132,7 @@ const Education = () => {
         </div>
       )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={education.map((e) => e._sortId)}
           strategy={verticalListSortingStrategy}
@@ -146,57 +149,72 @@ const Education = () => {
                 onDelete={() => removeEducation(index)}
               >
                 <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  School / University
-                </label>
-                <input
-                  type="text"
-                  value={edu.school}
-                  onChange={(e) => handleChange(index, 'school', e.target.value)}
-                  placeholder="e.g. University of Technology"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Degree / Major
-                </label>
-                <input
-                  type="text"
-                  value={edu.degree}
-                  onChange={(e) => handleChange(index, 'degree', e.target.value)}
-                  placeholder="e.g. BSc Computer Science"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Graduation Date
-                </label>
-                <input
-                  type="text"
-                  value={edu.graduationDate}
-                  onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
-                  placeholder="e.g. May 2019"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Additional Info (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={edu.description}
-                  onChange={(e) => handleChange(index, 'description', e.target.value)}
-                  placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label
+                        htmlFor={`education-school-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        School / University
+                      </label>
+                      <input
+                        id={`education-school-${index}`}
+                        type="text"
+                        value={edu.school}
+                        onChange={(e) => handleChange(index, 'school', e.target.value)}
+                        placeholder="e.g. University of Technology"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`education-degree-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        Degree / Major
+                      </label>
+                      <input
+                        id={`education-degree-${index}`}
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => handleChange(index, 'degree', e.target.value)}
+                        placeholder="e.g. BSc Computer Science"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`education-grad-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        Graduation Date
+                      </label>
+                      <input
+                        id={`education-grad-${index}`}
+                        type="text"
+                        value={edu.graduationDate}
+                        onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
+                        placeholder="e.g. May 2019"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label
+                        htmlFor={`education-description-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                      >
+                        Additional Info (Optional)
+                      </label>
+                      <input
+                        id={`education-description-${index}`}
+                        type="text"
+                        value={edu.description}
+                        onChange={(e) => handleChange(index, 'description', e.target.value)}
+                        placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </SortableItem>
             ))}

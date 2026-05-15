@@ -6,7 +6,8 @@ import jobSearchService from '../../services/jobSearchService';
 /**
  * Detect if text contains meaningful HTML tags (not just entities)
  */
-const isHTML = (str) => /<(p|div|ul|ol|li|br|h[1-6]|strong|b|em|i|a|table|span|section|article)\b/i.test(str);
+const isHTML = (str) =>
+  /<(p|div|ul|ol|li|br|h[1-6]|strong|b|em|i|a|table|span|section|article)\b/i.test(str);
 
 /**
  * Sanitize HTML — strip dangerous content and unwanted platform-specific UI junk
@@ -18,11 +19,13 @@ const sanitizeHTML = (html) => {
   const doc = parser.parseFromString(html, 'text/html');
 
   // 1. Remove dangerous or unnecessary tags (including SVGs that cause duplicate icons)
-  const tagsToRemove = doc.querySelectorAll('script, style, iframe, object, embed, form, input, button, img, svg, path, figure');
-  tagsToRemove.forEach(el => el.remove());
+  const tagsToRemove = doc.querySelectorAll(
+    'script, style, iframe, object, embed, form, input, button, img, svg, path, figure'
+  );
+  tagsToRemove.forEach((el) => el.remove());
 
   // 2. Remove social share links, and convert internal Jobberman metadata tags
-  doc.querySelectorAll('a').forEach(a => {
+  doc.querySelectorAll('a').forEach((a) => {
     const text = (a.textContent || '').toLowerCase();
     const href = (a.href || '').toLowerCase();
 
@@ -75,7 +78,7 @@ const sanitizeHTML = (html) => {
     }
   }
 
-  textNodesToRemove.forEach(node => {
+  textNodesToRemove.forEach((node) => {
     const parent = node.parentNode;
     if (node) node.remove();
     // If parent is now an empty wrapper (like a <li> or <p>), remove it too
@@ -86,15 +89,18 @@ const sanitizeHTML = (html) => {
 
   // 4. Strip inline styles, classes, ids, and event listeners to ensure clean styling
   const allElements = doc.body.querySelectorAll('*');
-  allElements.forEach(el => {
+  allElements.forEach((el) => {
     // Keep classes for our custom injected tags and SVGs
-    if (el.closest('span[data-badge="true"]') || ['svg', 'path', 'circle', 'polyline', 'rect', 'polygon'].includes(el.tagName.toLowerCase())) {
-      return; 
+    if (
+      el.closest('span[data-badge="true"]') ||
+      ['svg', 'path', 'circle', 'polyline', 'rect', 'polygon'].includes(el.tagName.toLowerCase())
+    ) {
+      return;
     }
     el.removeAttribute('style');
     el.removeAttribute('class');
     el.removeAttribute('id');
-    Array.from(el.attributes).forEach(attr => {
+    Array.from(el.attributes).forEach((attr) => {
       if (attr.name.toLowerCase().startsWith('on')) {
         el.removeAttribute(attr.name);
       }
@@ -102,7 +108,7 @@ const sanitizeHTML = (html) => {
   });
 
   // 5. Remove empty elements (except structural ones)
-  doc.body.querySelectorAll('*').forEach(el => {
+  doc.body.querySelectorAll('*').forEach((el) => {
     if (el.tagName !== 'BR' && el.tagName !== 'HR' && el.innerHTML.trim() === '') {
       el.remove();
     }
@@ -112,21 +118,31 @@ const sanitizeHTML = (html) => {
 
   // 6. Fix metadata formatting and missing badges
   // Jobberman outputs metadata in a single squished text node when icons are removed.
-  finalHtml = finalHtml.replace(/(Min Qualification:|Experience Level:|Experience Length:)/gi, '<br/><strong>$1</strong> ');
+  finalHtml = finalHtml.replace(
+    /(Min Qualification:|Experience Level:|Experience Length:)/gi,
+    '<br/><strong>$1</strong> '
+  );
 
   // Promote the extracted header into a styled H2 element with a larger font size
-  finalHtml = finalHtml.replace(/(Job descriptions (?:&amp;|&) requirements)/gi, '<h2 class="text-xl font-bold text-slate-800 mt-8 mb-4 border-b border-slate-100 pb-2">$1</h2>');
+  finalHtml = finalHtml.replace(
+    /(Job descriptions (?:&amp;|&) requirements)/gi,
+    '<h2 class="text-xl font-bold text-slate-800 mt-8 mb-4 border-b border-slate-100 pb-2">$1</h2>'
+  );
 
   // Clean up any leading breaks we might have accidentally created at the very start
   finalHtml = finalHtml.replace(/^(<br\s*\/?>\s*)+/i, '');
 
   // 7. Safely reorder the large heading to be ABOVE the Qualifications block
-  const reorderRegex = /((?:<br\s*\/?>\s*)*<strong>Min Qualification:<\/strong>[\s\S]*?<strong>Experience Length:<\/strong>[^<]*)((?:<br\s*\/?>\s*)*<h2[^>]*>Job descriptions (?:&amp;|&) requirements<\/h2>\s*)/i;
+  const reorderRegex =
+    /((?:<br\s*\/?>\s*)*<strong>Min Qualification:<\/strong>[\s\S]*?<strong>Experience Length:<\/strong>[^<]*)((?:<br\s*\/?>\s*)*<h2[^>]*>Job descriptions (?:&amp;|&) requirements<\/h2>\s*)/i;
   finalHtml = finalHtml.replace(reorderRegex, '$2$1<br/><br/>');
 
   // Wrap raw salary strings in the same badge style so they don't break across lines
   // Matches "NGN 100,000 - 200,000" or similar ranges
-  finalHtml = finalHtml.replace(/(NGN\s*[\d,]+\s*(-\s*[\d,]+)?)/g, '<span data-badge="true" class="whitespace-nowrap bg-emerald-50! text-emerald-700! border-emerald-200!">$1</span>');
+  finalHtml = finalHtml.replace(
+    /(NGN\s*[\d,]+\s*(-\s*[\d,]+)?)/g,
+    '<span data-badge="true" class="whitespace-nowrap bg-emerald-50! text-emerald-700! border-emerald-200!">$1</span>'
+  );
 
   return finalHtml;
 };
@@ -158,13 +174,17 @@ const formatMultilineText = (text) => {
   const parts = [];
   let inList = false;
 
-  const HEADER_PATTERN = /^(about\s+(the|this|us)|requirements?|responsibilities|qualifications|skills?\s*(required|needed)?|experience|benefits?|what\s+(you|we)|who\s+(you|we)|your\s+role|the\s+(role|position|opportunity)|job\s+description|key\s+(duties|responsibilities)|how\s+to\s+apply|salary|location|company\s+overview|we\s+offer|what\s+we\s+offer|perks|duties|overview|summary|role\s+summary|minimum|preferred|essential|desirable|package|remuneration|apply|to\s+apply|ideal\s+candidate|why\s+join)/i;
+  const HEADER_PATTERN =
+    /^(about\s+(the|this|us)|requirements?|responsibilities|qualifications|skills?\s*(required|needed)?|experience|benefits?|what\s+(you|we)|who\s+(you|we)|your\s+role|the\s+(role|position|opportunity)|job\s+description|key\s+(duties|responsibilities)|how\s+to\s+apply|salary|location|company\s+overview|we\s+offer|what\s+we\s+offer|perks|duties|overview|summary|role\s+summary|minimum|preferred|essential|desirable|package|remuneration|apply|to\s+apply|ideal\s+candidate|why\s+join)/i;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
 
     if (!line) {
-      if (inList) { parts.push('</ul>'); inList = false; }
+      if (inList) {
+        parts.push('</ul>');
+        inList = false;
+      }
       continue;
     }
 
@@ -178,15 +198,24 @@ const formatMultilineText = (text) => {
     const isBullet = /^[-•*▪◦–·►➤✓✔☑]\s/.test(line) || /^\d+[.)]\s/.test(line);
 
     if (isHeader) {
-      if (inList) { parts.push('</ul>'); inList = false; }
+      if (inList) {
+        parts.push('</ul>');
+        inList = false;
+      }
       const headerText = line.replace(/:$/, '').trim();
       parts.push(`<h4>${headerText}</h4>`);
     } else if (isBullet) {
       const bulletText = line.replace(/^[-•*▪◦–·►➤✓✔☑]\s*/, '').replace(/^\d+[.)]\s*/, '');
-      if (!inList) { parts.push('<ul>'); inList = true; }
+      if (!inList) {
+        parts.push('<ul>');
+        inList = true;
+      }
       parts.push(`<li>${bulletText}</li>`);
     } else {
-      if (inList) { parts.push('</ul>'); inList = false; }
+      if (inList) {
+        parts.push('</ul>');
+        inList = false;
+      }
       parts.push(`<p>${line}</p>`);
     }
   }
@@ -206,7 +235,8 @@ const formatTextBlob = (text) => {
   const parts = [];
   let buffer = [];
 
-  const SECTION_KEYWORDS = /\b(requirements?|responsibilities|qualifications|experience required|skills|benefits|about the (role|company|position)|key duties|what you|who you|your role|the role|we offer|how to apply|ideal candidate|minimum|essential)\b/i;
+  const SECTION_KEYWORDS =
+    /\b(requirements?|responsibilities|qualifications|experience required|skills|benefits|about the (role|company|position)|key duties|what you|who you|your role|the role|we offer|how to apply|ideal candidate|minimum|essential)\b/i;
 
   const flushBuffer = () => {
     if (buffer.length > 0) {
@@ -230,7 +260,10 @@ const formatTextBlob = (text) => {
         const keyword = match[0];
         const headerText = keyword.charAt(0).toUpperCase() + keyword.slice(1);
         parts.push(`<h4>${headerText}</h4>`);
-        const remainder = sentence.replace(SECTION_KEYWORDS, '').replace(/^[:\s-]+/, '').trim();
+        const remainder = sentence
+          .replace(SECTION_KEYWORDS, '')
+          .replace(/^[:\s-]+/, '')
+          .trim();
         if (remainder) buffer.push(remainder);
       } else {
         buffer.push(sentence);
@@ -263,13 +296,7 @@ const FormattedDescription = ({ text }) => {
   );
 };
 
-const JobDetailPanel = ({
-  result,
-  searchId,
-  isOpen,
-  onClose,
-  onApplyClick,
-}) => {
+const JobDetailPanel = ({ result, searchId, isOpen, onClose, onApplyClick }) => {
   const [fullDescription, setFullDescription] = useState('');
   const [loadingDesc, setLoadingDesc] = useState(false);
 
@@ -355,24 +382,35 @@ const JobDetailPanel = ({
                 {loadingDesc ? (
                   <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-3 bg-slate-100 rounded animate-pulse" style={{ width: `${80 - i * 10}%` }} />
+                      <div
+                        key={i}
+                        className="h-3 bg-slate-100 rounded animate-pulse"
+                        style={{ width: `${80 - i * 10}%` }}
+                      />
                     ))}
                   </div>
                 ) : (
-                  <FormattedDescription text={fullDescription || result.snippet || 'No description available'} />
+                  <FormattedDescription
+                    text={fullDescription || result.snippet || 'No description available'}
+                  />
                 )}
               </div>
 
               {/* Meta info */}
               <div className="flex flex-wrap gap-2 text-xs">
-                <span className={`px-2 py-1 rounded-full ${result.source === 'jobberman'
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-blue-50 text-blue-600'
-                  }`}>
+                <span
+                  className={`px-2 py-1 rounded-full ${
+                    result.source === 'jobberman'
+                      ? 'bg-green-50 text-green-600'
+                      : 'bg-blue-50 text-blue-600'
+                  }`}
+                >
                   {result.source === 'jobberman' ? 'Local' : 'Global'}
                 </span>
                 {result.category && (
-                  <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600">{result.category}</span>
+                  <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                    {result.category}
+                  </span>
                 )}
                 {result.postedDate && (
                   <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-500">

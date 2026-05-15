@@ -310,9 +310,7 @@ const AdminSettings = () => {
                         }
                         className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
                       />
-                      <p className="text-xs text-slate-500">
-                        Credits earned by watching an ad.
-                      </p>
+                      <p className="text-xs text-slate-500">Credits earned by watching an ad.</p>
                     </div>
                   </div>
                 </div>
@@ -339,7 +337,9 @@ const AdminSettings = () => {
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Tailor Bundle Cost</label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        Tailor Bundle Cost
+                      </label>
                       <input
                         type="number"
                         value={settings.credits.tailorBundleCost}

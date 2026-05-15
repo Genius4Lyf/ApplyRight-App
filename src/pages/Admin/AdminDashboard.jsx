@@ -51,10 +51,18 @@ const AdminDashboard = () => {
   });
 
   const months = [
-    { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
-    { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
-    { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
-    { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' },
+    { value: 1, label: 'Jan' },
+    { value: 2, label: 'Feb' },
+    { value: 3, label: 'Mar' },
+    { value: 4, label: 'Apr' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' },
+    { value: 8, label: 'Aug' },
+    { value: 9, label: 'Sep' },
+    { value: 10, label: 'Oct' },
+    { value: 11, label: 'Nov' },
+    { value: 12, label: 'Dec' },
   ];
 
   useEffect(() => {
@@ -367,11 +375,23 @@ const AdminDashboard = () => {
           {stats.jobMetrics?.funnel &&
             (() => {
               const funnelSteps = [
-                { label: 'Searches', value: stats.jobMetrics.funnel.searches, color: 'bg-blue-500' },
+                {
+                  label: 'Searches',
+                  value: stats.jobMetrics.funnel.searches,
+                  color: 'bg-blue-500',
+                },
                 { label: 'Clicks', value: stats.jobMetrics.funnel.clicks, color: 'bg-indigo-500' },
                 { label: 'Saves', value: stats.jobMetrics.funnel.saves, color: 'bg-violet-500' },
-                { label: 'Tailored', value: stats.jobMetrics.funnel.tailors, color: 'bg-purple-500' },
-                { label: 'Applications', value: stats.jobMetrics.funnel.applications, color: 'bg-pink-500' },
+                {
+                  label: 'Tailored',
+                  value: stats.jobMetrics.funnel.tailors,
+                  color: 'bg-purple-500',
+                },
+                {
+                  label: 'Applications',
+                  value: stats.jobMetrics.funnel.applications,
+                  color: 'bg-pink-500',
+                },
               ];
               const maxVal = Math.max(...funnelSteps.map((s) => s.value), 1);
               const topVal = funnelSteps[0].value || 1;

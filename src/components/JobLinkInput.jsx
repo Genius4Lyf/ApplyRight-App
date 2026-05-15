@@ -79,7 +79,9 @@ const JobLinkInput = ({ onJobExtracted }) => {
           <Link2 className="w-5 h-5 lg:w-6 lg:h-6" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base lg:text-lg font-semibold text-slate-900">Step 2 · Job listing</h3>
+          <h3 className="text-base lg:text-lg font-semibold text-slate-900">
+            Step 2 · Job listing
+          </h3>
           <p className="text-xs lg:text-sm text-slate-500">Provide the job details for analysis</p>
         </div>
       </div>

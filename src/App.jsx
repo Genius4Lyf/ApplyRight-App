@@ -22,12 +22,15 @@ import MobileHomeRedirect from './components/MobileHomeRedirect';
 import MobileWelcome from './pages/mobile/MobileWelcome';
 import InterviewPrepList from './pages/InterviewPrepList';
 import InterviewPrepDetail from './pages/InterviewPrepDetail';
+import InterviewPracticePage from './pages/InterviewPracticePage';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
+import { waitForReady } from './utils/splash';
 import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
+import MyCVs from './pages/MyCVs';
 import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
 import TargetJob from './pages/CVBuilder/TargetJob';
 import Heading from './pages/CVBuilder/Heading';
@@ -59,7 +62,9 @@ const SessionManager = ({ children }) => {
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem('user'));
-  } catch (e) {}
+  } catch {
+    user = null;
+  }
 
   const handleIdle = () => {
     const isAdmin = user?.role === 'admin';
@@ -147,12 +152,17 @@ const RootLayout = () => {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl mix-blend-multiply -translate-x-1/4 translate-y-1/4"></div>
       </div>
 
-      <div className={`relative z-0 ${showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}`}>
+      <div
+        className={`relative z-0 ${showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}`}
+      >
         <AnimatePresence mode="wait">
           {element && cloneElement(element, { key: getPageKey(location.pathname) })}
         </AnimatePresence>
+        {/* Inside the wrapper so modals (z-50) can stack above the nav (z-40);
+            otherwise the wrapper's z-0 traps modal z-index in its own stacking
+            context and the nav punches through the backdrop on Android. */}
+        <MobileBottomNav />
       </div>
-      <MobileBottomNav />
     </SessionManager>
   );
 };
@@ -182,6 +192,7 @@ import AdminSettings from './pages/Admin/AdminSettings';
 import AdminJobSearches from './pages/Admin/AdminJobSearches';
 import AdminReportStudio from './pages/Admin/AdminReportStudio';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
+import AdminAIFeedback from './pages/Admin/AdminAIFeedback';
 
 // ... existing router configuration ...
 
@@ -357,11 +368,31 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: '/interview-prep/:applicationId/practice',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <InterviewPracticePage />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
         path: '/resume/:id',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
               <ResumeReview />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/my-cvs',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <MyCVs />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),
@@ -445,6 +476,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: '/admin/ai-feedback',
+        element: (
+          <AdminRoute>
+            <AdminAIFeedback />
+          </AdminRoute>
+        ),
+      },
+      {
         path: '/admin/settings',
         element: (
           <AdminRoute>
@@ -472,16 +511,24 @@ import { HelmetProvider } from 'react-helmet-async';
 function App() {
   useEffect(() => {
     if (!isMobile()) return;
-    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
     StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-    StatusBar.setBackgroundColor({ color: '#ffffff00' }).catch(() => {}); // fully transparent — page bg shows through
+    StatusBar.setBackgroundColor({ color: '#ffffff' }).catch(() => {});
 
-    // Wake the Render backend before showing the app — splash stays up until
-    // the first response lands or 8s passes, whichever happens first.
+    // Init AdMob on Android — dynamic import so the plugin is never bundled
+    // for web. Failure is swallowed so it can't block splash hide.
+    import('./services/admob.service').then(({ initAdMob }) => initAdMob()).catch(() => {});
+
+    // Wake the Render backend in the background so the first real request is
+    // warm by the time the destination page needs it.
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const wakeBackend = fetch(apiUrl, { method: 'GET' }).catch(() => {});
-    const timeout = new Promise((resolve) => setTimeout(resolve, 8000));
-    Promise.race([wakeBackend, timeout]).finally(() => {
+    fetch(apiUrl, { method: 'GET' }).catch(() => {});
+
+    // Hold the splash until the destination route signals it has content
+    // (via signalReady()), or the 8s safety net fires. This replaces the old
+    // "race the backend ping" approach, which let the dashboard render empty
+    // while its drafts fetch was still in flight.
+    waitForReady(8000).finally(() => {
       SplashScreen.hide().catch(() => {});
     });
   }, []);

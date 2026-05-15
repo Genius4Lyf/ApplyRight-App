@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Share2, PlayCircle, Loader, X, Gift, AlertCircle, Check } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
 import AdPlayer from '../components/AdPlayer';
 import MonetagBanner from '../components/MonetagBanner';
+
+const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 const CreditStore = () => {
   const navigate = useNavigate();
@@ -89,9 +92,30 @@ const CreditStore = () => {
 
   const handleAdSuccess = async () => {
     try {
+      // On Android the credit grant lands via AdMob SSV — no client-side
+      // /watch-ad call. Pull the fresh balance and ad stats from the server.
+      if (isAndroidNative()) {
+        const [bal, stats] = await Promise.all([
+          billingService.getBalance().catch(() => null),
+          billingService.getAdStats().catch(() => null),
+        ]);
+        if (bal?.credits != null) {
+          window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
+        }
+        if (stats) setAdStats(stats);
+        setRewardMessage('');
+        setShowAdPlayer(false);
+        setShowReward(true);
+        setTimeout(() => {
+          setShowReward(false);
+          setRewardMessage('');
+        }, 4000);
+        return;
+      }
+
+      // Web (Monetag) — server awards on this call.
       const result = await billingService.watchAd();
 
-      // Dispatch update event for Navbar
       window.dispatchEvent(new CustomEvent('credit_updated', { detail: result.credits }));
 
       setAdStats((prev) => ({
@@ -109,13 +133,24 @@ const CreditStore = () => {
       }, 4000);
     } catch (error) {
       console.error('Ad reward failed:', error);
-      console.error('Response data:', error.response?.data);
-      console.error('Response status:', error.response?.status);
       const serverMsg = error.response?.data?.message || error.message || 'Unknown error';
       alert(`Failed to claim reward: ${serverMsg}`);
       setShowAdPlayer(false);
     }
   };
+
+  const getStoredUserId = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      return stored?._id || stored?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const platformReward = isAndroidNative()
+    ? config?.credits?.adRewardAndroid || 10
+    : config?.credits?.adReward || 5;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -154,13 +189,14 @@ const CreditStore = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-4">
                   Instant Reward
                 </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">View Sponsored Offer</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  {isAndroidNative() ? 'Watch Video to Earn Credits' : 'View Sponsored Offer'}
+                </h2>
                 <p className="text-slate-500 text-lg">
-                  Support our platform by viewing an offer and earn{' '}
-                  <span className="text-indigo-600 font-bold">
-                    {config?.credits?.adReward || 5} A.I Credits
-                  </span>
-                  .
+                  {isAndroidNative()
+                    ? 'Watch a short video ad and earn '
+                    : 'Support our platform by viewing an offer and earn '}
+                  <span className="text-indigo-600 font-bold">{platformReward} A.I Credits</span>.
                 </p>
               </div>
 
@@ -189,9 +225,11 @@ const CreditStore = () => {
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform">
                   <Zap className="w-10 h-10 text-indigo-600 ml-1" />
                 </div>
-                <span className="text-white font-bold text-2xl">View Offer</span>
+                <span className="text-white font-bold text-2xl">
+                  {isAndroidNative() ? 'Watch Video' : 'View Offer'}
+                </span>
                 <span className="text-indigo-200 font-medium mt-1">
-                  +{config?.credits?.adReward || 5} A.I Credits
+                  +{platformReward} A.I Credits
                 </span>
 
                 {adStats.streak > 0 && (
@@ -244,7 +282,11 @@ const CreditStore = () => {
 
       {/* Ad Player Modal */}
       {showAdPlayer && (
-        <AdPlayer onComplete={handleAdSuccess} onClose={() => setShowAdPlayer(false)} />
+        <AdPlayer
+          userId={getStoredUserId()}
+          onComplete={handleAdSuccess}
+          onClose={() => setShowAdPlayer(false)}
+        />
       )}
 
       {/* Reward Celebration Overlay */}
@@ -266,7 +308,7 @@ const CreditStore = () => {
                 <Zap className="w-12 h-12 text-white fill-white" />
               </motion.div>
               <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                +{config?.credits?.adReward || 5} A.I Credits!
+                +{platformReward} A.I Credits!
               </h2>
               {rewardMessage && (
                 <motion.div

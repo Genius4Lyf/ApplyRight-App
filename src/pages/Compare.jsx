@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Building2, Briefcase, AlertTriangle, CheckCircle, Trophy, Minus } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Briefcase,
+  AlertTriangle,
+  CheckCircle,
+  Trophy,
+  Minus,
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
@@ -125,9 +134,7 @@ const Compare = () => {
           <ArrowLeft className="w-4 h-4" /> Back to applications
         </button>
 
-        {loading && (
-          <div className="text-center py-12 text-slate-400">Loading comparison…</div>
-        )}
+        {loading && <div className="text-center py-12 text-slate-400">Loading comparison…</div>}
 
         {!loading && error && (
           <div className="bg-white border border-red-200 rounded-xl p-6 text-center">
@@ -154,7 +161,8 @@ const Compare = () => {
                 <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
-                    These two applications are for different jobs. Comparison is most useful when both runs target the same role.
+                    These two applications are for different jobs. Comparison is most useful when
+                    both runs target the same role.
                   </span>
                 </div>
               )}
@@ -191,7 +199,9 @@ const Compare = () => {
                 <div
                   key={label}
                   className={`bg-white rounded-xl border ${
-                    overallWinner === label ? 'border-emerald-300 ring-1 ring-emerald-100' : 'border-slate-200'
+                    overallWinner === label
+                      ? 'border-emerald-300 ring-1 ring-emerald-100'
+                      : 'border-slate-200'
                   } p-5 shadow-sm`}
                 >
                   <div className="flex items-baseline justify-between mb-3">
@@ -210,17 +220,22 @@ const Compare = () => {
                       {typeof app.fitScore === 'number' ? `${app.fitScore}%` : '—'}
                     </div>
                   </div>
-                  {typeof app.optimizedFitScore === 'number' && app.optimizedFitScore > app.fitScore && (
-                    <div className={`mt-2 px-3 py-1.5 rounded-lg ${scoreBg(app.optimizedFitScore)} text-xs flex items-center gap-2`}>
-                      <CheckCircle className={`w-3.5 h-3.5 ${scoreColor(app.optimizedFitScore)}`} />
-                      <span className="text-slate-600">
-                        Optimized to{' '}
-                        <span className={`font-semibold ${scoreColor(app.optimizedFitScore)}`}>
-                          {app.optimizedFitScore}%
+                  {typeof app.optimizedFitScore === 'number' &&
+                    app.optimizedFitScore > app.fitScore && (
+                      <div
+                        className={`mt-2 px-3 py-1.5 rounded-lg ${scoreBg(app.optimizedFitScore)} text-xs flex items-center gap-2`}
+                      >
+                        <CheckCircle
+                          className={`w-3.5 h-3.5 ${scoreColor(app.optimizedFitScore)}`}
+                        />
+                        <span className="text-slate-600">
+                          Optimized to{' '}
+                          <span className={`font-semibold ${scoreColor(app.optimizedFitScore)}`}>
+                            {app.optimizedFitScore}%
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                  )}
+                      </div>
+                    )}
                   <Link
                     to={`/history`}
                     onClick={(e) => {
@@ -245,11 +260,36 @@ const Compare = () => {
                 <div className="col-span-4 text-right">Resume A</div>
                 <div className="col-span-4 text-right">Resume B</div>
               </div>
-              <DimensionRow label="Skills" weight="40%" valueA={breakA.skillsScore} valueB={breakB.skillsScore} />
-              <DimensionRow label="Experience" weight="25%" valueA={breakA.experienceScore} valueB={breakB.experienceScore} />
-              <DimensionRow label="Education" weight="15%" valueA={breakA.educationScore} valueB={breakB.educationScore} />
-              <DimensionRow label="Seniority" weight="10%" valueA={breakA.seniorityScore} valueB={breakB.seniorityScore} />
-              <DimensionRow label="Profile strength" weight="10%" valueA={breakA.overallScore} valueB={breakB.overallScore} />
+              <DimensionRow
+                label="Skills"
+                weight="40%"
+                valueA={breakA.skillsScore}
+                valueB={breakB.skillsScore}
+              />
+              <DimensionRow
+                label="Experience"
+                weight="25%"
+                valueA={breakA.experienceScore}
+                valueB={breakB.experienceScore}
+              />
+              <DimensionRow
+                label="Education"
+                weight="15%"
+                valueA={breakA.educationScore}
+                valueB={breakB.educationScore}
+              />
+              <DimensionRow
+                label="Seniority"
+                weight="10%"
+                valueA={breakA.seniorityScore}
+                valueB={breakB.seniorityScore}
+              />
+              <DimensionRow
+                label="Profile strength"
+                weight="10%"
+                valueA={breakA.overallScore}
+                valueB={breakB.overallScore}
+              />
             </div>
 
             {/* Missing must-have skills side-by-side */}

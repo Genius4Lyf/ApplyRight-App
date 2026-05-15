@@ -8,16 +8,12 @@ import SectionTips from '../../components/SectionTips';
 import InlineExample from '../../components/InlineExample';
 
 const ProfessionalSummary = () => {
-  // Safely destructure context
+  // Safely destructure context — fallback ensures hooks below see stable
+  // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
 
-  // Fallback if context is somehow missing (shouldn't happen in valid layout)
-  if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
-  }
-
-  const [summary, setSummary] = useState(cvData.professionalSummary || '');
+  const [summary, setSummary] = useState(cvData?.professionalSummary || '');
   const [generating, setGenerating] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const hasAutoOpened = useRef(false);
@@ -33,6 +29,12 @@ const ProfessionalSummary = () => {
       }, 500);
     }
   }, [cvData, summary]);
+
+  // Render guard lives below the hooks so the hook call order is stable
+  // across renders (rules-of-hooks).
+  if (!cvData) {
+    return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
+  }
 
   const handleGenerateClick = () => {
     if (!cvData.targetJob?.title && !cvData.personalInfo?.fullName) {
@@ -84,6 +86,7 @@ const ProfessionalSummary = () => {
 
       if (suggestions && suggestions.length > 0) {
         setSummary(suggestions[0]);
+        setStepDirty?.(true);
         toast.success('AI Summary Generated!');
       }
     } catch (error) {
@@ -96,6 +99,7 @@ const ProfessionalSummary = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    setStepDirty?.(false);
     handleNext({ professionalSummary: summary });
   };
 
@@ -122,7 +126,7 @@ const ProfessionalSummary = () => {
           tips={[
             'Sentence 1: who you are professionally and how many years.',
             'Sentence 2: a concrete win or area of strongest impact.',
-            'Sentence 3 (optional): what you\'re looking for next.',
+            "Sentence 3 (optional): what you're looking for next.",
             'Avoid generic adjectives ("innovative", "passionate") — show, don\'t tell.',
           ]}
         />
@@ -134,7 +138,10 @@ const ProfessionalSummary = () => {
         <div className="relative">
           <textarea
             value={summary}
-            onChange={(e) => setSummary(e.target.value)}
+            onChange={(e) => {
+              setStepDirty?.(true);
+              setSummary(e.target.value);
+            }}
             placeholder="e.g. Innovative Software Engineer with 5+ years of experience in..."
             className="w-full p-4 border border-slate-300 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700"
           />

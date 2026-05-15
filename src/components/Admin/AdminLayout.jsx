@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Search,
   FileImage,
+  ThumbsUp,
 } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon.png';
 import GlobalBanner from '../GlobalBanner';
@@ -26,6 +27,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/job-searches', icon: Search, label: 'Job Searches' },
     { path: '/admin/reports', icon: FileImage, label: 'Ad Reports' },
     { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
+    { path: '/admin/ai-feedback', icon: ThumbsUp, label: 'AI Feedback' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 

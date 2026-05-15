@@ -69,9 +69,12 @@ const HistoryTutorial = ({ isOpen, onClose, user }) => {
                 <Building2 className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-slate-900">Be specific about role &amp; company</h3>
+                <h3 className="font-semibold text-sm text-slate-900">
+                  Be specific about role &amp; company
+                </h3>
                 <p className="text-sm text-slate-600 leading-relaxed mt-0.5">
-                  Use the <strong>exact job title and company name</strong>. The AI uses these to tailor suggestions to your industry.
+                  Use the <strong>exact job title and company name</strong>. The AI uses these to
+                  tailor suggestions to your industry.
                 </p>
               </div>
             </div>
@@ -81,9 +84,12 @@ const HistoryTutorial = ({ isOpen, onClose, user }) => {
                 <ClipboardPaste className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-slate-900">Write 2+ rough bullets first</h3>
+                <h3 className="font-semibold text-sm text-slate-900">
+                  Write 2+ rough bullets first
+                </h3>
                 <p className="text-sm text-slate-600 leading-relaxed mt-0.5">
-                  Drop in a few rough lines about what you did. The AI will sharpen them into <strong>achievement-focused, ATS-ready bullets</strong>.
+                  Drop in a few rough lines about what you did. The AI will sharpen them into{' '}
+                  <strong>achievement-focused, ATS-ready bullets</strong>.
                 </p>
               </div>
             </div>

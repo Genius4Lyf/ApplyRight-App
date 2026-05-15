@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  CheckCircle, ArrowLeft, ExternalLink, X, Pencil,
-  ShieldCheck, AlertTriangle, XCircle, Sparkles,
+  CheckCircle,
+  ArrowLeft,
+  ExternalLink,
+  X,
+  Pencil,
+  ShieldCheck,
+  AlertTriangle,
+  XCircle,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import TailorDiffView from '../../components/cv/TailorDiffView';
+import useInterstitial from '../../hooks/useInterstitial';
 
 // --- Score-based guidance ---
 const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
@@ -16,8 +24,10 @@ const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
       icon: <ShieldCheck className="w-5 h-5" />,
       color: 'emerald',
       title: 'Strong Match',
-      message: 'Your CV is well-aligned with this role. The tailoring enhanced your keywords and experience to match the job requirements.',
-      advice: 'Review the changes below to make sure everything reads naturally, then proceed to preview.',
+      message:
+        'Your CV is well-aligned with this role. The tailoring enhanced your keywords and experience to match the job requirements.',
+      advice:
+        'Review the changes below to make sure everything reads naturally, then proceed to preview.',
     };
   }
   if (afterScore >= 40) {
@@ -28,9 +38,13 @@ const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
       color: 'amber',
       title: 'Partial Match',
       message: `Tailoring improved your score by ${improvement > 0 ? '+' + improvement : '0'} points, but there are gaps between your profile and this role.`,
-      advice: missingSkills?.length > 0
-        ? `Consider building experience in: ${missingSkills.slice(0, 4).map((s) => s.name || s).join(', ')}. You can still apply, but highlighting transferable skills will help.`
-        : 'Consider customizing your summary and experience bullets to better reflect the role requirements.',
+      advice:
+        missingSkills?.length > 0
+          ? `Consider building experience in: ${missingSkills
+              .slice(0, 4)
+              .map((s) => s.name || s)
+              .join(', ')}. You can still apply, but highlighting transferable skills will help.`
+          : 'Consider customizing your summary and experience bullets to better reflect the role requirements.',
     };
   }
   return {
@@ -38,13 +52,15 @@ const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
     icon: <XCircle className="w-5 h-5" />,
     color: 'red',
     title: 'Low Match',
-    message: 'This role may not align well with your current experience. Even after tailoring, key qualifications are missing.',
-    advice: 'Consider revisiting your experience and skills sections to better align with your target role.',
+    message:
+      'This role may not align well with your current experience. Even after tailoring, key qualifications are missing.',
+    advice:
+      'Consider revisiting your experience and skills sections to better align with your target role.',
   };
 };
 
 // --- Review Modal ---
-const TailorReviewModal = ({ isOpen, onClose, onEdit, onPreview, atsScores, tailoredForJob }) => {
+const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob }) => {
   if (!isOpen) return null;
 
   const afterScore = atsScores?.after?.fitScore || 0;
@@ -53,16 +69,40 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, onPreview, atsScores, tail
   const guidance = getScoreGuidance(afterScore, beforeScore, missingSkills);
 
   const colorMap = {
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-600', bar: 'bg-emerald-500' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', bar: 'bg-amber-500' },
-    red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', bar: 'bg-red-500' },
+    emerald: {
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      text: 'text-emerald-700',
+      icon: 'text-emerald-600',
+      bar: 'bg-emerald-500',
+    },
+    amber: {
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      text: 'text-amber-700',
+      icon: 'text-amber-500',
+      bar: 'bg-amber-500',
+    },
+    red: {
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      text: 'text-red-700',
+      icon: 'text-red-500',
+      bar: 'bg-red-500',
+    },
   };
   const colors = colorMap[guidance.color];
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop — clicking closes the modal. Keyboard users can use the
+          explicit X button in the header for parity. */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close tailoring details"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+      />
 
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
@@ -99,16 +139,24 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, onPreview, atsScores, tail
               <div className="mt-3 flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 w-12">Before</span>
                 <div className="flex-1 h-1.5 rounded-full bg-white/60">
-                  <div className="h-full rounded-full bg-slate-400" style={{ width: `${beforeScore}%` }} />
+                  <div
+                    className="h-full rounded-full bg-slate-400"
+                    style={{ width: `${beforeScore}%` }}
+                  />
                 </div>
                 <span className="text-[10px] text-slate-500 w-8 text-right">{beforeScore}%</span>
               </div>
               <div className="mt-1 flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 w-12">After</span>
                 <div className="flex-1 h-1.5 rounded-full bg-white/60">
-                  <div className={`h-full rounded-full ${colors.bar}`} style={{ width: `${afterScore}%` }} />
+                  <div
+                    className={`h-full rounded-full ${colors.bar}`}
+                    style={{ width: `${afterScore}%` }}
+                  />
                 </div>
-                <span className="text-[10px] font-semibold text-slate-600 w-8 text-right">{afterScore}%</span>
+                <span className="text-[10px] font-semibold text-slate-600 w-8 text-right">
+                  {afterScore}%
+                </span>
               </div>
             </div>
           )}
@@ -120,7 +168,9 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, onPreview, atsScores, tail
 
           {/* Review Checklist */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Before you proceed, review:</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Before you proceed, review:
+            </p>
             <ul className="space-y-2">
               {[
                 'Professional summary reads naturally and matches your voice',
@@ -172,16 +222,13 @@ const Finalize = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const atsScores = location.state?.atsScores;
-  const isBundle = location.state?.isBundle;
 
-  // Show review modal automatically when arriving from tailor/bundle
+  // Review modal is no longer auto-opened on arrival — that obscured the
+  // step content and made Finalize feel like a hidden modal instead of the
+  // last step of the wizard. Users see the inline summary banner first and
+  // can open the detailed modal explicitly when they want it.
   const [showReviewModal, setShowReviewModal] = useState(false);
-
-  useEffect(() => {
-    if (tailoredFrom && atsScores) {
-      setShowReviewModal(true);
-    }
-  }, [tailoredFrom, atsScores]);
+  const { triggerInterstitial } = useInterstitial();
 
   const handlePreview = () => {
     if (!id || id === 'new') {
@@ -189,6 +236,10 @@ const Finalize = () => {
       return;
     }
     setShowReviewModal(false);
+    // Interstitial at the natural completion moment, before we leave the
+    // wizard for the preview. Fires only on Android for free users; web is
+    // a no-op. Fire-and-forget — don't block navigation on ad load.
+    triggerInterstitial('cv_finalize_preview');
     navigate(`/resume/${id}`);
   };
 
@@ -211,8 +262,18 @@ const Finalize = () => {
   const guidance = atsScores ? getScoreGuidance(afterScore, beforeScore, missingSkills) : null;
 
   const guidanceColorMap = {
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-600' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500' },
+    emerald: {
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      text: 'text-emerald-700',
+      icon: 'text-emerald-600',
+    },
+    amber: {
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      text: 'text-amber-700',
+      icon: 'text-amber-500',
+    },
     red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500' },
   };
 
@@ -223,7 +284,6 @@ const Finalize = () => {
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
         onEdit={handleEditCV}
-        onPreview={handlePreview}
         atsScores={atsScores}
         tailoredForJob={tailoredForJob}
       />
@@ -244,16 +304,30 @@ const Finalize = () => {
         </div>
       </div>
 
-      {/* Inline Score Guidance (visible after modal is dismissed) */}
-      {guidance && tailoredFrom && !showReviewModal && (
-        <div className={`${guidanceColorMap[guidance.color].bg} ${guidanceColorMap[guidance.color].border} border rounded-xl p-4 flex items-start gap-3`}>
-          <div className={`${guidanceColorMap[guidance.color].icon} mt-0.5 flex-shrink-0`}>{guidance.icon}</div>
+      {/* Inline Score Guidance — replaces the auto-opening modal. The
+          detailed diff + advice still lives in the modal; users open it
+          explicitly via the button instead of being interrupted on arrival. */}
+      {guidance && tailoredFrom && (
+        <div
+          className={`${guidanceColorMap[guidance.color].bg} ${guidanceColorMap[guidance.color].border} border rounded-xl p-4 flex flex-col sm:flex-row items-start gap-3`}
+        >
+          <div className={`${guidanceColorMap[guidance.color].icon} mt-0.5 flex-shrink-0`}>
+            {guidance.icon}
+          </div>
           <div className="flex-1">
             <p className={`font-semibold text-sm ${guidanceColorMap[guidance.color].text}`}>
               {guidance.title} — {afterScore}% match
             </p>
             <p className="text-sm text-slate-600 mt-1">{guidance.advice}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowReviewModal(true)}
+            className="shrink-0 self-stretch sm:self-center inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            View tailoring details
+          </button>
         </div>
       )}
 

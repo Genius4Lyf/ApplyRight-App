@@ -6,7 +6,9 @@ const jobSearchService = {
 
   // Trending jobs (paginated)
   getTrending: (source = 'mixed', page = 1, limit = 10) =>
-    api.get(`/job-search/trending?source=${source}&page=${page}&limit=${limit}`).then((r) => r.data),
+    api
+      .get(`/job-search/trending?source=${source}&page=${page}&limit=${limit}`)
+      .then((r) => r.data),
 
   // Browse by source (paginated)
   browse: (source, page = 1, limit = 10) =>

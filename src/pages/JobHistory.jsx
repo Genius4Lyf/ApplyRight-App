@@ -12,7 +12,6 @@ import {
   FileText,
   Mail,
   MessageSquare,
-  CheckCircle,
   Eye,
   ChevronDown,
   Search,
@@ -53,62 +52,31 @@ import NextBestAction from '../components/NextBestAction';
 import JobRequirementsCard from '../components/JobRequirementsCard';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import {
+  getPrepSummary,
+  hasInterviewPrep,
+  mergeInterviewPrepResponse,
+} from '../utils/interviewPrep';
 import { toast } from 'sonner';
 
-// Status metadata: label, color tone, and filter group for the tabs above the list.
-const STATUS_META = {
-  analyzed: { label: 'Analyzed', tone: 'slate', group: 'active' },
-  assets_generated: { label: 'Ready to apply', tone: 'indigo', group: 'active' },
-  submitted: { label: 'Submitted', tone: 'amber', group: 'in_progress' },
-  interviewing: { label: 'Interviewing', tone: 'blue', group: 'in_progress' },
-  offer: { label: 'Offer', tone: 'emerald', group: 'closed' },
-  rejected: { label: 'Rejected', tone: 'red', group: 'closed' },
-  withdrawn: { label: 'Withdrawn', tone: 'gray', group: 'closed' },
-};
-
-const TONE_CLASSES = {
-  slate: 'bg-slate-100 text-slate-600 border-slate-200',
-  indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  amber: 'bg-amber-50 text-amber-700 border-amber-200',
-  blue: 'bg-blue-50 text-blue-700 border-blue-200',
-  emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  red: 'bg-red-50 text-red-700 border-red-200',
-  gray: 'bg-gray-100 text-gray-600 border-gray-200',
-};
-
-const STATUS_OPTIONS = [
-  'analyzed',
-  'assets_generated',
-  'submitted',
-  'interviewing',
-  'offer',
-  'rejected',
-  'withdrawn',
-];
-
-const FILTER_TABS = [
-  { id: 'all', label: 'All' },
-  { id: 'active', label: 'Active' },
-  { id: 'in_progress', label: 'In progress' },
-  { id: 'closed', label: 'Closed' },
-];
-
-const StatusPill = ({ status, onClick, className = '' }) => {
-  const meta = STATUS_META[status] || STATUS_META.analyzed;
-  const tone = TONE_CLASSES[meta.tone];
-  const interactive = typeof onClick === 'function';
-  return (
-    <button
-      type={interactive ? 'button' : undefined}
-      onClick={interactive ? (e) => { e.stopPropagation(); onClick(e); } : undefined}
-      disabled={!interactive}
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${tone} ${interactive ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'} ${className}`}
-    >
-      {meta.label}
-      {interactive && <ChevronDown className="w-3 h-3 opacity-60" />}
-    </button>
-  );
-};
+/**
+ * Reusable section header for the application detail panel. Gives each major
+ * group (Snapshot Analysis, Generated Assets) a consistent title + subtitle +
+ * subtle bottom border so cards inside don't visually run into each other.
+ */
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+  <div className="flex items-start gap-2.5 pb-2 border-b border-slate-100">
+    {Icon && (
+      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-4 h-4" />
+      </div>
+    )}
+    <div className="min-w-0">
+      <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">{title}</h3>
+      {subtitle && <p className="text-xs text-slate-500 mt-0.5 leading-snug">{subtitle}</p>}
+    </div>
+  </div>
+);
 
 const JobHistory = () => {
   const navigate = useNavigate();
@@ -124,10 +92,8 @@ const JobHistory = () => {
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCL, setGeneratingCL] = useState(false);
   const [generatingInterview, setGeneratingInterview] = useState(false);
-  const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [statusMenuOpen, setStatusMenuOpen] = useState(null); // application id, or 'detail'
   const [compareMenuOpen, setCompareMenuOpen] = useState(false);
   const [cvGenStatus, setCvGenStatus] = useState(null);
   const [reanalyzing, setReanalyzing] = useState(false);
@@ -162,14 +128,6 @@ const JobHistory = () => {
 
   // Get user from local storage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Close status menu on outside click
-  useEffect(() => {
-    if (!statusMenuOpen) return;
-    const close = () => setStatusMenuOpen(null);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [statusMenuOpen]);
 
   useEffect(() => {
     if (!compareMenuOpen) return;
@@ -225,39 +183,8 @@ const JobHistory = () => {
     setApplications((prev) => prev.map((a) => (a._id === updated._id ? updated : a)));
   };
 
-  const handleStatusUpdate = async (appId, status) => {
-    setStatusMenuOpen(null);
-    // Optimistic update — revert on failure
-    const prevApps = applications;
-    const prevSelected = selectedApp;
-    setApplications((apps) =>
-      apps.map((a) => (a._id === appId ? { ...a, status, statusUpdatedAt: new Date().toISOString() } : a))
-    );
-    if (selectedApp?._id === appId) {
-      setSelectedApp((prev) => ({ ...prev, status, statusUpdatedAt: new Date().toISOString() }));
-    }
-    try {
-      await api.patch(`/applications/${appId}/status`, { status });
-      toast.success(`Status updated: ${STATUS_META[status]?.label || status}`);
-    } catch (error) {
-      console.error('Failed to update status', error);
-      toast.error('Failed to update status. Please try again.');
-      setApplications(prevApps);
-      setSelectedApp(prevSelected);
-    }
-  };
-
-  // Compose status filter + text search + sort. Each application passes
-  // through three gates before display:
-  //   1. Status group matches the active filter tab (or "all").
-  //   2. Job title or company contains the search query (case-insensitive).
-  //   3. Sort by the selected order (newest/oldest/score asc-desc).
   const filteredApplications = applications
     .filter((app) => {
-      if (filter !== 'all') {
-        const status = app.status || 'analyzed';
-        if (STATUS_META[status]?.group !== filter) return false;
-      }
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
         const title = (app.jobId?.title || app.jobTitle || '').toLowerCase();
@@ -285,11 +212,15 @@ const JobHistory = () => {
   const handleAssetGenError = (err, fallbackMessage) => {
     const code = err.response?.data?.code;
     if (err.response?.status === 403 && code === 'INSUFFICIENT_CREDITS') {
-      toast.error(`Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`);
+      toast.error(
+        `Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`
+      );
       return;
     }
     if (err.response?.status === 503 && code === 'AI_UNAVAILABLE') {
-      toast.error('AI is temporarily unavailable. You have not been charged. Please try again in a moment.');
+      toast.error(
+        'AI is temporarily unavailable. You have not been charged. Please try again in a moment.'
+      );
       return;
     }
     if (err.response?.status === 409 && code === 'GENERATION_IN_PROGRESS') {
@@ -359,9 +290,7 @@ const JobHistory = () => {
     const endpoint = mode === 'bundle' ? 'generate-bundle' : 'generate-cv';
     const startMessage = mode === 'bundle' ? 'Starting bundle…' : 'Starting…';
     const errorMessage =
-      mode === 'bundle'
-        ? 'Failed to start bundle generation.'
-        : 'Failed to start CV generation.';
+      mode === 'bundle' ? 'Failed to start bundle generation.' : 'Failed to start CV generation.';
 
     setGeneratingCV(true);
     setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: startMessage });
@@ -441,7 +370,9 @@ const JobHistory = () => {
         coverLetterWarnings: res.data.coverLetterWarnings || [],
       });
       showCoverLetterToast(res.data.coverLetterWarnings);
-      window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+      window.dispatchEvent(
+        new CustomEvent('credit_updated', { detail: res.data.remainingCredits })
+      );
     } catch (err) {
       // Long LLM calls (gen + fact-check) sometimes have the connection dropped
       // by an upstream proxy after the backend has already saved the letter.
@@ -471,18 +402,17 @@ const JobHistory = () => {
     setGeneratingInterview(true);
     try {
       const res = await api.post(`/analysis/${selectedApp._id}/generate-interview`);
-      updateSelectedApp({ interviewQuestions: res.data.interviewQuestions, questionsToAsk: res.data.questionsToAsk });
+      updateSelectedApp(mergeInterviewPrepResponse(selectedApp, res.data));
       toast.success('Interview prep generated!');
-      window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+      window.dispatchEvent(
+        new CustomEvent('credit_updated', { detail: res.data.remainingCredits })
+      );
     } catch (err) {
       // Same recovery pattern — backend may have saved even if request appeared to fail.
       try {
         const recovery = await api.get(`/applications/${selectedApp._id}`);
-        if (recovery.data?.interviewQuestions?.length > 0) {
-          updateSelectedApp({
-            interviewQuestions: recovery.data.interviewQuestions,
-            questionsToAsk: recovery.data.questionsToAsk || [],
-          });
+        if (hasInterviewPrep(recovery.data)) {
+          updateSelectedApp(recovery.data);
           toast.success('Interview prep generated!');
           refreshBalance();
           return;
@@ -519,7 +449,9 @@ const JobHistory = () => {
         actionPlan: res.data.actionPlan,
       });
       if (res.data.remainingCredits !== undefined) {
-        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.remainingCredits }));
+        window.dispatchEvent(
+          new CustomEvent('credit_updated', { detail: res.data.remainingCredits })
+        );
       }
       toast.success(`Re-analyzed: ${res.data.fitScore}% match`);
     } catch (err) {
@@ -586,35 +518,10 @@ const JobHistory = () => {
                 </select>
               </div>
 
-              {/* Status filter tabs */}
-              <div className="flex gap-1 p-0.5 bg-slate-100 rounded-lg w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {FILTER_TABS.map((tab) => {
-                  const count = tab.id === 'all'
-                    ? applications.length
-                    : applications.filter((a) => STATUS_META[a.status || 'analyzed']?.group === tab.id).length;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setFilter(tab.id)}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                        filter === tab.id
-                          ? 'bg-white text-indigo-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      {tab.label}
-                      <span className={`ml-1 ${filter === tab.id ? 'text-indigo-400' : 'text-slate-400'}`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {filteredApplications.length === 0 && (
                 <div className="text-center py-8 text-sm text-slate-400">
-                  {searchQuery.trim() || filter !== 'all'
-                    ? 'No applications match these filters.'
+                  {searchQuery.trim()
+                    ? 'No applications match your search.'
                     : 'No applications yet.'}
                 </div>
               )}
@@ -652,10 +559,9 @@ const JobHistory = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
                     <Building className="w-3 h-3" />
-                    <span className="line-clamp-1">{app.jobId?.company || app.jobCompany || 'Unknown Company'}</span>
-                  </div>
-                  <div className="mb-2">
-                    <StatusPill status={app.status || 'analyzed'} />
+                    <span className="line-clamp-1">
+                      {app.jobId?.company || app.jobCompany || 'Unknown Company'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 justify-between">
                     <div className="flex gap-2 flex-wrap">
@@ -669,16 +575,19 @@ const JobHistory = () => {
                           <Mail className="w-3 h-3" /> Letter
                         </span>
                       )}
-                      {app.interviewQuestions && app.interviewQuestions.length > 0 && (
+                      {hasInterviewPrep(app) && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-50 text-purple-600 text-xs font-medium border border-purple-200">
                           <MessageSquare className="w-3 h-3" /> Interview
                         </span>
                       )}
-                      {!app.optimizedCV && !app.draftCVId && !app.coverLetter && (!app.interviewQuestions || app.interviewQuestions.length === 0) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 text-slate-400 text-xs font-medium border border-slate-200">
-                          Analysis only
-                        </span>
-                      )}
+                      {!app.optimizedCV &&
+                        !app.draftCVId &&
+                        !app.coverLetter &&
+                        !hasInterviewPrep(app) && (
+                          <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 text-slate-400 text-xs font-medium border border-slate-200">
+                            Analysis only
+                          </span>
+                        )}
                     </div>
                     {app.fitScore !== undefined && (
                       <span
@@ -731,42 +640,7 @@ const JobHistory = () => {
                     </button>
 
                     <div className="flex-1 flex justify-between items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-3">
-                        <h2 className="font-semibold text-slate-900">Application Details</h2>
-                        {/* Interactive status pill — opens menu to change status */}
-                        <div className="relative">
-                          <StatusPill
-                            status={selectedApp.status || 'analyzed'}
-                            onClick={() => setStatusMenuOpen(statusMenuOpen === 'detail' ? null : 'detail')}
-                          />
-                          {statusMenuOpen === 'detail' && (
-                            <div
-                              onClick={(e) => e.stopPropagation()}
-                              className="absolute top-full left-0 mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[180px]"
-                            >
-                              {STATUS_OPTIONS.map((opt) => (
-                                <button
-                                  key={opt}
-                                  onClick={() => handleStatusUpdate(selectedApp._id, opt)}
-                                  className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-slate-50 flex items-center gap-2 ${
-                                    selectedApp.status === opt ? 'bg-slate-50' : ''
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-2 h-2 rounded-full ${
-                                      TONE_CLASSES[STATUS_META[opt].tone].split(' ')[0].replace('bg-', 'bg-')
-                                    }`}
-                                  />
-                                  {STATUS_META[opt].label}
-                                  {selectedApp.status === opt && (
-                                    <CheckCircle className="w-3 h-3 ml-auto text-indigo-500" />
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <h2 className="font-semibold text-slate-900">Application Details</h2>
                       <div className="flex items-center gap-3">
                         {/* Re-run analysis — refreshes fitScore + analysis using
                             the same resume + job. Useful when prompts/models
@@ -827,7 +701,8 @@ const JobHistory = () => {
                                     >
                                       <div className="flex flex-col leading-tight min-w-0">
                                         <span className="text-slate-700 truncate">
-                                          Resume from {formatRelativeDate(other.resumeId?.createdAt)}
+                                          Resume from{' '}
+                                          {formatRelativeDate(other.resumeId?.createdAt)}
                                         </span>
                                         <span className="text-[10px] text-slate-400 truncate">
                                           Run {formatRelativeDate(other.createdAt)}
@@ -867,64 +742,80 @@ const JobHistory = () => {
                     </div>
                   </div>
                   <div
-                    className="p-3 space-y-6 lg:p-6 lg:space-y-8 lg:overflow-y-auto custom-scrollbar lg:flex-1"
+                    className="p-4 space-y-8 sm:space-y-10 lg:p-6 lg:space-y-10 lg:overflow-y-auto custom-scrollbar lg:flex-1"
                     onScroll={(e) => setIsScrolled(e.target.scrollTop > 0)}
                   >
                     {selectedApp.fitAnalysis && (
-                      <div className="mb-8 space-y-4">
-                        <h3 className="text-lg font-bold text-slate-900 items-center flex gap-2">
-                          <Sparkles className="w-5 h-5 text-indigo-500" />
-                          Snapshot Analysis
-                        </h3>
-                        <NextBestAction
-                          fitScore={selectedApp.fitScore}
-                          fitAnalysis={selectedApp.fitAnalysis}
-                          application={selectedApp}
-                          onGenerateCV={handleGenerateCV}
-                          onGenerateCoverLetter={handleGenerateCoverLetter}
-                          onGenerateInterview={handleGenerateInterview}
-                          onGenerateBundle={handleGenerateBundle}
-                          onView={() => navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}`)}
-                          generatingCV={generatingCV}
-                          generatingCL={generatingCL}
-                          generatingInterview={generatingInterview}
-                          cvGenStatus={cvGenStatus}
+                      <section className="space-y-4 sm:space-y-5">
+                        <SectionHeader
+                          icon={Sparkles}
+                          title="Snapshot Analysis"
+                          subtitle="Where you stand against the role"
                         />
-                        <JobRequirementsCard
-                          fitAnalysis={selectedApp.fitAnalysis}
-                          jobTitle={selectedApp.jobTitle}
-                          jobCompany={selectedApp.jobCompany}
-                        />
-                        <FitScoreCard
-                          fitScore={selectedApp.fitScore}
-                          fitAnalysis={selectedApp.fitAnalysis}
-                          actionPlan={selectedApp.actionPlan}
-                          optimizedFitScore={selectedApp.optimizedFitScore}
-                          applicationId={selectedApp._id}
-                        />
-                      </div>
+                        <div className="space-y-5 sm:space-y-6">
+                          <NextBestAction
+                            fitScore={selectedApp.fitScore}
+                            fitAnalysis={selectedApp.fitAnalysis}
+                            application={selectedApp}
+                            onGenerateCV={handleGenerateCV}
+                            onGenerateCoverLetter={handleGenerateCoverLetter}
+                            onGenerateInterview={handleGenerateInterview}
+                            onGenerateBundle={handleGenerateBundle}
+                            onView={() =>
+                              navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}`)
+                            }
+                            generatingCV={generatingCV}
+                            generatingCL={generatingCL}
+                            generatingInterview={generatingInterview}
+                            cvGenStatus={cvGenStatus}
+                          />
+                          <JobRequirementsCard
+                            fitAnalysis={selectedApp.fitAnalysis}
+                            jobTitle={selectedApp.jobTitle}
+                            jobCompany={selectedApp.jobCompany}
+                          />
+                          <FitScoreCard
+                            fitScore={selectedApp.fitScore}
+                            fitAnalysis={selectedApp.fitAnalysis}
+                            actionPlan={selectedApp.actionPlan}
+                            optimizedFitScore={selectedApp.optimizedFitScore}
+                            applicationId={selectedApp._id}
+                          />
+                        </div>
+                      </section>
                     )}
 
                     {/* Generated Assets */}
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 items-center flex gap-2 mb-4">
-                        <Briefcase className="w-5 h-5 text-indigo-500" />
-                        Generated Assets
-                      </h3>
+                    <section className="space-y-4 sm:space-y-5">
+                      <SectionHeader
+                        icon={Briefcase}
+                        title="Generated Assets"
+                        subtitle="CV, cover letter, and interview prep"
+                      />
 
                       {/* CV + Cover Letter — compact 2-column row. Both are
                           "click to view" assets that open in dedicated pages,
                           so the cards just need state + a single CTA. */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* CV Card */}
-                        <div className={`p-4 rounded-xl border ${(selectedApp.optimizedCV || selectedApp.draftCVId) ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div
+                          className={`p-4 rounded-xl border ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}
+                        >
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className={`w-4 h-4 ${(selectedApp.optimizedCV || selectedApp.draftCVId) ? 'text-emerald-600' : 'text-slate-400'}`} />
-                            <span className="text-sm font-semibold text-slate-700">Optimized CV</span>
+                            <FileText
+                              className={`w-4 h-4 ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'text-emerald-600' : 'text-slate-400'}`}
+                            />
+                            <span className="text-sm font-semibold text-slate-700">
+                              Optimized CV
+                            </span>
                           </div>
-                          {(selectedApp.optimizedCV || selectedApp.draftCVId) ? (
+                          {selectedApp.optimizedCV || selectedApp.draftCVId ? (
                             <button
-                              onClick={() => navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`)}
+                              onClick={() =>
+                                navigate(
+                                  `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
+                                )
+                              }
                               className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
                             >
                               <Eye className="w-3.5 h-3.5" /> View & Download
@@ -934,27 +825,44 @@ const JobHistory = () => {
                               onClick={handleGenerateCV}
                               disabled={generatingCV}
                               className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                                generatingCV ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                generatingCV
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
                               {generatingCV ? (
-                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
+                                <>
+                                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                                  Generating...
+                                </>
                               ) : (
-                                <><Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)</>
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)
+                                </>
                               )}
                             </button>
                           )}
                         </div>
 
                         {/* Cover Letter Card */}
-                        <div className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div
+                          className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}
+                        >
                           <div className="flex items-center gap-2 mb-2">
-                            <Mail className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600' : 'text-slate-400'}`} />
-                            <span className="text-sm font-semibold text-slate-700">Cover Letter</span>
+                            <Mail
+                              className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600' : 'text-slate-400'}`}
+                            />
+                            <span className="text-sm font-semibold text-slate-700">
+                              Cover Letter
+                            </span>
                           </div>
                           {selectedApp.coverLetter ? (
                             <button
-                              onClick={() => navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`)}
+                              onClick={() =>
+                                navigate(
+                                  `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
+                                )
+                              }
                               className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all"
                             >
                               <Eye className="w-3.5 h-3.5" /> View & Download
@@ -964,30 +872,38 @@ const JobHistory = () => {
                               onClick={handleGenerateCoverLetter}
                               disabled={generatingCL}
                               className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                                generatingCL ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                generatingCL
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
                               {generatingCL ? (
-                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
+                                <>
+                                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                                  Generating...
+                                </>
                               ) : (
-                                <><Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)</>
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)
+                                </>
                               )}
                             </button>
                           )}
                           {/* Fact-check warnings — claims the letter makes that
                               the resume doesn't directly support. Non-blocking. */}
-                          {selectedApp.coverLetter && selectedApp.coverLetterWarnings?.length > 0 && (
-                            <div className="mt-3 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
-                              <div className="font-bold uppercase tracking-wide mb-1">
-                                Verify before sending
+                          {selectedApp.coverLetter &&
+                            selectedApp.coverLetterWarnings?.length > 0 && (
+                              <div className="mt-3 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
+                                <div className="font-bold uppercase tracking-wide mb-1">
+                                  Verify before sending
+                                </div>
+                                <ul className="space-y-0.5 list-disc pl-3">
+                                  {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
+                                    <li key={i}>{w}</li>
+                                  ))}
+                                </ul>
                               </div>
-                              <ul className="space-y-0.5 list-disc pl-3">
-                                {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
-                                  <li key={i}>{w}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </div>
 
@@ -996,9 +912,7 @@ const JobHistory = () => {
                           drill into questions + answers + skill talking points
                           and add personal notes. Replaces the previously inline
                           two-column section that lived here. */}
-                      {selectedApp.interviewPrep?.jobQuestions?.length > 0 ||
-                      selectedApp.interviewPrep?.skillsWithEvidence?.length > 0 ||
-                      selectedApp.interviewQuestions?.length > 0 ? (
+                      {hasInterviewPrep(selectedApp) ? (
                         <Link
                           to={`/interview-prep/${selectedApp._id}`}
                           className="rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors p-4 flex items-center gap-3 group"
@@ -1011,17 +925,7 @@ const JobHistory = () => {
                               Interview prep ready
                             </h4>
                             <p className="text-xs text-slate-600 mt-0.5">
-                              {(selectedApp.interviewPrep?.jobQuestions?.length ||
-                                selectedApp.interviewQuestions?.length ||
-                                0)}{' '}
-                              question
-                              {(selectedApp.interviewPrep?.jobQuestions?.length ||
-                                selectedApp.interviewQuestions?.length ||
-                                0) === 1
-                                ? ''
-                                : 's'}
-                              {selectedApp.interviewPrep?.skillsWithEvidence?.length > 0 &&
-                                ` · ${selectedApp.interviewPrep.skillsWithEvidence.length} skills with talking points`}
+                              {getPrepSummary(selectedApp)}
                             </p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
@@ -1032,11 +936,10 @@ const JobHistory = () => {
                             <MessageSquare className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-900">
-                              Interview prep
-                            </h4>
+                            <h4 className="text-sm font-semibold text-slate-900">Interview prep</h4>
                             <p className="text-xs text-slate-500 mt-0.5">
-                              Generate likely questions + suggested answers tailored to your CV and this role.
+                              Generate likely questions + suggested answers tailored to your CV and
+                              this role.
                             </p>
                           </div>
                           <button
@@ -1061,7 +964,7 @@ const JobHistory = () => {
                           </button>
                         </div>
                       )}
-                    </div>
+                    </section>
                   </div>
                 </div>
               ) : (

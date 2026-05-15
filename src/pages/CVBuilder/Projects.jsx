@@ -32,9 +32,9 @@ import {
 import SortableItem from '../../components/SortableItem';
 
 const newSortId = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID
+  typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const ensureIds = (items) =>
   (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
@@ -42,13 +42,10 @@ const ensureIds = (items) =>
 const Projects = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, updateCvData, user } = context || {};
+  const { cvData, handleNext, handleBack, saving, updateCvData, user, setStepDirty } =
+    context || {};
 
-  // Fallback if context is somehow missing
-  if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
-  }
-  const [projects, setProjects] = useState(() => ensureIds(cvData.projects));
+  const [projects, setProjects] = useState(() => ensureIds(cvData?.projects));
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
   const [showTutorial, setShowTutorial] = useState(false);
@@ -80,19 +77,19 @@ const Projects = () => {
   // still mounts and can be opened manually via the "How AI Works" button.
 
   const addProject = () => {
-    setProjects([
-      ...projects,
-      { _sortId: newSortId(), title: '', link: '', description: '' },
-    ]);
+    setStepDirty?.(true);
+    setProjects([...projects, { _sortId: newSortId(), title: '', link: '', description: '' }]);
   };
 
   const removeProject = (index) => {
+    setStepDirty?.(true);
     const newProjects = [...projects];
     newProjects.splice(index, 1);
     setProjects(newProjects);
   };
 
   const handleChange = (index, field, value) => {
+    setStepDirty?.(true);
     const newProjects = [...projects];
     newProjects[index] = { ...newProjects[index], [field]: value };
     setProjects(newProjects);
@@ -117,6 +114,12 @@ const Projects = () => {
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
   }, [projects, updateCvData]);
+
+  // Render guard lives below the hooks so the hook call order is stable
+  // across renders (rules-of-hooks).
+  if (!cvData) {
+    return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
+  }
 
   const handleGenerateBullets = async (index, customInput = null) => {
     const proj = projects[index];
@@ -194,6 +197,7 @@ const Projects = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    setStepDirty?.(false);
     handleNext({ projects: projects });
   };
 
@@ -227,11 +231,11 @@ const Projects = () => {
         title="Projects show what you do when nobody's asking"
         intro="Even small side projects matter — they show initiative."
         tips={[
-          'Pick projects relevant to the role you\'re targeting; cut the rest.',
+          "Pick projects relevant to the role you're targeting; cut the rest.",
           'Each description: what it is, who used it, the most concrete outcome (users, downloads, impact).',
           'If it was a team project, name your specific contribution — what <em>you</em> built or led.',
           'Add a link if you have one — GitHub, live demo, write-up, anything.',
-          'Don\'t list languages here — your Skills section already covers that.',
+          "Don't list languages here — your Skills section already covers that.",
         ]}
       />
 
@@ -256,11 +260,7 @@ const Projects = () => {
         </div>
       )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={projects.map((p) => p._sortId)}
           strategy={verticalListSortingStrategy}
@@ -277,117 +277,132 @@ const Projects = () => {
                 onDelete={() => removeProject(index)}
               >
                 <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Project Title
-                </label>
-                <input
-                  type="text"
-                  value={proj.title}
-                  onChange={(e) => handleChange(index, 'title', e.target.value)}
-                  placeholder="e.g. Portfolio Website"
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Link (Optional)
-                </label>
-                <div className="relative">
-                  <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={proj.link}
-                    onChange={(e) => handleChange(index, 'link', e.target.value)}
-                    onBlur={() => handleLinkBlur(index)}
-                    placeholder="github.com/your-project"
-                    className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              {/* Optimization Prompt */}
-              {optimizationCandidate?.index === index && (
-                <div className="mb-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="p-2 bg-emerald-100 rounded-full text-emerald-600">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-emerald-900">
-                      Optimize Project Details?
-                    </h4>
-                    <p className="text-xs text-emerald-700 mt-1">
-                      Our AI can structure your rough notes into impressive professional
-                      achievements.
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        type="button"
-                        onClick={() => handleGenerateBullets(index, optimizationCandidate.text)}
-                        disabled={generatingIndex === index}
-                        className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor={`project-title-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
                       >
-                        {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOptimizationCandidate(null)}
-                        className="text-xs text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-medium transition-colors"
+                        Project Title
+                      </label>
+                      <input
+                        id={`project-title-${index}`}
+                        type="text"
+                        value={proj.title}
+                        onChange={(e) => handleChange(index, 'title', e.target.value)}
+                        placeholder="e.g. Portfolio Website"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`project-link-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
                       >
-                        Dismiss
-                      </button>
+                        Link (Optional)
+                      </label>
+                      <div className="relative">
+                        <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                        <input
+                          id={`project-link-${index}`}
+                          type="text"
+                          value={proj.link}
+                          onChange={(e) => handleChange(index, 'link', e.target.value)}
+                          onBlur={() => handleLinkBlur(index)}
+                          placeholder="github.com/your-project"
+                          className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs font-bold text-slate-500 uppercase">
-                  Description / Bullets
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleGenerateBullets(index)}
-                  disabled={generatingIndex === index || !proj.title}
-                  className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
-                >
-                  {generatingIndex === index ? (
-                    <RefreshCcw className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3 h-3" />
-                  )}
-                  {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
-                </button>
-              </div>
-              <textarea
-                value={proj.description}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  if (val.length === 1 && !val.startsWith('•')) {
-                    val = '• ' + val;
-                    setTimeout(() => {
-                      if (e.target) e.target.selectionStart = e.target.selectionEnd = val.length;
-                    }, 0);
-                  }
-                  handleChange(index, 'description', val);
-                }}
-                onPaste={(e) => handlePaste(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onFocus={() => handleFocus(index)}
-                placeholder="• Developed a full-stack app using..."
-                className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
-              />
-              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-[11px] text-slate-500">
-                  Tip: 1-3 short bullets is enough. Lead with what it does, not how you built it.
-                </p>
-                <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
-              </div>
-            </div>
+                  <div>
+                    {/* Optimization Prompt */}
+                    {optimizationCandidate?.index === index && (
+                      <div className="mb-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="p-2 bg-emerald-100 rounded-full text-emerald-600">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-emerald-900">
+                            Optimize Project Details?
+                          </h4>
+                          <p className="text-xs text-emerald-700 mt-1">
+                            Our AI can structure your rough notes into impressive professional
+                            achievements.
+                          </p>
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleGenerateBullets(index, optimizationCandidate.text)
+                              }
+                              disabled={generatingIndex === index}
+                              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                            >
+                              {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setOptimizationCandidate(null)}
+                              className="text-xs text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-medium transition-colors"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center mb-1">
+                      <label
+                        htmlFor={`project-description-${index}`}
+                        className="block text-xs font-bold text-slate-500 uppercase"
+                      >
+                        Description / Bullets
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateBullets(index)}
+                        disabled={generatingIndex === index || !proj.title}
+                        className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
+                      >
+                        {generatingIndex === index ? (
+                          <RefreshCcw className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
+                      </button>
+                    </div>
+                    <textarea
+                      id={`project-description-${index}`}
+                      value={proj.description}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val.length === 1 && !val.startsWith('•')) {
+                          val = '• ' + val;
+                          setTimeout(() => {
+                            if (e.target)
+                              e.target.selectionStart = e.target.selectionEnd = val.length;
+                          }, 0);
+                        }
+                        handleChange(index, 'description', val);
+                      }}
+                      onPaste={(e) => handlePaste(e, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      onFocus={() => handleFocus(index)}
+                      placeholder="• Developed a full-stack app using..."
+                      className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                    />
+                    <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-[11px] text-slate-500">
+                        Tip: 1-3 short bullets is enough. Lead with what it does, not how you built
+                        it.
+                      </p>
+                      <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
+                    </div>
+                  </div>
                 </div>
               </SortableItem>
             ))}

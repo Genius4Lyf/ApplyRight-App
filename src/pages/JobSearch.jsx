@@ -238,7 +238,10 @@ const JobSearch = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[...Array(PAGE_SIZE)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col h-[180px]">
+                <div
+                  key={i}
+                  className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col h-[180px]"
+                >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>
                     <div className="flex-1 space-y-3 mt-1">
@@ -266,7 +269,7 @@ const JobSearch = () => {
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-slate-500">
                 {displayPagination
-                  ? `Showing ${((displayPagination.page - 1) * displayPagination.limit) + 1}–${Math.min(displayPagination.page * displayPagination.limit, displayPagination.totalCount)} of ${displayPagination.totalCount} jobs`
+                  ? `Showing ${(displayPagination.page - 1) * displayPagination.limit + 1}–${Math.min(displayPagination.page * displayPagination.limit, displayPagination.totalCount)} of ${displayPagination.totalCount} jobs`
                   : `${displayResults.length} jobs`}
               </p>
             </div>
@@ -299,26 +302,27 @@ const JobSearch = () => {
                 </button>
 
                 <div className="flex items-center gap-1">
-                  {generatePageNumbers(displayPagination.page, displayPagination.totalPages).map((p, i) =>
-                    p === '...' ? (
-                      <span key={`dots-${i}`} className="px-2 text-sm text-slate-400">...</span>
-                    ) : (
-                      <button
-                        key={p}
-                        onClick={() =>
-                          isSearchActive
-                            ? handleSearchPageChange(p)
-                            : handleTabPageChange(p)
-                        }
-                        className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
-                          p === displayPagination.page
-                            ? 'bg-indigo-600 text-white'
-                            : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    )
+                  {generatePageNumbers(displayPagination.page, displayPagination.totalPages).map(
+                    (p, i) =>
+                      p === '...' ? (
+                        <span key={`dots-${i}`} className="px-2 text-sm text-slate-400">
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={p}
+                          onClick={() =>
+                            isSearchActive ? handleSearchPageChange(p) : handleTabPageChange(p)
+                          }
+                          className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
+                            p === displayPagination.page
+                              ? 'bg-indigo-600 text-white'
+                              : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      )
                   )}
                 </div>
 

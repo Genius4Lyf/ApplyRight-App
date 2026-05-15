@@ -15,6 +15,7 @@ import {
 import TemplateThumbnail from './TemplateThumbnail';
 import AdPlayer from './AdPlayer';
 import api from '../services/api';
+import { Capacitor } from '@capacitor/core';
 
 import { toast } from 'sonner';
 
@@ -84,12 +85,12 @@ const TemplateSelector = ({
   const handleAdComplete = async () => {
     setAdOpen(false);
     try {
-      // Award credits
-      await api.post('/billing/watch-ad');
+      const isAndroidNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+      if (!isAndroidNative) {
+        await api.post('/billing/watch-ad');
+      }
 
-      // We need to fetch updated profile to get new credits
       const res = await api.get('/auth/me');
-      // Dispatch update
       window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: res.data }));
       toast.success('Credits earned! You can now unlock the template.');
     } catch (e) {
@@ -113,7 +114,13 @@ const TemplateSelector = ({
 
   return (
     <div className="w-full relative">
-      {adOpen && <AdPlayer onComplete={handleAdComplete} onClose={() => setAdOpen(false)} />}
+      {adOpen && (
+        <AdPlayer
+          userId={user?._id || user?.id}
+          onComplete={handleAdComplete}
+          onClose={() => setAdOpen(false)}
+        />
+      )}
 
       {unlockModalOpen && templateToUnlock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">

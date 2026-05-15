@@ -14,8 +14,14 @@ export const detectRoleFamily = (targetTitle = '', fallbackTitle = '') => {
   if (!text.trim()) return 'generic';
 
   const matchers = [
-    { family: 'engineering', re: /(software|engineer|developer|backend|frontend|fullstack|devops|sre|architect|programmer|coder)/ },
-    { family: 'data', re: /(data scientist|data analyst|machine learning|ml engineer|analytics|data engineer|bi analyst)/ },
+    {
+      family: 'engineering',
+      re: /(software|engineer|developer|backend|frontend|fullstack|devops|sre|architect|programmer|coder)/,
+    },
+    {
+      family: 'data',
+      re: /(data scientist|data analyst|machine learning|ml engineer|analytics|data engineer|bi analyst)/,
+    },
     { family: 'product', re: /(product manager|product owner|pm\b|product lead)/ },
     { family: 'design', re: /(designer|ux|ui|design lead|art director|creative)/ },
     { family: 'marketing', re: /(marketing|growth|seo|content|social media|brand)/ },
@@ -23,7 +29,10 @@ export const detectRoleFamily = (targetTitle = '', fallbackTitle = '') => {
     { family: 'operations', re: /(operations|ops|logistics|supply chain|project manager)/ },
     { family: 'finance', re: /(finance|accountant|financial analyst|treasury|controller)/ },
     { family: 'hr', re: /(human resources|recruit|hr\b|talent|people operations)/ },
-    { family: 'customer', re: /(customer success|customer support|account manager|client services)/ },
+    {
+      family: 'customer',
+      re: /(customer success|customer support|account manager|client services)/,
+    },
   ];
 
   for (const m of matchers) {
@@ -104,7 +113,7 @@ const EXAMPLES = {
     ],
     data: [
       'Kaggle: top 8% solution to the "store sales forecasting" challenge using LightGBM and feature engineering on holiday/promo signals.',
-      'Personal: built a dashboard tracking my city\'s public transit reliability — 18 months of GTFS data, deployed on Streamlit.',
+      "Personal: built a dashboard tracking my city's public transit reliability — 18 months of GTFS data, deployed on Streamlit.",
     ],
     generic: [
       'A short, descriptive name + 1-2 lines on what it does, who uses it, and the most concrete outcome you can name.',
@@ -118,7 +127,7 @@ const EXAMPLES = {
       'Product manager with 5 years shipping B2B SaaS to mid-market customers. Took an internal tool from 0 to $4M ARR through three pricing iterations and a self-serve motion. Strongest at turning customer pain into shipped roadmap.',
     ],
     generic: [
-      'A 2-3 sentence summary of who you are professionally, what you\'ve done that\'s most relevant to the role, and what you\'re looking for next. Specific > generic.',
+      "A 2-3 sentence summary of who you are professionally, what you've done that's most relevant to the role, and what you're looking for next. Specific > generic.",
     ],
   },
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBlocker, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -37,7 +37,6 @@ const Profile = () => {
   const [initialFormData, setInitialFormData] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [pendingTx, setPendingTx] = useState(null); // To store the blocked navigation transition
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleSignOut = () => {
@@ -174,7 +173,7 @@ const Profile = () => {
       const urlObj = new URL(cleanUrl);
       // Keep only the protocol, hostname, and pathname (no query params)
       return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
-    } catch (error) {
+    } catch {
       // If URL parsing fails, return as-is
       return url;
     }
@@ -245,10 +244,6 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleUpgrade = () => {
-    navigate('/upgrade');
   };
 
   if (loading)
@@ -337,12 +332,16 @@ const Profile = () => {
                 General Settings
               </h2>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                  >
                     First Name
                   </label>
                   <input
+                    id="firstName"
                     type="text"
                     name="firstName"
                     value={formData.firstName}
@@ -351,10 +350,14 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                  >
                     Last Name
                   </label>
                   <input
+                    id="lastName"
                     type="text"
                     name="lastName"
                     value={formData.lastName}
@@ -363,10 +366,14 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                  <label
+                    htmlFor="otherName"
+                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                  >
                     Other Name
                   </label>
                   <input
+                    id="otherName"
                     type="text"
                     name="otherName"
                     value={formData.otherName}
@@ -378,15 +385,19 @@ const Profile = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                <label
+                  htmlFor="currentJobTitle"
+                  className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                >
                   Current Job Title
                 </label>
                 <input
+                  id="currentJobTitle"
                   type="text"
                   name="currentJobTitle"
                   value={formData.currentJobTitle}
                   onChange={handleChange}
-                  placeholder="e.g. Field Operator | Full Stack Developer"
+                  placeholder="e.g. Full Stack Developer"
                   className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
                 <p className="text-xs text-slate-400 mt-1">
@@ -399,10 +410,14 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="phone"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       Phone Number
                     </label>
                     <input
+                      id="phone"
                       type="tel"
                       name="phone"
                       value={formData.phone}
@@ -412,10 +427,14 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="portfolioUrl"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       Portfolio URL
                     </label>
                     <input
+                      id="portfolioUrl"
                       type="text"
                       name="portfolioUrl"
                       value={formData.portfolioUrl}
@@ -426,10 +445,14 @@ const Profile = () => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="linkedinUrl"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       LinkedIn Profile
                     </label>
                     <input
+                      id="linkedinUrl"
                       type="text"
                       name="linkedinUrl"
                       value={formData.linkedinUrl}
@@ -443,9 +466,9 @@ const Profile = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                <span className="block text-xs font-semibold text-slate-500 uppercase mb-1">
                   Career Stage
-                </label>
+                </span>
                 <CustomSelect
                   name="currentStatus"
                   value={formData.currentStatus}
@@ -496,10 +519,14 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="university"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       University
                     </label>
                     <input
+                      id="university"
                       type="text"
                       name="university"
                       value={formData.university}
@@ -509,10 +536,14 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="discipline"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       Discipline
                     </label>
                     <input
+                      id="discipline"
                       type="text"
                       name="discipline"
                       value={formData.discipline}
@@ -522,10 +553,14 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                    <label
+                      htmlFor="graduationYear"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    >
                       Graduation Year
                     </label>
                     <input
+                      id="graduationYear"
                       type="number"
                       name="graduationYear"
                       value={formData.graduationYear}
@@ -540,7 +575,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
                 {successMsg && (
                   <span className="text-emerald-600 text-sm font-medium flex items-center gap-1 animate-in fade-in">
                     <CheckCircle className="w-4 h-4" /> {successMsg}
@@ -549,7 +584,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={saving || !isDirty} // Disable if clean
-                  className={`btn-primary ml-auto px-6 py-2 flex items-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`btn-primary w-full sm:w-auto sm:ml-auto px-6 py-2 flex items-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {saving ? (
                     'Saving...'
@@ -653,14 +688,14 @@ const Profile = () => {
 
       {/* Sign-out confirmation modal */}
       {showLogoutModal && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowLogoutModal(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
-          >
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <button
+            type="button"
+            aria-label="Close sign out confirmation"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setShowLogoutModal(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 text-rose-600">
                 <LogOut className="w-6 h-6" />

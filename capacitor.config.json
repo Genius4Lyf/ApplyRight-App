@@ -4,9 +4,9 @@
   "webDir": "dist",
   "plugins": {
     "StatusBar": {
-      "overlaysWebView": true,
+      "overlaysWebView": false,
       "style": "DARK",
-      "backgroundColor": "#ffffff00"
+      "backgroundColor": "#ffffff"
     },
     "SplashScreen": {
       "launchAutoHide": false,
@@ -15,6 +15,12 @@
       "showSpinner": true,
       "androidSpinnerStyle": "large",
       "spinnerColor": "#4f46e5"
+    },
+    "AdMob": {
+      "initializeForTesting": false,
+      "tagForChildDirectedTreatment": false,
+      "tagForUnderAgeOfConsent": false,
+      "maxAdContentRating": "T"
     }
   }
 }

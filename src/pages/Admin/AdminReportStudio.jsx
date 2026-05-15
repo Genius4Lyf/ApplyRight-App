@@ -29,10 +29,18 @@ const AdminReportStudio = () => {
   });
 
   const months = [
-    { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
-    { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
-    { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
-    { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' },
+    { value: 1, label: 'Jan' },
+    { value: 2, label: 'Feb' },
+    { value: 3, label: 'Mar' },
+    { value: 4, label: 'Apr' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' },
+    { value: 8, label: 'Aug' },
+    { value: 9, label: 'Sep' },
+    { value: 10, label: 'Oct' },
+    { value: 11, label: 'Nov' },
+    { value: 12, label: 'Dec' },
   ];
 
   useEffect(() => {
@@ -53,8 +61,7 @@ const AdminReportStudio = () => {
     fetchStats();
   }, [viewType, selectedYear, selectedMonth]);
 
-  const activeTemplate =
-    AD_TEMPLATES.find((t) => t.id === selectedTemplate) || AD_TEMPLATES[0];
+  const activeTemplate = AD_TEMPLATES.find((t) => t.id === selectedTemplate) || AD_TEMPLATES[0];
 
   const activeMonthLabel = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString('en-NG', {
     month: 'long',
@@ -113,9 +120,7 @@ const AdminReportStudio = () => {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Ad Reports</h1>
-          <p className="text-slate-500">
-            Pick a design, preview it, and download as PNG.
-          </p>
+          <p className="text-slate-500">Pick a design, preview it, and download as PNG.</p>
         </div>
 
         {/* Period filter controls */}
@@ -191,9 +196,11 @@ const AdminReportStudio = () => {
                           <div className="text-sm text-slate-500">{template.description}</div>
                         </div>
                       </div>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-                        isActive ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'
-                      }`}>
+                      <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
+                          isActive ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
                         {template.focus}
                       </span>
                     </div>
@@ -220,9 +227,7 @@ const AdminReportStudio = () => {
                   </div>
                 ))}
               </div>
-              <div className="mt-3 text-xs text-slate-400">
-                Period: {reportContext.periodLabel}
-              </div>
+              <div className="mt-3 text-xs text-slate-400">Period: {reportContext.periodLabel}</div>
             </div>
           </div>
 

@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import api from '../../services/api';
-import { Search, RefreshCw, ChevronLeft, ChevronRight, MousePointerClick, Bookmark, Filter, X } from 'lucide-react';
+import {
+  Search,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  MousePointerClick,
+  Bookmark,
+  Filter,
+  X,
+} from 'lucide-react';
 
 const AdminJobSearches = () => {
   const [searches, setSearches] = useState([]);
