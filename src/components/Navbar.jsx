@@ -73,6 +73,23 @@ const Navbar = () => {
       try {
         const data = await billingService.getBalance();
         setCredits(data.credits);
+        // Mirror the authoritative balance into localStorage and broadcast it
+        // so every <CreditGate> (which reads from localStorage via useCredits)
+        // sees the same value as the navbar. Without this, out-of-band grants
+        // (referrals, admin top-ups, AdMob SSV callbacks, other tabs) would
+        // show the right number in the navbar but still trip the credit gates.
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          if (typeof data?.credits === 'number') {
+            user.credits = data.credits;
+            localStorage.setItem('user', JSON.stringify(user));
+            window.dispatchEvent(
+              new CustomEvent('credit_updated', { detail: data.credits })
+            );
+          }
+        } catch {
+          // localStorage unavailable — non-fatal, navbar state still updates.
+        }
       } catch (error) {
         console.error('Failed to fetch credits', error);
       }

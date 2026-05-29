@@ -108,31 +108,70 @@ const InterviewPrepDetail = () => {
   const handleGenerateMoreQuestions = () => setAdForMoreOpen(true);
 
   const handleAdForMoreComplete = async () => {
+    // Close the ad modal immediately — no point keeping a spinner up while
+    // the post-ad work runs. A loading toast covers the gap so the user has
+    // continuous feedback.
     setAdForMoreOpen(false);
+    const toastId = toast.loading('Crediting your account…');
+
     try {
-      // On Android the SSV callback has already credited the account. On web
-      // the AdPlayer's onComplete is where we award credits.
+      // Web: claim the Monetag reward synchronously. Android: AdMob credited
+      // server-side via SSV, but that callback can lag a few seconds after
+      // the ad reports complete — handled by the credit-wait loop below.
       if (!isAndroidNative()) {
         await api.post('/billing/watch-ad', { type: 'video' });
       }
-      const me = await api.get('/auth/me');
-      const fresh = me.data;
-      const credits = fresh?.credits ?? 0;
-      try {
-        const existing = readStoredUser();
-        localStorage.setItem('user', JSON.stringify({ ...existing, ...fresh }));
-      } catch {
-        /* ignore */
-      }
-      window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: fresh }));
-      window.dispatchEvent(new CustomEvent('credit_updated', { detail: credits }));
 
-      // Ad reward should cover the generate-more cost. `runGenerateMore`
-      // surfaces INSUFFICIENT_CREDITS via toast if anything went sideways.
+      // Poll /auth/me until credits land (or we hit the deadline). On web
+      // this resolves on the first hit; on Android it can take several
+      // polls while SSV catches up.
+      const deadline = Date.now() + 20000;
+      let credits = 0;
+      let fresh = null;
+      while (Date.now() < deadline) {
+        try {
+          const me = await api.get('/auth/me');
+          fresh = me.data;
+          credits = fresh?.credits ?? 0;
+          if (credits >= 5) break;
+        } catch {
+          /* keep polling */
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+
+      if (fresh) {
+        try {
+          const existing = readStoredUser();
+          localStorage.setItem('user', JSON.stringify({ ...existing, ...fresh }));
+        } catch {
+          /* ignore */
+        }
+        window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: fresh }));
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: credits }));
+      }
+
+      if (credits < 5) {
+        toast.error("Reward didn't land in time — try Get more questions in a moment.", {
+          id: toastId,
+        });
+        return;
+      }
+
+      toast.loading('Generating new questions…', { id: toastId });
       await runGenerateMore();
+      toast.dismiss(toastId);
     } catch (e) {
       console.error('Ad-for-more failed:', e);
-      toast.error('Failed to claim ad reward.');
+      const code = e.response?.data?.code;
+      const msg = e.response?.data?.message;
+      if (code === 'COOLDOWN') {
+        toast.error(msg || 'Please wait a moment before watching another ad.', { id: toastId });
+      } else if (code === 'DAILY_CAP') {
+        toast.error('Daily ad limit reached. Come back tomorrow.', { id: toastId });
+      } else {
+        toast.error('Failed to claim ad reward.', { id: toastId });
+      }
     }
   };
 

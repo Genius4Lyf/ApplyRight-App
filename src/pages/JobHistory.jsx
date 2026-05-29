@@ -227,6 +227,10 @@ const JobHistory = () => {
       toast.error('A CV generation is already running for this application.');
       return;
     }
+    if (err.response?.status === 422 && code === 'NO_CV_GROUNDING') {
+      toast.error(err.response.data.message);
+      return;
+    }
     toast.error(fallbackMessage);
   };
 

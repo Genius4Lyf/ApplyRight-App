@@ -31,11 +31,6 @@ const billingService = {
     return response.data;
   },
 
-  verifyPayment: async (reference) => {
-    const response = await api.post('/billing/verify-payment', { reference });
-    return response.data;
-  },
-
   /**
    * Poll /balance until the user's credit balance exceeds `baseline`, or
    * `timeoutMs` elapses. Used by the AdMob Rewarded Video flow on Android:

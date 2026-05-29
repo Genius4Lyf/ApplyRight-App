@@ -274,6 +274,10 @@ const Dashboard = () => {
       toast.error('A CV generation is already running for this application.');
       return;
     }
+    if (error.response?.status === 422 && code === 'NO_CV_GROUNDING') {
+      toast.error(error.response.data.message);
+      return;
+    }
     toast.error(fallbackMessage);
   };
 
@@ -730,7 +734,7 @@ const Dashboard = () => {
           /* Bottom-sheet on mobile, centered card on desktop. Compact
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[env(safe-area-inset-bottom)] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
               <button
                 type="button"
