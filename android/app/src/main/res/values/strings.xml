@@ -6,5 +6,5 @@
     <string name="custom_url_scheme">com.applyright.app</string>
     <!-- AdMob App ID. Currently the public Google test ID; replace with the
          production ID from the AdMob console before release. -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_app_id">ca-app-pub-5132618771301435~1138782885</string>
 </resources>
