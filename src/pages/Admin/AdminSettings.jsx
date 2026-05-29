@@ -312,6 +312,22 @@ const AdminSettings = () => {
                       />
                       <p className="text-xs text-slate-500">Credits earned by watching an ad.</p>
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Ad Reward (Android)
+                      </label>
+                      <input
+                        type="number"
+                        value={settings.credits.adRewardAndroid ?? 10}
+                        onChange={(e) =>
+                          handleChange('credits', 'adRewardAndroid', parseInt(e.target.value) || 0)
+                        }
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Credits earned by watching an AdMob ad on Android.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -445,6 +461,26 @@ const AdminSettings = () => {
                           checked={settings.features.enableJobSearch}
                           onChange={(e) =>
                             handleChange('features', 'enableJobSearch', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">AdMob Ads & Rewards</h4>
+                        <p className="text-sm text-slate-500">
+                          Enable native AdMob rewarded and interstitial ads on Android.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.admobEnabled ?? false}
+                          onChange={(e) =>
+                            handleChange('features', 'admobEnabled', e.target.checked)
                           }
                           className="sr-only peer"
                         />
