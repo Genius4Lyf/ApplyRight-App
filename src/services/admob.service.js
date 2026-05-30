@@ -13,6 +13,16 @@ const INTERSTITIAL_AD_ID = import.meta.env.VITE_ADMOB_INTERSTITIAL_UNIT_ID || TE
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
+// Devices that should receive test-backed ads on the *real* ad units. Only
+// applied when test mode is on (see initAdMob). Lets us exercise the full
+// reward + SSV flow on our own phones without no-fill or invalid-traffic
+// strikes. The hashed ID is printed in logcat on the first ad request.
+const TEST_DEVICE_IDS = ['2D94E973D9C3F3C6A1F019E503AC725A'];
+
+// Test mode is on in dev, or in a prod build when VITE_ADMOB_TESTING=true.
+// Keep it OFF for store releases so real users get real (revenue) ads.
+const TESTING_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ADMOB_TESTING === 'true';
+
 let pluginPromise = null;
 let initialized = false;
 let rewardedPrepared = false;
@@ -34,7 +44,8 @@ export const initAdMob = async () => {
     const plugin = await loadPlugin();
     if (!plugin) return;
     await plugin.AdMob.initialize({
-      initializeForTesting: import.meta.env.DEV,
+      initializeForTesting: TESTING_ENABLED,
+      testingDevices: TEST_DEVICE_IDS,
       requestTrackingAuthorization: false,
     });
     initialized = true;
@@ -52,15 +63,18 @@ export const prepareRewarded = async (userId) => {
     if (!initialized) await initAdMob();
     await plugin.AdMob.prepareRewardVideoAd({
       adId: REWARDED_AD_ID,
-      // ssvInfo: Google forwards userId verbatim as `user_id` in the SSV
+      // ssv: Google forwards userId verbatim as `user_id` in the SSV
       // callback. customData is echoed back via `custom_data` — we set it to
       // userId too for redundancy if Google ever truncates user_id.
-      ssvInfo: { userId: String(userId || ''), customData: String(userId || '') },
+      // NOTE: the @capacitor-community/admob option key is `ssv`, not `ssvInfo`;
+      // a wrong key is silently ignored, so user_id never reaches the callback.
+      ssv: { userId: String(userId || ''), customData: String(userId || '') },
     });
     rewardedPrepared = true;
     return true;
   } catch (err) {
-    console.warn('[AdMob] prepareRewarded failed:', err?.message || err);
+    // code: 0=internal, 1=invalid request (bad unit/app id), 2=network, 3=no fill.
+    console.warn(`[AdMob] prepareRewarded failed code=${err?.code} message=${err?.message}`, err);
     rewardedPrepared = false;
     return false;
   }
@@ -116,6 +130,9 @@ export const showRewarded = async () => {
   );
   subscriptions.push(
     await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, async (err) => {
+      // err.code is the Google Mobile Ads error code: 0=internal, 1=invalid
+      // request (bad unit/app id), 2=network, 3=no fill (no ad available).
+      console.warn(`[AdMob] rewarded FailedToLoad code=${err?.code} message=${err?.message}`, err);
       await cleanup();
       resolveOuter({ rewarded: false, reason: 'load_failed', error: err });
     })

@@ -3,7 +3,16 @@
     "allow": [
       "Bash(npx eslint *)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx prettier *)",
+      "Bash(xargs grep -l \"userId\\\\|user_id\")",
+      "Bash(curl -s -o - -w \"\\\\n[HTTP %{http_code}, time %{time_total}s]\\\\n\" \"https://applyright-server.onrender.com/api/billing/admob-ssv\")",
+      "Bash(curl -s -o - -w \"\\\\n[HTTP %{http_code}]\\\\n\" \"https://applyright-server.onrender.com/api/billing/admob-ssv?ad_network=test&user_id=abc&transaction_id=xyz&signature=AAA&key_id=123\")",
+      "Bash(curl -s -o - -w \"\\\\n[HTTP %{http_code}]\\\\n\" \"https://applyright-server.onrender.com/api/billing/admob-ssv/nonexistent-path-404-check\")",
+      "Bash(cd ../applyright-backend)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(adb devices *)",
+      "Bash(adb logcat *)"
     ]
   }
 }

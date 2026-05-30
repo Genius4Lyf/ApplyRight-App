@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Share2, PlayCircle, Loader, X, Gift, AlertCircle, Check } from 'lucide-react';
+import { Zap, Share2, X, Check } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
 import AdPlayer from '../components/AdPlayer';
-import MonetagBanner from '../components/MonetagBanner';
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
@@ -103,13 +102,11 @@ const CreditStore = () => {
           window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
         }
         if (stats) setAdStats(stats);
+        // The AdPlayer's own completion modal already shows the thank-you +
+        // credits-awarded message, so we don't fire the extra celebration
+        // overlay here (that produced a duplicate success modal).
         setRewardMessage('');
         setShowAdPlayer(false);
-        setShowReward(true);
-        setTimeout(() => {
-          setShowReward(false);
-          setRewardMessage('');
-        }, 4000);
         return;
       }
 
@@ -178,72 +175,70 @@ const CreditStore = () => {
           </p>
         </div>
 
-        {/* Main Action Card: Watch Ad */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative transform transition-all hover:shadow-2xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
+        {/* Main Action Card: Watch Video (Android only — AdMob lives here) */}
+        {isAndroidNative() && (
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative transform transition-all hover:shadow-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
 
-          <div className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row items-center gap-12">
-            <div className="flex-1 space-y-6 text-center md:text-left">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-4">
-                  Instant Reward
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                  {isAndroidNative() ? 'Watch Video to Earn Credits' : 'View Sponsored Offer'}
-                </h2>
-                <p className="text-slate-500 text-lg">
-                  {isAndroidNative()
-                    ? 'Watch a short video ad and earn '
-                    : 'Support our platform by viewing an offer and earn '}
-                  <span className="text-indigo-600 font-bold">{platformReward} A.I Credits</span>.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Takes only 5 seconds</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Instant reward</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Unlimited daily views</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-none">
-              <button
-                onClick={() => setShowAdPlayer(true)}
-                className="group relative flex flex-col items-center justify-center w-64 h-64 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg hover:scale-105 transition-all duration-300"
-              >
-                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform">
-                  <Zap className="w-10 h-10 text-indigo-600 ml-1" />
-                </div>
-                <span className="text-white font-bold text-2xl">
-                  {isAndroidNative() ? 'Watch Video' : 'View Offer'}
-                </span>
-                <span className="text-indigo-200 font-medium mt-1">
-                  +{platformReward} A.I Credits
-                </span>
-
-                {adStats.streak > 0 && (
-                  <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                    🔥 {adStats.streak} Day Streak
+            <div className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row items-center gap-12">
+              <div className="flex-1 space-y-6 text-center md:text-left">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-4">
+                    Instant Reward
                   </div>
-                )}
-              </button>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                    Watch Video to Earn Credits
+                  </h2>
+                  <p className="text-slate-500 text-lg">
+                    Watch a short video ad and earn{' '}
+                    <span className="text-indigo-600 font-bold">{platformReward} A.I Credits</span>.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Check className="w-5 h-5 text-green-500" />
+                    <span>Takes only 5 seconds</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Check className="w-5 h-5 text-green-500" />
+                    <span>Instant reward</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Check className="w-5 h-5 text-green-500" />
+                    <span>Unlimited daily views</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-none">
+                <button
+                  onClick={() => setShowAdPlayer(true)}
+                  className="group relative flex flex-col items-center justify-center w-64 h-64 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform">
+                    <Zap className="w-10 h-10 text-indigo-600 ml-1" />
+                  </div>
+                  <span className="text-white font-bold text-2xl">Watch Video</span>
+                  <span className="text-indigo-200 font-medium mt-1">
+                    +{platformReward} A.I Credits
+                  </span>
+
+                  {adStats.streak > 0 && (
+                    <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                      🔥 {adStats.streak} Day Streak
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Secondary Actions Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
           {/* Invite Friend */}
           <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -269,9 +264,6 @@ const CreditStore = () => {
               </button>
             </div>
           </div>
-
-          {/* Monetag Banner (Passive Income) */}
-          <MonetagBanner />
         </div>
 
         {/* Info Footer */}
