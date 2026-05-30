@@ -139,8 +139,13 @@ const CreditStore = () => {
   const getStoredUserId = () => {
     try {
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      return stored?._id || stored?.id || null;
-    } catch {
+      const resolved = stored?._id || stored?.id || null;
+      console.log(
+        `[AdFlow] getStoredUserId resolved=${resolved} keys=${Object.keys(stored).join(',')}`
+      );
+      return resolved;
+    } catch (e) {
+      console.warn('[AdFlow] getStoredUserId failed to parse localStorage user', e);
       return null;
     }
   };

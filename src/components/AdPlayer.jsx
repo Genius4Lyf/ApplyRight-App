@@ -107,6 +107,7 @@ const AdPlayer = (props) => {
   // SSV callback. The client just polls /balance to detect when SSV lands.
 
   const handleStartAdMobAd = async () => {
+    console.log(`[AdFlow] handleStartAdMobAd: AD CLICKED. userId=${userId}`);
     completedRef.current = false;
     setAdState('verifying');
     setVerifyMessage('Loading ad…');
@@ -115,11 +116,14 @@ const AdPlayer = (props) => {
     try {
       const bal = await billingService.getBalance();
       baseline = bal?.credits ?? 0;
-    } catch {
+      console.log(`[AdFlow] baseline balance = ${baseline}`);
+    } catch (e) {
+      console.warn('[AdFlow] getBalance (baseline) failed', e?.message);
       /* continue with baseline=0; we'll still complete on credit arrival */
     }
 
     const result = await showRewardedAd();
+    console.log(`[AdFlow] showRewardedAd resolved: ${JSON.stringify(result)}`);
     if (!result.rewarded) {
       if (result.reason === 'dismissed') {
         setAdState('tab-closed');
@@ -131,11 +135,13 @@ const AdPlayer = (props) => {
 
     // Video finished — now wait for the server-side SSV reward to land. Show a
     // dedicated "allocating credits" loading modal during this verification.
+    console.log('[AdFlow] reward earned client-side; polling balance for SSV grant…');
     setAdState('allocating');
     const poll = await billingService.pollBalanceUntilIncrease(baseline, {
       intervalMs: 1500,
       timeoutMs: 12000,
     });
+    console.log(`[AdFlow] poll result: ${JSON.stringify(poll)} (baseline was ${baseline})`);
 
     completedRef.current = true;
     if (poll.increased) {
@@ -143,10 +149,12 @@ const AdPlayer = (props) => {
       setAdState('completed');
       setTimeout(() => onComplete(), 3000);
     } else {
-      // SSV is usually <2s but can lag. Show a soft success and let the
-      // parent refresh — credits arrive eventually.
-      setAdState('completed');
-      setVerifyMessage("Reward is on its way — it'll appear shortly.");
+      // Balance did NOT increase within the poll window. Do NOT claim the
+      // credits were added — the SSV grant may have been rejected (cooldown/
+      // cap), failed (user mismatch), or simply never fired. Show an honest
+      // "pending" state instead of a green "+10 Unlocked".
+      setAdState('pending');
+      setVerifyMessage("Reward is being verified — if it doesn't appear shortly, try again later.");
       setTimeout(() => onComplete(), 3000);
     }
   };
@@ -245,6 +253,11 @@ const AdPlayer = (props) => {
                 <CheckCircle className="w-12 h-12" />
               </div>
             )}
+            {adState === 'pending' && (
+              <div className="w-full h-full bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+                <Loader className="w-10 h-10" />
+              </div>
+            )}
           </div>
 
           <h3 className="text-2xl font-bold text-slate-900 mb-2">
@@ -252,6 +265,7 @@ const AdPlayer = (props) => {
             {adState === 'verifying' && (usingAdMob ? 'Playing…' : 'Verifying...')}
             {adState === 'allocating' && 'Allocating Credits'}
             {adState === 'completed' && displaySuccessTitle}
+            {adState === 'pending' && 'Reward Pending'}
             {adState === 'tab-closed' && (usingAdMob ? 'Ad Closed Early' : 'Ad Tab Closed')}
             {adState === 'failed' && 'Ad Failed to Load'}
           </h3>
@@ -270,6 +284,9 @@ const AdPlayer = (props) => {
             {adState === 'allocating' &&
               'Allocating credits to your account — please wait while we verify your reward…'}
             {adState === 'completed' && (verifyMessage || displaySuccessMessage)}
+            {adState === 'pending' &&
+              (verifyMessage ||
+                'Your reward is being verified and will appear in your balance shortly.')}
             {adState === 'tab-closed' &&
               !usingAdMob &&
               'You closed the ad tab too early. Please try again and keep the tab open for the full duration.'}
@@ -329,6 +346,15 @@ const AdPlayer = (props) => {
             >
               <Loader className="w-5 h-5 animate-spin" />
               Verifying…
+            </button>
+          )}
+
+          {adState === 'pending' && (
+            <button
+              onClick={handleClose}
+              className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+            >
+              Got it
             </button>
           )}
 

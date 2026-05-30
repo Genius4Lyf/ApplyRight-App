@@ -57,10 +57,14 @@ export const initAdMob = async () => {
 
 export const prepareRewarded = async (userId) => {
   if (!isAndroidNative()) return false;
+  console.log(`[AdFlow] prepareRewarded called userId=${userId} adId=${REWARDED_AD_ID}`);
   try {
     const plugin = await loadPlugin();
     if (!plugin) return false;
     if (!initialized) await initAdMob();
+    console.log(
+      `[AdFlow] prepareRewarded -> requesting ad with ssv.userId=${String(userId || '')}`
+    );
     await plugin.AdMob.prepareRewardVideoAd({
       adId: REWARDED_AD_ID,
       // ssv: Google forwards userId verbatim as `user_id` in the SSV
@@ -71,10 +75,14 @@ export const prepareRewarded = async (userId) => {
       ssv: { userId: String(userId || ''), customData: String(userId || '') },
     });
     rewardedPrepared = true;
+    console.log('[AdFlow] prepareRewarded -> ad loaded OK (ready to show)');
     return true;
   } catch (err) {
     // code: 0=internal, 1=invalid request (bad unit/app id), 2=network, 3=no fill.
-    console.warn(`[AdMob] prepareRewarded failed code=${err?.code} message=${err?.message}`, err);
+    console.warn(
+      `[AdFlow][AdMob] prepareRewarded failed code=${err?.code} message=${err?.message}`,
+      err
+    );
     rewardedPrepared = false;
     return false;
   }
@@ -118,12 +126,14 @@ export const showRewarded = async () => {
   });
 
   subscriptions.push(
-    await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+    await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
       earned = true;
+      console.log(`[AdFlow] event=Rewarded reward=${JSON.stringify(reward)}`);
     })
   );
   subscriptions.push(
     await AdMob.addListener(RewardAdPluginEvents.Dismissed, async () => {
+      console.log(`[AdFlow] event=Dismissed earned=${earned}`);
       await cleanup();
       resolveOuter({ rewarded: earned, reason: earned ? undefined : 'dismissed' });
     })
@@ -132,15 +142,17 @@ export const showRewarded = async () => {
     await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, async (err) => {
       // err.code is the Google Mobile Ads error code: 0=internal, 1=invalid
       // request (bad unit/app id), 2=network, 3=no fill (no ad available).
-      console.warn(`[AdMob] rewarded FailedToLoad code=${err?.code} message=${err?.message}`, err);
+      console.warn(`[AdFlow] event=FailedToLoad code=${err?.code} message=${err?.message}`, err);
       await cleanup();
       resolveOuter({ rewarded: false, reason: 'load_failed', error: err });
     })
   );
 
   try {
+    console.log('[AdFlow] showRewardVideoAd() -> presenting ad');
     await AdMob.showRewardVideoAd();
   } catch (err) {
+    console.warn(`[AdFlow] showRewardVideoAd threw: ${err?.message}`, err);
     await cleanup();
     resolveOuter({ rewarded: false, reason: 'show_failed', error: err });
   }
