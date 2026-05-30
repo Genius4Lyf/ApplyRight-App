@@ -12,7 +12,13 @@
       "Bash(cd ../applyright-backend)",
       "Bash(echo \"exit: $?\")",
       "Bash(adb devices *)",
-      "Bash(adb logcat *)"
+      "Bash(adb logcat *)",
+      "Bash(npx cap *)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(adb -s RFCN101ZK7J install -r app/build/outputs/apk/debug/app-debug.apk)",
+      "Bash(adb -s RFCN101ZK7J shell monkey -p com.applyright.app -c android.intent.category.LAUNCHER 1)",
+      "Bash(adb -s RFCN101ZK7J logcat -c)",
+      "Bash(adb -s RFCN101ZK7J logcat -d)"
     ]
   }
 }

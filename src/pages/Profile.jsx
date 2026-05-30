@@ -24,6 +24,7 @@ import Modal from '../components/ui/Modal'; // Assuming Modal is created or exis
 import CVService from '../services/cv.service';
 import ApplicationService from '../services/application.service';
 import { billingService } from '../services';
+import UserService from '../services/user.service';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -39,10 +40,42 @@ const Profile = () => {
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // Account Deletion State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
   const handleSignOut = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      toast.error("Please type 'DELETE' to confirm.");
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await UserService.deleteAccount();
+      toast.success('Your account has been deleted successfully');
+
+      // Clear session & redirect
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      setTimeout(() => {
+        navigate('/register');
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to delete account', error);
+      toast.error(error.response?.data?.message || 'Failed to delete account. Please try again.');
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   // Form State
@@ -682,6 +715,27 @@ const Profile = () => {
               <LogOut className="w-4 h-4" />
               Sign out
             </button>
+
+            {/* Danger Zone — for compliance & data privacy (deleting user data) */}
+            <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-5 shadow-sm space-y-3">
+              <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                Danger Zone
+              </h4>
+              <p className="text-xs text-rose-600/80 leading-relaxed">
+                Permanently delete your ApplyRight account and all your resumes, CVs, and AI generation history. This action is irreversible.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteConfirmText('');
+                  setShowDeleteModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition-all shadow-md shadow-rose-200 hover:scale-[1.01]"
+              >
+                Delete Account
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -717,6 +771,70 @@ const Profile = () => {
                   className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-rose-200"
                 >
                   Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Deletion Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
+          <button
+            type="button"
+            aria-label="Close delete account confirmation"
+            className="absolute inset-0 cursor-default"
+            onClick={() => !deleting && setShowDeleteModal(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-rose-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 text-rose-600 animate-pulse">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Account Permanently?</h3>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                This will permanently delete your ApplyRight profile and purge all your CV drafts, uploaded resumes, matched job applications, and credit history from our servers. <strong>This action is irreversible.</strong>
+              </p>
+              
+              <div className="w-full mb-6 text-left">
+                <label htmlFor="deleteConfirmInput" className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                  Type <span className="text-rose-600 font-mono">DELETE</span> to confirm:
+                </label>
+                <input
+                  id="deleteConfirmInput"
+                  type="text"
+                  placeholder="DELETE"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  disabled={deleting}
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none font-mono text-center tracking-wider text-rose-600 font-bold"
+                />
+              </div>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteConfirmText !== 'DELETE' || deleting}
+                  onClick={handleDeleteAccount}
+                  className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Account'
+                  )}
                 </button>
               </div>
             </div>

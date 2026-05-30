@@ -17,8 +17,14 @@ const updateSettings = async (settings) => {
   return null;
 };
 
+const deleteAccount = async () => {
+  const response = await api.delete('/users/profile');
+  return response.data;
+};
+
 const UserService = {
   updateSettings,
+  deleteAccount,
 };
 
 export default UserService;
