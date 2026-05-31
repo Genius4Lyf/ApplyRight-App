@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://applyright.com/sitemap.xml
+Sitemap: https://applyright.com.ng/sitemap.xml

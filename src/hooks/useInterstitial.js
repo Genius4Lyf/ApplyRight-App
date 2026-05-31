@@ -97,26 +97,46 @@ export default function useInterstitial() {
     prepareInterstitial();
   }, [enabled]);
 
-  const canShow = useCallback(() => {
-    if (!enabled) return false;
-    if (sessionShownCount >= MAX_PER_SESSION) return false;
-    if (Date.now() - APP_LAUNCH_AT < LAUNCH_GRACE_MS) return false;
-    if (Date.now() - getLastAt() < MIN_GAP_MS) return false;
-    return true;
+  // Returns the specific reason an ad can't show (or null if it can). Used
+  // both as the eligibility gate and to log *why* an eligible-but-capped
+  // placement was skipped, so we can see how often the caps bite.
+  const blockReason = useCallback(() => {
+    if (!enabled) return 'flag_or_platform_off';
+    if (sessionShownCount >= MAX_PER_SESSION) return 'session_cap';
+    if (Date.now() - APP_LAUNCH_AT < LAUNCH_GRACE_MS) return 'launch_grace';
+    if (Date.now() - getLastAt() < MIN_GAP_MS) return 'min_gap';
+    return null;
   }, [enabled]);
+
+  const canShow = useCallback(() => blockReason() === null, [blockReason]);
 
   const triggerInterstitial = useCallback(
     async (placement = 'unknown') => {
-      if (!canShow()) return { shown: false, reason: 'not_eligible' };
+      const blocked = blockReason();
+      if (blocked) {
+        // Eligible-but-capped visibility: see how often each cap fires per
+        // placement in logcat. `session_cap` / `min_gap` here = potential
+        // revenue we're deliberately leaving on the table for retention.
+        console.log(
+          `[AdFlow] interstitial skipped placement=${placement} reason=${blocked} ` +
+            `shownThisSession=${sessionShownCount}/${MAX_PER_SESSION}`
+        );
+        return { shown: false, reason: blocked, placement };
+      }
       const ok = await showInterstitial();
       if (ok) {
         sessionShownCount += 1;
         setLastAt(Date.now());
+        console.log(
+          `[AdFlow] interstitial shown placement=${placement} ` +
+            `shownThisSession=${sessionShownCount}/${MAX_PER_SESSION}`
+        );
         return { shown: true, placement };
       }
+      console.log(`[AdFlow] interstitial show_failed placement=${placement}`);
       return { shown: false, reason: 'show_failed', placement };
     },
-    [canShow]
+    [blockReason]
   );
 
   return { enabled, canShow, triggerInterstitial };

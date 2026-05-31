@@ -5,6 +5,7 @@ import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
 import CVService from '../services/cv.service';
+import useInterstitial from '../hooks/useInterstitial';
 import {
   Sparkles,
   LogOut,
@@ -52,6 +53,7 @@ import { toast } from 'sonner';
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { triggerInterstitial } = useInterstitial();
   const [showProfileBanner, setShowProfileBanner] = useState(false);
 
   useEffect(() => {
@@ -449,6 +451,9 @@ const Dashboard = () => {
       } else {
         toast.success('Cover letter generated!');
       }
+      // Fire interstitial at this completion moment. No-op on web / paid /
+      // non-eligible users; frequency caps enforced inside the hook.
+      triggerInterstitial('cover_letter_generated');
       setJustCompleted('coverLetter');
     } catch (error) {
       handleAssetGenError(error, 'Failed to generate cover letter. Please try again.');
@@ -1031,17 +1036,23 @@ const Dashboard = () => {
 
               <div className="space-y-2">
                 <button
-                  onClick={() => navigate(`/cv-builder/${scanSuccessDraftId}`)}
+                  onClick={() => {
+                    // Completion moment after CV upload+convert. Fire-and-forget
+                    // — don't block navigation on ad load. No-op on web/paid.
+                    triggerInterstitial('upload_edit_in_builder');
+                    navigate(`/cv-builder/${scanSuccessDraftId}`);
+                  }}
                   className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                 >
                   <PenTool className="w-5 h-5" /> Review & Edit in Builder
                 </button>
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    triggerInterstitial('upload_ats_preview');
                     navigate(`/resume/${scanSuccessDraftId}`, {
                       state: { atsReadiness: scanATSReadiness },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1.5 py-2"
                 >
                   <Eye className="w-4 h-4" /> Skip to ATS Preview

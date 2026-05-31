@@ -273,7 +273,7 @@ const CreditStore = () => {
 
         {/* Info Footer */}
         <div className="text-center pt-8 border-t border-slate-200/50">
-          <p className="text-sm text-slate-400">Need help? Contact support@applyright.com</p>
+          <p className="text-sm text-slate-400">Need help? Contact support@applyright.com.ng</p>
         </div>
       </div>
 
