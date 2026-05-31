@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock, Eye, FileText, Cpu, Megaphone, UserCheck, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo/applyright-icon.png';
 
 const LAST_UPDATED = 'May 31, 2026';
 const SUPPORT_EMAIL = 'support@applyright.com.ng';
@@ -18,7 +19,10 @@ const PrivacyPolicy = () => {
             <ArrowLeft size={20} />
             <span className="font-medium">Back to Home</span>
           </Link>
-          <div className="font-bold text-xl tracking-tight text-indigo-600">ApplyRight</div>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
+            <span className="text-base sm:text-lg font-semibold text-slate-900">ApplyRight</span>
+          </Link>
         </div>
       </nav>
 
