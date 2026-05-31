@@ -626,16 +626,15 @@ const Dashboard = () => {
         {/* <MonetagBanner style={{ marginBottom: '2rem' }} /> */}
 
         {/* Workflow Selection Cards
-            New users (no CVs yet) need to build one before they can ApplyRight
-            against a job, so we surface "Create" as the recommended path.
-            Returning users with at least one draft most often want to tailor
-            an existing CV — recommend "ApplyRight". The non-recommended card
-            stays equally accessible; we're removing paralysis, not removing
-            choice. */}
+            "ApplyRight" is always surfaced as the recommended path so the badge
+            is consistent across web and the Android/Capacitor build (it no longer
+            shifts based on draft count, which made the two platforms look out of
+            sync). The non-recommended card stays equally accessible; we're
+            removing paralysis, not removing choice. */}
         {!workflowMode &&
           !initialLoading &&
           (() => {
-            const recommendedWorkflow = myDrafts.length === 0 ? 'create' : 'apply';
+            const recommendedWorkflow = 'apply';
             const RecommendedBadge = () => (
               <span className="absolute top-4 right-4 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
                 <Sparkles className="w-3 h-3" />
