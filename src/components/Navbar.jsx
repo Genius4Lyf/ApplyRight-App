@@ -338,18 +338,6 @@ const Navbar = () => {
                           role="menuitem"
                           onClick={() => {
                             setShowAccountMenu(false);
-                            navigate('/interview-prep');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                          <MessageSquare className="w-4 h-4 text-indigo-500" />
-                          Interview Prep
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowAccountMenu(false);
                             navigate('/credits');
                           }}
                           className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
