@@ -13,6 +13,10 @@ import {
   StickyNote,
   Plus,
   Loader,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -377,13 +381,16 @@ const InterviewPrepDetail = () => {
               transition={{ duration: 0.15 }}
             >
               <QuestionsTab
+                applicationId={applicationId}
                 jobQuestions={jobQuestions}
+                fabricationWarnings={application.interviewPrep?.fabricationWarnings || []}
                 questionsToAsk={questionsToAsk}
                 onStartPractice={startPracticeAllQuestions}
                 onGenerateMore={handleGenerateMoreQuestions}
                 generatingMore={generatingMore}
                 newQuestionIndices={newQuestionIndices}
                 isCvOnly={isCvOnly}
+                onConfidenceChange={reload}
               />
             </MotionDiv>
           )}
@@ -579,15 +586,191 @@ const SkillCard = ({ applicationId, skill, onPractice, onConfidenceChange }) => 
   );
 };
 
+const QuestionListItem = ({
+  applicationId,
+  question,
+  index,
+  isExpanded,
+  onToggle,
+  onConfidenceChange,
+  warnings,
+}) => {
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
+
+  const handleMarkConfidence = async (level) => {
+    const nextLevel = question.confidence === level ? null : level;
+    setSaving(true);
+    try {
+      await InterviewPrepService.updateQuestionConfidence(
+        applicationId,
+        question.question,
+        index,
+        nextLevel
+      );
+      toast.success('Confidence updated');
+      onConfidenceChange?.();
+    } catch (e) {
+      toast.error('Failed to update confidence');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startPracticeThis = () => {
+    navigate(`/interview-prep/${applicationId}/practice?questionIndex=${index}`);
+  };
+
+  const typeLabel = question.type ? question.type.charAt(0).toUpperCase() + question.type.slice(1) : 'Technical';
+  const typeBadgeColor =
+    question.type === 'behavioral'
+      ? 'bg-purple-50 text-purple-700 border-purple-200'
+      : question.type === 'situational'
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-blue-50 text-blue-700 border-blue-200';
+
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-all shadow-sm overflow-hidden">
+      {/* Header Row */}
+      <div
+        onClick={onToggle}
+        className="flex items-start justify-between gap-4 p-4 cursor-pointer select-none"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${typeBadgeColor}`}>
+              {typeLabel}
+            </span>
+            {question.confidence && (
+              <span
+                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                  question.confidence === 'ready'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : question.confidence === 'almost'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                }`}
+              >
+                {question.confidence.replace('_', ' ')}
+              </span>
+            )}
+            {warnings && warnings.unsupportedClaims?.length > 0 && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold">
+                <AlertTriangle className="w-3 h-3 text-amber-500" /> Verify claims
+              </span>
+            )}
+          </div>
+          <h4 className="text-sm font-semibold text-slate-900 leading-snug">
+            {question.question}
+          </h4>
+        </div>
+        <div className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 mt-0.5 shrink-0">
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-1.5 border-t border-slate-100 bg-slate-50/20">
+              {/* Grounding CV badging */}
+              {question.sourcedFrom && question.sourcedFrom.length > 0 && (
+                <div className="flex items-center gap-1.5 mb-3 flex-wrap pt-1.5">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Grounded in:</span>
+                  {question.sourcedFrom.map((src, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-semibold uppercase"
+                    >
+                      {src.type === 'experience' ? 'Work history' : src.type}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Warnings Panel */}
+              {warnings && warnings.unsupportedClaims?.length > 0 && (
+                <div className="mb-3.5 p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Verify facts in the suggested answer:</span> The AI suggested answer includes details not found in your CV profile:
+                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800">
+                      {warnings.unsupportedClaims.map((claim, idx) => (
+                        <li key={idx}>{claim}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Answer */}
+              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm mb-4">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Suggested Answer</p>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                  {question.suggestedAnswer || 'No suggested answer available.'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3.5 border-t border-slate-150">
+                <button
+                  type="button"
+                  onClick={startPracticeThis}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+                >
+                  <Play className="w-3.5 h-3.5" /> Practice this question
+                </button>
+
+                <div className="sm:ml-auto flex flex-wrap items-center gap-1.5 justify-center sm:justify-start">
+                  <span className="text-[10px] text-slate-400 font-bold mr-1">Readiness:</span>
+                  {CONFIDENCE_OPTIONS.map((opt) => {
+                    const active = question.confidence === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleMarkConfidence(opt.id)}
+                        disabled={saving}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-colors ${
+                          active ? opt.activeClasses : opt.classes
+                        } disabled:opacity-60`}
+                      >
+                        {active ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const QuestionsTab = ({
+  applicationId,
   jobQuestions,
+  fabricationWarnings,
   questionsToAsk,
   onStartPractice,
   onGenerateMore,
   generatingMore,
   newQuestionIndices,
   isCvOnly,
+  onConfidenceChange,
 }) => {
+  const [expandedIndex, setExpandedIndex] = useState(null);
+
   if (jobQuestions.length === 0 && questionsToAsk.length === 0) {
     return (
       <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
@@ -599,15 +782,13 @@ const QuestionsTab = ({
     );
   }
 
-  // The "Generate more" CTA is only meaningful when the prep is tied to a
-  // job (CV-only drafts have no JD to ground new questions in).
   const canGenerateMore = !isCvOnly && jobQuestions.length > 0;
 
   return (
     <div className="space-y-6">
       {jobQuestions.length > 0 && (
         <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-3 mb-6">
             <SectionHeader
               icon={MessageSquare}
               title="Job-based prep"
@@ -618,15 +799,34 @@ const QuestionsTab = ({
             <button
               type="button"
               onClick={onStartPractice}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+              className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
             >
               <PlayCircle className="w-3.5 h-3.5" />
-              Prep me
+              Practice all
             </button>
           </div>
 
+          {/* Core Collapsible Questions List */}
+          <div className="space-y-3 mb-6">
+            {jobQuestions.map((q, i) => {
+              const warnings = (fabricationWarnings || []).find((w) => w.index === i);
+              return (
+                <QuestionListItem
+                  key={i}
+                  applicationId={applicationId}
+                  question={q}
+                  index={i}
+                  isExpanded={expandedIndex === i}
+                  onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
+                  onConfidenceChange={onConfidenceChange}
+                  warnings={warnings}
+                />
+              );
+            })}
+          </div>
+
           {newQuestionIndices && newQuestionIndices.size > 0 && (
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 space-y-2 mb-6">
               <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
                 Just added
               </p>

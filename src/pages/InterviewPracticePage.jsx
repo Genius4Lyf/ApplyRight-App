@@ -14,6 +14,7 @@ const InterviewPracticePage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const skillFilter = searchParams.get('skill');
+  const questionIndexFilter = searchParams.get('questionIndex');
 
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +50,22 @@ const InterviewPracticePage = () => {
     const skills = getSkillPrep(application);
     const questions = getJobQuestions(application);
 
+    // Scoped to a single question index
+    if (questionIndexFilter !== null) {
+      const idx = parseInt(questionIndexFilter, 10);
+      const q = questions[idx];
+      if (q) {
+        return [{
+          id: `q:${idx}`,
+          index: idx,
+          kind: 'question',
+          type: q.type,
+          prompt: q.question,
+          suggestedAnswer: q.suggestedAnswer || '',
+        }];
+      }
+    }
+
     // Scoped to a single skill: lead with the talking point, then any
     // questions whose sourcedFrom evidence references that skill name. We
     // don't have a skill→question backref in the schema, so fall back to
@@ -73,6 +90,7 @@ const InterviewPracticePage = () => {
         )
         .map((q, i) => ({
           id: `q:${skill.name}:${i}`,
+          index: questions.indexOf(q),
           kind: 'question',
           type: q.type,
           prompt: q.question,
@@ -84,12 +102,13 @@ const InterviewPracticePage = () => {
     // Default: all job questions.
     return questions.map((q, i) => ({
       id: `q:${i}`,
+      index: i,
       kind: 'question',
       type: q.type,
       prompt: q.question,
       suggestedAnswer: q.suggestedAnswer || '',
     }));
-  }, [application, skillFilter]);
+  }, [application, skillFilter, questionIndexFilter]);
 
   // Esc closes the practice view.
   useEffect(() => {
@@ -114,13 +133,23 @@ const InterviewPracticePage = () => {
       return next;
     });
 
-    // Skill cards persist; question cards are session-only (no per-question
-    // schema field — only per-skill is persisted across reloads).
     if (card.kind === 'skill') {
       try {
         await InterviewPrepService.updateSkillConfidence(
           applicationId,
           card.id.replace(/^skill:/, ''),
+          nextLevel
+        );
+      } catch {
+        toast.error('Failed to save confidence');
+      }
+    } else if (card.kind === 'question') {
+      const dbIndex = card.index !== undefined ? card.index : parseInt(card.id.replace(/^q:/, ''), 10);
+      try {
+        await InterviewPrepService.updateQuestionConfidence(
+          applicationId,
+          card.prompt,
+          dbIndex,
           nextLevel
         );
       } catch {
@@ -204,6 +233,7 @@ const InterviewPracticePage = () => {
             </div>
           ) : (
             <PracticeRunner
+              applicationId={applicationId}
               cards={cards}
               confidenceById={confidenceById}
               onMarkConfidence={handleMarkConfidence}

@@ -65,6 +65,24 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  updateQuestionConfidence: async (applicationId, questionText, questionIndex, confidence) => {
+    const response = await api.patch(`/interview-prep/${applicationId}/question-confidence`, {
+      questionText,
+      questionIndex,
+      confidence,
+    });
+    return response.data;
+  },
+
+  gradeAnswer: async (applicationId, questionText, questionIndex, answerText) => {
+    const response = await api.post(`/interview-prep/${applicationId}/grade-answer`, {
+      questionText,
+      questionIndex,
+      answerText,
+    });
+    return response.data;
+  },
+
   // Returns { exists, draftCVId, generatedAt, skillCount, alreadySynced } when
   // the linked DraftCV has skills with evidence available to pull into prep.
   detectGeneratedCV: async (applicationId) => {
