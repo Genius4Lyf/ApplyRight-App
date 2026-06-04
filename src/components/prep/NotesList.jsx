@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Pencil, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../../services/interviewPrep.service';
 import NoteEditor from './NoteEditor';
@@ -25,9 +25,56 @@ const formatTimestamp = (value) => {
   });
 };
 
+// Read-only view of a saved note — what you land on when reopening one, with an
+// Edit button to drop into the editor.
+const NoteView = ({ note, onEdit, onClose, onDelete }) => (
+  <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <h3 className="text-base font-bold text-slate-900 min-w-0">{deriveTitle(note)}</h3>
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+        >
+          <Pencil className="w-3.5 h-3.5" /> Edit
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+    {note.body ? (
+      <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed mt-3">{note.body}</p>
+    ) : (
+      <p className="text-sm text-slate-400 italic mt-3">No content yet.</p>
+    )}
+    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+      <span className="text-[11px] text-slate-400">
+        {note.updatedAt ? `Updated ${formatTimestamp(note.updatedAt)}` : ''}
+      </span>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-medium"
+      >
+        <Trash2 className="w-3.5 h-3.5" /> Delete
+      </button>
+    </div>
+  </div>
+);
+
 const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedConsumed }) => {
   const [notes, setNotes] = useState(initialNotes);
   const [openId, setOpenId] = useState(null);
+  // 'view' = read-only (default when reopening a saved note); 'edit' = editor.
+  const [mode, setMode] = useState('view');
   // Local draft id used before the server has assigned one.
   const NEW_NOTE_ID = '__new__';
   // When opened with a `seed` (e.g. the "Draft your answer" CTA), the new-note
@@ -50,6 +97,7 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
     if (seed) {
       setSeededDraft({ title: seed.title || '', body: seed.body || '' });
       setOpenId(NEW_NOTE_ID);
+      setMode('edit');
       onSeedConsumed?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,6 +111,7 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
   const handleAdd = () => {
     setSeededDraft(null);
     setOpenId(NEW_NOTE_ID);
+    setMode('edit');
   };
 
   // First write for a brand-new note. Subsequent writes (autosave or Save)
@@ -123,14 +172,28 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
 
       {openNote && (
         <div className="mb-4">
-          <NoteEditor
-            key={openNote.id}
-            note={openNote}
-            onAutosave={openNote.id === NEW_NOTE_ID ? handleCreate : handleUpdate(openNote.id)}
-            onSave={openNote.id === NEW_NOTE_ID ? handleCreate : handleUpdate(openNote.id)}
-            onDelete={openNote.id === NEW_NOTE_ID ? null : () => handleDelete(openNote.id)}
-            onCancel={() => setOpenId(null)}
-          />
+          {mode === 'edit' || openNote.id === NEW_NOTE_ID ? (
+            <NoteEditor
+              key={openNote.id}
+              note={openNote}
+              onAutosave={openNote.id === NEW_NOTE_ID ? handleCreate : handleUpdate(openNote.id)}
+              onSave={openNote.id === NEW_NOTE_ID ? handleCreate : handleUpdate(openNote.id)}
+              onDelete={openNote.id === NEW_NOTE_ID ? null : () => handleDelete(openNote.id)}
+              onCancel={() => {
+                // Unsaved brand-new draft → back to the list; an existing note →
+                // back to its read view.
+                if (openNote.id === NEW_NOTE_ID) setOpenId(null);
+                else setMode('view');
+              }}
+            />
+          ) : (
+            <NoteView
+              note={openNote}
+              onEdit={() => setMode('edit')}
+              onClose={() => setOpenId(null)}
+              onDelete={() => handleDelete(openNote.id)}
+            />
+          )}
         </div>
       )}
 
@@ -150,7 +213,10 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
               <li key={note.id}>
                 <button
                   type="button"
-                  onClick={() => setOpenId(note.id)}
+                  onClick={() => {
+                    setOpenId(note.id);
+                    setMode('view');
+                  }}
                   className="w-full text-left bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors"
                 >
                   <div className="flex items-start gap-3">

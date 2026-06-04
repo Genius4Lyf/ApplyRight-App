@@ -18,6 +18,7 @@ import {
   RefreshCw,
   GitCompare,
   ChevronRight,
+  FileSearch,
 } from 'lucide-react';
 
 /**
@@ -52,6 +53,7 @@ import NextBestAction from '../components/NextBestAction';
 import JobRequirementsCard from '../components/JobRequirementsCard';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import JobPostingDrawer from '../components/JobPostingDrawer';
 import {
   getPrepSummary,
   hasInterviewPrep,
@@ -97,6 +99,7 @@ const JobHistory = () => {
   const [compareMenuOpen, setCompareMenuOpen] = useState(false);
   const [cvGenStatus, setCvGenStatus] = useState(null);
   const [reanalyzing, setReanalyzing] = useState(false);
+  const [jobDrawerOpen, setJobDrawerOpen] = useState(false);
   const [metricCapture, setMetricCapture] = useState({
     isOpen: false,
     vagueBullets: [],
@@ -646,6 +649,19 @@ const JobHistory = () => {
                     <div className="flex-1 flex justify-between items-center gap-3 flex-wrap">
                       <h2 className="font-semibold text-slate-900">Application Details</h2>
                       <div className="flex items-center gap-3">
+                        {/* View the original job posting this analysis ran
+                            against. Reference-only drawer; data already rides
+                            on the populated jobId. Shown on mobile too. */}
+                        <button
+                          type="button"
+                          onClick={() => setJobDrawerOpen(true)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-md transition-colors"
+                          title="View the original job posting"
+                        >
+                          <FileSearch className="w-3 h-3" />
+                          Job posting
+                        </button>
+
                         {/* Re-run analysis — refreshes fitScore + analysis using
                             the same resume + job. Useful when prompts/models
                             have been upgraded since the original run. */}
@@ -999,6 +1015,12 @@ const JobHistory = () => {
           primaryLabel={metricCapture.mode === 'bundle' ? 'Generate full kit' : 'Generate CV'}
           onSubmit={handleMetricCaptureSubmit}
           onCancel={handleMetricCaptureCancel}
+        />
+
+        <JobPostingDrawer
+          isOpen={jobDrawerOpen}
+          onClose={() => setJobDrawerOpen(false)}
+          job={selectedApp?.jobId}
         />
       </main>
     </div>
