@@ -83,6 +83,16 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Grade a delivered Story Bank story against its own STAR (1 credit).
+  gradeStory: async (applicationId, storyId, questionText, answerText) => {
+    const response = await api.post(`/interview-prep/${applicationId}/grade-story`, {
+      storyId,
+      questionText,
+      answerText,
+    });
+    return response.data;
+  },
+
   // ── Story Bank ──
   // Generate the bank (reached via the ad-reward flow on the detail page). Lives
   // under /analysis like generate-interview; returns { stories, interviewPrep, remainingCredits }.

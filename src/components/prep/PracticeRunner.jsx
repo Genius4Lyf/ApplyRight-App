@@ -13,9 +13,11 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Volume2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../../services/interviewPrep.service';
+import { speak, stopSpeaking, isTTSSupported } from '../../lib/speech';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const CONFIDENCE_OPTIONS = [
@@ -67,6 +69,7 @@ const PracticeRunner = ({
     setGradeReport(null);
     setFeedbackTab('coaching');
     setExpandedStarSection(null);
+    stopSpeaking();
   }
 
   // Setup Web Speech API for voice dictation
@@ -82,6 +85,9 @@ const PracticeRunner = ({
       }
     }
   }, []);
+
+  // Stop any read-aloud audio when the runner unmounts.
+  useEffect(() => () => stopSpeaking(), []);
 
   if (!Array.isArray(cards) || cards.length === 0) {
     return (
@@ -148,14 +154,24 @@ const PracticeRunner = ({
     setGrading(true);
     setGradeReport(null);
     try {
-      const dbIndex =
-        card.index !== undefined ? card.index : parseInt(card.id.replace(/^q:/, ''), 10);
-      const res = await InterviewPrepService.gradeAnswer(
-        applicationId,
-        card.prompt,
-        dbIndex,
-        userAnswer
-      );
+      let res;
+      if (card.kind === 'story') {
+        res = await InterviewPrepService.gradeStory(
+          applicationId,
+          card.storyId,
+          card.prompt,
+          userAnswer
+        );
+      } else {
+        const dbIndex =
+          card.index !== undefined ? card.index : parseInt(card.id.replace(/^q:/, ''), 10);
+        res = await InterviewPrepService.gradeAnswer(
+          applicationId,
+          card.prompt,
+          dbIndex,
+          userAnswer
+        );
+      }
       setGradeReport(res);
       // Automatically update confidence level locally and parent state
       if (onMarkConfidence) {
@@ -213,9 +229,11 @@ const PracticeRunner = ({
           <button
             type="button"
             onClick={() => setMode('ai-mock')}
-            disabled={card.kind !== 'question'}
+            disabled={card.kind === 'skill'}
             title={
-              card.kind !== 'question' ? 'AI grading is only available for job questions.' : ''
+              card.kind === 'skill'
+                ? 'AI grading is for questions and stories, not reference skills.'
+                : ''
             }
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
               mode === 'ai-mock'
@@ -242,14 +260,27 @@ const PracticeRunner = ({
 
       {/* QUESTION CARD */}
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 sm:p-8 mb-6 shadow-sm">
-        <p className="text-base sm:text-lg font-semibold text-slate-900 leading-snug">
-          {card.prompt}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-base sm:text-lg font-semibold text-slate-900 leading-snug">
+            {card.prompt}
+          </p>
+          {isTTSSupported() && (
+            <button
+              type="button"
+              onClick={() => speak(card.prompt)}
+              className="shrink-0 p-2 -mt-1 -mr-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white transition-colors"
+              title="Hear the question"
+              aria-label="Hear the question"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* MODE 1: FLASHCARD REVIEW — also the only mode for non-question cards
-          (skills / stories), regardless of the toggle's last state. */}
-      {(mode === 'flashcard' || card.kind !== 'question') && (
+      {/* MODE 1: FLASHCARD REVIEW — also the only mode for reference skill
+          cards, regardless of the toggle's last state. */}
+      {(mode === 'flashcard' || card.kind === 'skill') && (
         <div className="space-y-6">
           <div className="min-h-48 rounded-xl border border-slate-200 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-sm">
             {showAnswer ? (
@@ -334,8 +365,8 @@ const PracticeRunner = ({
         </div>
       )}
 
-      {/* MODE 2: INTERACTIVE AI MOCK INTERVIEWER — job questions only. */}
-      {mode === 'ai-mock' && card.kind === 'question' && (
+      {/* MODE 2: INTERACTIVE AI MOCK INTERVIEWER — questions and stories. */}
+      {mode === 'ai-mock' && card.kind !== 'skill' && (
         <div className="space-y-6">
           {/* Attempt history strip — best score + recent attempts. */}
           {attemptHistory.length > 0 && (
@@ -436,18 +467,20 @@ const PracticeRunner = ({
                 {/* Bottom Textarea Tray */}
                 <div className="bg-slate-50/70 border-t border-slate-100 p-2.5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleRecording}
-                      className={`p-2 rounded-lg transition-all shadow-sm ${
-                        isRecording
-                          ? 'bg-pink-650 hover:bg-pink-755 text-white ring-2 ring-pink-500/25'
-                          : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
-                      }`}
-                      title={isRecording ? 'Stop Recording' : 'Start Voice Dictation'}
-                    >
-                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
+                    {recognition && (
+                      <button
+                        type="button"
+                        onClick={toggleRecording}
+                        className={`p-2 rounded-lg transition-all shadow-sm ${
+                          isRecording
+                            ? 'bg-pink-650 hover:bg-pink-755 text-white ring-2 ring-pink-500/25'
+                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
+                        }`}
+                        title={isRecording ? 'Stop Recording' : 'Start Voice Dictation'}
+                      >
+                        {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      </button>
+                    )}
                     {userAnswer && (
                       <button
                         type="button"
@@ -569,9 +602,10 @@ const PracticeRunner = ({
                         key={key}
                         className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm"
                       >
-                        <div
+                        <button
+                          type="button"
                           onClick={() => setExpandedStarSection(isExpanded ? null : key)}
-                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 transition-all select-none"
+                          className="w-full flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 transition-all select-none text-left"
                         >
                           <div className="flex items-center gap-2">
                             {data.covered ? (
@@ -592,7 +626,7 @@ const PracticeRunner = ({
                           ) : (
                             <ChevronDown className="w-4 h-4 text-slate-400" />
                           )}
-                        </div>
+                        </button>
                         {isExpanded && (
                           <div className="p-3 pt-0 border-t border-slate-100 text-xs text-slate-650 leading-relaxed bg-slate-50/20">
                             {data.feedback}

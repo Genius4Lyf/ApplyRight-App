@@ -110,7 +110,11 @@ const InterviewPrepDetail = () => {
       const msg = e.response?.data?.message || 'Failed to generate more questions';
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
-        toast.error('Not enough credits. Watch an ad to earn more.');
+        toast.error(
+          adRewarded
+            ? 'Not enough credits. Watch an ad to earn more.'
+            : 'Not enough credits to generate more questions.'
+        );
       } else {
         toast.error(msg);
       }
@@ -217,7 +221,11 @@ const InterviewPrepDetail = () => {
       const msg = e.response?.data?.message || 'Failed to generate stories';
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
-        toast.error('Not enough credits. Watch an ad to earn more.');
+        toast.error(
+          adRewarded
+            ? 'Not enough credits. Watch an ad to earn more.'
+            : 'Not enough credits to generate your story bank.'
+        );
       } else {
         toast.error(msg);
       }
@@ -689,7 +697,7 @@ const QuestionListItem = ({
       );
       toast.success('Confidence updated');
       onConfidenceChange?.();
-    } catch (e) {
+    } catch {
       toast.error('Failed to update confidence');
     } finally {
       setSaving(false);
@@ -713,9 +721,10 @@ const QuestionListItem = ({
   return (
     <div className="border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-all shadow-sm overflow-hidden">
       {/* Header Row */}
-      <div
+      <button
+        type="button"
         onClick={onToggle}
-        className="flex items-start justify-between gap-4 p-4 cursor-pointer select-none"
+        className="w-full flex items-start justify-between gap-4 p-4 cursor-pointer select-none text-left"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -753,7 +762,7 @@ const QuestionListItem = ({
         <div className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 mt-0.5 shrink-0">
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
-      </div>
+      </button>
 
       {/* Expanded Content */}
       <AnimatePresence initial={false}>

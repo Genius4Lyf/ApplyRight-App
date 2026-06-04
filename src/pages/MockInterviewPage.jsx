@@ -13,11 +13,13 @@ import {
   Check,
   Trophy,
   AlertTriangle,
+  Volume2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { getJobQuestions } from '../utils/interviewPrep';
 import { useMinVisible } from '../hooks/useMinVisible';
+import { speak, stopSpeaking, isSpeechRecognitionSupported } from '../lib/speech';
 
 const MAX_QUESTIONS = 6;
 const STAR_DIMS = ['situation', 'task', 'action', 'result'];
@@ -110,12 +112,21 @@ const MockInterviewPage = () => {
     recognitionRef.current = rec;
   }, []);
 
-  const questions = useMemo(
-    () => getJobQuestions(application).slice(0, MAX_QUESTIONS),
-    [application]
-  );
+  // Run the questions the user is *least* ready on first (unrated / needs-work
+  // before ready), so a mock drills weak spots. Keep each question's original
+  // index so grading still targets the right entry in interviewPrep.jobQuestions.
+  const questions = useMemo(() => {
+    const RANK = { ready: 3, almost: 2, needs_work: 1 };
+    return getJobQuestions(application)
+      .map((q, i) => ({ ...q, _origIndex: i }))
+      .sort((a, b) => (RANK[a.confidence] ?? 0) - (RANK[b.confidence] ?? 0))
+      .slice(0, MAX_QUESTIONS);
+  }, [application]);
 
-  const exitToDetail = () => navigate(`/interview-prep/${applicationId}`);
+  const exitToDetail = () => {
+    stopSpeaking();
+    navigate(`/interview-prep/${applicationId}`);
+  };
 
   const toggleRecording = () => {
     const rec = recognitionRef.current;
@@ -145,10 +156,12 @@ const MockInterviewPage = () => {
 
   const finish = () => {
     stopRecording();
+    stopSpeaking();
     setPhase('report');
   };
 
   const advanceOrFinish = () => {
+    stopSpeaking();
     if (current + 1 >= questions.length) {
       finish();
     } else {
@@ -169,7 +182,7 @@ const MockInterviewPage = () => {
       const res = await InterviewPrepService.gradeAnswer(
         applicationId,
         q.question,
-        current,
+        q._origIndex ?? current,
         answer
       );
       setResults((prev) => [
@@ -256,7 +269,9 @@ const MockInterviewPage = () => {
               setAnswer={setAnswer}
               grading={grading}
               isRecording={isRecording}
+              voiceSupported={isSpeechRecognitionSupported()}
               onToggleRecording={toggleRecording}
+              onHear={() => speak(questions[current].question)}
               onSubmit={handleSubmit}
               onSkip={handleSkip}
             />
@@ -355,7 +370,9 @@ const RunningView = ({
   setAnswer,
   grading,
   isRecording,
+  voiceSupported,
   onToggleRecording,
+  onHear,
   onSubmit,
   onSkip,
 }) => {
@@ -385,9 +402,20 @@ const RunningView = ({
       <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
         Question {index + 1} of {total} · {typeLabel}
       </p>
-      <h2 className="text-base sm:text-lg font-semibold text-slate-900 leading-snug mt-1.5">
-        {question.question}
-      </h2>
+      <div className="flex items-start justify-between gap-3 mt-1.5">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 leading-snug">
+          {question.question}
+        </h2>
+        <button
+          type="button"
+          onClick={onHear}
+          className="shrink-0 p-2 -mt-1 -mr-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors"
+          title="Hear the question"
+          aria-label="Hear the question"
+        >
+          <Volume2 className="w-4 h-4" />
+        </button>
+      </div>
 
       <div className="relative mt-4">
         <textarea
@@ -406,19 +434,21 @@ const RunningView = ({
       </div>
 
       <div className="mt-4 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onToggleRecording}
-          disabled={grading}
-          className={`p-2.5 rounded-lg shadow-sm transition-all disabled:opacity-40 ${
-            isRecording
-              ? 'bg-pink-600 hover:bg-pink-700 text-white'
-              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
-          }`}
-          title={isRecording ? 'Stop voice' : 'Dictate'}
-        >
-          {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-        </button>
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={onToggleRecording}
+            disabled={grading}
+            className={`p-2.5 rounded-lg shadow-sm transition-all disabled:opacity-40 ${
+              isRecording
+                ? 'bg-pink-600 hover:bg-pink-700 text-white'
+                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
+            }`}
+            title={isRecording ? 'Stop voice' : 'Dictate'}
+          >
+            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
+        )}
         <span className="text-[11px] text-slate-400">{answer.length} chars</span>
 
         <div className="ml-auto flex items-center gap-2">
