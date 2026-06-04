@@ -1300,7 +1300,7 @@ const Dashboard = () => {
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-4 h-4" /> Generate (5 Credits)
+                          <Sparkles className="w-4 h-4" /> Generate (10 Credits)
                         </>
                       )}
                     </button>

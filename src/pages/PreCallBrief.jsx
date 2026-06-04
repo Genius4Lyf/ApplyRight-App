@@ -92,8 +92,7 @@ const PreCallBrief = () => {
     .sort((a, b) => rankOf(a.confidence) - rankOf(b.confidence))
     .slice(0, 5);
   const skills = getSkillPrep(application)
-    .map((s) => s.name)
-    .filter(Boolean)
+    .filter((s) => s.name)
     .slice(0, 10);
   const askThem = getQuestionsToAsk(application).slice(0, 5);
   const notes = (
@@ -245,17 +244,17 @@ const PreCallBrief = () => {
                 </Section>
               )}
 
-              {/* Skills */}
+              {/* Skills — name + soundbite to drop into skill-probe answers */}
               {skills.length > 0 && (
                 <Section icon={Sparkles} title="Skills to emphasize">
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="space-y-2">
                     {skills.map((s, i) => (
-                      <span
-                        key={i}
-                        className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold"
-                      >
-                        {s}
-                      </span>
+                      <div key={i} className="text-sm">
+                        <span className="font-semibold text-emerald-700">{s.name}</span>
+                        {s.talkingPoint && (
+                          <span className="text-slate-600"> — {s.talkingPoint}</span>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </Section>

@@ -67,7 +67,7 @@ const STAR_FIELDS = [
 ];
 
 // ── Empty state / generate CTA ──────────────────────────────────────────────
-const StoryBankEmpty = ({ isCvOnly, generating, onGenerate }) => (
+const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
   <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8">
     <div className="flex items-start gap-3">
       <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
@@ -106,11 +106,24 @@ const StoryBankEmpty = ({ isCvOnly, generating, onGenerate }) => (
             <Sparkles className="w-4 h-4" />
             Generate Story Bank
             <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
-              <PlayCircle className="w-3 h-3" /> Ad video
+              {adRewarded ? (
+                <>
+                  <PlayCircle className="w-3 h-3" /> Ad video
+                </>
+              ) : (
+                '5 credits'
+              )}
             </span>
           </>
         )}
       </button>
+    )}
+    {!isCvOnly && (
+      <p className="mt-2 text-xs text-slate-500">
+        {adRewarded
+          ? 'Watch a short ad — free, no credits used.'
+          : 'Uses 5 credits to build your stories.'}
+      </p>
     )}
   </section>
 );
@@ -520,6 +533,7 @@ const StoryBank = ({
   warnings = [],
   isCvOnly,
   generating,
+  adRewarded,
   onGenerate,
   onChange,
   onPracticeStory,
@@ -555,7 +569,12 @@ const StoryBank = ({
   if (stories.length === 0) {
     return (
       <div className="space-y-4">
-        <StoryBankEmpty isCvOnly={isCvOnly} generating={generating} onGenerate={onGenerate} />
+        <StoryBankEmpty
+          isCvOnly={isCvOnly}
+          generating={generating}
+          adRewarded={adRewarded}
+          onGenerate={onGenerate}
+        />
         <button
           type="button"
           onClick={handleAddStory}
@@ -582,7 +601,11 @@ const StoryBank = ({
               onClick={onGenerate}
               disabled={generating}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
-              title="Regenerate the whole bank (watch a short ad)"
+              title={
+                adRewarded
+                  ? 'Regenerate the whole bank (watch a short ad)'
+                  : 'Regenerate the whole bank (5 credits)'
+              }
             >
               {generating ? (
                 <Loader className="w-3.5 h-3.5 animate-spin" />

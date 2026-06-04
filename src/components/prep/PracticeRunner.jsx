@@ -304,29 +304,32 @@ const PracticeRunner = ({
               </button>
             </div>
 
-            <div className="lg:ml-auto flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-bold mr-1.5">Rate readiness:</span>
-              {CONFIDENCE_OPTIONS.map((option) => {
-                const active = activeConfidence === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onMarkConfidence?.(card, option.id)}
-                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
-                      active ? option.activeClasses : option.classes
-                    }`}
-                  >
-                    {active ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    ) : (
-                      <Circle className="w-3.5 h-3.5" />
-                    )}
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Readiness rating — for questions & stories, not reference skills. */}
+            {card.kind !== 'skill' && (
+              <div className="lg:ml-auto flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-slate-400 font-bold mr-1.5">Rate readiness:</span>
+                {CONFIDENCE_OPTIONS.map((option) => {
+                  const active = activeConfidence === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => onMarkConfidence?.(card, option.id)}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+                        active ? option.activeClasses : option.classes
+                      }`}
+                    >
+                      {active ? (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <Circle className="w-3.5 h-3.5" />
+                      )}
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

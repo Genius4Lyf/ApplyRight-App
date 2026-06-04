@@ -63,18 +63,15 @@ export const getPrepSummary = (application) => {
 // being unprepared genuinely lowers readiness, and it nudges the user to rate.
 const CONFIDENCE_POINTS = { ready: 100, almost: 60, needs_work: 25 };
 
-// Compute the readiness summary from data already on the prep (skill / question /
-// story confidence + fabrication warnings). Pure — no API calls, no side effects.
+// Compute the readiness summary from the things the user actively prepares:
+// job questions + stories. Skills are a reference layer (auto-surfaced, unrated),
+// so they're deliberately excluded — otherwise auto-surfacing them would tank the
+// score with a pile of "unrated" items. Pure — no API calls, no side effects.
 export const computeReadiness = (application) => {
-  const skills = getSkillPrep(application);
   const questions = getJobQuestions(application);
   const stories = getStories(application);
 
-  const items = [
-    ...skills.map((s) => s.confidence),
-    ...questions.map((q) => q.confidence),
-    ...stories.map((s) => s.confidence),
-  ];
+  const items = [...questions.map((q) => q.confidence), ...stories.map((s) => s.confidence)];
 
   const counts = { ready: 0, almost: 0, needs_work: 0, unrated: 0 };
   let sum = 0;

@@ -31,7 +31,6 @@ import {
   getSkillPrep,
   getStories,
 } from '../utils/interviewPrep';
-import LinkedCVBanner from '../components/prep/LinkedCVBanner';
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
 import ReadinessOverview from '../components/prep/ReadinessOverview';
@@ -59,6 +58,11 @@ const InterviewPrepDetail = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(null);
   const showLoader = useMinVisible(loading, 800);
+
+  // Platform split for AI generation (more questions / story bank): the Android
+  // app routes through an AdMob rewarded video (grants credits → nets free);
+  // web charges credits directly with no ad.
+  const adRewarded = isAndroidNative();
 
   // "Generate more questions" CTA state. When credits run low, the button
   // becomes a "Watch ad to unlock more questions" CTA that opens AdPlayer.
@@ -121,7 +125,10 @@ const InterviewPrepDetail = () => {
   // balance. (The /generate-more-interview endpoint still deducts internally;
   // the ad rewards more credits than the call costs, so it nets out positive
   // for the user.)
-  const handleGenerateMoreQuestions = () => setAdForMoreOpen(true);
+  const handleGenerateMoreQuestions = () => {
+    if (adRewarded) setAdForMoreOpen(true);
+    else runGenerateMore();
+  };
 
   // Shared post-ad reward claim used by both the "more questions" and "story
   // bank" ad flows. Claims the reward (web), polls /auth/me until credits land,
@@ -219,7 +226,10 @@ const InterviewPrepDetail = () => {
     }
   };
 
-  const handleGenerateStories = () => setAdForStoriesOpen(true);
+  const handleGenerateStories = () => {
+    if (adRewarded) setAdForStoriesOpen(true);
+    else runGenerateStories();
+  };
   const handleAdForStoriesComplete = () =>
     handleAdReward(runGenerateStories, 'Building your stories…');
 
@@ -397,8 +407,6 @@ const InterviewPrepDetail = () => {
           onGoToTab={setActiveTab}
         />
 
-        <LinkedCVBanner applicationId={applicationId} isCvOnly={isCvOnly} onPulled={reload} />
-
         {/* Tabs */}
         <nav className="flex items-center gap-1 border-b border-slate-200 mb-6 overflow-x-auto">
           {tabs.map((tab) => {
@@ -450,6 +458,7 @@ const InterviewPrepDetail = () => {
                 warnings={storyWarnings}
                 isCvOnly={isCvOnly}
                 generating={generatingStories}
+                adRewarded={adRewarded}
                 onGenerate={handleGenerateStories}
                 onChange={reload}
                 onPracticeStory={startPracticeForStory}
@@ -466,11 +475,8 @@ const InterviewPrepDetail = () => {
               transition={{ duration: 0.15 }}
             >
               <SkillsTab
-                applicationId={applicationId}
-                isCvOnly={isCvOnly}
                 skills={skillsWithEvidence}
                 draftCVId={application.draftCVId}
-                onChange={reload}
                 onPracticeSkill={startPracticeForSkill}
               />
             </MotionDiv>
@@ -492,6 +498,7 @@ const InterviewPrepDetail = () => {
                 onStartPractice={startPracticeAllQuestions}
                 onStartMock={startMockInterview}
                 onGenerateMore={handleGenerateMoreQuestions}
+                adRewarded={adRewarded}
                 generatingMore={generatingMore}
                 newQuestionIndices={newQuestionIndices}
                 isCvOnly={isCvOnly}
@@ -555,53 +562,32 @@ const InterviewPrepDetail = () => {
   );
 };
 
-const SkillsTab = ({ applicationId, isCvOnly, skills, draftCVId, onChange, onPracticeSkill }) => {
-  const [savingSkills, setSavingSkills] = useState(false);
-
-  const handlePullSkills = async () => {
-    setSavingSkills(true);
-    try {
-      await InterviewPrepService.saveSkills(applicationId);
-      await onChange?.();
-      toast.success('Skill talking points saved');
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to save skill prep');
-    } finally {
-      setSavingSkills(false);
-    }
-  };
-
+// Skills are a REFERENCE layer (not a practice/readiness mode): quick,
+// CV-grounded soundbites for "what's your experience with X?" probes. They
+// auto-surface from the linked CV (the backend reads them through), so there's
+// no manual "pull" and no per-skill rating — full narratives live in Stories.
+const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   if (skills.length === 0) {
     return (
       <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8">
         <SectionHeader
           icon={Sparkles}
-          title="Skill-based prep"
-          subtitle="Pull rehearsable talking points from your CV's skills"
+          title="Skill soundbites"
+          subtitle="Quick, CV-grounded answers for skill-probe questions"
           iconBg="bg-emerald-50"
           iconColor="text-emerald-600"
         />
         <p className="mt-4 text-sm text-slate-600 leading-relaxed">
-          Each AI-generated skill on this CV ships with evidence (where it came from in your
-          history) and a talking point you can read aloud. Save them here to anchor your interview
-          prep.
+          When your CV has AI-generated skills with evidence, their rehearsable talking points
+          appear here automatically. Generate skills in the CV builder to populate them.
         </p>
-        {isCvOnly && draftCVId ? (
+        {draftCVId && (
           <Link
             to={`/cv-builder/${draftCVId}/skills`}
             className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
           >
             <Eye className="w-4 h-4" /> Open CV builder
           </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={handlePullSkills}
-            disabled={savingSkills}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
-          >
-            {savingSkills ? 'Pulling…' : 'Pull from CV'}
-          </button>
         )}
       </section>
     );
@@ -609,105 +595,72 @@ const SkillsTab = ({ applicationId, isCvOnly, skills, draftCVId, onChange, onPra
 
   return (
     <section className="space-y-3">
+      <div className="flex items-start gap-2 rounded-lg bg-emerald-50/50 border border-emerald-100 px-3 py-2.5">
+        <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-600 leading-relaxed">
+          <span className="font-semibold text-slate-700">Quick soundbites</span> for
+          &ldquo;what&apos;s your experience with X?&rdquo; questions, pulled from your CV. For full
+          STAR narratives, use the <span className="font-semibold text-indigo-700">Stories</span>{' '}
+          tab.
+        </p>
+      </div>
       {skills.map((skill, i) => (
         <SkillCard
           key={`${skill.name}-${i}`}
-          applicationId={applicationId}
           skill={skill}
           onPractice={() => onPracticeSkill(skill.name)}
-          onConfidenceChange={onChange}
         />
       ))}
     </section>
   );
 };
 
-const SkillCard = ({ applicationId, skill, onPractice, onConfidenceChange }) => {
-  const [confidence, setConfidence] = useState(skill.confidence || null);
-  const [saving, setSaving] = useState(false);
-
-  const handleMark = async (level) => {
-    const next = confidence === level ? null : level;
-    setConfidence(next);
-    setSaving(true);
-    try {
-      await InterviewPrepService.updateSkillConfidence(applicationId, skill.name, next);
-      onConfidenceChange?.();
-    } catch {
-      setConfidence(skill.confidence || null);
-      toast.error('Failed to save confidence');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Mirror of the job-based prep card pattern: hide the study content
-  // (evidence + talking point) on the landing view so the user reaches it
-  // by tapping Prep me on this, which opens the practice runner with the
-  // skill's talking point and related questions one at a time.
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4">
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-bold text-slate-900">{skill.name}</p>
-            {skill.category && (
-              <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
-                {skill.category}
-              </span>
-            )}
-            {confidence && (
-              <span
-                className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
-                  confidence === 'ready'
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : confidence === 'almost'
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'bg-rose-50 text-rose-700'
-                }`}
-              >
-                {confidence.replace('_', ' ')}
-              </span>
-            )}
-          </div>
-        </div>
+const SkillCard = ({ skill, onPractice }) => (
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+    <div className="flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <Sparkles className="w-5 h-5" />
       </div>
-
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-slate-100">
-        <button
-          type="button"
-          onClick={onPractice}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
-        >
-          <PlayCircle className="w-4 h-4" />
-          Prep me on this
-        </button>
-        <div className="sm:ml-auto flex flex-wrap items-center gap-2">
-          {CONFIDENCE_OPTIONS.map((opt) => {
-            const active = confidence === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => handleMark(opt.id)}
-                disabled={saving}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
-                  active ? opt.activeClasses : opt.classes
-                } disabled:opacity-60`}
-              >
-                {active ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                {opt.label}
-              </button>
-            );
-          })}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-bold text-slate-900">{skill.name}</p>
+          {skill.category && (
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+              {skill.category}
+            </span>
+          )}
         </div>
+        {skill.talkingPoint && (
+          <p className="text-sm text-slate-700 leading-relaxed mt-1.5">{skill.talkingPoint}</p>
+        )}
+        {Array.isArray(skill.evidence) && skill.evidence.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap mt-2">
+            <span className="text-[10px] uppercase font-bold text-slate-400">From:</span>
+            {skill.evidence.map((ev, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-semibold uppercase"
+              >
+                {ev.type === 'experience' ? 'Work history' : ev.type}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
-};
+
+    <div className="mt-3 pt-3 border-t border-slate-100">
+      <button
+        type="button"
+        onClick={onPractice}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50"
+      >
+        <PlayCircle className="w-4 h-4" />
+        Rehearse this
+      </button>
+    </div>
+  </div>
+);
 
 const QuestionListItem = ({
   applicationId,
@@ -907,6 +860,7 @@ const QuestionsTab = ({
   onStartPractice,
   onStartMock,
   onGenerateMore,
+  adRewarded,
   generatingMore,
   newQuestionIndices,
   isCvOnly,
@@ -1021,15 +975,23 @@ const QuestionsTab = ({
                   <>
                     <Plus className="w-4 h-4" />
                     Get more questions
-                    <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
-                      <PlayCircle className="w-3 h-3" />
-                      Ad video
-                    </span>
+                    {adRewarded ? (
+                      <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
+                        <PlayCircle className="w-3 h-3" />
+                        Ad video
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
+                        5 credits
+                      </span>
+                    )}
                   </>
                 )}
               </button>
               <p className="text-xs text-slate-500 mt-2">
-                Watch a short ad to unlock fresh questions — free, no credits used.
+                {adRewarded
+                  ? 'Watch a short ad to unlock fresh questions — free, no credits used.'
+                  : 'Uses 5 credits to generate fresh questions.'}
               </p>
             </div>
           )}
