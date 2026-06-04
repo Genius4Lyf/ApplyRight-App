@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../../services/interviewPrep.service';
@@ -25,21 +25,45 @@ const formatTimestamp = (value) => {
   });
 };
 
-const NotesList = ({ applicationId, initialNotes = [], onChange }) => {
+const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedConsumed }) => {
   const [notes, setNotes] = useState(initialNotes);
   const [openId, setOpenId] = useState(null);
   // Local draft id used before the server has assigned one.
   const NEW_NOTE_ID = '__new__';
+  // When opened with a `seed` (e.g. the "Draft your answer" CTA), the new-note
+  // editor is prefilled with this starter title/body.
+  const [seededDraft, setSeededDraft] = useState(null);
   const newDraft =
-    openId === NEW_NOTE_ID ? { id: NEW_NOTE_ID, title: '', body: '', status: 'draft' } : null;
+    openId === NEW_NOTE_ID
+      ? {
+          id: NEW_NOTE_ID,
+          title: seededDraft?.title || '',
+          body: seededDraft?.body || '',
+          status: 'draft',
+        }
+      : null;
   const openNote = newDraft || notes.find((n) => n.id === openId);
+
+  // Consume an incoming seed once on mount: open a prefilled new note, then tell
+  // the parent to clear it so re-entering Notes doesn't reopen it.
+  useEffect(() => {
+    if (seed) {
+      setSeededDraft({ title: seed.title || '', body: seed.body || '' });
+      setOpenId(NEW_NOTE_ID);
+      onSeedConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const commit = (next) => {
     setNotes(next);
     onChange?.(next);
   };
 
-  const handleAdd = () => setOpenId(NEW_NOTE_ID);
+  const handleAdd = () => {
+    setSeededDraft(null);
+    setOpenId(NEW_NOTE_ID);
+  };
 
   // First write for a brand-new note. Subsequent writes (autosave or Save)
   // route through handleUpdate against the server-assigned id.

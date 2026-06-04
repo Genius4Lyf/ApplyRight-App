@@ -78,6 +78,9 @@ const InterviewPrepDetail = () => {
   // the kind in flight; `adEssentialKind` holds the kind pending an ad (Android).
   const [generatingEssential, setGeneratingEssential] = useState(null);
   const [adEssentialKind, setAdEssentialKind] = useState(null);
+  // Seed for the Notes tab — set when the "Draft your answer in My notes" CTA is
+  // tapped, so NotesList opens a prefilled new note. Cleared once consumed.
+  const [notesSeed, setNotesSeed] = useState(null);
   // Only needed for AdMob SSV — credit balance is tracked globally via the
   // navbar, not in this component.
   const [userId, setUserId] = useState(() => readStoredUser()._id || readStoredUser().id || null);
@@ -590,6 +593,10 @@ const InterviewPrepDetail = () => {
                 onGenerateMore={handleGenerateMoreQuestions}
                 onGenerateEssential={handleGenerateEssential}
                 generatingEssential={generatingEssential}
+                onGoToNotes={(seed) => {
+                  setNotesSeed(seed || null);
+                  setActiveTab('notes');
+                }}
                 adRewarded={adRewarded}
                 generatingMore={generatingMore}
                 newQuestionIndices={newQuestionIndices}
@@ -608,7 +615,12 @@ const InterviewPrepDetail = () => {
               transition={{ duration: 0.15 }}
             >
               <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-                <NotesList applicationId={applicationId} initialNotes={notes} />
+                <NotesList
+                  applicationId={applicationId}
+                  initialNotes={notes}
+                  seed={notesSeed}
+                  onSeedConsumed={() => setNotesSeed(null)}
+                />
               </section>
             </MotionDiv>
           )}
@@ -1013,6 +1025,10 @@ const ESSENTIALS = [
     q: 'What’s your biggest weakness / a gap in your experience?',
     tip: 'Pick a real growth area (not a humblebrag), then show what you’re actively doing about it — mirror the gaps flagged in the Role tab.',
     generatable: false,
+    noteSeed: {
+      title: 'My weakness / growth area',
+      body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
+    },
   },
 ];
 
@@ -1021,6 +1037,7 @@ const EssentialsSection = ({
   adRewarded,
   generatingEssential,
   onGenerateEssential,
+  onGoToNotes,
 }) => {
   const hasType = (t) => (jobQuestions || []).some((q) => (q.type || '').toLowerCase() === t);
   // Once intro/motivation has a personalized answer, it lives in the grouped
@@ -1069,6 +1086,15 @@ const EssentialsSection = ({
                 )}
               </button>
             )}
+            {!e.generatable && onGoToNotes && (
+              <button
+                type="button"
+                onClick={() => onGoToNotes(e.noteSeed)}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 text-xs font-semibold transition-colors"
+              >
+                <StickyNote className="w-3.5 h-3.5" /> Draft your answer in My notes
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -1086,6 +1112,7 @@ const QuestionsTab = ({
   onGenerateMore,
   onGenerateEssential,
   generatingEssential,
+  onGoToNotes,
   adRewarded,
   generatingMore,
   newQuestionIndices,
@@ -1103,6 +1130,7 @@ const QuestionsTab = ({
         adRewarded={adRewarded}
         generatingEssential={generatingEssential}
         onGenerateEssential={isCvOnly ? null : onGenerateEssential}
+        onGoToNotes={onGoToNotes}
       />
 
       {jobQuestions.length === 0 && (
