@@ -19,6 +19,7 @@ import {
   Play,
   BookOpen,
   ClipboardList,
+  Target,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -34,6 +35,7 @@ import {
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
 import ReadinessOverview from '../components/prep/ReadinessOverview';
+import RoleBrief from '../components/prep/RoleBrief';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import api from '../services/api';
@@ -247,18 +249,30 @@ const InterviewPrepDetail = () => {
       try {
         const app = await reload();
         if (cancelled) return;
-        // Default tab: Stories if any, else Skills, else Questions, else Notes.
+        // Default tab: Role brief for job-linked prep (orient first), else the
+        // most actionable populated tab.
         const stories = getStories(app);
         const skills = getSkillPrep(app);
         const questions = getJobQuestions(app);
+        const isCvOnlyApp = app.source === 'draft' || (!app.jobId && !app.jobTitle);
+        const fa = app.fitAnalysis || {};
+        const hasRole =
+          !isCvOnlyApp &&
+          (typeof app.fitScore === 'number' ||
+            !!fa.recommendation ||
+            !!fa.overallFeedback ||
+            (fa.matchedSkills || []).length > 0 ||
+            (fa.missingSkills || []).length > 0);
         setActiveTab(
-          stories.length
-            ? 'stories'
-            : skills.length
-              ? 'skills'
-              : questions.length
-                ? 'questions'
-                : 'notes'
+          hasRole
+            ? 'role'
+            : stories.length
+              ? 'stories'
+              : skills.length
+                ? 'skills'
+                : questions.length
+                  ? 'questions'
+                  : 'notes'
         );
       } catch (e) {
         if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
@@ -307,7 +321,18 @@ const InterviewPrepDetail = () => {
     ? application.interviewPrep.userNotes
     : [];
 
+  // Role brief draws on the job fit-analysis — only meaningful for job-linked prep.
+  const fa = application.fitAnalysis || {};
+  const hasRoleBrief =
+    !isCvOnly &&
+    (typeof application.fitScore === 'number' ||
+      !!fa.recommendation ||
+      !!fa.overallFeedback ||
+      (fa.matchedSkills || []).length > 0 ||
+      (fa.missingSkills || []).length > 0);
+
   const tabs = [
+    ...(hasRoleBrief ? [{ id: 'role', label: 'Role', icon: Target, count: 0 }] : []),
     { id: 'stories', label: 'Stories', icon: BookOpen, count: stories.length },
     { id: 'skills', label: 'Skills', icon: Sparkles, count: skillsWithEvidence.length },
     { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
@@ -452,6 +477,18 @@ const InterviewPrepDetail = () => {
         </nav>
 
         <AnimatePresence mode="wait">
+          {activeTab === 'role' && (
+            <MotionDiv
+              key="role"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <RoleBrief application={application} />
+            </MotionDiv>
+          )}
+
           {activeTab === 'stories' && (
             <MotionDiv
               key="stories"
@@ -861,6 +898,71 @@ const QuestionListItem = ({
   );
 };
 
+// Question categories, in display order. The generated `type` maps onto these;
+// anything unrecognized falls into "Other".
+const QUESTION_CATEGORIES = [
+  { key: 'intro', label: 'Tell me about yourself' },
+  { key: 'behavioral', label: 'Behavioral' },
+  { key: 'technical', label: 'Technical' },
+  { key: 'situational', label: 'Situational' },
+  { key: 'motivation', label: 'Why this role / company' },
+  { key: 'gap', label: 'Gaps & weaknesses' },
+  { key: 'other', label: 'Other' },
+];
+
+// Group questions by category while preserving each one's original index (used
+// for confidence, practice routing, and fabrication-warning lookup).
+const groupQuestionsByCategory = (questions) => {
+  const byKey = {};
+  questions.forEach((q, i) => {
+    const t = typeof q.type === 'string' ? q.type.toLowerCase() : '';
+    const key = QUESTION_CATEGORIES.some((c) => c.key === t) ? t : 'other';
+    (byKey[key] = byKey[key] || []).push({ q, i });
+  });
+  return QUESTION_CATEGORIES.filter((c) => byKey[c.key]?.length).map((c) => ({
+    key: c.key,
+    label: c.label,
+    items: byKey[c.key],
+  }));
+};
+
+// Universal questions every interview opens with. Coaching guidance only — no AI
+// generation/credits; they point the user at their Stories / Role brief.
+const ESSENTIALS = [
+  {
+    q: 'Tell me about yourself.',
+    tip: 'A 60–90s pitch: current role → 1–2 relevant wins → why this role excites you. Lead with a Story Bank highlight; don’t recite your CV top-to-bottom.',
+  },
+  {
+    q: 'Why do you want this role / this company?',
+    tip: 'Connect your goals to the role and name something specific about the company or product. Tie it to a strength from the Role tab.',
+  },
+  {
+    q: 'What’s your biggest weakness / a gap in your experience?',
+    tip: 'Pick a real growth area (not a humblebrag), then show what you’re actively doing about it — mirror the gaps flagged in the Role tab.',
+  },
+];
+
+const EssentialsSection = () => (
+  <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+    <SectionHeader
+      icon={Sparkles}
+      title="Interview essentials"
+      subtitle="The questions almost every interview opens with"
+      iconBg="bg-amber-50"
+      iconColor="text-amber-600"
+    />
+    <div className="mt-4 space-y-3">
+      {ESSENTIALS.map((e, i) => (
+        <div key={i} className="border-l-2 border-amber-200 pl-3">
+          <p className="text-sm font-semibold text-slate-900">{e.q}</p>
+          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{e.tip}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
 const QuestionsTab = ({
   applicationId,
   jobQuestions,
@@ -877,21 +979,21 @@ const QuestionsTab = ({
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
-  if (jobQuestions.length === 0 && questionsToAsk.length === 0) {
-    return (
-      <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
-        <MessageSquare className="w-7 h-7 mx-auto text-slate-300 mb-2" />
-        <p className="text-sm text-slate-600">
-          No job-specific questions yet. Run a job analysis to generate them.
-        </p>
-      </section>
-    );
-  }
-
   const canGenerateMore = !isCvOnly && jobQuestions.length > 0;
 
   return (
     <div className="space-y-6">
+      <EssentialsSection />
+
+      {jobQuestions.length === 0 && (
+        <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
+          <MessageSquare className="w-7 h-7 mx-auto text-slate-300 mb-2" />
+          <p className="text-sm text-slate-600">
+            No job-specific questions yet. Generate interview prep from the dashboard.
+          </p>
+        </section>
+      )}
+
       {jobQuestions.length > 0 && (
         <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3 mb-6">
@@ -922,23 +1024,32 @@ const QuestionsTab = ({
             </div>
           </div>
 
-          {/* Core Collapsible Questions List */}
-          <div className="space-y-3 mb-6">
-            {jobQuestions.map((q, i) => {
-              const warnings = (fabricationWarnings || []).find((w) => w.index === i);
-              return (
-                <QuestionListItem
-                  key={i}
-                  applicationId={applicationId}
-                  question={q}
-                  index={i}
-                  isExpanded={expandedIndex === i}
-                  onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
-                  onConfidenceChange={onConfidenceChange}
-                  warnings={warnings}
-                />
-              );
-            })}
+          {/* Questions grouped by category */}
+          <div className="space-y-5 mb-6">
+            {groupQuestionsByCategory(jobQuestions).map((group) => (
+              <div key={group.key}>
+                <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                  {group.label} <span className="text-slate-300">· {group.items.length}</span>
+                </p>
+                <div className="space-y-3">
+                  {group.items.map(({ q, i }) => {
+                    const warnings = (fabricationWarnings || []).find((w) => w.index === i);
+                    return (
+                      <QuestionListItem
+                        key={i}
+                        applicationId={applicationId}
+                        question={q}
+                        index={i}
+                        isExpanded={expandedIndex === i}
+                        onToggle={() => setExpandedIndex(expandedIndex === i ? null : i)}
+                        onConfidenceChange={onConfidenceChange}
+                        warnings={warnings}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
           {newQuestionIndices && newQuestionIndices.size > 0 && (
