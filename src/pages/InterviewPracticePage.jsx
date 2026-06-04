@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { X, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
-import { getJobQuestions, getSkillPrep } from '../utils/interviewPrep';
+import { getJobQuestions, getSkillPrep, getStories } from '../utils/interviewPrep';
 import PracticeRunner from '../components/prep/PracticeRunner';
 import { useMinVisible } from '../hooks/useMinVisible';
 
@@ -15,6 +15,7 @@ const InterviewPracticePage = () => {
   const navigate = useNavigate();
   const skillFilter = searchParams.get('skill');
   const questionIndexFilter = searchParams.get('questionIndex');
+  const storyFilter = searchParams.get('story');
 
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,10 +29,13 @@ const InterviewPracticePage = () => {
         const { application: app } = await InterviewPrepService.getOne(applicationId);
         if (cancelled) return;
         setApplication(app);
-        // Seed confidence map from saved skill confidence.
+        // Seed confidence map from saved skill + story confidence.
         const seeded = {};
         getSkillPrep(app).forEach((s) => {
           if (s.confidence) seeded[`skill:${s.name}`] = s.confidence;
+        });
+        getStories(app).forEach((s) => {
+          if (s.confidence) seeded[`story:${s.id}`] = s.confidence;
         });
         setConfidenceById(seeded);
       } catch (e) {
@@ -50,19 +54,53 @@ const InterviewPracticePage = () => {
     const skills = getSkillPrep(application);
     const questions = getJobQuestions(application);
 
+    // Scoped to a single story: one flashcard whose "answer" is the assembled
+    // STAR story. The prompt uses one of the story's own answersQuestions
+    // (the explicit backref) — no fuzzy matching.
+    if (storyFilter) {
+      const story = getStories(application).find((s) => s.id === storyFilter);
+      if (!story) return [];
+      const starText = [
+        ['Situation', story.situation],
+        ['Task', story.task],
+        ['Action', story.action],
+        ['Result', story.result],
+      ]
+        .filter(([, v]) => v && v.trim())
+        .map(([label, v]) => `${label}: ${v}`)
+        .join('\n\n');
+      const prompt =
+        (Array.isArray(story.answersQuestions) && story.answersQuestions[0]) ||
+        story.title ||
+        'Tell me about a relevant experience.';
+      return [
+        {
+          id: `story:${story.id}`,
+          storyId: story.id,
+          kind: 'story',
+          type: 'Story',
+          prompt,
+          suggestedAnswer: starText || 'No story details saved yet.',
+          confidence: story.confidence,
+        },
+      ];
+    }
+
     // Scoped to a single question index
     if (questionIndexFilter !== null) {
       const idx = parseInt(questionIndexFilter, 10);
       const q = questions[idx];
       if (q) {
-        return [{
-          id: `q:${idx}`,
-          index: idx,
-          kind: 'question',
-          type: q.type,
-          prompt: q.question,
-          suggestedAnswer: q.suggestedAnswer || '',
-        }];
+        return [
+          {
+            id: `q:${idx}`,
+            index: idx,
+            kind: 'question',
+            type: q.type,
+            prompt: q.question,
+            suggestedAnswer: q.suggestedAnswer || '',
+          },
+        ];
       }
     }
 
@@ -108,7 +146,7 @@ const InterviewPracticePage = () => {
       prompt: q.question,
       suggestedAnswer: q.suggestedAnswer || '',
     }));
-  }, [application, skillFilter, questionIndexFilter]);
+  }, [application, skillFilter, questionIndexFilter, storyFilter]);
 
   // Esc closes the practice view.
   useEffect(() => {
@@ -143,8 +181,15 @@ const InterviewPracticePage = () => {
       } catch {
         toast.error('Failed to save confidence');
       }
+    } else if (card.kind === 'story') {
+      try {
+        await InterviewPrepService.updateStoryConfidence(applicationId, card.storyId, nextLevel);
+      } catch {
+        toast.error('Failed to save confidence');
+      }
     } else if (card.kind === 'question') {
-      const dbIndex = card.index !== undefined ? card.index : parseInt(card.id.replace(/^q:/, ''), 10);
+      const dbIndex =
+        card.index !== undefined ? card.index : parseInt(card.id.replace(/^q:/, ''), 10);
       try {
         await InterviewPrepService.updateQuestionConfidence(
           applicationId,
@@ -168,9 +213,14 @@ const InterviewPracticePage = () => {
 
   if (!application) return null;
 
-  const headline = skillFilter
-    ? `Practice: ${skillFilter}`
-    : application.jobTitle || application.jobId?.title || 'Practice mode';
+  const storyForHeadline = storyFilter
+    ? getStories(application).find((s) => s.id === storyFilter)
+    : null;
+  const headline = storyForHeadline
+    ? `Practice: ${storyForHeadline.title || 'Story'}`
+    : skillFilter
+      ? `Practice: ${skillFilter}`
+      : application.jobTitle || application.jobId?.title || 'Practice mode';
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">

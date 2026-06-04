@@ -17,15 +17,22 @@ import {
   ChevronUp,
   AlertTriangle,
   Play,
+  BookOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { useMinVisible } from '../hooks/useMinVisible';
-import { getJobQuestions, getQuestionsToAsk, getSkillPrep } from '../utils/interviewPrep';
+import {
+  getJobQuestions,
+  getQuestionsToAsk,
+  getSkillPrep,
+  getStories,
+} from '../utils/interviewPrep';
 import LinkedCVBanner from '../components/prep/LinkedCVBanner';
 import NotesList from '../components/prep/NotesList';
+import StoryBank from '../components/prep/StoryBank';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import api from '../services/api';
@@ -56,6 +63,9 @@ const InterviewPrepDetail = () => {
   const [generatingMore, setGeneratingMore] = useState(false);
   const [adForMoreOpen, setAdForMoreOpen] = useState(false);
   const [newQuestionIndices, setNewQuestionIndices] = useState(() => new Set());
+  // Story Bank generation — ad-rewarded, same pattern as "Get more questions".
+  const [generatingStories, setGeneratingStories] = useState(false);
+  const [adForStoriesOpen, setAdForStoriesOpen] = useState(false);
   // Only needed for AdMob SSV — credit balance is tracked globally via the
   // navbar, not in this component.
   const [userId, setUserId] = useState(() => readStoredUser()._id || readStoredUser().id || null);
@@ -111,62 +121,63 @@ const InterviewPrepDetail = () => {
   // for the user.)
   const handleGenerateMoreQuestions = () => setAdForMoreOpen(true);
 
-  const handleAdForMoreComplete = async () => {
-    // Close the ad modal immediately — no point keeping a spinner up while
-    // the post-ad work runs. A loading toast covers the gap so the user has
-    // continuous feedback.
+  // Shared post-ad reward claim used by both the "more questions" and "story
+  // bank" ad flows. Claims the reward (web), polls /auth/me until credits land,
+  // syncs localStorage + fires the credit events, and returns the final balance.
+  // Returns -1 on a hard failure (already toasted by the caller's catch).
+  const claimAdReward = async (toastId) => {
+    // Web: claim the Monetag reward synchronously. Android: AdMob credits
+    // server-side via SSV, which can lag a few seconds — covered by the poll.
+    if (!isAndroidNative()) {
+      await api.post('/billing/watch-ad', { type: 'video' });
+    }
+
+    const deadline = Date.now() + 20000;
+    let credits = 0;
+    let fresh = null;
+    while (Date.now() < deadline) {
+      try {
+        const me = await api.get('/auth/me');
+        fresh = me.data;
+        credits = fresh?.credits ?? 0;
+        if (credits >= 5) break;
+      } catch {
+        /* keep polling */
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    if (fresh) {
+      try {
+        const existing = readStoredUser();
+        localStorage.setItem('user', JSON.stringify({ ...existing, ...fresh }));
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: fresh }));
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: credits }));
+    }
+
+    if (credits < 5) {
+      toast.error("Reward didn't land in time — try again in a moment.", { id: toastId });
+      return -1;
+    }
+    return credits;
+  };
+
+  const handleAdReward = async (run, generatingLabel) => {
+    // Close the ad modal immediately; a loading toast covers the post-ad work.
     setAdForMoreOpen(false);
+    setAdForStoriesOpen(false);
     const toastId = toast.loading('Crediting your account…');
-
     try {
-      // Web: claim the Monetag reward synchronously. Android: AdMob credited
-      // server-side via SSV, but that callback can lag a few seconds after
-      // the ad reports complete — handled by the credit-wait loop below.
-      if (!isAndroidNative()) {
-        await api.post('/billing/watch-ad', { type: 'video' });
-      }
-
-      // Poll /auth/me until credits land (or we hit the deadline). On web
-      // this resolves on the first hit; on Android it can take several
-      // polls while SSV catches up.
-      const deadline = Date.now() + 20000;
-      let credits = 0;
-      let fresh = null;
-      while (Date.now() < deadline) {
-        try {
-          const me = await api.get('/auth/me');
-          fresh = me.data;
-          credits = fresh?.credits ?? 0;
-          if (credits >= 5) break;
-        } catch {
-          /* keep polling */
-        }
-        await new Promise((r) => setTimeout(r, 1500));
-      }
-
-      if (fresh) {
-        try {
-          const existing = readStoredUser();
-          localStorage.setItem('user', JSON.stringify({ ...existing, ...fresh }));
-        } catch {
-          /* ignore */
-        }
-        window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: fresh }));
-        window.dispatchEvent(new CustomEvent('credit_updated', { detail: credits }));
-      }
-
-      if (credits < 5) {
-        toast.error("Reward didn't land in time — try Get more questions in a moment.", {
-          id: toastId,
-        });
-        return;
-      }
-
-      toast.loading('Generating new questions…', { id: toastId });
-      await runGenerateMore();
+      const credits = await claimAdReward(toastId);
+      if (credits < 0) return;
+      toast.loading(generatingLabel, { id: toastId });
+      await run();
       toast.dismiss(toastId);
     } catch (e) {
-      console.error('Ad-for-more failed:', e);
+      console.error('Ad reward failed:', e);
       const code = e.response?.data?.code;
       const msg = e.response?.data?.message;
       if (code === 'COOLDOWN') {
@@ -179,16 +190,56 @@ const InterviewPrepDetail = () => {
     }
   };
 
+  const handleAdForMoreComplete = () =>
+    handleAdReward(runGenerateMore, 'Generating new questions…');
+
+  // ── Story Bank generation (ad-rewarded, same contract as more questions) ──
+  const runGenerateStories = async () => {
+    setGeneratingStories(true);
+    try {
+      const res = await InterviewPrepService.generateStories(applicationId);
+      if (typeof res.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      await reload();
+      const count = res.stories?.length || 0;
+      toast.success(count ? `${count} stories ready` : 'Story bank generated');
+    } catch (e) {
+      const msg = e.response?.data?.message || 'Failed to generate stories';
+      const code = e.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        toast.error('Not enough credits. Watch an ad to earn more.');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setGeneratingStories(false);
+    }
+  };
+
+  const handleGenerateStories = () => setAdForStoriesOpen(true);
+  const handleAdForStoriesComplete = () =>
+    handleAdReward(runGenerateStories, 'Building your stories…');
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const app = await reload();
         if (cancelled) return;
-        // Default tab: Skills if any, otherwise Questions if any, otherwise Notes.
+        // Default tab: Stories if any, else Skills, else Questions, else Notes.
+        const stories = getStories(app);
         const skills = getSkillPrep(app);
         const questions = getJobQuestions(app);
-        setActiveTab(skills.length ? 'skills' : questions.length ? 'questions' : 'notes');
+        setActiveTab(
+          stories.length
+            ? 'stories'
+            : skills.length
+              ? 'skills'
+              : questions.length
+                ? 'questions'
+                : 'notes'
+        );
       } catch (e) {
         if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
       } finally {
@@ -230,11 +281,14 @@ const InterviewPrepDetail = () => {
   const jobQuestions = getJobQuestions(application);
   const skillsWithEvidence = getSkillPrep(application);
   const questionsToAsk = getQuestionsToAsk(application);
+  const stories = getStories(application);
+  const storyWarnings = application.interviewPrep?.storyFabricationWarnings || [];
   const notes = Array.isArray(application.interviewPrep?.userNotes)
     ? application.interviewPrep.userNotes
     : [];
 
   const tabs = [
+    { id: 'stories', label: 'Stories', icon: BookOpen, count: stories.length },
     { id: 'skills', label: 'Skills', icon: Sparkles, count: skillsWithEvidence.length },
     { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
     { id: 'notes', label: 'My notes', icon: StickyNote, count: notes.length },
@@ -246,6 +300,10 @@ const InterviewPrepDetail = () => {
 
   const startPracticeForSkill = (skillName) => {
     navigate(`/interview-prep/${applicationId}/practice?skill=${encodeURIComponent(skillName)}`);
+  };
+
+  const startPracticeForStory = (storyId) => {
+    navigate(`/interview-prep/${applicationId}/practice?story=${encodeURIComponent(storyId)}`);
   };
 
   return (
@@ -353,6 +411,27 @@ const InterviewPrepDetail = () => {
         </nav>
 
         <AnimatePresence mode="wait">
+          {activeTab === 'stories' && (
+            <MotionDiv
+              key="stories"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <StoryBank
+                applicationId={applicationId}
+                initialStories={stories}
+                warnings={storyWarnings}
+                isCvOnly={isCvOnly}
+                generating={generatingStories}
+                onGenerate={handleGenerateStories}
+                onChange={reload}
+                onPracticeStory={startPracticeForStory}
+              />
+            </MotionDiv>
+          )}
+
           {activeTab === 'skills' && (
             <MotionDiv
               key="skills"
@@ -426,6 +505,24 @@ const InterviewPrepDetail = () => {
           androidButtonText="Watch Video"
           androidSuccessTitle="Credits Earned!"
           androidSuccessMessage="Generating more questions for you…"
+        />
+      )}
+
+      {adForStoriesOpen && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForStoriesComplete}
+          onClose={() => setAdForStoriesOpen(false)}
+          title="Build Your Story Bank"
+          subtitle="Watch a short ad to earn credits and generate STAR stories from your CV for this role."
+          buttonText="Watch & Build"
+          successTitle="Credits Earned!"
+          successMessage="Building your stories…"
+          androidTitle="Build Your Story Bank"
+          androidSubtitle="Watch a quick video to earn credits, then we'll build your STAR stories."
+          androidButtonText="Watch Video"
+          androidSuccessTitle="Credits Earned!"
+          androidSuccessMessage="Building your stories…"
         />
       )}
     </div>
@@ -621,7 +718,9 @@ const QuestionListItem = ({
     navigate(`/interview-prep/${applicationId}/practice?questionIndex=${index}`);
   };
 
-  const typeLabel = question.type ? question.type.charAt(0).toUpperCase() + question.type.slice(1) : 'Technical';
+  const typeLabel = question.type
+    ? question.type.charAt(0).toUpperCase() + question.type.slice(1)
+    : 'Technical';
   const typeBadgeColor =
     question.type === 'behavioral'
       ? 'bg-purple-50 text-purple-700 border-purple-200'
@@ -638,7 +737,9 @@ const QuestionListItem = ({
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${typeBadgeColor}`}>
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${typeBadgeColor}`}
+            >
               {typeLabel}
             </span>
             {question.confidence && (
@@ -660,9 +761,7 @@ const QuestionListItem = ({
               </span>
             )}
           </div>
-          <h4 className="text-sm font-semibold text-slate-900 leading-snug">
-            {question.question}
-          </h4>
+          <h4 className="text-sm font-semibold text-slate-900 leading-snug">{question.question}</h4>
         </div>
         <div className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 mt-0.5 shrink-0">
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -683,7 +782,9 @@ const QuestionListItem = ({
               {/* Grounding CV badging */}
               {question.sourcedFrom && question.sourcedFrom.length > 0 && (
                 <div className="flex items-center gap-1.5 mb-3 flex-wrap pt-1.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Grounded in:</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">
+                    Grounded in:
+                  </span>
                   {question.sourcedFrom.map((src, i) => (
                     <span
                       key={i}
@@ -700,7 +801,8 @@ const QuestionListItem = ({
                 <div className="mb-3.5 p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Verify facts in the suggested answer:</span> The AI suggested answer includes details not found in your CV profile:
+                    <span className="font-bold">Verify facts in the suggested answer:</span> The AI
+                    suggested answer includes details not found in your CV profile:
                     <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800">
                       {warnings.unsupportedClaims.map((claim, idx) => (
                         <li key={idx}>{claim}</li>
@@ -712,7 +814,9 @@ const QuestionListItem = ({
 
               {/* Suggested Answer */}
               <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm mb-4">
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Suggested Answer</p>
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                  Suggested Answer
+                </p>
                 <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                   {question.suggestedAnswer || 'No suggested answer available.'}
                 </p>
@@ -742,7 +846,11 @@ const QuestionListItem = ({
                           active ? opt.activeClasses : opt.classes
                         } disabled:opacity-60`}
                       >
-                        {active ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                        {active ? (
+                          <CheckCircle2 className="w-3 h-3" />
+                        ) : (
+                          <Circle className="w-3 h-3" />
+                        )}
                         {opt.label}
                       </button>
                     );

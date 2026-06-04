@@ -83,6 +83,37 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // ── Story Bank ──
+  // Generate the bank (reached via the ad-reward flow on the detail page). Lives
+  // under /analysis like generate-interview; returns { stories, interviewPrep, remainingCredits }.
+  generateStories: async (applicationId) => {
+    const response = await api.post(`/analysis/${applicationId}/generate-stories`);
+    return response.data;
+  },
+
+  updateStoryConfidence: async (applicationId, storyId, confidence) => {
+    const response = await api.patch(`/interview-prep/${applicationId}/story-confidence`, {
+      storyId,
+      confidence,
+    });
+    return response.data;
+  },
+
+  createStory: async (applicationId, story = {}) => {
+    const response = await api.post(`/interview-prep/${applicationId}/stories`, story);
+    return response.data;
+  },
+
+  updateStory: async (applicationId, storyId, patch) => {
+    const response = await api.patch(`/interview-prep/${applicationId}/stories/${storyId}`, patch);
+    return response.data;
+  },
+
+  deleteStory: async (applicationId, storyId) => {
+    const response = await api.delete(`/interview-prep/${applicationId}/stories/${storyId}`);
+    return response.data;
+  },
+
   // Returns { exists, draftCVId, generatedAt, skillCount, alreadySynced } when
   // the linked DraftCV has skills with evidence available to pull into prep.
   detectGeneratedCV: async (applicationId) => {

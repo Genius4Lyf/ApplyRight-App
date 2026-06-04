@@ -25,17 +25,27 @@ export const getSkillPrep = (application) => {
   return Array.isArray(skills) ? skills : [];
 };
 
+export const getStories = (application) => {
+  const stories = getInterviewPrep(application).stories;
+  return Array.isArray(stories) ? stories : [];
+};
+
 export const hasInterviewPrep = (application) =>
   getJobQuestions(application).length > 0 ||
   getQuestionsToAsk(application).length > 0 ||
-  getSkillPrep(application).length > 0;
+  getSkillPrep(application).length > 0 ||
+  getStories(application).length > 0;
 
 export const getPrepSummary = (application) => {
   const questionCount = getJobQuestions(application).length;
   const skillCount = getSkillPrep(application).length;
   const askCount = getQuestionsToAsk(application).length;
+  const storyCount = getStories(application).length;
   const parts = [];
 
+  if (storyCount > 0) {
+    parts.push(`${storyCount} stor${storyCount === 1 ? 'y' : 'ies'}`);
+  }
   if (questionCount > 0) {
     parts.push(`${questionCount} question${questionCount === 1 ? '' : 's'}`);
   }

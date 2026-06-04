@@ -177,7 +177,11 @@ const PracticeRunner = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
         <div>
           <p className="text-xs uppercase tracking-wider font-bold text-slate-400">
-            {card.kind === 'skill' ? 'Skill talking point' : card.type || 'Question'}
+            {card.kind === 'skill'
+              ? 'Skill talking point'
+              : card.kind === 'story'
+                ? 'Your STAR story'
+                : card.type || 'Question'}
           </p>
           <h2 className="text-sm font-medium text-slate-500 mt-0.5">
             Card {safeIndex + 1} of {total}
@@ -200,8 +204,10 @@ const PracticeRunner = ({
           <button
             type="button"
             onClick={() => setMode('ai-mock')}
-            disabled={card.kind === 'skill'}
-            title={card.kind === 'skill' ? 'AI grading is only available for job questions.' : ''}
+            disabled={card.kind !== 'question'}
+            title={
+              card.kind !== 'question' ? 'AI grading is only available for job questions.' : ''
+            }
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
               mode === 'ai-mock'
                 ? 'bg-white text-slate-900 shadow-sm'
@@ -232,14 +238,19 @@ const PracticeRunner = ({
         </p>
       </div>
 
-      {/* MODE 1: FLASHCARD REVIEW */}
-      {mode === 'flashcard' && (
+      {/* MODE 1: FLASHCARD REVIEW — also the only mode for non-question cards
+          (skills / stories), regardless of the toggle's last state. */}
+      {(mode === 'flashcard' || card.kind !== 'question') && (
         <div className="space-y-6">
           <div className="min-h-48 rounded-xl border border-slate-200 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-sm">
             {showAnswer ? (
               <div>
                 <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3">
-                  {card.kind === 'skill' ? 'Suggested talking point' : 'Suggested answer'}
+                  {card.kind === 'skill'
+                    ? 'Suggested talking point'
+                    : card.kind === 'story'
+                      ? 'Your STAR story'
+                      : 'Suggested answer'}
                 </p>
                 <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line">
                   {card.suggestedAnswer || 'No suggested answer available.'}
@@ -311,8 +322,8 @@ const PracticeRunner = ({
         </div>
       )}
 
-      {/* MODE 2: INTERACTIVE AI MOCK INTERVIEWER */}
-      {mode === 'ai-mock' && (
+      {/* MODE 2: INTERACTIVE AI MOCK INTERVIEWER — job questions only. */}
+      {mode === 'ai-mock' && card.kind === 'question' && (
         <div className="space-y-6">
           {/* Main Interview Grid */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
