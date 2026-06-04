@@ -23,6 +23,7 @@ import MobileWelcome from './pages/mobile/MobileWelcome';
 import InterviewPrepList from './pages/InterviewPrepList';
 import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import InterviewPracticePage from './pages/InterviewPracticePage';
+import PreCallBrief from './pages/PreCallBrief';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
@@ -373,6 +374,16 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <InterviewPracticePage />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/interview-prep/:applicationId/brief',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <PreCallBrief />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),

@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Play,
   BookOpen,
+  ClipboardList,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -357,6 +358,15 @@ const InterviewPrepDetail = () => {
                 </p>
               )}
             </div>
+
+            <Link
+              to={`/interview-prep/${applicationId}/brief`}
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+              aria-label="Pre-call brief"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="hidden sm:inline">Brief</span>
+            </Link>
 
             <Link
               to={
