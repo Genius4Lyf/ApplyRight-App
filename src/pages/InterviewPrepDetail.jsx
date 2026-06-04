@@ -312,6 +312,10 @@ const InterviewPrepDetail = () => {
     navigate(`/interview-prep/${applicationId}/practice?filter=weak`);
   };
 
+  const startMockInterview = () => {
+    navigate(`/interview-prep/${applicationId}/mock`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
@@ -486,6 +490,7 @@ const InterviewPrepDetail = () => {
                 fabricationWarnings={application.interviewPrep?.fabricationWarnings || []}
                 questionsToAsk={questionsToAsk}
                 onStartPractice={startPracticeAllQuestions}
+                onStartMock={startMockInterview}
                 onGenerateMore={handleGenerateMoreQuestions}
                 generatingMore={generatingMore}
                 newQuestionIndices={newQuestionIndices}
@@ -900,6 +905,7 @@ const QuestionsTab = ({
   fabricationWarnings,
   questionsToAsk,
   onStartPractice,
+  onStartMock,
   onGenerateMore,
   generatingMore,
   newQuestionIndices,
@@ -933,14 +939,24 @@ const QuestionsTab = ({
               iconBg="bg-indigo-50"
               iconColor="text-indigo-600"
             />
-            <button
-              type="button"
-              onClick={onStartPractice}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
-            >
-              <PlayCircle className="w-3.5 h-3.5" />
-              Practice all
-            </button>
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onStartPractice}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                Practice all
+              </button>
+              <button
+                type="button"
+                onClick={onStartMock}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+              >
+                <Play className="w-3.5 h-3.5" />
+                Mock interview
+              </button>
+            </div>
           </div>
 
           {/* Core Collapsible Questions List */}

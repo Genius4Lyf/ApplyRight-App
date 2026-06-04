@@ -24,6 +24,7 @@ import InterviewPrepList from './pages/InterviewPrepList';
 import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import InterviewPracticePage from './pages/InterviewPracticePage';
 import PreCallBrief from './pages/PreCallBrief';
+import MockInterviewPage from './pages/MockInterviewPage';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
@@ -384,6 +385,16 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <PreCallBrief />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/interview-prep/:applicationId/mock',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <MockInterviewPage />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),
