@@ -16,6 +16,7 @@ const InterviewPracticePage = () => {
   const skillFilter = searchParams.get('skill');
   const questionIndexFilter = searchParams.get('questionIndex');
   const storyFilter = searchParams.get('story');
+  const weakFilter = searchParams.get('filter') === 'weak';
 
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -137,6 +138,21 @@ const InterviewPracticePage = () => {
       return [skillCard, ...related];
     }
 
+    // Weak spots: every job question not yet rated 'ready'.
+    if (weakFilter) {
+      return questions
+        .map((q, i) => ({ q, i }))
+        .filter(({ q }) => q.confidence !== 'ready')
+        .map(({ q, i }) => ({
+          id: `q:${i}`,
+          index: i,
+          kind: 'question',
+          type: q.type,
+          prompt: q.question,
+          suggestedAnswer: q.suggestedAnswer || '',
+        }));
+    }
+
     // Default: all job questions.
     return questions.map((q, i) => ({
       id: `q:${i}`,
@@ -146,7 +162,7 @@ const InterviewPracticePage = () => {
       prompt: q.question,
       suggestedAnswer: q.suggestedAnswer || '',
     }));
-  }, [application, skillFilter, questionIndexFilter, storyFilter]);
+  }, [application, skillFilter, questionIndexFilter, storyFilter, weakFilter]);
 
   // Esc closes the practice view.
   useEffect(() => {
@@ -216,11 +232,13 @@ const InterviewPracticePage = () => {
   const storyForHeadline = storyFilter
     ? getStories(application).find((s) => s.id === storyFilter)
     : null;
-  const headline = storyForHeadline
-    ? `Practice: ${storyForHeadline.title || 'Story'}`
-    : skillFilter
-      ? `Practice: ${skillFilter}`
-      : application.jobTitle || application.jobId?.title || 'Practice mode';
+  const headline = weakFilter
+    ? 'Practice: weak spots'
+    : storyForHeadline
+      ? `Practice: ${storyForHeadline.title || 'Story'}`
+      : skillFilter
+        ? `Practice: ${skillFilter}`
+        : application.jobTitle || application.jobId?.title || 'Practice mode';
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
@@ -267,11 +285,15 @@ const InterviewPracticePage = () => {
         <div className="w-full bg-white text-slate-900 rounded-2xl p-6 sm:p-10 shadow-2xl">
           {cards.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-base font-semibold text-slate-900 mb-2">Nothing to practice yet</p>
+              <p className="text-base font-semibold text-slate-900 mb-2">
+                {weakFilter ? "You're all caught up" : 'Nothing to practice yet'}
+              </p>
               <p className="text-sm text-slate-600 mb-6">
-                {skillFilter
-                  ? 'That skill has no talking point saved.'
-                  : 'Run a job analysis to generate practice questions.'}
+                {weakFilter
+                  ? 'Every question is marked Ready. Nothing weak left to drill.'
+                  : skillFilter
+                    ? 'That skill has no talking point saved.'
+                    : 'Run a job analysis to generate practice questions.'}
               </p>
               <button
                 type="button"

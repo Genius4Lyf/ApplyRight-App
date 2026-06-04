@@ -59,6 +59,72 @@ export const getPrepSummary = (application) => {
   return parts.join(' · ');
 };
 
+// Per-confidence point values for the readiness score. Unrated counts as 0 —
+// being unprepared genuinely lowers readiness, and it nudges the user to rate.
+const CONFIDENCE_POINTS = { ready: 100, almost: 60, needs_work: 25 };
+
+// Compute the readiness summary from data already on the prep (skill / question /
+// story confidence + fabrication warnings). Pure — no API calls, no side effects.
+export const computeReadiness = (application) => {
+  const skills = getSkillPrep(application);
+  const questions = getJobQuestions(application);
+  const stories = getStories(application);
+
+  const items = [
+    ...skills.map((s) => s.confidence),
+    ...questions.map((q) => q.confidence),
+    ...stories.map((s) => s.confidence),
+  ];
+
+  const counts = { ready: 0, almost: 0, needs_work: 0, unrated: 0 };
+  let sum = 0;
+  items.forEach((c) => {
+    if (c === 'ready' || c === 'almost' || c === 'needs_work') {
+      counts[c] += 1;
+      sum += CONFIDENCE_POINTS[c];
+    } else {
+      counts.unrated += 1;
+    }
+  });
+
+  const total = items.length;
+  const rated = total - counts.unrated;
+  const score = total ? Math.round(sum / total) : 0;
+
+  const weakQuestionIndices = questions
+    .map((q, i) => (q.confidence === 'ready' ? null : i))
+    .filter((i) => i !== null);
+
+  const prep = getInterviewPrep(application);
+  const flaggedCount =
+    (Array.isArray(prep.fabricationWarnings) ? prep.fabricationWarnings.length : 0) +
+    (Array.isArray(prep.storyFabricationWarnings) ? prep.storyFabricationWarnings.length : 0);
+
+  let nextAction;
+  if (total === 0) {
+    nextAction = { kind: 'generate', label: 'Generate prep to get started' };
+  } else if (counts.unrated > 0) {
+    nextAction = {
+      kind: 'rate',
+      label: `Review ${counts.unrated} item${counts.unrated === 1 ? '' : 's'} you haven't rated`,
+    };
+  } else if (counts.needs_work > 0) {
+    nextAction = {
+      kind: 'revisit',
+      label: `Revisit ${counts.needs_work} weak answer${counts.needs_work === 1 ? '' : 's'}`,
+    };
+  } else if (flaggedCount > 0) {
+    nextAction = {
+      kind: 'verify',
+      label: `Verify ${flaggedCount} flagged claim${flaggedCount === 1 ? '' : 's'}`,
+    };
+  } else {
+    nextAction = { kind: 'done', label: "You're interview-ready" };
+  }
+
+  return { total, rated, counts, score, weakQuestionIndices, flaggedCount, nextAction };
+};
+
 export const mergeInterviewPrepResponse = (application, payload) => {
   const existingPrep = getInterviewPrep(application);
   const incomingPrep = payload?.interviewPrep || {};

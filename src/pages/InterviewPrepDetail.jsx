@@ -33,6 +33,7 @@ import {
 import LinkedCVBanner from '../components/prep/LinkedCVBanner';
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
+import ReadinessOverview from '../components/prep/ReadinessOverview';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import api from '../services/api';
@@ -306,6 +307,10 @@ const InterviewPrepDetail = () => {
     navigate(`/interview-prep/${applicationId}/practice?story=${encodeURIComponent(storyId)}`);
   };
 
+  const startPracticeWeak = () => {
+    navigate(`/interview-prep/${applicationId}/practice?filter=weak`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
@@ -372,6 +377,12 @@ const InterviewPrepDetail = () => {
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <ReadinessOverview
+          application={application}
+          onPracticeWeak={startPracticeWeak}
+          onGoToTab={setActiveTab}
+        />
+
         <LinkedCVBanner applicationId={applicationId} isCvOnly={isCvOnly} onPulled={reload} />
 
         {/* Tabs */}
