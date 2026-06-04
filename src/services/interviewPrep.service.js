@@ -101,6 +101,12 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Generate a personalized essential answer (kind: 'intro' | 'motivation').
+  generateEssential: async (applicationId, kind) => {
+    const response = await api.post(`/analysis/${applicationId}/generate-essential`, { kind });
+    return response.data;
+  },
+
   updateStoryConfidence: async (applicationId, storyId, confidence) => {
     const response = await api.patch(`/interview-prep/${applicationId}/story-confidence`, {
       storyId,

@@ -74,6 +74,10 @@ const InterviewPrepDetail = () => {
   // Story Bank generation — ad-rewarded, same pattern as "Get more questions".
   const [generatingStories, setGeneratingStories] = useState(false);
   const [adForStoriesOpen, setAdForStoriesOpen] = useState(false);
+  // Essential-answer generation (intro / motivation). `generatingEssential` holds
+  // the kind in flight; `adEssentialKind` holds the kind pending an ad (Android).
+  const [generatingEssential, setGeneratingEssential] = useState(null);
+  const [adEssentialKind, setAdEssentialKind] = useState(null);
   // Only needed for AdMob SSV — credit balance is tracked globally via the
   // navbar, not in this component.
   const [userId, setUserId] = useState(() => readStoredUser()._id || readStoredUser().id || null);
@@ -184,6 +188,7 @@ const InterviewPrepDetail = () => {
     // Close the ad modal immediately; a loading toast covers the post-ad work.
     setAdForMoreOpen(false);
     setAdForStoriesOpen(false);
+    setAdEssentialKind(null);
     const toastId = toast.loading('Crediting your account…');
     try {
       const credits = await claimAdReward(toastId);
@@ -240,6 +245,46 @@ const InterviewPrepDetail = () => {
     if (adRewarded) setAdForStoriesOpen(true);
     else runGenerateStories();
   };
+
+  // ── Essential answer generation (intro / motivation), 2 credits or ad ──
+  const runGenerateEssential = async (kind) => {
+    if (!kind) return;
+    setGeneratingEssential(kind);
+    try {
+      const res = await InterviewPrepService.generateEssential(applicationId, kind);
+      if (typeof res.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      await reload();
+      toast.success(
+        kind === 'intro'
+          ? 'Your "about you" answer is ready'
+          : 'Your "why this role" answer is ready'
+      );
+    } catch (e) {
+      const code = e.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        toast.error(
+          adRewarded
+            ? 'Not enough credits. Watch an ad to earn more.'
+            : 'Not enough credits (2 needed).'
+        );
+      } else if (code === 'NO_CV_GROUNDING') {
+        toast.error(e.response?.data?.message);
+      } else {
+        toast.error(e.response?.data?.message || 'Failed to generate answer');
+      }
+    } finally {
+      setGeneratingEssential(null);
+    }
+  };
+
+  const handleGenerateEssential = (kind) => {
+    if (adRewarded) setAdEssentialKind(kind);
+    else runGenerateEssential(kind);
+  };
+  const handleAdForEssentialComplete = () =>
+    handleAdReward(() => runGenerateEssential(adEssentialKind), 'Writing your answer…');
   const handleAdForStoriesComplete = () =>
     handleAdReward(runGenerateStories, 'Building your stories…');
 
@@ -543,6 +588,8 @@ const InterviewPrepDetail = () => {
                 onStartPractice={startPracticeAllQuestions}
                 onStartMock={startMockInterview}
                 onGenerateMore={handleGenerateMoreQuestions}
+                onGenerateEssential={handleGenerateEssential}
+                generatingEssential={generatingEssential}
                 adRewarded={adRewarded}
                 generatingMore={generatingMore}
                 newQuestionIndices={newQuestionIndices}
@@ -601,6 +648,24 @@ const InterviewPrepDetail = () => {
           androidButtonText="Watch Video"
           androidSuccessTitle="Credits Earned!"
           androidSuccessMessage="Building your stories…"
+        />
+      )}
+
+      {adEssentialKind && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForEssentialComplete}
+          onClose={() => setAdEssentialKind(null)}
+          title="Generate Your Answer"
+          subtitle="Watch a short ad to earn credits and write a personalized answer from your CV."
+          buttonText="Watch & Generate"
+          successTitle="Credits Earned!"
+          successMessage="Writing your answer…"
+          androidTitle="Generate Your Answer"
+          androidSubtitle="Watch a quick video to earn credits, then we'll write your answer."
+          androidButtonText="Watch Video"
+          androidSuccessTitle="Credits Earned!"
+          androidSuccessMessage="Writing your answer…"
         />
       )}
     </div>
@@ -926,42 +991,90 @@ const groupQuestionsByCategory = (questions) => {
   }));
 };
 
-// Universal questions every interview opens with. Coaching guidance only — no AI
-// generation/credits; they point the user at their Stories / Role brief.
+// Universal questions every interview opens with. `intro` and `motivation` can be
+// turned into a personalized, CV-grounded answer on demand (then they move into the
+// graded question list); `gap` stays coaching-only (auto-writing someone's weakness
+// is risky — better to guide them to pick their own).
 const ESSENTIALS = [
   {
+    kind: 'intro',
     q: 'Tell me about yourself.',
     tip: 'A 60–90s pitch: current role → 1–2 relevant wins → why this role excites you. Lead with a Story Bank highlight; don’t recite your CV top-to-bottom.',
+    generatable: true,
   },
   {
+    kind: 'motivation',
     q: 'Why do you want this role / this company?',
     tip: 'Connect your goals to the role and name something specific about the company or product. Tie it to a strength from the Role tab.',
+    generatable: true,
   },
   {
+    kind: 'gap',
     q: 'What’s your biggest weakness / a gap in your experience?',
     tip: 'Pick a real growth area (not a humblebrag), then show what you’re actively doing about it — mirror the gaps flagged in the Role tab.',
+    generatable: false,
   },
 ];
 
-const EssentialsSection = () => (
-  <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-    <SectionHeader
-      icon={Sparkles}
-      title="Interview essentials"
-      subtitle="The questions almost every interview opens with"
-      iconBg="bg-amber-50"
-      iconColor="text-amber-600"
-    />
-    <div className="mt-4 space-y-3">
-      {ESSENTIALS.map((e, i) => (
-        <div key={i} className="border-l-2 border-amber-200 pl-3">
-          <p className="text-sm font-semibold text-slate-900">{e.q}</p>
-          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{e.tip}</p>
-        </div>
-      ))}
-    </div>
-  </section>
-);
+const EssentialsSection = ({
+  jobQuestions,
+  adRewarded,
+  generatingEssential,
+  onGenerateEssential,
+}) => {
+  const hasType = (t) => (jobQuestions || []).some((q) => (q.type || '').toLowerCase() === t);
+  // Once intro/motivation has a personalized answer, it lives in the grouped
+  // question list — hide its coaching card here to avoid duplication.
+  const visible = ESSENTIALS.filter((e) => !(e.generatable && hasType(e.kind)));
+  if (visible.length === 0) return null;
+
+  return (
+    <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+      <SectionHeader
+        icon={Sparkles}
+        title="Interview essentials"
+        subtitle="The questions almost every interview opens with"
+        iconBg="bg-amber-50"
+        iconColor="text-amber-600"
+      />
+      <div className="mt-4 space-y-4">
+        {visible.map((e) => (
+          <div key={e.kind} className="border-l-2 border-amber-200 pl-3">
+            <p className="text-sm font-semibold text-slate-900">{e.q}</p>
+            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{e.tip}</p>
+            {e.generatable && onGenerateEssential && (
+              <button
+                type="button"
+                onClick={() => onGenerateEssential(e.kind)}
+                disabled={generatingEssential === e.kind}
+                className="mt-2 inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {generatingEssential === e.kind ? (
+                  <>
+                    <Loader className="w-3.5 h-3.5 animate-spin" /> Writing…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" /> Generate from my CV
+                    <span className="ml-1 inline-flex items-center gap-1 pl-1.5 pr-1.5 py-0.5 rounded bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
+                      {adRewarded ? (
+                        <>
+                          <PlayCircle className="w-3 h-3" /> Ad
+                        </>
+                      ) : (
+                        '2 cr'
+                      )}
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const QuestionsTab = ({
   applicationId,
@@ -971,6 +1084,8 @@ const QuestionsTab = ({
   onStartPractice,
   onStartMock,
   onGenerateMore,
+  onGenerateEssential,
+  generatingEssential,
   adRewarded,
   generatingMore,
   newQuestionIndices,
@@ -983,7 +1098,12 @@ const QuestionsTab = ({
 
   return (
     <div className="space-y-6">
-      <EssentialsSection />
+      <EssentialsSection
+        jobQuestions={jobQuestions}
+        adRewarded={adRewarded}
+        generatingEssential={generatingEssential}
+        onGenerateEssential={isCvOnly ? null : onGenerateEssential}
+      />
 
       {jobQuestions.length === 0 && (
         <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
