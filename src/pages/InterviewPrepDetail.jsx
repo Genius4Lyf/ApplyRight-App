@@ -716,6 +716,9 @@ const QuestionListItem = ({
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
+  const attempts = Array.isArray(question.attempts) ? question.attempts : [];
+  const bestScore = attempts.length ? Math.max(...attempts.map((a) => a.score || 0)) : null;
+
   const handleMarkConfidence = async (level) => {
     const nextLevel = question.confidence === level ? null : level;
     setSaving(true);
@@ -774,6 +777,11 @@ const QuestionListItem = ({
                 }`}
               >
                 {question.confidence.replace('_', ' ')}
+              </span>
+            )}
+            {bestScore !== null && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">
+                Best {bestScore}% · {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
               </span>
             )}
             {warnings && warnings.unsupportedClaims?.length > 0 && (

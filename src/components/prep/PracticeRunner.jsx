@@ -96,6 +96,15 @@ const PracticeRunner = ({
   const card = cards[safeIndex];
   const activeConfidence = confidenceById[card.id] || card.confidence;
 
+  // Attempt history for this card — prefer the freshly graded list (includes the
+  // attempt just submitted), else the attempts loaded with the card.
+  const attemptHistory =
+    (gradeReport?.attempts?.length ? gradeReport.attempts : card.attempts) || [];
+  const bestScore = attemptHistory.length
+    ? Math.max(...attemptHistory.map((a) => a.score || 0))
+    : null;
+  const isNewBest = !!gradeReport && attemptHistory.length > 1 && gradeReport.score >= bestScore;
+
   const toggleRecording = () => {
     if (!recognition) {
       toast.error(
@@ -325,6 +334,37 @@ const PracticeRunner = ({
       {/* MODE 2: INTERACTIVE AI MOCK INTERVIEWER — job questions only. */}
       {mode === 'ai-mock' && card.kind === 'question' && (
         <div className="space-y-6">
+          {/* Attempt history strip — best score + recent attempts. */}
+          {attemptHistory.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                Best {bestScore}%
+              </span>
+              <span className="text-[11px] text-slate-400">
+                · {attemptHistory.length} attempt{attemptHistory.length === 1 ? '' : 's'}
+              </span>
+              {isNewBest && (
+                <span className="text-[11px] font-bold text-emerald-600">New best! 🎉</span>
+              )}
+              <div className="ml-auto flex items-center gap-1">
+                {attemptHistory.slice(-6).map((a, i) => (
+                  <span
+                    key={i}
+                    title={a.createdAt ? new Date(a.createdAt).toLocaleString() : ''}
+                    className={`inline-flex items-center justify-center min-w-7 h-6 px-1 rounded text-[10px] font-bold ${
+                      a.score > 75
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : a.score > 45
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-rose-100 text-rose-700'
+                    }`}
+                  >
+                    {a.score}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Main Interview Grid */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
             {/* Interviewer stream (Video simulation frame) */}

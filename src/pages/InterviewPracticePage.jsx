@@ -100,6 +100,7 @@ const InterviewPracticePage = () => {
             type: q.type,
             prompt: q.question,
             suggestedAnswer: q.suggestedAnswer || '',
+            attempts: q.attempts || [],
           },
         ];
       }
@@ -134,6 +135,7 @@ const InterviewPracticePage = () => {
           type: q.type,
           prompt: q.question,
           suggestedAnswer: q.suggestedAnswer || '',
+          attempts: q.attempts || [],
         }));
       return [skillCard, ...related];
     }
@@ -150,6 +152,7 @@ const InterviewPracticePage = () => {
           type: q.type,
           prompt: q.question,
           suggestedAnswer: q.suggestedAnswer || '',
+          attempts: q.attempts || [],
         }));
     }
 
@@ -161,6 +164,7 @@ const InterviewPracticePage = () => {
       type: q.type,
       prompt: q.question,
       suggestedAnswer: q.suggestedAnswer || '',
+      attempts: q.attempts || [],
     }));
   }, [application, skillFilter, questionIndexFilter, storyFilter, weakFilter]);
 
