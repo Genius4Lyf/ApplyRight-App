@@ -101,9 +101,37 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Premium TTS for Interview Mode — returns an audio Blob (mp3). Throws on 503
+  // when no provider is configured, so callers fall back to the browser voice.
+  synthesizeSpeech: async (text) => {
+    const response = await api.post('/interview-prep/tts', { text }, { responseType: 'blob' });
+    return response.data;
+  },
+
+  // Save the self-assessed result of an Interview Mode session.
+  saveInterviewSession: async (applicationId, payload) => {
+    const response = await api.post(`/interview-prep/${applicationId}/interview-session`, payload);
+    return response.data;
+  },
+
   // Generate a personalized essential answer (kind: 'intro' | 'motivation').
   generateEssential: async (applicationId, kind) => {
     const response = await api.post(`/analysis/${applicationId}/generate-essential`, { kind });
+    return response.data;
+  },
+
+  // Generate a tailored "what to wear / first impression" guide for this role.
+  generateDressGuide: async (applicationId) => {
+    const response = await api.post(`/analysis/${applicationId}/generate-dress-guide`);
+    return response.data;
+  },
+
+  // Adaptive interviewer: one dynamic follow-up to the user's answer (1 credit).
+  generateFollowUp: async (applicationId, questionText, answerText) => {
+    const response = await api.post(`/interview-prep/${applicationId}/follow-up`, {
+      questionText,
+      answerText,
+    });
     return response.data;
   },
 

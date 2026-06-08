@@ -14,4 +14,10 @@ export const CREDIT_COSTS = {
   GENERATE_BUNDLE: 18,
   CREATE_FROM_UPLOAD: 15,
   GENERATE_SKILLS: 10,
+  // Interview Mode (a full live run). Defined for the planned premium gate but
+  // NOT enforced yet — Interview Mode is free during testing (first-free-then-
+  // credits is wired behind a flag in MockInterviewPage).
+  INTERVIEW_MODE: 5,
+  // "What to wear" — tailored interview-attire guide. Web charges; Android ad-rewarded.
+  GENERATE_DRESS_GUIDE: 2,
 };

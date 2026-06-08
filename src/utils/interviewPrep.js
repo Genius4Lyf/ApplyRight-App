@@ -30,6 +30,29 @@ export const getStories = (application) => {
   return Array.isArray(stories) ? stories : [];
 };
 
+const CONF_RANK = { needs_work: 1, almost: 2, ready: 3 };
+
+// Trend across recent Interview Mode runs — powers the "desensitization" message
+// (your nerves ease with reps). Reads interviewPrep.interviewHistory (last ~10);
+// falls back to the single lastInterviewSession so one run still counts.
+// Returns { count, trend: 'up'|'flat'|'down', firstConfidence, lastConfidence }.
+export const getInterviewTrend = (application) => {
+  const prep = getInterviewPrep(application);
+  let history = Array.isArray(prep.interviewHistory) ? prep.interviewHistory : [];
+  if (history.length === 0 && prep.lastInterviewSession?.completedAt) {
+    history = [prep.lastInterviewSession];
+  }
+  const withConf = history.filter((h) => h && h.confidence);
+  const firstConfidence = withConf[0]?.confidence || null;
+  const lastConfidence = withConf[withConf.length - 1]?.confidence || null;
+  let trend = 'flat';
+  if (firstConfidence && lastConfidence) {
+    const delta = (CONF_RANK[lastConfidence] || 0) - (CONF_RANK[firstConfidence] || 0);
+    trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  }
+  return { count: history.length, trend, firstConfidence, lastConfidence };
+};
+
 export const hasInterviewPrep = (application) =>
   getJobQuestions(application).length > 0 ||
   getQuestionsToAsk(application).length > 0 ||

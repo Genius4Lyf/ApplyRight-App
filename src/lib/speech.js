@@ -38,3 +38,43 @@ export const stopSpeaking = () => {
     /* no-op */
   }
 };
+
+// One-shot dictation: start the browser SpeechRecognition, stream the running
+// transcript to `onText`, and call `onEnd(finalText)` when it stops. Returns a
+// stop() function. No-op (calls onError) where SpeechRecognition is unsupported
+// (e.g. the Android WebView) — callers should hide the mic in that case.
+export const startDictation = ({ onText, onEnd, onError } = {}) => {
+  const SR = getSpeechRecognition();
+  if (!SR) {
+    onError?.(new Error('unsupported'));
+    return () => {};
+  }
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.interimResults = true;
+  rec.continuous = true;
+  let finalText = '';
+  rec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i += 1) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalText += `${t} `;
+      else interim += t;
+    }
+    onText?.(`${finalText}${interim}`.trim());
+  };
+  rec.onerror = (e) => onError?.(e);
+  rec.onend = () => onEnd?.(finalText.trim());
+  try {
+    rec.start();
+  } catch (e) {
+    onError?.(e);
+  }
+  return () => {
+    try {
+      rec.stop();
+    } catch {
+      /* no-op */
+    }
+  };
+};

@@ -16,10 +16,12 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
+  EyeOff,
   Play,
   BookOpen,
   ClipboardList,
   Target,
+  Wind,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -31,11 +33,16 @@ import {
   getQuestionsToAsk,
   getSkillPrep,
   getStories,
+  getInterviewTrend,
 } from '../utils/interviewPrep';
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
 import ReadinessOverview from '../components/prep/ReadinessOverview';
 import RoleBrief from '../components/prep/RoleBrief';
+import CalmKit from '../components/prep/CalmKit';
+import BodyLanguage from '../components/prep/BodyLanguage';
+import NervesTrend from '../components/prep/NervesTrend';
+import LastInterviewCard from '../components/prep/LastInterviewCard';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import api from '../services/api';
@@ -78,6 +85,9 @@ const InterviewPrepDetail = () => {
   // the kind in flight; `adEssentialKind` holds the kind pending an ad (Android).
   const [generatingEssential, setGeneratingEssential] = useState(null);
   const [adEssentialKind, setAdEssentialKind] = useState(null);
+  // Dress-guide generation (Role tab). Same ad-rewarded/credit split.
+  const [generatingDress, setGeneratingDress] = useState(false);
+  const [adForDressOpen, setAdForDressOpen] = useState(false);
   // Seed for the Notes tab — set when the "Draft your answer in My notes" CTA is
   // tapped, so NotesList opens a prefilled new note. Cleared once consumed.
   const [notesSeed, setNotesSeed] = useState(null);
@@ -286,6 +296,38 @@ const InterviewPrepDetail = () => {
     if (adRewarded) setAdEssentialKind(kind);
     else runGenerateEssential(kind);
   };
+
+  const runGenerateDressGuide = async () => {
+    setGeneratingDress(true);
+    try {
+      const res = await InterviewPrepService.generateDressGuide(applicationId);
+      if (typeof res.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      await reload();
+      toast.success('Your dress guide is ready');
+    } catch (e) {
+      const code = e.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        toast.error(
+          adRewarded
+            ? 'Not enough credits. Watch an ad to earn more.'
+            : 'Not enough credits (2 needed).'
+        );
+      } else {
+        toast.error(e.response?.data?.message || 'Failed to generate dress guide');
+      }
+    } finally {
+      setGeneratingDress(false);
+    }
+  };
+
+  const handleGenerateDressGuide = () => {
+    if (adRewarded) setAdForDressOpen(true);
+    else runGenerateDressGuide();
+  };
+  const handleAdForDressComplete = () =>
+    handleAdReward(runGenerateDressGuide, 'Styling your look…');
   const handleAdForEssentialComplete = () =>
     handleAdReward(() => runGenerateEssential(adEssentialKind), 'Writing your answer…');
   const handleAdForStoriesComplete = () =>
@@ -384,6 +426,7 @@ const InterviewPrepDetail = () => {
     { id: 'stories', label: 'Stories', icon: BookOpen, count: stories.length },
     { id: 'skills', label: 'Skills', icon: Sparkles, count: skillsWithEvidence.length },
     { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
+    { id: 'gameday', label: 'Game day', icon: Wind, count: 0 },
     { id: 'notes', label: 'My notes', icon: StickyNote, count: notes.length },
   ];
 
@@ -482,11 +525,49 @@ const InterviewPrepDetail = () => {
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
-        <ReadinessOverview
-          application={application}
-          onPracticeWeak={startPracticeWeak}
-          onGoToTab={setActiveTab}
-        />
+        {!isCvOnly ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
+            <LastInterviewCard
+              session={application.interviewPrep?.lastInterviewSession}
+              trend={getInterviewTrend(application)}
+              onStart={startMockInterview}
+              onPracticeQuestion={(i) =>
+                navigate(`/interview-prep/${applicationId}/practice?questionIndex=${i}`)
+              }
+            />
+            <ReadinessOverview
+              application={application}
+              onPracticeWeak={startPracticeWeak}
+              onGoToTab={setActiveTab}
+              onGenerateEssential={handleGenerateEssential}
+              generatingEssential={generatingEssential}
+              onDraftWeakness={() => {
+                setNotesSeed({
+                  title: 'My weakness / growth area',
+                  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
+                });
+                setActiveTab('notes');
+              }}
+            />
+          </div>
+        ) : (
+          <div className="mb-6">
+            <ReadinessOverview
+              application={application}
+              onPracticeWeak={startPracticeWeak}
+              onGoToTab={setActiveTab}
+              onGenerateEssential={handleGenerateEssential}
+              generatingEssential={generatingEssential}
+              onDraftWeakness={() => {
+                setNotesSeed({
+                  title: 'My weakness / growth area',
+                  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
+                });
+                setActiveTab('notes');
+              }}
+            />
+          </div>
+        )}
 
         {/* Tabs */}
         <nav className="flex items-center gap-1 border-b border-slate-200 mb-6 overflow-x-auto">
@@ -533,7 +614,11 @@ const InterviewPrepDetail = () => {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
             >
-              <RoleBrief application={application} />
+              <RoleBrief
+                application={application}
+                onGenerateDressGuide={handleGenerateDressGuide}
+                generatingDress={generatingDress}
+              />
             </MotionDiv>
           )}
 
@@ -603,6 +688,30 @@ const InterviewPrepDetail = () => {
                 isCvOnly={isCvOnly}
                 onConfidenceChange={reload}
               />
+            </MotionDiv>
+          )}
+
+          {activeTab === 'gameday' && (
+            <MotionDiv
+              key="gameday"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div className="mb-4">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                  Game-day readiness
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                  Walk in calm and ready — not just prepped on what to say.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <NervesTrend application={application} />
+                <CalmKit />
+                <BodyLanguage />
+              </div>
             </MotionDiv>
           )}
 
@@ -678,6 +787,24 @@ const InterviewPrepDetail = () => {
           androidButtonText="Watch Video"
           androidSuccessTitle="Credits Earned!"
           androidSuccessMessage="Writing your answer…"
+        />
+      )}
+
+      {adForDressOpen && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForDressComplete}
+          onClose={() => setAdForDressOpen(false)}
+          title="Get Your Dress Guide"
+          subtitle="Watch a short ad to earn credits and get a tailored what-to-wear guide for this role."
+          buttonText="Watch & Generate"
+          successTitle="Credits Earned!"
+          successMessage="Styling your look…"
+          androidTitle="Get Your Dress Guide"
+          androidSubtitle="Watch a quick video to earn credits, then we'll tailor your interview outfit."
+          androidButtonText="Watch Video"
+          androidSuccessTitle="Credits Earned!"
+          androidSuccessMessage="Styling your look…"
         />
       )}
     </div>
@@ -911,8 +1038,9 @@ const QuestionListItem = ({
                 <div className="mb-3.5 p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Verify facts in the suggested answer:</span> The AI
-                    suggested answer includes details not found in your CV profile:
+                    <span className="font-bold">Verify these facts before you rehearse:</span> the
+                    model answer (shown in Practice / Interview mode) includes details not found in
+                    your CV profile:
                     <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800">
                       {warnings.unsupportedClaims.map((claim, idx) => (
                         <li key={idx}>{claim}</li>
@@ -922,14 +1050,22 @@ const QuestionListItem = ({
                 </div>
               )}
 
-              {/* Suggested Answer */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm mb-4">
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
-                  Suggested Answer
-                </p>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                  {question.suggestedAnswer || 'No suggested answer available.'}
-                </p>
+              {/* Model answer is intentionally hidden here — it's revealed in
+                  Practice mode ("Reveal answer") or read aloud in Interview
+                  mode, so the user rehearses before peeking. */}
+              <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
+                <EyeOff className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Model answer hidden on purpose
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Rehearse out loud first, then reveal the model answer in{' '}
+                    <span className="font-semibold text-indigo-600">Practice mode</span> or hear it
+                    read to you in{' '}
+                    <span className="font-semibold text-indigo-600">Interview mode</span>.
+                  </p>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -1144,7 +1280,7 @@ const QuestionsTab = ({
 
       {jobQuestions.length > 0 && (
         <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
               icon={MessageSquare}
               title="Job-based prep"
@@ -1167,7 +1303,7 @@ const QuestionsTab = ({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
               >
                 <Play className="w-3.5 h-3.5" />
-                Mock interview
+                Interview Mode
               </button>
             </div>
           </div>

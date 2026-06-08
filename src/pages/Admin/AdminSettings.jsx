@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/Admin/AdminLayout';
+import CustomSelect from '../../components/ui/CustomSelect';
 
 const AdminSettings = () => {
   const [settings, setSettings] = useState(null);
@@ -103,6 +104,18 @@ const AdminSettings = () => {
           newVal: settings.announcement.type,
         });
       }
+    }
+
+    // Check Voice (Interview Mode TTS provider)
+    if (
+      (settings.tts?.provider || 'elevenlabs') !== (originalSettings.tts?.provider || 'elevenlabs')
+    ) {
+      changesList.push({
+        category: 'Voice',
+        key: 'Interviewer voice provider',
+        oldVal: originalSettings.tts?.provider || 'elevenlabs',
+        newVal: settings.tts?.provider || 'elevenlabs',
+      });
     }
 
     return changesList;
@@ -487,6 +500,34 @@ const AdminSettings = () => {
                         <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
+                  </div>
+                </div>
+
+                {/* Interview Mode Voice */}
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-primary" />
+                    Interview Mode Voice
+                  </h3>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-6">
+                    <p className="block text-sm font-semibold text-slate-700 mb-2">
+                      AI interviewer voice provider
+                    </p>
+                    <CustomSelect
+                      value={settings.tts?.provider || 'elevenlabs'}
+                      onChange={(e) => handleChange('tts', 'provider', e.target.value)}
+                      options={[
+                        { value: 'elevenlabs', label: 'ElevenLabs (most realistic)' },
+                        { value: 'openai', label: 'OpenAI TTS (cheaper)' },
+                        { value: 'off', label: 'Off (use device voice)' },
+                      ]}
+                      className="w-full max-w-xs"
+                    />
+                    <p className="text-xs text-slate-500 mt-2">
+                      API keys are configured via environment variables (see the setup guide). If
+                      the selected provider has no key, Interview Mode falls back to the
+                      browser&apos;s built-in voice.
+                    </p>
                   </div>
                 </div>
               </div>

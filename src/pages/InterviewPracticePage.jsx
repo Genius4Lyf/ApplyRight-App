@@ -225,8 +225,8 @@ const InterviewPracticePage = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-700 border-t-indigo-400 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -245,23 +245,23 @@ const InterviewPracticePage = () => {
         : application.jobTitle || application.jobId?.title || 'Practice mode';
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-      <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+    <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900">
+      <header className="shrink-0 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           {/* Row 1: status badge ↔ exit. Kept terse so the row never wraps. */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                 <PlayCircle className="w-4 h-4" />
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-300">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
                 Practice mode
               </span>
             </div>
             <button
               type="button"
               onClick={exitToDetail}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               Exit
@@ -270,7 +270,7 @@ const InterviewPracticePage = () => {
           {/* Row 2: headline ↔ progress meta. Headline truncates, meta has
               breathing room of its own. */}
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <p className="text-sm sm:text-base font-semibold text-slate-100 truncate min-w-0">
+            <p className="text-sm sm:text-base font-semibold text-slate-900 truncate min-w-0">
               {headline}
             </p>
             {cards.length > 0 && (
@@ -285,27 +285,33 @@ const InterviewPracticePage = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
-        <div className="w-full bg-white text-slate-900 rounded-2xl p-6 sm:p-10 shadow-2xl">
+      <main className="flex-1 min-h-0 flex justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+        <div className="w-full max-w-3xl flex flex-col min-h-0">
           {cards.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-base font-semibold text-slate-900 mb-2">
-                {weakFilter ? "You're all caught up" : 'Nothing to practice yet'}
-              </p>
-              <p className="text-sm text-slate-600 mb-6">
-                {weakFilter
-                  ? 'Every question is marked Ready. Nothing weak left to drill.'
-                  : skillFilter
-                    ? 'That skill has no talking point saved.'
-                    : 'Run a job analysis to generate practice questions.'}
-              </p>
-              <button
-                type="button"
-                onClick={exitToDetail}
-                className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
-              >
-                Back to prep
-              </button>
+            <div className="m-auto w-full relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-8 text-center shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
+              />
+              <div className="relative z-10">
+                <p className="text-base font-bold text-slate-900 mb-2">
+                  {weakFilter ? "You're all caught up" : 'Nothing to practice yet'}
+                </p>
+                <p className="text-sm text-slate-500 mb-6">
+                  {weakFilter
+                    ? 'Every question is marked Ready. Nothing weak left to drill.'
+                    : skillFilter
+                      ? 'That skill has no talking point saved.'
+                      : 'Run a job analysis to generate practice questions.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={exitToDetail}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-500/20"
+                >
+                  Back to prep
+                </button>
+              </div>
             </div>
           ) : (
             <PracticeRunner

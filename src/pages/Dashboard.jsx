@@ -1183,7 +1183,7 @@ const Dashboard = () => {
                     <Eye className="w-4 h-4" /> View CV
                   </button>
                 ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_CV} layout="card">
                     <button
                       onClick={handleGenerateCV}
                       disabled={generatingCV}
@@ -1232,7 +1232,7 @@ const Dashboard = () => {
                     <Eye className="w-4 h-4" /> View Cover Letter
                   </button>
                 ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER}>
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER} layout="card">
                     <button
                       onClick={handleGenerateCoverLetter}
                       disabled={generatingCL}
@@ -1283,7 +1283,7 @@ const Dashboard = () => {
                     <Eye className="w-4 h-4" /> View Interview Prep
                   </button>
                 ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_INTERVIEW}>
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_INTERVIEW} layout="card">
                     <button
                       onClick={handleGenerateInterview}
                       disabled={generatingInterview}
