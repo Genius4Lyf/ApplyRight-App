@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import {
@@ -82,6 +82,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle }) => (
 
 const JobHistory = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -147,6 +148,13 @@ const JobHistory = () => {
     try {
       const res = await api.get('/applications');
       setApplications(res.data);
+      // Deep-link: /history?app=<id> preselects that application (e.g. arriving
+      // from the interview page's "generate your CV" prompt).
+      const preselectId = searchParams.get('app');
+      if (preselectId) {
+        const match = res.data.find((a) => a._id === preselectId);
+        if (match) setSelectedApp(match);
+      }
     } catch (error) {
       console.error('Failed to fetch history', error);
     } finally {

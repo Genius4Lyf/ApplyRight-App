@@ -45,6 +45,7 @@ import NervesTrend from '../components/prep/NervesTrend';
 import LastInterviewCard from '../components/prep/LastInterviewCard';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
+import CVViewModal from '../components/CVViewModal';
 import api from '../services/api';
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
@@ -88,6 +89,8 @@ const InterviewPrepDetail = () => {
   // Dress-guide generation (Role tab). Same ad-rewarded/credit split.
   const [generatingDress, setGeneratingDress] = useState(false);
   const [adForDressOpen, setAdForDressOpen] = useState(false);
+  // Inline, view-only CV preview (job-linked prep).
+  const [showCv, setShowCv] = useState(false);
   // Seed for the Notes tab — set when the "Draft your answer in My notes" CTA is
   // tapped, so NotesList opens a prefilled new note. Cleared once consumed.
   const [notesSeed, setNotesSeed] = useState(null);
@@ -506,20 +509,26 @@ const InterviewPrepDetail = () => {
               <span className="hidden sm:inline">Brief</span>
             </Link>
 
-            <Link
-              to={
-                !isCvOnly
-                  ? `/resume/${application._id}`
-                  : application.draftCVId
-                    ? `/cv-builder/${application.draftCVId}/skills`
-                    : '#'
-              }
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-              aria-label={isCvOnly ? 'Open CV' : 'View CV'}
-            >
-              <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">{isCvOnly ? 'Open CV' : 'View CV'}</span>
-            </Link>
+            {isCvOnly ? (
+              <Link
+                to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
+                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                aria-label="Open CV"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Open CV</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowCv(true)}
+                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                aria-label="View CV"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">View CV</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -805,6 +814,14 @@ const InterviewPrepDetail = () => {
           androidButtonText="Watch Video"
           androidSuccessTitle="Credits Earned!"
           androidSuccessMessage="Styling your look…"
+        />
+      )}
+
+      {!isCvOnly && (
+        <CVViewModal
+          applicationId={application._id}
+          isOpen={showCv}
+          onClose={() => setShowCv(false)}
         />
       )}
     </div>

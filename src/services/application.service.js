@@ -7,6 +7,12 @@ const ApplicationService = {
     return response.data;
   },
 
+  // Get a single application by id (full document — includes optimizedCV + templateId).
+  getApplicationById: async (id) => {
+    const response = await api.get(`/applications/${id}`);
+    return response.data;
+  },
+
   // Delete an application
   deleteApplication: async (id) => {
     const response = await api.delete(`/applications/${id}`);
