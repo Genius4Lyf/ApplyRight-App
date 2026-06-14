@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
-const UserTable = ({ users, onRoleUpdate, onDelete }) => {
+const UserTable = ({ users, onRoleUpdate, onPlanUpdate, onDelete }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -13,6 +13,7 @@ const UserTable = ({ users, onRoleUpdate, onDelete }) => {
             <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold">
               <th className="px-6 py-4">User</th>
               <th className="px-6 py-4">Role</th>
+              <th className="px-6 py-4">Plan</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Joined</th>
               <th className="px-6 py-4 text-right">Actions</th>
@@ -46,6 +47,21 @@ const UserTable = ({ users, onRoleUpdate, onDelete }) => {
                   >
                     {user.role}
                   </span>
+                </td>
+                <td className="px-6 py-4">
+                  <select
+                    value={user.plan || 'free'}
+                    onChange={(e) => onPlanUpdate(user._id, e.target.value)}
+                    title="Change plan"
+                    className={`text-xs font-medium rounded-full px-2.5 py-1 border cursor-pointer capitalize focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                      user.plan === 'paid'
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

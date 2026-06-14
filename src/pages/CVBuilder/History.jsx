@@ -23,6 +23,17 @@ import {
 } from '@dnd-kit/sortable';
 import SortableItem from '../../components/SortableItem';
 
+// Free users are capped at this many bullet points per role; paid users get
+// unlimited. The "paid" flag is set manually from the admin panel for now
+// (Admin > Users), and will become automatic once billing is integrated.
+const FREE_BULLET_LIMIT = 4;
+
+// Count the non-empty bullet lines in a description string. A line is a bullet
+// even if it only has the "• " prefix typed, so we strip bullets/whitespace
+// before checking for real content.
+const countBullets = (text) =>
+  (text || '').split('\n').filter((line) => line.replace(/•/g, '').trim().length > 0).length;
+
 // Stable per-item ID for drag-and-drop. Persists with the data so order is
 // stable across renders even after the auto-save round-trip.
 const newSortId = () =>
@@ -38,6 +49,9 @@ const History = () => {
   const context = useOutletContext();
   const { cvData, handleNext, handleBack, saving, updateCvData, user, setStepDirty } =
     context || {};
+
+  // Paid users get unlimited bullets per role. Toggled from the admin panel.
+  const isPaid = user?.plan === 'paid';
 
   const [history, setHistory] = useState(() => ensureIds(cvData?.experience));
 
@@ -205,6 +219,16 @@ const History = () => {
   const handleKeyDown = (e, index) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+
+      // Free users can't add a new bullet beyond the limit (editing existing
+      // ones is still allowed). Paid users are unlimited.
+      if (!isPaid && countBullets(history[index]?.description) >= FREE_BULLET_LIMIT) {
+        toast.info(
+          `Free plan allows up to ${FREE_BULLET_LIMIT} bullets per role. Upgrade to add unlimited.`
+        );
+        return;
+      }
+
       const textarea = e.target;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -468,6 +492,17 @@ const History = () => {
                               e.target.selectionStart = e.target.selectionEnd = val.length;
                           }, 0);
                         }
+                        // Block free users from adding bullets past the limit (e.g.
+                        // via a multi-line paste). Edits that don't add bullets pass.
+                        if (!isPaid) {
+                          const next = countBullets(val);
+                          if (next > FREE_BULLET_LIMIT && next > countBullets(role.description)) {
+                            toast.info(
+                              `Free plan allows up to ${FREE_BULLET_LIMIT} bullets per role. Upgrade to add unlimited.`
+                            );
+                            return;
+                          }
+                        }
                         handleChange(index, 'description', val);
                       }}
                       onPaste={(e) => handlePaste(e, index)}
@@ -478,7 +513,9 @@ const History = () => {
                     />
                     <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                       <p className="text-[11px] text-slate-500">
-                        Tip: 3-5 bullets is the sweet spot. One per impact, not per task.
+                        {isPaid
+                          ? 'Tip: 3-5 bullets is the sweet spot. One per impact, not per task.'
+                          : `Tip: 3-5 bullets is the sweet spot. ${countBullets(role.description)}/${FREE_BULLET_LIMIT} used — upgrade for unlimited.`}
                       </p>
                       <InlineExample
                         kind="bullet"

@@ -1,0 +1,152 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Mic, Play, Trash2 } from 'lucide-react';
+import { listRecordings, getRecordingBlob, deleteRecording } from '../../lib/recordings';
+import AudioPlayer from '../AudioPlayer';
+
+// "Past interviews" — replay live-interview recordings saved on THIS device
+// (IndexedDB). Hidden when there are none. Cross-device replay would need server
+// storage (future). Plays one recording at a time via a lazily-loaded blob URL.
+const fmtDuration = (sec) => {
+  const s = Math.max(0, Math.round(sec || 0));
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, '0')}`;
+};
+
+const fmtDate = (ms) => {
+  try {
+    return new Date(ms).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return '';
+  }
+};
+
+const RecordingsPanel = ({ applicationId }) => {
+  const [items, setItems] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+  const [activeUrl, setActiveUrl] = useState(null);
+  const [confirmId, setConfirmId] = useState(null); // row pending delete-confirm
+  const urlRef = useRef(null);
+
+  const refresh = async () => {
+    const rows = await listRecordings(applicationId);
+    setItems(rows);
+    setLoaded(true);
+  };
+
+  useEffect(() => {
+    refresh();
+    return () => {
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationId]);
+
+  const play = async (id) => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    const blob = await getRecordingBlob(id);
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    urlRef.current = url;
+    setActiveUrl(url);
+    setActiveId(id);
+  };
+
+  const remove = async (id) => {
+    setConfirmId(null);
+    await deleteRecording(id);
+    if (id === activeId) {
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+      setActiveUrl(null);
+      setActiveId(null);
+    }
+    refresh();
+  };
+
+  // Nothing to show — render nothing (no empty state clutter).
+  if (!loaded || items.length === 0) return null;
+
+  return (
+    <div className="rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+          <Mic className="w-4.5 h-4.5" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">Past interviews</h3>
+          <p className="text-[11px] text-slate-400">
+            Saved on this device — replay your live interviews
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2.5">
+        {items.map((r) => (
+          <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-3">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => play(r.id)}
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5" /> Play
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 truncate">
+                  {fmtDate(r.createdAt)}
+                </p>
+                <p className="text-[11px] text-slate-400">{fmtDuration(r.durationSec)} long</p>
+              </div>
+              {confirmId === r.id ? (
+                <div className="shrink-0 flex items-center gap-1.5">
+                  <span className="hidden sm:inline text-[11px] font-medium text-slate-500">
+                    Delete?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => remove(r.id)}
+                    className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmId(null)}
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-[11px] font-semibold transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmId(r.id)}
+                  title="Delete recording"
+                  className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {activeId === r.id && activeUrl && (
+              <div className="mt-3">
+                <AudioPlayer src={activeUrl} autoPlay durationHint={r.durationSec} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default RecordingsPanel;

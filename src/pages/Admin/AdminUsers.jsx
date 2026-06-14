@@ -66,6 +66,24 @@ const AdminUsers = () => {
     }
   };
 
+  const handlePlanUpdate = async (id, newPlan) => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      await api.put(`/admin/users/${id}/plan`, { plan: newPlan }, config);
+      toast.success(`User plan updated to ${newPlan}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating plan:', error);
+      toast.error('Failed to update user plan');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (
       window.confirm('Are you sure you want to delete this user? This action cannot be undone.')
@@ -114,7 +132,12 @@ const AdminUsers = () => {
         </div>
       ) : (
         <>
-          <UserTable users={users} onRoleUpdate={handleRoleUpdate} onDelete={handleDelete} />
+          <UserTable
+            users={users}
+            onRoleUpdate={handleRoleUpdate}
+            onPlanUpdate={handlePlanUpdate}
+            onDelete={handleDelete}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

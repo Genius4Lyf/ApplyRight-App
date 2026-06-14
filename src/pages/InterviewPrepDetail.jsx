@@ -43,6 +43,8 @@ import CalmKit from '../components/prep/CalmKit';
 import BodyLanguage from '../components/prep/BodyLanguage';
 import NervesTrend from '../components/prep/NervesTrend';
 import LastInterviewCard from '../components/prep/LastInterviewCard';
+import RecordingsPanel from '../components/prep/RecordingsPanel';
+import LastAssessmentCard from '../components/prep/LastAssessmentCard';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import CVViewModal from '../components/CVViewModal';
@@ -538,11 +540,9 @@ const InterviewPrepDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
             <LastInterviewCard
               session={application.interviewPrep?.lastInterviewSession}
+              history={application.interviewPrep?.interviewHistory}
               trend={getInterviewTrend(application)}
               onStart={startMockInterview}
-              onPracticeQuestion={(i) =>
-                navigate(`/interview-prep/${applicationId}/practice?questionIndex=${i}`)
-              }
             />
             <ReadinessOverview
               application={application}
@@ -577,6 +577,13 @@ const InterviewPrepDetail = () => {
             />
           </div>
         )}
+
+        {/* Re-readable AI assessment from the last conversational interview */}
+        <div className="mb-6 space-y-4">
+          <LastAssessmentCard application={application} />
+          {/* Past live-interview recordings (device-local; hidden when none) */}
+          <RecordingsPanel applicationId={applicationId} />
+        </div>
 
         {/* Tabs */}
         <nav className="flex items-center gap-1 border-b border-slate-200 mb-6 overflow-x-auto">

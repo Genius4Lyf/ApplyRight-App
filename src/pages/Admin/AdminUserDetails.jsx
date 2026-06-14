@@ -20,6 +20,24 @@ const AdminUserDetails = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
+  const [updatingPlan, setUpdatingPlan] = useState(false);
+
+  const handlePlanChange = async (newPlan) => {
+    if (newPlan === userData?.user?.plan) return;
+    setUpdatingPlan(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await api.put(`/admin/users/${id}/plan`, { plan: newPlan }, config);
+      setUserData((prev) => ({ ...prev, user: { ...prev.user, plan: newPlan } }));
+      toast.success(`Plan updated to ${newPlan}`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to update plan');
+    } finally {
+      setUpdatingPlan(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -140,9 +158,22 @@ const AdminUserDetails = () => {
             </div>
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-4 h-4 text-slate-400 mt-1" />
-              <div>
+              <div className="flex-1">
                 <p className="text-xs text-slate-500">Plan</p>
-                <p className="text-sm font-medium text-slate-900 capitalize">{user.plan}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <select
+                    value={user.plan}
+                    onChange={(e) => handlePlanChange(e.target.value)}
+                    disabled={updatingPlan}
+                    className="text-sm font-medium text-slate-900 capitalize border border-slate-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+                  >
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                  {updatingPlan && (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

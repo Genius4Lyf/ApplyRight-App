@@ -20,11 +20,28 @@ import {
   Wind,
   Mic,
   Loader,
+  MessageSquare,
+  BookOpen,
+  Wifi,
+  Send,
+  Lock,
+  MicOff,
+  Captions,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { getJobQuestions, computeReadiness, getInterviewTrend } from '../utils/interviewPrep';
 import { BreathingExercise } from '../components/prep/CalmKit';
+import VoiceVisualizer from '../components/prep/VoiceVisualizer';
+import AudioPlayer from '../components/AudioPlayer';
+import AssessmentReport from '../components/prep/AssessmentReport';
+import { VoiceStyleSelector, DeviceCheck } from '../components/prep/InterviewSetup';
+import {
+  isRealtimeSupported,
+  createRealtimeSession as createRealtimeWebRTC,
+} from '../lib/realtime';
+import { createMixedRecorder } from '../lib/recorder';
+import { saveRecording } from '../lib/recordings';
 import { useMinVisible } from '../hooks/useMinVisible';
 import { speak, stopSpeaking, startDictation, isSpeechRecognitionSupported } from '../lib/speech';
 
@@ -48,6 +65,21 @@ const CONF = [
   { id: 'ready', label: 'Strong' },
 ];
 const CONF_WORD = { needs_work: 'shaky', almost: 'okay', ready: 'strong' };
+const READINESS_LABEL = {
+  ready: 'Interview-ready',
+  almost: 'Almost there',
+  needs_work: 'Needs work',
+};
+// Seconds remaining at which we nudge the live interviewer to start its closing.
+const REALTIME_NUDGE_SEC = 90;
+
+// Minimum time the "connecting" call screen stays up, so the connect animation
+// always reads as a deliberate beat instead of flashing past when the
+// interviewer's voice happens to be ready instantly.
+const CONNECT_MIN_MS = 1800;
+// How long the "Connected" confirmation holds before the call view reveals — the
+// ringing resolves into a connected beat, then opens, like a call being answered.
+const CONNECTED_HOLD_MS = 600;
 
 const WEAKNESS_Q = {
   question:
@@ -97,8 +129,13 @@ const MockInterviewPage = () => {
   const [loading, setLoading] = useState(true);
   const showLoader = useMinVisible(loading, 500);
 
-  const [phase, setPhase] = useState('intro'); // intro | running | review
+  // choose → (scripted) intro | connecting | running | review
+  //        → (conversational, realtime)  intro | connecting | live | grading | review
+  //        → (conversational, fallback)  intro | connecting | conversation | grading | review
+  const [phase, setPhase] = useState('choose');
+  const [mode, setMode] = useState(null); // 'scripted' | 'conversational'
   const [showReadyCheck, setShowReadyCheck] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [missing, setMissing] = useState([]);
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -114,6 +151,87 @@ const MockInterviewPage = () => {
   const [followUp, setFollowUp] = useState('');
   const [loadingFollowUp, setLoadingFollowUp] = useState(false);
 
+  // ── conversational mode (turn-based live interview) ──
+  // The client owns the transcript + spine and resends them each turn; the
+  // backend is stateless. The question is NOT shown on screen — it's a
+  // conversation, so the user listens and replies.
+  const [transcript, setTranscript] = useState([]);
+  const [spineIndex, setSpineIndex] = useState(0);
+  const [turnLoading, setTurnLoading] = useState(false);
+
+  // ── realtime (live voice) mode ──
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [micStream, setMicStream] = useState(null);
+  const [savedRecordingBlob, setSavedRecordingBlob] = useState(null);
+  const [savedRecordingDuration, setSavedRecordingDuration] = useState(0);
+  // AI assessment of a conversational interview (replaces self-rating). Null for
+  // the guided/scripted mode, which keeps self-rating.
+  const [assessment, setAssessment] = useState(null);
+  // Transcript kept around so a failed assessment can be re-run from review.
+  const [gradingTranscript, setGradingTranscript] = useState(null);
+  const [gradeError, setGradeError] = useState(false);
+  const realtimeRef = useRef(null);
+  const recorderRef = useRef(null);
+  const maxSessionSecRef = useRef(360);
+  const nudgedRef = useRef(false); // wrap-up nudge sent once near the time cap
+
+  // ── "connecting" call beat ──
+  // Hold the connecting screen for at least CONNECT_MIN_MS so the call-connect
+  // animation always registers, even when the interviewer's voice is ready
+  // instantly. enterConnecting() opens it; leaveConnecting(target) flips to the
+  // live phase once the minimum has elapsed.
+  const connectStartRef = useRef(0);
+  const leftConnectingRef = useRef(false);
+  const connectTimerRef = useRef(null);
+  // Drives the "Connected" confirmation beat on the call screen before the call
+  // view reveals.
+  const [connected, setConnected] = useState(false);
+  const enterConnecting = () => {
+    leftConnectingRef.current = false;
+    connectStartRef.current = Date.now();
+    clearTimeout(connectTimerRef.current);
+    setConnected(false);
+    setPhase('connecting');
+  };
+  // Called the instant the interviewer's voice is ready. Keeps ringing until the
+  // minimum beat is nearly up, then shows "Connected" for CONNECTED_HOLD_MS, then
+  // reveals the call view — so the connection visibly resolves instead of cutting.
+  const leaveConnecting = (target) => {
+    if (leftConnectingRef.current) return; // first caller wins (realtime fires repeatedly)
+    leftConnectingRef.current = true;
+    const elapsed = Date.now() - connectStartRef.current;
+    const ringRemain = Math.max(0, CONNECT_MIN_MS - elapsed - CONNECTED_HOLD_MS);
+    connectTimerRef.current = setTimeout(() => {
+      setConnected(true); // ringing resolves into the "Connected" beat
+      connectTimerRef.current = setTimeout(() => setPhase(target), CONNECTED_HOLD_MS);
+    }, ringRemain);
+  };
+
+  // Personalization: interviewer voice + interview style (remembered per device).
+  const [voice, setVoice] = useState(() => localStorage.getItem('interview_voice') || 'marin');
+  const [style, setStyle] = useState(() => localStorage.getItem('interview_style') || 'balanced');
+  // Optional live captions of what the interviewer says (accessibility).
+  const [captionsOn, setCaptionsOn] = useState(false);
+  const [caption, setCaption] = useState('');
+
+  const chooseVoice = (v) => {
+    setVoice(v);
+    try {
+      localStorage.setItem('interview_voice', v);
+    } catch {
+      /* ignore */
+    }
+  };
+  const chooseStyle = (s) => {
+    setStyle(s);
+    try {
+      localStorage.setItem('interview_style', s);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const startedAtRef = useRef(0);
   const audioRef = useRef(null);
   const audioCacheRef = useRef(new Map());
@@ -122,6 +240,11 @@ const MockInterviewPage = () => {
     const u = readStoredUser();
     return (u.name || u.firstName || '').trim().split(' ')[0] || 'there';
   }, []);
+
+  // Subscription tier (free | plus | pro). Read from the stored user so the
+  // chooser can show which tier each mode needs. Gating is non-blocking while
+  // Interview Mode is free during testing (see FREE_DURING_TESTING).
+  const userTier = useMemo(() => readStoredUser().tier || 'free', []);
 
   useEffect(() => {
     let cancelled = false;
@@ -218,8 +341,40 @@ const MockInterviewPage = () => {
       stopAudio();
       cache.forEach((url) => URL.revokeObjectURL(url));
       cache.clear();
+      clearTimeout(connectTimerRef.current);
+      // Tear down any live realtime session + recorder on unmount.
+      realtimeRef.current?.stop();
+      recorderRef.current?.stop();
     };
   }, []);
+
+  // ── realtime session countdown (cost guardrail) ──
+  // Runs only during the live phase; reaching zero ends the interview.
+  useEffect(() => {
+    if (phase !== 'live') return undefined;
+    const id = setInterval(() => {
+      setSecondsLeft((t) => (t <= 1 ? 0 : t - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'live') return;
+    if (secondsLeft === 0) {
+      endRealtime();
+      return;
+    }
+    // Nudge the interviewer to start wrapping up while there's still time for the
+    // closing (weakness question + "any questions for me"). Sent once, and only
+    // for sessions long enough to have a meaningful tail.
+    if (!nudgedRef.current && maxSessionSecRef.current > 150 && secondsLeft <= REALTIME_NUDGE_SEC) {
+      nudgedRef.current = true;
+      realtimeRef.current?.sendInstruction(
+        'TIME CHECK: only about a minute and a half remains. Finish the current exchange, then go straight to your CLOSING — ask one weakness or growth-area question, then ask whether they have any questions for you, then give a brief, warm sign-off and thank them by name.'
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft, phase]);
 
   // ── per-question timer ──
   // `timeLeft` is the CURRENT question's answer window (not a whole-run total).
@@ -241,7 +396,21 @@ const MockInterviewPage = () => {
   // ── flow ──
   const exitToDetail = () => {
     stopAudio();
+    // Tear down any live session + recorder before leaving.
+    realtimeRef.current?.stop();
+    realtimeRef.current = null;
+    recorderRef.current?.stop();
+    recorderRef.current = null;
     navigate(`/interview-prep/${applicationId}`);
+  };
+
+  // Confirm before bailing out of an interview that's actually in progress
+  // (leaving loses the session, recording, and assessment). Other screens exit
+  // straight away.
+  const ACTIVE_PHASES = ['running', 'conversation', 'live'];
+  const handleExitClick = () => {
+    if (ACTIVE_PHASES.includes(phase)) setShowExitConfirm(true);
+    else exitToDetail();
   };
 
   const handleStartClick = () => {
@@ -254,8 +423,15 @@ const MockInterviewPage = () => {
       setMissing(miss);
       setShowReadyCheck(true);
     } else {
-      beginInterview();
+      startByMode();
     }
+  };
+
+  // Start whichever mode the user picked on the chooser. Used by the intro
+  // "start" button (after the ready check), "Start anyway", and "Retake".
+  const startByMode = () => {
+    if (mode === 'conversational') beginConversation();
+    else beginInterview();
   };
 
   // ── premium gate (scaffolding — OFF during testing) ──
@@ -284,7 +460,7 @@ const MockInterviewPage = () => {
     setFollowUp('');
     setSessionRatings({});
     // "Going live" — show the connecting screen while the greeting voice loads.
-    setPhase('connecting');
+    enterConnecting();
 
     const q = simQuestions[0];
     const role = title && title !== 'Interview' ? ` for the ${title} role` : '';
@@ -299,7 +475,7 @@ const MockInterviewPage = () => {
     speakText(greeting, () => {
       startedAtRef.current = Date.now();
       setTimeLeft(budgetMin(q) * 60); // per-question answer window for Q1
-      setPhase('running');
+      leaveConnecting('running');
     });
   };
 
@@ -404,6 +580,260 @@ const MockInterviewPage = () => {
     setPhase('review');
   };
 
+  // ── conversational flow ──
+  const spinePayload = () => simQuestions.map((q) => ({ question: q.question, type: q.type }));
+
+  // Conversational mode dispatches to the realtime (live voice) experience when
+  // the browser supports it (web + WebRTC + mic), else the turn-based fallback
+  // (Android WebView, no mic, etc.).
+  const beginConversation = () => {
+    if (isRealtimeSupported()) return beginRealtime();
+    return beginTurnBasedConversation();
+  };
+
+  const resetSessionState = () => {
+    setShowReadyCheck(false);
+    setCurrent(0);
+    setResults([]);
+    setConfidence(null);
+    setFlagged(new Set());
+    setSessionRatings({});
+    setTranscript([]);
+    setSpineIndex(0);
+    setAssessment(null);
+    setGradingTranscript(null);
+    setGradeError(false);
+    setSavedRecordingBlob(null);
+    setSavedRecordingDuration(0);
+  };
+
+  const beginTurnBasedConversation = async () => {
+    resetSessionState();
+    enterConnecting();
+
+    try {
+      const res = await InterviewPrepService.conversationTurn(applicationId, {
+        phase: 'greeting',
+        questionSpine: spinePayload(),
+        spineIndex: 0,
+        transcript: [],
+        lastAnswer: '',
+      });
+      startedAtRef.current = Date.now();
+      setSpineIndex(typeof res.nextSpineIndex === 'number' ? res.nextSpineIndex : 0);
+      setTranscript([{ role: 'interviewer', text: res.spoken }]);
+      // Go live the instant the interviewer's voice begins (after the connect beat).
+      speakText(res.spoken, () => leaveConnecting('conversation'));
+    } catch (e) {
+      const code = e.response?.data?.code;
+      toast.error(
+        code === 'AI_UNAVAILABLE'
+          ? 'The AI interviewer is unavailable right now. Try the guided mode instead.'
+          : e.response?.data?.message || 'Failed to start the conversation'
+      );
+      setPhase('intro');
+    }
+  };
+
+  // ── realtime (live voice) flow ──
+  const handleRealtimeError = (err) => {
+    if (err?.code === 'MIC_DENIED') {
+      toast.error('We need microphone access for the live interview.');
+      realtimeRef.current?.stop();
+      realtimeRef.current = null;
+      setMicStream(null);
+      setPhase('intro');
+      return;
+    }
+    // Network drop / handshake loss mid-interview: don't waste it — save and
+    // score whatever was captured.
+    if (err?.code === 'CONNECTION_LOST' || err?.code === 'HANDSHAKE_FAILED') {
+      toast.error('Connection lost — saving and scoring the interview so far.');
+    } else {
+      toast.error('The live interview hit a problem — scoring what we have.');
+    }
+    endRealtime();
+  };
+
+  const beginRealtime = async () => {
+    resetSessionState();
+    setMuted(false);
+    setMicStream(null);
+    setCaption('');
+    nudgedRef.current = false;
+    enterConnecting();
+
+    try {
+      // Give the interviewer a natural, time-aware opening (greets by name + time).
+      const hour = new Date().getHours();
+      const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+      const sess = await InterviewPrepService.createRealtimeSession(applicationId, spinePayload(), {
+        timeOfDay,
+        candidateName: firstName && firstName !== 'there' ? firstName : '',
+        voice,
+        style,
+      });
+      maxSessionSecRef.current = sess.maxSessionSec || 360;
+      setSecondsLeft(maxSessionSecRef.current);
+
+      const ctl = createRealtimeWebRTC({
+        clientSecret: sess.clientSecret,
+        model: sess.model,
+        onState: (s) => {
+          setVoiceState(s === 'speaking' ? 'speaking' : s === 'connecting' ? 'loading' : 'idle');
+          if (s === 'listening' || s === 'speaking') leaveConnecting('live');
+        },
+        onError: handleRealtimeError,
+        onStream: ({ local, remote }) => {
+          setMicStream(local);
+          recorderRef.current = createMixedRecorder(local, remote);
+        },
+        onCaption: (turn) => {
+          if (turn.role === 'interviewer') setCaption(turn.text);
+        },
+      });
+      realtimeRef.current = ctl;
+      startedAtRef.current = Date.now();
+      await ctl.start();
+    } catch (e) {
+      const code = e.response?.data?.code;
+      toast.error(
+        code === 'REALTIME_UNAVAILABLE' || code === 'AI_UNAVAILABLE'
+          ? 'The live interviewer is unavailable — switching to the typed conversation.'
+          : e.response?.data?.message || 'Failed to start the live interview.'
+      );
+      // Seamless fallback to the turn-based conversational mode.
+      beginTurnBasedConversation();
+    }
+  };
+
+  // End the live session: grab the transcript, stop + persist the recording,
+  // then AI-assess the interview.
+  const endRealtime = async () => {
+    const liveTranscript = realtimeRef.current?.getTranscript?.() || [];
+    try {
+      const blob = await recorderRef.current?.stop();
+      recorderRef.current = null;
+      if (blob) {
+        const durationSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+        const id = await saveRecording({ applicationId, blob, durationSec, createdAt: Date.now() });
+        if (id) {
+          setSavedRecordingBlob(blob);
+          setSavedRecordingDuration(durationSec);
+          toast.success('Interview recording saved — replay it anytime on this device.');
+        }
+      }
+    } catch {
+      /* recording is best-effort */
+    }
+    realtimeRef.current?.stop();
+    realtimeRef.current = null;
+    setMicStream(null);
+    finishConversation(liveTranscript);
+  };
+
+  const toggleRealtimeMute = () => {
+    const nowMuted = realtimeRef.current?.toggleMute();
+    setMuted(!!nowMuted);
+  };
+
+  // One turn: send the candidate's answer + transcript, speak the reply, advance.
+  const submitAnswer = async (answerText) => {
+    if (turnLoading) return;
+    const text = (answerText || '').trim();
+    if (!text) return;
+    const nextTranscript = [...transcript, { role: 'candidate', text }];
+    setTranscript(nextTranscript);
+    setTurnLoading(true);
+    setVoiceState('loading'); // interviewer tile shows "Preparing…"
+    try {
+      const res = await InterviewPrepService.conversationTurn(applicationId, {
+        phase: 'answer',
+        questionSpine: spinePayload(),
+        spineIndex,
+        transcript: nextTranscript,
+        lastAnswer: text,
+      });
+      const finalTranscript = [...nextTranscript, { role: 'interviewer', text: res.spoken }];
+      setTranscript(finalTranscript);
+      setSpineIndex(typeof res.nextSpineIndex === 'number' ? res.nextSpineIndex : spineIndex);
+      speakText(res.spoken);
+      if (res.done) finishConversation(finalTranscript);
+    } catch (e) {
+      const code = e.response?.data?.code;
+      toast.error(
+        code === 'AI_UNAVAILABLE'
+          ? 'The AI interviewer is unavailable right now.'
+          : e.response?.data?.message || 'Failed to continue the interview'
+      );
+      setVoiceState('idle');
+    } finally {
+      setTurnLoading(false);
+    }
+  };
+
+  // Grade a transcript and show the report. Keeps the transcript on failure so
+  // the user can re-run the assessment from the review screen (the interview
+  // isn't lost just because the assessor blipped).
+  const gradeTranscript = async (tx) => {
+    setGradingTranscript(tx);
+    setGradeError(false);
+    setPhase('grading');
+    try {
+      const durationSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+      const res = await InterviewPrepService.assessInterview(applicationId, {
+        transcript: tx,
+        durationSec,
+        plannedSec,
+      });
+      setAssessment(res.assessment);
+      setGradingTranscript(null);
+      setApplication((prev) =>
+        prev
+          ? {
+              ...prev,
+              interviewPrep: {
+                ...prev.interviewPrep,
+                lastInterviewSession: res.lastInterviewSession,
+              },
+            }
+          : prev
+      );
+    } catch (e) {
+      setGradeError(true);
+      toast.error(
+        e.response?.data?.code === 'AI_UNAVAILABLE'
+          ? 'Couldn’t score this interview right now — your recording is saved; you can re-run it.'
+          : 'Couldn’t score this interview right now — you can re-run it.'
+      );
+    } finally {
+      setPhase('review');
+    }
+  };
+
+  // End of a conversational interview → AI-assess it from the transcript
+  // (replaces self-rating). Falls back to a plain review if there's nothing to grade.
+  const finishConversation = (gradingTranscriptArg) => {
+    const resultsWithRatings = simQuestions.map((q, i) => ({
+      ...q,
+      confidence: sessionRatings[i] || q.confidence || null,
+    }));
+    setResults(resultsWithRatings);
+
+    const tx = Array.isArray(gradingTranscriptArg) ? gradingTranscriptArg : transcript;
+    const hasAnswers = tx.some((t) => t.role === 'candidate' && (t.text || '').trim());
+    if (!hasAnswers) {
+      setGradingTranscript(null);
+      setPhase('review');
+      return;
+    }
+    gradeTranscript(tx);
+  };
+
+  const retryAssessment = () => {
+    if (gradingTranscript && gradingTranscript.length) gradeTranscript(gradingTranscript);
+  };
+
   const toggleFlag = (origIndex) => {
     setFlagged((prev) => {
       const n = new Set(prev);
@@ -463,18 +893,47 @@ const MockInterviewPage = () => {
   if (!application) return null;
   const title = application.jobTitle || application.jobId?.title || 'Interview';
 
+  // Dark "call room" theme for the conversational interview itself — the live
+  // voice run, the turn-based conversation, the connect beat that leads into
+  // them, and the scoring screen that follows. Setup (chooser/intro), the guided
+  // reader, and the review scorecard stay on the bright theme, so stepping into
+  // the conversation reads as walking into the call.
+  const immersive =
+    phase === 'conversation' ||
+    phase === 'live' ||
+    phase === 'grading' ||
+    (phase === 'connecting' && mode === 'conversational');
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900">
-      <header className="backdrop-blur sticky top-0 z-10 border-b border-slate-200/70 bg-white/80">
+    <div
+      className={`min-h-screen flex flex-col ${
+        immersive
+          ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100'
+          : 'bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900'
+      }`}
+    >
+      <header
+        className={`backdrop-blur sticky top-0 z-10 border-b ${
+          immersive ? 'border-white/10 bg-slate-950/50' : 'border-slate-200/70 bg-white/80'
+        }`}
+      >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
-            {phase === 'running' && (
+          <span
+            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${
+              immersive ? 'text-indigo-300' : 'text-indigo-600'
+            }`}
+          >
+            {(phase === 'running' || phase === 'conversation' || phase === 'live') && (
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
               </span>
             )}
-            Interview mode
+            {phase === 'live'
+              ? 'Live interview'
+              : phase === 'conversation'
+                ? 'Conversational interview'
+                : 'Interview mode'}
           </span>
           <div className="flex items-center gap-3">
             {phase === 'running' && (
@@ -487,10 +946,24 @@ const MockInterviewPage = () => {
                 <Clock className="w-4 h-4" /> {fmt(timeLeft)}
               </span>
             )}
+            {phase === 'live' && (
+              <span
+                className={`inline-flex items-center gap-1.5 text-sm font-bold tabular-nums ${
+                  secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-200'
+                }`}
+                title="Time left in this interview"
+              >
+                <Clock className="w-4 h-4" /> {fmt(secondsLeft)}
+              </span>
+            )}
             <button
               type="button"
-              onClick={exitToDetail}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
+              onClick={handleExitClick}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                immersive
+                  ? 'bg-white/5 border border-white/15 hover:bg-white/10 text-slate-200'
+                  : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
             >
               <X className="w-3.5 h-3.5" /> Exit
             </button>
@@ -500,6 +973,30 @@ const MockInterviewPage = () => {
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-4 sm:py-5">
         <div className="w-full max-w-3xl">
+          {phase === 'choose' &&
+            (simQuestions.length === 0 ? (
+              <IntroView
+                firstName={firstName}
+                title={title}
+                count={0}
+                plannedSec={plannedSec}
+                lastSession={lastSession}
+                trend={getInterviewTrend(application)}
+                onStart={handleStartClick}
+                onCancel={exitToDetail}
+              />
+            ) : (
+              <ModeChooserView
+                title={title}
+                userTier={userTier}
+                onPick={(picked) => {
+                  setMode(picked);
+                  setPhase('intro');
+                }}
+                onCancel={exitToDetail}
+              />
+            ))}
+
           {phase === 'intro' && (
             <IntroView
               firstName={firstName}
@@ -508,12 +1005,56 @@ const MockInterviewPage = () => {
               plannedSec={plannedSec}
               lastSession={lastSession}
               trend={getInterviewTrend(application)}
+              mode={mode}
+              voice={voice}
+              style={style}
+              onVoiceChange={chooseVoice}
+              onStyleChange={chooseStyle}
               onStart={handleStartClick}
-              onCancel={exitToDetail}
+              onCancel={() => setPhase('choose')}
             />
           )}
 
-          {phase === 'connecting' && <ConnectingView firstName={firstName} title={title} />}
+          {phase === 'connecting' && (
+            <ConnectingView
+              firstName={firstName}
+              title={title}
+              mode={mode}
+              dark={mode === 'conversational'}
+              connected={connected}
+            />
+          )}
+
+          {phase === 'conversation' && (
+            <ConversationView
+              voiceState={voiceState}
+              turnLoading={turnLoading}
+              spineIndex={spineIndex}
+              total={simQuestions.length}
+              onReplay={() => {
+                const last = [...transcript].reverse().find((t) => t.role === 'interviewer');
+                if (last) speakText(last.text);
+              }}
+              onSubmit={submitAnswer}
+              onEnd={() => finishConversation()}
+            />
+          )}
+
+          {phase === 'live' && (
+            <RealtimeView
+              voiceState={voiceState}
+              secondsLeft={secondsLeft}
+              muted={muted}
+              micStream={micStream}
+              captionsOn={captionsOn}
+              caption={caption}
+              onToggleCaptions={() => setCaptionsOn((v) => !v)}
+              onToggleMute={toggleRealtimeMute}
+              onEnd={endRealtime}
+            />
+          )}
+
+          {phase === 'grading' && <GradingView />}
 
           {phase === 'running' && simQuestions.length > 0 && (
             <RunningView
@@ -537,13 +1078,18 @@ const MockInterviewPage = () => {
           {phase === 'review' && (
             <ReviewView
               results={results}
-              overall={overall}
+              overall={assessment ? assessment.overallScore : overall}
+              assessment={assessment}
               confidence={confidence}
               setConfidence={setConfidence}
               flagged={flagged}
               toggleFlag={toggleFlag}
               saving={saving}
               saved={!!lastSession}
+              recordingBlob={savedRecordingBlob}
+              recordingDuration={savedRecordingDuration}
+              gradeError={gradeError && !assessment && !!gradingTranscript}
+              onRetryAssessment={retryAssessment}
               onSave={saveSession}
               onPracticeWeak={() =>
                 navigate(`/interview-prep/${applicationId}/practice?filter=weak`)
@@ -551,7 +1097,7 @@ const MockInterviewPage = () => {
               onPracticeQuestion={(i) =>
                 navigate(`/interview-prep/${applicationId}/practice?questionIndex=${i}`)
               }
-              onRetake={beginInterview}
+              onRetake={startByMode}
               onDone={exitToDetail}
               onRateQuestion={(idx, rating) => {
                 setResults((prev) => {
@@ -572,14 +1118,76 @@ const MockInterviewPage = () => {
             missing={missing}
             readiness={computeReadiness(application).score}
             onPrepare={exitToDetail}
-            onStartAnyway={beginInterview}
+            onStartAnyway={startByMode}
             onClose={() => setShowReadyCheck(false)}
+          />
+        )}
+        {showExitConfirm && (
+          <ExitConfirmModal
+            isLive={phase === 'live'}
+            onLeave={() => {
+              setShowExitConfirm(false);
+              exitToDetail();
+            }}
+            onStay={() => setShowExitConfirm(false)}
           />
         )}
       </AnimatePresence>
     </div>
   );
 };
+
+// ── Exit confirmation (only while an interview is in progress) ──
+const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onStay}
+      className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+    />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 15 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 15 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+      className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900"
+    >
+      <div className="flex items-start gap-3.5">
+        <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+          <AlertTriangle className="w-5 h-5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base font-bold text-slate-900 leading-snug">Leave the interview?</h2>
+          <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+            You’re in the middle of an interview. If you leave now, this session won’t be saved
+            {isLive ? ' — no recording and no assessment' : ' and won’t be assessed'}. To get your
+            score, finish and tap{' '}
+            <span className="font-semibold text-slate-700">End &amp; review</span> instead.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col sm:flex-row gap-2">
+        <button
+          type="button"
+          onClick={onStay}
+          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-100 select-none cursor-pointer"
+        >
+          Stay in the interview
+        </button>
+        <button
+          type="button"
+          onClick={onLeave}
+          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600 text-sm font-semibold hover:bg-rose-50 transition-colors select-none cursor-pointer"
+        >
+          Leave anyway
+        </button>
+      </div>
+    </motion.div>
+  </div>
+);
 
 // ── Ready check ──
 const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose }) => (
@@ -674,39 +1282,137 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
 );
 
 // ── Going live (connecting) ──
-// Shown after the user takes their seat, while the greeting voice is being
-// synthesized. It's replaced by the live interview the instant audio plays.
-const ConnectingView = ({ firstName, title }) => (
+// A short "placing the call" beat shown after the user starts, while the
+// interviewer's greeting voice loads. Expanding sonar rings + a stepping status
+// make it feel like a call connecting; it's replaced by the live screen the
+// instant the interviewer's voice begins. A minimum on-screen time (CONNECT_MIN_MS,
+// enforced by the parent) keeps it from flashing past too fast to read.
+// `dark` styles it for the immersive conversational call room.
+const CONNECT_STEPS = ['Dialing…', 'Ringing…', 'Connecting…'];
+
+const ConnectingView = ({ firstName, title, mode, dark, connected }) => {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (connected) return undefined; // freeze the stepper once connected
+    const id = setInterval(() => setStep((s) => Math.min(s + 1, CONNECT_STEPS.length - 1)), 750);
+    return () => clearInterval(id);
+  }, [connected]);
+
+  return (
+    <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
+      {/* Interviewer avatar — sonar rings while placing the call, a settled
+          emerald ring once connected. */}
+      <div className="relative mb-8 flex items-center justify-center">
+        {!connected && (
+          <div className="absolute w-20 h-20 sm:w-24 sm:h-24" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className={`absolute inset-0 rounded-full border ${
+                  dark ? 'border-indigo-400/40' : 'border-indigo-300/60'
+                }`}
+                initial={{ scale: 0.85, opacity: 0.55 }}
+                animate={{ scale: 2.3, opacity: 0 }}
+                transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.8, ease: 'easeOut' }}
+              />
+            ))}
+          </div>
+        )}
+        <motion.div
+          animate={connected ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white flex items-center justify-center p-3.5 shadow-xl transition-[box-shadow,border-color] duration-300 ${
+            connected
+              ? 'border border-emerald-300 ring-4 ring-emerald-400/40'
+              : dark
+                ? 'border border-white/20 ring-4 ring-indigo-500/30'
+                : 'border border-indigo-200 ring-4 ring-indigo-100'
+          }`}
+        >
+          <img
+            src="/applyright-icon.png"
+            alt="ApplyRight AI interviewer"
+            className="w-full h-full object-contain"
+          />
+        </motion.div>
+      </div>
+
+      {connected ? (
+        <motion.span
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${
+            dark ? 'text-emerald-300' : 'text-emerald-600'
+          }`}
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+        </motion.span>
+      ) : (
+        <span
+          className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${
+            dark ? 'text-rose-300' : 'text-rose-600'
+          }`}
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+          </span>
+          {CONNECT_STEPS[step]}
+        </span>
+      )}
+
+      <h2 className={`mt-3 text-lg sm:text-xl font-bold ${dark ? 'text-white' : 'text-slate-900'}`}>
+        {connected ? 'Connected — here we go.' : 'Connecting you with your interviewer…'}
+      </h2>
+      <p className={`mt-1 text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+        {connected
+          ? 'Putting you through…'
+          : `${firstName && firstName !== 'there' ? `One moment, ${firstName}.` : 'One moment.'}${
+              title ? ` ${title}` : ''
+            }`}
+      </p>
+      {!connected && mode === 'conversational' && (
+        <p className={`mt-2 text-xs max-w-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+          Setting up a live conversation — this works best on a strong, stable connection.
+        </p>
+      )}
+
+      {/* progress dots advance with the call steps; all fill on connect */}
+      <div className="mt-6 flex items-center gap-2" aria-hidden>
+        {CONNECT_STEPS.map((_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              connected
+                ? `w-6 ${dark ? 'bg-emerald-400' : 'bg-emerald-500'}`
+                : i <= step
+                  ? `w-6 ${dark ? 'bg-indigo-400' : 'bg-indigo-500'}`
+                  : `w-1.5 ${dark ? 'bg-white/15' : 'bg-slate-200'}`
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Shown while the AI scores a finished conversational interview.
+const GradingView = () => (
   <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
     <div className="relative mb-6">
-      {/* soft pulsing halo behind the interviewer */}
       <span className="absolute -inset-3 rounded-[1.75rem] bg-indigo-300/40 blur-2xl animate-pulse" />
-      <span className="absolute -inset-1 rounded-3xl ring-2 ring-indigo-200/70 animate-ping" />
-      <div className="relative w-20 h-20 rounded-3xl bg-white border border-indigo-200 ring-4 ring-indigo-100 flex items-center justify-center p-3 shadow-md">
+      <div className="relative w-20 h-20 rounded-3xl bg-white border border-white/20 ring-4 ring-indigo-500/30 flex items-center justify-center p-3 shadow-xl">
         <img
           src="/applyright-icon.png"
-          alt="ApplyRight AI interviewer"
+          alt="ApplyRight AI"
           className="w-full h-full object-contain"
         />
       </div>
     </div>
-
-    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-rose-600">
-      <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
-        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
-      </span>
-      Going live
-    </span>
-
-    <h2 className="mt-3 text-lg sm:text-xl font-bold text-slate-900">
-      Connecting you with your interviewer…
-    </h2>
-    <p className="mt-1 text-sm text-slate-500">
-      {firstName && firstName !== 'there' ? `One moment, ${firstName}.` : 'One moment.'}
-      {title ? ` ${title}` : ''}
+    <h2 className="mt-1 text-lg sm:text-xl font-bold text-white">Scoring your interview…</h2>
+    <p className="mt-1 text-sm text-slate-400 max-w-sm">
+      Assessing your answers against your CV and the role — the things interviewers look for.
     </p>
-
     <div className="mt-5 flex items-center gap-1.5" aria-hidden>
       <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" />
       <span
@@ -752,6 +1458,11 @@ const IntroView = ({
   plannedSec,
   lastSession,
   trend,
+  mode,
+  voice,
+  style,
+  onVoiceChange,
+  onStyleChange,
   onStart,
   onCancel,
 }) => (
@@ -771,7 +1482,9 @@ const IntroView = ({
           className="w-full h-full object-contain"
         />
       </div>
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Interview mode</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+        {mode === 'conversational' ? 'Conversational interview' : 'Guided interview'}
+      </h1>
       <p className="text-sm text-slate-500 mt-1">{title}</p>
     </div>
 
@@ -792,12 +1505,41 @@ const IntroView = ({
       </>
     ) : (
       <>
-        <p className="relative z-10 text-sm text-slate-600 mt-4 leading-relaxed text-center">
-          Hi <span className="font-semibold text-slate-900">{firstName}</span> — take a breath. Your
-          ApplyRight AI interviewer will ask each question aloud. Answer out loud as if you’re in
-          the room, then <strong className="text-slate-900">reveal a model answer</strong> and rate
-          how it felt.
-        </p>
+        {mode === 'conversational' ? (
+          <p className="relative z-10 text-sm text-slate-600 mt-4 leading-relaxed text-center">
+            Hi <span className="font-semibold text-slate-900">{firstName}</span> — take a breath.
+            Your ApplyRight AI interviewer will{' '}
+            <strong className="text-slate-900">actually talk with you</strong>: it reacts to your
+            answers and asks natural follow-ups. Reply by voice or text — just have the
+            conversation, like the real thing.
+          </p>
+        ) : (
+          <p className="relative z-10 text-sm text-slate-600 mt-4 leading-relaxed text-center">
+            Hi <span className="font-semibold text-slate-900">{firstName}</span> — take a breath.
+            Your ApplyRight AI interviewer will ask each question aloud. Answer out loud as if
+            you’re in the room, then{' '}
+            <strong className="text-slate-900">reveal a model answer</strong> and rate how it felt.
+          </p>
+        )}
+        {mode === 'conversational' && (
+          <div className="relative z-10 mt-4 rounded-xl border border-amber-100 bg-amber-50/50 p-3 flex items-start gap-2.5">
+            <Mic className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-600 leading-relaxed">
+              <span className="font-semibold text-slate-800">Find a quiet spot first.</span> The
+              interviewer is always listening, so background noise or other voices can interrupt it.
+              Earphones or a headset help a lot.
+            </p>
+          </div>
+        )}
+        {mode === 'conversational' && (
+          <VoiceStyleSelector
+            voice={voice}
+            style={style}
+            onVoiceChange={onVoiceChange}
+            onStyleChange={onStyleChange}
+          />
+        )}
+        {mode === 'conversational' && <DeviceCheck />}
         {trend && trend.count >= 1 && (
           <div className="relative z-10 mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 flex items-start gap-2.5">
             <TrendingUp className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -812,15 +1554,44 @@ const IntroView = ({
             </p>
           </div>
         )}
-        <div className="relative z-10 mt-4 grid grid-cols-3 gap-2.5">
-          <Stat icon={HelpCircle} value={count} label={count === 1 ? 'Question' : 'Questions'} />
-          <Stat
-            icon={Clock}
-            value={`~${Math.round(plannedSec / 60)}`}
-            unit="min"
-            label="Duration"
-          />
-          <Stat icon={Sparkles} value="Free" label="No credits" />
+        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                Questions
+              </p>
+              <p className="text-sm font-extrabold text-slate-800 mt-0.5">{count}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                Duration
+              </p>
+              <p className="text-sm font-extrabold text-slate-800 mt-0.5">
+                ~{Math.round(plannedSec / 60)} min
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                Credits
+              </p>
+              <p className="text-sm font-extrabold text-slate-800 mt-0.5">Free</p>
+            </div>
+          </div>
         </div>
         {lastSession && (
           <div className="relative z-10 mt-4 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 text-xs text-slate-500 flex items-center gap-2.5">
@@ -842,33 +1613,18 @@ const IntroView = ({
             onClick={onStart}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
           >
-            Take your seat
+            {mode === 'conversational' ? 'Start the conversation' : 'Take your seat'}
           </button>
           <button
             type="button"
             onClick={onCancel}
             className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold transition-colors cursor-pointer select-none"
           >
-            Cancel
+            Back
           </button>
         </div>
       </>
     )}
-  </div>
-);
-
-const Stat = ({ icon: Icon, value, unit, label }) => (
-  <div className="rounded-2xl bg-white border border-slate-200 p-3.5 flex flex-col items-center text-center transition-all hover:border-indigo-200 hover:shadow-sm">
-    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2 shrink-0">
-      <Icon className="w-4.5 h-4.5" />
-    </div>
-    <p className="text-lg font-bold text-slate-900 leading-none">
-      {value}
-      {unit && <span className="text-xs font-semibold text-slate-400 ml-0.5">{unit}</span>}
-    </p>
-    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mt-1.5 leading-tight">
-      {label}
-    </p>
   </div>
 );
 
@@ -1222,12 +1978,17 @@ const RunningView = ({
 const ReviewView = ({
   results,
   overall,
+  assessment,
   confidence,
   setConfidence,
   flagged,
   toggleFlag,
   saving,
   saved,
+  recordingBlob,
+  recordingDuration,
+  gradeError,
+  onRetryAssessment,
   onSave,
   onPracticeWeak,
   onPracticeQuestion,
@@ -1236,6 +1997,13 @@ const ReviewView = ({
   onRateQuestion,
 }) => {
   const [openIdx, setOpenIdx] = useState(null);
+
+  // Object URL for the just-recorded live session (replay on the review screen).
+  const recordingUrl = useMemo(
+    () => (recordingBlob ? URL.createObjectURL(recordingBlob) : null),
+    [recordingBlob]
+  );
+  useEffect(() => () => recordingUrl && URL.revokeObjectURL(recordingUrl), [recordingUrl]);
 
   const confBadgeStyle = (c) => {
     if (c === 'ready') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
@@ -1274,48 +2042,86 @@ const ReviewView = ({
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-slate-900">Interview complete</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              {overall != null
-                ? `Self-assessed performance score: ${overall}% average`
-                : 'Complete your ratings to calculate your score.'}
+              {assessment
+                ? `AI readiness score: ${overall}% — ${READINESS_LABEL[assessment.readiness] || ''}`
+                : overall != null
+                  ? `Self-assessed performance score: ${overall}% average`
+                  : 'Complete your ratings to calculate your score.'}
             </p>
           </div>
         </div>
 
-        {/* Self confidence overall */}
-        <div className="mt-6">
-          <p className="text-sm font-bold text-slate-800 mb-2.5">How did that feel overall?</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {CONF.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setConfidence(c.id)}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
-                  confidence === c.id
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
+        {/* Recording of the live session — replay it right here */}
+        {recordingUrl && (
+          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 mb-2">
+              Your interview recording
+            </p>
+            <AudioPlayer src={recordingUrl} durationHint={recordingDuration} />
+            <p className="mt-2 text-xs text-slate-500">
+              Saved on this device — find it again under “Past interviews” on your prep page.
+            </p>
           </div>
-        </div>
+        )}
 
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={saving}
-            className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-            {saved ? 'Update my review' : 'Save my review'}
-          </button>
-        </div>
+        {/* AI assessment (conversational) — replaces self-rating */}
+        {assessment ? (
+          <AssessmentReport assessment={assessment} />
+        ) : gradeError ? (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-center">
+            <p className="text-sm font-semibold text-slate-800">
+              We couldn’t score this interview just now.
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Your answers are still here — give it another try.
+            </p>
+            <button
+              type="button"
+              onClick={onRetryAssessment}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" /> Re-run assessment
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Self confidence overall (guided/scripted mode) */}
+            <div className="mt-6">
+              <p className="text-sm font-bold text-slate-800 mb-2.5">How did that feel overall?</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {CONF.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setConfidence(c.id)}
+                    className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
+                      confidence === c.id
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Per-question results */}
-        {results.length > 0 && (
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+                {saved ? 'Update my review' : 'Save my review'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Per-question results (guided/scripted only) */}
+        {!assessment && results.length > 0 && (
           <div className="mt-8 pt-6 border-t border-slate-100">
             <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3.5">
               Your practiced questions — tick any you want to keep working on
@@ -1446,6 +2252,445 @@ const ReviewView = ({
         </div>
       </div>
     </div>
+  );
+};
+
+// ── Mode chooser ──
+// Shown the moment the user starts an interview. Teaches the difference between
+// the two modes (what each is, why it differs, the tier + the network it needs)
+// so the user picks the right one. Free during testing — the tier pill is
+// informational, never a hard block.
+const TIER_RANK = { free: 0, plus: 1, pro: 2 };
+
+const ModeCard = ({
+  icon,
+  name,
+  tierLabel,
+  tierKey,
+  userTier,
+  blurb,
+  bullets,
+  network,
+  networkIcon,
+  accent,
+  onPick,
+}) => {
+  // Free during testing: everyone can start either mode. The pill tells the
+  // user which tier this mode will need once Interview Mode becomes paid.
+  const owned = TIER_RANK[userTier] >= TIER_RANK[tierKey];
+  return (
+    <div
+      className={`relative overflow-hidden rounded-3xl border bg-white/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)] flex flex-col ${accent.border}`}
+    >
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute -top-20 -right-14 w-52 h-52 rounded-full blur-3xl ${accent.glow}`}
+      />
+      <div className="relative z-10 flex items-center gap-3">
+        <div
+          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${accent.iconBg}`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-base font-bold text-slate-900 leading-tight">{name}</h3>
+          <span
+            className={`mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${accent.pill}`}
+          >
+            {owned ? null : <Lock className="w-2.5 h-2.5" />} {tierLabel}
+          </span>
+        </div>
+      </div>
+
+      <p className="relative z-10 text-sm text-slate-600 mt-3.5 leading-relaxed">{blurb}</p>
+
+      <ul className="relative z-10 mt-3 space-y-1.5">
+        {bullets.map((b, i) => (
+          <li key={i} className="flex items-start gap-2 text-xs text-slate-500">
+            <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${accent.dot}`} />
+            <span className="leading-relaxed">{b}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div
+        className={`relative z-10 mt-4 flex items-start gap-2 rounded-xl border p-2.5 ${accent.netBox}`}
+      >
+        {networkIcon}
+        <p className="text-xs leading-relaxed">{network}</p>
+      </div>
+
+      <div className="relative z-10 mt-auto pt-4">
+        <button
+          type="button"
+          onClick={onPick}
+          className={`w-full px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all cursor-pointer shadow-md hover:-translate-y-0.5 active:translate-y-0 select-none ${accent.btn}`}
+        >
+          {name.startsWith('Conversational') ? 'Start conversational' : 'Start guided'}
+        </button>
+        <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-wider text-slate-400">
+          Included free during testing
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
+  <div className="relative">
+    <div className="text-center mb-5">
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Choose your interview</h1>
+      <p className="text-sm text-slate-500 mt-1">
+        Two ways to practice for <span className="font-semibold text-slate-700">{title}</span> —
+        pick the one that fits your connection.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <ModeCard
+        icon={<MessageSquare className="w-5 h-5" />}
+        name="Conversational interview"
+        tierLabel="Plus"
+        tierKey="plus"
+        userTier={userTier}
+        blurb="A real back-and-forth. The AI reacts to what you actually say, references your CV, and asks natural follow-ups — the closest thing to the real room."
+        bullets={[
+          'Talks with you, not at you — live follow-ups',
+          'Reply by voice or text, at your own pace',
+          'Best on desktop / Chrome',
+        ]}
+        network="Needs excellent network coverage — every answer is a live round-trip to the interviewer."
+        networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
+        accent={{
+          border: 'border-indigo-200',
+          glow: 'bg-gradient-to-br from-indigo-200/60 to-violet-200/40',
+          iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+          pill: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+          dot: 'bg-indigo-500',
+          netBox: 'border-indigo-100 bg-indigo-50/40 text-indigo-700',
+          btn: 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-indigo-500/20',
+        }}
+        onPick={() => onPick('conversational')}
+      />
+
+      <ModeCard
+        icon={<BookOpen className="w-5 h-5" />}
+        name="Guided question reader"
+        tierLabel="Pro"
+        tierKey="pro"
+        userTier={userTier}
+        blurb="The interviewer reads each prepared question aloud with a warm, human delivery. You answer out loud, reveal a model outline, and rate how it felt."
+        bullets={[
+          'Steady, predictable pace — one question at a time',
+          'Reveal a model answer after each question',
+          'Self-rate to track your readiness',
+        ]}
+        network="Needs only a normal, good internet connection — questions are prepared up front, so brief dips are fine."
+        networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
+        accent={{
+          border: 'border-slate-200',
+          glow: 'bg-gradient-to-br from-slate-200/60 to-indigo-100/40',
+          iconBg: 'bg-slate-100 text-slate-600 border border-slate-200',
+          pill: 'bg-amber-50 text-amber-700 border border-amber-200',
+          dot: 'bg-slate-400',
+          netBox: 'border-slate-200 bg-slate-50 text-slate-600',
+          btn: 'bg-slate-800 hover:bg-slate-900 shadow-slate-300/40',
+        }}
+        onPick={() => onPick('scripted')}
+      />
+    </div>
+
+    <div className="mt-5 text-center">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-5 py-2 rounded-xl text-slate-500 hover:text-slate-800 text-sm font-semibold hover:bg-slate-100 transition-colors cursor-pointer select-none"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+);
+
+// Shared interviewer "tile" for the conversational run — avatar + live voice
+// state + a replay button. (The guided RunningView keeps its own inline tile.)
+const InterviewerTile = ({ voiceState, onReplay }) => {
+  const speaking = voiceState === 'speaking';
+  const loading = voiceState === 'loading';
+  return (
+    <div className="shrink-0 relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.6)]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/15 blur-3xl"
+      />
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="relative shrink-0">
+          <div
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
+              speaking
+                ? 'border-indigo-300 ring-4 ring-indigo-400/40 shadow-lg shadow-indigo-500/40 scale-[1.03]'
+                : 'border-white/20 ring-2 ring-white/10'
+            }`}
+          >
+            <img
+              src="/applyright-icon.png"
+              alt="ApplyRight AI interviewer"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-sm sm:text-base font-bold text-white">ApplyRight AI</p>
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+            Your interviewer
+          </p>
+          <div className="mt-1.5">
+            {speaking ? (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" /> Speaking…
+              </span>
+            ) : loading ? (
+              <span className="text-[11px] font-bold text-slate-400 animate-pulse">Thinking…</span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Listening
+              </span>
+            )}
+          </div>
+        </div>
+
+        {onReplay && (
+          <button
+            type="button"
+            onClick={onReplay}
+            title="Hear that again"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold transition-colors cursor-pointer select-none"
+          >
+            <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Reusable answer box — textarea + optional voice dictation + submit. Used by
+// the conversational run for every turn.
+const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
+  const [answer, setAnswer] = useState('');
+  const [listening, setListening] = useState(false);
+  const stopRef = useRef(null);
+  const sttSupported = isSpeechRecognitionSupported();
+
+  useEffect(() => () => stopRef.current?.(), []);
+
+  const toggleMic = () => {
+    if (listening) {
+      stopRef.current?.();
+      setListening(false);
+      return;
+    }
+    setListening(true);
+    stopRef.current = startDictation({
+      onText: (t) => setAnswer(t),
+      onEnd: () => setListening(false),
+      onError: () => setListening(false),
+    });
+  };
+
+  const send = () => {
+    const text = answer.trim();
+    if (!text || loading) return;
+    onSubmit(text);
+    setAnswer('');
+  };
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        rows={4}
+        placeholder={placeholder || 'Answer naturally — speak or type…'}
+        className="w-full text-sm rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
+      />
+      <div className="mt-2 flex items-center gap-2">
+        {sttSupported && (
+          <button
+            type="button"
+            onClick={toggleMic}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
+              listening
+                ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
+                : 'border-white/15 bg-white/5 text-slate-200 hover:bg-white/10'
+            }`}
+          >
+            <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={loading || !answer.trim()}
+          onClick={send}
+          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold disabled:opacity-50 transition-all"
+        >
+          {loading ? (
+            <Loader className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Send className="w-3.5 h-3.5" />
+          )}
+          Send answer
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ── Conversational run ──
+// Turn-based conversational fallback (Android / no-mic). It's a real
+// conversation, so the QUESTION is NOT shown on screen — you listen and reply.
+// The typed composer stays here because it's the only way to answer without a mic.
+const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.96, y: 10 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    className="flex flex-col h-[calc(100dvh-5.5rem)]"
+  >
+    {/* header row */}
+    <div className="shrink-0 flex items-center justify-between mb-3 px-1">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+        Conversation in progress
+      </p>
+      <button
+        type="button"
+        onClick={onEnd}
+        className="text-[11px] font-semibold text-slate-400 hover:text-white transition-colors"
+      >
+        End &amp; review
+      </button>
+    </div>
+
+    <InterviewerTile voiceState={voiceState} onReplay={onReplay} />
+
+    {/* Your turn — listen to the interviewer, then answer (no question shown) */}
+    <div className="flex-1 min-h-0 flex flex-col mt-4">
+      <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2 px-1">
+        Your turn
+      </p>
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+        <AnswerComposer onSubmit={onSubmit} loading={turnLoading} />
+        <p className="mt-3 text-center text-xs text-slate-400 leading-relaxed">
+          Listen to the interviewer, then answer like you would in a real interview — they respond
+          to what you say.
+        </p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+// ── Realtime (live voice) view — VOICE ONLY, no text, no question on screen ──
+const RealtimeView = ({
+  voiceState,
+  secondsLeft,
+  muted,
+  micStream,
+  captionsOn,
+  caption,
+  onToggleCaptions,
+  onToggleMute,
+  onEnd,
+}) => {
+  const speaking = voiceState === 'speaking';
+  const connecting = voiceState === 'loading';
+  const listening = !speaking && !connecting;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col h-[calc(100dvh-5.5rem)]"
+    >
+      <div className="shrink-0 flex items-center justify-between mb-3 px-1">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+          Live voice interview
+        </p>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onToggleCaptions}
+            title="Toggle captions"
+            className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors ${
+              captionsOn ? 'text-indigo-300' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Captions className="w-3.5 h-3.5" /> CC
+          </button>
+          <span
+            className={`text-[11px] font-bold tabular-nums ${
+              secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-400'
+            }`}
+          >
+            {fmt(secondsLeft)} left
+          </span>
+        </div>
+      </div>
+
+      <InterviewerTile voiceState={voiceState} />
+
+      {/* Big live status */}
+      <div className="shrink-0 mt-5 text-center">
+        <p className="text-lg sm:text-xl font-bold text-white">
+          {connecting
+            ? 'Connecting…'
+            : speaking
+              ? 'Interviewer is speaking'
+              : 'Go ahead — I’m listening'}
+        </p>
+        <p className="mt-1 text-sm text-slate-400">
+          Just talk — the interviewer hears you and replies in real time.
+        </p>
+      </div>
+
+      {/* Optional captions of what the interviewer just said (accessibility) */}
+      {captionsOn && (
+        <div className="shrink-0 mt-4 mx-1 rounded-xl border border-white/10 bg-white/5 p-3 min-h-[3rem]">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+            Interviewer (captions)
+          </p>
+          <p className="text-sm text-slate-200 leading-relaxed">{caption || '…'}</p>
+        </div>
+      )}
+
+      {/* Voice tracker — lights up + tracks your mic on your turn */}
+      <div className="flex-1 min-h-0 flex flex-col justify-center mt-5">
+        <VoiceVisualizer stream={micStream} active={listening && !muted} dark />
+      </div>
+
+      {/* Controls (pinned) */}
+      <div className="shrink-0 mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onToggleMute}
+          className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none ${
+            muted
+              ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
+              : 'border-white/15 bg-white/5 hover:bg-white/10 text-slate-200'
+          }`}
+        >
+          {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+          {muted ? 'Unmute' : 'Mute'}
+        </button>
+        <button
+          type="button"
+          onClick={onEnd}
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
+        >
+          End &amp; review
+        </button>
+      </div>
+    </motion.div>
   );
 };
 

@@ -135,6 +135,38 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Conversational Interview Mode: one live turn. The client owns the transcript
+  // + question spine and resends them each turn (server is stateless).
+  // payload = { questionSpine, spineIndex, transcript, lastAnswer, phase }.
+  // Returns { spoken, displayQuestion, isFollowUp, nextSpineIndex, done }.
+  conversationTurn: async (applicationId, payload) => {
+    const response = await api.post(`/interview-prep/${applicationId}/conversation-turn`, payload);
+    return response.data;
+  },
+
+  // Realtime (live voice) Interview Mode: mint a short-lived OpenAI ephemeral
+  // client secret. The browser then does the WebRTC handshake directly with
+  // OpenAI. Returns { clientSecret, expiresAt, model, voice, maxSessionSec }.
+  createRealtimeSession: async (applicationId, questionSpine, meta = {}) => {
+    const response = await api.post(`/interview-prep/${applicationId}/realtime-session`, {
+      questionSpine,
+      ...meta, // { timeOfDay, candidateName } for a natural, time-aware greeting
+    });
+    return response.data;
+  },
+
+  // Assess a finished conversational interview from its transcript (AI grade
+  // grounded in CV + job). Persists as the prep's last session.
+  // Returns { assessment, lastInterviewSession }.
+  assessInterview: async (applicationId, { transcript, durationSec, plannedSec }) => {
+    const response = await api.post(`/interview-prep/${applicationId}/assess-interview`, {
+      transcript,
+      durationSec,
+      plannedSec,
+    });
+    return response.data;
+  },
+
   updateStoryConfidence: async (applicationId, storyId, confidence) => {
     const response = await api.patch(`/interview-prep/${applicationId}/story-confidence`, {
       storyId,

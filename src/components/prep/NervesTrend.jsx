@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import { getInterviewTrend } from '../../utils/interviewPrep';
+import ScoringInfo from './ScoringInfo';
 
 // Visualises how the user's self-rated nerves move across recent Interview Mode
 // runs — the exposure-therapy selling point made tangible ("each rep gets
@@ -25,10 +26,12 @@ const NervesTrend = ({ application }) => {
         <TrendingUp className="w-4 h-4 text-emerald-600" />
         <h3 className="text-sm font-bold text-slate-900">Your nerves over time</h3>
       </div>
-      <p className="text-xs text-slate-500 mb-3">
-        {trend.count} interview{trend.count === 1 ? '' : 's'} done.{' '}
+      <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+        Each bar is one interview (oldest left, newest right) — the{' '}
+        <span className="font-semibold text-slate-600">taller and greener</span>, the more
+        confidently you handled it.{' '}
         {trend.trend === 'up'
-          ? 'Trending stronger — exactly how desensitization works.'
+          ? 'Yours are trending stronger — exactly how nerves ease with practice.'
           : 'Each rep makes the real room feel more familiar.'}
       </p>
       <div className="flex items-end gap-2 h-20">
@@ -48,6 +51,19 @@ const NervesTrend = ({ application }) => {
       <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 font-semibold">
         <span>Earlier</span>
         <span>Latest</span>
+      </div>
+
+      {/* Legend so the colours are self-explanatory */}
+      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-3">
+          {['needs_work', 'almost', 'ready'].map((c) => (
+            <span key={c} className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+              <span className={`w-2 h-2 rounded-full ${COLOR[c]}`} />
+              {LABEL[c]}
+            </span>
+          ))}
+        </div>
+        <ScoringInfo />
       </div>
     </section>
   );

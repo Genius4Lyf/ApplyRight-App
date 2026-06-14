@@ -1,11 +1,42 @@
 import React from 'react';
-import { ArrowRight, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
+import ScoringInfo from './ScoringInfo';
 
-const CONF_LABEL = { needs_work: 'Felt shaky', almost: 'Felt okay', ready: 'Felt strong' };
-const CONF_TONE = {
-  needs_work: 'bg-rose-50 text-rose-700 border-rose-200',
-  almost: 'bg-amber-50 text-amber-700 border-amber-200',
-  ready: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+// How an interview went + a short, plain-English meaning. Works for both
+// self-rated (guided) and AI-graded (conversational) sessions.
+const STATUS = {
+  needs_work: {
+    label: 'Shaky',
+    blurb: 'Below the bar — keep practising the fundamentals.',
+    score: 'text-rose-600',
+    text: 'text-rose-700',
+    dot: 'bg-rose-500',
+    box: 'border-rose-100 bg-rose-50/60',
+  },
+  almost: {
+    label: 'Okay',
+    blurb: 'Getting there — a few rough edges to sharpen.',
+    score: 'text-amber-600',
+    text: 'text-amber-700',
+    dot: 'bg-amber-500',
+    box: 'border-amber-100 bg-amber-50/60',
+  },
+  ready: {
+    label: 'Strong',
+    blurb: 'Sharp and specific — you sound interview-ready.',
+    score: 'text-emerald-600',
+    text: 'text-emerald-700',
+    dot: 'bg-emerald-500',
+    box: 'border-emerald-100 bg-emerald-50/60',
+  },
+};
+const FALLBACK = {
+  label: 'Done',
+  blurb: 'Interview completed.',
+  score: 'text-slate-600',
+  text: 'text-slate-600',
+  dot: 'bg-slate-400',
+  box: 'border-slate-200 bg-slate-50',
 };
 
 const fmtWhen = (value) => {
@@ -15,19 +46,36 @@ const fmtWhen = (value) => {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
-// Compact summary of the user's most recent Interview Mode session, shown on the
-// prep page so they can pick up where they left off.
-const LastInterviewCard = ({ session, trend, onStart, onPracticeQuestion }) => {
-  if (!session || !session.completedAt) {
+// Recent interviews + how each went, so users can see their progress. The most
+// recent is shown prominently with a plain-English read on the status; earlier
+// ones are a compact list below. Driven by interviewHistory.
+const LastInterviewCard = ({ session, history, trend, onStart }) => {
+  const hist = Array.isArray(history) ? history : [];
+  const rows = (
+    hist.length
+      ? hist
+      : session && session.completedAt
+        ? [
+            {
+              completedAt: session.completedAt,
+              confidence: session.confidence,
+              score: session.score,
+            },
+          ]
+        : []
+  )
+    .slice()
+    .reverse()
+    .slice(0, 5);
+
+  if (rows.length === 0) {
     return (
       <section className="relative overflow-hidden rounded-xl border border-indigo-100/80 bg-white/70 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between h-full shadow-[0_8px_30px_-12px_rgba(79,70,229,0.35)] hover:shadow-[0_12px_36px_-10px_rgba(79,70,229,0.45)] transition-all duration-300">
-        {/* Ambient brand glow — bleeds through the frosted surface for a premium, lit-from-within feel */}
         <div
           aria-hidden
           className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full bg-gradient-to-br from-indigo-300/40 to-purple-300/30 blur-3xl"
         />
         <div className="relative z-10 flex flex-col items-center text-center">
-          {/* ApplyRight AI mark — the empty state's focal point */}
           <div className="relative mt-1 mb-3">
             <div className="w-12 h-12 rounded-xl bg-white border border-indigo-100 ring-2 ring-indigo-100/70 flex items-center justify-center shadow-sm p-2">
               <img
@@ -40,8 +88,8 @@ const LastInterviewCard = ({ session, trend, onStart, onPracticeQuestion }) => {
           </div>
           <h2 className="text-base font-bold text-slate-900">Interview with ApplyRight AI</h2>
           <p className="mt-1.5 text-xs text-slate-600 leading-relaxed max-w-[17rem]">
-            Get interview-ready before the real thing. Our AI runs a timed mock for this role, asks
-            the questions out loud, then grades your answers and flags what to sharpen.
+            Get interview-ready before the real thing. Our AI runs a live mock for this role, asks
+            the questions out loud, then grades how you did.
           </p>
         </div>
         <div className="relative z-10 mt-4 pt-3 border-t border-indigo-100/60 flex justify-center">
@@ -59,75 +107,85 @@ const LastInterviewCard = ({ session, trend, onStart, onPracticeQuestion }) => {
     );
   }
 
-  const flagged = Array.isArray(session.flagged) ? session.flagged : [];
-  const when = fmtWhen(session.completedAt);
-  const mins = session.durationSec ? Math.max(1, Math.round(session.durationSec / 60)) : null;
+  const latest = rows[0];
+  const earlier = rows.slice(1);
+  const st = STATUS[latest.confidence] || FALLBACK;
+  const count = trend?.count || hist.length || rows.length;
+  const nervesEasing = trend?.trend === 'up' && count >= 2;
 
   return (
     <section className="relative overflow-hidden rounded-xl border border-indigo-100/80 bg-white/70 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between h-full shadow-[0_8px_30px_-12px_rgba(79,70,229,0.35)] hover:shadow-[0_12px_36px_-10px_rgba(79,70,229,0.45)] transition-all duration-300">
-      {/* Ambient brand glow — bleeds through the frosted surface for a premium, lit-from-within feel */}
       <div
         aria-hidden
         className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full bg-gradient-to-br from-indigo-300/40 to-purple-300/30 blur-3xl"
       />
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-white border border-indigo-100 ring-2 ring-indigo-100/70 flex items-center justify-center shrink-0 p-1.5">
-              <img
-                src="/applyright-icon.png"
-                alt="ApplyRight AI"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-slate-900">Last interview</h2>
-              <p className="text-xs text-slate-500">
-                {when}
-                {mins ? ` · ${mins} min` : ''}
-              </p>
-              {trend && trend.count >= 2 && (
-                <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">
-                  {trend.count} interviews{trend.trend === 'up' ? ' · nerves easing' : ''}
-                </p>
-              )}
-            </div>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-white border border-indigo-100 ring-2 ring-indigo-100/70 flex items-center justify-center shrink-0 p-1.5">
+            <img
+              src="/applyright-icon.png"
+              alt="ApplyRight AI"
+              className="w-full h-full object-contain"
+            />
           </div>
-          {session.confidence && (
-            <span
-              className={`shrink-0 text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${CONF_TONE[session.confidence] || 'bg-slate-50 text-slate-600 border-slate-200'}`}
-            >
-              {CONF_LABEL[session.confidence] || session.confidence}
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-slate-900">Your interviews</h2>
+            <p className="text-xs text-slate-500">
+              {count} {count === 1 ? 'session' : 'sessions'} · your progress
+            </p>
+          </div>
+          {nervesEasing && (
+            <span className="ml-auto shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+              <TrendingUp className="w-3.5 h-3.5" /> Improving
             </span>
           )}
         </div>
 
-        {flagged.length > 0 ? (
+        {/* Most recent — prominent, with a plain-English read on the status */}
+        <div className={`mt-3 rounded-xl border p-3.5 ${st.box}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-baseline gap-2">
+              {typeof latest.score === 'number' && (
+                <span className={`text-2xl font-extrabold leading-none ${st.score}`}>
+                  {latest.score}%
+                </span>
+              )}
+              <span className={`text-sm font-bold ${st.text}`}>{st.label}</span>
+            </div>
+            <span className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400">
+              Latest · {fmtWhen(latest.completedAt)}
+            </span>
+          </div>
+          <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">{st.blurb}</p>
+          <div className="mt-2">
+            <ScoringInfo />
+          </div>
+        </div>
+
+        {/* Earlier interviews — compact progress trail */}
+        {earlier.length > 0 && (
           <div className="mt-3">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
-              You wanted to work on
+            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+              Earlier
             </p>
-            <ul className="space-y-1.5">
-              {flagged.map((f, i) => (
-                <li key={i} className="flex items-start justify-between gap-3">
-                  <span className="text-xs text-slate-700 leading-relaxed">{f.question}</span>
-                  {onPracticeQuestion && Number.isInteger(f.index) && (
-                    <button
-                      type="button"
-                      onClick={() => onPracticeQuestion(f.index)}
-                      className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700"
-                    >
-                      <Play className="w-3.5 h-3.5" /> Practice
-                    </button>
-                  )}
-                </li>
-              ))}
+            <ul className="divide-y divide-slate-100">
+              {earlier.map((r, i) => {
+                const e = STATUS[r.confidence] || FALLBACK;
+                return (
+                  <li key={i} className="flex items-center justify-between gap-3 py-1.5">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${e.dot}`} />
+                      <span className="text-xs text-slate-600">{fmtWhen(r.completedAt)}</span>
+                    </span>
+                    <span className={`shrink-0 text-[11px] font-bold ${e.text}`}>
+                      {typeof r.score === 'number' ? `${r.score}% · ` : ''}
+                      {e.label}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
-        ) : (
-          <p className="mt-3 text-xs text-slate-500">
-            No questions flagged — you felt good across the board.
-          </p>
         )}
       </div>
 
