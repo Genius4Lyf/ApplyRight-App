@@ -102,11 +102,13 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
   return createPortal(
     <div className="fixed inset-0 z-[120] flex flex-col bg-slate-900/70 backdrop-blur-sm">
       {/* Top bar */}
-      <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-white/95 backdrop-blur border-b border-slate-200">
+      <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2 min-w-0">
           <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
-          <span className="text-sm font-bold text-slate-900 truncate">Your CV</span>
-          <span className="hidden sm:inline text-[10px] uppercase tracking-wider font-bold text-slate-400">
+          <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+            Your CV
+          </span>
+          <span className="hidden sm:inline text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
             View only
           </span>
         </div>
@@ -126,7 +128,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
             type="button"
             onClick={onClose}
             aria-label="Close CV view"
-            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -141,15 +143,15 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
             <p className="text-xs mt-2">Loading your CV…</p>
           </div>
         ) : error ? (
-          <div className="max-w-sm mx-auto mt-10 bg-white rounded-xl p-6 text-center">
-            <p className="text-sm text-slate-700">{error}</p>
+          <div className="max-w-sm mx-auto mt-10 bg-white dark:bg-slate-800 rounded-xl p-6 text-center">
+            <p className="text-sm text-slate-700 dark:text-slate-300">{error}</p>
           </div>
         ) : !hasCV ? (
-          <div className="max-w-sm mx-auto mt-10 bg-white rounded-xl p-6 text-center">
-            <p className="text-sm font-semibold text-slate-800 mb-1">
+          <div className="max-w-sm mx-auto mt-10 bg-white dark:bg-slate-800 rounded-xl p-6 text-center">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">
               No CV generated for this role yet
             </p>
-            <p className="text-xs text-slate-500 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Head to this application to generate a tailored CV, then come back to view it here.
             </p>
             <button

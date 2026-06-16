@@ -55,32 +55,32 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="bg-white border border-slate-200 rounded-xl overflow-hidden"
+      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden"
     >
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
         aria-expanded={expanded}
       >
-        <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
           <Briefcase className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
               Job requirements
             </span>
-            <span className="text-[10px] text-slate-400">AI extracted</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">AI extracted</span>
           </div>
-          <p className="text-sm font-semibold text-slate-700 mt-0.5 truncate">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 truncate">
             {teaserParts.join(' · ') || 'Tap to view extracted requirements'}
           </p>
         </div>
         <motion.div
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          className="text-slate-400 shrink-0"
+          className="text-slate-400 dark:text-slate-500 shrink-0"
         >
           <ChevronDown className="w-5 h-5" />
         </motion.div>
@@ -96,26 +96,34 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-4">
+            <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-4">
               {(jobTitle || jobCompany) && (
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     {jobTitle || 'Untitled role'}
                   </p>
-                  {jobCompany && <p className="text-xs text-slate-500 mt-0.5">{jobCompany}</p>}
+                  {jobCompany && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {jobCompany}
+                    </p>
+                  )}
                 </div>
               )}
 
               {(seniority || (typeof requiredYears === 'number' && requiredYears > 0)) && (
                 <div className="flex flex-wrap gap-2 text-xs">
                   {seniority && (
-                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-md font-medium">
-                      Seniority: <span className="text-slate-900">{seniority}</span>
+                    <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md font-medium">
+                      Seniority:{' '}
+                      <span className="text-slate-900 dark:text-slate-100">{seniority}</span>
                     </span>
                   )}
                   {typeof requiredYears === 'number' && requiredYears > 0 && (
-                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-md font-medium">
-                      Experience: <span className="text-slate-900">{requiredYears}+ yrs</span>
+                    <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md font-medium">
+                      Experience:{' '}
+                      <span className="text-slate-900 dark:text-slate-100">
+                        {requiredYears}+ yrs
+                      </span>
                     </span>
                   )}
                 </div>
@@ -123,14 +131,14 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
 
               {requiredSkills.length > 0 && (
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider font-bold text-rose-700 mb-2">
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-rose-700 dark:text-rose-300 mb-2">
                     Required ({requiredSkills.length})
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {requiredSkills.map((s, i) => (
                       <span
                         key={`req-${i}`}
-                        className="text-xs px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-800 font-medium"
+                        className="text-xs px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 font-medium"
                       >
                         {s.name}
                       </span>
@@ -141,14 +149,14 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
 
               {niceToHaveSkills.length > 0 && (
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider font-bold text-amber-700 mb-2">
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 mb-2">
                     Nice to have ({niceToHaveSkills.length})
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {niceToHaveSkills.map((s, i) => (
                       <span
                         key={`nth-${i}`}
-                        className="text-xs px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 font-medium"
+                        className="text-xs px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 font-medium"
                       >
                         {s.name}
                       </span>
@@ -157,7 +165,7 @@ const JobRequirementsCard = ({ fitAnalysis, jobTitle, jobCompany }) => {
                 </div>
               )}
 
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
                 <Sparkles className="w-3 h-3" />
                 <span>
                   Extracted by AI from the job description. Verify against the original posting if

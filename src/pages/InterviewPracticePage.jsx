@@ -246,22 +246,22 @@ const InterviewPracticePage = () => {
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900">
-      <header className="shrink-0 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+      <header className="shrink-0 border-b border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-800/80 backdrop-blur">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           {/* Row 1: status badge ↔ exit. Kept terse so the row never wraps. */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
                 <PlayCircle className="w-4 h-4" />
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
                 Practice mode
               </span>
             </div>
             <button
               type="button"
               onClick={exitToDetail}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               Exit
@@ -270,11 +270,11 @@ const InterviewPracticePage = () => {
           {/* Row 2: headline ↔ progress meta. Headline truncates, meta has
               breathing room of its own. */}
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <p className="text-sm sm:text-base font-semibold text-slate-900 truncate min-w-0">
+            <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 truncate min-w-0">
               {headline}
             </p>
             {cards.length > 0 && (
-              <p className="text-[11px] text-slate-400 shrink-0 whitespace-nowrap">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap">
                 <span>
                   {markedCount}/{cards.length} marked
                 </span>
@@ -288,16 +288,16 @@ const InterviewPracticePage = () => {
       <main className="flex-1 min-h-0 flex justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
         <div className="w-full max-w-3xl flex flex-col min-h-0">
           {cards.length === 0 ? (
-            <div className="m-auto w-full relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-8 text-center shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+            <div className="m-auto w-full relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-8 text-center shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
               />
               <div className="relative z-10">
-                <p className="text-base font-bold text-slate-900 mb-2">
+                <p className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {weakFilter ? "You're all caught up" : 'Nothing to practice yet'}
                 </p>
-                <p className="text-sm text-slate-500 mb-6">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                   {weakFilter
                     ? 'Every question is marked Ready. Nothing weak left to drill.'
                     : skillFilter

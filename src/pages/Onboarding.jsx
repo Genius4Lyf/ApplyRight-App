@@ -119,7 +119,7 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
       <WelcomeModal
         isOpen={showWelcome}
         firstName={formData.firstName}
@@ -133,13 +133,13 @@ const Onboarding = () => {
             {['Basic Info', 'Education'].map((label, index) => (
               <span
                 key={label}
-                className={`text-sm font-medium ${step > index ? 'text-primary' : step === index + 1 ? 'text-slate-900' : 'text-slate-400'}`}
+                className={`text-sm font-medium ${step > index ? 'text-primary' : step === index + 1 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 {label}
               </span>
             ))}
           </div>
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-in-out"
               style={{ width: `${(step / 2) * 100}%` }}
@@ -147,7 +147,7 @@ const Onboarding = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
           <div className="relative bg-primary/5 border-b border-primary/10 overflow-hidden">
             {/* Educational Background Pattern */}
             <div
@@ -161,15 +161,15 @@ const Onboarding = () => {
             />
 
             <div className="relative z-10 p-8 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-4 shadow-sm text-primary">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-slate-800 mb-4 shadow-sm text-primary">
                 {step === 1 && <User className="w-6 h-6" />}
                 {step === 2 && <GraduationCap className="w-6 h-6" />}
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {step === 1 && "Let's get to know you"}
                 {step === 2 && 'Your Academic Journey'}
               </h2>
-              <p className="text-slate-500 mt-2">
+              <p className="text-slate-500 dark:text-slate-400 mt-2">
                 {step === 1 && 'Tell us a bit about yourself to get started.'}
                 {step === 2 && 'Help us tailor resources to your field of study.'}
               </p>
@@ -181,7 +181,7 @@ const Onboarding = () => {
               <div className="space-y-5 animate-fadeIn">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                       First Name
                     </label>
                     <input
@@ -194,7 +194,7 @@ const Onboarding = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                       Last Name
                     </label>
                     <input
@@ -209,7 +209,7 @@ const Onboarding = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     Other Name (Optional)
                   </label>
                   <input
@@ -241,7 +241,7 @@ const Onboarding = () => {
             {step === 2 && (
               <div className="space-y-5 animate-fadeIn">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     University / Institution
                   </label>
                   <input
@@ -253,7 +253,7 @@ const Onboarding = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     Discipline / Major
                   </label>
                   <input
@@ -266,7 +266,7 @@ const Onboarding = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     Graduation Year (Expected)
                   </label>
                   <input
@@ -281,12 +281,12 @@ const Onboarding = () => {
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t border-slate-100">
+            <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="px-6 py-2 text-slate-600 font-medium hover:text-slate-900 transition-colors"
+                  className="px-6 py-2 text-slate-600 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
                 >
                   Back
                 </button>

@@ -21,15 +21,17 @@ const NervesTrend = ({ application }) => {
   const recent = history.slice(-8); // last 8 runs for the mini chart
 
   return (
-    <section className="rounded-2xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <section className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       <div className="flex items-center gap-2 mb-1">
-        <TrendingUp className="w-4 h-4 text-emerald-600" />
-        <h3 className="text-sm font-bold text-slate-900">Your nerves over time</h3>
+        <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          Your nerves over time
+        </h3>
       </div>
-      <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
         Each bar is one interview (oldest left, newest right) — the{' '}
-        <span className="font-semibold text-slate-600">taller and greener</span>, the more
-        confidently you handled it.{' '}
+        <span className="font-semibold text-slate-600 dark:text-slate-300">taller and greener</span>
+        , the more confidently you handled it.{' '}
         {trend.trend === 'up'
           ? 'Yours are trending stronger — exactly how nerves ease with practice.'
           : 'Each rep makes the real room feel more familiar.'}
@@ -48,16 +50,19 @@ const NervesTrend = ({ application }) => {
           );
         })}
       </div>
-      <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 font-semibold">
+      <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-semibold">
         <span>Earlier</span>
         <span>Latest</span>
       </div>
 
       {/* Legend so the colours are self-explanatory */}
-      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-3">
           {['needs_work', 'almost', 'ready'].map((c) => (
-            <span key={c} className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+            <span
+              key={c}
+              className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400"
+            >
               <span className={`w-2 h-2 rounded-full ${COLOR[c]}`} />
               {LABEL[c]}
             </span>

@@ -40,7 +40,11 @@ const ProfessionalSummary = () => {
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading editor context...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        Loading editor context...
+      </div>
+    );
   }
 
   const handleGenerateClick = () => {
@@ -119,12 +123,16 @@ const ProfessionalSummary = () => {
         className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
       >
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Professional Summary</h2>
-            <p className="text-slate-500">Your 30-second elevator pitch. Make it count.</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+              Professional Summary
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400">
+              Your 30-second elevator pitch. Make it count.
+            </p>
           </div>
         </div>
 
@@ -152,14 +160,14 @@ const ProfessionalSummary = () => {
               setSummary(e.target.value);
             }}
             placeholder="e.g. Innovative Software Engineer with 5+ years of experience in..."
-            className="w-full p-4 border border-slate-300 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700"
+            className="w-full p-4 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
           />
           <div className="flex justify-end mt-2">
             <button
               type="button"
               onClick={handleGenerateClick}
               disabled={generating}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md text-xs font-bold transition-all border border-indigo-200 shadow-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 rounded-md text-xs font-bold transition-all border border-indigo-200 dark:border-indigo-500/30 shadow-sm"
             >
               {generating ? (
                 <RefreshCcw className="w-3 h-3 animate-spin" />
@@ -171,21 +179,21 @@ const ProfessionalSummary = () => {
           </div>
         </div>
 
-        <div className="bg-indigo-50 p-4 rounded-lg flex items-start gap-3">
-          <div className="p-1 bg-indigo-100 rounded text-indigo-600 mt-0.5">
+        <div className="bg-indigo-50 dark:bg-indigo-500/15 p-4 rounded-lg flex items-start gap-3">
+          <div className="p-1 bg-indigo-100 dark:bg-indigo-500/20 rounded text-indigo-600 dark:text-indigo-300 mt-0.5">
             <Sparkles className="w-3 h-3" />
           </div>
-          <div className="text-xs text-indigo-800 leading-relaxed">
+          <div className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed">
             <strong>Tip:</strong> The AI uses your Work History and Skills to craft this summary —
             it's grounded in your own experience, not tailored to a job description.
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
           <button
             type="button"
             onClick={handleBack}
-            className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+            className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
@@ -201,7 +209,7 @@ const ProfessionalSummary = () => {
 
       {showAiModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white text-center">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 animate-in bounce-in duration-700">
@@ -215,12 +223,12 @@ const ProfessionalSummary = () => {
 
             {/* Body */}
             <div className="p-8">
-              <p className="text-slate-600 mb-6 text-center leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 mb-6 text-center leading-relaxed">
                 Generate an AI-personalised summary: the AI will analyse your{' '}
                 <strong>work history</strong> and <strong>skills</strong> to provide the result.
               </p>
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 text-center">
-                <p className="text-slate-500 text-sm">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-4 text-center">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
                   If you're unhappy with the AI's response, you can simply discard it and write your
                   own.
                 </p>
@@ -228,10 +236,10 @@ const ProfessionalSummary = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <div className="p-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
               <button
                 onClick={() => setShowAiModal(false)}
-                className="px-4 py-2 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 rounded-lg font-medium transition-colors"
               >
                 Not now
               </button>

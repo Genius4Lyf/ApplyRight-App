@@ -112,14 +112,18 @@ const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
             ? 'border-indigo-400/40 bg-indigo-500/10'
             : 'border-white/10 bg-white/5'
           : active
-            ? 'border-indigo-200 bg-indigo-50/50'
-            : 'border-slate-200 bg-white'
+            ? 'border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/15'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
       }`}
     >
       <canvas ref={canvasRef} className="w-full h-16" />
       <p
         className={`mt-2 text-center text-[11px] font-bold uppercase tracking-wider ${
-          active ? (dark ? 'text-indigo-300' : 'text-indigo-600') : 'text-slate-400'
+          active
+            ? dark
+              ? 'text-indigo-300'
+              : 'text-indigo-600 dark:text-indigo-300'
+            : 'text-slate-400 dark:text-slate-500'
         }`}
       >
         {active ? 'Listening to you…' : 'Your turn will light up here'}

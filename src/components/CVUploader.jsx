@@ -60,21 +60,25 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
   return (
     /* Card framing only on lg+; on mobile/tablet the uploader sits flush
        with the page so the dropzone gets the full viewport width. */
-    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300">
+    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600">
       <div className="flex items-center gap-3 mb-4 lg:mb-6">
-        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
           <FileText className="w-5 h-5 lg:w-6 lg:h-6" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base lg:text-lg font-semibold text-slate-900">Step 1 · Resume</h3>
-          <p className="text-xs lg:text-sm text-slate-500">Upload your latest CV or portfolio</p>
+          <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Step 1 · Resume
+          </h3>
+          <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
+            Upload your latest CV or portfolio
+          </p>
         </div>
       </div>
 
       <div
         className={`
                     flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-200 relative
-                    ${uploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer border-slate-200 hover:border-indigo-400 bg-slate-50/30'}
+                    ${uploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer border-slate-200 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/30 dark:bg-slate-900/30'}
                 `}
         onClick={() => !uploading && fileInputRef.current.click()}
       >
@@ -90,23 +94,27 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
 
         {!file ? (
           <div className="text-center pointer-events-none">
-            <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 group-hover:text-indigo-600 transition-colors">
+            <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 transition-colors">
               <Upload className="w-6 h-6" />
             </div>
-            <p className="text-slate-600 font-medium mb-1">Click or drag to upload</p>
-            <p className="text-xs text-slate-400">PDF, DOCX (Max 5MB)</p>
+            <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">
+              Click or drag to upload
+            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">PDF, DOCX (Max 5MB)</p>
           </div>
         ) : (
           <div className="w-full text-center">
-            <div className="inline-flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm max-w-full">
-              <div className="w-10 h-10 rounded bg-green-50 flex items-center justify-center text-green-600">
+            <div className="inline-flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm max-w-full">
+              <div className="w-10 h-10 rounded bg-green-50 dark:bg-green-500/15 flex items-center justify-center text-green-600 dark:text-green-300">
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div className="text-left min-w-0 pr-4">
-                <p className="text-sm font-medium text-slate-900 truncate max-w-[150px]">
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
                   {file.name}
                 </p>
-                <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
               </div>
               <button
                 onClick={(e) => {
@@ -115,7 +123,7 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
                   setMessage(null);
                   if (fileInputRef.current) fileInputRef.current.value = '';
                 }}
-                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 transition-colors"
               >
                 <XCircle className="w-4 h-4" />
               </button>
@@ -137,8 +145,8 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
         <div
           className={`mt-4 flex items-center p-3 rounded-lg border text-sm ${
             message.type === 'success'
-              ? 'bg-green-50 border-green-100 text-green-700'
-              : 'bg-red-50 border-red-100 text-red-700'
+              ? 'bg-green-50 dark:bg-green-500/15 border-green-100 dark:border-green-500/30 text-green-700 dark:text-green-300'
+              : 'bg-red-50 dark:bg-red-500/15 border-red-100 dark:border-red-500/30 text-red-700 dark:text-red-300'
           }`}
         >
           {message.type === 'success' ? (
@@ -154,7 +162,9 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
         onClick={handleUpload}
         disabled={!file || uploading}
         className={`mt-4 w-full h-12 rounded-lg font-semibold transition-all ${
-          !file || uploading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary'
+          !file || uploading
+            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+            : 'btn-primary'
         }`}
       >
         {uploading ? 'Processing...' : 'Confirm Upload'}

@@ -26,15 +26,15 @@ const Modal = ({ isOpen, onClose, title, children, footer, maxWidth = 'max-w-2xl
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className={`bg-white rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden`}
+              className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -42,14 +42,14 @@ const Modal = ({ isOpen, onClose, title, children, footer, maxWidth = 'max-w-2xl
 
               {/* Scrollable Body */}
               <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                <div className="prose prose-slate max-w-none">{children}</div>
+                <div className="prose prose-slate dark:prose-invert max-w-none">{children}</div>
               </div>
 
               {/* Footer */}
               {footer ? (
                 footer
               ) : (
-                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <div className="p-6 border-t border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40 flex justify-end">
                   <button onClick={onClose} className="btn-primary">
                     Understood
                   </button>

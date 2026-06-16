@@ -33,7 +33,7 @@ const TargetJob = () => {
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
   }
 
   const handleChange = (e) => {
@@ -69,12 +69,14 @@ const TargetJob = () => {
         className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
       >
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
             <Target className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Target Job Analysis</h2>
-            <p className="text-slate-500">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+              Target Job Analysis
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400">
               Tell us what you're applying for so our AI can tailor your resume.
             </p>
           </div>
@@ -96,7 +98,7 @@ const TargetJob = () => {
           <div>
             <label
               htmlFor="target-job-title"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
               Target Job Title
             </label>
@@ -107,14 +109,14 @@ const TargetJob = () => {
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g. Senior Frontend Engineer"
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
             />
           </div>
 
           <div>
             <label
               htmlFor="target-job-description"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
               Job Description (Optional)
             </label>
@@ -124,16 +126,16 @@ const TargetJob = () => {
               value={formData.description}
               onChange={handleChange}
               placeholder="Paste the job description here. Our AI will use this to suggest relevant skills and keywords for your summary and experience."
-              className="w-full p-3 border border-slate-300 rounded-lg h-48 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none"
+              className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-48 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none"
             />
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
           <button
             type="button"
             onClick={handleBack}
-            className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+            className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
@@ -154,29 +156,29 @@ const TargetJob = () => {
           close in the absolute corner, title and body stacked underneath. */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             {/* Close button — absolute top-right, doesn't compete with the
                 title for horizontal space on mobile. */}
             <button
               type="button"
               onClick={() => setShowModal(false)}
               aria-label="Close"
-              className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+              className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="px-5 pt-7 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
               {/* Hero icon */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
-                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600 dark:text-amber-300" />
               </div>
 
               {/* Title + body */}
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 leading-tight">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight">
                 Add a target job title?
               </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 Telling us the role you're targeting lets our AI tailor your CV with the right
                 keywords. Without it you'll get a generic CV.
               </p>
@@ -189,11 +191,14 @@ const TargetJob = () => {
                   ['Higher ATS score', 'for better recruiter visibility'],
                 ].map(([title, body]) => (
                   <li key={title} className="flex items-start gap-2.5">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mt-0.5">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mt-0.5">
                       <Check className="w-3 h-3" strokeWidth={3} />
                     </span>
-                    <span className="text-sm text-slate-700 leading-relaxed">
-                      <strong className="font-semibold text-slate-900">{title}</strong> {body}
+                    <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <strong className="font-semibold text-slate-900 dark:text-slate-100">
+                        {title}
+                      </strong>{' '}
+                      {body}
                     </span>
                   </li>
                 ))}
@@ -202,11 +207,11 @@ const TargetJob = () => {
 
             {/* Actions — primary on top on mobile (thumb reach), side-by-side on
                 desktop with primary on the right. */}
-            <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 border-t border-slate-100 pt-4">
+            <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
               <button
                 type="button"
                 onClick={handleSkipAndContinue}
-                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors text-sm"
+                className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm"
               >
                 Continue without it
               </button>

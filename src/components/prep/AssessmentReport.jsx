@@ -11,11 +11,16 @@ const AssessmentList = ({ title, items, tone }) => {
   const dot =
     tone === 'emerald' ? 'bg-emerald-500' : tone === 'rose' ? 'bg-rose-500' : 'bg-indigo-500';
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3.5">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">{title}</p>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3.5">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+        {title}
+      </p>
       <ul className="space-y-1.5">
         {items.map((it, i) => (
-          <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
+          <li
+            key={i}
+            className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed"
+          >
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${dot}`} />
             <span>{it}</span>
           </li>
@@ -36,29 +41,37 @@ const AssessmentReport = ({ assessment }) => {
   } = assessment || {};
   return (
     <div className="mt-6 space-y-6">
-      {summary && <p className="text-sm text-slate-700 leading-relaxed">{summary}</p>}
+      {summary && (
+        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{summary}</p>
+      )}
 
       {/* Rubric breakdown */}
       {dimensions.length > 0 && (
         <div>
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-3">
             How you scored
           </p>
           <div className="space-y-3">
             {dimensions.map((d) => (
               <div key={d.key}>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="font-semibold text-slate-700">{d.label}</span>
-                  <span className="font-bold text-slate-900 tabular-nums">{d.score}%</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {d.label}
+                  </span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                    {d.score}%
+                  </span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${dimTone(d.score)}`}
                     style={{ width: `${d.score}%` }}
                   />
                 </div>
                 {d.feedback && (
-                  <p className="mt-1 text-xs text-slate-500 leading-relaxed">{d.feedback}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {d.feedback}
+                  </p>
                 )}
               </div>
             ))}
@@ -76,13 +89,16 @@ const AssessmentReport = ({ assessment }) => {
       {/* Questions you were asked */}
       {questionsAsked.length > 0 && (
         <div>
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
             Questions you were asked
           </p>
           <ol className="space-y-1.5">
             {questionsAsked.map((q, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
-                <span className="shrink-0 w-4 text-right font-bold text-slate-400 tabular-nums">
+              <li
+                key={i}
+                className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed"
+              >
+                <span className="shrink-0 w-4 text-right font-bold text-slate-400 dark:text-slate-500 tabular-nums">
                   {i + 1}.
                 </span>
                 <span>{q}</span>

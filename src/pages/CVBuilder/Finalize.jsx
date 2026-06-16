@@ -70,24 +70,24 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
 
   const colorMap = {
     emerald: {
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-200',
-      text: 'text-emerald-700',
-      icon: 'text-emerald-600',
+      bg: 'bg-emerald-50 dark:bg-emerald-500/15',
+      border: 'border-emerald-200 dark:border-emerald-500/30',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      icon: 'text-emerald-600 dark:text-emerald-300',
       bar: 'bg-emerald-500',
     },
     amber: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      text: 'text-amber-700',
-      icon: 'text-amber-500',
+      bg: 'bg-amber-50 dark:bg-amber-500/15',
+      border: 'border-amber-200 dark:border-amber-500/30',
+      text: 'text-amber-700 dark:text-amber-300',
+      icon: 'text-amber-500 dark:text-amber-300',
       bar: 'bg-amber-500',
     },
     red: {
-      bg: 'bg-red-50',
-      border: 'border-red-200',
-      text: 'text-red-700',
-      icon: 'text-red-500',
+      bg: 'bg-red-50 dark:bg-red-500/15',
+      border: 'border-red-200 dark:border-red-500/30',
+      text: 'text-red-700 dark:text-red-300',
+      icon: 'text-red-500 dark:text-red-300',
       bar: 'bg-red-500',
     },
   };
@@ -105,16 +105,18 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
+      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2 shrink-0">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-500" />
-            <h3 className="text-lg font-bold text-slate-800">CV Tailored Successfully</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+              CV Tailored Successfully
+            </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <X className="w-4 h-4" />
           </button>
@@ -131,30 +133,34 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
                     <span className={`font-bold ${colors.text}`}>{guidance.title}</span>
                     <span className={`text-sm font-semibold ${colors.text}`}>{afterScore}%</span>
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed">{guidance.message}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {guidance.message}
+                  </p>
                 </div>
               </div>
 
               {/* Score bar */}
               <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 w-12">Before</span>
-                <div className="flex-1 h-1.5 rounded-full bg-white/60">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">Before</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/60 dark:bg-white/10">
                   <div
                     className="h-full rounded-full bg-slate-400"
                     style={{ width: `${beforeScore}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-slate-500 w-8 text-right">{beforeScore}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 w-8 text-right">
+                  {beforeScore}%
+                </span>
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 w-12">After</span>
-                <div className="flex-1 h-1.5 rounded-full bg-white/60">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">After</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/60 dark:bg-white/10">
                   <div
                     className={`h-full rounded-full ${colors.bar}`}
                     style={{ width: `${afterScore}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-semibold text-slate-600 w-8 text-right">
+                <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 w-8 text-right">
                   {afterScore}%
                 </span>
               </div>
@@ -162,13 +168,15 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
           )}
 
           {/* Advice */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-            <p className="text-sm text-slate-600 leading-relaxed">{guidance.advice}</p>
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              {guidance.advice}
+            </p>
           </div>
 
           {/* Review Checklist */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
               Before you proceed, review:
             </p>
             <ul className="space-y-2">
@@ -178,8 +186,11 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
                 'Added skills are ones you can genuinely demonstrate',
                 'Contact details and personal info are correct',
               ].map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                  <CheckCircle className="w-3.5 h-3.5 text-slate-300 mt-0.5 flex-shrink-0" />
+                <li
+                  key={i}
+                  className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300"
+                >
+                  <CheckCircle className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 mt-0.5 flex-shrink-0" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -196,14 +207,14 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
             </button>
             <button
               onClick={onEdit}
-              className="w-full px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
             >
               <Pencil className="w-3.5 h-3.5" /> Edit CV
             </button>
           </div>
 
           {tailoredForJob && (
-            <p className="text-[11px] text-slate-400 text-center">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
               Tailored for {tailoredForJob.title} at {tailoredForJob.company}
             </p>
           )}
@@ -250,7 +261,9 @@ const Finalize = () => {
   };
 
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading review...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading review...</div>
+    );
   }
 
   const isComplete = cvData.personalInfo?.fullName && cvData.experience?.length > 0;
@@ -263,18 +276,23 @@ const Finalize = () => {
 
   const guidanceColorMap = {
     emerald: {
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-200',
-      text: 'text-emerald-700',
-      icon: 'text-emerald-600',
+      bg: 'bg-emerald-50 dark:bg-emerald-500/15',
+      border: 'border-emerald-200 dark:border-emerald-500/30',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      icon: 'text-emerald-600 dark:text-emerald-300',
     },
     amber: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      text: 'text-amber-700',
-      icon: 'text-amber-500',
+      bg: 'bg-amber-50 dark:bg-amber-500/15',
+      border: 'border-amber-200 dark:border-amber-500/30',
+      text: 'text-amber-700 dark:text-amber-300',
+      icon: 'text-amber-500 dark:text-amber-300',
     },
-    red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500' },
+    red: {
+      bg: 'bg-red-50 dark:bg-red-500/15',
+      border: 'border-red-200 dark:border-red-500/30',
+      text: 'text-red-700 dark:text-red-300',
+      icon: 'text-red-500 dark:text-red-300',
+    },
   };
 
   return (
@@ -289,14 +307,14 @@ const Finalize = () => {
       />
 
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-300">
           <CheckCircle className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
             {tailoredFrom ? 'Tailored CV Review' : 'Final Review'}
           </h2>
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             {tailoredFrom
               ? 'Review the changes made to your CV before previewing.'
               : "You've added all the essentials. Ready to visualize?"}
@@ -318,12 +336,12 @@ const Finalize = () => {
             <p className={`font-semibold text-sm ${guidanceColorMap[guidance.color].text}`}>
               {guidance.title} — {afterScore}% match
             </p>
-            <p className="text-sm text-slate-600 mt-1">{guidance.advice}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{guidance.advice}</p>
           </div>
           <button
             type="button"
             onClick={() => setShowReviewModal(true)}
-            className="shrink-0 self-stretch sm:self-center inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 transition-colors"
+            className="shrink-0 self-stretch sm:self-center inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
             View tailoring details
@@ -331,12 +349,14 @@ const Finalize = () => {
         </div>
       )}
 
-      <div className="bg-slate-50 rounded-xl p-8 border border-slate-200">
-        <h3 className="font-bold text-slate-800 mb-4">Summary of your inputs:</h3>
+      <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-700">
+        <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4">
+          Summary of your inputs:
+        </h3>
         <ul className="space-y-3">
           <li className="flex items-center gap-3">
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.personalInfo?.fullName ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.personalInfo?.fullName ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
             >
               {cvData.personalInfo?.fullName ? (
                 <CheckCircle className="w-3 h-3" />
@@ -344,13 +364,19 @@ const Finalize = () => {
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
               )}
             </div>
-            <span className={cvData.personalInfo?.fullName ? 'text-slate-700' : 'text-slate-400'}>
+            <span
+              className={
+                cvData.personalInfo?.fullName
+                  ? 'text-slate-700 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }
+            >
               Heading & Contact Info
             </span>
           </li>
           <li className="flex items-center gap-3">
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.professionalSummary ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.professionalSummary ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
             >
               {cvData.professionalSummary ? (
                 <CheckCircle className="w-3 h-3" />
@@ -358,13 +384,19 @@ const Finalize = () => {
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
               )}
             </div>
-            <span className={cvData.professionalSummary ? 'text-slate-700' : 'text-slate-400'}>
+            <span
+              className={
+                cvData.professionalSummary
+                  ? 'text-slate-700 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }
+            >
               Professional Summary
             </span>
           </li>
           <li className="flex items-center gap-3">
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.experience?.length > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.experience?.length > 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
             >
               {cvData.experience?.length > 0 ? (
                 <CheckCircle className="w-3 h-3" />
@@ -372,13 +404,19 @@ const Finalize = () => {
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
               )}
             </div>
-            <span className={cvData.experience?.length > 0 ? 'text-slate-700' : 'text-slate-400'}>
+            <span
+              className={
+                cvData.experience?.length > 0
+                  ? 'text-slate-700 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }
+            >
               Work History ({cvData.experience?.length || 0} roles)
             </span>
           </li>
           <li className="flex items-center gap-3">
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.education?.length > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.education?.length > 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
             >
               {cvData.education?.length > 0 ? (
                 <CheckCircle className="w-3 h-3" />
@@ -386,13 +424,19 @@ const Finalize = () => {
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
               )}
             </div>
-            <span className={cvData.education?.length > 0 ? 'text-slate-700' : 'text-slate-400'}>
+            <span
+              className={
+                cvData.education?.length > 0
+                  ? 'text-slate-700 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }
+            >
               Education ({cvData.education?.length || 0} entries)
             </span>
           </li>
           <li className="flex items-center gap-3">
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.skills?.length > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center ${cvData.skills?.length > 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
             >
               {cvData.skills?.length > 0 ? (
                 <CheckCircle className="w-3 h-3" />
@@ -400,14 +444,20 @@ const Finalize = () => {
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
               )}
             </div>
-            <span className={cvData.skills?.length > 0 ? 'text-slate-700' : 'text-slate-400'}>
+            <span
+              className={
+                cvData.skills?.length > 0
+                  ? 'text-slate-700 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }
+            >
               Skills ({cvData.skills?.length || 0} listed)
             </span>
           </li>
         </ul>
 
         {!isComplete && (
-          <div className="mt-6 p-3 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-100">
+          <div className="mt-6 p-3 bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 text-sm rounded-lg border border-amber-100 dark:border-amber-500/30">
             Warning: Some key sections seem empty. You can still preview, but your resume might look
             incomplete.
           </div>
@@ -424,12 +474,12 @@ const Finalize = () => {
         />
       )}
 
-      <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         {tailoredFrom ? (
           <button
             type="button"
             onClick={handleEditCV}
-            className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+            className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
             <Pencil className="w-4 h-4" /> Edit CV
           </button>
@@ -437,7 +487,7 @@ const Finalize = () => {
           <button
             type="button"
             onClick={handleBack}
-            className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+            className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>

@@ -109,14 +109,14 @@ const CVBuilderInner = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
       <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
@@ -124,7 +124,7 @@ const CVBuilderInner = () => {
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Slim full-width progress strip — visible on every screen size,
               replacing the desktop-only step dots that were hidden on mobile. */}
-          <div className="bg-slate-100 h-1 w-full overflow-hidden shrink-0">
+          <div className="bg-slate-100 dark:bg-slate-700 h-1 w-full overflow-hidden shrink-0">
             <div
               className="h-full bg-indigo-600 transition-all duration-500 ease-out"
               style={{
@@ -138,7 +138,7 @@ const CVBuilderInner = () => {
               status and Exit on the right. The strip replaces the old static
               "Step X of N" text — clicking a step jumps straight to it, and
               goToStep auto-saves the section you're leaving first. */}
-          <div className="bg-white border-b border-slate-200 px-2 md:px-4 py-2 flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-2 md:px-4 py-2 flex items-center gap-2 md:gap-3 shrink-0">
             {editingTitle ? (
               <input
                 ref={titleInputRef}
@@ -156,17 +156,17 @@ const CVBuilderInner = () => {
                   }
                 }}
                 aria-label="CV name"
-                className="hidden sm:block text-sm text-slate-800 font-medium shrink-0 w-36 sm:w-44 border-b border-indigo-400 bg-transparent outline-none pr-3 mr-1"
+                className="hidden sm:block text-sm text-slate-800 dark:text-slate-200 font-medium shrink-0 w-36 sm:w-44 border-b border-indigo-400 bg-transparent outline-none pr-3 mr-1"
               />
             ) : (
               <button
                 type="button"
                 onClick={beginTitleEdit}
                 title="Rename this CV"
-                className="group/title hidden sm:flex items-center gap-1 shrink-0 max-w-[12rem] text-sm text-slate-500 hover:text-slate-800 border-r border-slate-200 pr-3 mr-1 transition-colors"
+                className="group/title hidden sm:flex items-center gap-1 shrink-0 max-w-[12rem] text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 border-r border-slate-200 dark:border-slate-700 pr-3 mr-1 transition-colors"
               >
                 <span className="truncate">{cvData.title}</span>
-                <Pencil className="w-3 h-3 shrink-0 text-slate-400 opacity-0 group-hover/title:opacity-100 transition-opacity" />
+                <Pencil className="w-3 h-3 shrink-0 text-slate-400 dark:text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity" />
               </button>
             )}
 
@@ -189,16 +189,18 @@ const CVBuilderInner = () => {
                 const pillClass = {
                   current: 'bg-indigo-600 text-white',
                   complete:
-                    'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-50',
-                  warning: 'text-amber-700 hover:bg-amber-50 disabled:opacity-50',
-                  todo: 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-50',
+                    'text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50',
+                  warning:
+                    'text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/15 disabled:opacity-50',
+                  todo: 'text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50',
                 }[status];
 
                 const badgeClass = {
                   current: 'bg-white/20 text-white',
-                  complete: 'bg-emerald-100 text-emerald-700',
-                  warning: 'bg-amber-100 text-amber-700',
-                  todo: 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700',
+                  complete:
+                    'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+                  warning: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                  todo: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/15 group-hover:text-indigo-700 dark:group-hover:text-indigo-300',
                 }[status];
 
                 const title = {
@@ -240,14 +242,14 @@ const CVBuilderInner = () => {
             </nav>
 
             {saving && (
-              <span className="text-xs text-indigo-600 animate-pulse flex items-center gap-1 shrink-0">
+              <span className="text-xs text-indigo-600 dark:text-indigo-300 animate-pulse flex items-center gap-1 shrink-0">
                 <Save className="w-3 h-3" />
                 <span className="hidden sm:inline">Saving…</span>
               </span>
             )}
             {!saving && stepDirty && (
               <span
-                className="text-xs text-amber-600 flex items-center gap-1 shrink-0"
+                className="text-xs text-amber-600 dark:text-amber-300 flex items-center gap-1 shrink-0"
                 title="You have unsaved changes in this step"
               >
                 <AlertCircle className="w-3 h-3" />
@@ -257,7 +259,7 @@ const CVBuilderInner = () => {
             <button
               type="button"
               onClick={handleExitClick}
-              className="text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 px-2 py-1 rounded-md flex items-center gap-1 shrink-0 transition-colors"
+              className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 px-2 py-1 rounded-md flex items-center gap-1 shrink-0 transition-colors"
               title="Exit to My CVs (your completed steps are saved)"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -272,7 +274,7 @@ const CVBuilderInner = () => {
               computes overflow-x to `auto`, so each step's slide-in-from-right
               animation (a translateX) would create a draggable sideways scroll. */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 lg:p-8 custom-scrollbar">
-            <div className="max-w-3xl mx-auto bg-white min-h-[500px] p-4 sm:p-6 lg:p-8 lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200">
+            <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 min-h-[500px] p-4 sm:p-6 lg:p-8 lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200 dark:lg:border-slate-700">
               <Outlet
                 context={{
                   cvData,

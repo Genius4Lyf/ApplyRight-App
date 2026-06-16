@@ -32,22 +32,22 @@ const DeleteConfirmationModal = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header — tighter padding on mobile, looser on desktop */}
-              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 bg-red-50/50">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-red-50/50 dark:bg-red-500/15">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-300 shrink-0">
                     <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
                     {title}
                   </h3>
                 </div>
                 <button
                   onClick={!isDeleting ? onClose : undefined}
-                  className="p-1.5 -mr-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  className="p-1.5 -mr-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   disabled={isDeleting}
                   aria-label="Close"
                 >
@@ -57,17 +57,19 @@ const DeleteConfirmationModal = ({
 
               {/* Body */}
               <div className="p-4 sm:p-5 overflow-y-auto">
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{message}</p>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {message}
+                </p>
               </div>
 
               {/* Footer — buttons stack on mobile (full-width, big tap targets),
                   inline on desktop. Primary action sits above Cancel on mobile
                   via flex-col-reverse so it's the first thing the thumb hits. */}
-              <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+              <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
                 <button
                   onClick={onClose}
                   disabled={isDeleting}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

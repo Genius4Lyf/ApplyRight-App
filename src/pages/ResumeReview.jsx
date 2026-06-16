@@ -638,13 +638,15 @@ const ResumeReview = () => {
 
   if (error)
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 dark:text-red-300">
             <LayoutTemplate size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Unavailable</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+            Unavailable
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">{error}</p>
           <button onClick={() => navigate('/dashboard')} className="w-full btn-primary py-3">
             Return to Dashboard
           </button>
@@ -709,7 +711,7 @@ const ResumeReview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col relative">
       {downloadAdOpen && (
         <AdPlayer
           userId={userProfile?._id || userProfile?.id}
@@ -733,19 +735,23 @@ const ResumeReview = () => {
 
       {creditSuccessModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-10 h-10 text-green-600" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-10 h-10 text-green-600 dark:text-green-300" />
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">A.I Credits Earned!</h3>
-            <p className="text-slate-500 mb-6">You successfully watched the ad.</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              A.I Credits Earned!
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
+              You successfully watched the ad.
+            </p>
 
-            <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-100">
-              <span className="text-sm text-slate-500 uppercase tracking-wider font-bold block mb-1">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-800">
+              <span className="text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold block mb-1">
                 New Balance
               </span>
-              <div className="flex items-center justify-center gap-2 text-3xl font-extrabold text-indigo-600">
+              <div className="flex items-center justify-center gap-2 text-3xl font-extrabold text-indigo-600 dark:text-indigo-300">
                 <Zap className="w-6 h-6 fill-indigo-600" />
                 {userProfile?.credits || 0}
               </div>
@@ -781,7 +787,7 @@ const ResumeReview = () => {
                   setCreditSuccessModalOpen(false);
                   setUnlockModalOpen(false);
                 }}
-                className="w-full py-3 text-slate-400 hover:text-slate-600 font-medium text-sm"
+                className="w-full py-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-medium text-sm"
               >
                 Close
               </button>
@@ -792,10 +798,10 @@ const ResumeReview = () => {
 
       {unlockModalOpen && templateToUnlock && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
             <button
               onClick={() => setUnlockModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="w-5 h-5" />
             </button>
@@ -810,8 +816,10 @@ const ResumeReview = () => {
                   <Lock className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900">Unlock {templateToUnlock.name}</h3>
-              <p className="text-slate-500 mt-2">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Unlock {templateToUnlock.name}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mt-2">
                 This is a premium template. Unlock it to download and use for your applications.
               </p>
             </div>
@@ -823,7 +831,7 @@ const ResumeReview = () => {
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (userProfile?.credits || 0) >= templateToUnlock.cost
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -838,10 +846,12 @@ const ResumeReview = () => {
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
+                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-2 text-slate-500">or earn A.I credits</span>
+                  <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
+                    or earn A.I credits
+                  </span>
                 </div>
               </div>
 
@@ -856,12 +866,12 @@ const ResumeReview = () => {
                 View Offer for +5 A.I Credits
               </button>
 
-              <p className="text-xs text-slate-400 text-center leading-relaxed px-4">
+              <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed px-4">
                 💚 We use ads to keep ApplyRight free for everyone. Thank you for your support!
               </p>
 
               {(userProfile?.credits || 0) < templateToUnlock.cost && (
-                <p className="text-xs text-slate-500 text-center mt-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-2">
                   You have {userProfile?.credits || 0} A.I credits. Need{' '}
                   {templateToUnlock.cost - (userProfile?.credits || 0)} more.
                 </p>
@@ -874,20 +884,22 @@ const ResumeReview = () => {
       {/* Feedback Prompt Modal - After Download */}
       {showFeedbackPrompt && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
             <button
               onClick={() => setShowFeedbackPrompt(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <MessageSquare className="w-8 h-8 text-indigo-600" />
+            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-500/15 rounded-full flex items-center justify-center mx-auto mb-5">
+              <MessageSquare className="w-8 h-8 text-indigo-600 dark:text-indigo-300" />
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Enjoying ApplyRight?</h3>
-            <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Enjoying ApplyRight?
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
               Your CV is ready! We'd love to hear how your experience was. Your feedback helps us
               improve.
             </p>
@@ -905,7 +917,7 @@ const ResumeReview = () => {
               </button>
               <button
                 onClick={() => setShowFeedbackPrompt(false)}
-                className="w-full py-3 text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors"
+                className="w-full py-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-medium text-sm transition-colors"
               >
                 Maybe Later
               </button>
@@ -918,11 +930,11 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-        <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
+        <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
           <button
             type="button"
             onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
-            className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 shrink-0"
+            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-400 shrink-0"
             aria-label="Back"
           >
             <ChevronLeft size={20} />
@@ -930,22 +942,22 @@ const ResumeReview = () => {
           <div className="flex-1 min-w-0">
             {isDraftMode ? (
               <>
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                   Draft CV
                 </p>
-                <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
+                <h1 className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
                   {application?.title || 'Untitled draft'}
                 </h1>
               </>
             ) : (
               <>
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                   Application
                 </p>
-                <h1 className="text-sm md:text-base font-semibold text-slate-900 truncate">
+                <h1 className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
                   {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
                   {(application?.jobId?.company || application?.jobCompany) && (
-                    <span className="text-slate-500 font-normal">
+                    <span className="text-slate-500 dark:text-slate-400 font-normal">
                       {' '}
                       at {application?.jobId?.company || application?.jobCompany}
                     </span>
@@ -960,14 +972,14 @@ const ResumeReview = () => {
             The dedicated 52px mobile tab strip we used to render below the
             header was eating into the CV preview height — gone now. */}
           {!isDraftMode && (
-            <div className="flex bg-slate-100 p-0.5 rounded-lg shrink-0">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('resume')}
                 className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeTab === 'resume'
-                    ? 'bg-white shadow text-indigo-600'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <span className="sm:hidden">CV</span>
@@ -978,8 +990,8 @@ const ResumeReview = () => {
                 onClick={() => setActiveTab('cover-letter')}
                 className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeTab === 'cover-letter'
-                    ? 'bg-white shadow text-indigo-600'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <span className="sm:hidden">Letter</span>
@@ -991,8 +1003,8 @@ const ResumeReview = () => {
       )}
 
       {!immersive && !advisoryDismissed && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 md:px-6 py-2.5 flex items-start gap-2.5 text-amber-900">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+        <div className="bg-amber-50 dark:bg-amber-500/15 border-b border-amber-200 dark:border-amber-500/30 px-4 md:px-6 py-2.5 flex items-start gap-2.5 text-amber-900 dark:text-amber-200">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-300" />
           <p className="text-[12px] sm:text-[13px] leading-snug flex-1">
             AI can introduce inaccuracies. Review every claim against your real experience and edit
             anything that overstates what you did — before you download, print, or submit.
@@ -1001,7 +1013,7 @@ const ResumeReview = () => {
             type="button"
             onClick={dismissAdvisory}
             aria-label="Dismiss"
-            className="p-1 -m-1 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded transition-colors shrink-0"
+            className="p-1 -m-1 text-amber-700 dark:text-amber-300 hover:text-amber-900 hover:bg-amber-100 dark:hover:bg-amber-500/25 rounded transition-colors shrink-0"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -1013,12 +1025,12 @@ const ResumeReview = () => {
           the fixed-viewport split with each pane scrolling independently. */}
       <div className="flex-1 flex flex-col lg:flex-row lg:h-[calc(100vh-64px)] lg:overflow-hidden">
         {/* LEFT: Document Preview Area */}
-        <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100/50 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
+        <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100/50 dark:bg-slate-900/50 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
           {/* Zoom + view controls — collapses to a single icon on demand */}
           <motion.div
             layout
             transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
-            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 backdrop-blur shadow-xl border border-slate-200/60 rounded-full flex items-center overflow-hidden"
+            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur shadow-xl border border-slate-200/60 dark:border-slate-700/60 rounded-full flex items-center overflow-hidden"
           >
             <AnimatePresence mode="wait" initial={false}>
               {controlsExpanded ? (
@@ -1032,42 +1044,51 @@ const ResumeReview = () => {
                 >
                   <button
                     onClick={handleZoomOut}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
                     title="Zoom Out"
                   >
                     <ZoomOut size={18} />
                   </button>
-                  <span className="text-xs font-bold text-slate-600 w-12 text-center tabular-nums">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300 w-12 text-center tabular-nums">
                     {Math.round(scale * 100)}%
                   </span>
                   <button
                     onClick={handleZoomIn}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
                     title="Zoom In"
                   >
                     <ZoomIn size={18} />
                   </button>
-                  <span className="w-px h-5 bg-slate-200 mx-0.5" aria-hidden="true" />
+                  <span
+                    className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-0.5"
+                    aria-hidden="true"
+                  />
                   <button
                     onClick={handleFit}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
                     title="Fit to screen"
                   >
                     <Maximize2 size={16} />
                   </button>
-                  <span className="w-px h-5 bg-slate-200 mx-0.5" aria-hidden="true" />
+                  <span
+                    className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-0.5"
+                    aria-hidden="true"
+                  />
                   <button
                     onClick={toggleImmersive}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
                     title={immersive ? 'Exit fullscreen' : 'Fullscreen CV'}
                     aria-label={immersive ? 'Exit fullscreen' : 'Fullscreen CV'}
                   >
                     {immersive ? <Shrink size={16} /> : <Expand size={16} />}
                   </button>
-                  <span className="w-px h-5 bg-slate-200 mx-0.5" aria-hidden="true" />
+                  <span
+                    className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-0.5"
+                    aria-hidden="true"
+                  />
                   <button
                     onClick={() => setControlsExpanded(false)}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                     title="Collapse controls"
                     aria-label="Collapse controls"
                   >
@@ -1082,7 +1103,7 @@ const ResumeReview = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
                   onClick={() => setControlsExpanded(true)}
-                  className="p-3 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                  className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
                   aria-label="Open controls"
                   title="Open controls"
                 >
@@ -1412,7 +1433,7 @@ const ResumeReview = () => {
             "More" button opens the existing sidebar drawer for templates etc.
             Hidden in fullscreen so the CV truly fills the screen. */}
         {!immersive && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
             <button
               type="button"
               disabled={isDownloading}
@@ -1437,7 +1458,7 @@ const ResumeReview = () => {
                   ? () => navigate(`/cv-builder/${application?._id}/finalize`)
                   : handleEdit
               }
-              className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
               aria-label="Edit"
             >
               <PenTool className="w-4 h-4" />
@@ -1446,7 +1467,7 @@ const ResumeReview = () => {
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
+              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
               aria-label="More options"
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -1466,7 +1487,7 @@ const ResumeReview = () => {
         <div
           className={`
           fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-20
-          w-full lg:w-96 bg-white border-l border-slate-200 flex flex-col shadow-xl
+          w-full lg:w-96 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col shadow-xl
           lg:h-full
           transition-transform duration-300 ease-in-out
           ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
@@ -1476,17 +1497,21 @@ const ResumeReview = () => {
         >
           {/* Mobile drag handle */}
           <div className="lg:hidden flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 bg-slate-300 rounded-full"></div>
+            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
           </div>
 
-          <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
             <div className="flex-1">
-              <h2 className="font-bold text-slate-800 text-sm">Templates & actions</h2>
-              <p className="text-xs text-slate-500">Pick a template and download or edit</p>
+              <h2 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                Templates & actions
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Pick a template and download or edit
+              </p>
             </div>
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500"
               aria-label="Close panel"
             >
               <X size={20} />
@@ -1496,11 +1521,11 @@ const ResumeReview = () => {
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             {/* Tab strip moved to the top of the page — see header above */}
             {isDraftMode && (
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 flex gap-2">
-                <div className="text-slate-400 flex-shrink-0 mt-0.5">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-3 flex gap-2">
+                <div className="text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5">
                   <Sparkles size={14} />
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Cover letters are generated during the <strong>Application Fit</strong> analysis
                   when you upload an existing CV.
                 </p>
@@ -1509,14 +1534,16 @@ const ResumeReview = () => {
 
             {/* Suggestions Box - Hide for drafts if no analysis */}
             {!isDraftMode && (
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
+              <div className="bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl p-5">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-1">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-500/15 rounded-lg text-indigo-600 dark:text-indigo-300 mt-1">
                     <Sparkles size={18} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-indigo-900 text-sm">AI Analysis</h3>
-                    <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+                    <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-sm">
+                      AI Analysis
+                    </h3>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1 leading-relaxed">
                       Your fit score is <strong>{application.fitScore}%</strong>. This application
                       is optimized for{' '}
                       {application.jobId?.title || application.jobTitle || 'the role'}.
@@ -1527,22 +1554,24 @@ const ResumeReview = () => {
             )}
 
             {isDraftMode && atsReadiness && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-extrabold border-[3px] ${
                       atsReadiness.score >= 75
-                        ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                        ? 'border-emerald-400 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15'
                         : atsReadiness.score >= 50
-                          ? 'border-amber-400 text-amber-700 bg-amber-50'
-                          : 'border-red-400 text-red-700 bg-red-50'
+                          ? 'border-amber-400 dark:border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15'
+                          : 'border-red-400 dark:border-red-500/40 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15'
                     }`}
                   >
                     {atsReadiness.score}
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 text-sm">ATS Readiness Score</h3>
-                    <p className="text-xs text-slate-500">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                      ATS Readiness Score
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {atsReadiness.score >= 75
                         ? 'Well-structured for ATS systems'
                         : atsReadiness.score >= 50
@@ -1560,10 +1589,18 @@ const ResumeReview = () => {
                       ) : (
                         <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
                       )}
-                      <span className={check.passed ? 'text-slate-600' : 'text-slate-500'}>
+                      <span
+                        className={
+                          check.passed
+                            ? 'text-slate-600 dark:text-slate-300'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }
+                      >
                         {check.label}
                         {check.detail && (
-                          <span className="text-slate-400 ml-1">({check.detail})</span>
+                          <span className="text-slate-400 dark:text-slate-500 ml-1">
+                            ({check.detail})
+                          </span>
                         )}
                       </span>
                     </div>
@@ -1571,12 +1608,19 @@ const ResumeReview = () => {
                 </div>
                 {/* Tips */}
                 {atsReadiness.tips?.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-amber-800 mb-1.5">Tips to improve:</p>
+                  <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-100 dark:border-amber-500/30 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1.5">
+                      Tips to improve:
+                    </p>
                     <ul className="space-y-1">
                       {atsReadiness.tips.slice(0, 3).map((tip, i) => (
-                        <li key={i} className="text-xs text-amber-700 leading-relaxed flex gap-1.5">
-                          <span className="text-amber-400 flex-shrink-0 mt-0.5">-</span>
+                        <li
+                          key={i}
+                          className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed flex gap-1.5"
+                        >
+                          <span className="text-amber-400 dark:text-amber-500 flex-shrink-0 mt-0.5">
+                            -
+                          </span>
                           {tip}
                         </li>
                       ))}
@@ -1587,14 +1631,16 @@ const ResumeReview = () => {
             )}
 
             {isDraftMode && !atsReadiness && (
-              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+              <div className="bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 rounded-xl p-5">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600 mt-1">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-500/15 rounded-lg text-emerald-600 dark:text-emerald-300 mt-1">
                     <Check size={18} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-emerald-900 text-sm">Draft Preview</h3>
-                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+                    <h3 className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">
+                      Draft Preview
+                    </h3>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1 leading-relaxed">
                       You are viewing a live preview of your draft. Any changes made in the builder
                       will appear here.
                     </p>
@@ -1605,21 +1651,21 @@ const ResumeReview = () => {
 
             {/* Actions */}
             <div>
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <LayoutTemplate className="w-4 h-4" /> Actions
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   disabled={isDownloading}
                   onClick={handleDownloadClick}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
                 >
                   {isDownloading ? (
                     <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin mb-1"></div>
                   ) : (
-                    <Download className="w-5 h-5 text-slate-600 group-hover:text-indigo-600 mb-1" />
+                    <Download className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 mb-1" />
                   )}
-                  <span className="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 text-center">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-indigo-700 text-center">
                     {isDownloading
                       ? 'Processing...'
                       : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}
@@ -1633,10 +1679,10 @@ const ResumeReview = () => {
                       ? () => navigate(`/cv-builder/${application._id}/finalize`)
                       : handleEdit
                   }
-                  className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all group"
                 >
-                  <PenTool className="w-5 h-5 text-slate-600 group-hover:text-indigo-600 mb-1" />
-                  <span className="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 text-center">
+                  <PenTool className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 mb-1" />
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-indigo-700 text-center">
                     Edit in Builder
                   </span>
                 </button>
@@ -1645,13 +1691,13 @@ const ResumeReview = () => {
                 {isDraftMode && (
                   <button
                     disabled
-                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
                   >
-                    <div className="absolute top-1 right-1 bg-slate-200 text-slate-500 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
+                    <div className="absolute top-1 right-1 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
                       Soon
                     </div>
-                    <Mail className="w-5 h-5 text-slate-400 mb-1" />
-                    <span className="text-xs font-semibold text-slate-500 text-center">
+                    <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 mb-1" />
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">
                       Email Docs
                     </span>
                   </button>
@@ -1662,7 +1708,7 @@ const ResumeReview = () => {
             {/* Templates Selection - Only relevant for Resume currently, maybe simple style for Cover Letter later */}
             {activeTab === 'resume' && (
               <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4">
                   Template Style
                 </h3>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
@@ -1677,9 +1723,9 @@ const ResumeReview = () => {
                         }}
                         className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${
                           templateId === t.id
-                            ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
-                            : 'border-slate-200 hover:border-slate-300'
-                        } ${locked ? 'bg-slate-50/50' : ''}`}
+                            ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/15 ring-1 ring-indigo-600'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                        } ${locked ? 'bg-slate-50/50 dark:bg-slate-900/50' : ''}`}
                       >
                         <div className="w-10 h-14 mr-3 flex-shrink-0 relative">
                           <TemplateThumbnail type={t.id} className="rounded-sm" />
@@ -1698,7 +1744,7 @@ const ResumeReview = () => {
                                 ? 'bg-emerald-500 text-white'
                                 : locked
                                   ? 'bg-slate-800 text-white'
-                                  : 'bg-indigo-100 text-indigo-700'
+                                  : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
                             }`}
                           >
                             {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
@@ -1710,7 +1756,7 @@ const ResumeReview = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-slate-700 block truncate">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 block truncate">
                             {t.name}
                           </span>
                           {t.isRecommended && (
@@ -1719,7 +1765,7 @@ const ResumeReview = () => {
                             </span>
                           )}
                           {locked && (
-                            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                               {t.cost} credits to unlock
                             </span>
                           )}
@@ -1733,7 +1779,7 @@ const ResumeReview = () => {
             )}
           </div>
 
-          <div className="p-6 border-t border-slate-100 bg-slate-50">
+          <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
             {isDraftMode ? (
               <button
                 onClick={() => navigate(`/cv-builder/${application._id}/finalize`)}

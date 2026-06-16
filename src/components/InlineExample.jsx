@@ -157,7 +157,7 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+        className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 font-medium transition-colors"
       >
         <Sparkles className="w-3 h-3" />
         {label || (open ? 'Hide example' : 'Show me an example')}
@@ -179,16 +179,16 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="mt-2 space-y-1.5 bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div className="mt-2 space-y-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
               {candidates.slice(0, 2).map((ex, i) => (
                 <p
                   key={i}
-                  className="text-xs text-slate-700 italic leading-relaxed border-l-2 border-indigo-300 pl-2"
+                  className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed border-l-2 border-indigo-300 dark:border-indigo-500/30 pl-2"
                 >
                   "{ex}"
                 </p>
               ))}
-              <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 mt-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700 mt-2">
                 These are examples for inspiration — write your own truthfully.
               </p>
             </div>

@@ -32,17 +32,17 @@ const formatRelativeDate = (date) => {
 };
 
 const scoreColor = (s) => {
-  if (typeof s !== 'number') return 'text-slate-400';
+  if (typeof s !== 'number') return 'text-slate-400 dark:text-slate-500';
   if (s >= 80) return 'text-emerald-500';
   if (s >= 60) return 'text-amber-500';
   return 'text-red-500';
 };
 
 const scoreBg = (s) => {
-  if (typeof s !== 'number') return 'bg-slate-50';
-  if (s >= 80) return 'bg-emerald-50';
-  if (s >= 60) return 'bg-amber-50';
-  return 'bg-red-50';
+  if (typeof s !== 'number') return 'bg-slate-50 dark:bg-slate-900';
+  if (s >= 80) return 'bg-emerald-50 dark:bg-emerald-500/15';
+  if (s >= 60) return 'bg-amber-50 dark:bg-amber-500/15';
+  return 'bg-red-50 dark:bg-red-500/15';
 };
 
 // Win/loss/tie badge for a numeric dimension. Higher is better.
@@ -55,10 +55,12 @@ const winnerOn = (a, b) => {
 const DimensionRow = ({ label, valueA, valueB, weight }) => {
   const winner = winnerOn(valueA, valueB);
   return (
-    <div className="grid grid-cols-12 items-center gap-2 py-2.5 border-b border-slate-100 last:border-b-0 text-sm">
-      <div className="col-span-4 text-slate-600">
+    <div className="grid grid-cols-12 items-center gap-2 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 text-sm">
+      <div className="col-span-4 text-slate-600 dark:text-slate-300">
         {label}
-        {weight && <span className="text-xs text-slate-400 ml-1">({weight})</span>}
+        {weight && (
+          <span className="text-xs text-slate-400 dark:text-slate-500 ml-1">({weight})</span>
+        )}
       </div>
       <div className={`col-span-4 text-right font-semibold ${scoreColor(valueA)}`}>
         {typeof valueA === 'number' ? `${valueA}/100` : '—'}
@@ -123,42 +125,48 @@ const Compare = () => {
   const overallWinner = winnerOn(appA?.fitScore, appB?.fitScore);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 pt-8 pb-16">
         <button
           type="button"
           onClick={() => navigate('/history')}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4"
+          className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-4"
         >
           <ArrowLeft className="w-4 h-4" /> Back to applications
         </button>
 
-        {loading && <div className="text-center py-12 text-slate-400">Loading comparison…</div>}
+        {loading && (
+          <div className="text-center py-12 text-slate-400 dark:text-slate-500">
+            Loading comparison…
+          </div>
+        )}
 
         {!loading && error && (
-          <div className="bg-white border border-red-200 rounded-xl p-6 text-center">
+          <div className="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-500/30 rounded-xl p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-            <p className="text-slate-700">{error}</p>
+            <p className="text-slate-700 dark:text-slate-300">{error}</p>
           </div>
         )}
 
         {!loading && !error && appA && appB && (
           <>
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-900">Compare analyses</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Compare analyses
+              </h1>
               {sameJob ? (
-                <p className="text-sm text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
-                  <Briefcase className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium text-slate-700">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                  <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
                     {appA.jobId?.title || appA.jobTitle || 'Role'}
                   </span>
-                  <span className="text-slate-400">at</span>
-                  <Building2 className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-400 dark:text-slate-500">at</span>
+                  <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <span>{appA.jobId?.company || appA.jobCompany || 'Company'}</span>
                 </p>
               ) : (
-                <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-start gap-2">
+                <div className="mt-3 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
                     These two applications are for different jobs. Comparison is most useful when
@@ -170,9 +178,9 @@ const Compare = () => {
 
             {/* Headline winner banner */}
             {sameJob && overallWinner && overallWinner !== 'tie' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
-                <p className="text-sm text-slate-700">
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   <span className="font-semibold">
                     Resume {overallWinner === 'A' ? 'A' : 'B'} scored higher
                   </span>{' '}
@@ -182,9 +190,9 @@ const Compare = () => {
               </div>
             )}
             {sameJob && overallWinner === 'tie' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 flex items-center gap-3">
-                <Minus className="w-5 h-5 text-slate-400 shrink-0" />
-                <p className="text-sm text-slate-700">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
+                <Minus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   Both runs scored within 1 point of each other — effectively tied on overall fit.
                 </p>
               </div>
@@ -198,21 +206,21 @@ const Compare = () => {
               ].map(({ app, label }) => (
                 <div
                   key={label}
-                  className={`bg-white rounded-xl border ${
+                  className={`bg-white dark:bg-slate-800 rounded-xl border ${
                     overallWinner === label
-                      ? 'border-emerald-300 ring-1 ring-emerald-100'
-                      : 'border-slate-200'
+                      ? 'border-emerald-300 dark:border-emerald-500/30 ring-1 ring-emerald-100'
+                      : 'border-slate-200 dark:border-slate-700'
                   } p-5 shadow-sm`}
                 >
                   <div className="flex items-baseline justify-between mb-3">
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                         Resume {label}
                       </span>
-                      <p className="text-sm text-slate-700 mt-0.5">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                         Uploaded {formatRelativeDate(app.resumeId?.createdAt)}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
                         Run {formatRelativeDate(app.createdAt)}
                       </p>
                     </div>
@@ -228,7 +236,7 @@ const Compare = () => {
                         <CheckCircle
                           className={`w-3.5 h-3.5 ${scoreColor(app.optimizedFitScore)}`}
                         />
-                        <span className="text-slate-600">
+                        <span className="text-slate-600 dark:text-slate-300">
                           Optimized to{' '}
                           <span className={`font-semibold ${scoreColor(app.optimizedFitScore)}`}>
                             {app.optimizedFitScore}%
@@ -244,7 +252,7 @@ const Compare = () => {
                       // Set a flag the JobHistory page could read to auto-open
                       // this app — left as future polish.
                     }}
-                    className="mt-3 inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800"
+                    className="mt-3 inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 hover:text-indigo-800"
                   >
                     Open this application <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -253,9 +261,11 @@ const Compare = () => {
             </div>
 
             {/* Score breakdown side-by-side */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 mt-6">
-              <h3 className="font-semibold text-slate-800 mb-3">Score breakdown</h3>
-              <div className="grid grid-cols-12 gap-2 pb-2 border-b border-slate-100 text-[10px] uppercase tracking-wider font-bold text-slate-400">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+                Score breakdown
+              </h3>
+              <div className="grid grid-cols-12 gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                 <div className="col-span-4">Dimension</div>
                 <div className="col-span-4 text-right">Resume A</div>
                 <div className="col-span-4 text-right">Resume B</div>
@@ -293,15 +303,17 @@ const Compare = () => {
             </div>
 
             {/* Missing must-have skills side-by-side */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 mt-6">
-              <h3 className="font-semibold text-slate-800 mb-3">Critical gaps</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
+                Critical gaps
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
                     Resume A — {missingA.length} missing
                   </p>
                   {missingA.length === 0 ? (
-                    <p className="text-sm text-emerald-600 flex items-center gap-1.5">
+                    <p className="text-sm text-emerald-600 dark:text-emerald-300 flex items-center gap-1.5">
                       <CheckCircle className="w-4 h-4" /> All required skills matched.
                     </p>
                   ) : (
@@ -309,7 +321,7 @@ const Compare = () => {
                       {missingA.map((s, i) => (
                         <span
                           key={`a-${i}`}
-                          className="text-xs px-2 py-1 rounded-md bg-red-50 border border-red-200 text-slate-700"
+                          className="text-xs px-2 py-1 rounded-md bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 text-slate-700 dark:text-slate-300"
                         >
                           {s.name}
                         </span>
@@ -318,11 +330,11 @@ const Compare = () => {
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
                     Resume B — {missingB.length} missing
                   </p>
                   {missingB.length === 0 ? (
-                    <p className="text-sm text-emerald-600 flex items-center gap-1.5">
+                    <p className="text-sm text-emerald-600 dark:text-emerald-300 flex items-center gap-1.5">
                       <CheckCircle className="w-4 h-4" /> All required skills matched.
                     </p>
                   ) : (
@@ -330,7 +342,7 @@ const Compare = () => {
                       {missingB.map((s, i) => (
                         <span
                           key={`b-${i}`}
-                          className="text-xs px-2 py-1 rounded-md bg-red-50 border border-red-200 text-slate-700"
+                          className="text-xs px-2 py-1 rounded-md bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 text-slate-700 dark:text-slate-300"
                         >
                           {s.name}
                         </span>

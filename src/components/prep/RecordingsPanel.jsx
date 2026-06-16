@@ -76,14 +76,14 @@ const RecordingsPanel = ({ applicationId }) => {
   if (!loaded || items.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
           <Mic className="w-4.5 h-4.5" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Past interviews</h3>
-          <p className="text-[11px] text-slate-400">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Past interviews</h3>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
             Saved on this device — replay your live interviews
           </p>
         </div>
@@ -91,7 +91,10 @@ const RecordingsPanel = ({ applicationId }) => {
 
       <div className="space-y-2.5">
         {items.map((r) => (
-          <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-3">
+          <div
+            key={r.id}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3"
+          >
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -101,14 +104,16 @@ const RecordingsPanel = ({ applicationId }) => {
                 <Play className="w-3.5 h-3.5" /> Play
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
                   {fmtDate(r.createdAt)}
                 </p>
-                <p className="text-[11px] text-slate-400">{fmtDuration(r.durationSec)} long</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                  {fmtDuration(r.durationSec)} long
+                </p>
               </div>
               {confirmId === r.id ? (
                 <div className="shrink-0 flex items-center gap-1.5">
-                  <span className="hidden sm:inline text-[11px] font-medium text-slate-500">
+                  <span className="hidden sm:inline text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     Delete?
                   </span>
                   <button
@@ -121,7 +126,7 @@ const RecordingsPanel = ({ applicationId }) => {
                   <button
                     type="button"
                     onClick={() => setConfirmId(null)}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -131,7 +136,7 @@ const RecordingsPanel = ({ applicationId }) => {
                   type="button"
                   onClick={() => setConfirmId(r.id)}
                   title="Delete recording"
-                  className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                  className="shrink-0 p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

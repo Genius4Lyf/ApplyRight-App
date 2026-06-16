@@ -51,7 +51,7 @@ export const BreathingExercise = ({ compact = false }) => {
     <div className="flex flex-col items-center text-center">
       <div className={`relative flex items-center justify-center ${compact ? 'h-36' : 'h-44'}`}>
         <div
-          className="rounded-full bg-gradient-to-br from-indigo-400/30 to-violet-400/30 border border-indigo-200 flex items-center justify-center"
+          className="rounded-full bg-gradient-to-br from-indigo-400/30 to-violet-400/30 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center"
           style={{
             width: compact ? 110 : 140,
             height: compact ? 110 : 140,
@@ -61,13 +61,13 @@ export const BreathingExercise = ({ compact = false }) => {
             transitionDuration: `${running ? step.secs : 0.6}s`,
           }}
         >
-          <span className="text-sm font-semibold text-indigo-700">
+          <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
             {running ? step.label : 'Ready'}
           </span>
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 font-medium mt-1">
+      <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-1">
         {running ? `Cycle ${cycles + 1} · 4-7-8 breathing` : '4-7-8 breathing · aim for 3–4 rounds'}
       </p>
 
@@ -84,7 +84,7 @@ export const BreathingExercise = ({ compact = false }) => {
           <button
             type="button"
             onClick={reset}
-            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
           >
             Reset
           </button>
@@ -116,17 +116,19 @@ const CalmKit = () => {
   return (
     <div className="space-y-4">
       {/* Breathing */}
-      <section className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <section className="relative overflow-hidden rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
         />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <Wind className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">Settle your nerves</h3>
+            <Wind className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              Settle your nerves
+            </h3>
           </div>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
             Slow, paced breathing lowers your heart rate and steadies your voice. Do this in the
             lobby or just before you join.
           </p>
@@ -136,23 +138,28 @@ const CalmKit = () => {
 
       {/* Reframe + Visualization */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <section className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4">
+        <section className="rounded-2xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-500/15 p-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-bold text-slate-900">Reframe the nerves</h3>
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              Reframe the nerves
+            </h3>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Tell yourself <span className="font-semibold text-slate-800">“I’m excited”</span>, not
-            “I’m nervous.” It’s the same racing heart — but candidates who relabel it as excitement
-            perform measurably better. The adrenaline is on your side.
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            Tell yourself{' '}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">“I’m excited”</span>,
+            not “I’m nervous.” It’s the same racing heart — but candidates who relabel it as
+            excitement perform measurably better. The adrenaline is on your side.
           </p>
         </section>
-        <section className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+        <section className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <Eye className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">Picture it going well</h3>
+            <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              Picture it going well
+            </h3>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             Take 20 seconds: see yourself walking in, a warm greeting, answering the first question
             calmly and clearly. Rehearsing success quiets the part of your brain that rehearses
             disaster.
@@ -161,12 +168,12 @@ const CalmKit = () => {
       </div>
 
       {/* Night-before checklist */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
         <div className="flex items-center gap-2 mb-1">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <h3 className="text-sm font-bold text-slate-900">The night before</h3>
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">The night before</h3>
         </div>
-        <p className="text-xs text-slate-500 mb-3">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
           Decide everything tonight so the morning has zero stress to add.
         </p>
         <ul className="space-y-2">
@@ -180,12 +187,12 @@ const CalmKit = () => {
                   className="w-full flex items-start gap-2.5 text-left group"
                 >
                   {on ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
                   ) : (
-                    <Circle className="w-4 h-4 text-slate-300 group-hover:text-slate-400 shrink-0 mt-0.5" />
+                    <Circle className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 shrink-0 mt-0.5" />
                   )}
                   <span
-                    className={`text-xs leading-relaxed ${on ? 'text-slate-400 line-through' : 'text-slate-700'}`}
+                    className={`text-xs leading-relaxed ${on ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-700 dark:text-slate-300'}`}
                   >
                     {item}
                   </span>

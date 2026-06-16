@@ -55,6 +55,8 @@ import MaintenanceGuard from './components/MaintenanceGuard';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import TopProgressBar from './components/TopProgressBar';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { isDarkEligibleRoute } from './utils/theme';
 
 // Session Manager Component
 const SessionManager = ({ children }) => {
@@ -120,6 +122,16 @@ const GuestRoute = ({ children }) => {
 const RootLayout = () => {
   const location = useLocation();
   const element = useOutlet();
+  const { theme } = useTheme();
+
+  // Dark mode is scoped to the authenticated user UI only. Toggle `.dark` on
+  // <html> (so React portals rendered to document.body inherit it) whenever the
+  // user prefers dark AND the current route is dark-eligible; remove it on any
+  // public/auth/admin page. This is the single place that owns the class.
+  useEffect(() => {
+    const on = theme === 'dark' && isDarkEligibleRoute(location.pathname);
+    document.documentElement.classList.toggle('dark', on);
+  }, [location.pathname, theme]);
 
   // Custom key function to prevent CVBuilderLayout from remounting on step changes
   const getPageKey = (pathname) => {
@@ -146,12 +158,12 @@ const RootLayout = () => {
       <TopProgressBar />
 
       {/* Global Educative / AI-themed Background */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none bg-slate-50">
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-slate-50 dark:bg-slate-950">
         {/* Subtle dot matrix pattern - slightly darker/more visible */}
-        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px] opacity-60"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-60 dark:opacity-20"></div>
         {/* Soft ambient gradients */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/60 rounded-full blur-3xl mix-blend-multiply translate-x-1/3 -translate-y-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl mix-blend-multiply -translate-x-1/4 translate-y-1/4"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/60 dark:bg-indigo-500/10 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen translate-x-1/3 -translate-y-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 dark:bg-sky-500/10 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen -translate-x-1/4 translate-y-1/4"></div>
       </div>
 
       <div
@@ -558,8 +570,10 @@ function App() {
   return (
     <ErrorBoundary>
       <HelmetProvider>
-        <RouterProvider router={router} />
-        <Toaster position="top-right" richColors />
+        <ThemeProvider>
+          <RouterProvider router={router} />
+          <Toaster position="top-right" richColors />
+        </ThemeProvider>
       </HelmetProvider>
     </ErrorBoundary>
   );

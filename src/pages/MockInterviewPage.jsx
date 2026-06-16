@@ -975,7 +975,7 @@ const MockInterviewPage = () => {
             {phase === 'running' && (
               <span
                 className={`inline-flex items-center gap-1.5 text-sm font-bold tabular-nums ${
-                  timeLeft <= 30 ? 'text-rose-500' : 'text-slate-700'
+                  timeLeft <= 30 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'
                 }`}
                 title="Time left on this question"
               >
@@ -1004,7 +1004,7 @@ const MockInterviewPage = () => {
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 immersive
                   ? 'bg-white/5 border border-white/15 hover:bg-white/10 text-slate-200'
-                  : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-600'
+                  : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
               <X className="w-3.5 h-3.5" /> Exit
@@ -1195,19 +1195,24 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900"
+      className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
     >
       <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-100 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
           <AlertTriangle className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-base font-bold text-slate-900 leading-snug">Leave the interview?</h2>
-          <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+            Leave the interview?
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
             You’re in the middle of an interview. If you leave now, this session won’t be saved
             {isLive ? ' — no recording and no assessment' : ' and won’t be assessed'}. To get your
             score, finish and tap{' '}
-            <span className="font-semibold text-slate-700">End &amp; review</span> instead.
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              End &amp; review
+            </span>{' '}
+            instead.
           </p>
         </div>
       </div>
@@ -1223,7 +1228,7 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
         <button
           type="button"
           onClick={onLeave}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600 text-sm font-semibold hover:bg-rose-50 transition-colors select-none cursor-pointer"
+          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors select-none cursor-pointer"
         >
           Leave anyway
         </button>
@@ -1247,35 +1252,39 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900"
+      className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
     >
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
         aria-label="Close"
       >
         <X className="w-4 h-4" />
       </button>
 
       <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/15 border border-amber-100 dark:border-amber-500/30 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
           <AlertTriangle className="w-5 h-5" />
         </div>
         <div className="min-w-0 pr-6">
-          <h2 className="text-base font-bold text-slate-900 leading-snug">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
             Ready for this interview?
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">Some essentials are still missing</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Some essentials are still missing
+          </p>
         </div>
       </div>
 
-      <div className="mt-5 bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+      <div className="mt-5 bg-slate-50 dark:bg-slate-900 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center text-xs mb-2">
-          <span className="font-semibold text-slate-600">Your readiness score</span>
-          <span className="font-bold text-slate-900">{readiness}%</span>
+          <span className="font-semibold text-slate-600 dark:text-slate-300">
+            Your readiness score
+          </span>
+          <span className="font-bold text-slate-900 dark:text-slate-100">{readiness}%</span>
         </div>
-        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-amber-500 rounded-full transition-all duration-500"
             style={{ width: `${readiness}%` }}
@@ -1284,24 +1293,31 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       </div>
 
       <div className="mt-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
           To-do before you start:
         </p>
         <ul className="space-y-2.5">
           {missing.map((m, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
+            <li
+              key={i}
+              className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0 animate-pulse" />
               <span className="leading-relaxed">
-                Prepare <span className="font-medium text-slate-900">{m.replace('your ', '')}</span>
+                Prepare{' '}
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {m.replace('your ', '')}
+                </span>
               </span>
             </li>
           ))}
         </ul>
       </div>
 
-      <p className="text-xs text-slate-500 bg-indigo-50/40 border border-indigo-100/50 rounded-lg p-3 mt-5 leading-relaxed">
-        <span className="font-semibold text-indigo-800">Tip:</span> Preparing these essentials
-        enables the AI interviewer to ask targeted questions grounded in your actual history.
+      <p className="text-xs text-slate-500 dark:text-slate-400 bg-indigo-50/40 dark:bg-indigo-500/15 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg p-3 mt-5 leading-relaxed">
+        <span className="font-semibold text-indigo-800 dark:text-indigo-300">Tip:</span> Preparing
+        these essentials enables the AI interviewer to ask targeted questions grounded in your
+        actual history.
       </p>
 
       <div className="mt-6 flex flex-col sm:flex-row gap-2">
@@ -1315,7 +1331,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
         <button
           type="button"
           onClick={onStartAnyway}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-slate-350 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors select-none cursor-pointer"
+          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-350 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors select-none cursor-pointer"
         >
           Start anyway
         </button>
@@ -1479,13 +1495,13 @@ const BreatheToggle = () => {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200"
       >
         <Wind className="w-3.5 h-3.5" />
         {open ? 'Hide breathing' : 'Feeling nervous? Take a breath first'}
       </button>
       {open && (
-        <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/30 p-4">
+        <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
           <BreathingExercise compact />
         </div>
       )}
@@ -1509,7 +1525,7 @@ const IntroView = ({
   onStart,
   onCancel,
 }) => (
-  <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 sm:p-7 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+  <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-7 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
     {/* ambient brand glow */}
     <div
       aria-hidden
@@ -1525,15 +1541,15 @@ const IntroView = ({
           className="w-full h-full object-contain"
         />
       </div>
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
         {mode === 'conversational' ? 'Conversational interview' : 'Guided interview'}
       </h1>
-      <p className="text-sm text-slate-500 mt-1">{title}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{title}</p>
     </div>
 
     {count === 0 ? (
       <>
-        <p className="relative z-10 text-sm text-slate-500 mt-6 text-center leading-relaxed">
+        <p className="relative z-10 text-sm text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
           No interview questions yet. Generate interview prep first to activate the simulation.
         </p>
         <div className="relative z-10 mt-6 text-center">
@@ -1549,28 +1565,31 @@ const IntroView = ({
     ) : (
       <>
         {mode === 'conversational' ? (
-          <p className="relative z-10 text-sm text-slate-600 mt-4 leading-relaxed text-center">
-            Hi <span className="font-semibold text-slate-900">{firstName}</span> — take a breath.
-            Your ApplyRight AI interviewer will{' '}
-            <strong className="text-slate-900">actually talk with you</strong>: it reacts to your
-            answers and asks natural follow-ups. Reply by voice or text — just have the
-            conversation, like the real thing.
+          <p className="relative z-10 text-sm text-slate-600 dark:text-slate-300 mt-4 leading-relaxed text-center">
+            Hi <span className="font-semibold text-slate-900 dark:text-slate-100">{firstName}</span>{' '}
+            — take a breath. Your ApplyRight AI interviewer will{' '}
+            <strong className="text-slate-900 dark:text-slate-100">actually talk with you</strong>:
+            it reacts to your answers and asks natural follow-ups. Reply by voice or text — just
+            have the conversation, like the real thing.
           </p>
         ) : (
-          <p className="relative z-10 text-sm text-slate-600 mt-4 leading-relaxed text-center">
-            Hi <span className="font-semibold text-slate-900">{firstName}</span> — take a breath.
-            Your ApplyRight AI interviewer will ask each question aloud. Answer out loud as if
-            you’re in the room, then{' '}
-            <strong className="text-slate-900">reveal a model answer</strong> and rate how it felt.
+          <p className="relative z-10 text-sm text-slate-600 dark:text-slate-300 mt-4 leading-relaxed text-center">
+            Hi <span className="font-semibold text-slate-900 dark:text-slate-100">{firstName}</span>{' '}
+            — take a breath. Your ApplyRight AI interviewer will ask each question aloud. Answer out
+            loud as if you’re in the room, then{' '}
+            <strong className="text-slate-900 dark:text-slate-100">reveal a model answer</strong>{' '}
+            and rate how it felt.
           </p>
         )}
         {mode === 'conversational' && (
-          <div className="relative z-10 mt-4 rounded-xl border border-amber-100 bg-amber-50/50 p-3 flex items-start gap-2.5">
-            <Mic className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600 leading-relaxed">
-              <span className="font-semibold text-slate-800">Find a quiet spot first.</span> The
-              interviewer is always listening, so background noise or other voices can interrupt it.
-              Earphones or a headset help a lot.
+          <div className="relative z-10 mt-4 rounded-xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/15 p-3 flex items-start gap-2.5">
+            <Mic className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                Find a quiet spot first.
+              </span>{' '}
+              The interviewer is always listening, so background noise or other voices can interrupt
+              it. Earphones or a headset help a lot.
             </p>
           </div>
         )}
@@ -1584,10 +1603,10 @@ const IntroView = ({
         )}
         {mode === 'conversational' && <DeviceCheck />}
         {trend && trend.count >= 1 && (
-          <div className="relative z-10 mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 flex items-start gap-2.5">
-            <TrendingUp className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600 leading-relaxed">
-              <span className="font-semibold text-slate-800">
+          <div className="relative z-10 mt-4 rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/15 p-3 flex items-start gap-2.5">
+            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
                 You’ve done {trend.count} {trend.count === 1 ? 'interview' : 'interviews'}.
               </span>{' '}
               {trend.trend === 'up' && trend.firstConfidence && trend.lastConfidence
@@ -1597,50 +1616,56 @@ const IntroView = ({
             </p>
           </div>
         )}
-        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100">
+        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100 dark:divide-slate-800">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
               <HelpCircle className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
                 Questions
               </p>
-              <p className="text-sm font-extrabold text-slate-800 mt-0.5">{count}</p>
+              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                {count}
+              </p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
               <Clock className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
                 Duration
               </p>
-              <p className="text-sm font-extrabold text-slate-800 mt-0.5">
+              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
                 ~{Math.round(plannedSec / 60)} min
               </p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
                 Credits
               </p>
-              <p className="text-sm font-extrabold text-slate-800 mt-0.5">Free</p>
+              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                Free
+              </p>
             </div>
           </div>
         </div>
         {lastSession && (
-          <div className="relative z-10 mt-4 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 text-xs text-slate-500 flex items-center gap-2.5">
+          <div className="relative z-10 mt-4 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2.5">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
             <div>
-              <span className="font-semibold text-slate-700">Last session:</span>{' '}
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                Last session:
+              </span>{' '}
               {typeof lastSession.score === 'number' ? `${lastSession.score}% overall · ` : ''}
               {lastSession.flagged?.length
                 ? `${lastSession.flagged.length} flagged questions to practice`
@@ -1661,7 +1686,7 @@ const IntroView = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold transition-colors cursor-pointer select-none"
+            className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
           >
             Back
           </button>
@@ -1696,11 +1721,11 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
   };
 
   return (
-    <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/30 p-4">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 mb-1">
+    <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
         Adaptive follow-up · premium
       </p>
-      <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
         Type or dictate your answer and the AI interviewer asks a real follow-up — just like the
         live thing.
       </p>
@@ -1709,7 +1734,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…"
-        className="w-full text-sm rounded-xl border border-slate-200 bg-white p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
       />
       <div className="mt-2 flex items-center gap-2">
         {sttSupported && (
@@ -1718,8 +1743,8 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
             onClick={toggleMic}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
               listening
-                ? 'border-rose-300 bg-rose-50 text-rose-600'
-                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                ? 'border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
             <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
@@ -1740,11 +1765,13 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
         </button>
       </div>
       {followUp && (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 mb-1">
+        <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
             Interviewer follow-up
           </p>
-          <p className="text-sm text-slate-800 font-semibold leading-snug">“{followUp}”</p>
+          <p className="text-sm text-slate-800 dark:text-slate-200 font-semibold leading-snug">
+            “{followUp}”
+          </p>
         </div>
       )}
     </div>
@@ -1784,14 +1811,14 @@ const RunningView = ({
                 ? 'w-6 bg-indigo-500'
                 : i === index
                   ? 'flex-1 bg-gradient-to-r from-indigo-500 to-violet-500'
-                  : 'w-6 bg-slate-200'
+                  : 'w-6 bg-slate-200 dark:bg-slate-700'
             }`}
           />
         ))}
       </div>
 
       {/* Interviewer "video tile" — the AI is present and talking to you */}
-      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
         {/* ambient brand glow */}
         <div
           aria-hidden
@@ -1805,7 +1832,7 @@ const RunningView = ({
               className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
                 speaking
                   ? 'border-indigo-300 ring-4 ring-indigo-200/60 shadow-lg shadow-indigo-300/40 scale-[1.03]'
-                  : 'border-slate-200 ring-2 ring-slate-100'
+                  : 'border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800'
               }`}
             >
               <img
@@ -1815,7 +1842,7 @@ const RunningView = ({
               />
             </div>
             {speaking && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white rounded-full px-1.5 py-0.5 shadow-sm border border-indigo-100">
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-indigo-100 dark:border-indigo-500/30">
                 <span className="w-0.5 h-2 bg-indigo-500 rounded-full animate-pulse" />
                 <span
                   className="w-0.5 h-3 bg-indigo-500 rounded-full animate-pulse"
@@ -1834,22 +1861,24 @@ const RunningView = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm sm:text-base font-bold text-slate-900">ApplyRight AI</p>
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+            <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+              ApplyRight AI
+            </p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
               Your interviewer
             </p>
             <div className="mt-1.5">
               {speaking ? (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />{' '}
                   Speaking…
                 </span>
               ) : loading ? (
-                <span className="text-[11px] font-bold text-slate-400 animate-pulse">
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 animate-pulse">
                   Preparing question…
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Listening
                 </span>
               )}
@@ -1860,7 +1889,7 @@ const RunningView = ({
             type="button"
             onClick={onReplay}
             title="Hear the question again"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors cursor-pointer select-none"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer select-none"
           >
             <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
           </button>
@@ -1868,11 +1897,11 @@ const RunningView = ({
 
         {/* The question, framed as something the interviewer is asking you */}
         <div className="relative z-10 mt-4">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
             Question {index + 1} of {total} · {TYPE_LABEL(question.type)} · ~{budgetMin(question)}{' '}
             min
           </p>
-          <h2 className="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+          <h2 className="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">
             “{question.question}”
           </h2>
         </div>
@@ -1880,7 +1909,7 @@ const RunningView = ({
 
       {/* Your turn — scrolls internally so the controls stay pinned and the page never scrolls */}
       <div className="flex-1 min-h-0 flex flex-col mt-4">
-        <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2 px-1">
+        <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2 px-1">
           Your turn
         </p>
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
@@ -1891,9 +1920,9 @@ const RunningView = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed border-slate-300 rounded-2xl bg-white/60 text-center"
+                className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-800/60 text-center"
               >
-                <p className="text-sm text-slate-500 mb-5 max-w-md leading-relaxed">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 max-w-md leading-relaxed">
                   Answer out loud, as if you’re really in the room. When you’re done, reveal a model
                   outline and rate how it felt.
                 </p>
@@ -1914,11 +1943,11 @@ const RunningView = ({
                 className="space-y-4"
               >
                 {/* Model answer outline */}
-                <div className="p-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600">
+                <div className="p-5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 space-y-3">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300">
                     {question.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
                   </p>
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-slate-300">
                     {question.suggestedAnswer ||
                       (question.isWeakness
                         ? 'A strong weakness answer is personal, honest, and growth-oriented. Follow these principles:\n\n' +
@@ -1934,8 +1963,8 @@ const RunningView = ({
                 </div>
 
                 {/* Rating deck */}
-                <div className="p-5 rounded-2xl border border-slate-200 bg-white">
-                  <p className="text-sm font-bold text-slate-800 mb-3 text-center sm:text-left">
+                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-center sm:text-left">
                     How did your answer feel?
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1944,8 +1973,8 @@ const RunningView = ({
                       onClick={() => onRate('needs_work')}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                         currentRating === 'needs_work'
-                          ? 'bg-rose-50 border-rose-400 text-rose-700 ring-2 ring-rose-100'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-400 dark:border-rose-500/40 text-rose-700 dark:text-rose-300 ring-2 ring-rose-100 dark:ring-rose-500/20'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
@@ -1956,8 +1985,8 @@ const RunningView = ({
                       onClick={() => onRate('almost')}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                         currentRating === 'almost'
-                          ? 'bg-amber-50 border-amber-400 text-amber-700 ring-2 ring-amber-100'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-400 dark:border-amber-500/40 text-amber-700 dark:text-amber-300 ring-2 ring-amber-100 dark:ring-amber-500/20'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
@@ -1968,8 +1997,8 @@ const RunningView = ({
                       onClick={() => onRate('ready')}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                         currentRating === 'ready'
-                          ? 'bg-emerald-50 border-emerald-400 text-emerald-700 ring-2 ring-emerald-100'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-400 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-100 dark:ring-emerald-500/20'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
@@ -1988,11 +2017,11 @@ const RunningView = ({
       </div>
 
       {/* Controls (pinned to the bottom of the viewport-height column) */}
-      <div className="shrink-0 mt-4 pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+      <div className="shrink-0 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={onSkip}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all cursor-pointer select-none"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer select-none"
         >
           <SkipForward className="w-3.5 h-3.5" /> Skip question
         </button>
@@ -2049,10 +2078,13 @@ const ReviewView = ({
   useEffect(() => () => recordingUrl && URL.revokeObjectURL(recordingUrl), [recordingUrl]);
 
   const confBadgeStyle = (c) => {
-    if (c === 'ready') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-    if (c === 'almost') return 'bg-amber-50 text-amber-700 border border-amber-200';
-    if (c === 'needs_work') return 'bg-rose-50 text-rose-700 border border-rose-200';
-    return 'bg-slate-100 text-slate-500 border border-slate-200';
+    if (c === 'ready')
+      return 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30';
+    if (c === 'almost')
+      return 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30';
+    if (c === 'needs_work')
+      return 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30';
+    return 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
   };
 
   const confLabel = (c) => {
@@ -2063,10 +2095,14 @@ const ReviewView = ({
   };
 
   const scoreTone = (s) =>
-    s >= 75 ? 'text-emerald-600' : s >= 45 ? 'text-amber-600' : 'text-rose-600';
+    s >= 75
+      ? 'text-emerald-600 dark:text-emerald-300'
+      : s >= 45
+        ? 'text-amber-600 dark:text-amber-300'
+        : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/80 backdrop-blur-md p-5 sm:p-8 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-8 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       {/* ambient brand glow */}
       <div
         aria-hidden
@@ -2074,8 +2110,8 @@ const ReviewView = ({
       />
 
       <div className="relative z-10">
-        <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100">
-          <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
             {overall != null ? (
               <span className={`text-xl font-bold ${scoreTone(overall)}`}>{overall}%</span>
             ) : (
@@ -2083,8 +2119,10 @@ const ReviewView = ({
             )}
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900">Interview complete</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
+              Interview complete
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {assessment
                 ? `AI readiness score: ${overall}% — ${READINESS_LABEL[assessment.readiness] || ''}`
                 : overall != null
@@ -2096,12 +2134,12 @@ const ReviewView = ({
 
         {/* Recording of the live session — replay it right here */}
         {recordingUrl && (
-          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 mb-2">
+          <div className="mt-5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-4">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-2">
               Your interview recording
             </p>
             <AudioPlayer src={recordingUrl} durationHint={recordingDuration} />
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               Saved on this device — find it again under “Past interviews” on your prep page.
             </p>
           </div>
@@ -2111,11 +2149,11 @@ const ReviewView = ({
         {assessment ? (
           <AssessmentReport assessment={assessment} />
         ) : gradeError ? (
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-center">
-            <p className="text-sm font-semibold text-slate-800">
+          <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/15 p-4 text-center">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               We couldn’t score this interview just now.
             </p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Your answers are still here — give it another try.
             </p>
             <button
@@ -2130,7 +2168,9 @@ const ReviewView = ({
           <>
             {/* Self confidence overall (guided/scripted mode) */}
             <div className="mt-6">
-              <p className="text-sm font-bold text-slate-800 mb-2.5">How did that feel overall?</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2.5">
+                How did that feel overall?
+              </p>
               <div className="flex items-center gap-2 flex-wrap">
                 {CONF.map((c) => (
                   <button
@@ -2140,7 +2180,7 @@ const ReviewView = ({
                     className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                       confidence === c.id
                         ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {c.label}
@@ -2165,8 +2205,8 @@ const ReviewView = ({
 
         {/* Per-question results (guided/scripted only) */}
         {!assessment && results.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-3.5">
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-3.5">
               Your practiced questions — tick any you want to keep working on
             </p>
             <div className="space-y-3">
@@ -2176,13 +2216,13 @@ const ReviewView = ({
                 return (
                   <div
                     key={i}
-                    className="border border-slate-200 rounded-xl overflow-hidden bg-white hover:border-indigo-200 transition-colors"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 p-3">
                       <button
                         type="button"
                         onClick={() => toggleFlag(r._origIndex)}
-                        className="shrink-0 text-slate-300 hover:text-indigo-500 transition-colors"
+                        className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors"
                         title="Flag to work on"
                       >
                         {on ? (
@@ -2199,19 +2239,19 @@ const ReviewView = ({
                       <button
                         type="button"
                         onClick={() => setOpenIdx(open ? null : i)}
-                        className="flex-1 min-w-0 text-left text-sm font-semibold text-slate-800 truncate hover:text-slate-900 transition-colors cursor-pointer"
+                        className="flex-1 min-w-0 text-left text-sm font-semibold text-slate-800 dark:text-slate-200 truncate hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer"
                       >
                         {r.question}
                       </button>
                     </div>
                     {open && (
-                      <div className="px-4 pb-4 pt-2 border-t border-slate-100 bg-slate-50/60 space-y-4">
+                      <div className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 space-y-4">
                         {/* Suggested answer outline */}
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 mb-1.5">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1.5">
                             {r.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
                           </p>
-                          <p className="text-xs text-slate-600 bg-white border border-slate-200 rounded-xl p-3 whitespace-pre-line leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 whitespace-pre-line leading-relaxed">
                             {r.suggestedAnswer ||
                               (r.isWeakness
                                 ? "1. State a genuine weakness (avoid cliches like 'perfectionist').\n" +
@@ -2225,8 +2265,8 @@ const ReviewView = ({
                         </div>
 
                         {/* Micro rating adjustment */}
-                        <div className="border-t border-slate-200/80 pt-3">
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                        <div className="border-t border-slate-200/80 dark:border-slate-700/80 pt-3">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
                             Adjust your rating
                           </p>
                           <div className="flex items-center gap-2">
@@ -2238,11 +2278,11 @@ const ReviewView = ({
                                 className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
                                   r.confidence === c.id
                                     ? c.id === 'ready'
-                                      ? 'bg-emerald-50 border-emerald-400 text-emerald-700'
+                                      ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-400 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
                                       : c.id === 'almost'
-                                        ? 'bg-amber-50 border-amber-400 text-amber-700'
-                                        : 'bg-rose-50 border-rose-400 text-rose-700'
-                                    : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                                        ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-400 dark:border-amber-500/40 text-amber-700 dark:text-amber-300'
+                                        : 'bg-rose-50 dark:bg-rose-500/15 border-rose-400 dark:border-rose-500/40 text-rose-700 dark:text-rose-300'
+                                    : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
                               >
                                 {c.label}
@@ -2255,7 +2295,7 @@ const ReviewView = ({
                           <button
                             type="button"
                             onClick={() => onPracticeQuestion(r._origIndex)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-semibold transition-all cursor-pointer"
                           >
                             <Play className="w-3.5 h-3.5" /> Practice this question
                           </button>
@@ -2281,14 +2321,14 @@ const ReviewView = ({
           <button
             type="button"
             onClick={onRetake}
-            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold transition-all cursor-pointer select-none"
+            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-all cursor-pointer select-none"
           >
             <RefreshCw className="w-4 h-4" /> Retake
           </button>
           <button
             type="button"
             onClick={onDone}
-            className="sm:ml-auto px-4.5 py-2.5 rounded-xl text-slate-500 hover:text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors cursor-pointer select-none text-center"
+            className="sm:ml-auto px-4.5 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none text-center"
           >
             Back to prep
           </button>
@@ -2323,7 +2363,7 @@ const ModeCard = ({
   const owned = TIER_RANK[userTier] >= TIER_RANK[tierKey];
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border bg-white/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)] flex flex-col ${accent.border}`}
+      className={`relative overflow-hidden rounded-3xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)] flex flex-col ${accent.border}`}
     >
       <div
         aria-hidden
@@ -2336,7 +2376,9 @@ const ModeCard = ({
           {icon}
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-bold text-slate-900 leading-tight">{name}</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+            {name}
+          </h3>
           <span
             className={`mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${accent.pill}`}
           >
@@ -2345,11 +2387,13 @@ const ModeCard = ({
         </div>
       </div>
 
-      <p className="relative z-10 text-sm text-slate-600 mt-3.5 leading-relaxed">{blurb}</p>
+      <p className="relative z-10 text-sm text-slate-600 dark:text-slate-300 mt-3.5 leading-relaxed">
+        {blurb}
+      </p>
 
       <ul className="relative z-10 mt-3 space-y-1.5">
         {bullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2 text-xs text-slate-500">
+          <li key={i} className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${accent.dot}`} />
             <span className="leading-relaxed">{b}</span>
           </li>
@@ -2371,7 +2415,7 @@ const ModeCard = ({
         >
           {name.startsWith('Conversational') ? 'Start conversational' : 'Start guided'}
         </button>
-        <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-wider text-slate-400">
+        <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Included free during testing
         </p>
       </div>
@@ -2382,10 +2426,13 @@ const ModeCard = ({
 const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
   <div className="relative">
     <div className="text-center mb-5">
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Choose your interview</h1>
-      <p className="text-sm text-slate-500 mt-1">
-        Two ways to practice for <span className="font-semibold text-slate-700">{title}</span> —
-        pick the one that fits your connection.
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+        Choose your interview
+      </h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Two ways to practice for{' '}
+        <span className="font-semibold text-slate-700 dark:text-slate-300">{title}</span> — pick the
+        one that fits your connection.
       </p>
     </div>
 
@@ -2405,12 +2452,14 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         network="Needs excellent network coverage — every answer is a live round-trip to the interviewer."
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         accent={{
-          border: 'border-indigo-200',
+          border: 'border-indigo-200 dark:border-indigo-500/30',
           glow: 'bg-gradient-to-br from-indigo-200/60 to-violet-200/40',
-          iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
-          pill: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+          iconBg:
+            'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30',
+          pill: 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30',
           dot: 'bg-indigo-500',
-          netBox: 'border-indigo-100 bg-indigo-50/40 text-indigo-700',
+          netBox:
+            'border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300',
           btn: 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-indigo-500/20',
         }}
         onPick={() => onPick('conversational')}
@@ -2431,12 +2480,14 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         network="Needs only a normal, good internet connection — questions are prepared up front, so brief dips are fine."
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         accent={{
-          border: 'border-slate-200',
+          border: 'border-slate-200 dark:border-slate-700',
           glow: 'bg-gradient-to-br from-slate-200/60 to-indigo-100/40',
-          iconBg: 'bg-slate-100 text-slate-600 border border-slate-200',
-          pill: 'bg-amber-50 text-amber-700 border border-amber-200',
+          iconBg:
+            'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+          pill: 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
           dot: 'bg-slate-400',
-          netBox: 'border-slate-200 bg-slate-50 text-slate-600',
+          netBox:
+            'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300',
           btn: 'bg-slate-800 hover:bg-slate-900 shadow-slate-300/40',
         }}
         onPick={() => onPick('scripted')}
@@ -2447,7 +2498,7 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
       <button
         type="button"
         onClick={onCancel}
-        className="px-5 py-2 rounded-xl text-slate-500 hover:text-slate-800 text-sm font-semibold hover:bg-slate-100 transition-colors cursor-pointer select-none"
+        className="px-5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none"
       >
         Cancel
       </button>

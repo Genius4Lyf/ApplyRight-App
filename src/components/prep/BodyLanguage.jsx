@@ -37,24 +37,29 @@ const TIPS = [
 ];
 
 const BodyLanguage = () => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-5">
+  <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
     <div className="flex items-center gap-2 mb-1">
-      <Smile className="w-4 h-4 text-indigo-600" />
-      <h3 className="text-sm font-bold text-slate-900">Walk in with presence</h3>
+      <Smile className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+        Walk in with presence
+      </h3>
     </div>
-    <p className="text-xs text-slate-500 mb-3">
+    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
       How you show up speaks before you do. A few habits that read as confident:
     </p>
     <div className="grid sm:grid-cols-2 gap-3">
       {TIPS.map((t, i) => (
-        <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+        <div
+          key={i}
+          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 p-3"
+        >
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
               <t.icon className="w-3.5 h-3.5" />
             </div>
-            <p className="text-xs font-bold text-slate-800">{t.title}</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{t.title}</p>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">{t.body}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{t.body}</p>
         </div>
       ))}
     </div>

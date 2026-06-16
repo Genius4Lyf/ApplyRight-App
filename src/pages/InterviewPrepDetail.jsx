@@ -383,7 +383,7 @@ const InterviewPrepDetail = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <Navbar />
         <div className="flex items-center justify-center py-20">
           <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
@@ -394,9 +394,9 @@ const InterviewPrepDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <Navbar />
-        <div className="text-center py-12 text-rose-600">{error}</div>
+        <div className="text-center py-12 text-rose-600 dark:text-rose-300">{error}</div>
       </div>
     );
   }
@@ -456,16 +456,16 @@ const InterviewPrepDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
-      <header className="bg-white border-b border-slate-200">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5">
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => navigate('/interview-prep')}
-              className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors shrink-0"
+              className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
               aria-label="Back to list"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -473,30 +473,36 @@ const InterviewPrepDetail = () => {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                <h1 className="text-sm sm:text-base font-semibold text-slate-900 truncate">
+                <h1 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
                   {title}
                 </h1>
                 {company && (
-                  <span className="hidden sm:inline text-sm text-slate-400 shrink-0">·</span>
+                  <span className="hidden sm:inline text-sm text-slate-400 dark:text-slate-500 shrink-0">
+                    ·
+                  </span>
                 )}
                 {company && (
-                  <span className="hidden sm:inline text-sm text-slate-500 truncate">
+                  <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400 truncate">
                     {company}
                   </span>
                 )}
                 <span
                   className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                    isCvOnly ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'
+                    isCvOnly
+                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                      : 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
                   }`}
                 >
                   {isCvOnly ? 'From CV' : 'Job role'}
                 </span>
               </div>
               {company && (
-                <p className="sm:hidden text-xs text-slate-500 truncate mt-0.5">{company}</p>
+                <p className="sm:hidden text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {company}
+                </p>
               )}
               {isCvOnly && (
-                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Not attached to a job yet
                 </p>
               )}
@@ -504,7 +510,7 @@ const InterviewPrepDetail = () => {
 
             <Link
               to={`/interview-prep/${applicationId}/brief`}
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-md transition-colors"
               aria-label="Pre-call brief"
             >
               <ClipboardList className="w-4 h-4" />
@@ -514,7 +520,7 @@ const InterviewPrepDetail = () => {
             {isCvOnly ? (
               <Link
                 to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
-                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
                 aria-label="Open CV"
               >
                 <Eye className="w-4 h-4" />
@@ -524,7 +530,7 @@ const InterviewPrepDetail = () => {
               <button
                 type="button"
                 onClick={() => setShowCv(true)}
-                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
                 aria-label="View CV"
               >
                 <Eye className="w-4 h-4" />
@@ -586,7 +592,7 @@ const InterviewPrepDetail = () => {
         </div>
 
         {/* Tabs */}
-        <nav className="flex items-center gap-1 border-b border-slate-200 mb-6 overflow-x-auto">
+        <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -596,7 +602,9 @@ const InterviewPrepDetail = () => {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
-                  active ? 'text-indigo-700' : 'text-slate-500 hover:text-slate-700'
+                  active
+                    ? 'text-indigo-700 dark:text-indigo-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -604,7 +612,9 @@ const InterviewPrepDetail = () => {
                 {tab.count > 0 && (
                   <span
                     className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold ${
-                      active ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
+                      active
+                        ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     {tab.count}
@@ -716,10 +726,10 @@ const InterviewPrepDetail = () => {
               transition={{ duration: 0.15 }}
             >
               <div className="mb-4">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   Game-day readiness
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                   Walk in calm and ready — not just prepped on what to say.
                 </p>
               </div>
@@ -739,7 +749,7 @@ const InterviewPrepDetail = () => {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
             >
-              <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+              <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
                 <NotesList
                   applicationId={applicationId}
                   initialNotes={notes}
@@ -842,15 +852,15 @@ const InterviewPrepDetail = () => {
 const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   if (skills.length === 0) {
     return (
-      <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8">
+      <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
         <SectionHeader
           icon={Sparkles}
           title="Skill soundbites"
           subtitle="Quick, CV-grounded answers for skill-probe questions"
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-600"
+          iconBg="bg-emerald-50 dark:bg-emerald-500/15"
+          iconColor="text-emerald-600 dark:text-emerald-300"
         />
-        <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           When your CV has AI-generated skills with evidence, their rehearsable talking points
           appear here automatically. Generate skills in the CV builder to populate them.
         </p>
@@ -868,13 +878,13 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 
   return (
     <section className="space-y-3">
-      <div className="flex items-start gap-2 rounded-lg bg-emerald-50/50 border border-emerald-100 px-3 py-2.5">
-        <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-600 leading-relaxed">
-          <span className="font-semibold text-slate-700">Quick soundbites</span> for
-          &ldquo;what&apos;s your experience with X?&rdquo; questions, pulled from your CV. For full
-          STAR narratives, use the <span className="font-semibold text-indigo-700">Stories</span>{' '}
-          tab.
+      <div className="flex items-start gap-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 px-3 py-2.5">
+        <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Quick soundbites</span>{' '}
+          for &ldquo;what&apos;s your experience with X?&rdquo; questions, pulled from your CV. For
+          full STAR narratives, use the{' '}
+          <span className="font-semibold text-indigo-700 dark:text-indigo-300">Stories</span> tab.
         </p>
       </div>
       {skills.map((skill, i) => (
@@ -889,30 +899,34 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 };
 
 const SkillCard = ({ skill, onPractice }) => (
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+      <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
         <Sparkles className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-slate-900">{skill.name}</p>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{skill.name}</p>
           {skill.category && (
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
               {skill.category}
             </span>
           )}
         </div>
         {skill.talkingPoint && (
-          <p className="text-sm text-slate-700 leading-relaxed mt-1.5">{skill.talkingPoint}</p>
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mt-1.5">
+            {skill.talkingPoint}
+          </p>
         )}
         {Array.isArray(skill.evidence) && skill.evidence.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap mt-2">
-            <span className="text-[10px] uppercase font-bold text-slate-400">From:</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+              From:
+            </span>
             {skill.evidence.map((ev, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-semibold uppercase"
+                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
               >
                 {ev.type === 'experience' ? 'Work history' : ev.type}
               </span>
@@ -922,11 +936,11 @@ const SkillCard = ({ skill, onPractice }) => (
       </div>
     </div>
 
-    <div className="mt-3 pt-3 border-t border-slate-100">
+    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
       <button
         type="button"
         onClick={onPractice}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50"
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         <PlayCircle className="w-4 h-4" />
         Rehearse this
@@ -978,13 +992,13 @@ const QuestionListItem = ({
     : 'Technical';
   const typeBadgeColor =
     question.type === 'behavioral'
-      ? 'bg-purple-50 text-purple-700 border-purple-200'
+      ? 'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30'
       : question.type === 'situational'
-        ? 'bg-amber-50 text-amber-700 border-amber-200'
-        : 'bg-blue-50 text-blue-700 border-blue-200';
+        ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+        : 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30';
 
   return (
-    <div className="border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
       {/* Header Row */}
       <button
         type="button"
@@ -1002,29 +1016,31 @@ const QuestionListItem = ({
               <span
                 className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                   question.confidence === 'ready'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
                     : question.confidence === 'almost'
-                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
+                      : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30'
                 }`}
               >
                 {question.confidence.replace('_', ' ')}
               </span>
             )}
             {bestScore !== null && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
                 Best {bestScore}% · {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
               </span>
             )}
             {warnings && warnings.unsupportedClaims?.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold">
                 <AlertTriangle className="w-3 h-3 text-amber-500" /> Verify claims
               </span>
             )}
           </div>
-          <h4 className="text-sm font-semibold text-slate-900 leading-snug">{question.question}</h4>
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+            {question.question}
+          </h4>
         </div>
-        <div className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 mt-0.5 shrink-0">
+        <div className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 mt-0.5 shrink-0">
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
@@ -1039,17 +1055,17 @@ const QuestionListItem = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-1.5 border-t border-slate-100 bg-slate-50/20">
+            <div className="px-4 pb-4 pt-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/20">
               {/* Grounding CV badging */}
               {question.sourcedFrom && question.sourcedFrom.length > 0 && (
                 <div className="flex items-center gap-1.5 mb-3 flex-wrap pt-1.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
                     Grounded in:
                   </span>
                   {question.sourcedFrom.map((src, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-semibold uppercase"
+                      className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
                     >
                       {src.type === 'experience' ? 'Work history' : src.type}
                     </span>
@@ -1059,13 +1075,13 @@ const QuestionListItem = ({
 
               {/* Warnings Panel */}
               {warnings && warnings.unsupportedClaims?.length > 0 && (
-                <div className="mb-3.5 p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="mb-3.5 p-3.5 bg-amber-50/60 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold">Verify these facts before you rehearse:</span> the
                     model answer (shown in Practice / Interview mode) includes details not found in
                     your CV profile:
-                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800">
+                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800 dark:text-amber-200">
                       {warnings.unsupportedClaims.map((claim, idx) => (
                         <li key={idx}>{claim}</li>
                       ))}
@@ -1077,23 +1093,28 @@ const QuestionListItem = ({
               {/* Model answer is intentionally hidden here — it's revealed in
                   Practice mode ("Reveal answer") or read aloud in Interview
                   mode, so the user rehearses before peeking. */}
-              <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
+              <div className="bg-indigo-50/50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
                 <EyeOff className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800">
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     Model answer hidden on purpose
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                     Rehearse out loud first, then reveal the model answer in{' '}
-                    <span className="font-semibold text-indigo-600">Practice mode</span> or hear it
-                    read to you in{' '}
-                    <span className="font-semibold text-indigo-600">Interview mode</span>.
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-300">
+                      Practice mode
+                    </span>{' '}
+                    or hear it read to you in{' '}
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-300">
+                      Interview mode
+                    </span>
+                    .
                   </p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3.5 border-t border-slate-150">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3.5 border-t border-slate-150 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={startPracticeThis}
@@ -1103,7 +1124,9 @@ const QuestionListItem = ({
                 </button>
 
                 <div className="sm:ml-auto flex flex-wrap items-center gap-1.5 justify-center sm:justify-start">
-                  <span className="text-[10px] text-slate-400 font-bold mr-1">Readiness:</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mr-1">
+                    Readiness:
+                  </span>
                   {CONFIDENCE_OPTIONS.map((opt) => {
                     const active = question.confidence === opt.id;
                     return (
@@ -1206,19 +1229,21 @@ const EssentialsSection = ({
   if (visible.length === 0) return null;
 
   return (
-    <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+    <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
       <SectionHeader
         icon={Sparkles}
         title="Interview essentials"
         subtitle="The questions almost every interview opens with"
-        iconBg="bg-amber-50"
-        iconColor="text-amber-600"
+        iconBg="bg-amber-50 dark:bg-amber-500/15"
+        iconColor="text-amber-600 dark:text-amber-300"
       />
       <div className="mt-4 space-y-4">
         {visible.map((e) => (
-          <div key={e.kind} className="border-l-2 border-amber-200 pl-3">
-            <p className="text-sm font-semibold text-slate-900">{e.q}</p>
-            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{e.tip}</p>
+          <div key={e.kind} className="border-l-2 border-amber-200 dark:border-amber-500/30 pl-3">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{e.q}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
+              {e.tip}
+            </p>
             {e.generatable && onGenerateEssential && (
               <button
                 type="button"
@@ -1250,7 +1275,7 @@ const EssentialsSection = ({
               <button
                 type="button"
                 onClick={() => onGoToNotes(e.noteSeed)}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 text-xs font-semibold transition-colors"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-xs font-semibold transition-colors"
               >
                 <StickyNote className="w-3.5 h-3.5" /> Draft your answer in My notes
               </button>
@@ -1294,29 +1319,29 @@ const QuestionsTab = ({
       />
 
       {jobQuestions.length === 0 && (
-        <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8 text-center">
-          <MessageSquare className="w-7 h-7 mx-auto text-slate-300 mb-2" />
-          <p className="text-sm text-slate-600">
+        <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 text-center">
+          <MessageSquare className="w-7 h-7 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             No job-specific questions yet. Generate interview prep from the dashboard.
           </p>
         </section>
       )}
 
       {jobQuestions.length > 0 && (
-        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
               icon={MessageSquare}
               title="Job-based prep"
               subtitle={`${jobQuestions.length} likely question${jobQuestions.length === 1 ? '' : 's'} with rehearsable answers`}
-              iconBg="bg-indigo-50"
-              iconColor="text-indigo-600"
+              iconBg="bg-indigo-50 dark:bg-indigo-500/15"
+              iconColor="text-indigo-600 dark:text-indigo-300"
             />
             <div className="shrink-0 flex items-center gap-2">
               <button
                 type="button"
                 onClick={onStartPractice}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 Practice all
@@ -1336,8 +1361,9 @@ const QuestionsTab = ({
           <div className="space-y-5 mb-6">
             {groupQuestionsByCategory(jobQuestions).map((group) => (
               <div key={group.key}>
-                <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">
-                  {group.label} <span className="text-slate-300">· {group.items.length}</span>
+                <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+                  {group.label}{' '}
+                  <span className="text-slate-300 dark:text-slate-600">· {group.items.length}</span>
                 </p>
                 <div className="space-y-3">
                   {group.items.map(({ q, i }) => {
@@ -1362,7 +1388,7 @@ const QuestionsTab = ({
 
           {newQuestionIndices && newQuestionIndices.size > 0 && (
             <div className="mt-4 space-y-2 mb-6">
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
                 Just added
               </p>
               <ul className="space-y-1.5">
@@ -1373,9 +1399,9 @@ const QuestionsTab = ({
                   return (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed pl-3 border-l-2 border-emerald-300"
+                      className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-emerald-300 dark:border-emerald-500/30"
                     >
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
                         <Sparkles className="w-2.5 h-2.5" /> New
                       </span>
                       <span>{text}</span>
@@ -1387,7 +1413,7 @@ const QuestionsTab = ({
           )}
 
           {canGenerateMore && (
-            <div className="mt-5 pt-4 border-t border-slate-100">
+            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={onGenerateMore}
@@ -1416,7 +1442,7 @@ const QuestionsTab = ({
                   </>
                 )}
               </button>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                 {adRewarded
                   ? 'Watch a short ad to unlock fresh questions — free, no credits used.'
                   : 'Uses 5 credits to generate fresh questions.'}
@@ -1427,16 +1453,16 @@ const QuestionsTab = ({
       )}
 
       {questionsToAsk.length > 0 && (
-        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
-          <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
-            <HelpCircle className="w-4 h-4 text-emerald-600" />
+        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+          <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+            <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
             Questions to ask the interviewer
           </h4>
           <ul className="space-y-2">
             {questionsToAsk.map((q, i) => (
               <li
                 key={i}
-                className="text-sm text-slate-700 leading-relaxed pl-3 border-l-2 border-emerald-200"
+                className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-emerald-200 dark:border-emerald-500/30"
               >
                 {q}
               </li>
@@ -1456,8 +1482,8 @@ const SectionHeader = ({ icon, title, subtitle, iconBg, iconColor }) => (
       {React.createElement(icon, { className: 'w-5 h-5' })}
     </div>
     <div className="min-w-0">
-      <h2 className="text-base sm:text-lg font-bold text-slate-900">{title}</h2>
-      <p className="text-xs sm:text-sm text-slate-500">{subtitle}</p>
+      <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
     </div>
   </div>
 );

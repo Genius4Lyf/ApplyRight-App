@@ -45,7 +45,7 @@ const MobileBottomNav = () => {
   if (!shouldShowBottomNav(location.pathname)) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)] z-40 shadow-[0_-1px_3px_rgba(0,0,0,0.04)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] z-40 shadow-[0_-1px_3px_rgba(0,0,0,0.04)]">
       <div className="flex items-stretch h-14">
         {TABS.map(({ to, label, icon, matches }) => {
           const active = matches.some(
@@ -59,7 +59,9 @@ const MobileBottomNav = () => {
               aria-label={label}
               aria-current={active ? 'page' : undefined}
               className={`flex items-center justify-center flex-1 transition-colors ${
-                active ? 'text-indigo-600' : 'text-gray-500 active:text-gray-700'
+                active
+                  ? 'text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-500 active:text-gray-700 dark:text-slate-400 dark:active:text-slate-200'
               }`}
             >
               {icon}

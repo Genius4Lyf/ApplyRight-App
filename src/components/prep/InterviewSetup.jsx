@@ -68,7 +68,7 @@ const Pill = ({ active, onClick, children }) => (
     className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
       active
         ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
     }`}
   >
     {children}
@@ -76,9 +76,9 @@ const Pill = ({ active, onClick, children }) => (
 );
 
 export const VoiceStyleSelector = ({ voice, style, onVoiceChange, onStyleChange }) => (
-  <div className="relative z-10 mt-4 rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+  <div className="relative z-10 mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3">
     <div>
-      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
         Interviewer voice
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -90,7 +90,7 @@ export const VoiceStyleSelector = ({ voice, style, onVoiceChange, onStyleChange 
       </div>
     </div>
     <div>
-      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
         Interview style
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -101,14 +101,22 @@ export const VoiceStyleSelector = ({ voice, style, onVoiceChange, onStyleChange 
         ))}
       </div>
       {STYLES.filter((s) => s.id === style).map((sel) => (
-        <div key={sel.id} className="mt-2 rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-          <p className="text-[11px] text-slate-600 leading-relaxed">{sel.blurb}</p>
-          <p className="mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">
+        <div
+          key={sel.id}
+          className="mt-2 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-2.5"
+        >
+          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+            {sel.blurb}
+          </p>
+          <p className="mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
             Example questions
           </p>
           <ul className="mt-1 space-y-0.5">
             {sel.examples.map((q, i) => (
-              <li key={i} className="text-[11px] italic text-slate-500 leading-relaxed">
+              <li
+                key={i}
+                className="text-[11px] italic text-slate-500 dark:text-slate-400 leading-relaxed"
+              >
                 “{q}”
               </li>
             ))}
@@ -181,18 +189,18 @@ export const DeviceCheck = () => {
             setDenied(false);
             setOpen(true);
           }}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700"
         >
           <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
         </button>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
             Device check
           </p>
 
           {denied ? (
-            <div className="flex items-start gap-2 text-xs text-rose-600">
+            <div className="flex items-start gap-2 text-xs text-rose-600 dark:text-rose-300">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 We couldn’t access your microphone. Allow mic access in your browser, then try
@@ -202,7 +210,7 @@ export const DeviceCheck = () => {
           ) : (
             <>
               <VoiceVisualizer stream={stream} active={!!stream} />
-              <p className="mt-1.5 text-[11px] text-slate-500 flex items-center gap-1">
+              <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                 {stream ? (
                   <>
                     <Check className="w-3 h-3 text-emerald-500" /> Say something — the bars should
@@ -219,14 +227,14 @@ export const DeviceCheck = () => {
             <button
               type="button"
               onClick={playTestSound}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
             >
               <Volume2 className="w-3.5 h-3.5" /> Play test sound
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-xs font-semibold text-slate-400 hover:text-slate-700"
+              className="text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700"
             >
               Done
             </button>

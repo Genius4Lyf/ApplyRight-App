@@ -73,28 +73,30 @@ const JobLinkInput = ({ onJobExtracted }) => {
   };
 
   return (
-    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300">
+    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600">
       <div className="flex items-center gap-3 mb-4 lg:mb-6">
-        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
           <Link2 className="w-5 h-5 lg:w-6 lg:h-6" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base lg:text-lg font-semibold text-slate-900">
+          <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
             Step 2 · Job listing
           </h3>
-          <p className="text-xs lg:text-sm text-slate-500">Provide the job details for analysis</p>
+          <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
+            Provide the job details for analysis
+          </p>
         </div>
       </div>
 
       <div className="flex-grow flex flex-col">
-        <div className="flex bg-slate-100 p-1 rounded-lg mb-6">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setMode('url')}
             className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
               mode === 'url'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             Paste URL
@@ -104,15 +106,15 @@ const JobLinkInput = ({ onJobExtracted }) => {
             onClick={() => setMode('text')}
             className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
               mode === 'text'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             Paste Description
           </button>
         </div>
 
-        <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+        <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 leading-relaxed">
           {mode === 'url'
             ? "Paste the link to the job posting. We'll extract the details automatically."
             : 'Paste the full job description text here depending on what you have available.'}
@@ -121,7 +123,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
         <form onSubmit={handleExtract} className="space-y-4 flex-grow flex flex-col">
           {mode === 'url' ? (
             <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-600 transition-colors">
                 <Search className="h-5 w-5" />
               </div>
               <input
@@ -145,12 +147,12 @@ const JobLinkInput = ({ onJobExtracted }) => {
                 disabled={success || loading}
               />
               {detectedUrl && (
-                <div className="absolute bottom-2 right-2 left-2 bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex items-start gap-3 shadow-md animate-in slide-in-from-bottom-2">
+                <div className="absolute bottom-2 right-2 left-2 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 p-3 rounded-lg flex items-start gap-3 shadow-md animate-in slide-in-from-bottom-2">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-indigo-900 mb-1">
+                    <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-200 mb-1">
                       Link detected in text
                     </p>
-                    <p className="text-xs text-indigo-700 line-clamp-1 mb-2">
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300 line-clamp-1 mb-2">
                       We found a URL. Would you like to scan this link directly?
                     </p>
                     <div className="flex gap-2">
@@ -164,7 +166,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
                       <button
                         type="button"
                         onClick={ignoreUrl}
-                        className="px-2 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 transition"
+                        className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                       >
                         No, keep text
                       </button>
@@ -181,9 +183,9 @@ const JobLinkInput = ({ onJobExtracted }) => {
               disabled={loading || success || (mode === 'url' ? !jobUrl : !description)}
               className={`w-full h-12 px-6 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
                 success
-                  ? 'bg-green-50 text-green-700 border border-green-100 cursor-default'
+                  ? 'bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-500/30 cursor-default'
                   : loading || (mode === 'url' ? !jobUrl : !description)
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                     : 'btn-primary'
               }`}
             >
@@ -202,13 +204,15 @@ const JobLinkInput = ({ onJobExtracted }) => {
         </form>
 
         {error && (
-          <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-red-700 text-sm animate-in fade-in slide-in-from-bottom-2">
+          <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-500/15 border border-red-100 dark:border-red-500/30 text-red-700 dark:text-red-300 text-sm animate-in fade-in slide-in-from-bottom-2">
             <div className="flex items-start gap-2">
               <div className="flex-1">
                 {error}
                 {error.includes('access') && mode === 'url' && (
-                  <div className="mt-2 bg-white p-3 rounded border border-red-100 text-xs text-slate-600">
-                    <p className="mb-2 font-medium text-red-800">Why is this happening?</p>
+                  <div className="mt-2 bg-white dark:bg-slate-800 p-3 rounded border border-red-100 dark:border-red-500/30 text-xs text-slate-600 dark:text-slate-300">
+                    <p className="mb-2 font-medium text-red-800 dark:text-red-300">
+                      Why is this happening?
+                    </p>
                     <p className="mb-2">
                       Some websites (like LinkedIn or short links) block automated readers.
                       Resolving this is easy:
@@ -220,7 +224,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
                           href={jobUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-indigo-600 font-medium hover:underline inline-flex items-center gap-1"
+                          className="text-indigo-600 dark:text-indigo-300 font-medium hover:underline inline-flex items-center gap-1"
                         >
                           this link <Link2 className="w-3 h-3" />
                         </a>{' '}
@@ -243,13 +247,15 @@ const JobLinkInput = ({ onJobExtracted }) => {
         )}
 
         {success && (
-          <div className="mt-6 flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-100 animate-in fade-in slide-in-from-bottom-2">
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
+          <div className="mt-6 flex items-center gap-3 p-4 bg-green-50 dark:bg-green-500/15 rounded-xl border border-green-100 dark:border-green-500/30 animate-in fade-in slide-in-from-bottom-2">
+            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-green-600 dark:text-green-300 shadow-sm">
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-green-900">Analysis Complete</p>
-              <p className="text-xs text-green-700">
+              <p className="text-sm font-semibold text-green-900 dark:text-green-200">
+                Analysis Complete
+              </p>
+              <p className="text-xs text-green-700 dark:text-green-300">
                 We've identified the core competencies needed.
               </p>
             </div>

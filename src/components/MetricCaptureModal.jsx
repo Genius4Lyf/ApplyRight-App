@@ -58,26 +58,26 @@ const MetricCaptureModal = ({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden"
+          className="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden"
         >
           {/* Drag-handle on mobile (visual affordance for the bottom-sheet) */}
           <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
-            <div className="w-10 h-1 rounded-full bg-slate-300" />
+            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
           </div>
 
           {/* Header — softer, info-first instead of decorative gradient */}
-          <div className="px-5 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-5 border-b border-slate-100 shrink-0">
+          <div className="px-5 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
                 <Hash className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0 pr-8">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
                   Quick step before we generate
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">
                   We spotted{' '}
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {total} bullet{total === 1 ? '' : 's'}
                   </span>{' '}
                   that say what you did but not the impact. Recruiters scan for numbers — adding one
@@ -87,7 +87,7 @@ const MetricCaptureModal = ({
               <button
                 type="button"
                 onClick={onCancel}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                 aria-label="Cancel"
               >
                 <X className="w-5 h-5" />
@@ -96,10 +96,10 @@ const MetricCaptureModal = ({
 
             {/* Progress chip — gives the user a sense of how much they've done */}
             <div className="mt-3 flex items-center gap-2 text-xs">
-              <span className="font-semibold text-slate-700">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {filledCount} of {total} filled
               </span>
-              <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${total > 0 ? (filledCount / total) * 100 : 0}%` }}
@@ -107,30 +107,38 @@ const MetricCaptureModal = ({
                   className="h-full bg-indigo-500 rounded-full"
                 />
               </div>
-              <span className="text-slate-400">All optional</span>
+              <span className="text-slate-400 dark:text-slate-500">All optional</span>
             </div>
           </div>
 
           {/* Bullets — each in a card so they don't blur into one wall of text */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-3 bg-slate-50/40">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-3 bg-slate-50/40 dark:bg-slate-900/40">
             {vagueBullets.map((b) => {
               const value = values[b.bulletId] ?? '';
               const hasValue = value.trim().length > 0;
               return (
                 <div
                   key={b.bulletId}
-                  className={`rounded-xl border p-3 sm:p-4 transition-colors bg-white ${
-                    hasValue ? 'border-indigo-300 ring-1 ring-indigo-200/40' : 'border-slate-200'
+                  className={`rounded-xl border p-3 sm:p-4 transition-colors bg-white dark:bg-slate-800 ${
+                    hasValue
+                      ? 'border-indigo-300 dark:border-indigo-500/30 ring-1 ring-indigo-200/40'
+                      : 'border-slate-200 dark:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center gap-2 text-[11px] mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                    <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
                       {b.roleTitle}
                     </span>
-                    {b.company && <span className="text-slate-500 truncate">{b.company}</span>}
+                    {b.company && (
+                      <span className="text-slate-500 dark:text-slate-400 truncate">
+                        {b.company}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-slate-700 italic leading-snug mb-3">"{b.original}"</p>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 italic leading-snug mb-3">
+                    "{b.original}"
+                  </p>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
                     Add a number (optional)
                   </label>
                   <input
@@ -139,8 +147,10 @@ const MetricCaptureModal = ({
                     value={value}
                     onChange={(e) => setVal(b.bulletId, e.target.value)}
                     placeholder={b.placeholder || 'e.g., 5-person team, 30% faster, $100K'}
-                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 placeholder-slate-400 ${
-                      hasValue ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-white'
+                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-slate-100 ${
+                      hasValue
+                        ? 'border-indigo-300 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                     }`}
                   />
                 </div>
@@ -148,8 +158,8 @@ const MetricCaptureModal = ({
             })}
 
             {/* Reassurance — clearer pact with the user */}
-            <div className="flex items-start gap-2.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
               <span className="leading-relaxed">
                 <strong className="font-semibold">Your numbers stay yours.</strong> We only weave
                 them into the matching bullet — nothing else gets fabricated, and your skills and
@@ -159,11 +169,11 @@ const MetricCaptureModal = ({
           </div>
 
           {/* Footer — actions stack on mobile, inline on desktop */}
-          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 shrink-0">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => handleSubmit(true)}
-              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
             >
               Skip — just generate now
             </button>

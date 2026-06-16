@@ -30,33 +30,53 @@ const STORY_THEMES = [
   {
     id: 'leadership',
     label: 'Leadership',
-    badge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    badge:
+      'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30',
   },
   {
     id: 'problem_solving',
     label: 'Problem solving',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+    badge:
+      'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
   },
-  { id: 'conflict', label: 'Conflict', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+  {
+    id: 'conflict',
+    label: 'Conflict',
+    badge:
+      'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
+  },
   {
     id: 'technical_achievement',
     label: 'Technical win',
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badge:
+      'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
   },
   {
     id: 'failure_learning',
     label: 'Failure & learning',
-    badge: 'bg-amber-50 text-amber-700 border-amber-200',
+    badge:
+      'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
   },
-  { id: 'teamwork', label: 'Teamwork', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'impact', label: 'Measurable impact', badge: 'bg-teal-50 text-teal-700 border-teal-200' },
+  {
+    id: 'teamwork',
+    label: 'Teamwork',
+    badge:
+      'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30',
+  },
+  {
+    id: 'impact',
+    label: 'Measurable impact',
+    badge:
+      'bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30',
+  },
 ];
 
 const themeMeta = (id) =>
   STORY_THEMES.find((t) => t.id === id) || {
     id,
     label: 'Story',
-    badge: 'bg-slate-50 text-slate-600 border-slate-200',
+    badge:
+      'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   };
 
 const STAR_FIELDS = [
@@ -68,25 +88,27 @@ const STAR_FIELDS = [
 
 // ── Empty state / generate CTA ──────────────────────────────────────────────
 const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
-  <section className="bg-white border border-dashed border-slate-200 rounded-xl p-6 sm:p-8">
+  <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+      <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
         <BookOpen className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <h2 className="text-base sm:text-lg font-bold text-slate-900">Your Story Bank</h2>
-        <p className="text-xs sm:text-sm text-slate-500">
+        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+          Your Story Bank
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           Reusable STAR stories from your real experience — one good story answers many questions.
         </p>
       </div>
     </div>
-    <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+    <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
       We&apos;ll build 5&ndash;6 stories (leadership, problem-solving, conflict, impact&hellip;)
       grounded in your CV, each tagged with the questions it can answer. You can edit any of them
       afterwards.
     </p>
     {isCvOnly ? (
-      <p className="mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+      <p className="mt-4 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3">
         Attach this prep to a job role to generate a tailored Story Bank, or add stories manually
         below.
       </p>
@@ -119,7 +141,7 @@ const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
       </button>
     )}
     {!isCvOnly && (
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
         {adRewarded
           ? 'Watch a short ad — free, no credits used.'
           : 'Uses 5 credits to build your stories.'}
@@ -145,7 +167,7 @@ const StoryCard = ({
   const skills = Array.isArray(story.skillsProven) ? story.skillsProven : [];
 
   return (
-    <div className="border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
       {/* Header */}
       <button
         type="button"
@@ -160,7 +182,7 @@ const StoryCard = ({
               {meta.label}
             </span>
             {answers.length > 0 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-semibold">
                 Answers {answers.length}
               </span>
             )}
@@ -168,26 +190,27 @@ const StoryCard = ({
               <span
                 className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
                   story.confidence === 'ready'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                     : story.confidence === 'almost'
-                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                      : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
                 }`}
               >
                 {story.confidence.replace('_', ' ')}
               </span>
             )}
             {warning && warning.unsupportedClaims?.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold">
-                <AlertTriangle className="w-3 h-3 text-amber-500" /> Verify claims
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold">
+                <AlertTriangle className="w-3 h-3 text-amber-500 dark:text-amber-300" /> Verify
+                claims
               </span>
             )}
           </div>
-          <h4 className="text-sm font-semibold text-slate-900 leading-snug">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
             {story.title || 'Untitled story'}
           </h4>
         </div>
-        <div className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 mt-0.5 shrink-0">
+        <div className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 mt-0.5 shrink-0">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
@@ -201,7 +224,7 @@ const StoryCard = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-1.5 border-t border-slate-100 bg-slate-50/20">
+            <div className="px-4 pb-4 pt-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/20">
               {editing ? (
                 <StoryEditor
                   applicationId={applicationId}
@@ -258,16 +281,18 @@ const StoryView = ({
   return (
     <div className="pt-2">
       {warning && warning.unsupportedClaims?.length > 0 && (
-        <div className="mb-3.5 p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="mb-3.5 p-3.5 bg-amber-50/60 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
           <div>
             <span className="font-bold">Verify these details against your CV:</span>
-            <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800">
+            <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800 dark:text-amber-200">
               {warning.unsupportedClaims.map((c, i) => (
                 <li key={i}>{c}</li>
               ))}
             </ul>
-            <p className="mt-1 text-amber-700">Editing the story clears this flag.</p>
+            <p className="mt-1 text-amber-700 dark:text-amber-300">
+              Editing the story clears this flag.
+            </p>
           </div>
         </div>
       )}
@@ -275,11 +300,14 @@ const StoryView = ({
       <div className="space-y-2.5">
         {STAR_FIELDS.map(({ key, label }) =>
           story[key] ? (
-            <div key={key} className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+            <div
+              key={key}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-sm"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
                 {label}
               </p>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {story[key]}
               </p>
             </div>
@@ -289,11 +317,13 @@ const StoryView = ({
 
       {skills.length > 0 && (
         <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] uppercase font-bold text-slate-400">Proves:</span>
+          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+            Proves:
+          </span>
           {skills.map((s, i) => (
             <span
               key={i}
-              className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold"
+              className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold"
             >
               {s}
             </span>
@@ -303,14 +333,14 @@ const StoryView = ({
 
       {answers.length > 0 && (
         <div className="mt-2.5">
-          <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+          <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">
             Use this story to answer:
           </p>
           <ul className="space-y-1">
             {answers.map((q, i) => (
               <li
                 key={i}
-                className="text-xs text-slate-600 leading-relaxed pl-3 border-l-2 border-slate-200"
+                className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-slate-200 dark:border-slate-700"
               >
                 {q}
               </li>
@@ -321,11 +351,13 @@ const StoryView = ({
 
       {Array.isArray(story.sourcedFrom) && story.sourcedFrom.length > 0 && (
         <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] uppercase font-bold text-slate-400">Grounded in:</span>
+          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+            Grounded in:
+          </span>
           {story.sourcedFrom.map((src, i) => (
             <span
               key={i}
-              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-semibold uppercase"
+              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
             >
               {src.type === 'experience' ? 'Work history' : src.type}
             </span>
@@ -334,7 +366,7 @@ const StoryView = ({
       )}
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3.5 mt-3.5 border-t border-slate-150">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3.5 mt-3.5 border-t border-slate-150 dark:border-slate-700">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -346,13 +378,15 @@ const StoryView = ({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
           >
             <Pencil className="w-3.5 h-3.5" /> Edit
           </button>
         </div>
         <div className="sm:ml-auto flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] text-slate-400 font-bold mr-1">Readiness:</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mr-1">
+            Readiness:
+          </span>
           {CONFIDENCE_OPTIONS.map((opt) => {
             const active = story.confidence === opt.id;
             return (
@@ -444,7 +478,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
   };
 
   const inputCls =
-    'w-full text-sm text-slate-800 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400';
+    'w-full text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 dark:placeholder-slate-500';
 
   return (
     <div className="pt-2 space-y-3">
@@ -468,7 +502,9 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
 
       {STAR_FIELDS.map(({ key, label }) => (
         <div key={key}>
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</p>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+            {label}
+          </p>
           <textarea
             value={draft[key]}
             onChange={set(key)}
@@ -479,7 +515,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
       ))}
 
       <div>
-        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
           Skills proven (comma separated)
         </p>
         <input
@@ -490,7 +526,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
         />
       </div>
       <div>
-        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
           Questions this answers (one per line)
         </p>
         <textarea
@@ -510,12 +546,12 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
         >
           Done
         </button>
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {saving ? (
             'Saving…'
           ) : savedAt ? (
             <>
-              <Check className="w-3 h-3 text-emerald-600" /> Saved
+              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-300" /> Saved
             </>
           ) : (
             'Auto-saves as you type'
@@ -579,7 +615,7 @@ const StoryBank = ({
           type="button"
           onClick={handleAddStory}
           disabled={adding}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 disabled:opacity-60"
         >
           <Plus className="w-4 h-4" /> Add a story manually
         </button>
@@ -590,7 +626,7 @@ const StoryBank = ({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {stories.length} stor{stories.length === 1 ? 'y' : 'ies'} — tap to expand, edit, or
           practice.
         </p>
@@ -600,7 +636,7 @@ const StoryBank = ({
               type="button"
               onClick={onGenerate}
               disabled={generating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-60"
               title={
                 adRewarded
                   ? 'Regenerate the whole bank (watch a short ad)'

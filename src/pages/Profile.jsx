@@ -16,10 +16,13 @@ import {
   Wallet,
   LogOut,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
 import Modal from '../components/ui/Modal'; // Assuming Modal is created or exists
+import { useTheme } from '../context/ThemeContext';
 
 import CVService from '../services/cv.service';
 import ApplicationService from '../services/application.service';
@@ -28,6 +31,7 @@ import UserService from '../services/user.service';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -291,8 +295,12 @@ const Profile = () => {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <Navbar />
         <div className="text-center mt-12">
-          <h2 className="text-xl font-bold text-slate-800">Failed to load profile</h2>
-          <p className="text-slate-500 mb-6">We couldn't retrieve your user data.</p>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+            Failed to load profile
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">
+            We couldn't retrieve your user data.
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
@@ -310,19 +318,21 @@ const Profile = () => {
       {/* Unsaved Changes Modal */}
       <Modal isOpen={showUnsavedModal} onClose={handleCancelExit} title="Unsaved Changes" size="sm">
         <div className="flex flex-col items-center text-center p-2">
-          <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mb-4 ring-8 ring-amber-50/50">
+          <div className="w-12 h-12 bg-amber-50 dark:bg-amber-500/15 rounded-full flex items-center justify-center mb-4 ring-8 ring-amber-50/50 dark:ring-amber-500/5">
             <AlertTriangle className="w-6 h-6 text-amber-500" />
           </div>
 
-          <h4 className="text-lg font-bold text-slate-900 mb-2">You have unsaved changes</h4>
-          <p className="text-sm text-slate-500 leading-relaxed mb-1 max-w-[260px] mx-auto">
+          <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+            You have unsaved changes
+          </h4>
+          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-1 max-w-[260px] mx-auto">
             If you leave now, you'll lose the changes you've made to your profile.
           </p>
 
           <div className="grid grid-cols-2 gap-3 w-full mt-8">
             <button
               onClick={handleConfirmExit}
-              className="px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors"
+              className="px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:text-rose-400 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 rounded-xl transition-colors"
             >
               Discard
             </button>
@@ -338,10 +348,12 @@ const Profile = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8 flex items-center gap-3">
-          <User className="w-8 h-8 text-indigo-600" />
+          <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Your Profile</h1>
-            <p className="text-slate-500">Manage your personal details and app settings.</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your Profile</h1>
+            <p className="text-slate-500 dark:text-slate-400">
+              Manage your personal details and app settings.
+            </p>
           </div>
         </div>
 
@@ -350,18 +362,18 @@ const Profile = () => {
           <div className="md:col-span-2 space-y-6">
             <form
               onSubmit={handleSave}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative"
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 relative"
             >
               {/* Dirty Indicator */}
               {isDirty && (
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1 rounded-full text-xs font-medium animate-in fade-in">
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 px-3 py-1 rounded-full text-xs font-medium animate-in fade-in">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
                   Unsaved Changes
                 </div>
               )}
 
-              <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-slate-400" />
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 General Settings
               </h2>
 
@@ -369,7 +381,7 @@ const Profile = () => {
                 <div>
                   <label
                     htmlFor="firstName"
-                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                   >
                     First Name
                   </label>
@@ -379,13 +391,13 @@ const Profile = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="lastName"
-                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                   >
                     Last Name
                   </label>
@@ -395,13 +407,13 @@ const Profile = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="otherName"
-                    className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                   >
                     Other Name
                   </label>
@@ -411,7 +423,7 @@ const Profile = () => {
                     name="otherName"
                     value={formData.otherName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     placeholder="Optional"
                   />
                 </div>
@@ -433,19 +445,21 @@ const Profile = () => {
                   placeholder="e.g. Full Stack Developer"
                   className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                   Displayed prominently on your CV header.
                 </p>
               </div>
 
-              <div className="border-t border-slate-100 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 mb-4">Contact Information</h3>
+              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4">
+                  Contact Information
+                </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label
                       htmlFor="phone"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       Phone Number
                     </label>
@@ -456,13 +470,13 @@ const Profile = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="e.g. 09017134882"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="portfolioUrl"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       Portfolio URL
                     </label>
@@ -474,13 +488,13 @@ const Profile = () => {
                       onChange={handleChange}
                       onBlur={handleUrlBlur}
                       placeholder="yourportfolio.com"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div className="md:col-span-2">
                     <label
                       htmlFor="linkedinUrl"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       LinkedIn Profile
                     </label>
@@ -492,14 +506,14 @@ const Profile = () => {
                       onChange={handleChange}
                       onBlur={handleUrlBlur}
                       placeholder="linkedin.com/in/yourprofile"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="mb-4">
-                <span className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+                <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">
                   Career Stage
                 </span>
                 <CustomSelect
@@ -512,17 +526,66 @@ const Profile = () => {
                     { value: 'career_switcher', label: 'Career Switcher' },
                   ]}
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                   This helps the AI adjust the tone of your CV.
                 </p>
               </div>
 
-              <div className="border-t border-slate-100 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-500" />
+              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                  Appearance
+                </h3>
+                <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Theme
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Dark mode applies across the app on this device.
+                    </div>
+                  </div>
+                  <div
+                    role="group"
+                    aria-label="Theme"
+                    className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setTheme('light')}
+                      aria-pressed={theme === 'light'}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                        theme === 'light'
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Sun className="w-3.5 h-3.5" />
+                      Light
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme('dark')}
+                      aria-pressed={theme === 'dark'}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                        theme === 'dark'
+                          ? 'bg-slate-700 text-white shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Moon className="w-3.5 h-3.5" />
+                      Dark
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   Automation Preferences
                 </h3>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
                   <input
                     type="checkbox"
                     id="autoGenerate"
@@ -531,22 +594,22 @@ const Profile = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })
                     }
-                    className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                    className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-800"
                   />
                   <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       Auto-Run Match Analysis
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
                       Automatically analyze compatibility when job and resume are uploaded.
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-500" />
+              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   Education Context
                 </h3>
 
@@ -554,7 +617,7 @@ const Profile = () => {
                   <div>
                     <label
                       htmlFor="university"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       University
                     </label>
@@ -565,13 +628,13 @@ const Profile = () => {
                       value={formData.university}
                       onChange={handleChange}
                       placeholder="e.g. Stanford University"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="discipline"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       Discipline
                     </label>
@@ -582,13 +645,13 @@ const Profile = () => {
                       value={formData.discipline}
                       onChange={handleChange}
                       placeholder="e.g. Computer Science"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="graduationYear"
-                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
                     >
                       Graduation Year
                     </label>
@@ -599,7 +662,7 @@ const Profile = () => {
                       value={formData.graduationYear}
                       onChange={handleChange}
                       placeholder="YYYY"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                     <p className="text-[10px] text-amber-600 mt-1 font-medium">
                       Critical for "Context-Aware" AI.
@@ -677,31 +740,39 @@ const Profile = () => {
             {/* Quick links — surfaces destinations that previously lived in the
                 Navbar account dropdown so mobile users (where the dropdown is
                 gone) still have one-tap access. */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-sm">
               <button
                 type="button"
                 onClick={() => navigate('/interview-prep')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900">Interview Prep</p>
-                  <p className="text-xs text-slate-500">Questions, answers, talking points</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Interview Prep
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Questions, answers, talking points
+                  </p>
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/credits')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900">Buy credits</p>
-                  <p className="text-xs text-slate-500">Top up your A.I credit balance</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Buy credits
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Top up your A.I credit balance
+                  </p>
                 </div>
               </button>
             </div>
@@ -710,20 +781,21 @@ const Profile = () => {
             <button
               type="button"
               onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 font-semibold transition-colors shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-rose-500/10 font-semibold transition-colors shadow-sm"
             >
               <LogOut className="w-4 h-4" />
               Sign out
             </button>
 
             {/* Danger Zone — for compliance & data privacy (deleting user data) */}
-            <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-5 shadow-sm space-y-3">
-              <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+            <div className="rounded-2xl border border-rose-100 bg-rose-50/30 dark:border-rose-500/20 dark:bg-rose-500/5 p-5 shadow-sm space-y-3">
+              <h4 className="text-sm font-bold text-rose-900 dark:text-rose-300 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                 Danger Zone
               </h4>
-              <p className="text-xs text-rose-600/80 leading-relaxed">
-                Permanently delete your ApplyRight account and all your resumes, CVs, and AI generation history. This action is irreversible.
+              <p className="text-xs text-rose-600/80 dark:text-rose-400/80 leading-relaxed">
+                Permanently delete your ApplyRight account and all your resumes, CVs, and AI
+                generation history. This action is irreversible.
               </p>
               <button
                 type="button"
@@ -749,17 +821,21 @@ const Profile = () => {
             className="absolute inset-0 cursor-default"
             onClick={() => setShowLogoutModal(false)}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-sm w-full p-6">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 text-rose-600">
+              <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/15 rounded-full flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400">
                 <LogOut className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
-              <p className="text-slate-500 mb-6">Are you sure you want to sign out?</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Sign Out?
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">
+                Are you sure you want to sign out?
+              </p>
               <div className="flex gap-3 w-full">
                 <button
                   onClick={() => setShowLogoutModal(false)}
-                  className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -787,19 +863,27 @@ const Profile = () => {
             className="absolute inset-0 cursor-default"
             onClick={() => !deleting && setShowDeleteModal(false)}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-rose-100">
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 border border-rose-100 dark:border-rose-500/20">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 text-rose-600 animate-pulse">
+              <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/15 rounded-full flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400 animate-pulse">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Account Permanently?</h3>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                This will permanently delete your ApplyRight profile and purge all your CV drafts, uploaded resumes, matched job applications, and credit history from our servers. <strong>This action is irreversible.</strong>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Delete Account Permanently?
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                This will permanently delete your ApplyRight profile and purge all your CV drafts,
+                uploaded resumes, matched job applications, and credit history from our servers.{' '}
+                <strong>This action is irreversible.</strong>
               </p>
-              
+
               <div className="w-full mb-6 text-left">
-                <label htmlFor="deleteConfirmInput" className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
-                  Type <span className="text-rose-600 font-mono">DELETE</span> to confirm:
+                <label
+                  htmlFor="deleteConfirmInput"
+                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide"
+                >
+                  Type <span className="text-rose-600 dark:text-rose-400 font-mono">DELETE</span> to
+                  confirm:
                 </label>
                 <input
                   id="deleteConfirmInput"
@@ -808,7 +892,7 @@ const Profile = () => {
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   disabled={deleting}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none font-mono text-center tracking-wider text-rose-600 font-bold"
+                  className="w-full p-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none font-mono text-center tracking-wider text-rose-600 dark:text-rose-400 font-bold"
                 />
               </div>
 
@@ -817,7 +901,7 @@ const Profile = () => {
                   type="button"
                   disabled={deleting}
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded-xl font-semibold transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

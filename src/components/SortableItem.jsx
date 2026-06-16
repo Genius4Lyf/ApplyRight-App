@@ -32,13 +32,13 @@ const SortableItem = ({ id, index, total, onMoveUp, onMoveDown, onDelete, childr
   const isLast = index === total - 1;
 
   const btnBase =
-    'p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
+    'p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
       {/* Unified toolbar: drag handle, ↑, ↓, divider, delete. Single pill, single
           shadow, consistent button sizes. Sits in the card's top-right padding. */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-white/95 backdrop-blur-sm rounded-md border border-slate-200/80 px-0.5 py-0.5 shadow-sm">
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-md border border-slate-200/80 dark:border-slate-700 px-0.5 py-0.5 shadow-sm">
         <button
           type="button"
           {...attributes}
@@ -71,13 +71,13 @@ const SortableItem = ({ id, index, total, onMoveUp, onMoveDown, onDelete, childr
         </button>
         {onDelete && (
           <>
-            <span className="w-px h-4 bg-slate-200 mx-0.5" aria-hidden="true" />
+            <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true" />
             <button
               type="button"
               onClick={onDelete}
               aria-label="Delete"
               title="Delete"
-              className="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              className="p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

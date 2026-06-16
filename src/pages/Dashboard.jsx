@@ -543,7 +543,7 @@ const Dashboard = () => {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
         {showProfileBanner && (
-          <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
+          <div className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
             <div
               onClick={() => navigate('/profile')}
               onKeyDown={(e) => {
@@ -557,12 +557,14 @@ const Dashboard = () => {
               aria-label="Enhance your profile"
               className="flex items-center gap-3 cursor-pointer flex-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg"
             >
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-indigo-900">Enhance Your Profile</h3>
-                <p className="text-sm text-indigo-700">
+                <h3 className="font-semibold text-indigo-900 dark:text-indigo-300">
+                  Enhance Your Profile
+                </h3>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300">
                   Complete setting up your profile to improve CV optimization.
                 </p>
               </div>
@@ -572,7 +574,7 @@ const Dashboard = () => {
                 e.stopPropagation();
                 setShowProfileBanner(false);
               }}
-              className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors"
+              className="p-2 text-indigo-400 dark:text-indigo-300 hover:text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -591,20 +593,22 @@ const Dashboard = () => {
             role="button"
             tabIndex={0}
             aria-label="Complete your profile"
-            className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-100 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-indigo-900">Complete your profile</h3>
-                <p className="text-sm text-indigo-700">
+                <h3 className="font-semibold text-indigo-900 dark:text-indigo-300">
+                  Complete your profile
+                </h3>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300">
                   Tell us about your goals to get personalized recommendations.
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-5 h-5 text-indigo-400 dark:text-indigo-300 group-hover:translate-x-1 transition-transform" />
           </div>
         )}
 
@@ -615,13 +619,13 @@ const Dashboard = () => {
             pushed below the fold by ~180px of intro copy. */}
         {!workflowMode && !initialLoading && (
           <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
               Tailored for your career
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {getStatusMessage()}
             </h2>
-            <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {getRecommendedAction()}
             </p>
           </div>
@@ -672,21 +676,21 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label="Start ApplyRight workflow"
-                  className={`bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                  className={`bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     applyIsRecommended
-                      ? 'border-2 border-indigo-300 ring-2 ring-indigo-100 hover:border-indigo-400'
-                      : 'border border-slate-200 hover:border-emerald-200'
+                      ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
+                      : 'border border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-500/30'
                   }`}
                 >
                   {applyIsRecommended && <RecommendedBadge />}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                  <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 dark:bg-emerald-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
                     <UploadIcon className="w-7 h-7" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
                     ApplyRight
                   </h3>
-                  <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
                     Run a check on your target job to see if you are qualified. We will analyze the
                     requirements and tailor your CV to perfectly match the role.
                   </p>
@@ -707,21 +711,21 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label="Create a new CV"
-                  className={`bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                  className={`bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     createIsRecommended
-                      ? 'border-2 border-indigo-300 ring-2 ring-indigo-100 hover:border-indigo-400'
-                      : 'border border-slate-200 hover:border-indigo-200'
+                      ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
+                      : 'border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30'
                   }`}
                 >
                   {createIsRecommended && <RecommendedBadge />}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                  <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                  <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
                     <PenTool className="w-7 h-7" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
                     Create a new CV
                   </h3>
-                  <p className="text-slate-500 leading-relaxed mb-6 relative z-10 flex-1">
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
                     Build a professional resume. Start from scratch or upload an existing CV to let
                     our AI do the heavy lifting.
                   </p>
@@ -739,21 +743,21 @@ const Dashboard = () => {
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[env(safe-area-inset-bottom)] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-800 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
               <button
                 type="button"
                 onClick={() => setShowCreateOptions(false)}
                 aria-label="Close"
-                className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10"
+                className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
-                <h3 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1 sm:mb-2 sm:text-center">
+                <h3 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
                   How would you like to start?
                 </h3>
-                <p className="text-sm text-slate-500 sm:text-center">
+                <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-center">
                   Pick the path that fits where you are now.
                 </p>
               </div>
@@ -763,16 +767,16 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/cv-builder/new')}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 sm:border-2 sm:border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition-all group"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 sm:border-2 sm:border-slate-100 dark:sm:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 rounded-xl transition-all group"
                 >
-                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-indigo-50 sm:bg-white sm:border sm:border-slate-200 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-indigo-600 shrink-0 sm:shadow-sm">
+                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-indigo-50 dark:bg-indigo-500/15 sm:bg-white dark:sm:bg-slate-800 sm:border sm:border-slate-200 dark:sm:border-slate-700 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-indigo-600 shrink-0 sm:shadow-sm">
                     <Plus className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-2">
+                    <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
                       Start from scratch
                     </h4>
-                    <p className="text-xs sm:text-sm text-slate-500 leading-snug">
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug">
                       Step-by-step wizard, build a resume from the ground up.
                     </p>
                   </div>
@@ -790,21 +794,21 @@ const Dashboard = () => {
                     setWorkflowMode('create-upload');
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                   }}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 sm:border-2 sm:border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 rounded-xl transition-all group"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 sm:border-2 sm:border-slate-100 dark:sm:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/15 rounded-xl transition-all group"
                 >
-                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-emerald-50 sm:bg-white sm:border sm:border-slate-200 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-emerald-600 shrink-0 sm:shadow-sm">
+                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-emerald-50 dark:bg-emerald-500/15 sm:bg-white dark:sm:bg-slate-800 sm:border sm:border-slate-200 dark:sm:border-slate-700 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-emerald-600 shrink-0 sm:shadow-sm">
                     <UploadIcon className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base sm:mb-1">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
                         Upload existing CV
                       </h4>
-                      <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold rounded-full shrink-0">
+                      <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] sm:text-xs font-bold rounded-full shrink-0">
                         15 cr
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-500 leading-snug sm:mt-1">
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug sm:mt-1">
                       We'll scan your PDF and auto-fill the builder with your details.
                     </p>
                   </div>
@@ -839,31 +843,31 @@ const Dashboard = () => {
                 setApplication(null);
                 setWorkflowMode(null);
               }}
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
+              className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
             {!fitResult ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-12">
-                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
                   <CVUploader onUploadSuccess={setResume} />
                 </div>
-                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
                   <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
                 </div>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                 {resume && (
-                  <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <div className="flex-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                         <CheckCircle className="w-3 h-3 text-emerald-500" /> Resume uploaded
                       </div>
-                      <p className="text-sm font-semibold text-slate-900 truncate">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {resume.parsedData?.experience?.[0]?.role || 'Your resume'}
                         {resume.parsedData?.skills?.length
                           ? ` · ${resume.parsedData.skills.length} skills`
@@ -872,29 +876,29 @@ const Dashboard = () => {
                     </div>
                     <button
                       onClick={handleChangeResume}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                      className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Change
                     </button>
                   </div>
                 )}
                 {job && (
-                  <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <div className="flex-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0">
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                         <CheckCircle className="w-3 h-3 text-emerald-500" /> Target job
                       </div>
-                      <p className="text-sm font-semibold text-slate-900 truncate">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {job.title}
                         {job.company ? ` · ${job.company}` : ''}
                       </p>
                     </div>
                     <button
                       onClick={handleGenerateNew}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                      className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Change
                     </button>
@@ -916,15 +920,17 @@ const Dashboard = () => {
                 setApplication(null);
                 setWorkflowMode(null);
               }}
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center mb-6 transition-colors"
+              className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
 
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Upload your Resume</h3>
-                <p className="text-slate-500">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Upload your Resume
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400">
                   Upload your existing CV (PDF) and we'll convert it into our editable format.
                 </p>
               </div>
@@ -932,15 +938,17 @@ const Dashboard = () => {
               {scanning ? (
                 <div className="py-12 flex flex-col items-center justify-center">
                   <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
-                  <h4 className="text-lg font-bold text-slate-800 animate-pulse">
+                  <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200 animate-pulse">
                     Scanning Document...
                   </h4>
-                  <p className="text-slate-500 mt-2">Extracting your experience and skills</p>
+                  <p className="text-slate-500 dark:text-slate-400 mt-2">
+                    Extracting your experience and skills
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="text-center pb-4">
-                    <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 font-bold rounded-full border border-amber-200">
+                    <span className="inline-block px-4 py-2 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold rounded-full border border-amber-200 dark:border-amber-500/30">
                       <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 A.I Credits
                     </span>
                   </div>
@@ -974,35 +982,37 @@ const Dashboard = () => {
         {/* Scan Success Modal */}
         {scanSuccessDraftId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 CV Scanned Successfully!
               </h3>
-              <p className="text-sm sm:text-base text-slate-500 mb-4">
+              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mb-4">
                 We've extracted and optimized your details with AI-powered formatting.
               </p>
 
               {/* ATS Readiness Score */}
               {scanATSReadiness && (
-                <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <div className="mb-6 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
                   <div className="flex flex-col sm:flex-row items-center sm:justify-center gap-3 mb-3">
                     <div
                       className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${
                         scanATSReadiness.score >= 75
-                          ? 'border-emerald-400 text-emerald-700 bg-emerald-50'
+                          ? 'border-emerald-400 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15'
                           : scanATSReadiness.score >= 50
-                            ? 'border-amber-400 text-amber-700 bg-amber-50'
-                            : 'border-red-400 text-red-700 bg-red-50'
+                            ? 'border-amber-400 dark:border-amber-500/50 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15'
+                            : 'border-red-400 dark:border-red-500/50 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15'
                       }`}
                     >
                       {scanATSReadiness.score}
                     </div>
                     <div className="text-center sm:text-left">
-                      <p className="text-sm font-bold text-slate-800">ATS Readiness Score</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        ATS Readiness Score
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {scanATSReadiness.score >= 75
                           ? 'Your resume is well-structured for ATS systems'
                           : scanATSReadiness.score >= 50
@@ -1018,8 +1028,8 @@ const Dashboard = () => {
                         key={i}
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                           check.passed
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
                         }`}
                       >
                         {check.passed ? (
@@ -1053,7 +1063,7 @@ const Dashboard = () => {
                       state: { atsReadiness: scanATSReadiness },
                     });
                   }}
-                  className="w-full text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1.5 py-2"
+                  className="w-full text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-1.5 py-2"
                 >
                   <Eye className="w-4 h-4" /> Skip to ATS Preview
                 </button>
@@ -1075,20 +1085,25 @@ const Dashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-bold text-slate-900">AI Compatibility Analysis</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  AI Compatibility Analysis
+                </h3>
               </div>
               {job && (job.title || job.company) && (
-                <div className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                  For: <span className="text-slate-900 font-bold">{job.title || 'Role'}</span>{' '}
+                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                  For:{' '}
+                  <span className="text-slate-900 dark:text-slate-100 font-bold">
+                    {job.title || 'Role'}
+                  </span>{' '}
                   {job.company && <span>at {job.company}</span>}
                 </div>
               )}
             </div>
 
             {analyzing ? (
-              <div className="w-full h-48 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center p-8">
+              <div className="w-full h-48 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center p-8">
                 <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                <p className="text-slate-500 font-medium">
+                <p className="text-slate-500 dark:text-slate-400 font-medium">
                   Analyzing your profile against role requirements...
                 </p>
               </div>
@@ -1149,25 +1164,31 @@ const Dashboard = () => {
           <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <div className="flex items-center gap-2 mb-6">
               <Zap className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-slate-900">Generate Professional Assets</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Generate Professional Assets
+              </h3>
             </div>
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               Choose which assets to generate. Each is created independently so you only pay for
               what you need.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Generate CV Card */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Optimized CV</h4>
-                    <p className="text-xs text-slate-500">ATS-optimized resume</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                      Optimized CV
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      ATS-optimized resume
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-4 flex-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
                   AI rewrites your resume with role-specific keywords, achievement-oriented bullets,
                   and clean formatting.
                 </p>
@@ -1178,7 +1199,7 @@ const Dashboard = () => {
                         `/resume/${application.draftId || application.applicationId}?tab=resume`
                       )
                     }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
                   >
                     <Eye className="w-4 h-4" /> View CV
                   </button>
@@ -1189,7 +1210,7 @@ const Dashboard = () => {
                       disabled={generatingCV}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingCV
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1209,17 +1230,21 @@ const Dashboard = () => {
               </div>
 
               {/* Generate Cover Letter Card */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center text-blue-600">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Cover Letter</h4>
-                    <p className="text-xs text-slate-500">Tailored to the role</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                      Cover Letter
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Tailored to the role
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-4 flex-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
                   A personalized cover letter connecting your experience to the job requirements.
                 </p>
                 {application.coverLetter ? (
@@ -1227,7 +1252,7 @@ const Dashboard = () => {
                     onClick={() =>
                       navigate(`/resume/${application.applicationId}?tab=cover-letter`)
                     }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
                   >
                     <Eye className="w-4 h-4" /> View Cover Letter
                   </button>
@@ -1238,7 +1263,7 @@ const Dashboard = () => {
                       disabled={generatingCL}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingCL
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1258,17 +1283,21 @@ const Dashboard = () => {
               </div>
 
               {/* Generate Interview Prep Card */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-500/15 flex items-center justify-center text-purple-600">
                     <MessageSquare className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Interview Prep</h4>
-                    <p className="text-xs text-slate-500">Questions & strategies</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                      Interview Prep
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Questions & strategies
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-4 flex-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
                   Role-specific interview questions to practice, plus smart questions to ask the
                   interviewer.
                 </p>
@@ -1278,7 +1307,7 @@ const Dashboard = () => {
                       const prepId = getPrepId(application);
                       if (prepId) navigate(`/interview-prep/${prepId}`);
                     }}
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
                   >
                     <Eye className="w-4 h-4" /> View Interview Prep
                   </button>
@@ -1289,7 +1318,7 @@ const Dashboard = () => {
                       disabled={generatingInterview}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingInterview
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1316,12 +1345,12 @@ const Dashboard = () => {
           <div className="mb-12 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <button
               onClick={handleGenerateNew}
-              className="flex items-center gap-3 px-8 py-4 bg-white border-2 border-indigo-200 text-indigo-700 rounded-xl font-semibold hover:bg-indigo-50 hover:border-indigo-300 transition-all hover:scale-[1.02] shadow-sm"
+              className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all hover:scale-[1.02] shadow-sm"
             >
               <RefreshCw className="w-5 h-5" />
               <span className="flex flex-col items-start leading-tight">
                 <span>Generate New Analysis</span>
-                <span className="text-xs font-normal text-slate-500">
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
                   Same resume, different job
                 </span>
               </span>
@@ -1336,20 +1365,20 @@ const Dashboard = () => {
           <Link
             to={`/interview-prep/${getPrepId(application)}`}
             id="preview-section"
-            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 transition-colors group"
+            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors group"
           >
-            <div className="w-11 h-11 rounded-lg bg-white text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 flex items-center justify-center shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm sm:text-base font-semibold text-slate-900">
+              <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100">
                 Interview prep ready
               </h4>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
                 {getPrepSummary(application)} - tap to review answers and talking points
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
+            <ChevronRight className="w-5 h-5 text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors shrink-0" />
           </Link>
         )}
 
@@ -1360,7 +1389,7 @@ const Dashboard = () => {
             the hero treatment. */}
         {workflowMode === 'upload' && !fitResult && !analyzing && (
           <div className="relative pt-8 hidden md:flex flex-col items-center">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200 dark:bg-slate-700"></div>
 
             <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS} className="w-full max-w-xl">
               <div className="relative group flex justify-center">
@@ -1375,7 +1404,7 @@ const Dashboard = () => {
                     relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
                     ${
                       !resume || !job || analyzing
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                         : 'btn-primary hover:scale-105 active:scale-95'
                     }
                   `}
@@ -1400,14 +1429,14 @@ const Dashboard = () => {
             </CreditGate>
 
             {!resume || !job ? (
-              <div className="mt-8 flex items-center gap-3 text-slate-400 font-medium bg-slate-50 px-6 py-3 rounded-full border border-slate-200">
-                <div className="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center text-[10px]">
+              <div className="mt-8 flex items-center gap-3 text-slate-400 dark:text-slate-500 font-medium bg-slate-50 dark:bg-slate-900 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700">
+                <div className="w-5 h-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px]">
                   !
                 </div>
                 Please complete both steps to proceed
               </div>
             ) : (
-              <p className="mt-8 text-indigo-600 font-medium animate-pulse flex items-center gap-2">
+              <p className="mt-8 text-indigo-600 dark:text-indigo-300 font-medium animate-pulse flex items-center gap-2">
                 {!analyzing && (
                   <>
                     <CheckCircle className="w-4 h-4" /> Ready for analysis
@@ -1425,7 +1454,7 @@ const Dashboard = () => {
             flush with the safe-area inset. */}
         {workflowMode === 'upload' && !fitResult && !analyzing && (
           <div
-            className="md:hidden fixed left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            className="md:hidden fixed left-0 right-0 z-30 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
             style={
               isMobile() ? { bottom: 'calc(4rem + env(safe-area-inset-bottom))' } : { bottom: 0 }
             }
@@ -1433,28 +1462,28 @@ const Dashboard = () => {
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2 text-xs font-medium">
                 <span
-                  className={`flex items-center gap-1 ${resume ? 'text-emerald-700' : 'text-slate-400'}`}
+                  className={`flex items-center gap-1 ${resume ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
                 >
                   {resume ? (
                     <CheckCircle className="w-3.5 h-3.5" />
                   ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-600" />
                   )}
                   Resume
                 </span>
-                <ChevronRight className="w-3 h-3 text-slate-300" />
+                <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600" />
                 <span
-                  className={`flex items-center gap-1 ${job ? 'text-emerald-700' : 'text-slate-400'}`}
+                  className={`flex items-center gap-1 ${job ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
                 >
                   {job ? (
                     <CheckCircle className="w-3.5 h-3.5" />
                   ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-600" />
                   )}
                   Job
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 rounded-full">
                 10 cr
               </span>
             </div>
@@ -1464,7 +1493,7 @@ const Dashboard = () => {
                 disabled={!resume || !job || analyzing}
                 className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
                   !resume || !job || analyzing
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                     : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
                 }`}
               >
@@ -1478,17 +1507,17 @@ const Dashboard = () => {
         {/* Auto-Analysis Modal */}
         {showAutoAnalyzeModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
               {/* Mobile: stacked + centered. Desktop (sm+): icon left, copy right. */}
               <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left sm:gap-4 mb-5 sm:mb-4">
-                <div className="p-3 bg-indigo-100 rounded-full text-indigo-600 mb-3 sm:mb-0 shrink-0">
+                <div className="p-3 bg-indigo-100 dark:bg-indigo-500/15 rounded-full text-indigo-600 mb-3 sm:mb-0 shrink-0">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1.5 sm:mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2">
                     Enable Auto-Analysis?
                   </h3>
-                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                     Automatically analyze your resume against any job you upload — no extra taps
                     needed.
                   </p>
@@ -1498,7 +1527,7 @@ const Dashboard = () => {
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-2 sm:mt-6">
                 <button
                   onClick={() => setShowAutoAnalyzeModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
                 >
                   Keep it manual
                 </button>
@@ -1516,14 +1545,16 @@ const Dashboard = () => {
         {/* Delete Confirmation Modal */}
         {deleteModalOpen && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
               <div className="flex items-start gap-4 mb-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center">
                   <Trash2 className="w-6 h-6 text-rose-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Delete CV?</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                    Delete CV?
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                     Are you sure you want to delete "{draftToDelete?.title || 'Untitled CV'}"? This
                     action cannot be undone.
                   </p>
@@ -1536,7 +1567,7 @@ const Dashboard = () => {
                     setDeleteModalOpen(false);
                     setDraftToDelete(null);
                   }}
-                  className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1555,24 +1586,31 @@ const Dashboard = () => {
       {/* Insufficient Credits Modal */}
       {showCreditModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center relative">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center relative">
             <button
               onClick={() => setShowCreditModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/15 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Zap className="w-8 h-8" />
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Insufficient A.I Credits</h3>
-            <p className="text-slate-500 mb-6">
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Insufficient A.I Credits
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
               You need{' '}
-              <span className="font-bold text-slate-900">{requiredCredits} A.I credits</span> to
-              perform this action, but you only have{' '}
-              <span className="font-bold text-slate-900">{user.credits || 0}</span>.
+              <span className="font-bold text-slate-900 dark:text-slate-100">
+                {requiredCredits} A.I credits
+              </span>{' '}
+              to perform this action, but you only have{' '}
+              <span className="font-bold text-slate-900 dark:text-slate-100">
+                {user.credits || 0}
+              </span>
+              .
             </p>
 
             <div className="space-y-3">
@@ -1584,16 +1622,16 @@ const Dashboard = () => {
               </button>
 
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase font-bold">
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-xs uppercase font-bold">
                   OR
                 </span>
-                <div className="flex-grow border-t border-slate-200"></div>
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
               </div>
 
               <button
                 onClick={() => navigate('/credits')} // For now direct to store where ad option lives
-                className="w-full py-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
               >
                 <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free A.I Credits
               </button>

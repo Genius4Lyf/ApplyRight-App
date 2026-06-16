@@ -69,7 +69,7 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
       <button
         type="button"
         onClick={handleReopen}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2.5 py-1.5 rounded-md transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 px-2.5 py-1.5 rounded-md transition-colors"
       >
         <Lightbulb className="w-3.5 h-3.5" />
         Tips for this section
@@ -78,7 +78,7 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-violet-50 to-indigo-50 border border-indigo-200/70 rounded-xl overflow-hidden">
+    <div className="bg-gradient-to-br from-indigo-50 via-violet-50 to-indigo-50 border border-indigo-200/70 dark:border-indigo-500/30 rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

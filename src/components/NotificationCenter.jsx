@@ -88,12 +88,12 @@ const NotificationCenter = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
+        className="relative p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
         title="Notifications"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
         )}
       </button>
 
@@ -103,14 +103,14 @@ const NotificationCenter = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-50 origin-top-right"
+            className="absolute right-0 mt-2 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 origin-top-right"
           >
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h3 className="font-bold text-slate-900">Notifications</h3>
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100">Notifications</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                  className="text-xs text-indigo-600 dark:text-indigo-300 font-medium hover:text-indigo-800"
                 >
                   Mark all as read
                 </button>
@@ -119,18 +119,18 @@ const NotificationCenter = () => {
 
             <div className="max-h-[400px] overflow-y-auto">
               {loading ? (
-                <div className="p-8 text-center text-slate-400">Loading...</div>
+                <div className="p-8 text-center text-slate-400 dark:text-slate-500">Loading...</div>
               ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-slate-400">
+                <div className="p-8 text-center text-slate-400 dark:text-slate-500">
                   <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
                   <p className="text-sm">No notifications yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {notifications.map((notification) => (
                     <div
                       key={notification._id}
-                      className={`p-4 hover:bg-slate-50 transition-colors relative group ${!notification.isRead ? 'bg-indigo-50/30' : ''}`}
+                      className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors relative group ${!notification.isRead ? 'bg-indigo-50/30 dark:bg-indigo-500/15' : ''}`}
                     >
                       <div className="flex gap-3">
                         <div
@@ -138,24 +138,24 @@ const NotificationCenter = () => {
                         ></div>
                         <div className="flex-1">
                           <h4
-                            className={`text-sm ${!notification.isRead ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}
+                            className={`text-sm ${!notification.isRead ? 'font-bold text-slate-900 dark:text-slate-100' : 'font-medium text-slate-700 dark:text-slate-300'}`}
                           >
                             {notification.title}
                           </h4>
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                             {notification.message}
                           </p>
                           <div className="flex items-center gap-2 mt-2">
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wide">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                               {new Date(notification.createdAt).toLocaleDateString()}
                             </span>
                             {notification.type === 'credit' && (
-                              <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
+                              <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 rounded text-[10px] font-bold">
                                 CREDIT
                               </span>
                             )}
                             {notification.type === 'system' && (
-                              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">
+                              <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">
                                 SYSTEM
                               </span>
                             )}
@@ -164,7 +164,7 @@ const NotificationCenter = () => {
                         {!notification.isRead && (
                           <button
                             onClick={() => markAsRead(notification._id)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-indigo-600 transition-all self-center"
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-all self-center"
                             title="Mark as read"
                           >
                             <Check className="w-4 h-4" />

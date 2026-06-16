@@ -89,7 +89,7 @@ const DashboardTour = () => {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden relative"
+        className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden relative"
       >
         {/* Close Button */}
         <button
@@ -128,8 +128,12 @@ const DashboardTour = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 font-heading">{step.title}</h3>
-              <p className="text-slate-500 leading-relaxed mb-8">{step.description}</p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 font-heading">
+                {step.title}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
+                {step.description}
+              </p>
             </motion.div>
           </AnimatePresence>
 
@@ -138,7 +142,7 @@ const DashboardTour = () => {
             {TOUR_STEPS.map((s, idx) => (
               <div
                 key={s.id}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-indigo-600' : 'bg-slate-200'}`}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
               />
             ))}
           </div>
@@ -155,7 +159,7 @@ const DashboardTour = () => {
           {currentStep < TOUR_STEPS.length - 1 && (
             <button
               onClick={handleClose}
-              className="mt-4 text-xs text-slate-400 hover:text-slate-600 font-medium"
+              className="mt-4 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-medium"
             >
               Skip Tour
             </button>

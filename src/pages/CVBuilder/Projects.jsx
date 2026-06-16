@@ -132,7 +132,9 @@ const Projects = () => {
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading projects...</div>
+    );
   }
 
   const handleGenerateBullets = async (index) => {
@@ -211,18 +213,20 @@ const Projects = () => {
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
             <PenTool className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Projects</h2>
-            <p className="text-slate-500">Showcase your practical work and initiatives.</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Projects</h2>
+            <p className="text-slate-500 dark:text-slate-400">
+              Showcase your practical work and initiatives.
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setShowTutorial(true)}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
+          className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
           <span className="hidden md:inline">How AI Works</span>
@@ -243,8 +247,8 @@ const Projects = () => {
       />
 
       {projects.length === 0 && (
-        <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-          <p className="text-slate-500 mb-4">No projects added yet.</p>
+        <div className="text-center p-8 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
+          <p className="text-slate-500 dark:text-slate-400 mb-4">No projects added yet.</p>
           <button
             type="button"
             onClick={addProject}
@@ -255,7 +259,7 @@ const Projects = () => {
           <div className="mt-4">
             <button
               type="submit"
-              className="text-sm text-indigo-600 hover:text-indigo-800 underline underline-offset-4"
+              className="text-sm text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 underline underline-offset-4"
             >
               Skip this section
             </button>
@@ -279,12 +283,12 @@ const Projects = () => {
                 onMoveDown={() => moveItem(index, 1)}
                 onDelete={() => removeProject(index)}
               >
-                <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
+                <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label
                         htmlFor={`project-title-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         Project Title
                       </label>
@@ -294,18 +298,18 @@ const Projects = () => {
                         value={proj.title}
                         onChange={(e) => handleChange(index, 'title', e.target.value)}
                         placeholder="e.g. Portfolio Website"
-                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`project-link-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         Link (Optional)
                       </label>
                       <div className="relative">
-                        <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                        <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                         <input
                           id={`project-link-${index}`}
                           type="text"
@@ -313,7 +317,7 @@ const Projects = () => {
                           onChange={(e) => handleChange(index, 'link', e.target.value)}
                           onBlur={() => handleLinkBlur(index)}
                           placeholder="github.com/your-project"
-                          className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                          className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                         />
                       </div>
                     </div>
@@ -323,7 +327,7 @@ const Projects = () => {
                     <div className="flex justify-between items-center mb-1">
                       <label
                         htmlFor={`project-description-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
                       >
                         Description / Bullets
                       </label>
@@ -331,7 +335,7 @@ const Projects = () => {
                         type="button"
                         onClick={() => handleGenerateBullets(index)}
                         disabled={generatingIndex === index || !proj.title}
-                        className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
+                        className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
                       >
                         {generatingIndex === index ? (
                           <RefreshCcw className="w-3 h-3 animate-spin" />
@@ -358,10 +362,10 @@ const Projects = () => {
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
                       placeholder="• Developed a full-stack app using..."
-                      className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                      className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
                     />
                     <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Tip: 1-3 short bullets is enough. Lead with what it does, not how you built
                         it.
                       </p>
@@ -379,17 +383,17 @@ const Projects = () => {
         <button
           type="button"
           onClick={addProject}
-          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Another Project
         </button>
       )}
 
-      <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button
           type="button"
           onClick={handleBack}
-          className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+          className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>

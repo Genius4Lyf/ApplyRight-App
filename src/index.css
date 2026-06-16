@@ -2,6 +2,11 @@
 
 @plugin "tailwindcss-animate";
 
+/* Enable class/selector-based dark mode (scoped to a `.dark` ancestor).
+   `.dark` is toggled on <html> only for authenticated user routes — see
+   src/utils/theme.js and the RootLayout effect in App.jsx. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Theme Configuration using CSS Variables */
 @theme {
   --color-primary: var(--color-primary);
@@ -88,12 +93,24 @@
     /* Slate 200 */
   }
 
+  /* Dark theme token overrides — active only inside the `.dark` subtree.
+     `.clean-card` and anything using bg-surface/bg-background/border-border
+     flips automatically via these tokens. */
+  .dark {
+    --color-background: #0f172a;
+    /* Slate 900 */
+    --color-surface: #1e293b;
+    /* Slate 800 */
+    --color-border: #334155;
+    /* Slate 700 */
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-indigo-100 selection:text-indigo-900;
+    @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-indigo-100 selection:text-indigo-900 dark:text-slate-100 dark:selection:bg-indigo-500/30 dark:selection:text-indigo-100;
   }
 
   h1,
@@ -102,7 +119,7 @@
   h4,
   h5,
   h6 {
-    @apply font-heading text-slate-900;
+    @apply font-heading text-slate-900 dark:text-slate-100;
   }
 }
 
@@ -113,11 +130,11 @@
   }
 
   .clean-card:hover {
-    @apply shadow-card border-slate-300;
+    @apply shadow-card border-slate-300 dark:border-slate-600;
   }
 
   .input-field {
-    @apply bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm;
+    @apply bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500;
   }
 
   .btn-primary {
@@ -125,7 +142,7 @@
   }
 
   .btn-secondary {
-    @apply bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2.5 px-6 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center;
+    @apply bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2.5 px-6 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700;
   }
 
   .bg-300\% {
@@ -142,7 +159,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300;
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-500;
   }
 
   /* A4 Paper & Scaling Logic */
@@ -209,7 +226,7 @@
 .job-description h4,
 .job-description h5,
 .job-description h6 {
-  @apply font-semibold text-slate-800 mt-4 mb-2 first:mt-0;
+  @apply font-semibold text-slate-800 mt-4 mb-2 first:mt-0 dark:text-slate-200;
 }
 
 .job-description h1,
@@ -224,7 +241,7 @@
 
 .job-description h5,
 .job-description h6 {
-  @apply text-xs uppercase tracking-wide text-slate-500;
+  @apply text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400;
 }
 
 .job-description p {
@@ -232,7 +249,7 @@
 }
 
 .job-description svg {
-  @apply inline-block w-4 h-4 mr-1.5 align-middle shrink-0 text-slate-400;
+  @apply inline-block w-4 h-4 mr-1.5 align-middle shrink-0 text-slate-400 dark:text-slate-500;
   max-width: 1rem;
   max-height: 1rem;
 }
@@ -264,25 +281,25 @@
 }
 
 .job-description li::marker {
-  @apply text-indigo-400;
+  @apply text-indigo-400 dark:text-indigo-300;
 }
 
 .job-description a {
-  @apply text-indigo-600 underline hover:text-indigo-800 transition-colors;
+  @apply text-indigo-600 underline hover:text-indigo-800 transition-colors dark:text-indigo-400 dark:hover:text-indigo-300;
 }
 
 /* Custom styling for Jobberman metadata tags converted to spans */
 .job-description span[data-badge="true"] {
-  @apply inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium mr-2 mb-3 border border-slate-200 transition-colors;
+  @apply inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium mr-2 mb-3 border border-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700;
 }
 
 .job-description span[data-badge="true"]:hover {
-  @apply bg-slate-200 text-slate-700;
+  @apply bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200;
 }
 
 .job-description strong,
 .job-description b {
-  @apply font-semibold text-slate-700;
+  @apply font-semibold text-slate-700 dark:text-slate-200;
 }
 
 .job-description br + br {
@@ -295,15 +312,15 @@
 
 .job-description th,
 .job-description td {
-  @apply border border-slate-200 px-2 py-1.5 text-left;
+  @apply border border-slate-200 px-2 py-1.5 text-left dark:border-slate-700;
 }
 
 .job-description th {
-  @apply bg-slate-50 font-semibold text-slate-700;
+  @apply bg-slate-50 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200;
 }
 
 .job-description hr {
-  @apply my-3 border-slate-200;
+  @apply my-3 border-slate-200 dark:border-slate-700;
 }
 
 /* Global Recharts overrides */

@@ -36,16 +36,16 @@ const Upgrade = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden bg-white max-md:flex max-md:flex-col-reverse">
+        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-800 max-md:flex max-md:flex-col-reverse">
           {/* Free Plan (Current) */}
-          <div className="p-8 md:p-12 bg-slate-50 flex flex-col relative border-r border-slate-100">
+          <div className="p-8 md:p-12 bg-slate-50 dark:bg-slate-900 flex flex-col relative border-r border-slate-100 dark:border-slate-800">
             <button
               onClick={() => navigate(-1)}
-              className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors flex items-center gap-2"
+              className="absolute top-6 left-6 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors flex items-center gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm font-medium">Back</span>
@@ -53,33 +53,37 @@ const Upgrade = () => {
 
             <div className="mt-12 mb-8">
               {user?.plan !== 'paid' ? (
-                <span className="inline-block px-3 py-1 bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+                <span className="inline-block px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
                   Current Plan
                 </span>
               ) : (
                 <div className="h-[24px] mb-4"></div> // Spacer to maintain alignment
               )}
-              <h3 className="text-3xl font-bold text-slate-900 mb-2">Free Starter</h3>
-              <p className="text-slate-500">Good for getting started, but limited.</p>
+              <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Free Starter
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400">
+                Good for getting started, but limited.
+              </p>
             </div>
 
             <div className="space-y-4 flex-1">
               <LimitItem icon={<Check />} text="1 Resume Draft" />
               <LimitItem icon={<Check />} text="3 Job Optimizations" />
               <LimitItem icon={<Check />} text="Basic Templates" />
-              <div className="opacity-40 space-y-4 pt-4 border-t border-slate-200">
+              <div className="opacity-40 space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <LimitItem
-                  icon={<X className="text-slate-400" />}
+                  icon={<X className="text-slate-400 dark:text-slate-500" />}
                   text="Unlimited AI Analysis"
                   crossed
                 />
                 <LimitItem
-                  icon={<X className="text-slate-400" />}
+                  icon={<X className="text-slate-400 dark:text-slate-500" />}
                   text="ATS Keyword Targeting"
                   crossed
                 />
                 <LimitItem
-                  icon={<X className="text-slate-400" />}
+                  icon={<X className="text-slate-400 dark:text-slate-500" />}
                   text="Cover Letter Generator"
                   crossed
                 />
@@ -178,9 +182,11 @@ const X = ({ className }) => (
 );
 
 const LimitItem = ({ icon, text, crossed }) => (
-  <div className={`flex items-center gap-3 ${crossed ? 'text-slate-400' : 'text-slate-600'}`}>
+  <div
+    className={`flex items-center gap-3 ${crossed ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'}`}
+  >
     <div
-      className={`w-6 h-6 flex items-center justify-center rounded-full shrink-0 ${crossed ? 'bg-slate-100' : 'bg-green-100 text-green-600'}`}
+      className={`w-6 h-6 flex items-center justify-center rounded-full shrink-0 ${crossed ? 'bg-slate-100 dark:bg-slate-800' : 'bg-green-100 dark:bg-green-500/15 text-green-600 dark:text-green-300'}`}
     >
       {React.cloneElement(icon, { size: 14 })}
     </div>

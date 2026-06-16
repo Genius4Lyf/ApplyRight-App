@@ -164,14 +164,14 @@ const JobSearch = () => {
   const isLoading = isSearchActive ? searchLoading : tabLoading[activeTab];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
       <GlobalBanner />
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Find Jobs</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Find Jobs</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Discover jobs from Nigeria and around the world
           </p>
         </div>
@@ -184,7 +184,7 @@ const JobSearch = () => {
           />
         </div>
 
-        <div className="flex gap-1 mb-4 p-0.5 bg-slate-100 rounded-lg w-fit max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex gap-1 mb-4 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -193,8 +193,8 @@ const JobSearch = () => {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   activeTab === tab.id && !isSearchActive
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -206,12 +206,12 @@ const JobSearch = () => {
 
         {isSearchActive && (
           <div className="flex items-center gap-2 mb-3">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {displayPagination?.totalCount || 0} search results
             </p>
             <button
               onClick={handleClearSearch}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              className="text-xs text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 font-medium"
             >
               Clear search
             </button>
@@ -223,7 +223,7 @@ const JobSearch = () => {
             {currentTabData.categories.map((cat) => (
               <span
                 key={cat}
-                className="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-full font-medium"
+                className="text-xs px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-full font-medium"
               >
                 {cat}
               </span>
@@ -234,27 +234,27 @@ const JobSearch = () => {
         {isLoading && (
           <div className="animate-pulse">
             <div className="flex items-center justify-between mb-3">
-              <div className="h-4 bg-slate-200 rounded w-24"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[...Array(PAGE_SIZE)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col h-[180px]"
+                  className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex flex-col h-[180px]"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 shrink-0"></div>
                     <div className="flex-1 space-y-3 mt-1">
                       <div className="flex justify-between items-start gap-2">
-                        <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
                       </div>
                       <div className="flex gap-2">
-                        <div className="h-3 bg-slate-100 rounded w-24"></div>
-                        <div className="h-3 bg-slate-100 rounded w-16"></div>
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-24"></div>
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-16"></div>
                       </div>
                       <div className="space-y-2 pt-2">
-                        <div className="h-2.5 bg-slate-100 rounded w-full"></div>
-                        <div className="h-2.5 bg-slate-100 rounded w-5/6"></div>
+                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded w-full"></div>
+                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded w-5/6"></div>
                       </div>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ const JobSearch = () => {
         {!isLoading && displayResults?.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {displayPagination
                   ? `Showing ${(displayPagination.page - 1) * displayPagination.limit + 1}–${Math.min(displayPagination.page * displayPagination.limit, displayPagination.totalCount)} of ${displayPagination.totalCount} jobs`
                   : `${displayResults.length} jobs`}
@@ -295,7 +295,7 @@ const JobSearch = () => {
                       : handleTabPageChange(displayPagination.page - 1)
                   }
                   disabled={!displayPagination.hasPrevPage}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -305,7 +305,10 @@ const JobSearch = () => {
                   {generatePageNumbers(displayPagination.page, displayPagination.totalPages).map(
                     (p, i) =>
                       p === '...' ? (
-                        <span key={`dots-${i}`} className="px-2 text-sm text-slate-400">
+                        <span
+                          key={`dots-${i}`}
+                          className="px-2 text-sm text-slate-400 dark:text-slate-500"
+                        >
                           ...
                         </span>
                       ) : (
@@ -317,7 +320,7 @@ const JobSearch = () => {
                           className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
                             p === displayPagination.page
                               ? 'bg-indigo-600 text-white'
-                              : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                              : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                           }`}
                         >
                           {p}
@@ -333,7 +336,7 @@ const JobSearch = () => {
                       : handleTabPageChange(displayPagination.page + 1)
                   }
                   disabled={!displayPagination.hasNextPage}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -345,8 +348,10 @@ const JobSearch = () => {
 
         {!isLoading && displayResults && displayResults.length === 0 && (
           <div className="text-center py-12">
-            <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">No jobs found. Try searching with different keywords.</p>
+            <Briefcase className="w-12 h-12 text-slate-300 dark:text-slate-500 mx-auto mb-3" />
+            <p className="text-slate-500 dark:text-slate-400">
+              No jobs found. Try searching with different keywords.
+            </p>
           </div>
         )}
       </main>

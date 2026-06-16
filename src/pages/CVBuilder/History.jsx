@@ -168,7 +168,9 @@ const History = () => {
   // across renders (rules-of-hooks). Returning before this point would skip
   // some of the useState/useSensor calls above on subsequent renders.
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading history...</div>
+    );
   }
 
   const handleGenerateBullets = async (index, customInput = null) => {
@@ -303,18 +305,20 @@ const History = () => {
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
             <Briefcase className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Work History</h2>
-            <p className="text-slate-500">Your experience tells your professional story.</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Work History</h2>
+            <p className="text-slate-500 dark:text-slate-400">
+              Your experience tells your professional story.
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setShowTutorial(true)}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
+          className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
           <span className="hidden md:inline">How AI Works</span>
@@ -345,8 +349,8 @@ const History = () => {
       />
 
       {history.length === 0 && (
-        <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-          <p className="text-slate-500 mb-4">No work history added yet.</p>
+        <div className="text-center p-8 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
+          <p className="text-slate-500 dark:text-slate-400 mb-4">No work history added yet.</p>
           <button
             type="button"
             onClick={addRole}
@@ -373,12 +377,12 @@ const History = () => {
                 onMoveDown={() => moveItem(index, 1)}
                 onDelete={() => removeRole(index)}
               >
-                <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm relative group">
+                <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="md:col-span-1">
                       <label
                         htmlFor={`history-title-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         Job Title
                       </label>
@@ -388,13 +392,13 @@ const History = () => {
                         value={role.title}
                         onChange={(e) => handleChange(index, 'title', e.target.value)}
                         placeholder="e.g. Senior Product Manager"
-                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div className="md:col-span-1 pr-8 md:pr-0">
                       <label
                         htmlFor={`history-company-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         Company
                       </label>
@@ -404,13 +408,13 @@ const History = () => {
                         value={role.company}
                         onChange={(e) => handleChange(index, 'company', e.target.value)}
                         placeholder="e.g. Acme Corp"
-                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`history-start-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         Start Date
                       </label>
@@ -420,13 +424,13 @@ const History = () => {
                         value={role.startDate}
                         onChange={(e) => handleChange(index, 'startDate', e.target.value)}
                         placeholder="e.g. Jan 2020"
-                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`history-end-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase mb-1"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                       >
                         End Date
                       </label>
@@ -438,7 +442,7 @@ const History = () => {
                           onChange={(e) => handleChange(index, 'endDate', e.target.value)}
                           disabled={role.isCurrent}
                           placeholder={role.isCurrent ? 'Present' : 'e.g. Dec 2023'}
-                          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                          className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
                         />
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
                           <input
@@ -447,7 +451,9 @@ const History = () => {
                             onChange={(e) => handleChange(index, 'isCurrent', e.target.checked)}
                             className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                           />
-                          <span className="text-xs text-slate-600">Current</span>
+                          <span className="text-xs text-slate-600 dark:text-slate-300">
+                            Current
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -457,7 +463,7 @@ const History = () => {
                     <div className="flex justify-between items-center mb-1">
                       <label
                         htmlFor={`history-description-${index}`}
-                        className="block text-xs font-bold text-slate-500 uppercase"
+                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
                       >
                         Description / Bullets
                       </label>
@@ -477,7 +483,7 @@ const History = () => {
                             ? 'Please write at least 2 bullet points to use AI Suggestions'
                             : 'Get AI Suggestions'
                         }
-                        className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800 disabled:opacity-50"
+                        className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
                       >
                         {generatingIndex === index ? (
                           <RefreshCcw className="w-3 h-3 animate-spin" />
@@ -517,10 +523,10 @@ const History = () => {
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
                       placeholder="• Achieved X by doing Y..."
-                      className="w-full p-3 border border-slate-300 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                      className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
                     />
                     <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {isPaid
                           ? 'Tip: 3-5 bullets is the sweet spot. One per impact, not per task.'
                           : `Tip: 3-5 bullets is the sweet spot. ${countBullets(role.description)}/${FREE_BULLET_LIMIT} used — upgrade for unlimited.`}
@@ -542,17 +548,17 @@ const History = () => {
         <button
           type="button"
           onClick={addRole}
-          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Another Position
         </button>
       )}
 
-      <div className="pt-6 border-t border-slate-100 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
+      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button
           type="button"
           onClick={handleBack}
-          className="w-full md:w-auto px-6 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200"
+          className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
@@ -571,27 +577,27 @@ const History = () => {
       {/* AI Suggestions Modal */}
       {showSuggestionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center gap-2 bg-indigo-50/50 shrink-0">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-800 truncate">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate">
                     AI Bullet Suggestions
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Select up to {maxSelectable} to add to your experience.
                   </p>
                 </div>
               </div>
-              <div className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full shrink-0">
+              <div className="text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full shrink-0">
                 {selectedSuggestions.length} / {maxSelectable}
               </div>
             </div>
 
-            <div className="p-4 flex-1 overflow-y-auto bg-slate-50">
+            <div className="p-4 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
               <div className="space-y-2">
                 {suggestionsList.map((suggestion, idx) => {
                   const isSelected = selectedSuggestions.includes(suggestion);
@@ -601,12 +607,12 @@ const History = () => {
                       key={idx}
                       onClick={() => toggleSuggestionSelection(suggestion, idx)}
                       className={`relative p-3 rounded-xl border-2 transition-all flex gap-3
-                                                ${isLocked ? 'cursor-not-allowed border-slate-200 bg-white' : 'cursor-pointer'}
+                                                ${isLocked ? 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800' : 'cursor-pointer'}
                                                 ${
                                                   isSelected
-                                                    ? 'border-indigo-500 bg-indigo-50/50 shadow-sm'
+                                                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
                                                     : !isLocked
-                                                      ? 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                                                      ? 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
                                                       : ''
                                                 }`}
                     >
@@ -616,7 +622,7 @@ const History = () => {
                                                     ${
                                                       isSelected
                                                         ? 'bg-indigo-500 border-indigo-500 text-white'
-                                                        : 'border-slate-300 bg-slate-50'
+                                                        : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
                                                     }`}
                         >
                           {isSelected && (
@@ -639,17 +645,17 @@ const History = () => {
                       <p
                         className={`text-sm leading-relaxed ${
                           isLocked
-                            ? 'blur-sm select-none text-slate-700'
+                            ? 'blur-sm select-none text-slate-700 dark:text-slate-300'
                             : isSelected
-                              ? 'text-indigo-900 font-medium'
-                              : 'text-slate-700'
+                              ? 'text-indigo-900 dark:text-indigo-200 font-medium'
+                              : 'text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {suggestion}
                       </p>
                       {isLocked && (
                         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/30">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white/90 border border-slate-200 px-2.5 py-1 rounded-full shadow-sm">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full shadow-sm">
                             <Lock className="w-3 h-3" /> Upgrade to unlock
                           </span>
                         </div>
@@ -660,18 +666,18 @@ const History = () => {
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
-              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 border border-indigo-100/50 rounded-lg">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                   <strong>Note:</strong> AI can make mistakes or generate generic content. Review
                   and edit these to ensure they reflect your actual, verifiable experience.
                 </p>
               </div>
               {lockedCount > 0 && (
-                <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                  <Lock className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg">
+                  <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
                     <strong>{lockedCount} more suggestions are locked.</strong> Upgrade to Pro to
                     see all {suggestionsList.length} and add more than {FREE_SELECT_LIMIT} at once.
                   </p>
@@ -681,7 +687,7 @@ const History = () => {
                 <button
                   type="button"
                   onClick={() => setShowSuggestionsModal(false)}
-                  className="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                  className="px-5 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>

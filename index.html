@@ -59,6 +59,34 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Dark-mode anti-flash guard: applies `.dark` before React mounts so an
+         authenticated page hard-refreshed in dark mode never flashes light.
+         Mirrors src/utils/theme.js (allow-list) and ThemeContext resolution. -->
+    <script>
+      (function () {
+        try {
+          var prefixes = [
+            '/dashboard', '/onboarding', '/history', '/compare', '/profile',
+            '/upgrade', '/credits', '/interview-prep', '/resume', '/my-cvs',
+            '/cv-builder', '/feedback/dashboard', '/jobs'
+          ];
+          var path = window.location.pathname;
+          var eligible = prefixes.some(function (p) {
+            return path === p || path.indexOf(p + '/') === 0;
+          });
+          if (!eligible) return;
+          var stored = null;
+          try { stored = localStorage.getItem('applyright-theme'); } catch (e) {}
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body>

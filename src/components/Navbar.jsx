@@ -14,16 +14,21 @@ import {
   ChevronDown,
   MessageSquare,
   FileText,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 import { isMobile } from '../utils/platform';
+import { useTheme } from '../context/ThemeContext';
 
 import logo from '../assets/logo/applyright-icon.png';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -83,9 +88,7 @@ const Navbar = () => {
           if (typeof data?.credits === 'number') {
             user.credits = data.credits;
             localStorage.setItem('user', JSON.stringify(user));
-            window.dispatchEvent(
-              new CustomEvent('credit_updated', { detail: data.credits })
-            );
+            window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.credits }));
           }
         } catch {
           // localStorage unavailable — non-fatal, navbar state still updates.
@@ -125,11 +128,13 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 transition-colors duration-200">
+    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 z-50">
           <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
-          <span className="text-base sm:text-lg font-semibold text-slate-900">ApplyRight</span>
+          <span className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">
+            ApplyRight
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -141,8 +146,8 @@ const Navbar = () => {
                   to="/dashboard"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
                     isActive('/dashboard')
-                      ? 'text-indigo-700 bg-indigo-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <LayoutDashboard className="w-4 h-4" />
@@ -152,8 +157,8 @@ const Navbar = () => {
                   to="/my-cvs"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
                     location.pathname.startsWith('/my-cvs')
-                      ? 'text-indigo-700 bg-indigo-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <FileText className="w-4 h-4" />
@@ -163,8 +168,8 @@ const Navbar = () => {
                   to="/history"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
                     isActive('/history')
-                      ? 'text-indigo-700 bg-indigo-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <History className="w-4 h-4" />
@@ -174,8 +179,8 @@ const Navbar = () => {
                   to="/interview-prep"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
                     location.pathname.startsWith('/interview-prep')
-                      ? 'text-indigo-700 bg-indigo-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -207,10 +212,10 @@ const Navbar = () => {
               <div className="relative" ref={popoverRef}>
                 <button
                   onClick={() => setShowCreditPopover(!showCreditPopover)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/15 rounded-full border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
                 >
-                  <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600" />
-                  <span className="text-sm font-bold text-indigo-700">
+                  <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                  <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
                     {credits !== null ? credits : '...'}
                   </span>
                 </button>
@@ -222,45 +227,45 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
                       exit={{ opacity: 0, y: 10, scale: 0.95, x: '-50%' }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full left-1/2 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 p-4"
+                      className="absolute top-full left-1/2 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 p-4"
                     >
                       <div className="space-y-3">
                         {/* Concrete framing: convert opaque credit count into the
                           number of actions the user can take right now. */}
                         {credits !== null && (
                           <div className="px-1">
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">
                               With {credits} credits
                             </p>
-                            <ul className="text-xs text-slate-600 space-y-1">
+                            <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
                               <li className="flex items-center justify-between">
                                 <span>Full application kit</span>
-                                <span className="font-semibold text-slate-700">
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">
                                   ≈{Math.floor(credits / 18)}
                                 </span>
                               </li>
                               <li className="flex items-center justify-between">
                                 <span>Optimized CV</span>
-                                <span className="font-semibold text-slate-700">
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">
                                   ≈{Math.floor(credits / 10)}
                                 </span>
                               </li>
                               <li className="flex items-center justify-between">
                                 <span>Cover letter</span>
-                                <span className="font-semibold text-slate-700">
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">
                                   ≈{Math.floor(credits / 5)}
                                 </span>
                               </li>
                             </ul>
                           </div>
                         )}
-                        <div className="border-t border-slate-100 -mx-4" />
+                        <div className="border-t border-slate-100 dark:border-slate-700 -mx-4" />
                         <button
                           onClick={() => {
                             navigate('/credits');
                             setShowCreditPopover(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-green-600 transition-colors flex items-center gap-2"
+                          className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2"
                         >
                           <PlayCircle className="w-4 h-4 text-green-500" />
                           Get more A.I credits
@@ -281,9 +286,9 @@ const Navbar = () => {
                   onClick={() => setShowAccountMenu((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={showAccountMenu}
-                  className="flex items-center gap-1.5 p-1 pl-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-1.5 p-1 pl-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
+                  <div className="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm">
                     {user && user.firstName && user.firstName.length > 0 ? (
                       user.firstName[0].toUpperCase()
                     ) : (
@@ -291,7 +296,7 @@ const Navbar = () => {
                     )}
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${
+                    className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${
                       showAccountMenu ? 'rotate-180' : ''
                     }`}
                   />
@@ -305,17 +310,19 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50"
+                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                     >
                       {/* Identity block */}
-                      <div className="px-4 py-3 border-b border-slate-100">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
+                      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                           {user && user.firstName
                             ? `${user.firstName} ${user.lastName || ''}`.trim()
                             : user?.email?.split('@')[0] || 'User'}
                         </p>
                         {user?.email && (
-                          <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {user.email}
+                          </p>
                         )}
                       </div>
 
@@ -328,9 +335,9 @@ const Navbar = () => {
                             setShowAccountMenu(false);
                             navigate('/profile');
                           }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         >
-                          <Settings className="w-4 h-4 text-slate-400" />
+                          <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           Profile settings
                         </button>
                         <button
@@ -340,14 +347,27 @@ const Navbar = () => {
                             setShowAccountMenu(false);
                             navigate('/credits');
                           }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         >
-                          <Sparkles className="w-4 h-4 text-indigo-500" />
+                          <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                           Buy credits
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={toggleTheme}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          {isDark ? (
+                            <Sun className="w-4 h-4 text-amber-500" />
+                          ) : (
+                            <Moon className="w-4 h-4 text-slate-400" />
+                          )}
+                          {isDark ? 'Light mode' : 'Dark mode'}
                         </button>
                       </div>
 
-                      <div className="border-t border-slate-100">
+                      <div className="border-t border-slate-100 dark:border-slate-700">
                         <button
                           type="button"
                           role="menuitem"
@@ -355,7 +375,7 @@ const Navbar = () => {
                             setShowAccountMenu(false);
                             setShowLogoutConfirm(true);
                           }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           Sign out
@@ -381,18 +401,18 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => navigate('/credits')}
-              className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 rounded-full border border-indigo-200 hover:bg-indigo-100 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/15 rounded-full border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
               aria-label={`${credits ?? '...'} credits — tap to top up`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 fill-indigo-600" />
-              <span className="text-xs font-bold text-indigo-700">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+              <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
                 {credits !== null ? credits : '...'}
               </span>
             </button>
           )}
           {!isMobile() && (
             <button
-              className="z-50 p-2 text-slate-600"
+              className="z-50 p-2 text-slate-600 dark:text-slate-300"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X /> : <Menu />}
@@ -423,17 +443,19 @@ const Navbar = () => {
                   animate={{ x: 0 }}
                   exit={{ x: '100%' }}
                   transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                  className="md:hidden fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[110] shadow-2xl flex flex-col overflow-y-auto"
+                  className="md:hidden fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white dark:bg-slate-900 z-[110] shadow-2xl flex flex-col overflow-y-auto"
                 >
                   {/* Drawer Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+                  <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
                     <div className="flex items-center gap-2">
                       <img src={logo} alt="ApplyRight Logo" className="h-7 w-auto" />
-                      <span className="text-lg font-bold text-slate-900">Menu</span>
+                      <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                        Menu
+                      </span>
                     </div>
                     <button
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 rounded-full transition-colors"
+                      className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 dark:text-slate-400 dark:hover:text-slate-100 dark:bg-slate-800 rounded-full transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -446,7 +468,7 @@ const Navbar = () => {
                         <Link
                           to="/dashboard"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                         >
                           <LayoutDashboard className="w-5 h-5" />
                           <span className="font-semibold">Dashboard</span>
@@ -454,7 +476,7 @@ const Navbar = () => {
                         <Link
                           to="/my-cvs"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/my-cvs') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/my-cvs') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                         >
                           <FileText className="w-5 h-5" />
                           <span className="font-semibold">My CVs</span>
@@ -462,7 +484,7 @@ const Navbar = () => {
                         <Link
                           to="/history"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                         >
                           <History className="w-5 h-5" />
                           <span className="font-semibold">My Applications</span>
@@ -470,7 +492,7 @@ const Navbar = () => {
                         <Link
                           to="/interview-prep"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                         >
                           <MessageSquare className="w-5 h-5" />
                           <span className="font-semibold">Interview Prep</span>
@@ -480,18 +502,20 @@ const Navbar = () => {
 
                     {isAuthenticated && (
                       <>
-                        <div className="h-px bg-slate-100 my-4" />
+                        <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
 
                         <Link
                           to="/credits"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/50 ${isActive('/credits') ? 'bg-indigo-50' : ''}`}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 ${isActive('/credits') ? 'bg-indigo-50 dark:bg-indigo-500/15' : ''}`}
                         >
                           <div className="flex items-center gap-3">
-                            <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600" />
-                            <span className="font-bold text-indigo-900">A.I Credits</span>
+                            <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                            <span className="font-bold text-indigo-900 dark:text-indigo-200">
+                              A.I Credits
+                            </span>
                           </div>
-                          <span className="font-black text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">
+                          <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md">
                             {credits !== null ? credits : '...'}
                           </span>
                         </Link>
@@ -500,15 +524,15 @@ const Navbar = () => {
                   </div>
 
                   {/* Bottom Footer Area */}
-                  <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
+                  <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0">
                     {isAuthenticated ? (
                       <>
                         <Link
                           to="/profile"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-200 transition-colors mb-3 group"
+                          className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors mb-3 group"
                         >
-                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold group-hover:scale-105 transition-transform">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold group-hover:scale-105 transition-transform">
                             {user && user.firstName ? (
                               user.firstName[0].toUpperCase()
                             ) : (
@@ -516,23 +540,35 @@ const Navbar = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-slate-900 truncate">
+                            <p className="font-bold text-slate-900 dark:text-slate-100 truncate">
                               {user && user.firstName
                                 ? `${user.firstName} ${user.lastName || ''}`
                                 : 'User'}
                             </p>
-                            <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
                               {user?.email || 'View Profile Settings'}
                             </p>
                           </div>
                         </Link>
 
                         <button
+                          onClick={toggleTheme}
+                          className="w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold"
+                        >
+                          {isDark ? (
+                            <Sun className="w-5 h-5 text-amber-500" />
+                          ) : (
+                            <Moon className="w-5 h-5 text-slate-400" />
+                          )}
+                          <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+                        </button>
+
+                        <button
                           onClick={() => {
                             setIsMobileMenuOpen(false);
                             setShowLogoutConfirm(true);
                           }}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-colors font-bold shadow-sm"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors font-bold shadow-sm"
                         >
                           <LogOut className="w-5 h-5" />
                           <span>Sign Out</span>
@@ -568,17 +604,21 @@ const Navbar = () => {
         typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
               <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
                   <LogOut className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
-                <p className="text-slate-500 mb-6">Are you sure you want to sign out?</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Sign Out?
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                  Are you sure you want to sign out?
+                </p>
                 <div className="flex gap-3 w-full">
                   <button
                     onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                    className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded-lg font-medium transition-colors"
                   >
                     Cancel
                   </button>

@@ -172,11 +172,11 @@ const CreditStore = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="absolute top-6 left-6 p-2 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors z-10"
+        className="absolute top-6 left-6 p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors z-10"
         title="Go Back"
       >
         <X className="w-5 h-5" />
@@ -185,51 +185,54 @@ const CreditStore = () => {
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center space-y-4 mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-indigo-100 text-indigo-600 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center p-3 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-2xl mb-4">
             <Zap className="w-8 h-8 fill-indigo-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             Free A.I Credits Store
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
             ApplyRight is 100% free. Watch ads to earn A.I credits for premium templates and AI
             features.
           </p>
         </div>
 
         {/* Earn credits by watching an ad — Monetag on web, AdMob on Android. */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative transform transition-all hover:shadow-2xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative transform transition-all hover:shadow-2xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 dark:bg-purple-500/15 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
 
           <div className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row items-center gap-12">
             <div className="flex-1 space-y-6 text-center md:text-left">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 text-xs font-bold uppercase tracking-wider mb-4">
                   Instant Reward
                 </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {isAndroidNative()
                     ? 'Watch Video to Earn Credits'
                     : 'Watch an Ad to Earn Credits'}
                 </h2>
-                <p className="text-slate-500 text-lg">
+                <p className="text-slate-500 dark:text-slate-400 text-lg">
                   {isAndroidNative() ? 'Watch a short video ad' : 'View a quick sponsored offer'}{' '}
                   and earn{' '}
-                  <span className="text-indigo-600 font-bold">{platformReward} A.I Credits</span>.
+                  <span className="text-indigo-600 dark:text-indigo-300 font-bold">
+                    {platformReward} A.I Credits
+                  </span>
+                  .
                 </p>
               </div>
 
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-slate-600">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <Check className="w-5 h-5 text-green-500" />
                   <span>Takes only 5 seconds</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-600">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <Check className="w-5 h-5 text-green-500" />
                   <span>Instant reward</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-600">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <Check className="w-5 h-5 text-green-500" />
                   <span>Unlimited daily views</span>
                 </div>
@@ -265,25 +268,27 @@ const CreditStore = () => {
         {/* Secondary Actions Grid */}
         <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
           {/* Invite Friend */}
-          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Share2 className="w-32 h-32 text-slate-900" />
+              <Share2 className="w-32 h-32 text-slate-900 dark:text-slate-100" />
             </div>
             <div className="relative z-10">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 text-blue-600">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/15 rounded-xl flex items-center justify-center mb-6 text-blue-600 dark:text-blue-300">
                 <Share2 className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Invite Friends</h3>
-              <p className="text-slate-500 mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Invite Friends
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">
                 Get{' '}
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 dark:text-slate-100">
                   {config?.credits?.referralBonus || 10} A.I Credits
                 </span>{' '}
                 for every friend who joins using your link.
               </p>
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors"
+                className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-colors"
               >
                 Get Invite Link
               </button>
@@ -292,8 +297,10 @@ const CreditStore = () => {
         </div>
 
         {/* Info Footer */}
-        <div className="text-center pt-8 border-t border-slate-200/50">
-          <p className="text-sm text-slate-400">Need help? Contact support@applyright.com.ng</p>
+        <div className="text-center pt-8 border-t border-slate-200/50 dark:border-slate-700/50">
+          <p className="text-sm text-slate-400 dark:text-slate-500">
+            Need help? Contact support@applyright.com.ng
+          </p>
         </div>
       </div>
 
@@ -356,24 +363,26 @@ const CreditStore = () => {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-5 h-5 text-slate-400 dark:text-slate-500" />
               </button>
 
               <div className="text-center space-y-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <Share2 className="w-8 h-8 text-green-600" />
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center mx-auto">
+                  <Share2 className="w-8 h-8 text-green-600 dark:text-green-300" />
                 </div>
 
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900">Invite Friends & Earn</h3>
-                  <p className="text-slate-600 mt-2">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    Invite Friends & Earn
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-300 mt-2">
                     Share your code with friends. When they sign up, <b>you get</b>{' '}
                     <span className="text-green-600 font-bold">
                       {config?.credits?.referralBonus || 10} A.I Credits
@@ -385,11 +394,11 @@ const CreditStore = () => {
                 <div className="space-y-3">
                   {/* Referral Code */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                       YOUR REFERRAL CODE
                     </label>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
-                      <div className="font-mono text-xl font-bold text-slate-800 tracking-wider">
+                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+                      <div className="font-mono text-xl font-bold text-slate-800 dark:text-slate-200 tracking-wider">
                         {loadingCode ? 'LOADING...' : referralCode || 'ERROR'}
                       </div>
                       <button
@@ -404,15 +413,15 @@ const CreditStore = () => {
 
                   {/* Share Link */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                       OR SHARE THIS LINK
                     </label>
                     <button
                       onClick={handleCopyLink}
                       disabled={loadingCode || !referralCode}
-                      className="w-full bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="text-sm text-indigo-600 font-medium truncate">
+                      <div className="text-sm text-indigo-600 dark:text-indigo-300 font-medium truncate">
                         {loadingCode
                           ? 'Loading...'
                           : `${window.location.origin}/register?ref=${referralCode}`}
@@ -426,7 +435,7 @@ const CreditStore = () => {
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-slate-400 dark:text-slate-500">
                   A.I Credits are valid for CV analysis and optimizations.
                 </div>
               </div>

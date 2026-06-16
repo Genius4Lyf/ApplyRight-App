@@ -106,15 +106,15 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
         <div
           className={`flex ${
             isCard ? 'flex-col gap-3 p-3' : 'flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4'
-          } bg-amber-50 border border-amber-200 rounded-xl`}
+          } bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl`}
         >
           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-900 leading-tight">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 leading-tight">
                 You need {short} more credit{short === 1 ? '' : 's'} to run this
               </p>
-              <p className="text-xs text-amber-700 mt-0.5">
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
                 This action costs {cost} credits — you have {credits}.
               </p>
             </div>
@@ -124,11 +124,11 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
               type="button"
               onClick={startAd}
               disabled={checking}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
                 isCard ? 'flex-1' : ''
               }`}
             >
-              <PlayCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
               {checking ? 'Checking…' : 'Watch ad'}
             </button>
             <button

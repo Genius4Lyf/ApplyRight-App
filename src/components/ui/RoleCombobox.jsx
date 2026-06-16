@@ -157,19 +157,19 @@ const RoleCombobox = ({ value, onChange, placeholder = 'e.g. Frontend Developer'
           onClick={() => setIsOpen(!isOpen)}
         >
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </div>
 
       {isOpen && filteredRoles.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
           <div className="p-1">
             {filteredRoles.map((role) => (
               <button
                 key={role}
                 type="button"
-                className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between group text-slate-700 hover:bg-slate-50 transition-colors"
+                className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between group text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 onClick={() => handleSelectRole(role)}
               >
                 <span>{role}</span>

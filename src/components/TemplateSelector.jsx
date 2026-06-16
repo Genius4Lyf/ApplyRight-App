@@ -124,10 +124,10 @@ const TemplateSelector = ({
 
       {unlockModalOpen && templateToUnlock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
             <button
               onClick={() => setUnlockModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="w-5 h-5" />
             </button>
@@ -142,8 +142,10 @@ const TemplateSelector = ({
                   <Lock className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900">Unlock {templateToUnlock.name}</h3>
-              <p className="text-slate-500 mt-2">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Unlock {templateToUnlock.name}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mt-2">
                 This is a premium template. Unlock it to use it for your applications.
               </p>
             </div>
@@ -155,7 +157,7 @@ const TemplateSelector = ({
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (user.credits || 0) >= templateToUnlock.cost
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -170,21 +172,21 @@ const TemplateSelector = ({
 
               {(user.credits || 0) < templateToUnlock.cost && (
                 <div className="text-center">
-                  <p className="text-sm text-red-500 font-medium mb-3">
+                  <p className="text-sm text-red-500 dark:text-red-300 font-medium mb-3">
                     <span className="text-sm font-medium">
                       Insufficient A.I credits (Have: {user.credits || 0})
                     </span>
                   </p>
                   <div className="relative flex py-2 items-center mb-3">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase font-bold">
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                    <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-xs uppercase font-bold">
                       OR
                     </span>
-                    <div className="flex-grow border-t border-slate-200"></div>
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
                   </div>
                   <button
                     onClick={() => setAdOpen(true)}
-                    className="w-full py-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                   >
                     <PlayCircle className="w-5 h-5 text-green-500" />
                     Watch Ad for +5 A.I Credits
@@ -209,8 +211,8 @@ const TemplateSelector = ({
                                 relative group cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden
                                 ${
                                   isSelected
-                                    ? 'border-indigo-600 ring-4 ring-indigo-50 shadow-xl scale-[1.02]'
-                                    : 'border-slate-200 hover:border-indigo-300 hover:shadow-md'
+                                    ? 'border-indigo-600 dark:border-indigo-500 ring-4 ring-indigo-50 dark:ring-indigo-500/15 shadow-xl scale-[1.02]'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:shadow-md'
                                 }
                             `}
             >
@@ -231,7 +233,7 @@ const TemplateSelector = ({
 
               {/* Thumbnail Area */}
               <div
-                className={`h-40 w-full bg-slate-50 flex items-center justify-center relative overflow-hidden group-hover:bg-indigo-50/30 transition-colors`}
+                className={`h-40 w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative overflow-hidden group-hover:bg-indigo-50/30 dark:group-hover:bg-indigo-500/15 transition-colors`}
               >
                 <TemplateThumbnail type={template.id} />
 
@@ -253,13 +255,13 @@ const TemplateSelector = ({
               </div>
 
               {/* Content */}
-              <div className="p-4 bg-white relative">
+              <div className="p-4 bg-white dark:bg-slate-800 relative">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                       {template.name}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                       {template.description}
                     </p>
                   </div>
@@ -275,16 +277,16 @@ const TemplateSelector = ({
         {isCompact && (
           <div
             onClick={onPreview}
-            className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all flex flex-col items-center justify-center p-6 h-full min-h-[200px]"
+            className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/15 transition-all flex flex-col items-center justify-center p-6 h-full min-h-[200px]"
           >
-            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-full flex items-center justify-center mb-4">
               <FileText className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-slate-800">View All Architecture</h3>
-            <p className="text-xs text-slate-500 text-center mt-2 px-4">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">View All Architecture</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-2 px-4">
               Browse our full collection of professional templates
             </p>
-            <button className="mt-4 text-sm font-semibold text-indigo-600 flex items-center">
+            <button className="mt-4 text-sm font-semibold text-indigo-600 dark:text-indigo-300 flex items-center">
               See All Templates <ArrowRight className="w-4 h-4 ml-1" />
             </button>
           </div>
