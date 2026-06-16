@@ -71,7 +71,7 @@ const READINESS_LABEL = {
   needs_work: 'Needs work',
 };
 // Seconds remaining at which we nudge the live interviewer to start its closing.
-const REALTIME_NUDGE_SEC = 90;
+const REALTIME_NUDGE_SEC = 45;
 
 // Minimum time the "connecting" call screen stays up, so the connect animation
 // always reads as a deliberate beat instead of flashing past when the
@@ -175,6 +175,12 @@ const MockInterviewPage = () => {
   const recorderRef = useRef(null);
   const maxSessionSecRef = useRef(360);
   const nudgedRef = useRef(false); // wrap-up nudge sent once near the time cap
+  // ── time-up wind-down ──
+  // When the main time runs out we DON'T hard-cut: we enter a grace window so the
+  // interviewer can verbally wrap up + run the closing ("any questions for me?").
+  const [inGrace, setInGrace] = useState(false);
+  const graceSecRef = useRef(90); // grace window length (from the backend session)
+  const graceKickRef = useRef(null); // silent-room fallback timer during grace
 
   // ── "connecting" call beat ──
   // Hold the connecting screen for at least CONNECT_MIN_MS so the call-connect
@@ -342,6 +348,7 @@ const MockInterviewPage = () => {
       cache.forEach((url) => URL.revokeObjectURL(url));
       cache.clear();
       clearTimeout(connectTimerRef.current);
+      clearTimeout(graceKickRef.current);
       // Tear down any live realtime session + recorder on unmount.
       realtimeRef.current?.stop();
       recorderRef.current?.stop();
@@ -361,20 +368,46 @@ const MockInterviewPage = () => {
   useEffect(() => {
     if (phase !== 'live') return;
     if (secondsLeft === 0) {
-      endRealtime();
+      if (!inGrace) {
+        // Main time is up — DON'T cut the candidate off. Enter the grace window:
+        // tell the interviewer to finish the current exchange, then wrap up and
+        // run the closing. The countdown now shows the grace seconds.
+        setInGrace(true);
+        nudgedRef.current = true; // the soft heads-up is moot now
+        realtimeRef.current?.sendInstruction(
+          "TIME IS UP. If the candidate is mid-answer, let them finish their current thought — do NOT interrupt. Then warmly tell them you're right at time, and go straight to your CLOSING: ask whether they have any questions for you, answer briefly, then give a warm sign-off and thank them by name."
+        );
+        setSecondsLeft(graceSecRef.current);
+        // Silent-room fallback: if neither side is speaking shortly after time-up,
+        // prompt the interviewer to deliver the wrap-up on its own. Guarded so it
+        // never talks over a speaking candidate (live isUserSpeaking check).
+        clearTimeout(graceKickRef.current);
+        graceKickRef.current = setTimeout(() => {
+          if (voiceState !== 'speaking' && !realtimeRef.current?.isUserSpeaking?.()) {
+            realtimeRef.current?.sendInstruction('', true);
+          }
+        }, 8000);
+      } else {
+        // Grace window expired — now close + grade.
+        endRealtime();
+      }
       return;
     }
-    // Nudge the interviewer to start wrapping up while there's still time for the
-    // closing (weakness question + "any questions for me"). Sent once, and only
-    // for sessions long enough to have a meaningful tail.
-    if (!nudgedRef.current && maxSessionSecRef.current > 150 && secondsLeft <= REALTIME_NUDGE_SEC) {
+    // Soft heads-up while there's still time, so time-up isn't a surprise. Sent
+    // once, and only for sessions long enough to have a meaningful tail.
+    if (
+      !nudgedRef.current &&
+      !inGrace &&
+      maxSessionSecRef.current > 150 &&
+      secondsLeft <= REALTIME_NUDGE_SEC
+    ) {
       nudgedRef.current = true;
       realtimeRef.current?.sendInstruction(
-        'TIME CHECK: only about a minute and a half remains. Finish the current exchange, then go straight to your CLOSING — ask one weakness or growth-area question, then ask whether they have any questions for you, then give a brief, warm sign-off and thank them by name.'
+        "TIME CHECK: you're nearly at time. Start steering toward wrapping up soon — finish the current topic, but don't begin a long new thread."
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft, phase]);
+  }, [secondsLeft, phase, inGrace]);
 
   // ── per-question timer ──
   // `timeLeft` is the CURRENT question's answer window (not a whole-run total).
@@ -605,6 +638,7 @@ const MockInterviewPage = () => {
     setGradeError(false);
     setSavedRecordingBlob(null);
     setSavedRecordingDuration(0);
+    setInGrace(false);
   };
 
   const beginTurnBasedConversation = async () => {
@@ -674,6 +708,7 @@ const MockInterviewPage = () => {
         style,
       });
       maxSessionSecRef.current = sess.maxSessionSec || 360;
+      graceSecRef.current = sess.graceSec || 90;
       setSecondsLeft(maxSessionSecRef.current);
 
       const ctl = createRealtimeWebRTC({
@@ -710,6 +745,7 @@ const MockInterviewPage = () => {
   // End the live session: grab the transcript, stop + persist the recording,
   // then AI-assess the interview.
   const endRealtime = async () => {
+    clearTimeout(graceKickRef.current);
     const liveTranscript = realtimeRef.current?.getTranscript?.() || [];
     try {
       const blob = await recorderRef.current?.stop();
@@ -949,11 +985,17 @@ const MockInterviewPage = () => {
             {phase === 'live' && (
               <span
                 className={`inline-flex items-center gap-1.5 text-sm font-bold tabular-nums ${
-                  secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-200'
+                  inGrace
+                    ? 'text-amber-300'
+                    : secondsLeft <= 30
+                      ? 'text-rose-400'
+                      : 'text-slate-200'
                 }`}
-                title="Time left in this interview"
+                title={inGrace ? 'Wrapping up' : 'Time left in this interview'}
               >
-                <Clock className="w-4 h-4" /> {fmt(secondsLeft)}
+                <Clock className="w-4 h-4" />
+                {inGrace && <span className="hidden sm:inline">Wrapping up ·</span>}{' '}
+                {fmt(secondsLeft)}
               </span>
             )}
             <button
@@ -1044,6 +1086,7 @@ const MockInterviewPage = () => {
             <RealtimeView
               voiceState={voiceState}
               secondsLeft={secondsLeft}
+              inGrace={inGrace}
               muted={muted}
               micStream={micStream}
               captionsOn={captionsOn}
@@ -2594,6 +2637,7 @@ const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }
 const RealtimeView = ({
   voiceState,
   secondsLeft,
+  inGrace,
   muted,
   micStream,
   captionsOn,
@@ -2629,10 +2673,10 @@ const RealtimeView = ({
           </button>
           <span
             className={`text-[11px] font-bold tabular-nums ${
-              secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-400'
+              inGrace ? 'text-amber-300' : secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-400'
             }`}
           >
-            {fmt(secondsLeft)} left
+            {inGrace ? `Wrapping up · ${fmt(secondsLeft)}` : `${fmt(secondsLeft)} left`}
           </span>
         </div>
       </div>
@@ -2642,14 +2686,18 @@ const RealtimeView = ({
       {/* Big live status */}
       <div className="shrink-0 mt-5 text-center">
         <p className="text-lg sm:text-xl font-bold text-white">
-          {connecting
-            ? 'Connecting…'
-            : speaking
-              ? 'Interviewer is speaking'
-              : 'Go ahead — I’m listening'}
+          {inGrace
+            ? 'We’re at time — any questions for me?'
+            : connecting
+              ? 'Connecting…'
+              : speaking
+                ? 'Interviewer is speaking'
+                : 'Go ahead — I’m listening'}
         </p>
         <p className="mt-1 text-sm text-slate-400">
-          Just talk — the interviewer hears you and replies in real time.
+          {inGrace
+            ? 'Just wrapping up — ask anything you’d like, then we’ll close.'
+            : 'Just talk — the interviewer hears you and replies in real time.'}
         </p>
       </div>
 

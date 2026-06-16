@@ -11,7 +11,7 @@ const ProfessionalSummary = () => {
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   const [summary, setSummary] = useState(cvData?.professionalSummary || '');
   const [generating, setGenerating] = useState(false);
@@ -29,6 +29,13 @@ const ProfessionalSummary = () => {
       }, 500);
     }
   }, [cvData, summary]);
+
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ professionalSummary: summary }));
+    return () => registerStepData?.(null);
+  }, [summary, registerStepData]);
 
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
@@ -65,23 +72,25 @@ const ProfessionalSummary = () => {
             .join('; ')
         : '';
 
+      // The summary is built from the candidate's own CV (work history, skills,
+      // existing draft) — NOT the target job description. We intentionally do
+      // not send the JD so the AI can't tailor/fabricate to match a role.
       const context = `
                 Candidate Name: ${cvData.personalInfo?.fullName || 'Candidate'}
                 Target Job Title: ${cvData.targetJob?.title || 'Professional'}
-                Target Job Description: ${cvData.targetJob?.description || 'N/A'}
-                
+
                 Key Skills: ${skillsStr}
-                
+
                 Work History Summary: ${historyStr}
-                
+
                 Existing Summary Draft: ${summary}
             `.trim();
 
-      const suggestions = await CVService.generateBullets(
+      const { suggestions = [] } = await CVService.generateBullets(
         cvData.targetJob?.title || 'Professional',
         context,
         'summary', // 'summary' type tells AI to write a paragraph
-        cvData.targetJob?.description
+        '' // no JD — summary is grounded in the candidate's CV only
       );
 
       if (suggestions && suggestions.length > 0) {
@@ -167,8 +176,8 @@ const ProfessionalSummary = () => {
             <Sparkles className="w-3 h-3" />
           </div>
           <div className="text-xs text-indigo-800 leading-relaxed">
-            <strong>Tip:</strong> The AI uses your Target Job, Skills, and Work History to craft
-            this summary.
+            <strong>Tip:</strong> The AI uses your Work History and Skills to craft this summary —
+            it's grounded in your own experience, not tailored to a job description.
           </div>
         </div>
 

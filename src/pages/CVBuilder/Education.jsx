@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { GraduationCap, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
@@ -31,9 +31,16 @@ const Education = () => {
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   const [education, setEducation] = useState(() => ensureIds(cvData?.education));
+
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ education }));
+    return () => registerStepData?.(null);
+  }, [education, registerStepData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

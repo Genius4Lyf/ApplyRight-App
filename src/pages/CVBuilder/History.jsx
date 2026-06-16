@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { Briefcase, ArrowRight, ArrowLeft, Plus, Sparkles, RefreshCcw } from 'lucide-react';
+import { useOutletContext, useParams } from 'react-router-dom';
+import { Briefcase, ArrowRight, ArrowLeft, Plus, Sparkles, RefreshCcw, Lock } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
 import SectionTips from '../../components/SectionTips';
+import JobKeywordPanel from '../../components/cv/JobKeywordPanel';
 import InlineExample from '../../components/InlineExample';
 import {
   DndContext,
@@ -27,6 +28,10 @@ import SortableItem from '../../components/SortableItem';
 // unlimited. The "paid" flag is set manually from the admin panel for now
 // (Admin > Users), and will become automatic once billing is integrated.
 const FREE_BULLET_LIMIT = 4;
+// How many of the locked (blurred) suggestions exist is decided by the SERVER
+// (it redacts the real text for free users and returns a lockedCount). The
+// frontend only decides the apply cap: free users apply up to 3, paid users all.
+const FREE_SELECT_LIMIT = 3;
 
 // Count the non-empty bullet lines in a description string. A line is a bullet
 // even if it only has the "• " prefix typed, so we strip bullets/whitespace
@@ -47,8 +52,25 @@ const ensureIds = (items) =>
 const History = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, updateCvData, user, setStepDirty } =
-    context || {};
+  const {
+    cvData,
+    handleNext,
+    handleBack,
+    saving,
+    updateCvData,
+    user,
+    setStepDirty,
+    registerStepData,
+  } = context || {};
+  const { id: draftId } = useParams();
+
+  // Persist the paid AI keyword extraction back into cvData so the wizard's
+  // auto-save keeps it (and the backend's charge-once check stays valid).
+  const handleKeywordsEnhanced = ({ keywords, aiKeywordsHash }) => {
+    updateCvData?.({
+      targetJob: { ...cvData.targetJob, aiKeywords: keywords, aiKeywordsHash },
+    });
+  };
 
   // Paid users get unlimited bullets per role. Toggled from the admin panel.
   const isPaid = user?.plan === 'paid';
@@ -80,7 +102,6 @@ const History = () => {
     setHistory((items) => arrayMove(items, index, target));
   };
   const [generatingIndex, setGeneratingIndex] = useState(null);
-  const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
   const [showTutorial, setShowTutorial] = useState(false);
 
   // AI Suggestions Modal State
@@ -88,6 +109,8 @@ const History = () => {
   const [suggestionsList, setSuggestionsList] = useState([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState([]);
   const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
+  // Server-reported count of trailing suggestions that are redacted/locked.
+  const [lockedCount, setLockedCount] = useState(0);
 
   // The auto-show tutorial modal was removed in favor of the inline SectionTips
   // card rendered at the top of the form below. Modal still mounts and can be
@@ -134,6 +157,13 @@ const History = () => {
     return () => clearTimeout(timer);
   }, [history, updateCvData]);
 
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ experience: history }));
+    return () => registerStepData?.(null);
+  }, [history, registerStepData]);
+
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks). Returning before this point would skip
   // some of the useState/useSensor calls above on subsequent renders.
@@ -157,19 +187,19 @@ const History = () => {
           ? `Company: ${role.company}`
           : '';
 
-      const suggestions = await CVService.generateBullets(
+      const { suggestions = [], lockedCount: locked = 0 } = await CVService.generateBullets(
         role.title,
         context,
         'experience',
         cvData.targetJob?.description
       );
 
-      if (suggestions && suggestions.length > 0) {
+      if (suggestions.length > 0) {
         setSuggestionsList(suggestions);
+        setLockedCount(locked);
         setSuggestionTargetIndex(index);
         setSelectedSuggestions([]);
         setShowSuggestionsModal(true);
-        setOptimizationCandidate(null); // Clear prompt
       } else {
         toast.warning('No suggestions generated. Please try again.');
       }
@@ -181,16 +211,30 @@ const History = () => {
     }
   };
 
-  const toggleSuggestionSelection = (suggestion) => {
+  // Paid users can select all suggestions; free users are capped at 3 and can't
+  // touch the locked (blurred) ones. Lock status comes from the server.
+  const maxSelectable = isPaid ? suggestionsList.length : FREE_SELECT_LIMIT;
+  const firstLockedIdx = suggestionsList.length - lockedCount;
+  const isLockedIdx = (idx) => lockedCount > 0 && idx >= firstLockedIdx;
+
+  const toggleSuggestionSelection = (suggestion, idx) => {
+    if (isLockedIdx(idx)) {
+      toast.info(`Upgrade to Pro to unlock all ${suggestionsList.length} AI suggestions.`);
+      return;
+    }
     if (selectedSuggestions.includes(suggestion)) {
       setSelectedSuggestions(selectedSuggestions.filter((s) => s !== suggestion));
-    } else {
-      if (selectedSuggestions.length >= 3) {
-        toast.warning('You can select up to 3 bullet points.');
-        return;
-      }
-      setSelectedSuggestions([...selectedSuggestions, suggestion]);
+      return;
     }
+    if (selectedSuggestions.length >= maxSelectable) {
+      toast.warning(
+        isPaid
+          ? `You can select up to ${maxSelectable} bullet points.`
+          : 'Free plan: select up to 3. Upgrade to Pro to add more.'
+      );
+      return;
+    }
+    setSelectedSuggestions([...selectedSuggestions, suggestion]);
   };
 
   const applySelectedSuggestions = () => {
@@ -206,14 +250,6 @@ const History = () => {
     setSuggestionsList([]);
     setSelectedSuggestions([]);
     setSuggestionTargetIndex(null);
-  };
-
-  const handlePaste = (e, index) => {
-    const pastedText = e.clipboardData.getData('text');
-    // If pasted text is substantial (e.g. > 30 chars), prompt for optimization
-    if (pastedText && pastedText.length > 30) {
-      setOptimizationCandidate({ index, text: pastedText });
-    }
   };
 
   const handleKeyDown = (e, index) => {
@@ -296,6 +332,16 @@ const History = () => {
           'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
           'Use the AI rewrite button after writing 2+ bullets — it sharpens what you already have.',
         ]}
+      />
+
+      <JobKeywordPanel
+        floating
+        targetJob={cvData?.targetJob}
+        coveredText={history
+          .map((r) => `${r.title || ''} ${r.company || ''} ${r.description || ''}`)
+          .join(' ')}
+        draftId={draftId}
+        onEnhanced={handleKeywordsEnhanced}
       />
 
       {history.length === 0 && (
@@ -408,43 +454,6 @@ const History = () => {
                   </div>
 
                   <div>
-                    {/* Optimization Prompt */}
-                    {optimizationCandidate?.index === index && (
-                      <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                        <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-indigo-900">
-                            Optimize with AI?
-                          </h4>
-                          <p className="text-xs text-indigo-700 mt-1">
-                            We detected a pasted description. Our AI can rewrite this into
-                            professional, ATS-friendly bullet points.
-                          </p>
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleGenerateBullets(index, optimizationCandidate.text)
-                              }
-                              disabled={generatingIndex === index}
-                              className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
-                            >
-                              {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setOptimizationCandidate(null)}
-                              className="text-xs text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-md font-medium transition-colors"
-                            >
-                              Dismiss
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex justify-between items-center mb-1">
                       <label
                         htmlFor={`history-description-${index}`}
@@ -505,7 +514,6 @@ const History = () => {
                         }
                         handleChange(index, 'description', val);
                       }}
-                      onPaste={(e) => handlePaste(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
                       placeholder="• Achieved X by doing Y..."
@@ -563,37 +571,43 @@ const History = () => {
       {/* AI Suggestions Modal */}
       {showSuggestionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                  <Sparkles className="w-5 h-5" />
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center gap-2 bg-indigo-50/50 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                  <Sparkles className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">AI Bullet Suggestions</h3>
-                  <p className="text-sm text-slate-500">
-                    Select up to 3 options to add to your experience.
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-slate-800 truncate">
+                    AI Bullet Suggestions
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Select up to {maxSelectable} to add to your experience.
                   </p>
                 </div>
               </div>
-              <div className="text-sm font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
-                {selectedSuggestions.length} / 3 Selected
+              <div className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full shrink-0">
+                {selectedSuggestions.length} / {maxSelectable}
               </div>
             </div>
 
-            <div className="p-6 max-h-[45vh] overflow-y-auto bg-slate-50">
-              <div className="space-y-3">
+            <div className="p-4 flex-1 overflow-y-auto bg-slate-50">
+              <div className="space-y-2">
                 {suggestionsList.map((suggestion, idx) => {
                   const isSelected = selectedSuggestions.includes(suggestion);
+                  const isLocked = isLockedIdx(idx);
                   return (
                     <div
                       key={idx}
-                      onClick={() => toggleSuggestionSelection(suggestion)}
-                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex gap-3
+                      onClick={() => toggleSuggestionSelection(suggestion, idx)}
+                      className={`relative p-3 rounded-xl border-2 transition-all flex gap-3
+                                                ${isLocked ? 'cursor-not-allowed border-slate-200 bg-white' : 'cursor-pointer'}
                                                 ${
                                                   isSelected
                                                     ? 'border-indigo-500 bg-indigo-50/50 shadow-sm'
-                                                    : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                                                    : !isLocked
+                                                      ? 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                                                      : ''
                                                 }`}
                     >
                       <div className="mt-0.5 flex-shrink-0">
@@ -623,30 +637,51 @@ const History = () => {
                         </div>
                       </div>
                       <p
-                        className={`text-sm leading-relaxed ${isSelected ? 'text-indigo-900 font-medium' : 'text-slate-700'}`}
+                        className={`text-sm leading-relaxed ${
+                          isLocked
+                            ? 'blur-sm select-none text-slate-700'
+                            : isSelected
+                              ? 'text-indigo-900 font-medium'
+                              : 'text-slate-700'
+                        }`}
                       >
                         {suggestion}
                       </p>
+                      {isLocked && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/30">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white/90 border border-slate-200 px-2.5 py-1 rounded-full shadow-sm">
+                            <Lock className="w-3 h-3" /> Upgrade to unlock
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-white">
-              <div className="flex items-start gap-2 mb-4 p-3 bg-indigo-50/50 border border-indigo-100/50 rounded-lg">
-                <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Note:</strong> AI can make mistakes or generate generic content. Please
-                  review these suggestions and edit them to ensure they accurately reflect your
-                  actual, verifiable experience.
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 border border-indigo-100/50 rounded-lg">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <strong>Note:</strong> AI can make mistakes or generate generic content. Review
+                  and edit these to ensure they reflect your actual, verifiable experience.
                 </p>
               </div>
+              {lockedCount > 0 && (
+                <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                  <Lock className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    <strong>{lockedCount} more suggestions are locked.</strong> Upgrade to Pro to
+                    see all {suggestionsList.length} and add more than {FREE_SELECT_LIMIT} at once.
+                  </p>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <button
                   type="button"
                   onClick={() => setShowSuggestionsModal(false)}
-                  className="px-6 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                  className="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -654,7 +689,7 @@ const History = () => {
                   type="button"
                   onClick={applySelectedSuggestions}
                   disabled={selectedSuggestions.length === 0}
-                  className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Apply Selected
                 </button>

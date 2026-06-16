@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import CVService from '../services/cv.service';
@@ -37,6 +37,10 @@ export const CVBuilderProvider = ({ children }) => {
     skills: [],
   });
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Indices of steps the user has actually landed on this session. Drives the
+  // step navigator's "visited but left empty" warning — we only nag about a
+  // section once the user has been there, not on initial load.
+  const [visitedSteps, setVisitedSteps] = useState(() => new Set());
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   // True when the current step has user input that hasn't been persisted via
@@ -44,6 +48,16 @@ export const CVBuilderProvider = ({ children }) => {
   // setStepDirty(false) on successful submit. Drives the beforeunload warning
   // and the Exit-with-confirm flow in the layout.
   const [stepDirty, setStepDirty] = useState(false);
+
+  // The active step registers a getter here that returns its current
+  // in-progress data slice (e.g. () => ({ skills: [...] })). Each step holds
+  // its own local form state, so this is how the wizard reaches in to flush
+  // that state when the user jumps to another section via the step navigator.
+  // null when the active step has nothing to persist (e.g. the Review step).
+  const stepDataRef = useRef(null);
+  const registerStepData = useCallback((getter) => {
+    stepDataRef.current = getter;
+  }, []);
 
   // Fetch full user profile from API on mount
   useEffect(() => {
@@ -179,6 +193,7 @@ export const CVBuilderProvider = ({ children }) => {
 
     if (index !== -1) {
       setCurrentStepIndex(index);
+      setVisitedSteps((prev) => (prev.has(index) ? prev : new Set(prev).add(index)));
 
       // Auto-save currentStep to DB so "Continue Editing" resumes from here
       const currentStepId = STEPS[index].id;
@@ -261,6 +276,68 @@ export const CVBuilderProvider = ({ children }) => {
     }
   };
 
+  // Jump directly to any step via the step navigator. If the current step has
+  // unsaved typing, flush it to the backend first (silent save) so nothing is
+  // lost — fulfilling "leave the section and the auto-save is done". The
+  // destination is reached even if that save fails, so the user is never stuck.
+  const goToStep = useCallback(
+    async (targetIndex) => {
+      if (targetIndex === currentStepIndex) return;
+      const target = STEPS[targetIndex];
+      if (!target) return;
+
+      let targetId = id;
+      const getter = stepDataRef.current;
+      const partial = getter ? getter() : null;
+
+      if (partial && stepDirty) {
+        setSaving(true);
+        try {
+          const merged = { ...cvData, ...partial };
+          setCvData(merged);
+          const payload = {
+            ...merged,
+            _id: id !== 'new' ? id : undefined,
+            currentStep: target.id,
+          };
+          const savedDraft = await CVService.saveDraft(payload);
+          // A brand-new draft gets its real _id back from this first save.
+          if (savedDraft?._id) targetId = id === 'new' ? savedDraft._id : id;
+          setStepDirty(false);
+        } catch (error) {
+          console.error('Failed to save section before jumping', error);
+          toast.error('Could not save this section — jumping anyway.');
+        } finally {
+          setSaving(false);
+        }
+      }
+
+      navigate(`/cv-builder/${targetId}/${target.path}`);
+    },
+    [cvData, currentStepIndex, id, navigate, stepDirty]
+  );
+
+  // Rename the CV. The backend save does a $set of only the fields sent, so a
+  // partial { _id, title } update touches just the title and leaves every other
+  // section intact. For an unsaved 'new' draft we only update locally — the new
+  // title rides along on the next real save (handleNext / goToStep).
+  const renameCv = useCallback(
+    async (rawTitle) => {
+      const title = (rawTitle || '').trim();
+      if (!title || title === cvData.title) return;
+      setCvData((prev) => ({ ...prev, title }));
+      if (id && id !== 'new') {
+        try {
+          await CVService.saveDraft({ _id: id, title });
+        } catch (error) {
+          console.error('Rename failed', error);
+          toast.error('Could not save the new name.');
+        }
+      }
+    },
+    [cvData.title, id]
+  );
+
   // Exit the wizard. Completed steps were already persisted by handleNext on
   // each transition; this just drops in-flight typing in the current step (if
   // any) and sends the user to their CV listing where they can pick this draft
@@ -275,12 +352,16 @@ export const CVBuilderProvider = ({ children }) => {
     updateCvData,
     handleNext,
     handleBack,
+    goToStep,
+    registerStepData,
+    renameCv,
     exitWizard,
     saving,
     loading,
     user,
     currentStep: STEPS[currentStepIndex],
     currentStepIndex,
+    visitedSteps,
     steps: STEPS,
     stepDirty,
     setStepDirty,

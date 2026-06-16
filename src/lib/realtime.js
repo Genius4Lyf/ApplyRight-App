@@ -103,6 +103,9 @@ export function createRealtimeSession({
   let micUnlocked = false;
   let userMuted = false;
   let hasSpoken = false;
+  // Whether the candidate is currently speaking (server VAD). Used by the
+  // time-up wind-down so a silent-room fallback prompt never cuts off a talker.
+  let userSpeaking = false;
   let speakBackstopTimer = null;
   let connectTimer = null;
 
@@ -175,6 +178,10 @@ export function createRealtimeSession({
           fail('REALTIME_EVENT', msg.error?.message || 'realtime error');
           return;
         }
+        // Track whether the candidate is mid-speech (server VAD), so the
+        // time-up fallback prompt only fires in a genuinely silent room.
+        if (msg.type === 'input_audio_buffer.speech_started') userSpeaking = true;
+        if (msg.type === 'input_audio_buffer.speech_stopped') userSpeaking = false;
         const turn = collectTranscript(msg, transcript);
         if (turn && onCaption) onCaption(turn);
         const s = eventToState(msg.type);
@@ -271,19 +278,25 @@ export function createRealtimeSession({
   // conversation item. The model picks it up on its next turn WITHOUT being
   // forced to respond now, so it doesn't interrupt whoever is speaking. Not a
   // user/assistant turn, so it never pollutes the graded transcript.
-  const sendInstruction = (text) => {
-    if (!dc || dc.readyState !== 'open' || !text) return;
+  const sendInstruction = (text, respond = false) => {
+    if (!dc || dc.readyState !== 'open') return;
     try {
-      dc.send(
-        JSON.stringify({
-          type: 'conversation.item.create',
-          item: {
-            type: 'message',
-            role: 'system',
-            content: [{ type: 'input_text', text }],
-          },
-        })
-      );
+      if (text) {
+        dc.send(
+          JSON.stringify({
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'system',
+              content: [{ type: 'input_text', text }],
+            },
+          })
+        );
+      }
+      // When asked, prompt the model to speak NOW (don't wait for the next user
+      // turn). Used by the silent-room time-up fallback. Harmless no-op/error if
+      // a response is already active.
+      if (respond) dc.send(JSON.stringify({ type: 'response.create' }));
     } catch {
       /* best-effort steering */
     }
@@ -294,6 +307,7 @@ export function createRealtimeSession({
     stop,
     toggleMute,
     sendInstruction,
+    isUserSpeaking: () => userSpeaking,
     getLocalStream: () => localStream,
     getRemoteStream: () => remoteStream,
     getTranscript: () => transcript.slice(),

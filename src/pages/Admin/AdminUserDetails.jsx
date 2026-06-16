@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'sonner';
+import PlanSelect from '../../components/Admin/PlanSelect';
 
 const AdminUserDetails = () => {
   const { id } = useParams();
@@ -161,15 +162,12 @@ const AdminUserDetails = () => {
               <div className="flex-1">
                 <p className="text-xs text-slate-500">Plan</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <select
+                  <PlanSelect
                     value={user.plan}
-                    onChange={(e) => handlePlanChange(e.target.value)}
+                    onChange={handlePlanChange}
                     disabled={updatingPlan}
-                    className="text-sm font-medium text-slate-900 capitalize border border-slate-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
-                  >
-                    <option value="free">Free</option>
-                    <option value="paid">Paid</option>
-                  </select>
+                    size="md"
+                  />
                   {updatingPlan && (
                     <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
                   )}

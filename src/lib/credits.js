@@ -14,6 +14,10 @@ export const CREDIT_COSTS = {
   GENERATE_BUNDLE: 18,
   CREATE_FROM_UPLOAD: 15,
   GENERATE_SKILLS: 10,
+  // Paid "Find more keywords" in the CV builder — richer AI extraction of ATS
+  // keywords from the pasted job description. Enforced in ai.controller.js
+  // (JD_KEYWORDS_COST) and charged once per unique JD (cached on the draft).
+  GENERATE_JD_KEYWORDS: 5,
   // Interview Mode (a full live run). Defined for the planned premium gate but
   // NOT enforced yet — Interview Mode is free during testing (first-free-then-
   // credits is wired behind a flag in MockInterviewPage).

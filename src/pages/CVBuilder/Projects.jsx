@@ -42,12 +42,19 @@ const ensureIds = (items) =>
 const Projects = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, updateCvData, user, setStepDirty } =
-    context || {};
+  const {
+    cvData,
+    handleNext,
+    handleBack,
+    saving,
+    updateCvData,
+    user,
+    setStepDirty,
+    registerStepData,
+  } = context || {};
 
   const [projects, setProjects] = useState(() => ensureIds(cvData?.projects));
   const [generatingIndex, setGeneratingIndex] = useState(null);
-  const [optimizationCandidate, setOptimizationCandidate] = useState(null); // { index, text }
   const [showTutorial, setShowTutorial] = useState(false);
 
   const sensors = useSensors(
@@ -115,37 +122,41 @@ const Projects = () => {
     return () => clearTimeout(timer);
   }, [projects, updateCvData]);
 
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ projects }));
+    return () => registerStepData?.(null);
+  }, [projects, registerStepData]);
+
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
     return <div className="p-8 text-center text-slate-500">Loading projects...</div>;
   }
 
-  const handleGenerateBullets = async (index, customInput = null) => {
+  const handleGenerateBullets = async (index) => {
     const proj = projects[index];
     if (!proj.title) {
       toast.error('Please enter a project title first.');
       return;
     }
 
-    // Context determination: Use customInput (from paste prompt) OR current text (manual rewrite trigger)
-    const textToRewrite = customInput || proj.description;
+    const textToRewrite = proj.description;
     const lineCount = textToRewrite
       ? textToRewrite.split('\n').filter((line) => line.trim().length > 5).length
       : 0;
 
-    // Validation for manual trigger (skip if it comes from the Paste Prompt "customInput")
-    if (!customInput && lineCount < 3) {
+    if (lineCount < 3) {
       toast.error('Please write at least 3 bullet points before rewriting.');
       return;
     }
 
     setGeneratingIndex(index);
     try {
-      // Include custom text if optimized, or just link context
       const context = `Rewrite/Improve these bullet points: "${textToRewrite}". Project Link: ${proj.link}`;
 
-      const suggestions = await CVService.generateBullets(
+      const { suggestions = [] } = await CVService.generateBullets(
         proj.title,
         context,
         'project',
@@ -156,20 +167,12 @@ const Projects = () => {
         const formattedBullets = suggestions.map((s) => `• ${s}`).join('\n');
         handleChange(index, 'description', formattedBullets);
         toast.success('Bullets generated!');
-        setOptimizationCandidate(null); // Clear prompt
       }
     } catch (error) {
       console.error('Failed to gen bullets', error);
       toast.error('Failed to generate project details');
     } finally {
       setGeneratingIndex(null);
-    }
-  };
-
-  const handlePaste = (e, index) => {
-    const pastedText = e.clipboardData.getData('text');
-    if (pastedText && pastedText.length > 30) {
-      setOptimizationCandidate({ index, text: pastedText });
     }
   };
 
@@ -317,43 +320,6 @@ const Projects = () => {
                   </div>
 
                   <div>
-                    {/* Optimization Prompt */}
-                    {optimizationCandidate?.index === index && (
-                      <div className="mb-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                        <div className="p-2 bg-emerald-100 rounded-full text-emerald-600">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-emerald-900">
-                            Optimize Project Details?
-                          </h4>
-                          <p className="text-xs text-emerald-700 mt-1">
-                            Our AI can structure your rough notes into impressive professional
-                            achievements.
-                          </p>
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleGenerateBullets(index, optimizationCandidate.text)
-                              }
-                              disabled={generatingIndex === index}
-                              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
-                            >
-                              {generatingIndex === index ? 'Optimizing...' : 'Yes, Optimize It'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setOptimizationCandidate(null)}
-                              className="text-xs text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-medium transition-colors"
-                            >
-                              Dismiss
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex justify-between items-center mb-1">
                       <label
                         htmlFor={`project-description-${index}`}
@@ -389,7 +355,6 @@ const Projects = () => {
                         }
                         handleChange(index, 'description', val);
                       }}
-                      onPaste={(e) => handlePaste(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
                       placeholder="• Developed a full-stack app using..."

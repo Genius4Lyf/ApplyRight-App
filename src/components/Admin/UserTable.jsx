@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Search, MoreVertical, Trash2, Edit, CheckCircle, XCircle, Eye } from 'lucide-react';
-import axios from 'axios';
-import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import PlanSelect from './PlanSelect';
 
-const UserTable = ({ users, onRoleUpdate, onPlanUpdate, onDelete }) => {
+const UserTable = ({ users, onPlanUpdate, onDelete }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -49,19 +48,10 @@ const UserTable = ({ users, onRoleUpdate, onPlanUpdate, onDelete }) => {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <select
+                  <PlanSelect
                     value={user.plan || 'free'}
-                    onChange={(e) => onPlanUpdate(user._id, e.target.value)}
-                    title="Change plan"
-                    className={`text-xs font-medium rounded-full px-2.5 py-1 border cursor-pointer capitalize focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                      user.plan === 'paid'
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                        : 'bg-slate-100 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    <option value="free">Free</option>
-                    <option value="paid">Paid</option>
-                  </select>
+                    onChange={(newPlan) => onPlanUpdate(user._id, newPlan)}
+                  />
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

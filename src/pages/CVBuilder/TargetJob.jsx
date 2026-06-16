@@ -7,7 +7,7 @@ const TargetJob = () => {
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, setStepDirty } = context || {};
+  const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   const [formData, setFormData] = useState(cvData?.targetJob || { title: '', description: '' });
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +22,13 @@ const TargetJob = () => {
       }
     }
   }, [cvData?.targetJob?.title, cvData?.targetJob?.description]);
+
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ targetJob: formData }));
+    return () => registerStepData?.(null);
+  }, [formData, registerStepData]);
 
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).

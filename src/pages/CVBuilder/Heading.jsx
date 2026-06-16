@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCVBuilder } from '../../context/CVContext';
 import { User, ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 
 const Heading = () => {
   // Use the custom hook for context
-  const { cvData, handleNext, handleBack, saving, user, setStepDirty } = useCVBuilder();
+  const { cvData, handleNext, handleBack, saving, user, setStepDirty, registerStepData } =
+    useCVBuilder();
 
   // Initialize form data - start with empty then populate via useEffect
   const [formData, setFormData] = useState({});
@@ -18,59 +19,59 @@ const Heading = () => {
     address: false,
   });
 
-  // Initialize and Auto-fill effect
-  useEffect(() => {
-    // First, set from cvData if available
-    const draftData = cvData?.personalInfo || {};
+  // Populate the form ONCE, from the saved draft plus (for still-empty fields)
+  // the user's profile. We deliberately do not re-derive on every cvData change:
+  // otherwise saving the step (which updates cvData) would re-run this and
+  // re-add/re-fill optional fields the user intentionally removed — e.g. a
+  // Website cleared here would come straight back from user.portfolioUrl.
+  const populated = useRef(false);
 
-    // Then merge with user profile data (only for empty fields)
+  const populateForm = () => {
+    const draftData = cvData?.personalInfo || {};
     const mergedData = { ...draftData };
-    let needsUpdate = false;
 
     if (user) {
-      // Auto-fill name if empty
       if (!mergedData.fullName && user.firstName) {
         const nameParts = [user.firstName, user.otherName, user.lastName].filter(Boolean);
         mergedData.fullName = nameParts.join(' ');
-        needsUpdate = true;
       }
-
-      // Auto-fill email if empty
-      if (!mergedData.email && user.email) {
-        mergedData.email = user.email;
-        needsUpdate = true;
-      }
-
-      // Auto-fill phone if empty
-      if (!mergedData.phone && user.phone) {
-        mergedData.phone = user.phone;
-        needsUpdate = true;
-      }
-
-      // Auto-fill LinkedIn if empty
-      if (!mergedData.linkedin && user.linkedinUrl) {
+      if (!mergedData.email && user.email) mergedData.email = user.email;
+      if (!mergedData.phone && user.phone) mergedData.phone = user.phone;
+      // For the optional, removable URL fields we only auto-fill when the draft
+      // has never set them (undefined). An explicit empty string means the user
+      // intentionally removed it, so we must not bring it back from their profile.
+      if (mergedData.linkedin === undefined && user.linkedinUrl)
         mergedData.linkedin = user.linkedinUrl;
-        needsUpdate = true;
-      }
-
-      // Auto-fill website if empty
-      if (!mergedData.website && user.portfolioUrl) {
+      if (mergedData.website === undefined && user.portfolioUrl)
         mergedData.website = user.portfolioUrl;
-        needsUpdate = true;
-      }
     }
 
-    // Always set the form data (either from draft or merged)
     setFormData(mergedData);
 
-    // Update visibility based on what we have
+    // Initial visibility reflects which optional fields actually have a value.
     setVisibleFields({
       linkedin: !!mergedData.linkedin,
       website: !!mergedData.website,
       nationality: !!mergedData.nationality,
       address: !!mergedData.address,
     });
+  };
+
+  useEffect(() => {
+    if (populated.current) return;
+    // Wait until the draft has loaded so we don't populate from an empty draft.
+    if (!cvData) return;
+    populated.current = true;
+    populateForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, cvData]);
+
+  // Expose this step's current data so the wizard can flush it when the user
+  // jumps to another section via the step navigator.
+  useEffect(() => {
+    registerStepData?.(() => ({ personalInfo: formData }));
+    return () => registerStepData?.(null);
+  }, [formData, registerStepData]);
 
   const handleChange = (e) => {
     setStepDirty?.(true);
@@ -90,7 +91,14 @@ const Heading = () => {
   };
 
   const toggleField = (field) => {
-    setVisibleFields((prev) => ({ ...prev, [field]: !prev[field] }));
+    const willShow = !visibleFields[field];
+    setVisibleFields((prev) => ({ ...prev, [field]: willShow }));
+    // When removing an optional field, also clear its value so it isn't saved
+    // (and can't be restored from the draft on the next load).
+    if (!willShow) {
+      setStepDirty?.(true);
+      setFormData((prev) => ({ ...prev, [field]: '' }));
+    }
   };
 
   const onSubmit = (e) => {
