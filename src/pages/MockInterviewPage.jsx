@@ -921,7 +921,7 @@ const MockInterviewPage = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
@@ -945,12 +945,12 @@ const MockInterviewPage = () => {
       className={`min-h-screen flex flex-col ${
         immersive
           ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100'
-          : 'bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900'
+          : 'bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 text-slate-900 dark:text-slate-100'
       }`}
     >
       <header
         className={`backdrop-blur sticky top-0 z-10 border-b ${
-          immersive ? 'border-white/10 bg-slate-950/50' : 'border-slate-200/70 bg-white/80'
+          immersive ? 'border-white/10 bg-slate-950/50' : 'border-slate-200/70 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80'
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">

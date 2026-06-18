@@ -225,7 +225,7 @@ const InterviewPracticePage = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
@@ -245,7 +245,7 @@ const InterviewPracticePage = () => {
         : application.jobTitle || application.jobId?.title || 'Practice mode';
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 text-slate-900">
+    <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 text-slate-900 dark:text-slate-100">
       <header className="shrink-0 border-b border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-800/80 backdrop-blur">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           {/* Row 1: status badge ↔ exit. Kept terse so the row never wraps. */}

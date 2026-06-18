@@ -8,35 +8,35 @@ const STATUS = {
   needs_work: {
     label: 'Shaky',
     blurb: 'Below the bar — keep practising the fundamentals.',
-    score: 'text-rose-600',
-    text: 'text-rose-700',
+    score: 'text-rose-600 dark:text-rose-400',
+    text: 'text-rose-700 dark:text-rose-300',
     dot: 'bg-rose-500',
-    box: 'border-rose-100 bg-rose-50/60',
+    box: 'border-rose-100 bg-rose-50/60 dark:border-rose-500/15 dark:bg-rose-500/10',
   },
   almost: {
     label: 'Okay',
     blurb: 'Getting there — a few rough edges to sharpen.',
-    score: 'text-amber-600',
-    text: 'text-amber-700',
+    score: 'text-amber-600 dark:text-amber-400',
+    text: 'text-amber-700 dark:text-amber-300',
     dot: 'bg-amber-500',
-    box: 'border-amber-100 bg-amber-50/60',
+    box: 'border-amber-100 bg-amber-50/60 dark:border-amber-500/15 dark:bg-amber-500/10',
   },
   ready: {
     label: 'Strong',
     blurb: 'Sharp and specific — you sound interview-ready.',
-    score: 'text-emerald-600',
-    text: 'text-emerald-700',
+    score: 'text-emerald-600 dark:text-emerald-400',
+    text: 'text-emerald-700 dark:text-emerald-300',
     dot: 'bg-emerald-500',
-    box: 'border-emerald-100 bg-emerald-50/60',
+    box: 'border-emerald-100 bg-emerald-50/60 dark:border-emerald-500/15 dark:bg-emerald-500/10',
   },
 };
 const FALLBACK = {
   label: 'Done',
   blurb: 'Interview completed.',
-  score: 'text-slate-600',
-  text: 'text-slate-600',
+  score: 'text-slate-600 dark:text-slate-400',
+  text: 'text-slate-600 dark:text-slate-400',
   dot: 'bg-slate-400',
-  box: 'border-slate-200 bg-slate-50',
+  box: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50',
 };
 
 const fmtWhen = (value) => {
@@ -116,7 +116,7 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
   const nervesEasing = trend?.trend === 'up' && count >= 2;
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-indigo-100/80 bg-white/70 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between h-full shadow-[0_8px_30px_-12px_rgba(79,70,229,0.35)] hover:shadow-[0_12px_36px_-10px_rgba(79,70,229,0.45)] transition-all duration-300">
+    <section className="relative overflow-hidden rounded-xl border border-indigo-100/80 dark:border-indigo-500/30 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between h-full shadow-[0_8px_30px_-12px_rgba(79,70,229,0.35)] hover:shadow-[0_12px_36px_-10px_rgba(79,70,229,0.45)] transition-all duration-300">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full bg-gradient-to-br from-indigo-300/40 to-purple-300/30 blur-3xl"

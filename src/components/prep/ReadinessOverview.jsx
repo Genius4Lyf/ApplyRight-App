@@ -172,7 +172,7 @@ const ReadinessOverview = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                   ) : introStatus === 'rehearsing' ? (
                     <div
-                      className="w-4 h-4 rounded-full border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center text-[10px] font-bold text-amber-655 dark:text-amber-300"
+                      className="w-4 h-4 rounded-full border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center text-[10px] font-bold text-amber-600 dark:text-amber-300"
                       title="Needs review & practice"
                     >
                       !
@@ -213,7 +213,7 @@ const ReadinessOverview = ({
                   <button
                     type="button"
                     onClick={() => onGoToTab?.('questions')}
-                    className="text-[11px] font-semibold text-indigo-650 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     Practice
                   </button>
@@ -221,7 +221,7 @@ const ReadinessOverview = ({
                   <button
                     type="button"
                     onClick={() => onGenerateEssential?.('intro')}
-                    className="text-[11px] font-semibold text-indigo-650 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     Generate
                   </button>
@@ -237,7 +237,7 @@ const ReadinessOverview = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                   ) : motivationStatus === 'rehearsing' ? (
                     <div
-                      className="w-4 h-4 rounded-full border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center text-[10px] font-bold text-amber-655 dark:text-amber-300"
+                      className="w-4 h-4 rounded-full border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center text-[10px] font-bold text-amber-600 dark:text-amber-300"
                       title="Needs review & practice"
                     >
                       !
@@ -278,7 +278,7 @@ const ReadinessOverview = ({
                   <button
                     type="button"
                     onClick={() => onGoToTab?.('questions')}
-                    className="text-[11px] font-semibold text-indigo-650 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     Practice
                   </button>
@@ -286,7 +286,7 @@ const ReadinessOverview = ({
                   <button
                     type="button"
                     onClick={() => onGenerateEssential?.('motivation')}
-                    className="text-[11px] font-semibold text-indigo-650 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     Generate
                   </button>
@@ -329,7 +329,7 @@ const ReadinessOverview = ({
                   <button
                     type="button"
                     onClick={onDraftWeakness}
-                    className="text-[11px] font-semibold text-indigo-650 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     Draft
                   </button>
