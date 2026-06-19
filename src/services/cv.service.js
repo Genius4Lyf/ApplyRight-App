@@ -63,20 +63,41 @@ const CVService = {
     return response.data;
   },
 
-  // Generate PDF (Puppeteer)
+  // Generate PDF (Puppeteer). Throws an Error with `.code === 'NEED_DOWNLOAD'`
+  // when the user is out of download entitlement (so callers can show the
+  // paywall). Because the request is a blob, a 402 JSON body arrives as a Blob
+  // and must be read back to text first.
   generatePdf: async (htmlContent, options = {}, metadata = {}) => {
-    const response = await api.post(
-      '/pdf/generate',
-      {
-        html: htmlContent,
-        options,
-        ...metadata,
-      },
-      {
-        responseType: 'blob',
+    try {
+      const response = await api.post(
+        '/pdf/generate',
+        {
+          html: htmlContent,
+          options,
+          ...metadata,
+        },
+        {
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 402 && error.response.data) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          const e = new Error(json.message || 'Payment required to download');
+          e.code = json.code || 'NEED_DOWNLOAD';
+          throw e;
+        } catch (parseErr) {
+          if (parseErr.code) throw parseErr;
+          const e = new Error('Payment required to download');
+          e.code = 'NEED_DOWNLOAD';
+          throw e;
+        }
       }
-    );
-    return response.data;
+      throw error;
+    }
   },
 };
 

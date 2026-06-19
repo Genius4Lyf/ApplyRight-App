@@ -57,6 +57,7 @@ import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
+import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import {
   Lock,
   Zap,
@@ -179,6 +180,7 @@ const ResumeReview = () => {
 
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
+  const [showDownloadPaywall, setShowDownloadPaywall] = useState(false); // Web ₦500 download paywall
   const [downloadSuccess, setDownloadSuccess] = useState(false); // Success state for download loader
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [templateToUnlock, setTemplateToUnlock] = useState(null);
@@ -526,7 +528,14 @@ const ResumeReview = () => {
     } catch (e) {
       console.error('PDF Download Error Details:', e);
 
-      // Because the request uses responseType: 'blob', server errors are returned as blobs
+      // CVService.generatePdf already decodes the blob 402 into a typed error.
+      if (e.code === 'NEED_DOWNLOAD') {
+        setShowDownloadPaywall(true);
+        setIsDownloading(false);
+        return;
+      }
+
+      // Because the request uses responseType: 'blob', other server errors arrive as blobs
       if (e.response && e.response.data instanceof Blob) {
         const reader = new FileReader();
         reader.onload = () => {
@@ -553,18 +562,16 @@ const ResumeReview = () => {
       return;
     }
 
-    // 2. Check Ad requirement (Alternating: Ad, Free, Ad, Free...)
-    if (userProfile?.plan !== 'paid') {
+    // 2. Ad requirement — NATIVE APP ONLY. On the native app, downloads are paid
+    // for by watching a rewarded ad (alternating: Ad, Free, Ad, Free...). On web
+    // we dropped the click-ad: downloads are gated server-side (1 free, then a
+    // ₦500 pass or a subscription) and the paywall is shown on a NEED_DOWNLOAD
+    // error from performDownload.
+    const isNativeApp = Capacitor.isNativePlatform();
+    if (isNativeApp && userProfile?.plan !== 'paid') {
       const downloadCount = parseInt(localStorage.getItem('download_count') || '0');
-      // const nextDownload = downloadCount + 1; // Removed for new logic
-
-      // console.log(
-      //   `Download count: ${downloadCount} -> Next check: ${downloadCount % 2 === 0 ? 'Ad Required' : 'Free'}`
-      // );
-
-      // New Policy: 0 (1st) = Ad, 1 (2nd) = Free, 2 (3rd) = Ad, etc.
+      // Policy: 0 (1st) = Ad, 1 (2nd) = Free, 2 (3rd) = Ad, etc.
       if (downloadCount % 2 === 0) {
-        // console.log('Ad required for this download');
         setDownloadAdOpen(true);
         return;
       }
@@ -712,6 +719,11 @@ const ResumeReview = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col relative">
+      <DownloadPaywallModal
+        open={showDownloadPaywall}
+        onClose={() => setShowDownloadPaywall(false)}
+      />
+
       {downloadAdOpen && (
         <AdPlayer
           userId={userProfile?._id || userProfile?.id}

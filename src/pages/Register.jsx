@@ -337,6 +337,21 @@ const Register = () => {
               Sign in
             </Link>
           </p>
+
+          {/* CV Agent entry point. For now this routes to the CV Agent plan on the
+              pricing page; the dedicated agent signup + CV-only dashboard is a
+              future build (see CV-AGENT-PLAN.md). */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <p className="text-center text-sm text-slate-500">
+              Create CVs for clients?{' '}
+              <Link
+                to="/upgrade"
+                className="font-semibold text-amber-600 hover:text-amber-700 hover:underline"
+              >
+                Sign up as a CV agent
+              </Link>
+            </p>
+          </div>
         </form>
       </AuthShell>
 

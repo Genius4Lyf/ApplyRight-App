@@ -1,10 +1,17 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
 });
+
+// Tells the backend whether the request is from the native app or the web. The
+// native app keeps its AdMob-rewarded download model, so native requests are
+// exempt from the web ₦500 download gate (a PDF costs us ~nothing to serve, so
+// the negligible spoof risk is an acceptable trade for not duplicating the gate).
+const CLIENT_PLATFORM = Capacitor.isNativePlatform() ? 'native' : 'web';
 
 // Add a request interceptor to add the auth token to every request
 api.interceptors.request.use(
@@ -13,6 +20,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    config.headers['X-Client-Platform'] = CLIENT_PLATFORM;
     return config;
   },
   (error) => {

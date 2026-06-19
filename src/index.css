@@ -16,11 +16,14 @@
   --color-surface: var(--color-surface);
   --color-border: var(--color-border);
 
-  --font-sans: Inter, sans-serif;
-  --font-heading: Outfit, sans-serif;
+  /* Body: humanist sans, like BaissonCV. Heading: Merriweather serif (the
+     "editorial / professional" signal). Georgia is the offline fallback. */
+  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-heading: Merriweather, Georgia, 'Times New Roman', serif;
 
-  --shadow-clean: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* Softer, hairline-style shadows so cards read as paper, not panels. */
+  --shadow-clean: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-card: 0 4px 12px -4px rgb(15 23 42 / 0.08), 0 1px 2px 0 rgb(15 23 42 / 0.04);
 
   --animate-fade-in-up: fadeInUp 0.5s ease-out;
   --animate-marquee: marquee 30s linear infinite;
@@ -107,10 +110,16 @@
 
   html {
     scroll-behavior: smooth;
+    /* Compact base: shrinks every rem-based size (text AND spacing) ~6% so the
+       whole UI reads tighter and "shows everything," like BaissonCV. */
+    font-size: 15px;
   }
 
   body {
     @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-indigo-100 selection:text-indigo-900 dark:text-slate-100 dark:selection:bg-indigo-500/30 dark:selection:text-indigo-100;
+    /* Stylistic-set + character variants for a cleaner humanist sans. */
+    font-feature-settings: 'ss01' on, 'cv11' on;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
@@ -120,13 +129,16 @@
   h5,
   h6 {
     @apply font-heading text-slate-900 dark:text-slate-100;
+    /* Tight tracking + lining numerals — Merriweather as an editorial display. */
+    letter-spacing: -0.012em;
+    font-feature-settings: 'lnum' on;
   }
 }
 
 /* Component Utilities */
 @layer components {
   .clean-card {
-    @apply bg-surface border border-border shadow-clean rounded-xl p-6 transition-all duration-200;
+    @apply bg-surface border border-border shadow-clean rounded-[14px] p-6 transition-all duration-200;
   }
 
   .clean-card:hover {

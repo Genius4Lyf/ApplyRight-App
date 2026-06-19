@@ -11,6 +11,12 @@ import {
   XCircle,
   PenTool,
   Mic,
+  Volume2,
+  BookOpen,
+  Printer,
+  GitCompare,
+  Sparkles,
+  Clock,
 } from 'lucide-react';
 import logo from '../assets/logo/applyright-icon.png';
 import Seo from '../components/Seo';
@@ -24,8 +30,6 @@ import {
   useScroll,
   useMotionValueEvent,
 } from 'framer-motion';
-import { TEMPLATES } from '../data/templates';
-import TemplateThumbnail from '../components/TemplateThumbnail';
 import axios from 'axios';
 import FeedbackCard from '../components/FeedbackCard';
 
@@ -557,263 +561,113 @@ const LandingPage = () => {
           </div>
         </motion.section>
 
-        {/* TEMPLATES SECTION: Visual Proof */}
+        {/* ADVANCED FEATURES SECTION: Next-Gen Tools */}
         <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-100px' }}
           variants={fadeInUp}
-          className="py-24 bg-white relative overflow-hidden"
+          className="py-24 bg-slate-50/80 backdrop-blur-sm border-y border-slate-200 relative overflow-hidden"
         >
-          {' '}
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Text Content */}
-              <div className="relative z-10">
-                <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">
-                  Professional Output
-                </h2>
-                <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">
-                  Optimized for Robots. <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                    Designed for Humans.
-                  </span>
-                </h3>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Don't settle for ugly, plain text files. ApplyRight generates beautifully
-                  formatted, professional PDFs that recruiters love to read.
-                </p>
+          {/* Subtle grid pattern background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3 flex items-center justify-center gap-1.5">
+                <Sparkles size={16} className="text-indigo-500 animate-pulse" /> Advanced Job-Prep Suite
+              </h2>
+              <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
+                Go Beyond the Simple Resume
+              </h3>
+              <p className="mt-4 text-xl text-slate-600 max-w-3xl mx-auto">
+                ApplyRight gives you a full toolkit designed by career experts to make sure you dominate every step of the hiring pipeline, from CV scoring to the final call.
+              </p>
+            </div>
 
-                <div className="space-y-6 mb-10">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
-                      <FileText size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">CV Templates</h4>
-                      <p className="text-slate-600">
-                        Industry-approved layouts that pass the ATS every time.
-                      </p>
-                    </div>
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+              {/* Feature 1: STAR Story Bank */}
+              <div className="p-8 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
+                    <BookOpen size={24} />
                   </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
-                      <PenTool size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">Cover Letters</h4>
-                      <p className="text-slate-600">
-                        Auto-generated, persuasive letters tailored to the job description.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-                      <Mic size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">Interview Prep</h4>
-                      <p className="text-slate-600">
-                        AI-generated questions and coaching based on your actual resume.
-                      </p>
-                    </div>
-                  </div>
+                  <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                    Grounded STAR Story Bank
+                  </h4>
+                  <p className="text-slate-600 leading-relaxed mb-6">
+                    Prep like top candidates actually do. Generate a bank of reusable STAR-formatted stories (Situation, Task, Action, Result) built from your real experience. Each story is verified by AI for claims consistency and linked directly to relevant interview questions.
+                  </p>
                 </div>
-
-                <Link
-                  to="/register"
-                  className="btn-primary py-3 px-8 bg-slate-900 text-white hover:bg-slate-800 rounded-xl inline-flex items-center gap-2"
-                >
-                  Create CV <ArrowRight size={18} />
-                </Link>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
+                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full">CV-Grounded Stories</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">STAR Method Formatting</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Claim Verification</span>
+                </div>
               </div>
 
-              {/* Visual Stack */}
-              <div className="relative h-[500px] flex items-center justify-center perspective-[1000px]">
-                {/* Abstract Decor */}
-                <div className="absolute inset-0 bg-indigo-50/50 rounded-full blur-3xl scale-75"></div>
-
-                {/* Card 1 (Back Left) */}
-                <motion.div
-                  initial={{ opacity: 0, rotate: -15, x: -50 }}
-                  whileInView={{ opacity: 1, rotate: -6, x: -40 }}
-                  transition={{ duration: 0.8, delay: 0.1 }}
-                  className="absolute w-[280px] h-[380px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden transform"
-                >
-                  <div className="h-4 bg-indigo-100 w-full mb-4"></div>
-                  <div className="px-6 space-y-3">
-                    <div className="flex gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-full bg-slate-100"></div>
-                      <div className="space-y-2 flex-1">
-                        <div className="h-3 bg-slate-100 rounded w-3/4"></div>
-                        <div className="h-2 bg-slate-50 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-slate-50 rounded w-full"></div>
-                    <div className="h-2 bg-slate-50 rounded w-5/6"></div>
-                    <div className="h-2 bg-slate-50 rounded w-4/5"></div>
+              {/* Feature 2: Voice-Enabled Interview Simulator */}
+              <div className="p-8 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 mb-6 group-hover:scale-110 transition-transform">
+                    <Volume2 size={24} />
                   </div>
-                </motion.div>
+                  <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                    Interactive Voice Interview Mode
+                  </h4>
+                  <p className="text-slate-600 leading-relaxed mb-6">
+                    Simulate real interview pressure. Our AI interviewer reads questions aloud using premium ElevenLabs & OpenAI TTS voice synthesis. Practice verbally with question-by-question suggestion timers, rate your own confidence, and receive targeted coaching reviews.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
+                  <span className="px-2.5 py-1 bg-violet-50 text-violet-700 rounded-full">Premium TTS (ElevenLabs)</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Timed Verbal Simulation</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Coaching Review</span>
+                </div>
+              </div>
 
-                {/* Card 2 (Back Right) */}
-                <motion.div
-                  initial={{ opacity: 0, rotate: 15, x: 50 }}
-                  whileInView={{ opacity: 1, rotate: 6, x: 40 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="absolute w-[280px] h-[380px] bg-slate-50 rounded-xl shadow-2xl border border-slate-200 overflow-hidden transform"
-                >
-                  <div className="px-6 py-8">
-                    <div className="w-16 h-16 rounded-lg bg-indigo-100 mb-6 mx-auto"></div>
-                    <div className="space-y-4">
-                      <div className="h-3 bg-slate-200 rounded w-full"></div>
-                      <div className="h-2 bg-slate-200 rounded w-5/6 mx-auto"></div>
-                      <div className="h-2 bg-slate-200 rounded w-4/6 mx-auto"></div>
-                    </div>
+              {/* Feature 3: 10-Minute Pre-Call Brief */}
+              <div className="p-8 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
+                    <Printer size={24} />
                   </div>
-                </motion.div>
+                  <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                    The 10-Minute Pre-Call Brief
+                  </h4>
+                  <p className="text-slate-600 leading-relaxed mb-6">
+                    Never walk in cold. Generate a print-friendly, single-page cram sheet containing your overall readiness score, your top 3 STAR stories, your weakest questions to review, key skills to highlight, and questions to ask the interviewer.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
+                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">Print-Optimized / Save PDF</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Quick Cram Sheet</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Readiness Rollup</span>
+                </div>
+              </div>
 
-                {/* Card 3 (Center Front) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  whileInView={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  className="absolute w-[300px] h-[400px] bg-white rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden z-20"
-                >
-                  {/* Header */}
-                  <div className="p-8 border-b border-slate-100 flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl ring-4 ring-indigo-50">
-                      AR
-                    </div>
-                    <div>
-                      <div className="h-4 bg-slate-800 rounded w-32 mb-2"></div>
-                      <div className="h-2 bg-indigo-100 rounded w-24"></div>
-                    </div>
+              {/* Feature 4: CV Comparison Studio */}
+              <div className="p-8 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 mb-6 group-hover:scale-110 transition-transform">
+                    <GitCompare size={24} />
                   </div>
-                  {/* Body */}
-                  <div className="p-8 space-y-6">
-                    {/* Experience Block */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <div className="h-3 bg-slate-200 rounded w-24"></div>
-                        <div className="h-3 bg-slate-100 rounded w-12"></div>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded w-full"></div>
-                      <div className="h-2 bg-slate-100 rounded w-11/12"></div>
-                      <div className="h-2 bg-indigo-50 rounded w-10/12"></div>{' '}
-                      {/* Highlighted line */}
-                    </div>
-
-                    {/* Experience Block 2 */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <div className="h-3 bg-slate-200 rounded w-28"></div>
-                        <div className="h-3 bg-slate-100 rounded w-12"></div>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded w-full"></div>
-                      <div className="h-2 bg-slate-100 rounded w-11/12"></div>
-                    </div>
-
-                    <div className="pt-4 flex gap-2">
-                      <div className="h-6 w-16 bg-slate-100 rounded-full"></div>
-                      <div className="h-6 w-20 bg-slate-100 rounded-full"></div>
-                      <div className="h-6 w-12 bg-indigo-100 rounded-full text-indigo-600 flex items-center justify-center text-[10px] font-bold">
-                        100%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Badge */}
-                  <div className="absolute top-4 right-4 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm">
-                    ATS Verified
-                  </div>
-                </motion.div>
+                  <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                    CV Comparison Studio
+                  </h4>
+                  <p className="text-slate-600 leading-relaxed mb-6">
+                    Compare two iterations of your CV side-by-side to target a specific job. See a detailed breakdown of which CV scores higher in each dimension, which must-have skills are missing, and exactly what updates increased your fit score.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
+                  <span className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-full">Side-by-Side Analysis</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Score Breakdown Diff</span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Target Job Benchmarking</span>
+                </div>
               </div>
             </div>
           </div>
         </motion.section>
-
-        {/* TEMPLATES GRID SECTION */}
-        <section className="py-24 bg-slate-50 relative overflow-hidden">
-          {/* Creative Background Elements */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white to-transparent"></div>
-          <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-slate-900 to-transparent opacity-10"></div>
-
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-16">
-              <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">
-                Premium Collection
-              </h2>
-              <h3 className="text-3xl md:text-5xl font-bold text-slate-900">Choose Your Look</h3>
-              <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto">
-                From corporate energy giants to luxury fashion houses, we have a template that fits
-                your industry perfectly.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-              {[
-                'energy-slb',
-                'energy-total',
-                'energy-nlng',
-                'luxury',
-                'luxury-royal',
-                'luxury-chic',
-                'luxury-classic',
-                'luxury-gold',
-              ].map((templateId, index) => {
-                const template = TEMPLATES.find((t) => t.id === templateId) || {
-                  name: templateId,
-                  id: templateId,
-                };
-                return (
-                  <motion.div
-                    key={template.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    whileHover={{ y: -10 }}
-                    className="group cursor-pointer"
-                    onClick={() => navigate('/login')}
-                  >
-                    <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-slate-200 group-hover:shadow-2xl group-hover:border-indigo-200 transition-all duration-300 bg-white">
-                      <div className="absolute inset-0 p-4 transition-transform duration-500 group-hover:scale-105">
-                        <TemplateThumbnail
-                          type={template.id}
-                          className="w-full h-full shadow-inner rounded-lg ring-1 ring-slate-100"
-                        />
-                      </div>
-
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div className="bg-white/90 backdrop-blur text-indigo-600 px-4 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                          Preview
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-center mt-4">
-                      <h4 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                        {template.name}
-                      </h4>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="mt-16 text-center">
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-700 hover:gap-3 transition-all"
-              >
-                View all 20+ templates <ArrowRight size={20} />
-              </Link>
-            </div>
-          </div>
-        </section>
 
         {/* What Users Say Section */}
         {featuredFeedbacks.length >= 3 && (
@@ -878,33 +732,39 @@ const LandingPage = () => {
 
         {/* Footer */}
         <footer className="bg-white border-t border-slate-200 py-12">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="ApplyRight Logo" className="h-6 w-auto" />
-              <span className="text-lg font-bold text-slate-900">ApplyRight</span>
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-slate-100 dark:border-slate-800 mb-8">
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="ApplyRight Logo" className="h-6 w-auto" />
+                <span className="text-lg font-bold text-slate-900">ApplyRight</span>
+              </div>
+
+              <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-600 justify-center">
+                <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link to="/terms" className="hover:text-indigo-600 transition-colors">
+                  Terms of Service
+                </Link>
+                <Link to="/contact" className="hover:text-indigo-600 transition-colors">
+                  Contact Us
+                </Link>
+                <Link to="/feedback" className="hover:text-indigo-600 transition-colors">
+                  Give Feedback
+                </Link>
+                <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
+                  ATS Guide
+                </Link>
+              </div>
+
+              <div className="text-slate-500 text-sm">
+                © {new Date().getFullYear()} ApplyRight. All rights reserved.
+              </div>
             </div>
 
-            <div className="flex gap-6 text-sm font-medium text-slate-600">
-              <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-indigo-600 transition-colors">
-                Terms of Service
-              </Link>
-              <Link to="/contact" className="hover:text-indigo-600 transition-colors">
-                Contact Us
-              </Link>
-              <Link to="/feedback" className="hover:text-indigo-600 transition-colors">
-                Give Feedback
-              </Link>
-              <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
-                ATS Guide
-              </Link>
-            </div>
-
-            <div className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} ApplyRight. All rights reserved.
-            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
+              <strong>Disclaimer:</strong> ApplyRight is an interview preparation tool. All mock sessions, voice conversations, and generated questions are designed solely for practice and confidence-building purposes. The questions simulated in our application are illustrative and do not guarantee the actual questions that will be encountered in your live hiring process.
+            </p>
           </div>
         </footer>
       </div>

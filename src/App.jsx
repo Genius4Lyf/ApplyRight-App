@@ -38,6 +38,7 @@ import TargetJob from './pages/CVBuilder/TargetJob';
 import Heading from './pages/CVBuilder/Heading';
 import ProfessionalSummary from './pages/CVBuilder/ProfessionalSummary';
 import Upgrade from './pages/Upgrade';
+import BillingReturn from './pages/BillingReturn';
 import CreditStore from './pages/CreditStore';
 import History from './pages/CVBuilder/History';
 import Projects from './pages/CVBuilder/Projects';
@@ -359,6 +360,15 @@ const router = createBrowserRouter([
               <CreditStore />
             </ProtectedRoute>
           </MaintenanceGuard>
+        ),
+      },
+      {
+        // Flutterwave redirect-return target (verifies the payment).
+        path: '/billing/return',
+        element: (
+          <ProtectedRoute>
+            <BillingReturn />
+          </ProtectedRoute>
         ),
       },
       {

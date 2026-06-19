@@ -31,6 +31,50 @@ const billingService = {
     return response.data;
   },
 
+  // --- Flutterwave one-time payments ---
+
+  // Start a checkout for a catalog item; returns { link, txRef }.
+  checkout: async (planId, currency = 'NGN') => {
+    const response = await api.post('/billing/checkout', { planId, currency });
+    return response.data;
+  },
+
+  // Verify a payment on redirect-return (webhook fallback).
+  // Returns { status, entitlement }.
+  verifyPayment: async ({ txRef, transactionId }) => {
+    const response = await api.post('/billing/verify', { txRef, transactionId });
+    return response.data;
+  },
+
+  // Current subscription/minute entitlement.
+  getEntitlement: async () => {
+    const response = await api.get('/billing/entitlement');
+    return response.data;
+  },
+
+  /**
+   * Poll /verify until the payment is settled or the deadline passes — covers the
+   * race where the user lands on the return page before the webhook fires.
+   * Returns the final { status, entitlement }.
+   */
+  pollVerifyUntilSettled: async (
+    { txRef, transactionId },
+    { intervalMs = 1500, timeoutMs = 15000 } = {}
+  ) => {
+    const deadline = Date.now() + timeoutMs;
+    let last = null;
+    while (Date.now() < deadline) {
+      try {
+        last = await billingService.verifyPayment({ txRef, transactionId });
+        if (last?.status === 'successful') return last;
+      } catch {
+        /* keep polling */
+      }
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+    return last || { status: 'pending', entitlement: null };
+  },
+
   /**
    * Poll /balance until the user's credit balance exceeds `baseline`, or
    * `timeoutMs` elapses. Used by the AdMob Rewarded Video flow on Android:

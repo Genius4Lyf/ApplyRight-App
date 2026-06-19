@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
+import billingService from '../services/billing.service';
 import { getJobQuestions, computeReadiness, getInterviewTrend } from '../utils/interviewPrep';
 import { BreathingExercise } from '../components/prep/CalmKit';
 import VoiceVisualizer from '../components/prep/VoiceVisualizer';
@@ -174,6 +175,9 @@ const MockInterviewPage = () => {
   const realtimeRef = useRef(null);
   const recorderRef = useRef(null);
   const maxSessionSecRef = useRef(360);
+  // Live-minute reservation id from createRealtimeSession; echoed back at assess
+  // so the backend reconciles the right reservation (null for turn-based runs).
+  const reservationRef = useRef(null);
   const nudgedRef = useRef(false); // wrap-up nudge sent once near the time cap
   // ── time-up wind-down ──
   // When the main time runs out we DON'T hard-cut: we enter a grace window so the
@@ -248,9 +252,31 @@ const MockInterviewPage = () => {
   }, []);
 
   // Subscription tier (free | plus | pro). Read from the stored user so the
-  // chooser can show which tier each mode needs. Gating is non-blocking while
-  // Interview Mode is free during testing (see FREE_DURING_TESTING).
+  // chooser can show which tier each mode needs.
   const userTier = useMemo(() => readStoredUser().tier || 'free', []);
+
+  // Live-interview entitlement (minutes balance + tier), the gate for the live
+  // voice interview. Refreshed after each run so the remaining minutes stay current.
+  const [entitlement, setEntitlement] = useState(null);
+  const refreshEntitlement = React.useCallback(async () => {
+    try {
+      setEntitlement(await billingService.getEntitlement());
+      // Let the navbar wallet pill refresh its minutes after a run/purchase.
+      window.dispatchEvent(new Event('entitlement_updated'));
+    } catch {
+      /* non-fatal — gate falls back to allowing the attempt; server enforces */
+    }
+  }, []);
+  useEffect(() => {
+    refreshEntitlement();
+  }, [refreshEntitlement]);
+
+  // Seconds of live interview the user can still start (paid minutes or free taste).
+  const liveSecondsAvailable = entitlement
+    ? entitlement.tier !== 'free'
+      ? entitlement.secondsRemaining || 0
+      : entitlement.freeTasteRemainingSec || 0
+    : null; // null = unknown (entitlement not loaded yet)
 
   useEffect(() => {
     let cancelled = false;
@@ -467,20 +493,10 @@ const MockInterviewPage = () => {
     else beginInterview();
   };
 
-  // ── premium gate (scaffolding — OFF during testing) ──
-  // Interview Mode is the flagship feature and is planned to become premium:
-  // the FIRST interview is free, then each run costs COSTS.INTERVIEW_MODE
-  // credits. To turn it on later: set FREE_DURING_TESTING = false and implement
-  // the credit path (reuse CreditGate + billingService, mirror the EssentialsSection
-  // flow). `getInterviewTrend(application).count === 0` ⇒ first interview, free.
-  const FREE_DURING_TESTING = true;
-  const canStartInterview = () => {
-    if (FREE_DURING_TESTING) return true;
-    // const firstInterviewFree = getInterviewTrend(application).count === 0;
-    // if (firstInterviewFree) return true;
-    // return /* user has >= COSTS.INTERVIEW_MODE credits, else open CreditGate */ true;
-    return true;
-  };
+  // Practice/simulated Q&A (the non-voice flow below) is free. The metered,
+  // paid product is the LIVE VOICE interview (beginRealtime), gated on the
+  // live-minute balance. Keep this open for the practice flow.
+  const canStartInterview = () => true;
 
   const beginInterview = () => {
     if (!canStartInterview()) return; // premium gate (kept open during testing)
@@ -625,6 +641,7 @@ const MockInterviewPage = () => {
   };
 
   const resetSessionState = () => {
+    reservationRef.current = null; // only a realtime mint sets a live reservation
     setShowReadyCheck(false);
     setCurrent(0);
     setResults([]);
@@ -690,6 +707,18 @@ const MockInterviewPage = () => {
   };
 
   const beginRealtime = async () => {
+    // Live-minute paywall: block before minting if we know the balance is empty.
+    // (null = entitlement not loaded yet → let the server be the gate.)
+    if (liveSecondsAvailable === 0) {
+      toast.error(
+        entitlement?.tier === 'free'
+          ? 'You’ve used your free interview minutes. Upgrade to keep practicing.'
+          : 'You’re out of interview minutes. Grab a plan or a top-up.'
+      );
+      navigate('/upgrade');
+      return;
+    }
+
     resetSessionState();
     setMuted(false);
     setMicStream(null);
@@ -707,6 +736,7 @@ const MockInterviewPage = () => {
         voice,
         style,
       });
+      reservationRef.current = sess.reservationId || null;
       maxSessionSecRef.current = sess.maxSessionSec || 360;
       graceSecRef.current = sess.graceSec || 90;
       setSecondsLeft(maxSessionSecRef.current);
@@ -732,6 +762,15 @@ const MockInterviewPage = () => {
       await ctl.start();
     } catch (e) {
       const code = e.response?.data?.code;
+      // Out of minutes (race / stale entitlement) → send to pricing, don't fall back.
+      if (code === 'NO_MINUTES') {
+        clearTimeout(connectTimerRef.current);
+        setPhase('choose');
+        await refreshEntitlement();
+        toast.error(e.response?.data?.message || 'You’re out of interview minutes.');
+        navigate('/upgrade');
+        return;
+      }
       toast.error(
         code === 'REALTIME_UNAVAILABLE' || code === 'AI_UNAVAILABLE'
           ? 'The live interviewer is unavailable — switching to the typed conversation.'
@@ -821,7 +860,11 @@ const MockInterviewPage = () => {
         transcript: tx,
         durationSec,
         plannedSec,
+        reservationId: reservationRef.current,
       });
+      // Reservation is now reconciled server-side; don't double-reconcile on a re-run.
+      reservationRef.current = null;
+      refreshEntitlement(); // reflect the minutes just spent
       setAssessment(res.assessment);
       setGradingTranscript(null);
       setApplication((prev) =>
@@ -1040,21 +1083,40 @@ const MockInterviewPage = () => {
             ))}
 
           {phase === 'intro' && (
-            <IntroView
-              firstName={firstName}
-              title={title}
-              count={simQuestions.length}
-              plannedSec={plannedSec}
-              lastSession={lastSession}
-              trend={getInterviewTrend(application)}
-              mode={mode}
-              voice={voice}
-              style={style}
-              onVoiceChange={chooseVoice}
-              onStyleChange={chooseStyle}
-              onStart={handleStartClick}
-              onCancel={() => setPhase('choose')}
-            />
+            <>
+              {entitlement && (
+                <div className="max-w-2xl mx-auto mb-3 flex items-center justify-center gap-2 text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {entitlement.tier === 'free'
+                      ? `Free interview minutes left: ${Math.ceil((liveSecondsAvailable || 0) / 60)}`
+                      : `${entitlement.minutesRemaining} live interview minutes left`}
+                  </span>
+                  {(liveSecondsAvailable || 0) <= 60 && (
+                    <button
+                      onClick={() => navigate('/upgrade')}
+                      className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      {entitlement.tier === 'free' ? 'Upgrade' : 'Top up'}
+                    </button>
+                  )}
+                </div>
+              )}
+              <IntroView
+                firstName={firstName}
+                title={title}
+                count={simQuestions.length}
+                plannedSec={plannedSec}
+                lastSession={lastSession}
+                trend={getInterviewTrend(application)}
+                mode={mode}
+                voice={voice}
+                style={style}
+                onVoiceChange={chooseVoice}
+                onStyleChange={chooseStyle}
+                onStart={handleStartClick}
+                onCancel={() => setPhase('choose')}
+              />
+            </>
           )}
 
           {phase === 'connecting' && (

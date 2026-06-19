@@ -17,6 +17,7 @@ import CVService from '../services/cv.service';
 import { getJobQuestions, getQuestionsToAsk, hasInterviewPrep } from '../utils/interviewPrep';
 
 import Modal from '../components/Modal';
+import DownloadPaywallModal from '../components/DownloadPaywallModal';
 
 // Import Templates
 import ATSCleanTemplate from '../components/templates/ATSCleanTemplate';
@@ -59,6 +60,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
   const [copied, setCopied] = useState(false);
   const [scale, setScale] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showDownloadPaywall, setShowDownloadPaywall] = useState(false);
 
   // Dynamic Scale for Mobile "Paper View"
   useEffect(() => {
@@ -552,7 +554,11 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
                   toast.success('PDF Downloaded');
                 } catch (error) {
                   console.error('PDF Download failed', error);
-                  toast.error('Failed to generate PDF');
+                  if (error.code === 'NEED_DOWNLOAD') {
+                    setShowDownloadPaywall(true);
+                  } else {
+                    toast.error('Failed to generate PDF');
+                  }
                 } finally {
                   setIsDownloading(false);
                 }
@@ -588,6 +594,11 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
           </div>
         </div>
       </Modal>
+
+      <DownloadPaywallModal
+        open={showDownloadPaywall}
+        onClose={() => setShowDownloadPaywall(false)}
+      />
     </div>
   );
 };

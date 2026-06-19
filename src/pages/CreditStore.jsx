@@ -29,6 +29,7 @@ const CreditStore = () => {
   const [copySuccess, setCopySuccess] = useState('');
   const [loadingCode, setLoadingCode] = useState(true);
   const [config, setConfig] = useState(null); // Store system config
+  const [entitlement, setEntitlement] = useState(null); // subscription tier + live minutes
 
   React.useEffect(() => {
     const fetchConfig = async () => {
@@ -40,6 +41,11 @@ const CreditStore = () => {
       }
     };
     fetchConfig();
+
+    billingService
+      .getEntitlement()
+      .then(setEntitlement)
+      .catch(() => setEntitlement(null));
 
     window.addEventListener('settings_updated', fetchConfig);
 
@@ -196,6 +202,34 @@ const CreditStore = () => {
             features.
           </p>
         </div>
+
+        {/* Subscription / live-interview minutes summary + upsell. */}
+        {entitlement && (
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-center sm:text-left">
+              {entitlement.tier === 'free' ? (
+                <p className="text-slate-600 dark:text-slate-300">
+                  <span className="font-semibold">Free plan</span> · live interview taste:{' '}
+                  {Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} min left
+                </p>
+              ) : (
+                <p className="text-slate-600 dark:text-slate-300">
+                  <span className="font-semibold capitalize">{entitlement.planId || entitlement.tier} plan</span> ·{' '}
+                  {entitlement.minutesRemaining} live interview min left
+                  {entitlement.expiresAt
+                    ? ` · until ${new Date(entitlement.expiresAt).toLocaleDateString()}`
+                    : ''}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => navigate('/upgrade')}
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors whitespace-nowrap"
+            >
+              {entitlement.tier === 'free' ? 'See plans' : 'Add minutes'}
+            </button>
+          </div>
+        )}
 
         {/* Earn credits by watching an ad — Monetag on web, AdMob on Android. */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative transform transition-all hover:shadow-2xl">

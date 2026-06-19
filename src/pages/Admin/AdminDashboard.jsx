@@ -10,6 +10,9 @@ import {
   Search,
   TrendingUp,
   Users,
+  Banknote,
+  CreditCard,
+  Clock,
 } from 'lucide-react';
 import api from '../../services/api';
 import {
@@ -39,6 +42,9 @@ const AdminDashboard = () => {
     chartData: [],
   });
   const [loading, setLoading] = useState(true);
+  // Real-money revenue analytics (from the Payment model), kept separate from the
+  // credit stats above.
+  const [revenue, setRevenue] = useState(null);
 
   // Filter States
   const [viewType, setViewType] = useState('daily');
@@ -76,8 +82,12 @@ const AdminDashboard = () => {
         };
 
         const query = `period=${viewType}&year=${selectedYear}&month=${selectedMonth}`;
-        const response = await api.get(`/admin/stats?${query}`, config);
-        setStats(response.data.data);
+        const [statsRes, revenueRes] = await Promise.all([
+          api.get(`/admin/stats?${query}`, config),
+          api.get(`/admin/revenue?${query}`, config).catch(() => null),
+        ]);
+        setStats(statsRes.data.data);
+        if (revenueRes?.data?.data) setRevenue(revenueRes.data.data);
       } catch (error) {
         console.error('Error fetching admin stats:', error);
       } finally {
@@ -87,6 +97,8 @@ const AdminDashboard = () => {
 
     fetchStats();
   }, [viewType, selectedYear, selectedMonth]);
+
+  const ngn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 
   return (
     <AdminLayout>
@@ -101,6 +113,69 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <>
+          {/* Revenue (real NGN) */}
+          {revenue && (
+            <section className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Revenue & Subscriptions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <DashboardStats
+                  title="Revenue (all-time)"
+                  value={ngn(revenue.totalRevenue)}
+                  change={`${revenue.newConversions} new`}
+                  trend="up"
+                  icon={Banknote}
+                />
+                <DashboardStats
+                  title="Active Subscriptions"
+                  value={revenue.activeSubsTotal}
+                  change={`plus ${revenue.activeSubsByTier?.plus || 0} · pro ${revenue.activeSubsByTier?.pro || 0}`}
+                  trend="up"
+                  icon={CreditCard}
+                />
+                <DashboardStats
+                  title="Live Minutes Used"
+                  value={revenue.liveMinutesConsumed}
+                  change={`~${ngn(revenue.estOpenAiCostNgn)} cost`}
+                  trend="down"
+                  icon={Clock}
+                />
+                <DashboardStats
+                  title="Est. Gross Margin"
+                  value={revenue.estGrossMarginPct == null ? '—' : `${revenue.estGrossMarginPct}%`}
+                  change={`top-ups ${ngn(revenue.totalTopupRevenue)}`}
+                  trend="up"
+                  icon={TrendingUp}
+                />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Revenue over time (₦)</h3>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={revenue.revenueOverTime}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                      <XAxis dataKey="name" fontSize={11} />
+                      <YAxis fontSize={11} />
+                      <Tooltip formatter={(v) => ngn(v)} />
+                      <Bar dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Revenue by plan (₦)</h3>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={revenue.revenueByPlan} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                      <XAxis type="number" fontSize={11} />
+                      <YAxis type="category" dataKey="label" width={110} fontSize={11} />
+                      <Tooltip formatter={(v) => ngn(v)} />
+                      <Bar dataKey="revenue" fill="#10b981" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <DashboardStats

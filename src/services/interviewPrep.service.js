@@ -158,11 +158,12 @@ const InterviewPrepService = {
   // Assess a finished conversational interview from its transcript (AI grade
   // grounded in CV + job). Persists as the prep's last session.
   // Returns { assessment, lastInterviewSession }.
-  assessInterview: async (applicationId, { transcript, durationSec, plannedSec }) => {
+  assessInterview: async (applicationId, { transcript, durationSec, plannedSec, reservationId }) => {
     const response = await api.post(`/interview-prep/${applicationId}/assess-interview`, {
       transcript,
       durationSec,
       plannedSec,
+      reservationId, // reconciles the live-minute reservation (realtime sessions only)
     });
     return response.data;
   },
