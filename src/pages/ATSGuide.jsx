@@ -46,8 +46,9 @@ const ATSGuide = () => {
               </span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              75% of resumes are rejected by Applicant Tracking Systems (ATS) before they’re ever
-              seen by a human. Here is exactly how to fix yours.
+              Most companies use Applicant Tracking Systems (ATS), and recruiters search them by
+              keyword — so a resume that doesn’t speak their language can get overlooked before a
+              human ever reads it. Here is exactly how to fix yours.
             </p>
           </motion.div>
         </div>

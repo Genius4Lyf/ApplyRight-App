@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   PenTool,
   ArrowRight,
@@ -8,6 +8,7 @@ import {
   Sparkles,
   RefreshCcw,
   Link as LinkIcon,
+  Lock,
 } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
@@ -39,6 +40,10 @@ const newSortId = () =>
 const ensureIds = (items) =>
   (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
+// Free users can apply up to this many of the AI rewrite options at once; paid
+// users can apply all. Both see all 10 options (no blur, no paywall on viewing).
+const FREE_SELECT_LIMIT = 3;
+
 const Projects = () => {
   // Safely destructure context
   const context = useOutletContext();
@@ -53,9 +58,20 @@ const Projects = () => {
     registerStepData,
   } = context || {};
 
+  const navigate = useNavigate();
+  // Paid users can apply all AI rewrite options; free users are capped.
+  const isPaid = user?.plan === 'paid';
+
   const [projects, setProjects] = useState(() => ensureIds(cvData?.projects));
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // AI Rewrite suggestions modal — single column, all 10 options visible &
+  // selectable; free users apply up to FREE_SELECT_LIMIT, paid apply all.
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [suggestionsList, setSuggestionsList] = useState([]);
+  const [selectedSuggestions, setSelectedSuggestions] = useState([]);
+  const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -170,9 +186,12 @@ const Projects = () => {
       );
 
       if (suggestions && suggestions.length > 0) {
-        const formattedBullets = suggestions.map((s) => `• ${s}`).join('\n');
-        handleChange(index, 'description', formattedBullets);
-        toast.success('Bullets generated!');
+        setSuggestionsList(suggestions);
+        setSelectedSuggestions([]);
+        setSuggestionTargetIndex(index);
+        setShowSuggestionsModal(true);
+      } else {
+        toast.warning('No suggestions generated. Please try again.');
       }
     } catch (error) {
       console.error('Failed to gen bullets', error);
@@ -180,6 +199,41 @@ const Projects = () => {
     } finally {
       setGeneratingIndex(null);
     }
+  };
+
+  // Free users apply up to FREE_SELECT_LIMIT; paid users apply all options.
+  const selectMax = isPaid ? suggestionsList.length : FREE_SELECT_LIMIT;
+
+  const goUpgrade = () => {
+    setShowSuggestionsModal(false);
+    navigate('/upgrade');
+  };
+
+  const toggleSuggestionSelection = (suggestion) => {
+    if (selectedSuggestions.includes(suggestion)) {
+      setSelectedSuggestions(selectedSuggestions.filter((s) => s !== suggestion));
+      return;
+    }
+    if (selectedSuggestions.length >= selectMax) {
+      toast.warning(
+        isPaid
+          ? `You can select up to ${selectMax}.`
+          : `Free plan: pick up to ${selectMax}. Upgrade to apply all.`
+      );
+      return;
+    }
+    setSelectedSuggestions([...selectedSuggestions, suggestion]);
+  };
+
+  const applySelectedSuggestions = () => {
+    if (selectedSuggestions.length === 0 || suggestionTargetIndex === null) return;
+    const formattedBullets = selectedSuggestions.map((s) => `• ${s}`).join('\n');
+    handleChange(suggestionTargetIndex, 'description', formattedBullets);
+    toast.success('Bullets applied!');
+    setShowSuggestionsModal(false);
+    setSuggestionsList([]);
+    setSelectedSuggestions([]);
+    setSuggestionTargetIndex(null);
   };
 
   const handleKeyDown = (e, index) => {
@@ -410,6 +464,131 @@ const Projects = () => {
           {saving ? 'Saving...' : 'Next: Education'} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
+
+      {/* AI Rewrite Suggestions Modal — all 10 options visible & selectable;
+          free users apply up to 3, paid users apply all. */}
+      {showSuggestionsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate">
+                    AI Rewrite
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Pick the best {selectMax} to add to your project.
+                  </p>
+                </div>
+              </div>
+              <div className="text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full shrink-0">
+                {selectedSuggestions.length} / {selectMax}
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 space-y-2">
+              {suggestionsList.map((suggestion, idx) => {
+                const isSelected = selectedSuggestions.includes(suggestion);
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => toggleSuggestionSelection(suggestion)}
+                    className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 cursor-pointer ${
+                      isSelected
+                        ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+                    }`}
+                  >
+                    <div className="mt-0.5 flex-shrink-0">
+                      <div
+                        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-indigo-500 border-indigo-500 text-white'
+                            : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
+                        }`}
+                      >
+                        {isSelected && (
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <p
+                      className={`text-sm leading-relaxed ${
+                        isSelected
+                          ? 'text-indigo-900 dark:text-indigo-200 font-medium'
+                          : 'text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {suggestion}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <strong>Note:</strong> AI can make mistakes. Review and edit these to ensure they
+                  reflect your real work.
+                </p>
+              </div>
+              {!isPaid && (
+                <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg">
+                  <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
+                    <strong>Free plan:</strong> apply up to {FREE_SELECT_LIMIT} options.{' '}
+                    <button
+                      type="button"
+                      onClick={goUpgrade}
+                      className="font-bold underline hover:no-underline"
+                    >
+                      Upgrade
+                    </button>{' '}
+                    to apply all {suggestionsList.length}.
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestionsModal(false)}
+                  className="px-5 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={applySelectedSuggestions}
+                  disabled={selectedSuggestions.length === 0}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Apply Selected
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tutorial Modal */}
       <ProjectsTutorial isOpen={showTutorial} onClose={() => setShowTutorial(false)} user={user} />

@@ -50,6 +50,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
 import ATSGuide from './pages/ATSGuide';
+import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
 import MaintenanceGuard from './components/MaintenanceGuard';
@@ -291,6 +292,10 @@ const router = createBrowserRouter([
       {
         path: '/ats-guide',
         element: <ATSGuide />,
+      },
+      {
+        path: '/how-ats-recruiters-work',
+        element: <HowATSRecruitersWork />,
       },
       {
         path: '/feedback',

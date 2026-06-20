@@ -755,6 +755,12 @@ const LandingPage = () => {
                 <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
                   ATS Guide
                 </Link>
+                <Link
+                  to="/how-ats-recruiters-work"
+                  className="hover:text-indigo-600 transition-colors"
+                >
+                  How ATS &amp; Recruiters Work
+                </Link>
               </div>
 
               <div className="text-slate-500 text-sm">

@@ -19,17 +19,36 @@ const CVService = {
     return response.data;
   },
 
-  // Generate bullet points using AI. Returns { suggestions, lockedCount } —
-  // lockedCount is the number of trailing suggestions redacted for free users
-  // (work-history only); 0 for paid users and for summary/project types.
-  generateBullets: async (role, context, type, targetJob) => {
+  // Generate bullet points using AI.
+  // - summary/project → { suggestions, lockedCount }
+  // - experience → two-tier payload: { isPaid, ai:{title,suggestions},
+  //   ats:{title,suggestions,locked}, limits:{selectMax,bulletMax} }. Free users
+  //   get real "AI suggestions" + a blurred "ApplyRight ATS" teaser; paid users
+  //   get real, JD-keyword-targeted ApplyRight ATS suggestions. draftId lets the
+  //   server reuse the cached target-job keywords for ATS generation.
+  generateBullets: async (role, context, type, targetJob, draftId) => {
     const response = await api.post('/ai/generate-bullets', {
       role,
       context,
       type,
       targetJob,
+      draftId,
     });
-    return response.data; // { suggestions, lockedCount }
+    return response.data;
+  },
+
+  // Reveal the free user's ONE-TIME real ApplyRight ATS suggestions for a role.
+  // Called only when the user clicks "Reveal" — this is where the lifetime taste
+  // is spent (server-side, atomic). Returns { taste, ats:{suggestions,locked},
+  // limits }, or HTTP 409 { code:'TASTE_USED' } if it was already used.
+  revealAtsTaste: async (role, context, targetJob, draftId) => {
+    const response = await api.post('/ai/reveal-ats-taste', {
+      role,
+      context,
+      targetJob,
+      draftId,
+    });
+    return response.data;
   },
 
   // Generate categorized skills

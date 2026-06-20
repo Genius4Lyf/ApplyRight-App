@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useParams } from 'react-router-dom';
-import { Briefcase, ArrowRight, ArrowLeft, Plus, Sparkles, RefreshCcw, Lock } from 'lucide-react';
+import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import {
+  Briefcase,
+  ArrowRight,
+  ArrowLeft,
+  Plus,
+  Sparkles,
+  RefreshCcw,
+  Lock,
+  Crown,
+} from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
@@ -27,10 +36,11 @@ import SortableItem from '../../components/SortableItem';
 // Free users are capped at this many bullet points per role; paid users get
 // unlimited. The "paid" flag is set manually from the admin panel for now
 // (Admin > Users), and will become automatic once billing is integrated.
-const FREE_BULLET_LIMIT = 4;
-// How many of the locked (blurred) suggestions exist is decided by the SERVER
-// (it redacts the real text for free users and returns a lockedCount). The
-// frontend only decides the apply cap: free users apply up to 3, paid users all.
+const FREE_BULLET_LIMIT = 3;
+// Free users can apply at most this many suggestions at once from the free "AI
+// suggestions" column. The server also returns limits.selectMax (source of
+// truth, honors subscription expiry); this is the fallback. Paid users using the
+// ApplyRight ATS column can apply all of them.
 const FREE_SELECT_LIMIT = 3;
 
 // Count the non-empty bullet lines in a description string. A line is a bullet
@@ -63,6 +73,7 @@ const History = () => {
     registerStepData,
   } = context || {};
   const { id: draftId } = useParams();
+  const navigate = useNavigate();
 
   // Persist the paid AI keyword extraction back into cvData so the wizard's
   // auto-save keeps it (and the backend's charge-once check stays valid).
@@ -104,13 +115,28 @@ const History = () => {
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // AI Suggestions Modal State
+  // Suggestions modal state. For work history the server returns a two-tier
+  // payload: { isPaid, atsTasteAvailable, ai:{...}, ats:{...,locked}, limits }.
+  // Free users always see both columns: AI (selectable) on the left and a BLURRED
+  // ApplyRight ATS teaser on the right. If their one-time taste is still
+  // available, the ATS column shows a "Reveal" button; clicking it generates the
+  // real ATS (and spends the trial). Paid users get a single unlocked ATS column.
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
-  const [suggestionsList, setSuggestionsList] = useState([]);
+  const [suggestionData, setSuggestionData] = useState(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState([]);
+  // Which column the current selection came from ('ai' | 'ats' | null). The two
+  // columns are mutually exclusive: once you pick from one, the other locks until
+  // you clear.
+  const [selectionSource, setSelectionSource] = useState(null);
   const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
-  // Server-reported count of trailing suggestions that are redacted/locked.
-  const [lockedCount, setLockedCount] = useState(0);
+  // Mobile only: which column is visible. Defaults to the ATS tab so ours leads
+  // (desktop shows both columns side by side regardless).
+  const [activeTab, setActiveTab] = useState('ats');
+  // The free user explicitly revealed their one-time real ATS this session.
+  const [atsRevealed, setAtsRevealed] = useState(false);
+  const [revealing, setRevealing] = useState(false);
+  // Role + context of the open modal, so "Reveal" can request the real ATS.
+  const [revealPayload, setRevealPayload] = useState(null);
 
   // The auto-show tutorial modal was removed in favor of the inline SectionTips
   // card rendered at the top of the form below. Modal still mounts and can be
@@ -175,6 +201,18 @@ const History = () => {
     );
   }
 
+  const openSuggestionsModal = (data, index, payload) => {
+    setSuggestionData(data);
+    setSuggestionTargetIndex(index);
+    setSelectedSuggestions([]);
+    setSelectionSource(null);
+    setAtsRevealed(false);
+    setRevealing(false);
+    setRevealPayload(payload || null);
+    setActiveTab('ats'); // lead with ApplyRight ATS on mobile
+    setShowSuggestionsModal(true);
+  };
+
   const handleGenerateBullets = async (index, customInput = null) => {
     const role = history[index];
     if (!role.title) {
@@ -191,19 +229,18 @@ const History = () => {
           ? `Company: ${role.company}`
           : '';
 
-      const { suggestions = [], lockedCount: locked = 0 } = await CVService.generateBullets(
+      const data = await CVService.generateBullets(
         role.title,
         context,
         'experience',
-        cvData.targetJob?.description
+        cvData.targetJob,
+        draftId
       );
 
-      if (suggestions.length > 0) {
-        setSuggestionsList(suggestions);
-        setLockedCount(locked);
-        setSuggestionTargetIndex(index);
-        setSelectedSuggestions([]);
-        setShowSuggestionsModal(true);
+      const aiCount = data?.ai?.suggestions?.length || 0;
+      const atsCount = data?.ats?.suggestions?.length || 0;
+      if (aiCount > 0 || atsCount > 0) {
+        openSuggestionsModal(data, index, { role: role.title, context });
       } else {
         toast.warning('No suggestions generated. Please try again.');
       }
@@ -215,44 +252,167 @@ const History = () => {
     }
   };
 
-  // Paid users can select all suggestions; free users are capped at 3 and can't
-  // touch the locked (blurred) ones. Lock status comes from the server.
-  const maxSelectable = isPaid ? suggestionsList.length : FREE_SELECT_LIMIT;
-  const firstLockedIdx = suggestionsList.length - lockedCount;
-  const isLockedIdx = (idx) => lockedCount > 0 && idx >= firstLockedIdx;
+  // The user explicitly clicked "Reveal" — generate their one-time real ATS and
+  // swap it into the (currently blurred) ATS column. This is where the trial is
+  // spent server-side; a 409 means it was already used (show the upgrade CTA).
+  const handleRevealAts = async () => {
+    if (!revealPayload || revealing) return;
+    setRevealing(true);
+    try {
+      const resp = await CVService.revealAtsTaste(
+        revealPayload.role,
+        revealPayload.context,
+        cvData.targetJob,
+        draftId
+      );
+      if (resp?.ats?.suggestions?.length) {
+        setSuggestionData((prev) => ({
+          ...prev,
+          atsTasteAvailable: false,
+          ats: resp.ats,
+          limits: resp.limits || prev.limits,
+        }));
+        setAtsRevealed(true);
+        setActiveTab('ats');
+      } else {
+        toast.warning('Could not reveal ApplyRight ATS. Please try again.');
+      }
+    } catch (err) {
+      if (err?.response?.status === 409) {
+        // Already used (e.g. on another device) — flip to the upgrade CTA.
+        setSuggestionData((prev) => ({ ...prev, atsTasteAvailable: false }));
+        toast.info('Your free ApplyRight ATS preview has already been used.');
+      } else {
+        console.error('Reveal failed', err);
+        toast.error('Failed to reveal ApplyRight ATS suggestions.');
+      }
+    } finally {
+      setRevealing(false);
+    }
+  };
 
-  const toggleSuggestionSelection = (suggestion, idx) => {
-    if (isLockedIdx(idx)) {
-      toast.info(`Upgrade to Pro to unlock all ${suggestionsList.length} AI suggestions.`);
-      return;
-    }
+  // Layout / state flags:
+  // - paidSuggestions → single, fully-unlocked ApplyRight ATS column (select all).
+  // - atsSelectable → the ATS column shows real, selectable suggestions (paid, or
+  //   a free user who just revealed their taste).
+  // - tasteAvailable → free user whose one-time reveal is still available (show
+  //   the "Reveal" button over the blurred teaser). Otherwise → upgrade CTA.
+  const paidSuggestions = suggestionData?.isPaid === true;
+  const atsSelectable = paidSuggestions || atsRevealed;
+  const tasteAvailable =
+    !paidSuggestions && !atsRevealed && suggestionData?.atsTasteAvailable === true;
+  // limits.selectMax is null (unlimited) only for paid; fall back accordingly.
+  const selectMax =
+    suggestionData?.limits?.selectMax ?? (suggestionData?.ats?.suggestions?.length || 0);
+
+  const goUpgrade = () => {
+    setShowSuggestionsModal(false);
+    navigate('/upgrade');
+  };
+
+  // Toggle a suggestion. The two columns are mutually exclusive: once a source is
+  // chosen, the other column locks until the selection is cleared.
+  const toggleSuggestionSelection = (suggestion, source) => {
     if (selectedSuggestions.includes(suggestion)) {
-      setSelectedSuggestions(selectedSuggestions.filter((s) => s !== suggestion));
+      const next = selectedSuggestions.filter((s) => s !== suggestion);
+      setSelectedSuggestions(next);
+      if (next.length === 0) setSelectionSource(null);
       return;
     }
-    if (selectedSuggestions.length >= maxSelectable) {
+    if (selectionSource && selectionSource !== source) {
+      toast.info('Pick from one set at a time — clear your selection to switch.');
+      return;
+    }
+    if (selectedSuggestions.length >= selectMax) {
       toast.warning(
-        isPaid
-          ? `You can select up to ${maxSelectable} bullet points.`
-          : 'Free plan: select up to 3. Upgrade to Pro to add more.'
+        paidSuggestions
+          ? `You can select up to ${selectMax} bullet points.`
+          : `Select up to ${selectMax}.`
       );
       return;
     }
     setSelectedSuggestions([...selectedSuggestions, suggestion]);
+    setSelectionSource(source);
   };
+
+  // A selectable suggestion card. `source` is 'ai' or 'ats'; a card from the
+  // non-active column is disabled while a selection exists in the other column.
+  const renderSelectableCard = (suggestion, idx, source) => {
+    const isSelected = selectedSuggestions.includes(suggestion);
+    const disabled = selectionSource && selectionSource !== source;
+    return (
+      <div
+        key={idx}
+        onClick={() => toggleSuggestionSelection(suggestion, source)}
+        className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 ${
+          disabled
+            ? 'cursor-not-allowed opacity-40 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+            : isSelected
+              ? 'cursor-pointer border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
+              : 'cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+        }`}
+      >
+        <div className="mt-0.5 flex-shrink-0">
+          <div
+            className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+              isSelected
+                ? 'bg-indigo-500 border-indigo-500 text-white'
+                : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
+            }`}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+        <p
+          className={`text-sm leading-relaxed ${
+            isSelected
+              ? 'text-indigo-900 dark:text-indigo-200 font-medium'
+              : 'text-slate-700 dark:text-slate-300'
+          }`}
+        >
+          {suggestion}
+        </p>
+      </div>
+    );
+  };
+
+  // A blurred, non-interactive teaser card for the locked ApplyRight ATS column.
+  const renderLockedCard = (suggestion, idx) => (
+    <div
+      key={idx}
+      className="relative p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
+    >
+      <p className="text-sm leading-relaxed blur-sm select-none text-slate-700 dark:text-slate-300">
+        {suggestion}
+      </p>
+    </div>
+  );
 
   const applySelectedSuggestions = () => {
     if (selectedSuggestions.length === 0 || suggestionTargetIndex === null) return;
 
+    // No trial bookkeeping here: the one-time ATS taste is already spent on the
+    // server the moment the real suggestions were revealed (consume-on-reveal).
+
     const formattedBullets = selectedSuggestions.map((s) => `• ${s}`).join('\n');
 
-    // Completely overwrite the existing description with the AI generated bullets
+    // Completely overwrite the existing description with the chosen bullets
     handleChange(suggestionTargetIndex, 'description', formattedBullets);
     toast.success('Bullets applied!');
 
     setShowSuggestionsModal(false);
-    setSuggestionsList([]);
+    setSuggestionData(null);
     setSelectedSuggestions([]);
+    setSelectionSource(null);
     setSuggestionTargetIndex(null);
   };
 
@@ -577,98 +737,160 @@ const History = () => {
       {/* Tutorial Modal */}
       <HistoryTutorial isOpen={showTutorial} onClose={() => setShowTutorial(false)} user={user} />
 
-      {/* AI Suggestions Modal */}
-      {showSuggestionsModal && (
+      {/* Suggestions Modal — landscape two-column on desktop (free: AI |
+          ApplyRight ATS teaser), single ApplyRight ATS column for paid users.
+          On mobile, free users get a tabbed view (defaults to the ATS tab). */}
+      {showSuggestionsModal && suggestionData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div
+            className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${
+              paidSuggestions ? 'max-w-2xl' : 'max-w-4xl'
+            }`}
+          >
+            {/* Header */}
             <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-                  <Sparkles className="w-4 h-4" />
+                  {paidSuggestions ? (
+                    <Crown className="w-4 h-4" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate">
-                    AI Bullet Suggestions
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
+                    {paidSuggestions ? 'ApplyRight ATS Suggestions' : 'Bullet Suggestions'}
+                    {(tasteAvailable || atsRevealed) && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        Free ATS preview
+                      </span>
+                    )}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Select up to {maxSelectable} to add to your experience.
+                    {atsRevealed
+                      ? `Compare both, then pick a side — select up to ${selectMax}.`
+                      : tasteAvailable
+                        ? 'Reveal ApplyRight ATS to compare — your 1 free preview.'
+                        : `Select up to ${selectMax} to add to your experience.`}
                   </p>
                 </div>
               </div>
               <div className="text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full shrink-0">
-                {selectedSuggestions.length} / {maxSelectable}
+                {selectedSuggestions.length} / {selectMax}
               </div>
             </div>
 
-            <div className="p-4 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-              <div className="space-y-2">
-                {suggestionsList.map((suggestion, idx) => {
-                  const isSelected = selectedSuggestions.includes(suggestion);
-                  const isLocked = isLockedIdx(idx);
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => toggleSuggestionSelection(suggestion, idx)}
-                      className={`relative p-3 rounded-xl border-2 transition-all flex gap-3
-                                                ${isLocked ? 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800' : 'cursor-pointer'}
-                                                ${
-                                                  isSelected
-                                                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
-                                                    : !isLocked
-                                                      ? 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
-                                                      : ''
-                                                }`}
-                    >
-                      <div className="mt-0.5 flex-shrink-0">
-                        <div
-                          className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
-                                                    ${
-                                                      isSelected
-                                                        ? 'bg-indigo-500 border-indigo-500 text-white'
-                                                        : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
-                                                    }`}
-                        >
-                          {isSelected && (
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          isLocked
-                            ? 'blur-sm select-none text-slate-700 dark:text-slate-300'
-                            : isSelected
-                              ? 'text-indigo-900 dark:text-indigo-200 font-medium'
-                              : 'text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {suggestion}
-                      </p>
-                      {isLocked && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/30">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full shadow-sm">
-                            <Lock className="w-3 h-3" /> Upgrade to unlock
-                          </span>
-                        </div>
+            {/* Mobile tab switcher (free users — both taste & taste-used show two
+                columns; paid uses a single column with no tabs) */}
+            {!paidSuggestions && (
+              <div className="lg:hidden flex gap-1 p-2 bg-slate-100 dark:bg-slate-900 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ai')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+                    activeTab === 'ai'
+                      ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  AI suggestions
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ats')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+                    activeTab === 'ats'
+                      ? 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  <Crown className="w-3.5 h-3.5" /> ApplyRight ATS
+                </button>
+              </div>
+            )}
+
+            {/* Body */}
+            <div className="flex-1 flex flex-col min-h-0 bg-slate-50 dark:bg-slate-900">
+              {paidSuggestions ? (
+                <div className="p-4 space-y-2 flex-1 overflow-y-auto">
+                  {(suggestionData.ats?.suggestions || []).map((suggestion, idx) =>
+                    renderSelectableCard(suggestion, idx, 'ats')
+                  )}
+                </div>
+              ) : (
+                <div className="grid lg:grid-cols-2 lg:divide-x divide-slate-200 dark:divide-slate-700 flex-1 min-h-0">
+                  {/* Left: generic AI suggestions (selectable) */}
+                  <div
+                    className={`p-4 ${activeTab === 'ai' ? 'flex' : 'hidden'} lg:flex flex-col min-h-0`}
+                  >
+                    <span className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3 shrink-0">
+                      AI suggestions
+                    </span>
+                    <div className="space-y-2 flex-1 overflow-y-auto pr-1">
+                      {(suggestionData.ai?.suggestions || []).map((suggestion, idx) =>
+                        renderSelectableCard(suggestion, idx, 'ai')
                       )}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+
+                  {/* Right: ApplyRight ATS — selectable during the free taste, a
+                      blurred upsell teaser once the taste has been used. */}
+                  <div
+                    className={`p-4 ${activeTab === 'ats' ? 'flex' : 'hidden'} lg:flex flex-col min-h-0 relative`}
+                  >
+                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+                        <Crown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        ApplyRight ATS
+                      </span>
+                      {(tasteAvailable || atsRevealed) && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                          Best choice
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2 flex-1 overflow-y-auto pr-1 pb-20">
+                      {(suggestionData.ats?.suggestions || []).map((suggestion, idx) =>
+                        atsSelectable
+                          ? renderSelectableCard(suggestion, idx, 'ats')
+                          : renderLockedCard(suggestion, idx)
+                      )}
+                    </div>
+                    {/* Over the blurred teaser: a Reveal button while the free
+                        trial is available, otherwise the upgrade CTA. */}
+                    {!atsSelectable && (
+                      <div className="absolute bottom-0 left-0 right-0 p-4 pt-10 bg-gradient-to-t from-slate-50 via-slate-50 dark:from-slate-900 dark:via-slate-900 to-transparent z-10 shrink-0">
+                        {tasteAvailable ? (
+                          <button
+                            type="button"
+                            onClick={handleRevealAts}
+                            disabled={revealing}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md transition-colors disabled:opacity-70"
+                          >
+                            {revealing ? (
+                              <RefreshCcw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Crown className="w-4 h-4" />
+                            )}
+                            {revealing ? 'Revealing…' : 'Reveal ApplyRight ATS — 1 free preview'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={goUpgrade}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md transition-colors"
+                          >
+                            <Lock className="w-4 h-4" /> Unlock ApplyRight ATS
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Footer */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
               <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
@@ -677,12 +899,52 @@ const History = () => {
                   and edit these to ensure they reflect your actual, verifiable experience.
                 </p>
               </div>
-              {lockedCount > 0 && (
+              {atsSelectable && (
+                <div className="flex items-start gap-2 mb-3 p-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/70 dark:border-emerald-500/30 rounded-lg">
+                  <Crown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-emerald-800 dark:text-emerald-200 leading-relaxed">
+                    <strong>Replace the [bracketed] figures</strong> (e.g. [X]%, [N]) with your real
+                    numbers — they’re fill-in prompts, not verified stats. Real metrics are what
+                    make recruiters stop and read.
+                  </p>
+                </div>
+              )}
+              {!paidSuggestions && (
                 <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg">
-                  <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 mt-0.5 flex-shrink-0" />
+                  <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 mt-0.5 flex-shrink-0" />
                   <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
-                    <strong>{lockedCount} more suggestions are locked.</strong> Upgrade to Pro to
-                    see all {suggestionsList.length} and add more than {FREE_SELECT_LIMIT} at once.
+                    {atsRevealed ? (
+                      <>
+                        <strong>This was your one free ApplyRight ATS preview.</strong> Next time it
+                        stays locked.{' '}
+                        <button
+                          type="button"
+                          onClick={goUpgrade}
+                          className="font-bold underline hover:no-underline"
+                        >
+                          Upgrade for unlimited
+                        </button>{' '}
+                        on every role.
+                      </>
+                    ) : tasteAvailable ? (
+                      <>
+                        <strong>Click “Reveal ApplyRight ATS”</strong> to see your one free,
+                        job-tailored ATS preview next to the basic AI suggestions and compare.
+                      </>
+                    ) : (
+                      <>
+                        <strong>ApplyRight ATS suggestions</strong> are tailored to your target
+                        job&apos;s keywords, ATS-optimized, and you can apply all of them.{' '}
+                        <button
+                          type="button"
+                          onClick={goUpgrade}
+                          className="font-bold underline hover:no-underline"
+                        >
+                          Upgrade to unlock
+                        </button>
+                        .
+                      </>
+                    )}
                   </p>
                 </div>
               )}
