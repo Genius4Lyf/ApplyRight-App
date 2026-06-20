@@ -2,9 +2,9 @@ import React, { forwardRef } from 'react';
 import {
   ArrowUpRight,
   BadgeCheck,
-  BriefcaseBusiness,
-  MousePointerClick,
-  Search,
+  ClipboardCheck,
+  Download,
+  FileText,
   Sparkles,
 } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon.png';
@@ -31,18 +31,6 @@ const pct = (part, total) => {
   return Math.round((part / total) * 100);
 };
 
-const sourceLabel = (value) => {
-  if (!value) return 'Direct';
-
-  if (value === 'adzuna') return 'Adzuna';
-  if (value === 'jobberman') return 'Jobberman';
-
-  return value
-    .split(/[-_\s]+/)
-    .map((piece) => piece.charAt(0).toUpperCase() + piece.slice(1))
-    .join(' ');
-};
-
 const normalizeContext = (context = {}) => ({
   periodLabel: context.periodLabel || 'Live dashboard snapshot',
   scopeLabel: context.scopeLabel || 'Current reporting window',
@@ -55,41 +43,26 @@ const normalizeContext = (context = {}) => ({
     }).format(new Date()),
 });
 
+// Job-search analytics are not rendered on the platform, so reports are built
+// entirely from CV / platform metrics (users, resumes, analyses, downloads, applications).
 const getReportData = (stats = {}) => {
-  // Job searches & tailors are not yet live — zero until production data exists
-  const searches = 0;
-  const clicks = stats.jobMetrics?.engagement?.totalClicks || 0;
-  const saves = stats.jobMetrics?.engagement?.totalSaved || 0;
-  const tailors = 0;
+  const users = stats.totalUsers || 0;
+  const resumes = stats.totalResumes || 0;
   const applications = stats.totalApplications || 0;
   const downloads = stats.featureUsage?.cvGeneration?.downloads || 0;
   const optimizations = stats.featureUsage?.cvGeneration?.optimizations || 0;
-  const topKeyword = stats.jobMetrics?.topKeywords?.[0]?._id || 'career growth';
-  const topLocation = stats.jobMetrics?.topLocations?.[0]?._id || 'Nigeria';
-  const sources = (stats.jobMetrics?.searchesBySource || []).slice(0, 3).map((source) => ({
-    label: sourceLabel(source._id),
-    count: source.count || 0,
-    share: pct(source.count || 0, searches),
-  }));
 
   return {
-    users: stats.totalUsers || 0,
-    resumes: stats.totalResumes || 0,
+    users,
+    resumes,
     credits: stats.totalCredits || 0,
     applications,
-    searches,
-    clicks,
-    saves,
-    tailors,
     downloads,
     optimizations,
     newUsers: stats.newUsersLastMonth || 0,
-    topKeyword,
-    topLocation,
-    searchToApplyRate: pct(applications, searches),
-    clickToSaveRate: pct(saves, clicks),
-    tailorRate: pct(tailors, searches),
-    sources,
+    analysisRate: pct(optimizations, resumes),
+    downloadRate: pct(downloads, resumes),
+    applyRate: pct(applications, resumes),
   };
 };
 
@@ -161,16 +134,16 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
                 {fmt(report.users)}+ professionals building careers with AI.
               </h1>
               <p className="mt-4 max-w-[520px] text-[20px] leading-[1.4] text-slate-300">
-                Smart resumes, ATS scoring, and job search — one faster workflow.
+                Smart resumes, ATS scoring, and AI analysis — one faster workflow.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: `${fmt(report.resumes)}+`, label: 'Resumes created', accent: true },
-                { value: `${fmt(report.searches)}+`, label: 'Jobs searched' },
                 { value: `${fmt(report.optimizations)}+`, label: 'Analyses run' },
-                { value: `${fmt(report.tailors)}+`, label: 'CVs tailored' },
+                { value: `${fmt(report.downloads)}+`, label: 'CVs downloaded' },
+                { value: `${fmt(report.applications)}+`, label: 'Applications' },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -207,13 +180,9 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
 
               <div className="mt-4 space-y-2.5">
                 {[
-                  { icon: Search, label: 'Search to apply', value: `${report.searchToApplyRate}%` },
-                  {
-                    icon: MousePointerClick,
-                    label: 'Click to save',
-                    value: `${report.clickToSaveRate}%`,
-                  },
-                  { icon: BriefcaseBusiness, label: 'Tailor rate', value: `${report.tailorRate}%` },
+                  { icon: FileText, label: 'Resumes analyzed', value: `${report.analysisRate}%` },
+                  { icon: Download, label: 'Download rate', value: `${report.downloadRate}%` },
+                  { icon: ClipboardCheck, label: 'Apply rate', value: `${report.applyRate}%` },
                 ].map((item) => (
                   <div
                     key={item.label}
@@ -229,32 +198,38 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
               </div>
             </div>
 
-            {/* Channel mix card */}
+            {/* Platform momentum card */}
             <div className="flex-1 rounded-2xl border border-white/10 bg-slate-950/40 p-5">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Top search channels
+                Platform momentum
               </div>
               <div className="mt-3 space-y-2.5">
-                {(report.sources.length
-                  ? report.sources
-                  : [{ label: 'Organic', count: 0, share: 0 }]
-                ).map((source, index) => (
-                  <div key={source.label}>
+                {[
+                  { label: 'Resumes built', value: report.resumes, bar: 100, color: 'bg-cyan-300' },
+                  {
+                    label: 'Analyses run',
+                    value: report.optimizations,
+                    bar: report.resumes
+                      ? Math.max(pct(report.optimizations, report.resumes), 18)
+                      : 18,
+                    color: 'bg-indigo-300',
+                  },
+                  {
+                    label: 'CVs downloaded',
+                    value: report.downloads,
+                    bar: report.resumes ? Math.max(pct(report.downloads, report.resumes), 12) : 12,
+                    color: 'bg-violet-300',
+                  },
+                ].map((item) => (
+                  <div key={item.label}>
                     <div className="mb-1.5 flex items-center justify-between text-sm text-slate-300">
-                      <span>{source.label}</span>
-                      <span>{source.share}%</span>
+                      <span>{item.label}</span>
+                      <span>{fmt(item.value)}</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
                       <div
-                        className={joinClasses(
-                          'h-full rounded-full',
-                          index === 0
-                            ? 'bg-cyan-300'
-                            : index === 1
-                              ? 'bg-indigo-300'
-                              : 'bg-violet-300'
-                        )}
-                        style={{ width: `${Math.max(source.share, source.count ? 18 : 10)}%` }}
+                        className={joinClasses('h-full rounded-full', item.color)}
+                        style={{ width: `${Math.min(item.bar, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -263,14 +238,12 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
 
               <div className="mt-4 rounded-xl border border-cyan-300/15 bg-cyan-300/10 px-4 py-3 text-cyan-100">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-200/80">
-                  Top keyword
+                  Applications tracked
                 </div>
                 <div className="mt-1.5 text-[24px] font-bold tracking-tight">
-                  {report.topKeyword}
+                  {fmt(report.applications)}
                 </div>
-                <div className="mt-1 text-xs text-cyan-100/70">
-                  Strongest interest from {report.topLocation}
-                </div>
+                <div className="mt-1 text-xs text-cyan-100/70">Across the ApplyRight community</div>
               </div>
             </div>
           </div>
@@ -279,7 +252,7 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
         {/* Footer */}
         <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4">
           <div className="flex items-center gap-2.5">
-            {['AI Resume Builder', 'ATS Scoring', 'Job Tracking'].map((tag) => (
+            {['AI Resume Builder', 'ATS Scoring', 'Interview Prep'].map((tag) => (
               <span
                 key={tag}
                 className="rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white/70"
@@ -347,7 +320,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
               </h1>
 
               <p className="mt-4 max-w-[480px] text-[20px] leading-[1.4] text-slate-600">
-                AI resume generation, job discovery, and application support — one clean workflow.
+                AI resume generation, ATS scoring, and application support — one clean workflow.
               </p>
             </div>
 
@@ -355,9 +328,9 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: `${fmt(report.resumes)}+`, label: 'Resumes built' },
-                { value: `${fmt(report.searches)}+`, label: 'Jobs searched' },
+                { value: `${fmt(report.optimizations)}+`, label: 'Analyses run' },
+                { value: `${fmt(report.downloads)}+`, label: 'CVs downloaded' },
                 { value: `${fmt(report.applications)}+`, label: 'Applications' },
-                { value: `${fmt(report.tailors)}+`, label: 'CVs tailored' },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -376,8 +349,8 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
             {/* Bottom stats */}
             <div className="flex items-end gap-6 border-t border-slate-200 pt-5">
               {[
-                { value: `${fmt(report.searchToApplyRate)}%`, label: 'search to apply' },
-                { value: `${fmt(report.tailorRate)}%`, label: 'search to tailor' },
+                { value: `${fmt(report.applyRate)}%`, label: 'apply rate' },
+                { value: `${fmt(report.downloadRate)}%`, label: 'download rate' },
                 { value: `${fmt(report.credits)}+`, label: 'credits held' },
               ].map((item) => (
                 <div key={item.label}>
@@ -417,7 +390,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
                   tone: 'bg-slate-950',
                 },
                 {
-                  label: 'Applications analyzed',
+                  label: 'Analyses run',
                   value: `${fmt(report.optimizations)}+`,
                   bar: report.resumes
                     ? Math.max(pct(report.optimizations, report.resumes), 24)
@@ -425,15 +398,15 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
                   tone: 'bg-indigo-500',
                 },
                 {
-                  label: 'CVs tailored',
-                  value: `${fmt(report.tailors)}+`,
-                  bar: report.resumes ? Math.max(pct(report.tailors, report.resumes), 20) : 28,
+                  label: 'CVs downloaded',
+                  value: `${fmt(report.downloads)}+`,
+                  bar: report.resumes ? Math.max(pct(report.downloads, report.resumes), 20) : 28,
                   tone: 'bg-cyan-500',
                 },
                 {
-                  label: 'Job searches',
-                  value: `${fmt(report.searches)}+`,
-                  bar: report.resumes ? Math.max(pct(report.searches, report.resumes), 30) : 50,
+                  label: 'Applications',
+                  value: `${fmt(report.applications)}+`,
+                  bar: report.resumes ? Math.max(pct(report.applications, report.resumes), 18) : 30,
                   tone: 'bg-violet-500',
                 },
               ].map((item) => (
@@ -445,7 +418,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
                   <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                     <div
                       className={joinClasses('h-full rounded-full', item.tone)}
-                      style={{ width: `${item.bar}%` }}
+                      style={{ width: `${Math.min(item.bar, 100)}%` }}
                     />
                   </div>
                 </div>
@@ -455,19 +428,19 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
             <div className="mt-5 flex flex-1 flex-col gap-3 border-t border-slate-200 pt-5">
               <div className="flex-1 rounded-[20px] bg-slate-950 px-5 py-5 text-white">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                  Top keyword
+                  Applications tracked
                 </div>
                 <div className="mt-2 font-heading text-[28px] font-semibold tracking-tight">
-                  {report.topKeyword}
+                  {fmt(report.applications)}+
                 </div>
               </div>
 
               <div className="flex-1 rounded-[20px] bg-indigo-50 px-5 py-5 text-slate-950">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-indigo-500/70">
-                  Top location
+                  Credits in play
                 </div>
                 <div className="mt-2 font-heading text-[28px] font-semibold tracking-tight">
-                  {report.topLocation}
+                  {fmt(report.credits)}+
                 </div>
               </div>
             </div>
@@ -477,7 +450,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
         {/* Footer */}
         <div className="flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white/60 px-6 py-4">
           <div className="flex items-center gap-2.5">
-            {['AI Resume Builder', 'ATS Scoring', 'Job Tracking', 'CV Downloads'].map((tag) => (
+            {['AI Resume Builder', 'ATS Scoring', 'Interview Prep', 'CV Downloads'].map((tag) => (
               <span
                 key={tag}
                 className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600"
@@ -499,35 +472,37 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
 const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
   const report = getReportData(stats);
   const meta = normalizeContext(context);
+  const funnelWidth = (value, floor) =>
+    report.users ? Math.min(Math.max(pct(value, report.users), floor), 100) : floor;
   const steps = [
     {
-      label: 'Search',
-      value: report.searches,
+      label: 'Sign-ups',
+      value: report.users,
       width: 100,
       tone: 'linear-gradient(90deg, #818cf8 0%, #6366f1 100%)',
     },
     {
-      label: 'Click',
-      value: report.clicks,
-      width: report.searches ? Math.max(pct(report.clicks, report.searches), 24) : 60,
+      label: 'Resumes',
+      value: report.resumes,
+      width: funnelWidth(report.resumes, 60),
       tone: 'linear-gradient(90deg, #67e8f9 0%, #06b6d4 100%)',
     },
     {
-      label: 'Save',
-      value: report.saves,
-      width: report.searches ? Math.max(pct(report.saves, report.searches), 20) : 48,
+      label: 'Analyses',
+      value: report.optimizations,
+      width: funnelWidth(report.optimizations, 48),
       tone: 'linear-gradient(90deg, #c4b5fd 0%, #8b5cf6 100%)',
     },
     {
-      label: 'Tailor',
-      value: report.tailors,
-      width: report.searches ? Math.max(pct(report.tailors, report.searches), 18) : 42,
+      label: 'Downloads',
+      value: report.downloads,
+      width: funnelWidth(report.downloads, 42),
       tone: 'linear-gradient(90deg, #f9a8d4 0%, #ec4899 100%)',
     },
     {
-      label: 'Apply',
+      label: 'Applications',
       value: report.applications,
-      width: report.searches ? Math.max(pct(report.applications, report.searches), 16) : 36,
+      width: funnelWidth(report.applications, 36),
       tone: 'linear-gradient(90deg, #fde68a 0%, #f59e0b 100%)',
     },
   ];
@@ -565,7 +540,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
             The journey
           </div>
           <h1 className="mt-4 font-heading text-[56px] font-semibold leading-[0.94] tracking-[-0.04em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-            How job seekers move from search to application.
+            How professionals build and ship standout CVs.
           </h1>
           <p className="mt-4 max-w-[280px] text-[18px] leading-[1.45] text-indigo-100/80">
             Real data from real professionals using ApplyRight to land their next role.
@@ -577,7 +552,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
           {[
             { value: `${fmt(report.users)}+`, label: 'Users' },
             { value: `${fmt(report.resumes)}+`, label: 'Resumes' },
-            { value: `${fmt(report.tailors)}+`, label: 'CVs tailored' },
+            { value: `${fmt(report.downloads)}+`, label: 'Downloads' },
             { value: `${fmt(report.optimizations)}+`, label: 'Analyses' },
           ].map((item) => (
             <div
@@ -600,15 +575,15 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
             Snapshot
           </div>
           <div className="mt-3 font-heading text-[40px] font-semibold leading-none">
-            {report.searchToApplyRate}%
+            {report.applyRate}%
           </div>
-          <div className="mt-1.5 text-sm text-indigo-100/80">search-to-apply conversion</div>
+          <div className="mt-1.5 text-sm text-indigo-100/80">applications per resume</div>
 
           <div className="mt-4 space-y-2">
             {[
               { label: 'New users', value: `+${fmt(report.newUsers)}` },
-              { label: 'Top keyword', value: report.topKeyword },
-              { label: 'Best market', value: report.topLocation },
+              { label: 'Resumes built', value: fmt(report.resumes) },
+              { label: 'CVs downloaded', value: fmt(report.downloads) },
             ].map((item) => (
               <div
                 key={item.label}
@@ -642,7 +617,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Total users', value: `${fmt(report.users)}+` },
-            { label: 'Searches', value: `${fmt(report.searches)}+` },
+            { label: 'Resumes', value: `${fmt(report.resumes)}+` },
             { label: 'Applications', value: `${fmt(report.applications)}+` },
           ].map((item) => (
             <div
@@ -666,7 +641,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
                 Funnel performance
               </div>
               <div className="mt-1.5 font-heading text-[24px] font-semibold tracking-tight text-white">
-                From search to hired
+                From sign-up to application
               </div>
             </div>
 
@@ -715,10 +690,10 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
             {[
               { num: '1', text: 'Create your free account' },
               { num: '2', text: 'Build a professional CV' },
-              { num: '3', text: 'Tailor CV to any job' },
-              { num: '4', text: 'Get ATS score & tips' },
-              { num: '5', text: 'Search & apply to jobs' },
-              { num: '6', text: 'Track all applications' },
+              { num: '3', text: 'Get an instant ATS score' },
+              { num: '4', text: 'Improve it with AI suggestions' },
+              { num: '5', text: 'Download your polished CV' },
+              { num: '6', text: 'Track your applications' },
             ].map((step) => (
               <div
                 key={step.num}

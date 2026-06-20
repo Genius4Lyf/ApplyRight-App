@@ -14,7 +14,7 @@ export const AD_TEMPLATES = [
     accentColor: '#67e8f9',
     bullets: [
       'Leads with total user growth and product adoption.',
-      'Highlights search, resume, and analysis volume.',
+      'Highlights resume, analysis, and download volume.',
       'Best for broad social proof or milestone campaigns.',
     ],
   },
@@ -34,14 +34,14 @@ export const AD_TEMPLATES = [
   {
     id: 'impact-report',
     name: 'Impact Report',
-    description: 'Split-layout funnel visual for operational growth and conversion storytelling.',
+    description: 'Split-layout funnel visual for operational growth and adoption storytelling.',
     bgColor: '#020617',
-    focus: 'Conversion',
+    focus: 'Adoption',
     accentColor: '#818cf8',
     bullets: [
-      'Shows the search-to-apply funnel in one export.',
+      'Shows the sign-up to application journey in one export.',
       'Best for data-driven posts and investor-style updates.',
-      'Surfaces source mix and strongest demand signals.',
+      'Surfaces resume, analysis, and download adoption.',
     ],
   },
 ];

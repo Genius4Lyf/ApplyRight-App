@@ -141,6 +141,20 @@ export const CVBuilderProvider = ({ children }) => {
     }
   }, [id, location.state]);
 
+  // Agent flow: when a CV agent starts a CV for a specific client, the client
+  // id + name ride in on navigation state. File the new draft under that client
+  // (clientId is persisted on the first save since handleNext sends all cvData).
+  useEffect(() => {
+    if (id === 'new' && location.state?.clientForCv) {
+      const { clientId, clientName } = location.state.clientForCv;
+      setCvData((prev) => ({
+        ...prev,
+        clientId: clientId || prev.clientId || null,
+        title: clientName ? `CV for ${clientName}` : prev.title,
+      }));
+    }
+  }, [id, location.state]);
+
   // Load Draft Data
   useEffect(() => {
     const loadDraft = async () => {
@@ -228,6 +242,21 @@ export const CVBuilderProvider = ({ children }) => {
     setCvData((prev) => ({ ...prev, ...partialData }));
   }, []);
 
+  // CV agents need an active plan to CREATE a CV — the backend returns 402
+  // { code: 'NEED_AGENT_SUB' } from /cv/save. Route them to the agent plans
+  // instead of a generic "save failed" toast. Returns true if it handled it.
+  const handleAgentPaywall = useCallback(
+    (error) => {
+      if (error?.response?.status === 402 && error?.response?.data?.code === 'NEED_AGENT_SUB') {
+        toast.error('An active agent plan is required to create CVs.');
+        navigate('/upgrade');
+        return true;
+      }
+      return false;
+    },
+    [navigate]
+  );
+
   // Save and Next
   const handleNext = async (stepData) => {
     // 1. Update Local State immediately
@@ -260,6 +289,7 @@ export const CVBuilderProvider = ({ children }) => {
       }
       // No next step means we're already on finalize — stay put.
     } catch (error) {
+      if (handleAgentPaywall(error)) return;
       console.error('Save failed', error);
       toast.error('Failed to save progress.');
     } finally {
@@ -305,6 +335,10 @@ export const CVBuilderProvider = ({ children }) => {
           if (savedDraft?._id) targetId = id === 'new' ? savedDraft._id : id;
           setStepDirty(false);
         } catch (error) {
+          if (handleAgentPaywall(error)) {
+            setSaving(false);
+            return;
+          }
           console.error('Failed to save section before jumping', error);
           toast.error('Could not save this section — jumping anyway.');
         } finally {
@@ -314,7 +348,7 @@ export const CVBuilderProvider = ({ children }) => {
 
       navigate(`/cv-builder/${targetId}/${target.path}`);
     },
-    [cvData, currentStepIndex, id, navigate, stepDirty]
+    [cvData, currentStepIndex, id, navigate, stepDirty, handleAgentPaywall]
   );
 
   // Rename the CV. The backend save does a $set of only the fields sent, so a
@@ -344,8 +378,14 @@ export const CVBuilderProvider = ({ children }) => {
   // back up. Clears stepDirty so the beforeunload listener doesn't fire.
   const exitWizard = useCallback(() => {
     setStepDirty(false);
-    navigate('/my-cvs');
-  }, [navigate]);
+    // Agents manage CVs from their own workspace; send them back there. If the
+    // CV is filed under a client, return to that client's folder.
+    if (user?.role === 'agent') {
+      navigate(cvData.clientId ? `/agent/clients/${cvData.clientId}` : '/agent');
+    } else {
+      navigate('/my-cvs');
+    }
+  }, [navigate, user, cvData.clientId]);
 
   const value = {
     cvData,

@@ -1,11 +1,81 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Briefcase,
+  Users,
+  FileDown,
+  ShieldCheck,
+  User,
+  HelpCircle,
+} from 'lucide-react';
 import Modal from '../components/Modal';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
+
+// Left-panel value props shown when signing up as a CV agent — reframes the
+// product around client work instead of the job-seeker pitch.
+const AGENT_VALUE_PROPS = [
+  {
+    icon: <Users className="w-4 h-4" />,
+    title: 'Organize CVs by client',
+    body: 'Keep every client’s CVs in their own folder, ready to revisit.',
+  },
+  {
+    icon: <FileDown className="w-4 h-4" />,
+    title: 'Unlimited CVs & downloads',
+    body: 'Tailor and export as many polished CVs as your clients need.',
+  },
+  {
+    icon: <ShieldCheck className="w-4 h-4" />,
+    title: 'Built for CV businesses',
+    body: 'A focused workspace — no interview tools, just CV output.',
+  },
+];
+
+// Static accent class sets so Tailwind keeps them at build time.
+const CARD_ACCENTS = {
+  indigo: { on: 'border-indigo-500 bg-indigo-50', icon: 'bg-indigo-100 text-indigo-600', dot: 'border-indigo-500 bg-indigo-500' },
+  amber: { on: 'border-amber-500 bg-amber-50', icon: 'bg-amber-100 text-amber-600', dot: 'border-amber-500 bg-amber-500' },
+};
+
+// One compact option in the "I'm signing up as" selector: small icon, a label,
+// and a radio dot — a single short row. Selected = accent border, tint, filled
+// dot. (What each type means lives behind the "?" next to the heading.)
+const AccountTypeCard = ({ selected, accent, icon, title, onClick }) => {
+  const a = CARD_ACCENTS[accent] || CARD_ACCENTS.indigo;
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onClick}
+      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400 ${
+        selected ? a.on : 'border-slate-200 bg-white hover:bg-slate-50'
+      }`}
+    >
+      <span
+        className={`flex items-center justify-center w-7 h-7 rounded-md shrink-0 ${
+          selected ? a.icon : 'bg-slate-100 text-slate-500'
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="flex-1 min-w-0 text-sm font-semibold text-slate-800 truncate">{title}</span>
+      <span
+        className={`flex items-center justify-center w-4 h-4 rounded-full border-2 shrink-0 ${
+          selected ? a.dot : 'border-slate-300'
+        }`}
+      >
+        {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+      </span>
+    </button>
+  );
+};
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,18 +91,35 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Agent signup mode (/register?as=agent) — creates a CV-agent account that
+  // lands on the CV-only workspace instead of the job-seeker dashboard.
+  const [isAgent, setIsAgent] = useState(false);
+  // "?" popover explaining the two account types.
+  const [showInfo, setShowInfo] = useState(false);
+  const infoRef = React.useRef(null);
   const navigate = useNavigate();
 
   const { email, phone, password, confirmPassword, referralCode } = formData;
 
-  // Pick up referral code from URL ?ref=...
+  // Pick up referral code from URL ?ref=... and agent mode from ?as=agent
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
     if (refCode) {
       setFormData((prev) => ({ ...prev, referralCode: refCode.toUpperCase() }));
     }
+    setIsAgent(urlParams.get('as') === 'agent');
   }, []);
+
+  // Close the "?" info popover on an outside click.
+  React.useEffect(() => {
+    if (!showInfo) return;
+    const onDown = (e) => {
+      if (infoRef.current && !infoRef.current.contains(e.target)) setShowInfo(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showInfo]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -45,6 +132,13 @@ const Register = () => {
 
   const handlePhoneChange = (phone) => {
     setFormData({ ...formData, phone });
+  };
+
+  // Account-type selector at the top of the form. Keeps the URL in sync so the
+  // choice survives a refresh/share and the page's accent/copy follow it.
+  const selectAudience = (agent) => {
+    setIsAgent(agent);
+    navigate(agent ? '/register?as=agent' : '/register', { replace: true });
   };
 
   const checkPasswordStrength = (password) => {
@@ -115,10 +209,17 @@ const Register = () => {
     setError('');
 
     try {
-      const res = await api.post('/auth/register', { email, phone, password, referralCode });
+      const res = await api.post('/auth/register', {
+        email,
+        phone,
+        password,
+        referralCode,
+        ...(isAgent ? { accountType: 'agent' } : {}),
+      });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/onboarding');
+      // Agents skip the job-seeker onboarding and go straight to their workspace.
+      navigate(res.data.role === 'agent' ? '/agent' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
       setIsLoading(false);
@@ -128,14 +229,84 @@ const Register = () => {
   return (
     <>
       <AuthShell
-        formTitle="Create your account"
-        formSubtitle="Start tailoring CVs in minutes — 10 free credits to play with."
-        leftHeading="Build a CV that gets past resume software."
-        leftSubcopy="ApplyRight pulls the right keywords from each job description and rewrites your bullets so recruiters — and the systems they use — actually notice you."
-        valueProps={DEFAULT_VALUE_PROPS}
-        trustSignals={['10 free credits', 'No card needed', 'Encrypted']}
+        formTitle={isAgent ? 'Create your CV agent account' : 'Create your account'}
+        formSubtitle={
+          isAgent
+            ? 'Build and download CVs for your clients — pick an agent plan after signup.'
+            : 'Start tailoring CVs in minutes — 10 free credits to play with.'
+        }
+        leftHeading={
+          isAgent
+            ? 'Run your CV-writing business in one place.'
+            : 'Build a CV that gets past resume software.'
+        }
+        leftSubcopy={
+          isAgent
+            ? 'Organize CVs by client, tailor each to the job, and download unlimited polished CVs on an agent plan.'
+            : 'ApplyRight pulls the right keywords from each job description and rewrites your bullets so recruiters — and the systems they use — actually notice you.'
+        }
+        valueProps={isAgent ? AGENT_VALUE_PROPS : DEFAULT_VALUE_PROPS}
+        accent={isAgent ? 'amber' : 'indigo'}
+        badge={
+          isAgent
+            ? { icon: <Briefcase className="w-3.5 h-3.5" />, label: 'CV Agent sign-up' }
+            : { icon: <User className="w-3.5 h-3.5" />, label: 'Job Seeker sign-up' }
+        }
+        trustSignals={
+          isAgent
+            ? ['Unlimited CVs', 'Built for clients', 'Encrypted']
+            : ['10 free credits', 'No card needed', 'Encrypted']
+        }
       >
         <form className="space-y-5" onSubmit={onSubmit}>
+          {/* Account-type selector — the first decision on the page so users
+              know whether they're signing up to job-hunt or to build CVs for
+              clients. Selected card uses that audience's accent (indigo vs amber). */}
+          <div role="radiogroup" aria-label="Account type">
+            <div ref={infoRef} className="relative flex items-center gap-1.5 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                I'm signing up as
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowInfo((v) => !v)}
+                aria-label="What's the difference between a job seeker and a CV agent?"
+                aria-expanded={showInfo}
+                className="text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:text-slate-600"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
+              {showInfo && (
+                <div className="absolute left-0 top-6 z-20 w-72 p-3 rounded-lg border border-slate-200 bg-white shadow-lg text-xs leading-relaxed text-slate-600 space-y-2">
+                  <p>
+                    <span className="font-semibold text-indigo-700">Job seeker</span> — optimize your
+                    own CV, score your fit for a job, and practice interviews with voice AI.
+                  </p>
+                  <p>
+                    <span className="font-semibold text-amber-700">CV agent</span> — build and
+                    download CVs for paying clients, organized by client. No interview tools.
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <AccountTypeCard
+                selected={!isAgent}
+                accent="indigo"
+                icon={<User className="w-4 h-4" />}
+                title="Job seeker"
+                onClick={() => selectAudience(false)}
+              />
+              <AccountTypeCard
+                selected={isAgent}
+                accent="amber"
+                icon={<Briefcase className="w-4 h-4" />}
+                title="CV agent"
+                onClick={() => selectAudience(true)}
+              />
+            </div>
+          </div>
+
           {error && (
             <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               {error}
@@ -294,7 +465,11 @@ const Register = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+            className={`w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed ${
+              isAgent
+                ? 'py-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors'
+                : 'btn-primary'
+            }`}
           >
             {isLoading ? (
               <>
@@ -322,7 +497,7 @@ const Register = () => {
               </>
             ) : (
               <>
-                Create account
+                {isAgent ? 'Create agent account' : 'Create account'}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -337,21 +512,6 @@ const Register = () => {
               Sign in
             </Link>
           </p>
-
-          {/* CV Agent entry point. For now this routes to the CV Agent plan on the
-              pricing page; the dedicated agent signup + CV-only dashboard is a
-              future build (see CV-AGENT-PLAN.md). */}
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <p className="text-center text-sm text-slate-500">
-              Create CVs for clients?{' '}
-              <Link
-                to="/upgrade"
-                className="font-semibold text-amber-600 hover:text-amber-700 hover:underline"
-              >
-                Sign up as a CV agent
-              </Link>
-            </p>
-          </div>
         </form>
       </AuthShell>
 

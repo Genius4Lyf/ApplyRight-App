@@ -36,7 +36,12 @@ const Login = () => {
       const res = await api.post('/auth/login', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/dashboard', { state: { showProfilePrompt: true } });
+      // CV agents have their own CV-only workspace.
+      if (res.data.role === 'agent') {
+        navigate('/agent');
+      } else {
+        navigate('/dashboard', { state: { showProfilePrompt: true } });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
       setIsLoading(false);

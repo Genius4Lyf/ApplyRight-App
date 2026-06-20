@@ -19,6 +19,7 @@ import {
   Crown,
   Clock,
   Mic,
+  Users,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
@@ -51,6 +52,10 @@ const Navbar = () => {
   } catch (e) {
     console.error('Failed to parse user from local storage', e);
   }
+  // CV agents get a CV-only workspace: no interview prep, no job applications,
+  // and no interview-minute wallet. They see Clients instead.
+  const isAgent = user?.role === 'agent';
+  const homePath = isAgent ? '/agent' : '/dashboard';
 
   const [credits, setCredits] = useState(null);
   const [entitlement, setEntitlement] = useState(null);
@@ -166,7 +171,7 @@ const Navbar = () => {
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 z-50">
+        <Link to={isAuthenticated ? homePath : '/'} className="flex items-center gap-2.5 z-50">
           <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
           <span className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">
             ApplyRight
@@ -179,9 +184,9 @@ const Navbar = () => {
             {isAuthenticated && (
               <>
                 <Link
-                  to="/dashboard"
+                  to={homePath}
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                    isActive('/dashboard')
+                    isActive(homePath)
                       ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
                   }`}
@@ -200,28 +205,44 @@ const Navbar = () => {
                   <FileText className="w-4 h-4" />
                   My CVs
                 </Link>
-                <Link
-                  to="/history"
-                  className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                    isActive('/history')
-                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <History className="w-4 h-4" />
-                  My Applications
-                </Link>
-                <Link
-                  to="/interview-prep"
-                  className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                    location.pathname.startsWith('/interview-prep')
-                      ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Interview Prep
-                </Link>
+                {isAgent ? (
+                  <Link
+                    to="/agent/clients"
+                    className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                      location.pathname.startsWith('/agent/clients')
+                        ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Users className="w-4 h-4" />
+                    Clients
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/history"
+                      className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                        isActive('/history')
+                          ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <History className="w-4 h-4" />
+                      My Applications
+                    </Link>
+                    <Link
+                      to="/interview-prep"
+                      className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                        location.pathname.startsWith('/interview-prep')
+                          ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Interview Prep
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </nav>
@@ -245,13 +266,11 @@ const Navbar = () => {
 
           {isAuthenticated && (
             <div className="flex items-center gap-4">
-              {/* Unified wallet pill: shows the scarce resource for the user's
-                  plan — minutes for paid, credits for free — and opens a popover
-                  with the full picture (plan, live minutes, credits). */}
-              <div className="relative" ref={popoverRef}>
-                <button
-                  onClick={() => setShowCreditPopover(!showCreditPopover)}
-                  aria-label="Wallet: plan, minutes and credits"
+              {/* Agents have no interview minutes — show a simple plan chip that
+                  links to the agent plans, never a "0m" minutes pill. */}
+              {isAgent ? (
+                <Link
+                  to="/upgrade"
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
                     isPaid
                       ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25'
@@ -262,125 +281,156 @@ const Navbar = () => {
                     <>
                       <Crown className="w-4 h-4 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
                       <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                        {minutesLeft !== null ? `${minutesLeft}m` : planLabelFor(entitlement)}
+                        {planLabelFor(entitlement)}
                       </span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                      <Crown className="w-4 h-4 text-indigo-500" />
                       <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
-                        {credits !== null ? credits : '...'}
+                        Get a plan
                       </span>
                     </>
                   )}
-                </button>
+                </Link>
+              ) : (
+                /* Unified wallet pill: shows the scarce resource for the user's
+                  plan — minutes for paid, credits for free — and opens a popover
+                  with the full picture (plan, live minutes, credits). */
+                <div className="relative" ref={popoverRef}>
+                  <button
+                    onClick={() => setShowCreditPopover(!showCreditPopover)}
+                    aria-label="Wallet: plan, minutes and credits"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
+                      isPaid
+                        ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25'
+                        : 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25'
+                    }`}
+                  >
+                    {isPaid ? (
+                      <>
+                        <Crown className="w-4 h-4 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
+                        <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                          {minutesLeft !== null ? `${minutesLeft}m` : planLabelFor(entitlement)}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                        <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                          {credits !== null ? credits : '...'}
+                        </span>
+                      </>
+                    )}
+                  </button>
 
-                <AnimatePresence>
-                  {showCreditPopover && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
-                    >
-                      {/* Plan + live minutes */}
-                      <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-                            Plan
-                          </span>
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-bold ${
-                              isPaid
-                                ? 'text-amber-600 dark:text-amber-400'
-                                : 'text-slate-500 dark:text-slate-400'
-                            }`}
+                  <AnimatePresence>
+                    {showCreditPopover && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                      >
+                        {/* Plan + live minutes */}
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                              Plan
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 text-xs font-bold ${
+                                isPaid
+                                  ? 'text-amber-600 dark:text-amber-400'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }`}
+                            >
+                              {isPaid && <Crown className="w-3 h-3 fill-current" />}
+                              {isPaid ? planLabelFor(entitlement) : 'Free'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                              <Mic className="w-4 h-4 text-indigo-500" /> Live interview
+                            </span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">
+                              {isPaid
+                                ? `${minutesLeft ?? 0} min left`
+                                : `${freeTasteMin ?? 0} free min left`}
+                            </span>
+                          </div>
+                          {isPaid && entitlement?.expiresAt && (
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> Expires{' '}
+                              {new Date(entitlement.expiresAt).toLocaleDateString()}
+                            </p>
+                          )}
+                          <button
+                            onClick={() => {
+                              navigate('/upgrade');
+                              setShowCreditPopover(false);
+                            }}
+                            className="mt-3 w-full py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 transition-colors"
                           >
-                            {isPaid && <Crown className="w-3 h-3 fill-current" />}
-                            {isPaid ? planLabelFor(entitlement) : 'Free'}
-                          </span>
+                            {isPaid ? 'Add minutes' : 'See plans & minutes'}
+                          </button>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                            <Mic className="w-4 h-4 text-indigo-500" /> Live interview
-                          </span>
-                          <span className="font-semibold text-slate-700 dark:text-slate-200">
-                            {isPaid
-                              ? `${minutesLeft ?? 0} min left`
-                              : `${freeTasteMin ?? 0} free min left`}
-                          </span>
-                        </div>
-                        {isPaid && entitlement?.expiresAt && (
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Expires{' '}
-                            {new Date(entitlement.expiresAt).toLocaleDateString()}
-                          </p>
-                        )}
-                        <button
-                          onClick={() => {
-                            navigate('/upgrade');
-                            setShowCreditPopover(false);
-                          }}
-                          className="mt-3 w-full py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 transition-colors"
-                        >
-                          {isPaid ? 'Add minutes' : 'See plans & minutes'}
-                        </button>
-                      </div>
 
-                      {/* Credits (text prep) */}
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-                            Text prep
-                          </span>
+                        {/* Credits (text prep) */}
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                              Text prep
+                            </span>
+                            {isPaid ? (
+                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                Unlimited
+                              </span>
+                            ) : (
+                              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                {credits ?? '...'} credits
+                              </span>
+                            )}
+                          </div>
                           {isPaid ? (
-                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                              Unlimited
-                            </span>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              CVs, cover letters & written Q&A are unlimited on your plan.
+                            </p>
                           ) : (
-                            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                              {credits ?? '...'} credits
-                            </span>
+                            <>
+                              <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1 mb-2">
+                                <li className="flex items-center justify-between">
+                                  <span>Full application kit</span>
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                    ≈{Math.floor((credits || 0) / 18)}
+                                  </span>
+                                </li>
+                                <li className="flex items-center justify-between">
+                                  <span>Optimized CV</span>
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                    ≈{Math.floor((credits || 0) / 10)}
+                                  </span>
+                                </li>
+                              </ul>
+                              <button
+                                onClick={() => {
+                                  navigate('/credits');
+                                  setShowCreditPopover(false);
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2"
+                              >
+                                <PlayCircle className="w-4 h-4 text-green-500" />
+                                Get more A.I credits
+                              </button>
+                            </>
                           )}
                         </div>
-                        {isPaid ? (
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            CVs, cover letters & written Q&A are unlimited on your plan.
-                          </p>
-                        ) : (
-                          <>
-                            <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1 mb-2">
-                              <li className="flex items-center justify-between">
-                                <span>Full application kit</span>
-                                <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                  ≈{Math.floor((credits || 0) / 18)}
-                                </span>
-                              </li>
-                              <li className="flex items-center justify-between">
-                                <span>Optimized CV</span>
-                                <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                  ≈{Math.floor((credits || 0) / 10)}
-                                </span>
-                              </li>
-                            </ul>
-                            <button
-                              onClick={() => {
-                                navigate('/credits');
-                                setShowCreditPopover(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-2"
-                            >
-                              <PlayCircle className="w-4 h-4 text-green-500" />
-                              Get more A.I credits
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Account avatar + dropdown menu — single trigger replaces the
                 old "ACCOUNT" label + name + avatar + standalone logout cluster.
@@ -468,20 +518,22 @@ const Navbar = () => {
                           className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         >
                           <Crown className="w-4 h-4 text-amber-500" />
-                          {isPaid ? 'Plans & minutes' : 'Upgrade plan'}
+                          {isAgent ? 'Agent plans' : isPaid ? 'Plans & minutes' : 'Upgrade plan'}
                         </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowAccountMenu(false);
-                            navigate('/credits');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                        >
-                          <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                          {isPaid ? 'A.I credits' : 'Buy credits'}
-                        </button>
+                        {!isAgent && (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowAccountMenu(false);
+                              navigate('/credits');
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                            {isPaid ? 'A.I credits' : 'Buy credits'}
+                          </button>
+                        )}
                         <button
                           type="button"
                           role="menuitem"
@@ -527,7 +579,20 @@ const Navbar = () => {
               their balance before scrolling — was previously desktop-only,
               which hid the most relevant info on the smallest screens. */}
         <div className="md:hidden flex items-center gap-2">
-          {isAuthenticated &&
+          {isAuthenticated && isAgent ? (
+            <button
+              type="button"
+              onClick={() => navigate('/upgrade')}
+              className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 rounded-full border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors"
+              aria-label="Agent plan — tap for plans"
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                {isPaid ? planLabelFor(entitlement) : 'Plans'}
+              </span>
+            </button>
+          ) : (
+            isAuthenticated &&
             (isPaid ? (
               <button
                 type="button"
@@ -552,7 +617,8 @@ const Navbar = () => {
                   {credits !== null ? credits : '...'}
                 </span>
               </button>
-            ))}
+            ))
+          )}
           {!isMobile() && (
             <button
               className="z-50 p-2 text-slate-600 dark:text-slate-300"
@@ -609,9 +675,9 @@ const Navbar = () => {
                     {isAuthenticated && (
                       <>
                         <Link
-                          to="/dashboard"
+                          to={homePath}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive(homePath) ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                         >
                           <LayoutDashboard className="w-5 h-5" />
                           <span className="font-semibold">Dashboard</span>
@@ -624,22 +690,35 @@ const Navbar = () => {
                           <FileText className="w-5 h-5" />
                           <span className="font-semibold">My CVs</span>
                         </Link>
-                        <Link
-                          to="/history"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
-                        >
-                          <History className="w-5 h-5" />
-                          <span className="font-semibold">My Applications</span>
-                        </Link>
-                        <Link
-                          to="/interview-prep"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
-                        >
-                          <MessageSquare className="w-5 h-5" />
-                          <span className="font-semibold">Interview Prep</span>
-                        </Link>
+                        {isAgent ? (
+                          <Link
+                            to="/agent/clients"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/agent/clients') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                          >
+                            <Users className="w-5 h-5" />
+                            <span className="font-semibold">Clients</span>
+                          </Link>
+                        ) : (
+                          <>
+                            <Link
+                              to="/history"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                            >
+                              <History className="w-5 h-5" />
+                              <span className="font-semibold">My Applications</span>
+                            </Link>
+                            <Link
+                              to="/interview-prep"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                            >
+                              <MessageSquare className="w-5 h-5" />
+                              <span className="font-semibold">Interview Prep</span>
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
 
@@ -657,36 +736,46 @@ const Navbar = () => {
                             <Crown className="w-5 h-5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
                             <div>
                               <span className="block font-bold text-amber-900 dark:text-amber-200 leading-tight">
-                                {isPaid ? planLabelFor(entitlement) : 'Free plan'}
+                                {isPaid
+                                  ? planLabelFor(entitlement)
+                                  : isAgent
+                                    ? 'No plan yet'
+                                    : 'Free plan'}
                               </span>
                               <span className="block text-xs text-amber-700/80 dark:text-amber-300/80">
-                                {isPaid
-                                  ? `${minutesLeft ?? 0} interview min left`
-                                  : `${freeTasteMin ?? 0} free min · tap to upgrade`}
+                                {isAgent
+                                  ? isPaid
+                                    ? 'Unlimited CVs & downloads'
+                                    : 'Get an agent plan · tap to upgrade'
+                                  : isPaid
+                                    ? `${minutesLeft ?? 0} interview min left`
+                                    : `${freeTasteMin ?? 0} free min · tap to upgrade`}
                               </span>
                             </div>
                           </div>
                           <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                            {isPaid ? 'Add min' : 'Plans'}
+                            {isAgent ? 'Plans' : isPaid ? 'Add min' : 'Plans'}
                           </span>
                         </Link>
 
-                        {/* A.I credits (text prep) */}
-                        <Link
-                          to="/credits"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 ${isActive('/credits') ? 'bg-indigo-50 dark:bg-indigo-500/15' : ''}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
-                            <span className="font-bold text-indigo-900 dark:text-indigo-200">
-                              A.I Credits
+                        {/* A.I credits (text prep) — not shown for agents (unlimited on plan) */}
+                        {!isAgent && (
+                          <Link
+                            to="/credits"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 ${isActive('/credits') ? 'bg-indigo-50 dark:bg-indigo-500/15' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                              <span className="font-bold text-indigo-900 dark:text-indigo-200">
+                                A.I Credits
+                              </span>
+                            </div>
+                            <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md">
+                              {isPaid ? '∞' : credits !== null ? credits : '...'}
                             </span>
-                          </div>
-                          <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md">
-                            {isPaid ? '∞' : credits !== null ? credits : '...'}
-                          </span>
-                        </Link>
+                          </Link>
+                        )}
                       </>
                     )}
                   </div>

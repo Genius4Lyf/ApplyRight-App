@@ -219,7 +219,10 @@ const AdminReportStudio = () => {
                   { label: 'Users', value: compactNumber(stats.totalUsers) },
                   { label: 'Resumes', value: compactNumber(stats.totalResumes) },
                   { label: 'Applications', value: compactNumber(stats.totalApplications) },
-                  { label: 'Searches', value: compactNumber(0) },
+                  {
+                    label: 'Downloads',
+                    value: compactNumber(stats.featureUsage?.cvGeneration?.downloads),
+                  },
                 ].map((item) => (
                   <div key={item.label} className="bg-slate-50 rounded-lg px-3 py-2.5">
                     <div className="text-lg font-bold text-slate-900">{item.value}</div>

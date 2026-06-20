@@ -85,7 +85,10 @@ const Projects = () => {
 
   const addProject = () => {
     setStepDirty?.(true);
-    setProjects([...projects, { _sortId: newSortId(), title: '', link: '', description: '' }]);
+    setProjects([
+      ...projects,
+      { _sortId: newSortId(), title: '', link: '', description: '', isNew: true },
+    ]);
   };
 
   const removeProject = (index) => {
@@ -116,7 +119,8 @@ const Projects = () => {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (updateCvData) {
-        updateCvData({ projects: projects });
+        const cleanedProjects = projects.map(({ isNew, ...rest }) => rest);
+        updateCvData({ projects: cleanedProjects });
       }
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
@@ -125,7 +129,7 @@ const Projects = () => {
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
   useEffect(() => {
-    registerStepData?.(() => ({ projects }));
+    registerStepData?.(() => ({ projects: projects.map(({ isNew, ...rest }) => rest) }));
     return () => registerStepData?.(null);
   }, [projects, registerStepData]);
 
@@ -203,7 +207,7 @@ const Projects = () => {
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
-    handleNext({ projects: projects });
+    handleNext({ projects: projects.map(({ isNew, ...rest }) => rest) });
   };
 
   return (
@@ -279,6 +283,7 @@ const Projects = () => {
                 id={proj._sortId}
                 index={index}
                 total={projects.length}
+                isNew={proj.isNew}
                 onMoveUp={() => moveItem(index, -1)}
                 onMoveDown={() => moveItem(index, 1)}
                 onDelete={() => removeProject(index)}

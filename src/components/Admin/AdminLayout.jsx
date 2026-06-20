@@ -9,7 +9,6 @@ import {
   X,
   Coins,
   MessageSquare,
-  Search,
   FileImage,
   ThumbsUp,
 } from 'lucide-react';
@@ -24,7 +23,6 @@ const AdminLayout = ({ children }) => {
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/transactions', icon: Coins, label: 'Transactions' },
-    { path: '/admin/job-searches', icon: Search, label: 'Job Searches' },
     { path: '/admin/reports', icon: FileImage, label: 'Ad Reports' },
     { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/admin/ai-feedback', icon: ThumbsUp, label: 'AI Feedback' },

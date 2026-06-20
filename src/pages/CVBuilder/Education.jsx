@@ -38,7 +38,7 @@ const Education = () => {
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
   useEffect(() => {
-    registerStepData?.(() => ({ education }));
+    registerStepData?.(() => ({ education: education.map(({ isNew, ...rest }) => rest) }));
     return () => registerStepData?.(null);
   }, [education, registerStepData]);
 
@@ -77,7 +77,7 @@ const Education = () => {
     setStepDirty?.(true);
     setEducation([
       ...education,
-      { _sortId: newSortId(), degree: '', school: '', graduationDate: '', description: '' },
+      { _sortId: newSortId(), degree: '', school: '', graduationDate: '', description: '', isNew: true },
     ]);
   };
 
@@ -98,7 +98,7 @@ const Education = () => {
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
-    handleNext({ education: education });
+    handleNext({ education: education.map(({ isNew, ...rest }) => rest) });
   };
 
   return (
@@ -155,6 +155,7 @@ const Education = () => {
                 id={edu._sortId}
                 index={index}
                 total={education.length}
+                isNew={edu.isNew}
                 onMoveUp={() => moveItem(index, -1)}
                 onMoveDown={() => moveItem(index, 1)}
                 onDelete={() => removeEducation(index)}

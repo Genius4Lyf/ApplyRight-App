@@ -12,7 +12,16 @@ const Upgrade = () => {
   const [entitlement, setEntitlement] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [currency, setCurrency] = useState('NGN');
-  const [audience, setAudience] = useState('seeker'); // 'seeker' | 'agent'
+  // Default the pricing audience to the user's account type: CV agents see the
+  // agent plans first; everyone else sees the interview/job-seeker tiers.
+  const isAgentAccount = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}').role === 'agent';
+    } catch {
+      return false;
+    }
+  })();
+  const [audience, setAudience] = useState(isAgentAccount ? 'agent' : 'seeker'); // 'seeker' | 'agent'
 
   const activeTiers = audience === 'agent' ? AGENT_TIERS : TIERS;
 
@@ -111,8 +120,9 @@ const Upgrade = () => {
             <div className="text-center mb-8 text-xs sm:text-sm text-slate-400 dark:text-slate-500 tracking-wide">
               {entitlement.tier === 'free' ? (
                 <span>
-                  You’re on the Free plan — {Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} of
-                  your {FREE_TASTE_MIN} free interview minutes left.
+                  You’re on the Free plan —{' '}
+                  {Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} of your{' '}
+                  {FREE_TASTE_MIN} free interview minutes left.
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
@@ -266,39 +276,40 @@ const Upgrade = () => {
 
           {/* Top-ups (interview minutes — job seekers only) */}
           {audience === 'seeker' && (
-          <div className="mt-12 max-w-2xl mx-auto">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">
-              Out of minutes?
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-5 text-center">
-              Add more live interview minutes any time. They use your current plan’s interviewer.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              {TOPUPS.map((p) => {
-                const priceLabel = currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
-                return (
-                  <div
-                    key={p.id}
-                    className="rounded-xl p-4 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
-                  >
-                    <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                      {p.label}
-                    </span>
-                    <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 my-1">
-                      {priceLabel}
-                    </span>
-                    <button
-                      onClick={() => startCheckout(p.id)}
-                      disabled={loadingId === p.id}
-                      className="mt-3 w-full py-2 rounded-lg font-semibold text-xs sm:text-sm bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-70"
+            <div className="mt-12 max-w-2xl mx-auto">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">
+                Out of minutes?
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-5 text-center">
+                Add more live interview minutes any time. They use your current plan’s interviewer.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {TOPUPS.map((p) => {
+                  const priceLabel =
+                    currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
+                  return (
+                    <div
+                      key={p.id}
+                      className="rounded-xl p-4 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
                     >
-                      {loadingId === p.id ? 'Loading…' : `Buy ${p.minutes} min`}
-                    </button>
-                  </div>
-                );
-              })}
+                      <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+                        {p.label}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 my-1">
+                        {priceLabel}
+                      </span>
+                      <button
+                        onClick={() => startCheckout(p.id)}
+                        disabled={loadingId === p.id}
+                        className="mt-3 w-full py-2 rounded-lg font-semibold text-xs sm:text-sm bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-70"
+                      >
+                        {loadingId === p.id ? 'Loading…' : `Buy ${p.minutes} min`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
           )}
 
           <p className="text-center text-xs text-slate-400 mt-10">

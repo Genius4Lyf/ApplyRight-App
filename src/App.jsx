@@ -101,11 +101,33 @@ const SessionManager = ({ children }) => {
   );
 };
 
+// Job-seeker-only routes that a CV agent should never land on (they have a
+// CV-only workspace at /agent). Agents keep access to /my-cvs, /cv-builder,
+// /upgrade and /profile, which they need to build and pay for client CVs.
+const AGENT_BLOCKED_PREFIXES = ['/dashboard', '/history', '/interview-prep', '/jobs'];
+
+const readUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
+  const location = useLocation();
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+  // Bounce agents out of job-seeker pages into their own dashboard.
+  const user = readUser();
+  if (
+    user.role === 'agent' &&
+    AGENT_BLOCKED_PREFIXES.some((p) => location.pathname.startsWith(p))
+  ) {
+    return <Navigate to="/agent" replace />;
   }
   return children;
 };
@@ -114,6 +136,20 @@ const ProtectedRoute = ({ children }) => {
 const GuestRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (token) {
+    const user = readUser();
+    return <Navigate to={user.role === 'agent' ? '/agent' : '/dashboard'} replace />;
+  }
+  return children;
+};
+
+// Agent Protected Route — mirrors AdminRoute, for CV-agent accounts.
+const AgentRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  const user = readUser();
+  if (user.role !== 'agent') {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -204,10 +240,14 @@ import AdminUsers from './pages/Admin/AdminUsers';
 import AdminTransactions from './pages/Admin/AdminTransactions';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
 import AdminSettings from './pages/Admin/AdminSettings';
-import AdminJobSearches from './pages/Admin/AdminJobSearches';
 import AdminReportStudio from './pages/Admin/AdminReportStudio';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
 import AdminAIFeedback from './pages/Admin/AdminAIFeedback';
+
+// CV-agent pages (separate CV-only workspace)
+import AgentDashboard from './pages/Agent/AgentDashboard';
+import AgentClients from './pages/Agent/AgentClients';
+import AgentClientDetail from './pages/Agent/AgentClientDetail';
 
 // ... existing router configuration ...
 
@@ -462,6 +502,38 @@ const router = createBrowserRouter([
         ],
       },
 
+      // CV-Agent Routes (CV-only workspace; no interview/job-search)
+      {
+        path: '/agent',
+        element: (
+          <MaintenanceGuard>
+            <AgentRoute>
+              <AgentDashboard />
+            </AgentRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/agent/clients',
+        element: (
+          <MaintenanceGuard>
+            <AgentRoute>
+              <AgentClients />
+            </AgentRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
+        path: '/agent/clients/:id',
+        element: (
+          <MaintenanceGuard>
+            <AgentRoute>
+              <AgentClientDetail />
+            </AgentRoute>
+          </MaintenanceGuard>
+        ),
+      },
+
       // Admin Routes
       {
         path: '/admin',
@@ -492,14 +564,6 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminUserDetails />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: '/admin/job-searches',
-        element: (
-          <AdminRoute>
-            <AdminJobSearches />
           </AdminRoute>
         ),
       },

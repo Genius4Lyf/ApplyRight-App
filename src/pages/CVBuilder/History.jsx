@@ -129,6 +129,7 @@ const History = () => {
         endDate: '',
         isCurrent: false,
         description: '',
+        isNew: true,
       },
     ]);
   };
@@ -151,7 +152,8 @@ const History = () => {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (updateCvData) {
-        updateCvData({ experience: history });
+        const cleanedHistory = history.map(({ isNew, ...rest }) => rest);
+        updateCvData({ experience: cleanedHistory });
       }
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
@@ -160,7 +162,7 @@ const History = () => {
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
   useEffect(() => {
-    registerStepData?.(() => ({ experience: history }));
+    registerStepData?.(() => ({ experience: history.map(({ isNew, ...rest }) => rest) }));
     return () => registerStepData?.(null);
   }, [history, registerStepData]);
 
@@ -295,7 +297,7 @@ const History = () => {
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
-    handleNext({ experience: history });
+    handleNext({ experience: history.map(({ isNew, ...rest }) => rest) });
   };
 
   return (
@@ -373,6 +375,7 @@ const History = () => {
                 id={role._sortId}
                 index={index}
                 total={history.length}
+                isNew={role.isNew}
                 onMoveUp={() => moveItem(index, -1)}
                 onMoveDown={() => moveItem(index, 1)}
                 onDelete={() => removeRole(index)}

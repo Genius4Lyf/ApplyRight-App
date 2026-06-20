@@ -23,8 +23,32 @@ import logo from '../assets/logo/applyright-icon.png';
  *                  panel bullet list (desktop only)
  *   trustSignals - array of strings rendered as small comma-separated
  *                  bullets under the form ("Free to start", etc.)
+ *   accent       - brand accent for the page: 'indigo' (default) or 'amber'
+ *                  (used to give the CV-agent signup a distinct feel)
+ *   badge        - optional { icon, label } pill shown above the headings to
+ *                  signal a special signup context (e.g. "CV Agent sign-up")
  *   children     - the actual form
  */
+// Full, static class strings per accent so Tailwind keeps them at build time.
+const ACCENTS = {
+  indigo: {
+    glow1: 'bg-indigo-600/20',
+    glow2: 'bg-violet-700/10',
+    hairline: 'via-indigo-500/30',
+    chip: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300',
+    badgeDark: 'bg-indigo-500/15 border border-indigo-400/30 text-indigo-200',
+    badgeLight: 'bg-indigo-50 border border-indigo-200 text-indigo-700',
+  },
+  amber: {
+    glow1: 'bg-amber-500/25',
+    glow2: 'bg-orange-600/10',
+    hairline: 'via-amber-500/40',
+    chip: 'bg-amber-500/10 border-amber-500/20 text-amber-300',
+    badgeDark: 'bg-amber-500/15 border border-amber-400/30 text-amber-200',
+    badgeLight: 'bg-amber-100 border border-amber-300 text-amber-700',
+  },
+};
+
 const AuthShell = ({
   formTitle,
   formSubtitle,
@@ -32,8 +56,11 @@ const AuthShell = ({
   leftSubcopy,
   valueProps = [],
   trustSignals = [],
+  accent = 'indigo',
+  badge = null,
   children,
 }) => {
+  const a = ACCENTS[accent] || ACCENTS.indigo;
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -50,12 +77,12 @@ const AuthShell = ({
         {/* Soft indigo glow in the top-right — gives the panel depth without
             the marketing-y gradient we had before. Heavy blur + low opacity. */}
         <div
-          className="absolute -top-40 -right-32 w-[28rem] h-[28rem] bg-indigo-600/20 blur-3xl rounded-full pointer-events-none"
+          className={`absolute -top-40 -right-32 w-[28rem] h-[28rem] ${a.glow1} blur-3xl rounded-full pointer-events-none`}
           aria-hidden="true"
         />
-        {/* Smaller violet glow in the bottom-left for asymmetric balance */}
+        {/* Smaller secondary glow in the bottom-left for asymmetric balance */}
         <div
-          className="absolute -bottom-32 -left-24 w-80 h-80 bg-violet-700/10 blur-3xl rounded-full pointer-events-none"
+          className={`absolute -bottom-32 -left-24 w-80 h-80 ${a.glow2} blur-3xl rounded-full pointer-events-none`}
           aria-hidden="true"
         />
         {/* Very faint dot pattern for texture, on top of the glows */}
@@ -67,7 +94,9 @@ const AuthShell = ({
           }}
         />
         {/* Hairline accent on the right edge */}
-        <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent via-indigo-500/30 to-transparent pointer-events-none" />
+        <div
+          className={`absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent ${a.hairline} to-transparent pointer-events-none`}
+        />
 
         {/* Layout: logo at top, content vertically centered in remaining
             space, copyright pinned at the bottom. The previous justify-between
@@ -87,6 +116,14 @@ const AuthShell = ({
           <div className="flex-1 flex items-center py-8">
             <div className="space-y-8 w-full">
               <div>
+                {badge && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.badgeDark}`}
+                  >
+                    {badge.icon}
+                    {badge.label}
+                  </span>
+                )}
                 <h1 className="text-[2rem] xl:text-[2.5rem] font-semibold leading-[1.15] tracking-tight text-slate-50 text-balance">
                   {leftHeading}
                 </h1>
@@ -100,7 +137,9 @@ const AuthShell = ({
                 <ul className="space-y-4 pt-2">
                   {valueProps.map((vp, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-300">
+                      <div
+                        className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${a.chip}`}
+                      >
                         {vp.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -135,6 +174,14 @@ const AuthShell = ({
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
             <div className="mb-6">
+              {badge && (
+                <span
+                  className={`inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.badgeLight}`}
+                >
+                  {badge.icon}
+                  {badge.label}
+                </span>
+              )}
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{formTitle}</h2>
               {formSubtitle && <p className="text-sm text-slate-500 mt-1.5">{formSubtitle}</p>}
             </div>
