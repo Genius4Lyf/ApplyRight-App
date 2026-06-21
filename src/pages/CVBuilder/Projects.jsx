@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   PenTool,
   ArrowRight,
@@ -63,6 +64,13 @@ const Projects = () => {
   const isPaid = user?.plan === 'paid';
 
   const [projects, setProjects] = useState(() => ensureIds(cvData?.projects));
+  const [expandedId, setExpandedId] = useState(() => {
+    const initial = ensureIds(cvData?.projects);
+    if (initial.length === 1 && !initial[0].title) {
+      return initial[0]._sortId;
+    }
+    return null;
+  });
   const [generatingIndex, setGeneratingIndex] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -101,10 +109,12 @@ const Projects = () => {
 
   const addProject = () => {
     setStepDirty?.(true);
+    const newId = newSortId();
     setProjects([
       ...projects,
-      { _sortId: newSortId(), title: '', link: '', description: '', isNew: true },
+      { _sortId: newId, title: '', link: '', description: '', isNew: true },
     ]);
+    setExpandedId(newId);
   };
 
   const removeProject = (index) => {
@@ -331,109 +341,161 @@ const Projects = () => {
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-8">
-            {projects.map((proj, index) => (
-              <SortableItem
-                key={proj._sortId}
-                id={proj._sortId}
-                index={index}
-                total={projects.length}
-                isNew={proj.isNew}
-                onMoveUp={() => moveItem(index, -1)}
-                onMoveDown={() => moveItem(index, 1)}
-                onDelete={() => removeProject(index)}
-              >
-                <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label
-                        htmlFor={`project-title-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        Project Title
-                      </label>
-                      <input
-                        id={`project-title-${index}`}
-                        type="text"
-                        value={proj.title}
-                        onChange={(e) => handleChange(index, 'title', e.target.value)}
-                        placeholder="e.g. Portfolio Website"
-                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor={`project-link-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        Link (Optional)
-                      </label>
-                      <div className="relative">
-                        <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
-                        <input
-                          id={`project-link-${index}`}
-                          type="text"
-                          value={proj.link}
-                          onChange={(e) => handleChange(index, 'link', e.target.value)}
-                          onBlur={() => handleLinkBlur(index)}
-                          placeholder="github.com/your-project"
-                          className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                        />
+            {projects.map((proj, index) => {
+              const isExpanded = expandedId === proj._sortId;
+              return (
+                 <SortableItem
+                  key={proj._sortId}
+                  id={proj._sortId}
+                  index={index}
+                  total={projects.length}
+                  isNew={proj.isNew}
+                  onMoveUp={() => moveItem(index, -1)}
+                  onMoveDown={() => moveItem(index, 1)}
+                  onDelete={() => removeProject(index)}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setExpandedId(isExpanded ? null : proj._sortId)}
+                >
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                    {/* Collapsed Header / Summary View */}
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? null : proj._sortId)}
+                      className="p-4 md:p-5 pr-28 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors select-none"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                          <PenTool className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">
+                            {proj.title || 'Untitled Project'}
+                            {proj.link && (
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">
+                                {' '}• {proj.link}
+                              </span>
+                            )}
+                          </h4>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label
-                        htmlFor={`project-description-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
-                      >
-                        Description / Bullets
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleGenerateBullets(index)}
-                        disabled={generatingIndex === index || !proj.title}
-                        className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
-                      >
-                        {generatingIndex === index ? (
-                          <RefreshCcw className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-3 h-3" />
-                        )}
-                        {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
-                      </button>
-                    </div>
-                    <textarea
-                      id={`project-description-${index}`}
-                      value={proj.description}
-                      onChange={(e) => {
-                        let val = e.target.value;
-                        if (val.length === 1 && !val.startsWith('•')) {
-                          val = '• ' + val;
-                          setTimeout(() => {
-                            if (e.target)
-                              e.target.selectionStart = e.target.selectionEnd = val.length;
-                          }, 0);
-                        }
-                        handleChange(index, 'description', val);
-                      }}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      onFocus={() => handleFocus(index)}
-                      placeholder="• Developed a full-stack app using..."
-                      className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
-                    />
-                    <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Tip: 1-3 short bullets is enough. Lead with what it does, not how you built
-                        it.
-                      </p>
-                      <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
-                    </div>
+                    {/* Expanded Content */}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="border-t border-slate-100 dark:border-slate-700 overflow-hidden"
+                        >
+                          <div className="p-4 md:p-6 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label
+                                  htmlFor={`project-title-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  Project Title
+                                </label>
+                                <input
+                                  id={`project-title-${index}`}
+                                  type="text"
+                                  value={proj.title}
+                                  onChange={(e) => handleChange(index, 'title', e.target.value)}
+                                  placeholder="e.g. Portfolio Website"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor={`project-link-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  Link (Optional)
+                                </label>
+                                <div className="relative">
+                                  <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                                  <input
+                                    id={`project-link-${index}`}
+                                    type="text"
+                                    value={proj.link}
+                                    onChange={(e) => handleChange(index, 'link', e.target.value)}
+                                    onBlur={() => handleLinkBlur(index)}
+                                    placeholder="github.com/your-project"
+                                    className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label
+                                  htmlFor={`project-description-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+                                >
+                                  Description / Bullets
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleGenerateBullets(index)}
+                                  disabled={generatingIndex === index || !proj.title}
+                                  className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
+                                >
+                                  {generatingIndex === index ? (
+                                    <RefreshCcw className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="w-3 h-3" />
+                                  )}
+                                  {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
+                                </button>
+                              </div>
+                              <textarea
+                                id={`project-description-${index}`}
+                                value={proj.description}
+                                onChange={(e) => {
+                                  let val = e.target.value;
+                                  if (val.length === 1 && !val.startsWith('•')) {
+                                    val = '• ' + val;
+                                    setTimeout(() => {
+                                      if (e.target)
+                                        e.target.selectionStart = e.target.selectionEnd = val.length;
+                                    }, 0);
+                                  }
+                                  handleChange(index, 'description', val);
+                                }}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                onFocus={() => handleFocus(index)}
+                                placeholder="• Developed a full-stack app using..."
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                              />
+                              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  Tip: 1-3 short bullets is enough. Lead with what it does, not how you built
+                                  it.
+                                </p>
+                                <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedId(null)}
+                                className="text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                              >
+                                Done
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              </SortableItem>
-            ))}
+                </SortableItem>
+              );
+            })}
           </div>
         </SortableContext>
       </DndContext>

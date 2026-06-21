@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import {
@@ -34,6 +35,13 @@ const Education = () => {
   const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   const [education, setEducation] = useState(() => ensureIds(cvData?.education));
+  const [expandedId, setExpandedId] = useState(() => {
+    const initial = ensureIds(cvData?.education);
+    if (initial.length === 1 && !initial[0].school && !initial[0].degree) {
+      return initial[0]._sortId;
+    }
+    return null;
+  });
 
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
@@ -75,10 +83,12 @@ const Education = () => {
 
   const addEducation = () => {
     setStepDirty?.(true);
+    const newId = newSortId();
     setEducation([
       ...education,
-      { _sortId: newSortId(), degree: '', school: '', graduationDate: '', description: '', isNew: true },
+      { _sortId: newId, degree: '', school: '', graduationDate: '', description: '', isNew: true },
     ]);
+    setExpandedId(newId);
   };
 
   const removeEducation = (index) => {
@@ -149,87 +159,142 @@ const Education = () => {
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-6">
-            {education.map((edu, index) => (
-              <SortableItem
-                key={edu._sortId}
-                id={edu._sortId}
-                index={index}
-                total={education.length}
-                isNew={edu.isNew}
-                onMoveUp={() => moveItem(index, -1)}
-                onMoveDown={() => moveItem(index, 1)}
-                onDelete={() => removeEducation(index)}
-              >
-                <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor={`education-school-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        School / University
-                      </label>
-                      <input
-                        id={`education-school-${index}`}
-                        type="text"
-                        value={edu.school}
-                        onChange={(e) => handleChange(index, 'school', e.target.value)}
-                        placeholder="e.g. University of Technology"
-                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
+            {education.map((edu, index) => {
+              const isExpanded = expandedId === edu._sortId;
+              return (
+                <SortableItem
+                  key={edu._sortId}
+                  id={edu._sortId}
+                  index={index}
+                  total={education.length}
+                  isNew={edu.isNew}
+                  onMoveUp={() => moveItem(index, -1)}
+                  onMoveDown={() => moveItem(index, 1)}
+                  onDelete={() => removeEducation(index)}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setExpandedId(isExpanded ? null : edu._sortId)}
+                >
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                    {/* Collapsed Header / Summary View */}
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? null : edu._sortId)}
+                      className="p-4 md:p-5 pr-28 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors select-none"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                          <GraduationCap className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">
+                            {edu.degree || 'Untitled Qualification'}
+                            {edu.school && (
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">
+                                {' '}• {edu.school}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                            {edu.graduationDate || '—'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label
-                        htmlFor={`education-degree-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        Degree / Major
-                      </label>
-                      <input
-                        id={`education-degree-${index}`}
-                        type="text"
-                        value={edu.degree}
-                        onChange={(e) => handleChange(index, 'degree', e.target.value)}
-                        placeholder="e.g. BSc Computer Science"
-                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor={`education-grad-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        Graduation Date
-                      </label>
-                      <input
-                        id={`education-grad-${index}`}
-                        type="text"
-                        value={edu.graduationDate}
-                        onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
-                        placeholder="e.g. May 2019"
-                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor={`education-description-${index}`}
-                        className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                      >
-                        Additional Info (Optional)
-                      </label>
-                      <input
-                        id={`education-description-${index}`}
-                        type="text"
-                        value={edu.description}
-                        onChange={(e) => handleChange(index, 'description', e.target.value)}
-                        placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
-                        className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
+
+                    {/* Expanded Content */}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="border-t border-slate-100 dark:border-slate-700 overflow-hidden"
+                        >
+                          <div className="p-4 md:p-6 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="md:col-span-2">
+                                <label
+                                  htmlFor={`education-school-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  School / University
+                                </label>
+                                <input
+                                  id={`education-school-${index}`}
+                                  type="text"
+                                  value={edu.school}
+                                  onChange={(e) => handleChange(index, 'school', e.target.value)}
+                                  placeholder="e.g. University of Technology"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor={`education-degree-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  Degree / Major
+                                </label>
+                                <input
+                                  id={`education-degree-${index}`}
+                                  type="text"
+                                  value={edu.degree}
+                                  onChange={(e) => handleChange(index, 'degree', e.target.value)}
+                                  placeholder="e.g. BSc Computer Science"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor={`education-grad-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  Graduation Date
+                                </label>
+                                <input
+                                  id={`education-grad-${index}`}
+                                  type="text"
+                                  value={edu.graduationDate}
+                                  onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
+                                  placeholder="e.g. May 2019"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label
+                                  htmlFor={`education-description-${index}`}
+                                  className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                                >
+                                  Additional Info (Optional)
+                                </label>
+                                <input
+                                  id={`education-description-${index}`}
+                                  type="text"
+                                  value={edu.description}
+                                  onChange={(e) => handleChange(index, 'description', e.target.value)}
+                                  placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedId(null)}
+                                className="text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                              >
+                                Done
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              </SortableItem>
-            ))}
+                </SortableItem>
+              );
+            })}
           </div>
         </SortableContext>
       </DndContext>

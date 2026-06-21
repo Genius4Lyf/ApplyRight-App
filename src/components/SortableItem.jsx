@@ -13,7 +13,18 @@ import { motion, AnimatePresence } from 'framer-motion';
  * All per-card actions live in a single action pill at the top-right of the card,
  * hidden behind a trigger button. When clicked, the actions slide out horizontally.
  */
-const SortableItem = ({ id, index, total, onMoveUp, onMoveDown, onDelete, isNew, children }) => {
+const SortableItem = ({
+  id,
+  index,
+  total,
+  onMoveUp,
+  onMoveDown,
+  onDelete,
+  isNew,
+  isExpanded,
+  onToggleExpand,
+  children,
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
@@ -52,6 +63,18 @@ const SortableItem = ({ id, index, total, onMoveUp, onMoveDown, onDelete, isNew,
     <div ref={setNodeRef} style={style} className="relative">
       {/* Sliding action drawer container */}
       <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        {onToggleExpand && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand();
+            }}
+            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
+          >
+            {isExpanded ? 'Collapse' : 'Edit'}
+          </button>
+        )}
         <AnimatePresence initial={false}>
           {isOpen && (
             <motion.div
