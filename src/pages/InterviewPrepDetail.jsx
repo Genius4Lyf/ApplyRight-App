@@ -383,7 +383,7 @@ const InterviewPrepDetail = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-transparent">
         <Navbar />
         <div className="flex items-center justify-center py-20">
           <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
@@ -394,7 +394,7 @@ const InterviewPrepDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-transparent">
         <Navbar />
         <div className="text-center py-12 text-rose-600 dark:text-rose-300">{error}</div>
       </div>
@@ -456,7 +456,7 @@ const InterviewPrepDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
 
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
@@ -1249,7 +1249,7 @@ const EssentialsSection = ({
                 type="button"
                 onClick={() => onGenerateEssential(e.kind)}
                 disabled={generatingEssential === e.kind}
-                className="mt-2 inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-2 inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {generatingEssential === e.kind ? (
                   <>
@@ -1418,7 +1418,7 @@ const QuestionsTab = ({
                 type="button"
                 onClick={onGenerateMore}
                 disabled={generatingMore}
-                className="group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                className="group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
               >
                 {generatingMore ? (
                   <>

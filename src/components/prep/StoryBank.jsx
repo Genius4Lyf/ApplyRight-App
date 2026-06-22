@@ -117,7 +117,7 @@ const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
         type="button"
         onClick={onGenerate}
         disabled={generating}
-        className="mt-4 group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        className="mt-4 group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
       >
         {generating ? (
           <>
