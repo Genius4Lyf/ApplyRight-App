@@ -14,8 +14,6 @@ import {
   ChevronDown,
   MessageSquare,
   FileText,
-  Sun,
-  Moon,
   Crown,
   Clock,
   Mic,
@@ -24,7 +22,6 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 import { isMobile } from '../utils/platform';
-import { useTheme } from '../context/ThemeContext';
 
 import logo from '../assets/logo/applyright-icon.png';
 
@@ -39,8 +36,7 @@ const planLabelFor = (ent) =>
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === 'dark';
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -534,19 +530,6 @@ const Navbar = () => {
                             {isPaid ? 'A.I credits' : 'Buy credits'}
                           </button>
                         )}
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={toggleTheme}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                        >
-                          {isDark ? (
-                            <Sun className="w-4 h-4 text-amber-500" />
-                          ) : (
-                            <Moon className="w-4 h-4 text-slate-400" />
-                          )}
-                          {isDark ? 'Light mode' : 'Dark mode'}
-                        </button>
                       </div>
 
                       <div className="border-t border-slate-100 dark:border-slate-700">
@@ -567,8 +550,11 @@ const Navbar = () => {
                   )}
                 </AnimatePresence>
               </div>
+
+
             </div>
           )}
+
         </div>
 
         {/* Mobile chrome:
@@ -808,17 +794,7 @@ const Navbar = () => {
                           </div>
                         </Link>
 
-                        <button
-                          onClick={toggleTheme}
-                          className="w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold"
-                        >
-                          {isDark ? (
-                            <Sun className="w-5 h-5 text-amber-500" />
-                          ) : (
-                            <Moon className="w-5 h-5 text-slate-400" />
-                          )}
-                          <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
-                        </button>
+
 
                         <button
                           onClick={() => {
