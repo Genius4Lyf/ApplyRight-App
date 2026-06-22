@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   XCircle,
   Sparkles,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import TailorDiffView from '../../components/cv/TailorDiffView';
@@ -228,7 +229,7 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
 const Finalize = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob } = context || {};
+  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob, isStepComplete } = context || {};
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -266,7 +267,14 @@ const Finalize = () => {
     );
   }
 
-  const isComplete = cvData.personalInfo?.fullName && cvData.experience?.length > 0;
+  const isComplete = isStepComplete ? [
+    'heading',
+    'history',
+    'projects',
+    'education',
+    'skills',
+    'summary'
+  ].every((stepId) => isStepComplete(stepId)) : false;
 
   // Score guidance for inline display (when modal is dismissed)
   const afterScore = atsScores?.after?.fitScore || 0;
@@ -457,9 +465,14 @@ const Finalize = () => {
         </ul>
 
         {!isComplete && (
-          <div className="mt-6 p-3 bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 text-sm rounded-lg border border-amber-100 dark:border-amber-500/30">
-            Warning: Some key sections seem empty. You can still preview, but your resume might look
-            incomplete.
+          <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-semibold rounded-xl border border-amber-200 dark:border-amber-500/30 flex items-start gap-3">
+            <Lock className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <p className="font-bold text-slate-800 dark:text-slate-200">Journey Incomplete</p>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                You have incomplete sections in your CV journey. The final preview and download are locked until all sections are filled in.
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -495,10 +508,18 @@ const Finalize = () => {
         <button
           type="button"
           onClick={handlePreview}
-          disabled={saving}
-          className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
+          disabled={saving || !isComplete}
+          className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          Preview My Application <ExternalLink className="w-4 h-4" />
+          {isComplete ? (
+            <>
+              Preview My Application <ExternalLink className="w-4 h-4" />
+            </>
+          ) : (
+            <>
+              <Lock className="w-4 h-4" /> Preview Locked
+            </>
+          )}
         </button>
       </div>
     </div>

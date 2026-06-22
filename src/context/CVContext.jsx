@@ -49,14 +49,29 @@ export const CVBuilderProvider = ({ children }) => {
   // and the Exit-with-confirm flow in the layout.
   const [stepDirty, setStepDirty] = useState(false);
 
+  // Conversation state for the ATS Coach, scoped to the current CV builder session.
+  const [coachState, setCoachState] = useState({});
+
+  // Reset coach state when draft ID changes (i.e. user switches CVs or starts fresh)
+  useEffect(() => {
+    setCoachState({});
+  }, [id]);
+
+
   // The active step registers a getter here that returns its current
   // in-progress data slice (e.g. () => ({ skills: [...] })). Each step holds
   // its own local form state, so this is how the wizard reaches in to flush
   // that state when the user jumps to another section via the step navigator.
   // null when the active step has nothing to persist (e.g. the Review step).
   const stepDataRef = useRef(null);
+  // A reactive snapshot of the active step's CURRENT (unsaved) form data. Steps
+  // re-register their getter on every change, so this stays live — letting the
+  // coach panel + journey read what the user is typing right now, without saving
+  // to the backend or touching the step components. null when nothing to persist.
+  const [liveStepData, setLiveStepData] = useState(null);
   const registerStepData = useCallback((getter) => {
     stepDataRef.current = getter;
+    setLiveStepData(getter ? getter() : null);
   }, []);
 
   // Fetch full user profile from API on mount
@@ -387,8 +402,37 @@ export const CVBuilderProvider = ({ children }) => {
     }
   }, [navigate, user, cvData.clientId]);
 
+  // Saved CV data overlaid with the active step's live (unsaved) edits — what the
+  // user actually sees on screen right now. The coach panel + journey use this so
+  // they're never stale on the section being edited.
+  const liveCvData = liveStepData ? { ...cvData, ...liveStepData } : cvData;
+
+  const isStepComplete = useCallback((stepId) => {
+    switch (stepId) {
+      case 'target_job':
+        return !!cvData.targetJob?.title?.trim();
+      case 'heading':
+        return !!cvData.personalInfo?.fullName;
+      case 'history':
+        return (cvData.experience?.length || 0) > 0;
+      case 'projects':
+        return (cvData.projects?.length || 0) > 0;
+      case 'education':
+        return (cvData.education?.length || 0) > 0;
+      case 'skills':
+        return (cvData.skills?.length || 0) > 0;
+      case 'summary':
+        return !!cvData.professionalSummary?.trim();
+      case 'finalize':
+        return true; // Review step — nothing to fill in here.
+      default:
+        return false;
+    }
+  }, [cvData]);
+
   const value = {
     cvData,
+    liveCvData,
     updateCvData,
     handleNext,
     handleBack,
@@ -405,9 +449,12 @@ export const CVBuilderProvider = ({ children }) => {
     steps: STEPS,
     stepDirty,
     setStepDirty,
+    isStepComplete,
     isTailored: !!cvData.tailoredFrom,
     tailoredFrom: cvData.tailoredFrom,
     tailoredForJob: cvData.tailoredForJob,
+    coachState,
+    setCoachState,
   };
 
   return <CVBuilderContext.Provider value={value}>{children}</CVBuilderContext.Provider>;

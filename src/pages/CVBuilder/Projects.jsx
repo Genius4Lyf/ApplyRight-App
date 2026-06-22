@@ -297,7 +297,7 @@ const Projects = () => {
           className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
-          <span className="hidden md:inline">How AI Works</span>
+          <span className="hidden md:inline">How ApplyRight AI Works</span>
         </button>
       </div>
 

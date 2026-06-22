@@ -403,7 +403,7 @@ const LandingPage = () => {
                 to="/how-it-works"
                 className="btn-secondary py-4 px-8 text-lg w-full sm:w-auto border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all"
               >
-                How Application Review Works
+                How ApplyRight AI Works
               </Link>
             </div>
           </motion.div>

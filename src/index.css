@@ -100,12 +100,12 @@
      `.clean-card` and anything using bg-surface/bg-background/border-border
      flips automatically via these tokens. */
   .dark {
-    --color-background: #0f172a;
+    --color-background: #020617;
+    /* Slate 955 */
+    --color-surface: #0f172a;
     /* Slate 900 */
-    --color-surface: #1e293b;
+    --color-border: #1e293b;
     /* Slate 800 */
-    --color-border: #334155;
-    /* Slate 700 */
   }
 
   html {
@@ -122,14 +122,26 @@
     text-rendering: optimizeLegibility;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1:not(.cv-template-container *),
+  h2:not(.cv-template-container *),
+  h3:not(.cv-template-container *),
+  h4:not(.cv-template-container *),
+  h5:not(.cv-template-container *),
+  h6:not(.cv-template-container *) {
     @apply font-heading text-slate-900 dark:text-slate-100;
     /* Tight tracking + lining numerals — Merriweather as an editorial display. */
+    letter-spacing: -0.012em;
+    font-feature-settings: 'lnum' on;
+  }
+
+  /* CV PDF/Print template headings wrapper (excludes dark mode text color adjustments) */
+  .cv-template-container h1,
+  .cv-template-container h2,
+  .cv-template-container h3,
+  .cv-template-container h4,
+  .cv-template-container h5,
+  .cv-template-container h6 {
+    @apply font-heading text-slate-900;
     letter-spacing: -0.012em;
     font-feature-settings: 'lnum' on;
   }
@@ -174,6 +186,15 @@
     @apply bg-slate-200 rounded-full hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-500;
   }
 
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   /* A4 Paper & Scaling Logic */
   .a4-page {
     width: 210mm;
@@ -185,6 +206,27 @@
     box-sizing: border-box;
     overflow: hidden;
     /* Prevent spillover */
+  }
+
+  @keyframes laser-sweep {
+    0% {
+      top: 0%;
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  .animate-laser-sweep {
+    animation: laser-sweep 2.2s ease-in-out infinite;
   }
 
   @media print {

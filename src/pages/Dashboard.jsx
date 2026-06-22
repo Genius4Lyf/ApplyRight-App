@@ -1507,34 +1507,35 @@ const Dashboard = () => {
         {/* Auto-Analysis Modal */}
         {showAutoAnalyzeModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
               {/* Mobile: stacked + centered. Desktop (sm+): icon left, copy right. */}
               <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left sm:gap-4 mb-5 sm:mb-4">
-                <div className="p-3 bg-indigo-100 dark:bg-indigo-500/15 rounded-full text-indigo-600 mb-3 sm:mb-0 shrink-0">
-                  <Sparkles className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mb-3 sm:mb-0">
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2 font-heading">
                     Enable Auto-Analysis?
                   </h3>
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                     Automatically analyze your resume against any job you upload — no extra taps
                     needed.
                   </p>
                 </div>
               </div>
               {/* Mobile: stacked, full-width, primary on top. Desktop: inline right-aligned. */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-2 sm:mt-6">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowAutoAnalyzeModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
                 >
                   Keep it manual
                 </button>
                 <button
                   onClick={enableAutoAnalysis}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all sm:hover:scale-105"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
                 >
+                  <Sparkles className="w-3.5 h-3.5" />
                   Enable auto-analysis
                 </button>
               </div>
@@ -1544,38 +1545,38 @@ const Dashboard = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteModalOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-rose-600" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left sm:gap-4 mb-5 sm:mb-4">
+                <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100/50 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 mb-3 sm:mb-0">
+                  <Trash2 className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2 font-heading">
                     Delete CV?
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                     Are you sure you want to delete "{draftToDelete?.title || 'Untitled CV'}"? This
                     action cannot be undone.
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
                 <button
                   onClick={() => {
                     setDeleteModalOpen(false);
                     setDraftToDelete(null);
                   }}
-                  className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md shadow-rose-500/10 hover:shadow-rose-500/20 transition-all active:scale-[0.98]"
                 >
-                  Delete
+                  Delete CV
                 </button>
               </div>
             </div>
@@ -1586,28 +1587,28 @@ const Dashboard = () => {
       {/* Insufficient Credits Modal */}
       {showCreditModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center relative">
             <button
               onClick={() => setShowCreditModal(false)}
-              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+              className="absolute top-4 right-4 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-805 rounded-full transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/15 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Zap className="w-8 h-8" />
+            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-500/10 border border-amber-100/50 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center mx-auto mb-5">
+              <Zap className="w-5 h-5" />
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 font-heading">
               Insufficient A.I Credits
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
               You need{' '}
-              <span className="font-bold text-slate-900 dark:text-slate-100">
+              <span className="font-bold text-slate-800 dark:text-slate-200">
                 {requiredCredits} A.I credits
               </span>{' '}
               to perform this action, but you only have{' '}
-              <span className="font-bold text-slate-900 dark:text-slate-100">
+              <span className="font-bold text-slate-800 dark:text-slate-200">
                 {user.credits || 0}
               </span>
               .
@@ -1616,22 +1617,22 @@ const Dashboard = () => {
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/credits')}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 <Zap className="w-4 h-4" /> Get More A.I Credits
               </button>
 
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-xs uppercase font-bold">
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                   OR
                 </span>
-                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
               </div>
 
               <button
                 onClick={() => navigate('/credits')} // For now direct to store where ad option lives
-                className="w-full py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free A.I Credits
               </button>

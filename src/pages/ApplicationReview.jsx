@@ -13,7 +13,9 @@ import {
   AlertTriangle,
   UserCheck,
   Layers,
+  Sparkles,
 } from 'lucide-react';
+import logo from '../assets/logo/applyright-icon.png';
 
 const ApplicationReview = () => {
   const fadeInUp = {
@@ -134,9 +136,7 @@ const ApplicationReview = () => {
           className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}
         >
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white transition-all group-hover:bg-indigo-700">
-              <Layers size={18} />
-            </div>
+            <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto object-contain" />
             <span className="text-xl font-bold font-heading text-slate-900">ApplyRight</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -167,22 +167,18 @@ const ApplicationReview = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100/50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-wide mb-6">
-              <AlertTriangle size={14} /> The Hard Truth
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/55 border border-indigo-200 text-indigo-700 text-xs font-bold uppercase tracking-wide mb-6">
+              <img src={logo} alt="ApplyRight Logo" className="w-4 h-4 object-contain" />
+              ApplyRight AI Co-Pilot
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight">
-              The Hiring Game is{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
-                Rigged.
-              </span>{' '}
-              <br />
-              <span className="text-3xl md:text-5xl text-slate-500 font-medium block mt-2">
-                (Unless You Know the Rules)
+            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight font-heading">
+              How ApplyRight{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+                AI Works
               </span>
             </h1>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              You submitted your resume. You waited. You heard nothing. <br />
-              It wasn't a human who rejected you. It was a robot.
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              An inside look at how our AI analyzes job descriptions, extracts keyword requirements, and rewrites your resume experience to stand out to both algorithms and recruiters.
             </p>
           </motion.div>
         </div>
@@ -342,18 +338,21 @@ const ApplicationReview = () => {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/30 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center mb-16">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center border border-white/20 mx-auto mb-6">
+            <img src={logo} alt="ApplyRight Logo" className="w-full h-full object-contain" />
+          </div>
           <h2 className="text-indigo-400 font-bold tracking-widest uppercase text-sm mb-4">
-            The Solution
+            How ApplyRight AI Works
           </h2>
-          <h3 className="text-4xl md:text-6xl font-bold mb-6 text-white">
-            How ApplyRight Bridges the Gap
+          <h3 className="text-4xl md:text-6xl font-bold mb-6 text-white font-heading">
+            The Three Pillars of AI Optimization
           </h3>
           <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
-            We built a tool that handles both hurdles automatically.
+            Our specialized AI agents work in tandem to rewrite, structure, and optimize your application materials.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-8 relative z-10">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 relative z-10">
           <motion.div
             whileHover={{ y: -10 }}
             className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
@@ -361,14 +360,28 @@ const ApplicationReview = () => {
             <div className="w-14 h-14 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400 mb-6">
               <Search size={28} />
             </div>
-            <h4 className="text-2xl font-bold mb-4 text-white">1. We Beat the Bot</h4>
+            <h4 className="text-2xl font-bold mb-4 text-white">1. Job Parsing</h4>
             <p className="text-indigo-50 leading-relaxed mb-6">
-              Our AI analyzes the job description, isolates the "must-have" keywords, and seamlessly
-              weaves them into your skills and experience sections. Your Match Score goes from 42%
-              to 95%.
+              Our parser AI reads the target job posting to identify critical keywords, implicit skills, and core competencies that recruiters are actively searching for.
             </p>
             <div className="flex items-center gap-2 text-green-400 font-bold text-sm">
-              <CheckCircle size={16} /> ATS COMPLIANT
+              <CheckCircle size={16} /> ANALYSIS READY
+            </div>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -10 }}
+            className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
+          >
+            <div className="w-14 h-14 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 mb-6">
+              <Sparkles size={28} />
+            </div>
+            <h4 className="text-2xl font-bold mb-4 text-white">2. Contextual Rewrite</h4>
+            <p className="text-indigo-50 leading-relaxed mb-6">
+              The AI rewrites your rough accomplishments, seamlessly integrating keywords without stuffing, and structuring each line in high-impact professional formats.
+            </p>
+            <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+              <CheckCircle size={16} /> ATS OPTIMIZED
             </div>
           </motion.div>
 
@@ -379,16 +392,137 @@ const ApplicationReview = () => {
             <div className="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 mb-6">
               <Eye size={28} />
             </div>
-            <h4 className="text-2xl font-bold mb-4 text-white">2. We Impress the Human</h4>
+            <h4 className="text-2xl font-bold mb-4 text-white">3. Format Verification</h4>
             <p className="text-indigo-50 leading-relaxed mb-6">
-              We output your optimized content into visually stunning, recruiter-approved templates.
-              Clean lines, perfect hierarchy, and scannable bullet points that pass the 6-second
-              test.
+              Validates that your CV uses parsing-friendly, single-column layouts and clean fonts that survive the ATS and win the 6-second recruiter skim.
             </p>
             <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
               <CheckCircle size={16} /> RECRUITER APPROVED
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* EXAMPLES SECTION */}
+      <section className="py-24 bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-indigo-600 font-bold uppercase tracking-wider text-xs">AI In Action</span>
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-2 font-heading">Example Transformations</h2>
+            <p className="text-lg text-slate-600 mt-4 max-w-2xl mx-auto">
+              See how our AI transforms rough drafts into recruiter-ready bullet points.
+            </p>
+          </div>
+
+          <div className="space-y-12">
+            {/* Example 1 */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">1</span>
+                Work History Bullet Point
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 items-stretch">
+                <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <p className="text-sm text-slate-600 italic leading-relaxed">
+                      "helped clients and sold more products"
+                    </p>
+                  </div>
+                  <div className="text-xs text-red-500 font-medium mt-4 flex items-center gap-1.5">
+                    <XCircle size={14} /> Fails keyword match & lacks measurable impact.
+                  </div>
+                </div>
+                
+                <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
+                    Optimized
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                      "Managed <strong className="text-indigo-600 font-semibold">15+ key accounts</strong> and resolved billing inquiries, boosting quarterly <strong className="text-indigo-600 font-semibold">customer retention by 18%</strong>."
+                    </p>
+                  </div>
+                  <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
+                    <CheckCircle size={14} /> Strong action verb, exact keywords, quantified result.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Example 2 */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">2</span>
+                Project Bullet Point
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 items-stretch">
+                <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <p className="text-sm text-slate-600 italic leading-relaxed">
+                      "did social media postings for a local shop"
+                    </p>
+                  </div>
+                  <div className="text-xs text-red-500 font-medium mt-4 flex items-center gap-1.5">
+                    <XCircle size={14} /> Too generic and doesn't showcase specific technical details.
+                  </div>
+                </div>
+                
+                <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
+                    Optimized
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                      "Launched a local <strong className="text-indigo-600 font-semibold">Facebook ad campaign</strong> and created weekly promotional content, driving a <strong className="text-indigo-600 font-semibold">30% increase in store foot traffic</strong>."
+                    </p>
+                  </div>
+                  <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
+                    <CheckCircle size={14} /> Demonstrates specific strategy, target execution, and audience metrics.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Example 3 */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">3</span>
+                Professional Summary
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 items-stretch">
+                <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <p className="text-sm text-slate-600 italic leading-relaxed">
+                      "I am a project manager with 3 years of experience. I want a new job."
+                    </p>
+                  </div>
+                  <div className="text-xs text-red-500 font-medium mt-4 flex items-center gap-1.5">
+                    <XCircle size={14} /> Short, passive, and tells recruiters what you want instead of what you offer.
+                  </div>
+                </div>
+                
+                <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
+                    Optimized
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                      "Results-driven <strong className="text-indigo-600 font-semibold">Project Manager</strong> with 3+ years of experience directing cross-functional teams and operational workflows. Proven track record of delivering complex projects <strong className="text-indigo-600 font-semibold">10% under budget</strong>."
+                    </p>
+                  </div>
+                  <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
+                    <CheckCircle size={14} /> Establishes expertise, defines core competencies, and quantifies value.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

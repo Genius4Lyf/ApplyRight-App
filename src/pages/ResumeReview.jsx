@@ -240,6 +240,15 @@ const ResumeReview = () => {
             // Convert draft to pseudo-application structure for the templates
             const { optimizedCV } = generateMarkdownFromDraft(draft);
 
+            const isDraftComplete =
+              !!draft.targetJob?.title?.trim() &&
+              !!draft.personalInfo?.fullName &&
+              (draft.experience?.length || 0) > 0 &&
+              (draft.projects?.length || 0) > 0 &&
+              (draft.education?.length || 0) > 0 &&
+              (draft.skills?.length || 0) > 0 &&
+              !!draft.professionalSummary?.trim();
+
             setApplication({
               _id: draft._id,
               optimizedCV: optimizedCV,
@@ -250,6 +259,8 @@ const ResumeReview = () => {
               status: 'draft',
               isDraft: true,
               personalInfo: draft.personalInfo, // Include personal info for contact details merging
+              isDraftComplete,
+              rawDraft: draft,
             });
             return;
           }
@@ -716,6 +727,64 @@ const ResumeReview = () => {
       }
     }
   };
+
+  if (isDraftMode && application && !application.isDraftComplete) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col relative">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+            {/* Locked Badge */}
+            <div className="relative mb-6 mx-auto w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <Lock className="w-7 h-7 animate-pulse" />
+              <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border border-white dark:border-slate-900">
+                !
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2 font-heading">
+              Preview & Download Locked
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-sm mx-auto font-medium">
+              You must complete all steps of your CV journey in the builder before you can view templates or download the PDF.
+            </p>
+
+            {/* Checklist of missing sections */}
+            <div className="text-left bg-slate-50 dark:bg-slate-950/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800/80 mb-6 space-y-3">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                Required Sections
+              </span>
+              {[
+                { label: 'Target Job', done: !!application.rawDraft?.targetJob?.title?.trim() },
+                { label: 'Heading', done: !!application.rawDraft?.personalInfo?.fullName },
+                { label: 'Work History', done: (application.rawDraft?.experience?.length || 0) > 0 },
+                { label: 'Projects', done: (application.rawDraft?.projects?.length || 0) > 0 },
+                { label: 'Education', done: (application.rawDraft?.education?.length || 0) > 0 },
+                { label: 'Skills', done: (application.rawDraft?.skills?.length || 0) > 0 },
+                { label: 'Summary', done: !!application.rawDraft?.professionalSummary?.trim() },
+              ].map((sec, idx) => (
+                <div key={idx} className="flex items-center justify-between text-xs font-semibold">
+                  <span className={sec.done ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 font-bold'}>
+                    {idx + 1}. {sec.label}
+                  </span>
+                  <span className={sec.done ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-700'}>
+                    {sec.done ? <Check className="w-4 h-4 inline" /> : <Lock className="w-3.5 h-3.5 inline" />}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => navigate(`/cv-builder/${application._id}`)}
+              className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10 font-bold text-sm"
+            >
+              Return to CV Builder
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col relative">

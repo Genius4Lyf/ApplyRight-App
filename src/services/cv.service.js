@@ -51,6 +51,32 @@ const CVService = {
     return response.data;
   },
 
+  // ApplyRight Suggested Summary — professional-summary variations by tone.
+  // Free users get the Professional tone real + the rest as locked teasers; paid
+  // get all tones. Returns { isPaid, tones:[{key,label,text,locked}] }.
+  generateSummaries: async (role, context) => {
+    const response = await api.post('/ai/generate-summaries', { role, context });
+    return response.data;
+  },
+
+  // CV Coach "Deep Scan": Job Match + Career Match + recruiter red-flags for a
+  // draft. Paid users run it freely; free users get one lifetime taste (spent
+  // server-side, atomic). Returns { isPaid, locked?, taste?, tasteAvailable,
+  // jobMatch, careerMatch, redFlags }. A 402/403/502 surfaces as a thrown error.
+  coachDeepScan: async (draftId, jobDescription) => {
+    const response = await api.post('/coach/deep-scan', { draftId, jobDescription });
+    return response.data;
+  },
+
+  // Live conversational AI coach message for the current builder step. Returns
+  // { message, guide, tone, limited, remaining } — or { limited:true } when the
+  // free daily quota is spent, or { fallback:true } when AI is unavailable. The
+  // caller falls back to the instant scripted coach in those cases.
+  coachGuide: async (draftId, step, signal, cvData) => {
+    const response = await api.post('/coach/guide', { draftId, step, signal, cvData });
+    return response.data;
+  },
+
   // Generate categorized skills
   generateSkills: async (education, experience, projects, targetJob) => {
     const response = await api.post('/ai/generate-skills', {

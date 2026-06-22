@@ -98,7 +98,11 @@ const CVTemplateRenderer = ({ application, userProfile }) => {
 
   // Unknown/legacy templateId falls back to the safe, ATS-clean default.
   const Template = TEMPLATES[application?.templateId] || ATSCleanTemplate;
-  return <Template markdown={rawMarkdown} userProfile={profile} />;
+  return (
+    <div className="cv-template-container bg-white text-black text-left">
+      <Template markdown={rawMarkdown} userProfile={profile} />
+    </div>
+  );
 };
 
 export default CVTemplateRenderer;

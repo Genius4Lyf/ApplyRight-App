@@ -15,7 +15,6 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
 import SectionTips from '../../components/SectionTips';
-import JobKeywordPanel from '../../components/cv/JobKeywordPanel';
 import InlineExample from '../../components/InlineExample';
 import {
   DndContext,
@@ -75,14 +74,6 @@ const History = () => {
   } = context || {};
   const { id: draftId } = useParams();
   const navigate = useNavigate();
-
-  // Persist the paid AI keyword extraction back into cvData so the wizard's
-  // auto-save keeps it (and the backend's charge-once check stays valid).
-  const handleKeywordsEnhanced = ({ keywords, aiKeywordsHash }) => {
-    updateCvData?.({
-      targetJob: { ...cvData.targetJob, aiKeywords: keywords, aiKeywordsHash },
-    });
-  };
 
   // Paid users get unlimited bullets per role. Toggled from the admin panel.
   const isPaid = user?.plan === 'paid';
@@ -493,7 +484,7 @@ const History = () => {
           className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
-          <span className="hidden md:inline">How AI Works</span>
+          <span className="hidden md:inline">How ApplyRight AI Works</span>
         </button>
       </div>
 
@@ -508,16 +499,6 @@ const History = () => {
           'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
           'Use the AI rewrite button after writing 2+ bullets — it sharpens what you already have.',
         ]}
-      />
-
-      <JobKeywordPanel
-        floating
-        targetJob={cvData?.targetJob}
-        coveredText={history
-          .map((r) => `${r.title || ''} ${r.company || ''} ${r.description || ''}`)
-          .join(' ')}
-        draftId={draftId}
-        onEnhanced={handleKeywordsEnhanced}
       />
 
       {history.length === 0 && (

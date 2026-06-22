@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { FileText, ArrowRight, ArrowLeft, Sparkles, RefreshCcw, Wand2 } from 'lucide-react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
+import {
+  FileText,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  RefreshCcw,
+  Wand2,
+  Lock,
+  Crown,
+} from 'lucide-react';
 import CVService from '../../services/cv.service';
 import Modal from '../../components/Modal';
 import { toast } from 'sonner';
@@ -12,10 +21,17 @@ const ProfessionalSummary = () => {
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
   const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
+  const navigate = useNavigate();
 
   const [summary, setSummary] = useState(cvData?.professionalSummary || '');
   const [generating, setGenerating] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  // ApplyRight Suggested Summary tone picker. toneData = { isPaid, tones:
+  // [{ key, label, text, locked }] }. Free users get the Professional tone real
+  // and the rest locked; paid users get all tones.
+  const [showToneModal, setShowToneModal] = useState(false);
+  const [toneData, setToneData] = useState(null);
+  const [activeToneKey, setActiveToneKey] = useState(null);
   const hasAutoOpened = useRef(false);
 
   // Auto-prompt for AI Summary if empty
@@ -90,17 +106,18 @@ const ProfessionalSummary = () => {
                 Existing Summary Draft: ${summary}
             `.trim();
 
-      const { suggestions = [] } = await CVService.generateBullets(
+      const data = await CVService.generateSummaries(
         cvData.targetJob?.title || 'Professional',
-        context,
-        'summary', // 'summary' type tells AI to write a paragraph
-        '' // no JD — summary is grounded in the candidate's CV only
+        context
       );
 
-      if (suggestions && suggestions.length > 0) {
-        setSummary(suggestions[0]);
-        setStepDirty?.(true);
-        toast.success('AI Summary Generated!');
+      if (data?.tones?.length) {
+        setToneData(data);
+        const firstUnlocked = data.tones.find((t) => !t.locked) || data.tones[0];
+        setActiveToneKey(firstUnlocked.key);
+        setShowToneModal(true);
+      } else {
+        toast.warning('No summary generated. Please try again.');
       }
     } catch (error) {
       console.error('AI Gen Failed', error);
@@ -108,6 +125,21 @@ const ProfessionalSummary = () => {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const goUpgrade = () => {
+    setShowToneModal(false);
+    navigate('/upgrade');
+  };
+
+  // Apply the currently-selected (unlocked) tone's summary to the editor.
+  const applyTone = () => {
+    const tone = toneData?.tones.find((t) => t.key === activeToneKey);
+    if (!tone || tone.locked || !tone.text) return;
+    setSummary(tone.text);
+    setStepDirty?.(true);
+    toast.success('Summary applied!');
+    setShowToneModal(false);
   };
 
   const onSubmit = (e) => {
@@ -160,7 +192,7 @@ const ProfessionalSummary = () => {
               setSummary(e.target.value);
             }}
             placeholder="e.g. Innovative Software Engineer with 5+ years of experience in..."
-            className="w-full p-4 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
+            className="w-full p-4 border border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
           />
           <div className="flex justify-end mt-2">
             <button
@@ -174,7 +206,7 @@ const ProfessionalSummary = () => {
               ) : (
                 <Sparkles className="w-3 h-3" />
               )}
-              {generating ? 'Writing...' : 'AI Rewrite'}
+              {generating ? 'Writing...' : 'ApplyRight Summary'}
             </button>
           </div>
         </div>
@@ -208,27 +240,36 @@ const ProfessionalSummary = () => {
       </form>
 
       {showAiModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white text-center">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 animate-in bounce-in duration-700">
-                <Sparkles className="w-6 h-6 text-yellow-300" />
+            <div className="p-6 pb-4 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Sparkles className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-bold mb-2">We've got some ideas for your summary</h2>
-              <p className="text-indigo-100 text-sm">
-                Let AI craft your elevator pitch based on your experience.
-              </p>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-heading">
+                  We've got some ideas for your summary
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+                  Let AI craft your elevator pitch based on your experience.
+                </p>
+              </div>
             </div>
 
             {/* Body */}
-            <div className="p-8">
-              <p className="text-slate-600 dark:text-slate-300 mb-6 text-center leading-relaxed">
+            <div className="px-6 py-4">
+              <p className="text-slate-600 dark:text-slate-300 mb-4 leading-relaxed text-sm">
                 Generate an AI-personalised summary: the AI will analyse your{' '}
-                <strong>work history</strong> and <strong>skills</strong> to provide the result.
+                <strong className="text-slate-900 dark:text-slate-100 font-medium">
+                  work history
+                </strong>{' '}
+                and{' '}
+                <strong className="text-slate-900 dark:text-slate-100 font-medium">skills</strong>{' '}
+                to provide the result.
               </p>
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-4 text-center">
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
                   If you're unhappy with the AI's response, you can simply discard it and write your
                   own.
                 </p>
@@ -236,16 +277,16 @@ const ProfessionalSummary = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <button
                 onClick={() => setShowAiModal(false)}
-                className="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 rounded-lg font-medium transition-colors"
+                className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors"
               >
                 Not now
               </button>
               <button
                 onClick={confirmGenerate}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center gap-2 shadow-lg shadow-indigo-200 transform transition-all hover:-translate-y-0.5"
+                className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 flex items-center gap-2 transition-all shadow-sm"
               >
                 <Wand2 className="w-4 h-4" /> Yes, generate
               </button>
@@ -253,6 +294,139 @@ const ProfessionalSummary = () => {
           </div>
         </div>
       )}
+
+      {/* ApplyRight Suggested Summary — tone picker. Free users get the
+          Professional tone unlocked; other tones are locked teasers. Paid users
+          get every tone. */}
+      {showToneModal &&
+        toneData &&
+        (() => {
+          const activeTone =
+            toneData.tones.find((t) => t.key === activeToneKey) || toneData.tones[0];
+          const lockedActive = activeTone?.locked;
+          return (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-heading">
+                        ApplyRight Suggested Summary
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {toneData.isPaid
+                          ? 'Pick the tone that fits you best.'
+                          : 'One tone is free — unlock all 6 with a premium plan.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tone tabs */}
+                <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/30 shrink-0 scrollbar-none">
+                  {toneData.tones.map((t) => {
+                    const active = t.key === activeToneKey;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setActiveToneKey(t.key)}
+                        className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                          active
+                            ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900'
+                            : 'bg-transparent border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        {t.locked && (
+                          <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        )}
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Body — selected tone's summary */}
+                <div className="flex-1 overflow-y-auto p-6 relative">
+                  <p
+                    className={`text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-sans ${
+                      lockedActive ? 'blur-[5px] select-none pointer-events-none opacity-40' : ''
+                    }`}
+                  >
+                    {activeTone?.text}
+                  </p>
+                  {lockedActive && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/70 dark:bg-slate-900/75 p-6 backdrop-blur-[2px]">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+                        <Crown className="w-3.5 h-3.5 text-amber-500" />
+                        {activeTone.label} tone
+                      </span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-[280px]">
+                        Unlock this tone and 5 other options to customize your professional summary.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={goUpgrade}
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-white text-xs font-bold bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/10 transition-all active:scale-[0.98]"
+                      >
+                        <Lock className="w-3.5 h-3.5" /> Upgrade to unlock
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 space-y-4">
+                  <div className="flex items-start gap-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    <Sparkles className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Note:</strong> Grounded in your work history and skills, not the job
+                      description. Review and edit before using.
+                    </span>
+                  </div>
+                  {!toneData.isPaid && (
+                    <div className="flex items-center justify-between gap-4 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                          Upgrade to unlock all 6 professional tones
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={goUpgrade}
+                        className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 shrink-0"
+                      >
+                        View Plans &rarr;
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowToneModal(false)}
+                      className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={applyTone}
+                      disabled={lockedActive || !activeTone?.text}
+                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                    >
+                      Use this summary
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
     </>
   );
 };
