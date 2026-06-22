@@ -116,11 +116,7 @@ const CalmKit = () => {
   return (
     <div className="space-y-4">
       {/* Breathing */}
-      <section className="relative overflow-hidden rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
-        />
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <Wind className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />

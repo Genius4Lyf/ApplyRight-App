@@ -114,6 +114,20 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // Standalone "Interview Me": create a lightweight Application (no fit analysis,
+  // no CV/cover-letter generation) and generate the question set, then return
+  // { applicationId } so the caller can jump straight into the live mock
+  // interview. Paid-only — a free user gets a 403 { code: 'TIER_REQUIRED' }. The
+  // job description is required; pass a resumeId (uploaded) OR draftCVId (saved CV).
+  startDirectInterview: async ({ resumeId, draftCVId, jobId }) => {
+    const response = await api.post('/analysis/direct-interview', {
+      resumeId,
+      draftCVId,
+      jobId,
+    });
+    return response.data;
+  },
+
   // Generate a personalized essential answer (kind: 'intro' | 'motivation').
   generateEssential: async (applicationId, kind) => {
     const response = await api.post(`/analysis/${applicationId}/generate-essential`, { kind });
@@ -162,7 +176,10 @@ const InterviewPrepService = {
   // Assess a finished conversational interview from its transcript (AI grade
   // grounded in CV + job). Persists as the prep's last session.
   // Returns { assessment, lastInterviewSession }.
-  assessInterview: async (applicationId, { transcript, durationSec, plannedSec, reservationId }) => {
+  assessInterview: async (
+    applicationId,
+    { transcript, durationSec, plannedSec, reservationId }
+  ) => {
     const response = await api.post(`/interview-prep/${applicationId}/assess-interview`, {
       transcript,
       durationSec,

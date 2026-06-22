@@ -26,6 +26,8 @@ import {
   PlayCircle,
   Mail,
   MessageSquare,
+  Mic,
+  Crown,
   RefreshCw,
 } from 'lucide-react';
 
@@ -654,7 +656,7 @@ const Dashboard = () => {
             const createIsRecommended = recommendedWorkflow === 'create';
 
             return (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Option 1: ApplyRight */}
                 <div
                   onClick={() => {
@@ -731,6 +733,41 @@ const Dashboard = () => {
                   </p>
                   <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
                     Start Builder <ChevronRight className="w-5 h-5 ml-1" />
+                  </div>
+                </div>
+
+                {/* Option 3: Interview Me — standalone, paid-only direct
+                    interview that skips the full ApplyRight analysis. */}
+                <div
+                  onClick={() => navigate('/interview/start')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate('/interview/start');
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Start a direct interview"
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 border border-slate-200 dark:border-slate-700 hover:border-amber-200 dark:hover:border-amber-500/30"
+                >
+                  <span className="absolute top-4 right-4 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                    <Crown className="w-3 h-3" />
+                    Pro
+                  </span>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
+                  <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/15 text-amber-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    <Mic className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
+                    Interview Me
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
+                    Just want to practice? Skip the analysis and jump straight into a live mock
+                    interview against any job description.
+                  </p>
+                  <div className="flex items-center text-amber-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
+                    Start interview <ChevronRight className="w-5 h-5 ml-1" />
                   </div>
                 </div>
               </div>

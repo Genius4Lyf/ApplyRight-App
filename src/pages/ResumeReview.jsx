@@ -1790,7 +1790,7 @@ const ResumeReview = () => {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4">
                   Template Style
                 </h3>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-none pr-1">
                   {TEMPLATES.map((t) => {
                     const locked = !isUnlocked(t.id);
                     return (

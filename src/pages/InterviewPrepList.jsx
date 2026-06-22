@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, Briefcase, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
+import { MessageSquare, Briefcase, Sparkles, BookOpen, ChevronRight, Mic } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
@@ -38,13 +38,23 @@ const InterviewPrepList = () => {
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 pt-8 pb-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Interview Prep</h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            {items.length > 0
-              ? `${items.length} prep${items.length === 1 ? '' : 's'} ready`
-              : 'Rehearse before the call'}
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Interview Prep
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400">
+              {items.length > 0
+                ? `${items.length} prep${items.length === 1 ? '' : 's'} ready`
+                : 'Rehearse before the call'}
+            </p>
+          </div>
+          <Link
+            to="/interview/start"
+            className="inline-flex items-center justify-center gap-2 px-5 h-11 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors shrink-0"
+          >
+            <Mic className="w-4 h-4" /> Start a direct interview
+          </Link>
         </div>
         {showLoader ? (
           <SkeletonGrid />
@@ -186,16 +196,16 @@ const EmptyState = () => (
     </p>
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
       <Link
-        to="/dashboard"
-        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm text-center transition-colors"
+        to="/interview/start"
+        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm text-center transition-colors"
       >
-        Run a job analysis
+        <Mic className="w-4 h-4" /> Start a direct interview
       </Link>
       <Link
-        to="/history"
+        to="/dashboard"
         className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
       >
-        View applications
+        Run a job analysis
       </Link>
     </div>
   </div>

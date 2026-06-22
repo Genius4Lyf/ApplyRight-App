@@ -25,6 +25,7 @@ import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import InterviewPracticePage from './pages/InterviewPracticePage';
 import PreCallBrief from './pages/PreCallBrief';
 import MockInterviewPage from './pages/MockInterviewPage';
+import InterviewStart from './pages/InterviewStart';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
@@ -414,6 +415,16 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <BillingReturn />
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/interview/start',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <InterviewStart />
+            </ProtectedRoute>
+          </MaintenanceGuard>
         ),
       },
       {

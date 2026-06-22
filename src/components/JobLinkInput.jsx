@@ -89,7 +89,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
       </div>
 
       <div className="flex-grow flex flex-col">
-        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mb-6">
+        <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setMode('url')}
@@ -185,7 +185,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
                 success
                   ? 'bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-500/30 cursor-default'
                   : loading || (mode === 'url' ? !jobUrl : !description)
-                    ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200/50 dark:border-slate-700/50'
                     : 'btn-primary'
               }`}
             >
