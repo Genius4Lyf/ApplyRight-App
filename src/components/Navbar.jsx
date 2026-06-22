@@ -331,7 +331,7 @@ const Navbar = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                        className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                       >
                         {/* Plan + live minutes */}
                         <div className="p-4 border-b border-slate-100 dark:border-slate-700">
@@ -466,7 +466,7 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                     >
                       {/* Identity block */}
                       <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
@@ -664,7 +664,7 @@ const Navbar = () => {
                     </div>
                     <button
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 dark:text-slate-400 dark:hover:text-slate-100 dark:bg-slate-800 rounded-full transition-colors"
+                      className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 dark:text-slate-400 dark:hover:text-slate-100 dark:bg-slate-900 rounded-full transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -724,7 +724,7 @@ const Navbar = () => {
 
                     {isAuthenticated && (
                       <>
-                        <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                        <div className="h-px bg-slate-100 dark:bg-slate-900 my-4" />
 
                         {/* Plan + live interview minutes */}
                         <Link
@@ -787,7 +787,7 @@ const Navbar = () => {
                         <Link
                           to="/profile"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors mb-3 group"
+                          className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors mb-3 group"
                         >
                           <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold group-hover:scale-105 transition-transform">
                             {user && user.firstName ? (
@@ -810,7 +810,7 @@ const Navbar = () => {
 
                         <button
                           onClick={toggleTheme}
-                          className="w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold"
+                          className="w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold"
                         >
                           {isDark ? (
                             <Sun className="w-5 h-5 text-amber-500" />
@@ -861,7 +861,7 @@ const Navbar = () => {
         typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
                   <LogOut className="w-6 h-6" />

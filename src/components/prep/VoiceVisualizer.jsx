@@ -113,7 +113,7 @@ const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
             : 'border-white/10 bg-white/5'
           : active
             ? 'border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/15'
-            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
       }`}
     >
       <canvas ref={canvasRef} className="w-full h-16" />

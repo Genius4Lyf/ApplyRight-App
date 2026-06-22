@@ -70,7 +70,7 @@ const SortableItem = ({
               e.stopPropagation();
               onToggleExpand();
             }}
-            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
+            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
           >
             {isExpanded ? 'Collapse' : 'Edit'}
           </button>
@@ -83,7 +83,7 @@ const SortableItem = ({
               exit={{ width: 0, opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
               style={{ originX: 1 }}
-              className="flex items-center gap-0.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-md border border-slate-200/80 dark:border-slate-700 px-0.5 py-0.5 shadow-sm overflow-hidden whitespace-nowrap"
+              className="flex items-center gap-0.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-md border border-slate-200/80 dark:border-slate-700 px-0.5 py-0.5 shadow-sm overflow-hidden whitespace-nowrap"
             >
               <button
                 type="button"
@@ -149,7 +149,7 @@ const SortableItem = ({
           onClick={handleToggle}
           aria-label={isOpen ? 'Hide actions' : 'Show actions'}
           title={isOpen ? 'Hide actions' : 'Show actions'}
-          className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
+          className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
         >
           {isOpen ? (
             <X className="w-3.5 h-3.5" />

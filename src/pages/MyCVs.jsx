@@ -161,7 +161,7 @@ const MyCVs = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               <Sparkles className="w-4 h-4 text-indigo-500" />
               ApplyRight a job
@@ -177,7 +177,7 @@ const MyCVs = () => {
         </header>
 
         {drafts.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
             <div className="relative flex-1 min-w-0">
               <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
@@ -202,7 +202,7 @@ const MyCVs = () => {
 
             <div className="flex flex-wrap items-center gap-2">
               <div
-                className="inline-flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"
+                className="inline-flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-0.5"
                 role="tablist"
                 aria-label="Filter by status"
               >
@@ -241,7 +241,7 @@ const MyCVs = () => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
                 >
                   {SORT_OPTIONS.map((o) => (
                     <option key={o.key} value={o.key}>
@@ -274,7 +274,7 @@ const MyCVs = () => {
       {draftToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div
-            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-cv-title"
@@ -324,7 +324,7 @@ const SkeletonGrid = () => (
     {[0, 1, 2, 3, 4, 5].map((i) => (
       <div
         key={i}
-        className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
+        className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
       >
         <div className="flex justify-between items-start mb-3">
           <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 animate-pulse" />
@@ -362,7 +362,7 @@ const EmptyState = () => (
       </Link>
       <Link
         to="/dashboard"
-        className="px-5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
+        className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
       >
         Go to dashboard
       </Link>
@@ -372,7 +372,7 @@ const EmptyState = () => (
 
 const FilteredEmptyState = ({ onClear }) => (
   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-    <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
+    <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
       <Search className="w-7 h-7" />
     </div>
     <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">

@@ -31,10 +31,20 @@ const TemplateSelector = ({
   const [adOpen, setAdOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
 
+  // Active paid status, expiry-aware (mirrors the backend subscription.hasPaidAccess):
+  // honor a subscription's expiry when present, else fall back to the manually-set
+  // `plan` flag (admin grants have no subscription subdoc). So an expired subscriber
+  // reverts to paying credits for premium templates.
+  const isPaidActive = (u = {}) => {
+    const exp = u.subscription?.expiresAt;
+    if (exp) return new Date(exp).getTime() > Date.now();
+    return u.plan === 'paid';
+  };
+
   // Helper to check if template is unlocked
   const isUnlocked = (template) => {
     if (!template.isPro) return true; // Free templates always unlocked
-    if (user.plan === 'paid') return true; // Pro users unlock everything (assuming)
+    if (isPaidActive(user)) return true; // Active paid tiers unlock everything
     if (user.unlockedTemplates && user.unlockedTemplates.includes(template.id)) return true;
     return false;
   };
@@ -48,9 +58,9 @@ const TemplateSelector = ({
     if (!templateToUnlock) return;
     setUnlocking(true);
     try {
+      // Price is server-owned — send only the templateId (cost is ignored server-side).
       const res = await api.post('/billing/unlock-template', {
         templateId: templateToUnlock.id,
-        cost: templateToUnlock.cost,
       });
 
       if (res.data.success) {
@@ -124,7 +134,7 @@ const TemplateSelector = ({
 
       {unlockModalOpen && templateToUnlock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
             <button
               onClick={() => setUnlockModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
@@ -157,7 +167,7 @@ const TemplateSelector = ({
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (user.credits || 0) >= templateToUnlock.cost
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -186,7 +196,7 @@ const TemplateSelector = ({
                   </div>
                   <button
                     onClick={() => setAdOpen(true)}
-                    className="w-full py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                   >
                     <PlayCircle className="w-5 h-5 text-green-500" />
                     Watch Ad for +5 A.I Credits
@@ -255,7 +265,7 @@ const TemplateSelector = ({
               </div>
 
               {/* Content */}
-              <div className="p-4 bg-white dark:bg-slate-800 relative">
+              <div className="p-4 bg-white dark:bg-slate-900 relative">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">

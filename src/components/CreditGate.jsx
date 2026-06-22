@@ -124,7 +124,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
               type="button"
               onClick={startAd}
               disabled={checking}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
                 isCard ? 'flex-1' : ''
               }`}
             >

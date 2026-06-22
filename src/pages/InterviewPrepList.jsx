@@ -99,14 +99,14 @@ const PrepCard = ({ app }) => {
       : {
           label: 'Auto-generated',
           icon: Sparkles,
-          classes: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',
+          classes: 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300',
         };
   const BadgeIcon = badge.icon;
 
   return (
     <Link
       to={`/interview-prep/${app._id}`}
-      className="flex flex-col h-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-indigo-300 dark:hover:border-indigo-500/60 hover:shadow-md transition-all group"
+      className="flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-indigo-300 dark:hover:border-indigo-500/60 hover:shadow-md transition-all group"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <span
@@ -161,7 +161,7 @@ const SkeletonGrid = () => (
     {[0, 1, 2].map((i) => (
       <div
         key={i}
-        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 animate-pulse"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 animate-pulse"
       >
         <div className="h-5 w-20 bg-slate-100 dark:bg-slate-700 rounded mb-3" />
         <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded mb-2" />
@@ -193,7 +193,7 @@ const EmptyState = () => (
       </Link>
       <Link
         to="/history"
-        className="px-5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
+        className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
       >
         View applications
       </Link>

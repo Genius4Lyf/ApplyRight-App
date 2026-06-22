@@ -143,7 +143,7 @@ const Compare = () => {
         )}
 
         {!loading && error && (
-          <div className="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-500/30 rounded-xl p-6 text-center">
+          <div className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-500/30 rounded-xl p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
             <p className="text-slate-700 dark:text-slate-300">{error}</p>
           </div>
@@ -178,7 +178,7 @@ const Compare = () => {
 
             {/* Headline winner banner */}
             {sameJob && overallWinner && overallWinner !== 'tie' && (
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
                 <p className="text-sm text-slate-700 dark:text-slate-300">
                   <span className="font-semibold">
@@ -190,7 +190,7 @@ const Compare = () => {
               </div>
             )}
             {sameJob && overallWinner === 'tie' && (
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
                 <Minus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
                 <p className="text-sm text-slate-700 dark:text-slate-300">
                   Both runs scored within 1 point of each other — effectively tied on overall fit.
@@ -206,7 +206,7 @@ const Compare = () => {
               ].map(({ app, label }) => (
                 <div
                   key={label}
-                  className={`bg-white dark:bg-slate-800 rounded-xl border ${
+                  className={`bg-white dark:bg-slate-900 rounded-xl border ${
                     overallWinner === label
                       ? 'border-emerald-300 dark:border-emerald-500/30 ring-1 ring-emerald-100'
                       : 'border-slate-200 dark:border-slate-700'
@@ -261,7 +261,7 @@ const Compare = () => {
             </div>
 
             {/* Score breakdown side-by-side */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
                 Score breakdown
               </h3>
@@ -303,7 +303,7 @@ const Compare = () => {
             </div>
 
             {/* Missing must-have skills side-by-side */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mt-6">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">
                 Critical gaps
               </h3>

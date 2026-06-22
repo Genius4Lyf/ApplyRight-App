@@ -404,7 +404,7 @@ const Skills = () => {
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 pr-8 sm:pr-10">
                 <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
                     {isPro ? (
                       <Sparkles className="w-4 h-4 text-indigo-500" />
                     ) : (
@@ -480,7 +480,7 @@ const Skills = () => {
       {/* Add Skill — single row: category selector + skill input + Add button.
           Press Enter in the skill input to add, no need to reach for the button.
           "+ New category" inline mode swaps the dropdown for a text input. */}
-      <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+      <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
         <div className="flex flex-col sm:flex-row gap-2 items-stretch">
           {/* Category control */}
           {creatingNewCategory ? (
@@ -491,7 +491,7 @@ const Skills = () => {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="Category name"
-                className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
               />
               <button
                 type="button"
@@ -512,7 +512,7 @@ const Skills = () => {
                 onClick={() => setCategoryDropdownOpen((v) => !v)}
                 aria-haspopup="listbox"
                 aria-expanded={categoryDropdownOpen}
-                className={`w-full p-2.5 pr-8 border rounded-lg outline-none text-sm bg-white dark:bg-slate-800 text-left transition-colors flex items-center ${
+                className={`w-full p-2.5 pr-8 border rounded-lg outline-none text-sm bg-white dark:bg-slate-900 text-left transition-colors flex items-center ${
                   categoryDropdownOpen
                     ? 'border-indigo-500 ring-1 ring-indigo-500'
                     : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
@@ -536,7 +536,7 @@ const Skills = () => {
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.12 }}
                     role="listbox"
-                    className="absolute z-30 left-0 right-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
+                    className="absolute z-30 left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
                   >
                     {availableCategories.map((cat) => {
                       const selected = cat === newSkillCategory;
@@ -591,7 +591,7 @@ const Skills = () => {
               }
             }}
             placeholder="Add a skill…"
-            className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+            className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
           />
 
           <button
@@ -698,7 +698,7 @@ const Skills = () => {
             className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-indigo-500/15 dark:via-slate-800 dark:to-purple-500/15 p-4 sm:p-5"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
                 {isPro ? <BookOpen className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -782,7 +782,7 @@ const Skills = () => {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.2 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-slate-800 w-full sm:max-w-md sm:m-4 rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+                className="bg-white dark:bg-slate-900 w-full sm:max-w-md sm:m-4 rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
               >
                 {/* Drag-handle affordance on mobile */}
                 <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-4 sm:hidden" />
@@ -871,7 +871,7 @@ const Skills = () => {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.2 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-slate-800 w-full sm:max-w-md sm:m-4 rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+                className="bg-white dark:bg-slate-900 w-full sm:max-w-md sm:m-4 rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
               >
                 {/* Drag-handle affordance on mobile */}
                 <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-4 sm:hidden" />

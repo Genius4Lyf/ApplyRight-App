@@ -195,7 +195,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
           </p>
 
           {/* Progress bar */}
-          <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 mb-4 relative overflow-hidden">
+          <div className="w-full bg-slate-200 dark:bg-slate-900 rounded-full h-1.5 mb-4 relative overflow-hidden">
             <div
               className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full transition-all duration-500"
               style={{ width: `${(doneCount / totalCount) * 100}%` }}
@@ -223,7 +223,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                       isStepDone
                         ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500'
                     }`}>
                       {isStepDone ? <Check className="w-3 h-3" /> : idx + 1}
                     </span>
@@ -298,7 +298,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
         {/* Loading Pulsing Overlay */}
         {scanning && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none p-4">
-            <div className="bg-white/95 dark:bg-slate-800/95 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 animate-pulse">
+            <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 animate-pulse">
               <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">Scanning CV...</span>
             </div>
@@ -308,7 +308,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
         {/* Scan Results Overlay */}
         {showResults && scanResult && (
           <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/10 dark:bg-slate-950/20 backdrop-blur-xs">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
@@ -419,7 +419,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
         {/* Missing JD Prompt Overlay */}
         {showJdPrompt && (
           <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/10 dark:bg-slate-950/20 backdrop-blur-xs">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center shrink-0">
@@ -606,7 +606,7 @@ const CVBuilderInner = () => {
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Slim full-width progress strip — visible on every screen size,
               replacing the desktop-only step dots that were hidden on mobile. */}
-          <div className="bg-slate-100 dark:bg-slate-800 h-1 w-full overflow-hidden shrink-0">
+          <div className="bg-slate-100 dark:bg-slate-900 h-1 w-full overflow-hidden shrink-0">
             <div
               className="h-full bg-indigo-600 transition-all duration-500 ease-out"
               style={{
@@ -682,7 +682,7 @@ const CVBuilderInner = () => {
                   complete:
                     'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:bg-emerald-300',
                   warning: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300',
-                  todo: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/15 group-hover:text-indigo-700 dark:group-hover:text-indigo-300',
+                  todo: 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/15 group-hover:text-indigo-700 dark:group-hover:text-indigo-300',
                 }[status];
 
                 const title = {
@@ -878,7 +878,7 @@ const CVBuilderInner = () => {
                 <button
                   type="button"
                   onClick={() => setMobilePreviewOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 transition-colors"
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

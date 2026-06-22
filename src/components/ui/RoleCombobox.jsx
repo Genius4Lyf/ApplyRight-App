@@ -163,7 +163,7 @@ const RoleCombobox = ({ value, onChange, placeholder = 'e.g. Frontend Developer'
       </div>
 
       {isOpen && filteredRoles.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
           <div className="p-1">
             {filteredRoles.map((role) => (
               <button

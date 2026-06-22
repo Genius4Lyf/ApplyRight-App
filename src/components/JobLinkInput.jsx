@@ -89,7 +89,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
       </div>
 
       <div className="flex-grow flex flex-col">
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mb-6">
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setMode('url')}
@@ -166,7 +166,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
                       <button
                         type="button"
                         onClick={ignoreUrl}
-                        className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                        className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                       >
                         No, keep text
                       </button>
@@ -185,7 +185,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
                 success
                   ? 'bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-500/30 cursor-default'
                   : loading || (mode === 'url' ? !jobUrl : !description)
-                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                     : 'btn-primary'
               }`}
             >
@@ -209,7 +209,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
               <div className="flex-1">
                 {error}
                 {error.includes('access') && mode === 'url' && (
-                  <div className="mt-2 bg-white dark:bg-slate-800 p-3 rounded border border-red-100 dark:border-red-500/30 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="mt-2 bg-white dark:bg-slate-900 p-3 rounded border border-red-100 dark:border-red-500/30 text-xs text-slate-600 dark:text-slate-300">
                     <p className="mb-2 font-medium text-red-800 dark:text-red-300">
                       Why is this happening?
                     </p>
@@ -248,7 +248,7 @@ const JobLinkInput = ({ onJobExtracted }) => {
 
         {success && (
           <div className="mt-6 flex items-center gap-3 p-4 bg-green-50 dark:bg-green-500/15 rounded-xl border border-green-100 dark:border-green-500/30 animate-in fade-in slide-in-from-bottom-2">
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-green-600 dark:text-green-300 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-green-600 dark:text-green-300 shadow-sm">
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>

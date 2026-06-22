@@ -362,7 +362,7 @@ const Profile = () => {
           <div className="md:col-span-2 space-y-6">
             <form
               onSubmit={handleSave}
-              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 relative"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 relative"
             >
               {/* Dirty Indicator */}
               {isDirty && (
@@ -391,7 +391,7 @@ const Profile = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                   />
                 </div>
                 <div>
@@ -407,7 +407,7 @@ const Profile = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                   />
                 </div>
                 <div>
@@ -423,7 +423,7 @@ const Profile = () => {
                     name="otherName"
                     value={formData.otherName}
                     onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     placeholder="Optional"
                   />
                 </div>
@@ -470,7 +470,7 @@ const Profile = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="e.g. 09017134882"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
@@ -488,7 +488,7 @@ const Profile = () => {
                       onChange={handleChange}
                       onBlur={handleUrlBlur}
                       placeholder="yourportfolio.com"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -506,7 +506,7 @@ const Profile = () => {
                       onChange={handleChange}
                       onBlur={handleUrlBlur}
                       placeholder="linkedin.com/in/yourprofile"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                 </div>
@@ -548,7 +548,7 @@ const Profile = () => {
                   <div
                     role="group"
                     aria-label="Theme"
-                    className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+                    className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
                   >
                     <button
                       type="button"
@@ -594,7 +594,7 @@ const Profile = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })
                     }
-                    className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-800"
+                    className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
                   />
                   <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
                     <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -628,7 +628,7 @@ const Profile = () => {
                       value={formData.university}
                       onChange={handleChange}
                       placeholder="e.g. Stanford University"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
@@ -645,7 +645,7 @@ const Profile = () => {
                       value={formData.discipline}
                       onChange={handleChange}
                       placeholder="e.g. Computer Science"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                   <div>
@@ -662,7 +662,7 @@ const Profile = () => {
                       value={formData.graduationYear}
                       onChange={handleChange}
                       placeholder="YYYY"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                     <p className="text-[10px] text-amber-600 mt-1 font-medium">
                       Critical for "Context-Aware" AI.
@@ -740,7 +740,7 @@ const Profile = () => {
             {/* Quick links — surfaces destinations that previously lived in the
                 Navbar account dropdown so mobile users (where the dropdown is
                 gone) still have one-tap access. */}
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-sm">
               <button
                 type="button"
                 onClick={() => navigate('/interview-prep')}
@@ -781,7 +781,7 @@ const Profile = () => {
             <button
               type="button"
               onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-rose-500/10 font-semibold transition-colors shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-500/10 font-semibold transition-colors shadow-sm"
             >
               <LogOut className="w-4 h-4" />
               Sign out
@@ -821,7 +821,7 @@ const Profile = () => {
             className="absolute inset-0 cursor-default"
             onClick={() => setShowLogoutModal(false)}
           />
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-sm w-full p-6">
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-sm w-full p-6">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/15 rounded-full flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400">
                 <LogOut className="w-6 h-6" />
@@ -863,7 +863,7 @@ const Profile = () => {
             className="absolute inset-0 cursor-default"
             onClick={() => !deleting && setShowDeleteModal(false)}
           />
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 border border-rose-100 dark:border-rose-500/20">
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6 border border-rose-100 dark:border-rose-500/20">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/15 rounded-full flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400 animate-pulse">
                 <AlertTriangle className="w-6 h-6" />

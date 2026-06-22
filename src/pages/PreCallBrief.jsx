@@ -77,7 +77,7 @@ const PreCallBrief = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
       </div>
     );
@@ -120,9 +120,9 @@ const PreCallBrief = () => {
         : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
       {/* Top bar — hidden when printing */}
-      <header className="print:hidden sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <header className="print:hidden sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <button
             type="button"
@@ -142,7 +142,7 @@ const PreCallBrief = () => {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 sm:p-8 space-y-7">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 sm:p-8 space-y-7">
           {/* Title block */}
           <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="min-w-0">

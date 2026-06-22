@@ -76,7 +76,7 @@ const RecordingsPanel = ({ applicationId }) => {
   if (!loaded || items.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       <div className="flex items-center gap-2.5 mb-4">
         <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
           <Mic className="w-4.5 h-4.5" />
@@ -93,7 +93,7 @@ const RecordingsPanel = ({ applicationId }) => {
         {items.map((r) => (
           <div
             key={r.id}
-            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3"
           >
             <div className="flex items-center gap-3">
               <button
@@ -126,7 +126,7 @@ const RecordingsPanel = ({ applicationId }) => {
                   <button
                     type="button"
                     onClick={() => setConfirmId(null)}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>

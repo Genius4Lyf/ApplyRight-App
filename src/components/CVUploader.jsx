@@ -94,7 +94,7 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
 
         {!file ? (
           <div className="text-center pointer-events-none">
-            <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 transition-colors">
+            <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 transition-colors">
               <Upload className="w-6 h-6" />
             </div>
             <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">
@@ -104,7 +104,7 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
           </div>
         ) : (
           <div className="w-full text-center">
-            <div className="inline-flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm max-w-full">
+            <div className="inline-flex items-center gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm max-w-full">
               <div className="w-10 h-10 rounded bg-green-50 dark:bg-green-500/15 flex items-center justify-center text-green-600 dark:text-green-300">
                 <CheckCircle className="w-6 h-6" />
               </div>
@@ -163,7 +163,7 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
         disabled={!file || uploading}
         className={`mt-4 w-full h-12 rounded-lg font-semibold transition-all ${
           !file || uploading
-            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+            ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
             : 'btn-primary'
         }`}
       >

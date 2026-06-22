@@ -30,7 +30,7 @@ const CVCard = ({ draft, onDelete, layout = 'compact' }) => {
       role="button"
       tabIndex={0}
       aria-label={`Open ${draft.title || 'Untitled CV'}`}
-      className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md transition-all group flex flex-col h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+      className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md transition-all group flex flex-col h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
     >
       <div className="flex justify-between items-start mb-3">
         <div

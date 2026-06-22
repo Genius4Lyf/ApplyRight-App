@@ -19,7 +19,7 @@ const DashboardSkeleton = () => (
       {[0, 1].map((i) => (
         <div
           key={i}
-          className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col"
+          className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col"
         >
           <Shimmer className="w-14 h-14 rounded-xl mb-6" />
           <Shimmer className="h-7 w-1/2 mb-3" />
@@ -40,7 +40,7 @@ const DashboardSkeleton = () => (
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
+            className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
           >
             <div className="flex justify-between items-start mb-3">
               <Shimmer className="w-10 h-10 rounded-lg" />

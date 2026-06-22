@@ -102,7 +102,7 @@ const matchBadge = (score) => {
 const JobMatchCard = ({ jobMatch }) => {
   if (!jobMatch?.available) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/50">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-900/50">
         <div className="flex items-center gap-2 mb-1">
           <Target className="w-4 h-4 text-indigo-500" />
           <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">Job Match</h4>
@@ -116,7 +116,7 @@ const JobMatchCard = ({ jobMatch }) => {
   const matched = jobMatch.matchedSkills || [];
   const missing = jobMatch.missingSkills || [];
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900">
       {missing.length > 0 && (
         <div className="mb-2">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1">
@@ -173,7 +173,7 @@ const JobMatchCard = ({ jobMatch }) => {
 const CareerMatchCard = ({ roles }) => {
   if (!roles || roles.length === 0) return null;
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900">
       <div className="flex items-center gap-2 mb-2">
         <Briefcase className="w-4 h-4 text-indigo-500" />
         <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -228,7 +228,7 @@ const severityDot = {
 };
 
 const RedFlagsCard = ({ flags }) => (
-  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900">
     <div className="flex items-center gap-2 mb-2">
       <AlertTriangle className="w-4 h-4 text-amber-500" />
       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -632,7 +632,7 @@ const JourneyRow = ({ section, showDetail }) => (
 const Journey = ({ health, cvComplete, sectionsLeft, isPaidHint, onEnterScan }) => {
   const [showDetail, setShowDetail] = useState(false);
   return (
-    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">Your CV journey</h3>
         <button
@@ -980,7 +980,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
 
               {scan.jobMatch?.available && (
                 <Reveal>
-                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 flex items-center gap-4">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex items-center gap-4">
                     <ScoreRing score={scan.jobMatch.fitScore} />
                     <div className="min-w-0">
                       <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
@@ -1031,7 +1031,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           {/* JD input — the entry to a match */}
           {!loading && !showLocked && !error && !unlocked && !tooEmpty && (
             <Reveal>
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
                 <label
                   htmlFor="coach-jd-input"
                   className="text-xs font-semibold text-slate-700 dark:text-slate-200"

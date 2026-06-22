@@ -72,7 +72,7 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.4, ease: 'easeOut' }}
-      className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full pl-3 pr-1.5 py-1 shadow-sm"
+      className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full pl-3 pr-1.5 py-1 shadow-sm"
     >
       <motion.div
         // One-time wiggle to draw attention. Loops 2x then stops so it's
@@ -209,7 +209,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col md:flex-row items-center gap-8"
+        className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col md:flex-row items-center gap-8"
       >
         {/* Circular Score */}
         <div className="relative flex-shrink-0 w-32 h-32 flex items-center justify-center">
@@ -251,7 +251,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
               Application Fit Analysis
             </h3>
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${isAIMode ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${isAIMode ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
             >
               {isAIMode ? <Bot className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
               {isAIMode ? 'AI-Powered Analysis' : 'Standard Match (Beta)'}
@@ -288,7 +288,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
             >
               <button
                 type="button"
@@ -387,7 +387,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08 }}
-        className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
@@ -425,7 +425,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                     .map((skill, idx) => (
                       <span
                         key={`must-${idx}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-red-200 dark:border-red-500/30 text-sm font-medium text-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-red-200 dark:border-red-500/30 text-sm font-medium text-slate-800 dark:text-slate-200"
                       >
                         <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
                         {skill.name}
@@ -447,7 +447,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                     .map((skill, idx) => (
                       <span
                         key={`nice-${idx}`}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-500/30 text-xs text-slate-700 dark:text-slate-300"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 text-xs text-slate-700 dark:text-slate-300"
                       >
                         {skill.name}
                       </span>
@@ -478,7 +478,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                 {matchedSkills.map((skill, idx) => (
                   <span
                     key={`match-${idx}`}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-500/30 text-xs text-slate-700 dark:text-slate-300"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 text-xs text-slate-700 dark:text-slate-300"
                   >
                     <CheckCircle className="w-3 h-3 text-emerald-500" />
                     {skill.name}
@@ -499,7 +499,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
         >
           <button
             type="button"
@@ -594,7 +594,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
         >
           <button
             type="button"
@@ -707,7 +707,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
             {actionPlan.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex items-start gap-3"
+                className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex items-start gap-3"
               >
                 <div className="mt-1 w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-indigo-700 dark:text-indigo-300">
                   {idx + 1}

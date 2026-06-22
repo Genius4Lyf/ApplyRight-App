@@ -21,7 +21,7 @@ const Section = ({ title, defaultOpen = true, children }) => {
 const ScoreBar = ({ label, score, color }) => (
   <div className="flex items-center gap-3">
     <span className="text-xs text-slate-500 dark:text-slate-400 w-14">{label}</span>
-    <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+    <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-900">
       <div
         className={`h-full rounded-full transition-all ${color}`}
         style={{ width: `${score}%` }}
@@ -178,7 +178,7 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
             {keptSkills.map((s) => (
               <span
                 key={s}
-                className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"
               >
                 <Equal className="w-2.5 h-2.5" /> {s}
               </span>

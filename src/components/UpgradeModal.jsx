@@ -23,7 +23,7 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-4xl bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 md:grid-cols-2"
+          className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 md:grid-cols-2"
         >
           <button
             onClick={onClose}
@@ -136,7 +136,7 @@ const LimitItem = ({ icon, text, crossed }) => (
     className={`flex items-center gap-3 ${crossed ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'}`}
   >
     <div
-      className={`w-5 h-5 flex items-center justify-center rounded-full ${crossed ? 'bg-slate-100 dark:bg-slate-800' : 'bg-green-100 dark:bg-green-500/15 text-green-600 dark:text-green-300'}`}
+      className={`w-5 h-5 flex items-center justify-center rounded-full ${crossed ? 'bg-slate-100 dark:bg-slate-900' : 'bg-green-100 dark:bg-green-500/15 text-green-600 dark:text-green-300'}`}
     >
       {React.cloneElement(icon, { size: 12 })}
     </div>

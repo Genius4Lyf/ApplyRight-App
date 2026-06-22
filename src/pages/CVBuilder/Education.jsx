@@ -174,7 +174,7 @@ const Education = () => {
                   isExpanded={isExpanded}
                   onToggleExpand={() => setExpandedId(isExpanded ? null : edu._sortId)}
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
                     {/* Collapsed Header / Summary View */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? null : edu._sortId)}
@@ -225,7 +225,7 @@ const Education = () => {
                                   value={edu.school}
                                   onChange={(e) => handleChange(index, 'school', e.target.value)}
                                   placeholder="e.g. University of Technology"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div>
@@ -241,7 +241,7 @@ const Education = () => {
                                   value={edu.degree}
                                   onChange={(e) => handleChange(index, 'degree', e.target.value)}
                                   placeholder="e.g. BSc Computer Science"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div>
@@ -257,7 +257,7 @@ const Education = () => {
                                   value={edu.graduationDate}
                                   onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
                                   placeholder="e.g. May 2019"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div className="md:col-span-2">
@@ -273,7 +273,7 @@ const Education = () => {
                                   value={edu.description}
                                   onChange={(e) => handleChange(index, 'description', e.target.value)}
                                   placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                             </div>

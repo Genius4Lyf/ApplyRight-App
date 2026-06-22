@@ -68,7 +68,7 @@ const Pill = ({ active, onClick, children }) => (
     className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
       active
         ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
     }`}
   >
     {children}
@@ -76,7 +76,7 @@ const Pill = ({ active, onClick, children }) => (
 );
 
 export const VoiceStyleSelector = ({ voice, style, onVoiceChange, onStyleChange }) => (
-  <div className="relative z-10 mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3">
+  <div className="relative z-10 mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3">
     <div>
       <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
         Interviewer voice
@@ -194,7 +194,7 @@ export const DeviceCheck = () => {
           <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
         </button>
       ) : (
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
             Device check
           </p>
@@ -227,7 +227,7 @@ export const DeviceCheck = () => {
             <button
               type="button"
               onClick={playTestSound}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
             >
               <Volume2 className="w-3.5 h-3.5" /> Play test sound
             </button>

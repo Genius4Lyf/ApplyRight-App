@@ -246,7 +246,7 @@ const InterviewPracticePage = () => {
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 text-slate-900 dark:text-slate-100">
-      <header className="shrink-0 border-b border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-800/80 backdrop-blur">
+      <header className="shrink-0 border-b border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           {/* Row 1: status badge ↔ exit. Kept terse so the row never wraps. */}
           <div className="flex items-center justify-between gap-3">
@@ -261,7 +261,7 @@ const InterviewPracticePage = () => {
             <button
               type="button"
               onClick={exitToDetail}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               Exit
@@ -288,7 +288,7 @@ const InterviewPracticePage = () => {
       <main className="flex-1 min-h-0 flex justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
         <div className="w-full max-w-3xl flex flex-col min-h-0">
           {cards.length === 0 ? (
-            <div className="m-auto w-full relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-8 text-center shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+            <div className="m-auto w-full relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-8 text-center shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"

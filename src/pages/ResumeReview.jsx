@@ -241,7 +241,6 @@ const ResumeReview = () => {
             const { optimizedCV } = generateMarkdownFromDraft(draft);
 
             const isDraftComplete =
-              !!draft.targetJob?.title?.trim() &&
               !!draft.personalInfo?.fullName &&
               (draft.experience?.length || 0) > 0 &&
               (draft.projects?.length || 0) > 0 &&
@@ -657,7 +656,7 @@ const ResumeReview = () => {
   if (error)
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl shadow-lg max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 dark:text-red-300">
             <LayoutTemplate size={32} />
           </div>
@@ -735,7 +734,7 @@ const ResumeReview = () => {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in-95 duration-300">
             {/* Locked Badge */}
-            <div className="relative mb-6 mx-auto w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <div className="relative mb-6 mx-auto w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Lock className="w-7 h-7 animate-pulse" />
               <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border border-white dark:border-slate-900">
                 !
@@ -755,7 +754,6 @@ const ResumeReview = () => {
                 Required Sections
               </span>
               {[
-                { label: 'Target Job', done: !!application.rawDraft?.targetJob?.title?.trim() },
                 { label: 'Heading', done: !!application.rawDraft?.personalInfo?.fullName },
                 { label: 'Work History', done: (application.rawDraft?.experience?.length || 0) > 0 },
                 { label: 'Projects', done: (application.rawDraft?.projects?.length || 0) > 0 },
@@ -816,7 +814,7 @@ const ResumeReview = () => {
 
       {creditSuccessModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
             <div className="w-20 h-20 bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10 text-green-600 dark:text-green-300" />
             </div>
@@ -879,7 +877,7 @@ const ResumeReview = () => {
 
       {unlockModalOpen && templateToUnlock && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
             <button
               onClick={() => setUnlockModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
@@ -912,7 +910,7 @@ const ResumeReview = () => {
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (userProfile?.credits || 0) >= templateToUnlock.cost
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -930,7 +928,7 @@ const ResumeReview = () => {
                   <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
+                  <span className="bg-white dark:bg-slate-900 px-2 text-slate-500 dark:text-slate-400">
                     or earn A.I credits
                   </span>
                 </div>
@@ -965,7 +963,7 @@ const ResumeReview = () => {
       {/* Feedback Prompt Modal - After Download */}
       {showFeedbackPrompt && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative text-center">
             <button
               onClick={() => setShowFeedbackPrompt(false)}
               className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1011,7 +1009,7 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-        <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
           <button
             type="button"
             onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
@@ -1053,7 +1051,7 @@ const ResumeReview = () => {
             The dedicated 52px mobile tab strip we used to render below the
             header was eating into the CV preview height — gone now. */}
           {!isDraftMode && (
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg shrink-0">
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('resume')}
@@ -1111,7 +1109,7 @@ const ResumeReview = () => {
           <motion.div
             layout
             transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
-            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur shadow-xl border border-slate-200/60 dark:border-slate-700/60 rounded-full flex items-center overflow-hidden"
+            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-xl border border-slate-200/60 dark:border-slate-700/60 rounded-full flex items-center overflow-hidden"
           >
             <AnimatePresence mode="wait" initial={false}>
               {controlsExpanded ? (
@@ -1208,7 +1206,7 @@ const ResumeReview = () => {
             <div
               ref={previewContentRef}
               id="resume-content"
-              className="w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform"
+              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
@@ -1514,7 +1512,7 @@ const ResumeReview = () => {
             "More" button opens the existing sidebar drawer for templates etc.
             Hidden in fullscreen so the CV truly fills the screen. */}
         {!immersive && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
             <button
               type="button"
               disabled={isDownloading}
@@ -1539,7 +1537,7 @@ const ResumeReview = () => {
                   ? () => navigate(`/cv-builder/${application?._id}/finalize`)
                   : handleEdit
               }
-              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
               aria-label="Edit"
             >
               <PenTool className="w-4 h-4" />
@@ -1548,7 +1546,7 @@ const ResumeReview = () => {
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
+              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
               aria-label="More options"
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -1568,7 +1566,7 @@ const ResumeReview = () => {
         <div
           className={`
           fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-20
-          w-full lg:w-96 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col shadow-xl
+          w-full lg:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 flex flex-col shadow-xl
           lg:h-full
           transition-transform duration-300 ease-in-out
           ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
@@ -1635,7 +1633,7 @@ const ResumeReview = () => {
             )}
 
             {isDraftMode && atsReadiness && (
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-extrabold border-[3px] ${
@@ -1774,7 +1772,7 @@ const ResumeReview = () => {
                     disabled
                     className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
                   >
-                    <div className="absolute top-1 right-1 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
+                    <div className="absolute top-1 right-1 bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
                       Soon
                     </div>
                     <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 mb-1" />

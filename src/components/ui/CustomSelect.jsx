@@ -50,7 +50,7 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full text-left px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl flex items-center justify-between transition-all duration-200 ${
+        className={`w-full text-left px-4 py-2.5 bg-white dark:bg-slate-900 border rounded-xl flex items-center justify-between transition-all duration-200 ${
           isOpen
             ? 'border-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-500/30 shadow-md'
             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
@@ -69,7 +69,7 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-100">
           <div className="p-1">
             {options.map((option) => (
               <button

@@ -21,7 +21,7 @@ const NervesTrend = ({ application }) => {
   const recent = history.slice(-8); // last 8 runs for the mini chart
 
   return (
-    <section className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <section className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       <div className="flex items-center gap-2 mb-1">
         <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">

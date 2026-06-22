@@ -103,7 +103,7 @@ const AgentDashboard = () => {
         <div className="grid grid-cols-2 gap-4 mb-8">
           <Link
             to="/agent/clients"
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors"
           >
             <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 mb-2">
               <Users className="w-4 h-4" />
@@ -115,7 +115,7 @@ const AgentDashboard = () => {
           </Link>
           <Link
             to="/my-cvs"
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors"
           >
             <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 mb-2">
               <FileText className="w-4 h-4" />
@@ -148,7 +148,7 @@ const AgentDashboard = () => {
           </button>
           <Link
             to="/agent/clients"
-            className="flex items-center justify-between gap-3 p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-500/40 text-left transition-colors"
+            className="flex items-center justify-between gap-3 p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-500/40 text-left transition-colors"
           >
             <div>
               <span className="block font-bold text-lg text-slate-900 dark:text-slate-100">
@@ -176,7 +176,7 @@ const AgentDashboard = () => {
           {loading ? (
             <p className="text-sm text-slate-400">Loading…</p>
           ) : clients.length === 0 ? (
-            <div className="bg-white dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center">
+            <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center">
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
                 No clients yet. Add your first client to start filing their CVs.
               </p>
@@ -193,7 +193,7 @@ const AgentDashboard = () => {
                 <Link
                   key={c._id}
                   to={`/agent/clients/${c._id}`}
-                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors"
                 >
                   <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                     {c.name}

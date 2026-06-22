@@ -356,7 +356,7 @@ const Projects = () => {
                   isExpanded={isExpanded}
                   onToggleExpand={() => setExpandedId(isExpanded ? null : proj._sortId)}
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
                     {/* Collapsed Header / Summary View */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? null : proj._sortId)}
@@ -404,7 +404,7 @@ const Projects = () => {
                                   value={proj.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
                                   placeholder="e.g. Portfolio Website"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div>
@@ -423,7 +423,7 @@ const Projects = () => {
                                     onChange={(e) => handleChange(index, 'link', e.target.value)}
                                     onBlur={() => handleLinkBlur(index)}
                                     placeholder="github.com/your-project"
-                                    className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                   />
                                 </div>
                               </div>
@@ -468,7 +468,7 @@ const Projects = () => {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
                                 placeholder="• Developed a full-stack app using..."
-                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
                               />
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -531,7 +531,7 @@ const Projects = () => {
           free users apply up to 3, paid users apply all. */}
       {showSuggestionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -563,7 +563,7 @@ const Projects = () => {
                     className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 cursor-pointer ${
                       isSelected
                         ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
                     }`}
                   >
                     <div className="mt-0.5 flex-shrink-0">
@@ -606,7 +606,7 @@ const Projects = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
               <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">

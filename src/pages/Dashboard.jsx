@@ -557,7 +557,7 @@ const Dashboard = () => {
               aria-label="Enhance your profile"
               className="flex items-center gap-3 cursor-pointer flex-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg"
             >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
                 <User className="w-5 h-5" />
               </div>
               <div>
@@ -676,7 +676,7 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label="Start ApplyRight workflow"
-                  className={`bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                  className={`bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     applyIsRecommended
                       ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
                       : 'border border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-500/30'
@@ -711,7 +711,7 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label="Create a new CV"
-                  className={`bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                  className={`bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     createIsRecommended
                       ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
                       : 'border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30'
@@ -743,7 +743,7 @@ const Dashboard = () => {
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[env(safe-area-inset-bottom)] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
               <button
                 type="button"
                 onClick={() => setShowCreateOptions(false)}
@@ -849,17 +849,17 @@ const Dashboard = () => {
             </button>
             {!fitResult ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-12">
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
                   <CVUploader onUploadSuccess={setResume} />
                 </div>
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
                   <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
                 </div>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                 {resume && (
-                  <div className="flex-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
@@ -883,7 +883,7 @@ const Dashboard = () => {
                   </div>
                 )}
                 {job && (
-                  <div className="flex-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0">
                       <Briefcase className="w-5 h-5" />
                     </div>
@@ -925,7 +925,7 @@ const Dashboard = () => {
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   Upload your Resume
@@ -982,7 +982,7 @@ const Dashboard = () => {
         {/* Scan Success Modal */}
         {scanSuccessDraftId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
               <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8" />
               </div>
@@ -1090,7 +1090,7 @@ const Dashboard = () => {
                 </h3>
               </div>
               {job && (job.title || job.company) && (
-                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                   For:{' '}
                   <span className="text-slate-900 dark:text-slate-100 font-bold">
                     {job.title || 'Role'}
@@ -1101,7 +1101,7 @@ const Dashboard = () => {
             </div>
 
             {analyzing ? (
-              <div className="w-full h-48 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center p-8">
+              <div className="w-full h-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center p-8">
                 <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">
                   Analyzing your profile against role requirements...
@@ -1174,7 +1174,7 @@ const Dashboard = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Generate CV Card */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600">
                     <FileText className="w-5 h-5" />
@@ -1210,7 +1210,7 @@ const Dashboard = () => {
                       disabled={generatingCV}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingCV
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1230,7 +1230,7 @@ const Dashboard = () => {
               </div>
 
               {/* Generate Cover Letter Card */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center text-blue-600">
                     <Mail className="w-5 h-5" />
@@ -1263,7 +1263,7 @@ const Dashboard = () => {
                       disabled={generatingCL}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingCL
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1283,7 +1283,7 @@ const Dashboard = () => {
               </div>
 
               {/* Generate Interview Prep Card */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-500/15 flex items-center justify-center text-purple-600">
                     <MessageSquare className="w-5 h-5" />
@@ -1318,7 +1318,7 @@ const Dashboard = () => {
                       disabled={generatingInterview}
                       className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         generatingInterview
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'btn-primary'
                       }`}
                     >
@@ -1345,7 +1345,7 @@ const Dashboard = () => {
           <div className="mb-12 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <button
               onClick={handleGenerateNew}
-              className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all hover:scale-[1.02] shadow-sm"
+              className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all hover:scale-[1.02] shadow-sm"
             >
               <RefreshCw className="w-5 h-5" />
               <span className="flex flex-col items-start leading-tight">
@@ -1367,7 +1367,7 @@ const Dashboard = () => {
             id="preview-section"
             className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors group"
           >
-            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 flex items-center justify-center shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -1454,7 +1454,7 @@ const Dashboard = () => {
             flush with the safe-area inset. */}
         {workflowMode === 'upload' && !fitResult && !analyzing && (
           <div
-            className="md:hidden fixed left-0 right-0 z-30 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            className="md:hidden fixed left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
             style={
               isMobile() ? { bottom: 'calc(4rem + env(safe-area-inset-bottom))' } : { bottom: 0 }
             }
@@ -1527,7 +1527,7 @@ const Dashboard = () => {
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowAutoAnalyzeModal(false)}
-                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
                 >
                   Keep it manual
                 </button>
@@ -1568,7 +1568,7 @@ const Dashboard = () => {
                     setDeleteModalOpen(false);
                     setDraftToDelete(null);
                   }}
-                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
+                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
                 >
                   Cancel
                 </button>
@@ -1632,7 +1632,7 @@ const Dashboard = () => {
 
               <button
                 onClick={() => navigate('/credits')} // For now direct to store where ad option lives
-                className="w-full py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 <PlayCircle className="w-4 h-4 text-amber-500" /> Watch Ad for Free A.I Credits
               </button>

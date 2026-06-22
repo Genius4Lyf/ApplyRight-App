@@ -147,7 +147,7 @@ const Onboarding = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden">
           <div className="relative bg-primary/5 border-b border-primary/10 overflow-hidden">
             {/* Educational Background Pattern */}
             <div
@@ -161,7 +161,7 @@ const Onboarding = () => {
             />
 
             <div className="relative z-10 p-8 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-slate-800 mb-4 shadow-sm text-primary">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-slate-900 mb-4 shadow-sm text-primary">
                 {step === 1 && <User className="w-6 h-6" />}
                 {step === 2 && <GraduationCap className="w-6 h-6" />}
               </div>

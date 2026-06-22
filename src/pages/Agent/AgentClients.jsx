@@ -76,7 +76,7 @@ const AgentClients = () => {
         {showForm && (
           <form
             onSubmit={onSubmit}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-6 space-y-4"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-6 space-y-4"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-slate-900 dark:text-slate-100">New client</h2>
@@ -158,7 +158,7 @@ const AgentClients = () => {
         {loading ? (
           <p className="text-sm text-slate-400">Loading…</p>
         ) : clients.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-10 text-center">
+          <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-10 text-center">
             <div className="w-14 h-14 rounded-full bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center text-amber-500 mx-auto mb-4">
               <Users className="w-7 h-7" />
             </div>
@@ -182,7 +182,7 @@ const AgentClients = () => {
               <Link
                 key={c._id}
                 to={`/agent/clients/${c._id}`}
-                className="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors flex items-center justify-between gap-2"
+                className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors flex items-center justify-between gap-2"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">

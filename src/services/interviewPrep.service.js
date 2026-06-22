@@ -146,7 +146,11 @@ const InterviewPrepService = {
 
   // Realtime (live voice) Interview Mode: mint a short-lived OpenAI ephemeral
   // client secret. The browser then does the WebRTC handshake directly with
-  // OpenAI. Returns { clientSecret, expiresAt, model, voice, maxSessionSec }.
+  // OpenAI. meta = { timeOfDay, candidateName, voice, style, requestedSec, wrapUp }
+  //   - requestedSec: desired interview length (paid only; free is fixed at taste)
+  //   - wrapUp: include the billed wrap-up window (default true server-side)
+  // Returns { clientSecret, expiresAt, model, voice, mainSec, graceSec,
+  //           maxSessionSec, reservationId, reservedSec }.
   createRealtimeSession: async (applicationId, questionSpine, meta = {}) => {
     const response = await api.post(`/interview-prep/${applicationId}/realtime-session`, {
       questionSpine,

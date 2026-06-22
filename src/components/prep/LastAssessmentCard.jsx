@@ -20,7 +20,7 @@ const LastAssessmentCard = ({ application }) => {
   if (!assessment || typeof assessment.overallScore !== 'number') return null;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

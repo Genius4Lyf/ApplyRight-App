@@ -90,7 +90,7 @@ const Upgrade = () => {
 
           {/* Audience toggle: job seekers vs CV agents */}
           <div className="flex justify-center mb-6">
-            <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+            <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
               <button
                 type="button"
                 onClick={() => setAudience('seeker')}
@@ -138,7 +138,7 @@ const Upgrade = () => {
 
           {/* Currency Switcher Tab */}
           <div className="flex justify-center mb-10">
-            <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+            <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
               <button
                 type="button"
                 onClick={() => setCurrency('NGN')}
@@ -183,7 +183,7 @@ const Upgrade = () => {
                   className={`relative rounded-3xl p-8 flex flex-col border ${
                     t.highlight
                       ? 'bg-slate-900 text-white border-indigo-500/40 shadow-2xl'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
                   }`}
                 >
                   {t.badge && (
@@ -290,7 +290,7 @@ const Upgrade = () => {
                   return (
                     <div
                       key={p.id}
-                      className="rounded-xl p-4 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
+                      className="rounded-xl p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
                     >
                       <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
                         {p.label}

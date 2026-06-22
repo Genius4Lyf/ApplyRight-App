@@ -161,7 +161,7 @@ const Heading = () => {
             onChange={handleChange}
             required
             placeholder="e.g. Alexander James"
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
 
@@ -177,7 +177,7 @@ const Heading = () => {
             onChange={handleChange}
             required
             placeholder="e.g. alex.james@gmail.com"
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
 
@@ -192,7 +192,7 @@ const Heading = () => {
             value={formData.phone || ''}
             onChange={handleChange}
             placeholder="e.g. +1 (555) 123-4567"
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
       </div>
@@ -264,7 +264,7 @@ const Heading = () => {
                   value={formData.address || ''}
                   onChange={handleChange}
                   placeholder="e.g. London, UK"
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
             </div>
@@ -297,7 +297,7 @@ const Heading = () => {
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
                   placeholder="linkedin.com/in/profile"
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
             </div>
@@ -330,7 +330,7 @@ const Heading = () => {
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
                   placeholder="your-portfolio.com"
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
             </div>
@@ -362,7 +362,7 @@ const Heading = () => {
                   value={formData.nationality || ''}
                   onChange={handleChange}
                   placeholder="e.g. British"
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
             </div>

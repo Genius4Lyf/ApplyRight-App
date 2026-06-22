@@ -67,7 +67,7 @@ const NextBestAction = ({
       <MotionDiv
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 shadow-md"
+        className="bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 shadow-md"
       >
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
@@ -201,7 +201,7 @@ const NextBestAction = ({
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="bg-white dark:bg-slate-800 border-2 border-emerald-300 dark:border-emerald-500/30 rounded-xl p-4 shadow-md"
+          className="bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-emerald-500/30 rounded-xl p-4 shadow-md"
         >
           <div className="flex items-start gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
@@ -236,7 +236,7 @@ const NextBestAction = ({
             <button
               type="button"
               onClick={onDismissCompletion}
-              className="flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-1"
+              className="flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-1"
             >
               Next: {nextLabel} <ArrowRight className="w-4 h-4" />
             </button>
@@ -274,7 +274,7 @@ const NextBestAction = ({
         className={`w-full flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-xl border-2 transition-all text-left active:scale-[0.99] ${
           action.tone === 'primary'
             ? 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed'
-            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/15'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/15'
         }`}
       >
         <div
@@ -322,7 +322,7 @@ const NextBestAction = ({
           <button
             type="button"
             onClick={onGenerateBundle}
-            className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/15 transition-all text-sm text-left"
+            className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/15 transition-all text-sm text-left"
           >
             <span className="flex items-start sm:items-center gap-2 min-w-0">
               <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 rounded shrink-0 mt-0.5 sm:mt-0">

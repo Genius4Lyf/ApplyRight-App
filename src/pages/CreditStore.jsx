@@ -182,7 +182,7 @@ const CreditStore = () => {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="absolute top-6 left-6 p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors z-10"
+        className="absolute top-6 left-6 p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors z-10"
         title="Go Back"
       >
         <X className="w-5 h-5" />
@@ -205,7 +205,7 @@ const CreditStore = () => {
 
         {/* Subscription / live-interview minutes summary + upsell. */}
         {entitlement && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-center sm:text-left">
               {entitlement.tier === 'free' ? (
                 <p className="text-slate-600 dark:text-slate-300">
@@ -232,7 +232,7 @@ const CreditStore = () => {
         )}
 
         {/* Earn credits by watching an ad — Monetag on web, AdMob on Android. */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative transform transition-all hover:shadow-2xl">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative transform transition-all hover:shadow-2xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 dark:bg-purple-500/15 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
 
@@ -302,7 +302,7 @@ const CreditStore = () => {
         {/* Secondary Actions Grid */}
         <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
           {/* Invite Friend */}
-          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
               <Share2 className="w-32 h-32 text-slate-900 dark:text-slate-100" />
             </div>
@@ -322,7 +322,7 @@ const CreditStore = () => {
               </p>
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-colors"
+                className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-colors"
               >
                 Get Invite Link
               </button>
@@ -397,7 +397,7 @@ const CreditStore = () => {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
+              className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button

@@ -498,7 +498,7 @@ const JobHistory = () => {
             <p className="text-slate-400 dark:text-slate-500">Loading history...</p>
           </div>
         ) : applications.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-500" />
             </div>
@@ -525,13 +525,13 @@ const JobHistory = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by job title or company"
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                   />
                 </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 text-slate-600 dark:text-slate-300"
+                  className="text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 text-slate-600 dark:text-slate-300"
                 >
                   {SORT_OPTIONS.map((opt) => (
                     <option key={opt.id} value={opt.id}>
@@ -564,8 +564,8 @@ const JobHistory = () => {
                                         p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md
                                         ${
                                           selectedApp?._id === app._id
-                                            ? 'bg-white dark:bg-slate-800 border-primary shadow-md ring-1 ring-primary/20'
-                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                                            ? 'bg-white dark:bg-slate-900 border-primary shadow-md ring-1 ring-primary/20'
+                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
                                         }
                                     `}
                 >
@@ -650,9 +650,9 @@ const JobHistory = () => {
                    panel is already full-width inside the page — adding a
                    bordered card here just nests padding inside padding and
                    crushes the inner content on small phones. */
-                <div className="overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none lg:h-full lg:flex lg:flex-col lg:mb-8 lg:bg-white lg:dark:bg-slate-800 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm">
+                <div className="overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none lg:h-full lg:flex lg:flex-col lg:mb-8 lg:bg-white lg:dark:bg-slate-900 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm">
                   <div
-                    className={`px-3 py-3 lg:px-4 lg:py-4 border-b transition-all duration-200 z-10 ${isScrolled ? 'shadow-md border-transparent bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'} flex items-center gap-3 lg:gap-4 sticky top-0`}
+                    className={`px-3 py-3 lg:px-4 lg:py-4 border-b transition-all duration-200 z-10 ${isScrolled ? 'shadow-md border-transparent bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'} flex items-center gap-3 lg:gap-4 sticky top-0`}
                   >
                     {/* Back Button (Mobile Only) */}
                     <button
@@ -673,7 +673,7 @@ const JobHistory = () => {
                         <button
                           type="button"
                           onClick={() => setJobDrawerOpen(true)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
                           title="View the original job posting"
                         >
                           <FileSearch className="w-3 h-3" />
@@ -713,7 +713,7 @@ const JobHistory = () => {
                                   e.stopPropagation();
                                   setCompareMenuOpen(!compareMenuOpen);
                                 }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
                                 title="Compare with another analysis for the same job"
                               >
                                 <GitCompare className="w-3 h-3" />
@@ -723,7 +723,7 @@ const JobHistory = () => {
                               {compareMenuOpen && (
                                 <div
                                   onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
+                                  className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
                                 >
                                   <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
                                     Compare against
@@ -854,7 +854,7 @@ const JobHistory = () => {
                                   `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
                                 )
                               }
-                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all"
+                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all"
                             >
                               <Eye className="w-3.5 h-3.5" /> View & Download
                             </button>
@@ -864,7 +864,7 @@ const JobHistory = () => {
                               disabled={generatingCV}
                               className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                                 generatingCV
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                                  ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
@@ -901,7 +901,7 @@ const JobHistory = () => {
                                   `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
                                 )
                               }
-                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-all"
+                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-all"
                             >
                               <Eye className="w-3.5 h-3.5" /> View & Download
                             </button>
@@ -911,7 +911,7 @@ const JobHistory = () => {
                               disabled={generatingCL}
                               className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                                 generatingCL
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                                  ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
@@ -955,7 +955,7 @@ const JobHistory = () => {
                           to={`/interview-prep/${selectedApp._id}`}
                           className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors p-4 flex items-center gap-3 group"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
                             <MessageSquare className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -970,7 +970,7 @@ const JobHistory = () => {
                         </Link>
                       ) : (
                         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0">
                             <MessageSquare className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">

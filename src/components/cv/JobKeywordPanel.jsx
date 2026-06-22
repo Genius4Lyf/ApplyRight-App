@@ -233,7 +233,7 @@ const JobKeywordPanel = ({
               </span>
             )}
           </div>
-          <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
             <div
               className={`h-full ${barColor} transition-all duration-500`}
               style={{ width: `${pct}%` }}
@@ -333,7 +333,7 @@ const JobKeywordPanel = ({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed right-3 bottom-6 z-40 inline-flex items-center gap-1.5 pl-2.5 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 transition-all"
+          className="fixed right-3 bottom-6 z-40 inline-flex items-center gap-1.5 pl-2.5 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 transition-all"
           title="Show keyword coverage"
         >
           <span className="relative flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">
@@ -358,7 +358,7 @@ const JobKeywordPanel = ({
       );
     }
     return createPortal(
-      <div className="fixed right-3 bottom-6 z-40 w-[min(320px,calc(100vw-1.5rem))] max-h-[calc(100dvh-7rem)] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pt-8 shadow-xl">
+      <div className="fixed right-3 bottom-6 z-40 w-[min(320px,calc(100vw-1.5rem))] max-h-[calc(100dvh-7rem)] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pt-8 shadow-xl">
         <button
           type="button"
           onClick={() => setOpen(false)}
@@ -376,7 +376,7 @@ const JobKeywordPanel = ({
 
   // ── Inline layout ──
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
       {body}
     </div>
   );

@@ -347,10 +347,10 @@ const History = () => {
         onClick={() => toggleSuggestionSelection(suggestion, source)}
         className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 ${
           disabled
-            ? 'cursor-not-allowed opacity-40 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+            ? 'cursor-not-allowed opacity-40 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
             : isSelected
               ? 'cursor-pointer border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
-              : 'cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+              : 'cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
         }`}
       >
         <div className="mt-0.5 flex-shrink-0">
@@ -390,7 +390,7 @@ const History = () => {
   const renderLockedCard = (suggestion, idx) => (
     <div
       key={idx}
-      className="relative p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
+      className="relative p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden"
     >
       <p className="text-sm leading-relaxed blur-sm select-none text-slate-700 dark:text-slate-300">
         {suggestion}
@@ -535,7 +535,7 @@ const History = () => {
                   isExpanded={isExpanded}
                   onToggleExpand={() => setExpandedId(isExpanded ? null : role._sortId)}
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
                     {/* Collapsed Header / Summary View */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? null : role._sortId)}
@@ -586,7 +586,7 @@ const History = () => {
                                   value={role.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
                                   placeholder="e.g. Senior Product Manager"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div className="md:col-span-1 pr-8 md:pr-0">
@@ -602,7 +602,7 @@ const History = () => {
                                   value={role.company}
                                   onChange={(e) => handleChange(index, 'company', e.target.value)}
                                   placeholder="e.g. Acme Corp"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div>
@@ -618,7 +618,7 @@ const History = () => {
                                   value={role.startDate}
                                   onChange={(e) => handleChange(index, 'startDate', e.target.value)}
                                   placeholder="e.g. Jan 2020"
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
                               <div>
@@ -636,7 +636,7 @@ const History = () => {
                                     onChange={(e) => handleChange(index, 'endDate', e.target.value)}
                                     disabled={role.isCurrent}
                                     placeholder={role.isCurrent ? 'Present' : 'e.g. Dec 2023'}
-                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
                                   />
                                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                                     <input
@@ -717,7 +717,7 @@ const History = () => {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
                                 placeholder="• Achieved X by doing Y..."
-                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
                               />
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -789,7 +789,7 @@ const History = () => {
       {showSuggestionsModal && suggestionData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div
-            className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${
+            className={`bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${
               paidSuggestions ? 'max-w-2xl' : 'max-w-4xl'
             }`}
           >
@@ -835,7 +835,7 @@ const History = () => {
                   onClick={() => setActiveTab('ai')}
                   className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
                     activeTab === 'ai'
-                      ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-sm'
+                      ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm'
                       : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
@@ -846,7 +846,7 @@ const History = () => {
                   onClick={() => setActiveTab('ats')}
                   className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
                     activeTab === 'ats'
-                      ? 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
                       : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
@@ -937,7 +937,7 @@ const History = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
               <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">

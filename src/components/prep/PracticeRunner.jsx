@@ -104,7 +104,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
       </div>
 
       {/* Prompt — premium frosted tile */}
-      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
@@ -122,7 +122,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             <button
               type="button"
               onClick={() => speak(card.prompt)}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
               title="Hear the question"
               aria-label="Hear the question"
             >
@@ -148,7 +148,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
               </p>
             </div>
           ) : (
-            <div className="h-full min-h-40 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-800/60 p-6">
+            <div className="h-full min-h-40 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-900/60 p-6">
               <EyeOff className="w-8 h-8 mb-3 text-slate-300 dark:text-slate-600" />
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 Answer out loud
@@ -168,7 +168,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             type="button"
             onClick={() => setIndex(Math.max(safeIndex - 1, 0))}
             disabled={safeIndex === 0}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
             Previous
           </button>
@@ -176,7 +176,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             type="button"
             onClick={() => setIndex(Math.min(safeIndex + 1, total - 1))}
             disabled={safeIndex === total - 1}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
             Next
           </button>

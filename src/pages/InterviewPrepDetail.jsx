@@ -459,7 +459,7 @@ const InterviewPrepDetail = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5">
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -614,7 +614,7 @@ const InterviewPrepDetail = () => {
                     className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold ${
                       active
                         ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     {tab.count}
@@ -749,7 +749,7 @@ const InterviewPrepDetail = () => {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
             >
-              <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
                 <NotesList
                   applicationId={applicationId}
                   initialNotes={notes}
@@ -852,7 +852,7 @@ const InterviewPrepDetail = () => {
 const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   if (skills.length === 0) {
     return (
-      <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
+      <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
         <SectionHeader
           icon={Sparkles}
           title="Skill soundbites"
@@ -899,7 +899,7 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 };
 
 const SkillCard = ({ skill, onPractice }) => (
-  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
     <div className="flex items-start gap-3">
       <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
         <Sparkles className="w-5 h-5" />
@@ -926,7 +926,7 @@ const SkillCard = ({ skill, onPractice }) => (
             {skill.evidence.map((ev, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
+                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
               >
                 {ev.type === 'experience' ? 'Work history' : ev.type}
               </span>
@@ -940,7 +940,7 @@ const SkillCard = ({ skill, onPractice }) => (
       <button
         type="button"
         onClick={onPractice}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors"
       >
         <PlayCircle className="w-4 h-4" />
         Rehearse this
@@ -998,7 +998,7 @@ const QuestionListItem = ({
         : 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30';
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
       {/* Header Row */}
       <button
         type="button"
@@ -1026,7 +1026,7 @@ const QuestionListItem = ({
               </span>
             )}
             {bestScore !== null && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
                 Best {bestScore}% · {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
               </span>
             )}
@@ -1065,7 +1065,7 @@ const QuestionListItem = ({
                   {question.sourcedFrom.map((src, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
+                      className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
                     >
                       {src.type === 'experience' ? 'Work history' : src.type}
                     </span>
@@ -1229,7 +1229,7 @@ const EssentialsSection = ({
   if (visible.length === 0) return null;
 
   return (
-    <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
       <SectionHeader
         icon={Sparkles}
         title="Interview essentials"
@@ -1319,7 +1319,7 @@ const QuestionsTab = ({
       />
 
       {jobQuestions.length === 0 && (
-        <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 text-center">
+        <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 text-center">
           <MessageSquare className="w-7 h-7 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
           <p className="text-sm text-slate-600 dark:text-slate-300">
             No job-specific questions yet. Generate interview prep from the dashboard.
@@ -1328,7 +1328,7 @@ const QuestionsTab = ({
       )}
 
       {jobQuestions.length > 0 && (
-        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
               icon={MessageSquare}
@@ -1341,7 +1341,7 @@ const QuestionsTab = ({
               <button
                 type="button"
                 onClick={onStartPractice}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 Practice all
@@ -1453,7 +1453,7 @@ const QuestionsTab = ({
       )}
 
       {questionsToAsk.length > 0 && (
-        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
           <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
             <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
             Questions to ask the interviewer

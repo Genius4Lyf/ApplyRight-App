@@ -59,7 +59,7 @@ const BillingReturn = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-10 text-center">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-10 text-center">
         {state === 'verifying' && (
           <>
             <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mx-auto mb-4" />

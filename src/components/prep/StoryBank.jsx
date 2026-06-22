@@ -88,7 +88,7 @@ const STAR_FIELDS = [
 
 // ── Empty state / generate CTA ──────────────────────────────────────────────
 const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
-  <section className="bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
+  <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
     <div className="flex items-start gap-3">
       <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
         <BookOpen className="w-5 h-5" />
@@ -167,7 +167,7 @@ const StoryCard = ({
   const skills = Array.isArray(story.skillsProven) ? story.skillsProven : [];
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
       {/* Header */}
       <button
         type="button"
@@ -182,7 +182,7 @@ const StoryCard = ({
               {meta.label}
             </span>
             {answers.length > 0 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-semibold">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-semibold">
                 Answers {answers.length}
               </span>
             )}
@@ -302,7 +302,7 @@ const StoryView = ({
           story[key] ? (
             <div
               key={key}
-              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-sm"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-sm"
             >
               <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
                 {label}
@@ -357,7 +357,7 @@ const StoryView = ({
           {story.sourcedFrom.map((src, i) => (
             <span
               key={i}
-              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
+              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
             >
               {src.type === 'experience' ? 'Work history' : src.type}
             </span>
@@ -378,7 +378,7 @@ const StoryView = ({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             <Pencil className="w-3.5 h-3.5" /> Edit
           </button>
@@ -636,7 +636,7 @@ const StoryBank = ({
               type="button"
               onClick={onGenerate}
               disabled={generating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors"
               title={
                 adRewarded
                   ? 'Regenerate the whole bank (watch a short ad)'

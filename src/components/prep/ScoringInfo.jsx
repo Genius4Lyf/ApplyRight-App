@@ -52,7 +52,7 @@ const ScoringInfo = ({ className = '' }) => {
               onClick={() => setOpen(false)}
               aria-hidden
             />
-            <div className="relative z-10 w-full max-w-sm rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 p-5 shadow-xl text-slate-900 dark:text-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative z-10 w-full max-w-sm rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl text-slate-900 dark:text-slate-100 animate-in fade-in zoom-in-95 duration-200">
               <button
                 type="button"
                 onClick={() => setOpen(false)}

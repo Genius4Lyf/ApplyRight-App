@@ -278,6 +278,20 @@ const MockInterviewPage = () => {
       : entitlement.freeTasteRemainingSec || 0
     : null; // null = unknown (entitlement not loaded yet)
 
+  const isPaidTier = !!entitlement && entitlement.tier !== 'free';
+
+  // Live-interview length control (paid only). Bounded by the per-tier cap and the
+  // remaining balance; free is fixed at its taste. `lengthSec` is the chosen length;
+  // null until initialized from the auto-planned duration once entitlement loads.
+  const [lengthSec, setLengthSec] = useState(null);
+  // End-of-interview wrap-up window. Default ON; draws from the user's balance so
+  // the interviewer can close out. Off = hard cut at time-up (every second to Q&A).
+  const [wrapUp, setWrapUp] = useState(true);
+  const lengthMaxSec = entitlement
+    ? Math.max(0, Math.min(entitlement.maxSessionSec || 0, liveSecondsAvailable || 0))
+    : 0;
+  const lengthMinSec = Math.max(60, Math.min(180, lengthMaxSec || 180));
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -323,6 +337,14 @@ const MockInterviewPage = () => {
     [simQuestions]
   );
   const lastSession = application?.interviewPrep?.lastInterviewSession || null;
+
+  // Seed the paid length slider once: default to the auto-planned duration, clamped
+  // into [lengthMinSec, lengthMaxSec]. Free tier never uses this.
+  useEffect(() => {
+    if (!isPaidTier || lengthSec != null || !lengthMaxSec) return;
+    const def = Math.max(lengthMinSec, Math.min(plannedSec || lengthMaxSec, lengthMaxSec));
+    setLengthSec(def);
+  }, [isPaidTier, lengthSec, lengthMaxSec, lengthMinSec, plannedSec]);
 
   // ── audio ──
   const stopAudio = () => {
@@ -394,6 +416,11 @@ const MockInterviewPage = () => {
   useEffect(() => {
     if (phase !== 'live') return;
     if (secondsLeft === 0) {
+      // Wrap-up turned off (graceSec 0) → hard cut at time-up: close + grade now.
+      if (!inGrace && graceSecRef.current <= 0) {
+        endRealtime();
+        return;
+      }
       if (!inGrace) {
         // Main time is up — DON'T cut the candidate off. Enter the grace window:
         // tell the interviewer to finish the current exchange, then wrap up and
@@ -586,8 +613,14 @@ const MockInterviewPage = () => {
   const handleTimeUp = () => advance('timeup');
 
   // Adaptive interviewer: send the user's answer, get + speak a real follow-up.
+  // Paid-only coaching — free users are routed to upgrade before any request.
   const handleFollowUp = async (answerText) => {
     if (!answerText || loadingFollowUp) return;
+    if (!isPaidTier) {
+      toast.error('Adaptive follow-ups are a Pro feature.');
+      navigate('/upgrade');
+      return;
+    }
     setLoadingFollowUp(true);
     try {
       const res = await InterviewPrepService.generateFollowUp(
@@ -606,7 +639,10 @@ const MockInterviewPage = () => {
       }
     } catch (e) {
       const code = e.response?.data?.code;
-      if (code === 'INSUFFICIENT_CREDITS') {
+      if (code === 'TIER_REQUIRED') {
+        toast.error('Adaptive follow-ups are a Pro feature.');
+        navigate('/upgrade');
+      } else if (code === 'INSUFFICIENT_CREDITS') {
         toast.error('Not enough credits for a follow-up.');
       } else if (code === 'AI_UNAVAILABLE') {
         toast.error('The AI interviewer is unavailable right now.');
@@ -735,10 +771,16 @@ const MockInterviewPage = () => {
         candidateName: firstName && firstName !== 'there' ? firstName : '',
         voice,
         style,
+        // Paid users pick a length; free is fixed server-side (taste). wrapUp drives
+        // the billed end-of-interview close-out window.
+        requestedSec: isPaidTier && lengthSec ? lengthSec : undefined,
+        wrapUp,
       });
       reservationRef.current = sess.reservationId || null;
-      maxSessionSecRef.current = sess.maxSessionSec || 360;
-      graceSecRef.current = sess.graceSec || 90;
+      // mainSec = the speaking countdown; graceSec = the wrap-up that runs after it
+      // (0 when the user turned wrap-up off → hard cut). Both bill against the balance.
+      maxSessionSecRef.current = sess.mainSec || sess.maxSessionSec || 360;
+      graceSecRef.current = sess.graceSec ?? 0;
       setSecondsLeft(maxSessionSecRef.current);
 
       const ctl = createRealtimeWebRTC({
@@ -964,7 +1006,7 @@ const MockInterviewPage = () => {
 
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
@@ -988,7 +1030,7 @@ const MockInterviewPage = () => {
       className={`min-h-screen flex flex-col ${
         immersive
           ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100'
-          : 'bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 text-slate-900 dark:text-slate-100'
+          : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'
       }`}
     >
       <header
@@ -1047,7 +1089,7 @@ const MockInterviewPage = () => {
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 immersive
                   ? 'bg-white/5 border border-white/15 hover:bg-white/10 text-slate-200'
-                  : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
               <X className="w-3.5 h-3.5" /> Exit
@@ -1101,6 +1143,66 @@ const MockInterviewPage = () => {
                   )}
                 </div>
               )}
+
+              {/* Live-interview length + wrap-up controls (the realtime voice mode only). */}
+              {mode === 'conversational' && entitlement && (
+                <div className="max-w-2xl mx-auto mb-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 space-y-4">
+                  {isPaidTier && lengthMaxSec >= lengthMinSec ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          htmlFor="interview-length"
+                          className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                        >
+                          Interview length
+                        </label>
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                          {Math.round((lengthSec || lengthMinSec) / 60)} min
+                        </span>
+                      </div>
+                      <input
+                        id="interview-length"
+                        type="range"
+                        min={lengthMinSec}
+                        max={lengthMaxSec}
+                        step={60}
+                        value={lengthSec || lengthMinSec}
+                        onChange={(e) => setLengthSec(Number(e.target.value))}
+                        className="w-full accent-indigo-600"
+                      />
+                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        {`Min ${Math.round(lengthMinSec / 60)} · Max ${Math.round(
+                          lengthMaxSec / 60
+                        )} min · Balance ${Math.floor((liveSecondsAvailable || 0) / 60)} min`}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                      {entitlement.tier === 'free'
+                        ? `Your free interview runs up to ${Math.ceil((liveSecondsAvailable || 0) / 60)} min.`
+                        : 'Add minutes to run a longer interview.'}
+                    </p>
+                  )}
+
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={wrapUp}
+                      onChange={(e) => setWrapUp(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-indigo-600"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-200">
+                      Allow a short wrap-up (~90s)
+                      <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                        {wrapUp
+                          ? 'Counts toward your minutes so the interviewer can finish your answer and close out. Turn off for a hard stop at time — every second goes to your answers.'
+                          : 'The interview stops exactly at time — no wrap-up. Every second goes to your answers.'}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <IntroView
                 firstName={firstName}
                 title={title}
@@ -1177,6 +1279,8 @@ const MockInterviewPage = () => {
               onFollowUp={handleFollowUp}
               followUp={followUp}
               loadingFollowUp={loadingFollowUp}
+              isPaid={isPaidTier}
+              onUpgrade={() => navigate('/upgrade')}
             />
           )}
 
@@ -1257,7 +1361,7 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
+      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
     >
       <div className="flex items-start gap-3.5">
         <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-100 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
@@ -1314,7 +1418,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
+      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
     >
       <button
         type="button"
@@ -1587,7 +1691,7 @@ const IntroView = ({
   onStart,
   onCancel,
 }) => (
-  <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-7 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+  <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-7 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
     {/* ambient brand glow */}
     <div
       aria-hidden
@@ -1678,7 +1782,7 @@ const IntroView = ({
             </p>
           </div>
         )}
-        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100 dark:divide-slate-800">
+        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100 dark:divide-slate-800">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
             <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
               <HelpCircle className="w-4 h-4" />
@@ -1748,7 +1852,7 @@ const IntroView = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
+            className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
           >
             Back
           </button>
@@ -1760,13 +1864,36 @@ const IntroView = ({
 
 // Adaptive follow-up — the premium "real interview" upgrade. The user types or
 // dictates their answer and the AI interviewer asks one dynamic follow-up.
-const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
+const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => {
   const [answer, setAnswer] = useState('');
   const [listening, setListening] = useState(false);
   const stopRef = useRef(null);
   const sttSupported = isSpeechRecognitionSupported();
 
   useEffect(() => () => stopRef.current?.(), []);
+
+  // Adaptive follow-ups are a paid (Pro/Premium) coaching feature. Free users see
+  // an upgrade prompt instead of the answer box.
+  if (!isPaid) {
+    return (
+      <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
+          Adaptive follow-up · Pro
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
+          Let the AI interviewer react to your answer and ask a real follow-up — just like the live
+          interview. Unlimited on a Pro or Premium plan.
+        </p>
+        <button
+          type="button"
+          onClick={() => onUpgrade?.()}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors"
+        >
+          <Sparkles className="w-3.5 h-3.5" /> Upgrade to unlock
+        </button>
+      </div>
+    );
+  }
 
   const toggleMic = () => {
     if (listening) {
@@ -1785,7 +1912,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
   return (
     <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
       <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
-        Adaptive follow-up · premium
+        Adaptive follow-up · Pro
       </p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
         Type or dictate your answer and the AI interviewer asks a real follow-up — just like the
@@ -1796,7 +1923,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…"
-        className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
       />
       <div className="mt-2 flex items-center gap-2">
         {sttSupported && (
@@ -1806,7 +1933,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
               listening
                 ? 'border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
-                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
             <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
@@ -1823,11 +1950,11 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading }) => {
           ) : (
             <Sparkles className="w-3.5 h-3.5" />
           )}
-          Ask me a follow-up · 1 credit
+          Ask me a follow-up
         </button>
       </div>
       {followUp && (
-        <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+        <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
           <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
             Interviewer follow-up
           </p>
@@ -1856,6 +1983,8 @@ const RunningView = ({
   onFollowUp,
   followUp,
   loadingFollowUp,
+  isPaid,
+  onUpgrade,
 }) => {
   const isLast = index + 1 >= total;
   const speaking = voiceState === 'speaking';
@@ -1880,7 +2009,7 @@ const RunningView = ({
       </div>
 
       {/* Interviewer "video tile" — the AI is present and talking to you */}
-      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
         {/* ambient brand glow */}
         <div
           aria-hidden
@@ -1904,7 +2033,7 @@ const RunningView = ({
               />
             </div>
             {speaking && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-indigo-100 dark:border-indigo-500/30">
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-900 rounded-full px-1.5 py-0.5 shadow-sm border border-indigo-100 dark:border-indigo-500/30">
                 <span className="w-0.5 h-2 bg-indigo-500 rounded-full animate-pulse" />
                 <span
                   className="w-0.5 h-3 bg-indigo-500 rounded-full animate-pulse"
@@ -1951,7 +2080,7 @@ const RunningView = ({
             type="button"
             onClick={onReplay}
             title="Hear the question again"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer select-none"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer select-none"
           >
             <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
           </button>
@@ -1982,7 +2111,7 @@ const RunningView = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-800/60 text-center"
+                className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-900/60 text-center"
               >
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 max-w-md leading-relaxed">
                   Answer out loud, as if you’re really in the room. When you’re done, reveal a model
@@ -2025,7 +2154,7 @@ const RunningView = ({
                 </div>
 
                 {/* Rating deck */}
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-center sm:text-left">
                     How did your answer feel?
                   </p>
@@ -2073,7 +2202,13 @@ const RunningView = ({
           </AnimatePresence>
 
           {onFollowUp && (
-            <FollowUpPanel onFollowUp={onFollowUp} followUp={followUp} loading={loadingFollowUp} />
+            <FollowUpPanel
+              onFollowUp={onFollowUp}
+              followUp={followUp}
+              loading={loadingFollowUp}
+              isPaid={isPaid}
+              onUpgrade={onUpgrade}
+            />
           )}
         </div>
       </div>
@@ -2083,7 +2218,7 @@ const RunningView = ({
         <button
           type="button"
           onClick={onSkip}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer select-none"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer select-none"
         >
           <SkipForward className="w-3.5 h-3.5" /> Skip question
         </button>
@@ -2146,7 +2281,7 @@ const ReviewView = ({
       return 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30';
     if (c === 'needs_work')
       return 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30';
-    return 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
+    return 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
   };
 
   const confLabel = (c) => {
@@ -2164,7 +2299,7 @@ const ReviewView = ({
         : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-8 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-8 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
       {/* ambient brand glow */}
       <div
         aria-hidden
@@ -2242,7 +2377,7 @@ const ReviewView = ({
                     className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                       confidence === c.id
                         ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {c.label}
@@ -2278,7 +2413,7 @@ const ReviewView = ({
                 return (
                   <div
                     key={i}
-                    className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 p-3">
                       <button
@@ -2313,7 +2448,7 @@ const ReviewView = ({
                           <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1.5">
                             {r.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
                           </p>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 whitespace-pre-line leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 whitespace-pre-line leading-relaxed">
                             {r.suggestedAnswer ||
                               (r.isWeakness
                                 ? "1. State a genuine weakness (avoid cliches like 'perfectionist').\n" +
@@ -2357,7 +2492,7 @@ const ReviewView = ({
                           <button
                             type="button"
                             onClick={() => onPracticeQuestion(r._origIndex)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-semibold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-semibold transition-all cursor-pointer"
                           >
                             <Play className="w-3.5 h-3.5" /> Practice this question
                           </button>
@@ -2383,7 +2518,7 @@ const ReviewView = ({
           <button
             type="button"
             onClick={onRetake}
-            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-all cursor-pointer select-none"
+            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-all cursor-pointer select-none"
           >
             <RefreshCw className="w-4 h-4" /> Retake
           </button>
@@ -2419,18 +2554,19 @@ const ModeCard = ({
   networkIcon,
   accent,
   onPick,
+  badge,
 }) => {
   // Free during testing: everyone can start either mode. The pill tells the
   // user which tier this mode will need once Interview Mode becomes paid.
   const owned = TIER_RANK[userTier] >= TIER_RANK[tierKey];
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)] flex flex-col ${accent.border}`}
+      className={`relative overflow-hidden rounded-3xl border bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col ${accent.border} ${accent.topLine ? 'pt-7' : ''}`}
     >
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute -top-20 -right-14 w-52 h-52 rounded-full blur-3xl ${accent.glow}`}
-      />
+      {accent.topLine && (
+        <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
+      )}
+
       <div className="relative z-10 flex items-center gap-3">
         <div
           className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${accent.iconBg}`}
@@ -2441,11 +2577,18 @@ const ModeCard = ({
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
             {name}
           </h3>
-          <span
-            className={`mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${accent.pill}`}
-          >
-            {owned ? null : <Lock className="w-2.5 h-2.5" />} {tierLabel}
-          </span>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${accent.pill}`}
+            >
+              {owned ? null : <Lock className="w-2.5 h-2.5" />} {tierLabel}
+            </span>
+            {badge && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/35 text-[9px] font-bold uppercase tracking-wider select-none">
+                {badge}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -2454,7 +2597,7 @@ const ModeCard = ({
       </p>
 
       <ul className="relative z-10 mt-3 space-y-1.5">
-        {bullets.map((b, i) => (
+        {(bullets || []).map((b, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${accent.dot}`} />
             <span className="leading-relaxed">{b}</span>
@@ -2477,9 +2620,6 @@ const ModeCard = ({
         >
           {name.startsWith('Conversational') ? 'Start conversational' : 'Start guided'}
         </button>
-        <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Included free during testing
-        </p>
       </div>
     </div>
   );
@@ -2502,7 +2642,7 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
       <ModeCard
         icon={<MessageSquare className="w-5 h-5" />}
         name="Conversational interview"
-        tierLabel="Plus"
+        tierLabel="Paid"
         tierKey="plus"
         userTier={userTier}
         blurb="A real back-and-forth. The AI reacts to what you actually say, references your CV, and asks natural follow-ups — the closest thing to the real room."
@@ -2513,25 +2653,27 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         ]}
         network="Needs excellent network coverage — every answer is a live round-trip to the interviewer."
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
+        badge="Recommended"
         accent={{
-          border: 'border-indigo-200 dark:border-indigo-500/30',
-          glow: 'bg-gradient-to-br from-indigo-200/60 to-violet-200/40',
+          topLine: true,
+          border: 'border-indigo-300/60 dark:border-indigo-500/40 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 transition-all duration-300',
+          glow: '',
           iconBg:
             'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30',
           pill: 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30',
           dot: 'bg-indigo-500',
           netBox:
-            'border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300',
-          btn: 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-indigo-500/20',
+            'border border-indigo-100/50 dark:border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/5 text-indigo-700 dark:text-indigo-300',
+          btn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-600 text-white shadow-md shadow-indigo-500/10 active:scale-[0.98] transition-all',
         }}
         onPick={() => onPick('conversational')}
       />
-
+ 
       <ModeCard
         icon={<BookOpen className="w-5 h-5" />}
         name="Guided question reader"
-        tierLabel="Pro"
-        tierKey="pro"
+        tierLabel="Free"
+        tierKey="free"
         userTier={userTier}
         blurb="The interviewer reads each prepared question aloud with a warm, human delivery. You answer out loud, reveal a model outline, and rate how it felt."
         bullets={[
@@ -2542,15 +2684,16 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         network="Needs only a normal, good internet connection — questions are prepared up front, so brief dips are fine."
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         accent={{
-          border: 'border-slate-200 dark:border-slate-700',
-          glow: 'bg-gradient-to-br from-slate-200/60 to-indigo-100/40',
+          topLine: false,
+          border: 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 transition-all duration-300',
+          glow: '',
           iconBg:
-            'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
-          pill: 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
+            'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+          pill: 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800',
           dot: 'bg-slate-400',
           netBox:
-            'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300',
-          btn: 'bg-slate-800 hover:bg-slate-900 shadow-slate-300/40',
+            'border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-350',
+          btn: 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-sm active:scale-[0.98] transition-all',
         }}
         onPick={() => onPick('scripted')}
       />

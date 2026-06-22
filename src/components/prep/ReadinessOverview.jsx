@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, PlayCircle, ArrowRight, CheckCircle2, Sparkles, Loader } from 'lucide-react';
+import { Target, PlayCircle, ArrowRight, CheckCircle2, Sparkles, Loader, Sparkle, GraduationCap } from 'lucide-react';
 import { computeReadiness, getJobQuestions } from '../../utils/interviewPrep';
 
 // Small SVG score ring. Color tracks the score band.
@@ -118,12 +118,26 @@ const ReadinessOverview = ({
 
   return (
     <section
-      className={`rounded-xl border p-4 sm:p-5 flex flex-col justify-between h-full hover:shadow-md hover:border-slate-350 transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-xl p-4 sm:p-5 flex flex-col justify-between h-full hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300 ${
         isReady
-          ? 'bg-emerald-50/40 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30'
-          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+          ? 'border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-slate-900 hover:border-emerald-500/50'
+          : 'border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 hover:border-indigo-500/50 dark:hover:border-indigo-500/40'
       }`}
     >
+      {/* Top-accent gradient line */}
+      {isReady ? (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
+      ) : (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
+      )}
+
+      {/* Tiny stars for dark mode */}
+      <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
+      <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
+      
+      {/* Education icon for light mode */}
+      <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
+
       <div>
         <div className="flex items-center gap-4">
           <ScoreRing score={score} />

@@ -590,7 +590,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
               minWidth: '210mm', // Force width
             }}
           >
-            <div className="a4-page">{renderTemplate()}</div>
+            <div className="a4-page cv-template-container">{renderTemplate()}</div>
           </div>
         </div>
       </Modal>
