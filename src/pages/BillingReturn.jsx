@@ -75,7 +75,9 @@ const BillingReturn = () => {
         {state === 'success' && (
           <>
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">You’re all set!</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              You’re all set!
+            </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {entitlement?.minutesRemaining != null
                 ? `${entitlement.minutesRemaining} live interview minutes are ready.`
@@ -97,8 +99,8 @@ const BillingReturn = () => {
               Payment not confirmed
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              If you were charged, it will reflect shortly — check your plan on the pricing page. You
-              were not charged for a cancelled payment.
+              If you were charged, it will reflect shortly — check your plan on the pricing page.
+              You were not charged for a cancelled payment.
             </p>
             <button
               onClick={() => navigate('/upgrade')}

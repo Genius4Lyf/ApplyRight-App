@@ -1,25 +1,5 @@
 import React from 'react';
-import {
-  Target,
-  CheckCircle2,
-  AlertTriangle,
-  Flag,
-  Lightbulb,
-  Shirt,
-  Sparkles,
-  Loader,
-} from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
-
-const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
-
-const DRESS_LABELS = {
-  business_formal: 'Business formal',
-  business_casual: 'Business casual',
-  smart_casual: 'Smart casual',
-  creative: 'Creative / polished',
-  uniform_or_specialized: 'Role-specific',
-};
+import { Target, CheckCircle2, AlertTriangle, Flag, Lightbulb } from 'lucide-react';
 
 // "Understand the exam" orientation, built entirely from the fit-analysis data
 // already on the application (no API call). Shown only for job-linked prep.
@@ -48,12 +28,10 @@ const Block = ({ icon, title, iconColor, children }) => (
   </div>
 );
 
-const RoleBrief = ({ application, onGenerateDressGuide, generatingDress }) => {
+const RoleBrief = ({ application }) => {
   const job = application.jobId || {};
   const title = job.title || application.jobTitle || 'This role';
   const company = job.company || application.jobCompany || '';
-  const dressGuide = application.interviewPrep?.dressGuide || null;
-  const hasDress = !!(dressGuide && dressGuide.summary);
   const fit = application.fitAnalysis || {};
   const fitScore = typeof application.fitScore === 'number' ? application.fitScore : null;
 
@@ -236,122 +214,6 @@ const RoleBrief = ({ application, onGenerateDressGuide, generatingDress }) => {
           <span className="font-semibold text-indigo-700 dark:text-indigo-300">Stories</span> as the
           evidence.
         </p>
-      </Block>
-
-      {/* Dress & first impression — tailored, AI-generated */}
-      <Block
-        icon={Shirt}
-        title="Dress & first impression"
-        iconColor="text-indigo-600 dark:text-indigo-300"
-      >
-        {hasDress ? (
-          <div className="space-y-3">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">
-              {DRESS_LABELS[dressGuide.dressCode] || 'Dress code'}
-            </span>
-            {dressGuide.summary && (
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                {dressGuide.summary}
-              </p>
-            )}
-            <div className="grid sm:grid-cols-2 gap-3">
-              {dressGuide.wear?.length > 0 && (
-                <div className="rounded-lg border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/15 p-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-300 mb-1.5">
-                    Wear
-                  </p>
-                  <ul className="space-y-1">
-                    {dressGuide.wear.map((w, i) => (
-                      <li
-                        key={i}
-                        className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-1.5"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
-                        {w}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {dressGuide.avoid?.length > 0 && (
-                <div className="rounded-lg border border-rose-100 dark:border-rose-500/30 bg-rose-50/40 dark:bg-rose-500/15 p-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-rose-700 dark:text-rose-300 mb-1.5">
-                    Avoid
-                  </p>
-                  <ul className="space-y-1">
-                    {dressGuide.avoid.map((w, i) => (
-                      <li
-                        key={i}
-                        className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-1.5"
-                      >
-                        <span className="text-rose-500 dark:text-rose-300 shrink-0 font-bold">
-                          ✕
-                        </span>
-                        {w}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-            {(dressGuide.virtualTip || dressGuide.groomingNote) && (
-              <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                {dressGuide.virtualTip && (
-                  <p>
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      On camera:
-                    </span>{' '}
-                    {dressGuide.virtualTip}
-                  </p>
-                )}
-                {dressGuide.groomingNote && (
-                  <p>
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      Grooming:
-                    </span>{' '}
-                    {dressGuide.groomingNote}
-                  </p>
-                )}
-              </div>
-            )}
-            {onGenerateDressGuide && (
-              <button
-                type="button"
-                onClick={onGenerateDressGuide}
-                disabled={generatingDress}
-                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 disabled:opacity-60"
-              >
-                {generatingDress ? 'Refreshing…' : 'Regenerate guide'}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 p-4">
-            <p className="text-xs text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
-              Get a tailored what-to-wear guide for{' '}
-              <span className="font-semibold">{company || 'this role'}</span> — outfit, what to
-              avoid, and first-impression tips. Dressing one step above the team can swing the room
-              in your favour.
-            </p>
-            {onGenerateDressGuide && (
-              <button
-                type="button"
-                onClick={onGenerateDressGuide}
-                disabled={generatingDress}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60"
-              >
-                {generatingDress ? (
-                  <Loader className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
-                {generatingDress
-                  ? 'Styling…'
-                  : `Generate dress guide · ${isAndroidNative() ? 'watch an ad' : '2 credits'}`}
-              </button>
-            )}
-          </div>
-        )}
       </Block>
     </section>
   );

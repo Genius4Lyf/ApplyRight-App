@@ -58,9 +58,9 @@ const ProjectsTutorial = ({ isOpen, onClose }) => {
                         Name the project, name the goal
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                        Use a clear <strong>project name</strong> and what you set out to achieve (e.g.
-                        "Marketing campaign for Q3 launch", "Open-source onboarding tool"). The AI uses
-                        this to highlight your impact.
+                        Use a clear <strong>project name</strong> and what you set out to achieve
+                        (e.g. "Marketing campaign for Q3 launch", "Open-source onboarding tool").
+                        The AI uses this to highlight your impact.
                       </p>
                     </div>
                   </div>
@@ -74,8 +74,8 @@ const ProjectsTutorial = ({ isOpen, onClose }) => {
                         Drop in rough notes — the AI polishes
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                        Paste a list of tasks, results, or a quick description. The AI rewrites them into{' '}
-                        <strong>impressive professional achievements</strong>.
+                        Paste a list of tasks, results, or a quick description. The AI rewrites them
+                        into <strong>impressive professional achievements</strong>.
                       </p>
                     </div>
                   </div>
@@ -89,7 +89,7 @@ const ProjectsTutorial = ({ isOpen, onClose }) => {
                 <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Example Transformation
                 </h4>
-                
+
                 <div className="space-y-3.5">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
@@ -99,15 +99,17 @@ const ProjectsTutorial = ({ isOpen, onClose }) => {
                       "did social media postings for a local shop"
                     </p>
                   </div>
-                  
+
                   <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-2"></div>
-                  
+
                   <div>
                     <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> ApplyRight AI Optimized
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> ApplyRight
+                      AI Optimized
                     </span>
                     <p className="text-xs text-slate-800 dark:text-slate-200 font-semibold mt-1 leading-relaxed">
-                      "Launched a local Facebook ad campaign and created weekly promotional content, driving a 30% increase in store foot traffic."
+                      "Launched a local Facebook ad campaign and created weekly promotional content,
+                      driving a 30% increase in store foot traffic."
                     </p>
                   </div>
                 </div>

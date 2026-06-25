@@ -56,7 +56,7 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
               <div className="opacity-40 space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <LimitItem
                   icon={<X className="text-slate-400" />}
-                  text="Unlimited AI Analysis"
+                  text="Monthly AI credit pool"
                   crossed
                 />
                 <LimitItem
@@ -97,8 +97,8 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
               </div>
 
               <div className="space-y-5">
-                <BenefitItem text="Unlimited Resumes & Drafts" />
-                <BenefitItem text="Endless Job Optimizations" />
+                <BenefitItem text="Generous monthly AI credits" />
+                <BenefitItem text="Top up credits any time" />
                 <BenefitItem text="Access All Premium Templates" />
                 <BenefitItem text="Advanced ATS Keyword Targeting" />
                 <BenefitItem text="AI Cover Letter Generator" />

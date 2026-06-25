@@ -97,7 +97,9 @@ const LoadingWithAd = ({
         {/* Loading indicator */}
         <div className="flex flex-col items-center mb-8">
           <Loader className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center">{currentMessage}</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center">
+            {currentMessage}
+          </h2>
           <p className="text-slate-500 dark:text-slate-400 mt-2">This will only take a moment</p>
         </div>
 

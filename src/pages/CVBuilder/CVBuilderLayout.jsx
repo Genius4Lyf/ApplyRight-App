@@ -30,7 +30,6 @@ import CVService from '../../services/cv.service';
 import { healthColor } from '../../utils/cvHealth';
 import { toast } from 'sonner';
 
-
 // ScoreRing component for the ATS fit score preview
 const ScoreRing = ({ score }) => {
   const { ring, text } = healthColor(score);
@@ -203,7 +202,9 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
           </div>
           <div className="w-full flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-5">
             <span>Progress</span>
-            <span>{doneCount} / {totalCount} Completed</span>
+            <span>
+              {doneCount} / {totalCount} Completed
+            </span>
           </div>
 
           {/* Steps List */}
@@ -220,22 +221,26 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
                   className="w-full flex items-center justify-between p-3.5 text-left transition-all hover:bg-slate-50 dark:hover:bg-slate-800/40 group outline-none"
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      isStepDone
-                        ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500'
-                    }`}>
+                    <span
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                        isStepDone
+                          ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
                       {isStepDone ? <Check className="w-3 h-3" /> : idx + 1}
                     </span>
-                    <span className={`text-xs font-bold transition-colors ${
-                      isStepDone
-                        ? 'text-slate-600 dark:text-slate-300'
-                        : 'text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
-                    }`}>
+                    <span
+                      className={`text-xs font-bold transition-colors ${
+                        isStepDone
+                          ? 'text-slate-600 dark:text-slate-300'
+                          : 'text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                      }`}
+                    >
                       {step.label}
                     </span>
                   </div>
-                  
+
                   {!isStepDone && (
                     <span className="text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider flex items-center gap-0.5">
                       Fill In &rarr;
@@ -272,7 +277,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
             position: 'absolute',
             left: 0,
             top: 0,
-            filter: (scanning || showResults) ? 'blur(4px) opacity(50%)' : 'none',
+            filter: scanning || showResults ? 'blur(4px) opacity(50%)' : 'none',
             transition: 'filter 0.4s ease, opacity 0.4s ease',
           }}
           className="bg-white shadow-xl rounded-sm border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[1123px] text-left"
@@ -282,7 +287,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
 
         {/* Laser Sweep Line */}
         {scanning && (
-          <div 
+          <div
             style={{
               width: '794px',
               height: '3px',
@@ -300,7 +305,9 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none p-4">
             <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 animate-pulse">
               <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">Scanning CV...</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                Scanning CV...
+              </span>
             </div>
           </div>
         )}
@@ -333,7 +340,9 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
               <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                 <ScoreRing score={scanResult.jobMatch?.fitScore || 0} />
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ATS Fit Score</span>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    ATS Fit Score
+                  </span>
                   <p className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">
                     {scanResult.jobMatch?.fitScore >= 75
                       ? 'Strong match 🎯'
@@ -438,7 +447,8 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
                 </button>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Paste the job description of the role you are targeting to run an ATS scan against your current CV.
+                Paste the job description of the role you are targeting to run an ATS scan against
+                your current CV.
               </p>
               <textarea
                 value={pastedJd}

@@ -7,12 +7,6 @@ const billingService = {
     return response.data;
   },
 
-  // Add credits (simulated for now)
-  addCredits: async (amount, description) => {
-    const response = await api.post('/billing/add', { amount, description });
-    return response.data;
-  },
-
   // Get transaction history
   getTransactions: async () => {
     const response = await api.get('/billing/transactions');

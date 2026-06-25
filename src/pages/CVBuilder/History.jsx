@@ -550,12 +550,14 @@ const History = () => {
                             {role.title || 'Untitled Role'}
                             {role.company && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
-                                {' '}• {role.company}
+                                {' '}
+                                • {role.company}
                               </span>
                             )}
                           </h4>
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                            {role.startDate || '—'} – {role.isCurrent ? 'Present' : role.endDate || '—'}
+                            {role.startDate || '—'} –{' '}
+                            {role.isCurrent ? 'Present' : role.endDate || '—'}
                           </p>
                         </div>
                       </div>
@@ -642,7 +644,9 @@ const History = () => {
                                     <input
                                       type="checkbox"
                                       checked={role.isCurrent || false}
-                                      onChange={(e) => handleChange(index, 'isCurrent', e.target.checked)}
+                                      onChange={(e) =>
+                                        handleChange(index, 'isCurrent', e.target.checked)
+                                      }
                                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                                     />
                                     <span className="text-xs text-slate-600 dark:text-slate-300">
@@ -668,12 +672,14 @@ const History = () => {
                                   disabled={
                                     generatingIndex === index ||
                                     !role.title ||
-                                    (role.description || '').split('\n').filter((b) => b.trim().length > 2)
-                                      .length < 2
+                                    (role.description || '')
+                                      .split('\n')
+                                      .filter((b) => b.trim().length > 2).length < 2
                                   }
                                   title={
-                                    (role.description || '').split('\n').filter((b) => b.trim().length > 2)
-                                      .length < 2
+                                    (role.description || '')
+                                      .split('\n')
+                                      .filter((b) => b.trim().length > 2).length < 2
                                       ? 'Please write at least 2 bullet points to use AI Suggestions'
                                       : 'Get AI Suggestions'
                                   }
@@ -698,14 +704,18 @@ const History = () => {
                                     // Need to adjust cursor in next tick
                                     setTimeout(() => {
                                       if (e.target)
-                                        e.target.selectionStart = e.target.selectionEnd = val.length;
+                                        e.target.selectionStart = e.target.selectionEnd =
+                                          val.length;
                                     }, 0);
                                   }
                                   // Block free users from adding bullets past the limit (e.g.
                                   // via a multi-line paste). Edits that don't add bullets pass.
                                   if (!isPaid) {
                                     const next = countBullets(val);
-                                    if (next > FREE_BULLET_LIMIT && next > countBullets(role.description)) {
+                                    if (
+                                      next > FREE_BULLET_LIMIT &&
+                                      next > countBullets(role.description)
+                                    ) {
                                       toast.info(
                                         `Free plan allows up to ${FREE_BULLET_LIMIT} bullets per role. Upgrade to add unlimited.`
                                       );

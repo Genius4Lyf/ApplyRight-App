@@ -84,6 +84,22 @@ export function createRealtimeSession({
   onError,
   onStream,
   onCaption,
+  // Seamless panel handoff support:
+  // - autoGreet: send response.create on connect (the interviewer speaks first).
+  //   A PRE-WARMED next interviewer sets this false so it stays silent until
+  //   activate() is called.
+  // - startSilent: connect but keep output muted + mic off (pre-warm). activate()
+  //   un-silences and (if !autoGreet) triggers the first response.
+  // - onReady: fired once the peer connection is established (pre-warm is ready).
+  // - onHandoff: fired when this interviewer calls the hand_off_to_next tool AND
+  //   has finished speaking its hand-off line — the cue to crossfade to the next.
+  // - onSpeakerChange(name): single-voice panel — the model says which panelist is
+  //   now talking (set_active_speaker tool), so the UI can highlight their tile.
+  autoGreet = true,
+  startSilent = false,
+  onReady,
+  onHandoff,
+  onSpeakerChange,
 }) {
   let pc = null;
   let localStream = null;
@@ -108,8 +124,35 @@ export function createRealtimeSession({
   let userSpeaking = false;
   let speakBackstopTimer = null;
   let connectTimer = null;
+  // Pre-warm / seamless-handoff state.
+  let silent = startSilent; // output muted + mic off until activate()
+  let ready = false; // peer connection established
+  let pendingHandoff = false; // tool called; waiting for the spoken line to finish
+  let handoffFired = false; // onHandoff dispatched (once)
+  let volTimer = null;
 
   const fail = (code, message) => onError && onError({ code, message });
+
+  // Ramp the remote audio volume (for crossfading between interviewers). Resolves
+  // when the target is reached.
+  const rampVolume = (target, ms = 250) =>
+    new Promise((resolve) => {
+      if (!audioEl) return resolve();
+      if (volTimer) clearInterval(volTimer);
+      const from = audioEl.volume;
+      const steps = Math.max(1, Math.round(ms / 25));
+      let i = 0;
+      volTimer = setInterval(() => {
+        i += 1;
+        const v = from + ((target - from) * i) / steps;
+        if (audioEl) audioEl.volume = Math.max(0, Math.min(1, v));
+        if (i >= steps) {
+          clearInterval(volTimer);
+          volTimer = null;
+          resolve();
+        }
+      }, 25);
+    });
 
   // The mic is live only once the greeting is done AND the user hasn't muted.
   const applyMic = () => {
@@ -128,7 +171,7 @@ export function createRealtimeSession({
   };
 
   const unlockMic = () => {
-    if (micUnlocked) return;
+    if (micUnlocked || silent) return; // never open the mic while pre-warmed/silent
     micUnlocked = true;
     clearMicTimers();
     applyMic();
@@ -150,6 +193,7 @@ export function createRealtimeSession({
     pc = new RTCPeerConnection();
     audioEl = new Audio();
     audioEl.autoplay = true;
+    audioEl.volume = silent ? 0 : 1; // pre-warmed sessions stay silent until activate()
     pc.ontrack = (e) => {
       remoteStream = e.streams[0];
       audioEl.srcObject = remoteStream;
@@ -165,6 +209,10 @@ export function createRealtimeSession({
     // Ask the interviewer to speak first — the session instructions tell it to
     // greet warmly and ask the opening question.
     dc.onopen = () => {
+      // A pre-warmed next interviewer (autoGreet:false) stays silent until
+      // activate() fires the first response, so we don't speak over the current
+      // interviewer who is still talking.
+      if (!autoGreet) return;
       try {
         dc.send(JSON.stringify({ type: 'response.create' }));
       } catch {
@@ -182,6 +230,62 @@ export function createRealtimeSession({
         // time-up fallback prompt only fires in a genuinely silent room.
         if (msg.type === 'input_audio_buffer.speech_started') userSpeaking = true;
         if (msg.type === 'input_audio_buffer.speech_stopped') userSpeaking = false;
+
+        // Tool calls from the interviewer. Two kinds:
+        //  - hand_off_to_next (multi-voice): switch to the next session's voice.
+        //  - set_active_speaker (single-voice panel): just update which panelist
+        //    the UI highlights — one continuous session, so we ack it and let the
+        //    model keep talking.
+        const fnName =
+          msg.type === 'response.function_call_arguments.done'
+            ? msg.name
+            : msg.type === 'response.output_item.done' && msg.item?.type === 'function_call'
+              ? msg.item?.name
+              : null;
+        const fnArgsRaw =
+          msg.type === 'response.function_call_arguments.done'
+            ? msg.arguments
+            : msg.item?.arguments;
+        const fnCallId =
+          msg.type === 'response.function_call_arguments.done' ? msg.call_id : msg.item?.call_id;
+
+        if (fnName === 'hand_off_to_next') pendingHandoff = true;
+        if (fnName === 'set_active_speaker') {
+          let speaker = '';
+          try {
+            speaker = JSON.parse(fnArgsRaw || '{}').name || '';
+          } catch {
+            speaker = '';
+          }
+          if (speaker && onSpeakerChange) onSpeakerChange(speaker);
+          // Ack the tool + let the model continue talking (UI-only tool, must not
+          // stall the conversation).
+          try {
+            if (fnCallId) {
+              dc.send(
+                JSON.stringify({
+                  type: 'conversation.item.create',
+                  item: {
+                    type: 'function_call_output',
+                    call_id: fnCallId,
+                    output: '{"ok":true}',
+                  },
+                })
+              );
+            }
+            dc.send(JSON.stringify({ type: 'response.create' }));
+          } catch {
+            /* best-effort; the model continues on the next turn regardless */
+          }
+        }
+
+        const fireHandoff = () => {
+          if (pendingHandoff && !handoffFired && onHandoff) {
+            handoffFired = true;
+            onHandoff();
+          }
+        };
+
         const turn = collectTranscript(msg, transcript);
         if (turn && onCaption) onCaption(turn);
         const s = eventToState(msg.type);
@@ -204,7 +308,13 @@ export function createRealtimeSession({
             unlockMic();
           }
           onState && onState(s);
+          // The hand-off line has finished playing (speaking → listening) → now
+          // it's safe to crossfade to the next interviewer.
+          if (s === 'listening') fireHandoff();
         }
+        // Fallback: model called the tool without (or before) audio — fire on the
+        // response completing so a handoff is never stranded.
+        if (msg.type === 'response.done') fireHandoff();
       } catch {
         /* ignore non-JSON / unknown events */
       }
@@ -212,13 +322,20 @@ export function createRealtimeSession({
 
     pc.onconnectionstatechange = () => {
       if (pc && pc.connectionState === 'connected') {
+        if (!ready) {
+          ready = true;
+          onReady && onReady(); // pre-warm is ready to be activated
+        }
         // Stay on the "connecting" screen until the AI actually speaks (it goes
         // first). Safety: if no greeting audio arrives, advance AND unlock the
-        // mic so the user isn't stranded muted.
-        connectTimer = setTimeout(() => {
-          if (onState) onState('listening');
-          unlockMic();
-        }, 12000);
+        // mic so the user isn't stranded muted. Skipped while pre-warmed/silent —
+        // a pre-connected next interviewer must NOT auto-unlock before activate().
+        if (!silent) {
+          connectTimer = setTimeout(() => {
+            if (onState) onState('listening');
+            unlockMic();
+          }, 12000);
+        }
       }
       if (pc && (pc.connectionState === 'failed' || pc.connectionState === 'disconnected')) {
         fail('CONNECTION_LOST');
@@ -239,9 +356,33 @@ export function createRealtimeSession({
     }
   };
 
+  // Bring a PRE-WARMED (silent) session live: un-silence it, fade its voice in,
+  // and trigger its first response so it starts speaking immediately. Reuses the
+  // already-established connection, so there's no handshake gap — this is what
+  // makes the panel hand-off seamless. `fadeMs` crossfades against the outgoing
+  // interviewer's fadeOut().
+  const activate = async ({ fadeMs = 250 } = {}) => {
+    silent = false;
+    if (!autoGreet && dc && dc.readyState === 'open') {
+      try {
+        dc.send(JSON.stringify({ type: 'response.create' }));
+      } catch {
+        /* the model still responds once the candidate speaks */
+      }
+    }
+    await rampVolume(1, fadeMs);
+  };
+
+  // Fade this interviewer's voice out (the outgoing half of a crossfade).
+  const fadeOut = (fadeMs = 250) => rampVolume(0, fadeMs);
+
   const stop = () => {
     stopped = true;
     clearMicTimers();
+    if (volTimer) {
+      clearInterval(volTimer);
+      volTimer = null;
+    }
     try {
       dc && dc.close();
     } catch {
@@ -305,8 +446,11 @@ export function createRealtimeSession({
   return {
     start,
     stop,
+    activate,
+    fadeOut,
     toggleMute,
     sendInstruction,
+    isReady: () => ready,
     isUserSpeaking: () => userSpeaking,
     getLocalStream: () => localStream,
     getRemoteStream: () => remoteStream,

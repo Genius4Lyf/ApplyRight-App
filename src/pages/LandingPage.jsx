@@ -332,6 +332,12 @@ const LandingPage = () => {
             </Link>
             <div className="flex items-center gap-4">
               <Link
+                to="/pricing"
+                className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
                 to="/login"
                 className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
               >
@@ -571,17 +577,19 @@ const LandingPage = () => {
         >
           {/* Subtle grid pattern background */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:16px_16px]"></div>
-          
+
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3 flex items-center justify-center gap-1.5">
-                <Sparkles size={16} className="text-indigo-500 animate-pulse" /> Advanced Job-Prep Suite
+                <Sparkles size={16} className="text-indigo-500 animate-pulse" /> Advanced Job-Prep
+                Suite
               </h2>
               <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
                 Go Beyond the Simple Resume
               </h3>
               <p className="mt-4 text-xl text-slate-600 max-w-3xl mx-auto">
-                ApplyRight gives you a full toolkit designed by career experts to make sure you dominate every step of the hiring pipeline, from CV scoring to the final call.
+                ApplyRight gives you a full toolkit designed by career experts to make sure you
+                dominate every step of the hiring pipeline, from CV scoring to the final call.
               </p>
             </div>
 
@@ -596,12 +604,19 @@ const LandingPage = () => {
                     Grounded STAR Story Bank
                   </h4>
                   <p className="text-slate-600 leading-relaxed mb-6">
-                    Prep like top candidates actually do. Generate a bank of reusable STAR-formatted stories (Situation, Task, Action, Result) built from your real experience. Each story is verified by AI for claims consistency and linked directly to relevant interview questions.
+                    Prep like top candidates actually do. Generate a bank of reusable STAR-formatted
+                    stories (Situation, Task, Action, Result) built from your real experience. Each
+                    story is verified by AI for claims consistency and linked directly to relevant
+                    interview questions.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
-                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full">CV-Grounded Stories</span>
-                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">STAR Method Formatting</span>
+                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full">
+                    CV-Grounded Stories
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">
+                    STAR Method Formatting
+                  </span>
                   <span className="px-2.5 py-1 bg-slate-100 rounded-full">Claim Verification</span>
                 </div>
               </div>
@@ -616,12 +631,19 @@ const LandingPage = () => {
                     Interactive Voice Interview Mode
                   </h4>
                   <p className="text-slate-600 leading-relaxed mb-6">
-                    Simulate real interview pressure. Our AI interviewer reads questions aloud using premium ElevenLabs & OpenAI TTS voice synthesis. Practice verbally with question-by-question suggestion timers, rate your own confidence, and receive targeted coaching reviews.
+                    Simulate real interview pressure. Our AI interviewer reads questions aloud using
+                    premium ElevenLabs & OpenAI TTS voice synthesis. Practice verbally with
+                    question-by-question suggestion timers, rate your own confidence, and receive
+                    targeted coaching reviews.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
-                  <span className="px-2.5 py-1 bg-violet-50 text-violet-700 rounded-full">Premium TTS (ElevenLabs)</span>
-                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Timed Verbal Simulation</span>
+                  <span className="px-2.5 py-1 bg-violet-50 text-violet-700 rounded-full">
+                    Premium TTS (ElevenLabs)
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">
+                    Timed Verbal Simulation
+                  </span>
                   <span className="px-2.5 py-1 bg-slate-100 rounded-full">Coaching Review</span>
                 </div>
               </div>
@@ -636,11 +658,15 @@ const LandingPage = () => {
                     The 10-Minute Pre-Call Brief
                   </h4>
                   <p className="text-slate-600 leading-relaxed mb-6">
-                    Never walk in cold. Generate a print-friendly, single-page cram sheet containing your overall readiness score, your top 3 STAR stories, your weakest questions to review, key skills to highlight, and questions to ask the interviewer.
+                    Never walk in cold. Generate a print-friendly, single-page cram sheet containing
+                    your overall readiness score, your top 3 STAR stories, your weakest questions to
+                    review, key skills to highlight, and questions to ask the interviewer.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
-                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">Print-Optimized / Save PDF</span>
+                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">
+                    Print-Optimized / Save PDF
+                  </span>
                   <span className="px-2.5 py-1 bg-slate-100 rounded-full">Quick Cram Sheet</span>
                   <span className="px-2.5 py-1 bg-slate-100 rounded-full">Readiness Rollup</span>
                 </div>
@@ -652,17 +678,23 @@ const LandingPage = () => {
                   <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 mb-6 group-hover:scale-110 transition-transform">
                     <GitCompare size={24} />
                   </div>
-                  <h4 className="text-2xl font-bold text-slate-900 mb-3">
-                    CV Comparison Studio
-                  </h4>
+                  <h4 className="text-2xl font-bold text-slate-900 mb-3">CV Comparison Studio</h4>
                   <p className="text-slate-600 leading-relaxed mb-6">
-                    Compare two iterations of your CV side-by-side to target a specific job. See a detailed breakdown of which CV scores higher in each dimension, which must-have skills are missing, and exactly what updates increased your fit score.
+                    Compare two iterations of your CV side-by-side to target a specific job. See a
+                    detailed breakdown of which CV scores higher in each dimension, which must-have
+                    skills are missing, and exactly what updates increased your fit score.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 pt-4 border-t border-slate-100">
-                  <span className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-full">Side-by-Side Analysis</span>
-                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Score Breakdown Diff</span>
-                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">Target Job Benchmarking</span>
+                  <span className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-full">
+                    Side-by-Side Analysis
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">
+                    Score Breakdown Diff
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-100 rounded-full">
+                    Target Job Benchmarking
+                  </span>
                 </div>
               </div>
             </div>
@@ -740,6 +772,9 @@ const LandingPage = () => {
               </div>
 
               <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-600 justify-center">
+                <Link to="/pricing" className="hover:text-indigo-600 transition-colors">
+                  Pricing
+                </Link>
                 <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
                   Privacy Policy
                 </Link>
@@ -761,6 +796,12 @@ const LandingPage = () => {
                 >
                   How ATS &amp; Recruiters Work
                 </Link>
+                <Link
+                  to="/how-to-ace-your-interview"
+                  className="hover:text-indigo-600 transition-colors"
+                >
+                  How to Ace Your Interview
+                </Link>
               </div>
 
               <div className="text-slate-500 text-sm">
@@ -769,7 +810,11 @@ const LandingPage = () => {
             </div>
 
             <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
-              <strong>Disclaimer:</strong> ApplyRight is an interview preparation tool. All mock sessions, voice conversations, and generated questions are designed solely for practice and confidence-building purposes. The questions simulated in our application are illustrative and do not guarantee the actual questions that will be encountered in your live hiring process.
+              <strong>Disclaimer:</strong> ApplyRight is an interview preparation tool. All mock
+              sessions, voice conversations, and generated questions are designed solely for
+              practice and confidence-building purposes. The questions simulated in our application
+              are illustrative and do not guarantee the actual questions that will be encountered in
+              your live hiring process.
             </p>
           </div>
         </footer>

@@ -22,6 +22,7 @@ const DARK_ELIGIBLE_PREFIXES = [
   '/cv-builder',
   '/feedback/dashboard',
   '/jobs',
+  '/agent', // CV-agent workspace (dashboard, clients)
 ];
 
 /**

@@ -130,9 +130,7 @@ export function computeCvHealth(cvData = {}) {
   // Listed in the SAME order as the CV Builder steps so the coach can nudge the
   // user not to skip a section. Projects is shown in place but flagged recommended.
   const sections = [contact, history, projectsSection, education, skillsSection, summary];
-  const score = sections
-    .filter((s) => !s.recommended)
-    .reduce((sum, s) => sum + (s.earned || 0), 0); // scored sections sum to 100
+  const score = sections.filter((s) => !s.recommended).reduce((sum, s) => sum + (s.earned || 0), 0); // scored sections sum to 100
 
   return { score, sections };
 }

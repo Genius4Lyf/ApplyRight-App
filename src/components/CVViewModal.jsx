@@ -5,6 +5,8 @@ import { X, FileText, ArrowUpRight, Loader, Lock } from 'lucide-react';
 import ApplicationService from '../services/application.service';
 import api from '../services/api';
 import CVTemplateRenderer from './CVTemplateRenderer';
+import PreviewWatermark from './PreviewWatermark';
+import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
 const readStoredUser = () => {
   try {
@@ -23,10 +25,15 @@ const A4_WIDTH = 794; // ~210mm @ 96dpi
 const CVViewModal = ({ applicationId, isOpen, onClose }) => {
   const navigate = useNavigate();
   const wrapRef = useRef(null);
+  // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
+  const screenshotObscured = useScreenshotGuard();
   const [app, setApp] = useState(null);
   // Profile drives the CV header (name + contact). Seed from localStorage for an
   // instant header, then refine from /auth/me (the source the resume page uses).
   const [profile, setProfile] = useState(readStoredUser);
+  // Uploaded resume text — shown when there's no ApplyRight-generated CV but the
+  // user uploaded a resume to this application.
+  const [resumeText, setResumeText] = useState(null);
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(() =>
     Math.min(1, Math.max((window.innerWidth - 16) / A4_WIDTH, 0.3))
@@ -40,6 +47,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
     if (!isOpen || !applicationId) return undefined;
     if (app && app._id === applicationId) return undefined; // already loaded — instant reopen
     let cancelled = false;
+    setResumeText(null); // reset the upload fallback for a fresh fetch
     Promise.all([
       ApplicationService.getApplicationById(applicationId),
       api
@@ -52,6 +60,17 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
         setApp(data);
         if (me) setProfile(me);
         setError(null);
+        // No ApplyRight-generated CV → fall back to the uploaded resume (if any).
+        if (!data?.optimizedCV) {
+          api
+            .get(`/interview-prep/${applicationId}/resume-text`)
+            .then((r) => {
+              if (!cancelled) setResumeText(r.data?.rawText || '');
+            })
+            .catch(() => {
+              if (!cancelled) setResumeText('');
+            });
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(e?.response?.data?.message || 'Failed to load your CV');
@@ -146,13 +165,33 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           <div className="max-w-sm mx-auto mt-10 bg-white dark:bg-slate-900 rounded-xl p-6 text-center">
             <p className="text-sm text-slate-700 dark:text-slate-300">{error}</p>
           </div>
+        ) : !hasCV && resumeText ? (
+          // Uploaded resume (no ApplyRight CV generated) — show the raw text.
+          <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl">
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <FileText className="w-4 h-4 text-indigo-600" />
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Your uploaded resume
+              </p>
+            </div>
+            <pre className="whitespace-pre-wrap break-words font-sans text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+              {resumeText}
+            </pre>
+          </div>
+        ) : !hasCV && resumeText === null ? (
+          // Still checking for an uploaded resume.
+          <div className="h-full flex flex-col items-center justify-center text-white/90">
+            <Loader className="w-8 h-8 animate-spin" />
+            <p className="text-xs mt-2">Loading your CV…</p>
+          </div>
         ) : !hasCV ? (
           <div className="max-w-sm mx-auto mt-10 bg-white dark:bg-slate-900 rounded-xl p-6 text-center">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">
-              No CV generated for this role yet
+              No CV attached to this role yet
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Head to this application to generate a tailored CV, then come back to view it here.
+              Upload a resume or generate a tailored CV for this application, then come back to view
+              it here.
             </p>
             <button
               type="button"
@@ -164,9 +203,17 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           </div>
         ) : (
           <div
-            className="bg-white shadow-2xl mx-auto"
-            style={{ zoom: scale, width: `${A4_WIDTH}px` }}
+            className="bg-white shadow-2xl mx-auto relative select-none transition-[filter] duration-200"
+            style={{
+              zoom: scale,
+              width: `${A4_WIDTH}px`,
+              filter: screenshotObscured ? 'blur(16px)' : undefined,
+            }}
+            onContextMenu={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
           >
+            <PreviewWatermark />
             <CVTemplateRenderer application={app} userProfile={profile} />
           </div>
         )}

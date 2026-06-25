@@ -178,7 +178,8 @@ const ApplicationReview = () => {
               </span>
             </h1>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              An inside look at how our AI analyzes job descriptions, extracts keyword requirements, and rewrites your resume experience to stand out to both algorithms and recruiters.
+              An inside look at how our AI analyzes job descriptions, extracts keyword requirements,
+              and rewrites your resume experience to stand out to both algorithms and recruiters.
             </p>
           </motion.div>
         </div>
@@ -348,7 +349,8 @@ const ApplicationReview = () => {
             The Three Pillars of AI Optimization
           </h3>
           <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
-            Our specialized AI agents work in tandem to rewrite, structure, and optimize your application materials.
+            Our specialized AI agents work in tandem to rewrite, structure, and optimize your
+            application materials.
           </p>
         </div>
 
@@ -362,7 +364,8 @@ const ApplicationReview = () => {
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">1. Job Parsing</h4>
             <p className="text-indigo-50 leading-relaxed mb-6">
-              Our parser AI reads the target job posting to identify critical keywords, implicit skills, and core competencies that recruiters are actively searching for.
+              Our parser AI reads the target job posting to identify critical keywords, implicit
+              skills, and core competencies that recruiters are actively searching for.
             </p>
             <div className="flex items-center gap-2 text-green-400 font-bold text-sm">
               <CheckCircle size={16} /> ANALYSIS READY
@@ -378,7 +381,8 @@ const ApplicationReview = () => {
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">2. Contextual Rewrite</h4>
             <p className="text-indigo-50 leading-relaxed mb-6">
-              The AI rewrites your rough accomplishments, seamlessly integrating keywords without stuffing, and structuring each line in high-impact professional formats.
+              The AI rewrites your rough accomplishments, seamlessly integrating keywords without
+              stuffing, and structuring each line in high-impact professional formats.
             </p>
             <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
               <CheckCircle size={16} /> ATS OPTIMIZED
@@ -394,7 +398,8 @@ const ApplicationReview = () => {
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">3. Format Verification</h4>
             <p className="text-indigo-50 leading-relaxed mb-6">
-              Validates that your CV uses parsing-friendly, single-column layouts and clean fonts that survive the ATS and win the 6-second recruiter skim.
+              Validates that your CV uses parsing-friendly, single-column layouts and clean fonts
+              that survive the ATS and win the 6-second recruiter skim.
             </p>
             <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
               <CheckCircle size={16} /> RECRUITER APPROVED
@@ -407,8 +412,12 @@ const ApplicationReview = () => {
       <section className="py-24 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="text-indigo-600 font-bold uppercase tracking-wider text-xs">AI In Action</span>
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-2 font-heading">Example Transformations</h2>
+            <span className="text-indigo-600 font-bold uppercase tracking-wider text-xs">
+              AI In Action
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-2 font-heading">
+              Example Transformations
+            </h2>
             <p className="text-lg text-slate-600 mt-4 max-w-2xl mx-auto">
               See how our AI transforms rough drafts into recruiter-ready bullet points.
             </p>
@@ -418,13 +427,17 @@ const ApplicationReview = () => {
             {/* Example 1 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">1</span>
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                  1
+                </span>
                 Work History Bullet Point
               </h3>
               <div className="grid md:grid-cols-2 gap-6 items-stretch">
                 <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">
+                      Your Rough Input
+                    </span>
                     <p className="text-sm text-slate-600 italic leading-relaxed">
                       "helped clients and sold more products"
                     </p>
@@ -433,15 +446,23 @@ const ApplicationReview = () => {
                     <XCircle size={14} /> Fails keyword match & lacks measurable impact.
                   </div>
                 </div>
-                
+
                 <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
                   <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
                     Optimized
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
+                      ApplyRight AI Rewrite
+                    </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
-                      "Managed <strong className="text-indigo-600 font-semibold">15+ key accounts</strong> and resolved billing inquiries, boosting quarterly <strong className="text-indigo-600 font-semibold">customer retention by 18%</strong>."
+                      "Managed{' '}
+                      <strong className="text-indigo-600 font-semibold">15+ key accounts</strong>{' '}
+                      and resolved billing inquiries, boosting quarterly{' '}
+                      <strong className="text-indigo-600 font-semibold">
+                        customer retention by 18%
+                      </strong>
+                      ."
                     </p>
                   </div>
                   <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
@@ -454,34 +475,50 @@ const ApplicationReview = () => {
             {/* Example 2 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">2</span>
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                  2
+                </span>
                 Project Bullet Point
               </h3>
               <div className="grid md:grid-cols-2 gap-6 items-stretch">
                 <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">
+                      Your Rough Input
+                    </span>
                     <p className="text-sm text-slate-600 italic leading-relaxed">
                       "did social media postings for a local shop"
                     </p>
                   </div>
                   <div className="text-xs text-red-500 font-medium mt-4 flex items-center gap-1.5">
-                    <XCircle size={14} /> Too generic and doesn't showcase specific technical details.
+                    <XCircle size={14} /> Too generic and doesn't showcase specific technical
+                    details.
                   </div>
                 </div>
-                
+
                 <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
                   <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
                     Optimized
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
+                      ApplyRight AI Rewrite
+                    </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
-                      "Launched a local <strong className="text-indigo-600 font-semibold">Facebook ad campaign</strong> and created weekly promotional content, driving a <strong className="text-indigo-600 font-semibold">30% increase in store foot traffic</strong>."
+                      "Launched a local{' '}
+                      <strong className="text-indigo-600 font-semibold">
+                        Facebook ad campaign
+                      </strong>{' '}
+                      and created weekly promotional content, driving a{' '}
+                      <strong className="text-indigo-600 font-semibold">
+                        30% increase in store foot traffic
+                      </strong>
+                      ."
                     </p>
                   </div>
                   <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
-                    <CheckCircle size={14} /> Demonstrates specific strategy, target execution, and audience metrics.
+                    <CheckCircle size={14} /> Demonstrates specific strategy, target execution, and
+                    audience metrics.
                   </div>
                 </div>
               </div>
@@ -490,34 +527,46 @@ const ApplicationReview = () => {
             {/* Example 3 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">3</span>
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                  3
+                </span>
                 Professional Summary
               </h3>
               <div className="grid md:grid-cols-2 gap-6 items-stretch">
                 <div className="p-5 bg-white rounded-xl border border-red-100 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">Your Rough Input</span>
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block mb-2">
+                      Your Rough Input
+                    </span>
                     <p className="text-sm text-slate-600 italic leading-relaxed">
                       "I am a project manager with 3 years of experience. I want a new job."
                     </p>
                   </div>
                   <div className="text-xs text-red-500 font-medium mt-4 flex items-center gap-1.5">
-                    <XCircle size={14} /> Short, passive, and tells recruiters what you want instead of what you offer.
+                    <XCircle size={14} /> Short, passive, and tells recruiters what you want instead
+                    of what you offer.
                   </div>
                 </div>
-                
+
                 <div className="p-5 bg-white rounded-xl border border-emerald-100 flex flex-col justify-between relative overflow-hidden shadow-sm">
                   <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wide">
                     Optimized
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">ApplyRight AI Rewrite</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
+                      ApplyRight AI Rewrite
+                    </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
-                      "Results-driven <strong className="text-indigo-600 font-semibold">Project Manager</strong> with 3+ years of experience directing cross-functional teams and operational workflows. Proven track record of delivering complex projects <strong className="text-indigo-600 font-semibold">10% under budget</strong>."
+                      "Results-driven{' '}
+                      <strong className="text-indigo-600 font-semibold">Project Manager</strong>{' '}
+                      with 3+ years of experience directing cross-functional teams and operational
+                      workflows. Proven track record of delivering complex projects{' '}
+                      <strong className="text-indigo-600 font-semibold">10% under budget</strong>."
                     </p>
                   </div>
                   <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
-                    <CheckCircle size={14} /> Establishes expertise, defines core competencies, and quantifies value.
+                    <CheckCircle size={14} /> Establishes expertise, defines core competencies, and
+                    quantifies value.
                   </div>
                 </div>
               </div>

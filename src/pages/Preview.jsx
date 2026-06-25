@@ -18,6 +18,8 @@ import { getJobQuestions, getQuestionsToAsk, hasInterviewPrep } from '../utils/i
 
 import Modal from '../components/Modal';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
+import PreviewWatermark from '../components/PreviewWatermark';
+import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
 // Import Templates
 import ATSCleanTemplate from '../components/templates/ATSCleanTemplate';
@@ -61,6 +63,8 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
   const [scale, setScale] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showDownloadPaywall, setShowDownloadPaywall] = useState(false);
+  // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
+  const screenshotObscured = useScreenshotGuard();
 
   // Dynamic Scale for Mobile "Paper View"
   useEffect(() => {
@@ -499,13 +503,16 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
               onClick={async () => {
                 try {
                   setIsDownloading(true);
-                  toast.info('Generating High-Quality PDF...', { duration: 2000 });
 
                   const element = document.getElementById('resume-content');
                   if (!element) throw new Error('Resume content not found');
 
-                  // 1. Serialization
-                  const contentHtml = element.outerHTML;
+                  // 1. Serialization — clone + strip the preview watermark so the
+                  // downloaded PDF is clean (the watermark is on-screen only).
+                  const cloneEl = element.cloneNode(true);
+                  cloneEl.querySelectorAll('[data-preview-watermark]').forEach((el) => el.remove());
+                  cloneEl.style.filter = 'none';
+                  const contentHtml = cloneEl.outerHTML;
                   const fullHtml = `
                                         <!DOCTYPE html>
                                         <html>
@@ -577,8 +584,16 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
       >
         <div
           id="resume-content"
-          className="p-0 bg-slate-100 min-h-[500px] flex justify-center overflow-x-hidden overflow-y-auto custom-scrollbar relative"
+          className="p-0 bg-slate-100 min-h-[500px] flex justify-center overflow-x-hidden overflow-y-auto custom-scrollbar relative select-none transition-[filter] duration-200"
+          style={{ filter: screenshotObscured ? 'blur(16px)' : undefined }}
+          onContextMenu={(e) => e.preventDefault()}
+          onCopy={(e) => e.preventDefault()}
+          onCut={(e) => e.preventDefault()}
         >
+          {/* Faint anti-screenshot watermark — stripped from the PDF clone before
+              download, so the paid file is clean. */}
+          <PreviewWatermark />
+
           {/* Scaling Wrapper */}
           <div
             className="scale-container transition-transform duration-300 origin-top bg-white shadow-2xl my-8"

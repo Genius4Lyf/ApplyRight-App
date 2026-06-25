@@ -17,7 +17,7 @@ import {
   Crown,
   Clock,
   Mic,
-  Users,
+  Wallet,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
@@ -64,6 +64,9 @@ const Navbar = () => {
   // credits; paid users see their plan + remaining minutes.
   const tier = entitlement?.tier || 'free';
   const isPaid = tier !== 'free';
+  // Combined spendable credits (plan allowance + wallet). Paid users now have a
+  // finite balance instead of "unlimited", so show the real number.
+  const displayCredits = entitlement?.availableCredits ?? credits;
   const minutesLeft = entitlement?.minutesRemaining ?? null;
   const freeTasteMin = entitlement
     ? Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)
@@ -190,6 +193,19 @@ const Navbar = () => {
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
                 </Link>
+                {isAgent && (
+                  <Link
+                    to="/agent/earnings"
+                    className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                      location.pathname.startsWith('/agent/earnings')
+                        ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Wallet className="w-4 h-4" />
+                    Earnings
+                  </Link>
+                )}
                 <Link
                   to="/my-cvs"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
@@ -201,19 +217,7 @@ const Navbar = () => {
                   <FileText className="w-4 h-4" />
                   My CVs
                 </Link>
-                {isAgent ? (
-                  <Link
-                    to="/agent/clients"
-                    className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                      location.pathname.startsWith('/agent/clients')
-                        ? 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    Clients
-                  </Link>
-                ) : (
+                {!isAgent && (
                   <>
                     <Link
                       to="/history"
@@ -246,6 +250,12 @@ const Navbar = () => {
           {!isAuthenticated && (
             <div className="flex items-center gap-3">
               <Link
+                to="/pricing"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
                 to="/login"
                 className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
               >
@@ -262,22 +272,26 @@ const Navbar = () => {
 
           {isAuthenticated && (
             <div className="flex items-center gap-4">
-              {/* Agents have no interview minutes — show a simple plan chip that
-                  links to the agent plans, never a "0m" minutes pill. */}
+              {/* Agents have no interview minutes. With a plan, the scarce
+                  resource is CV credits (for tailoring) — show the balance and
+                  link to top up. Without a plan, prompt them to subscribe. */}
               {isAgent ? (
                 <Link
-                  to="/upgrade"
+                  to={isPaid ? '/credits' : '/upgrade'}
+                  aria-label={isPaid ? 'CV credits — tap to top up' : 'Choose an agent plan'}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
                     isPaid
-                      ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25'
+                      ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25'
                       : 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25'
                   }`}
                 >
                   {isPaid ? (
                     <>
-                      <Crown className="w-4 h-4 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
-                      <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                        {planLabelFor(entitlement)}
+                      <Sparkles className="w-4 h-4 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                      <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                        {displayCredits !== null && displayCredits !== undefined
+                          ? displayCredits
+                          : '…'}
                       </span>
                     </>
                   ) : (
@@ -379,19 +393,14 @@ const Navbar = () => {
                             <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                               Text prep
                             </span>
-                            {isPaid ? (
-                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                Unlimited
-                              </span>
-                            ) : (
-                              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                                {credits ?? '...'} credits
-                              </span>
-                            )}
+                            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                              {displayCredits ?? '...'} credits
+                            </span>
                           </div>
                           {isPaid ? (
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                              CVs, cover letters & written Q&A are unlimited on your plan.
+                              CVs, cover letters & written prep use your plan credits first, then
+                              your wallet.
                             </p>
                           ) : (
                             <>
@@ -516,20 +525,18 @@ const Navbar = () => {
                           <Crown className="w-4 h-4 text-amber-500" />
                           {isAgent ? 'Agent plans' : isPaid ? 'Plans & minutes' : 'Upgrade plan'}
                         </button>
-                        {!isAgent && (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowAccountMenu(false);
-                              navigate('/credits');
-                            }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                          >
-                            <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                            {isPaid ? 'A.I credits' : 'Buy credits'}
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowAccountMenu(false);
+                            navigate('/credits');
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                          {isAgent ? 'CV credits' : isPaid ? 'A.I credits' : 'Buy credits'}
+                        </button>
                       </div>
 
                       <div className="border-t border-slate-100 dark:border-slate-700">
@@ -550,11 +557,8 @@ const Navbar = () => {
                   )}
                 </AnimatePresence>
               </div>
-
-
             </div>
           )}
-
         </div>
 
         {/* Mobile chrome:
@@ -668,6 +672,16 @@ const Navbar = () => {
                           <LayoutDashboard className="w-5 h-5" />
                           <span className="font-semibold">Dashboard</span>
                         </Link>
+                        {isAgent && (
+                          <Link
+                            to="/agent/earnings"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/agent/earnings') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                          >
+                            <Wallet className="w-5 h-5" />
+                            <span className="font-semibold">Earnings</span>
+                          </Link>
+                        )}
                         <Link
                           to="/my-cvs"
                           onClick={() => setIsMobileMenuOpen(false)}
@@ -676,16 +690,7 @@ const Navbar = () => {
                           <FileText className="w-5 h-5" />
                           <span className="font-semibold">My CVs</span>
                         </Link>
-                        {isAgent ? (
-                          <Link
-                            to="/agent/clients"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/agent/clients') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
-                          >
-                            <Users className="w-5 h-5" />
-                            <span className="font-semibold">Clients</span>
-                          </Link>
-                        ) : (
+                        {!isAgent && (
                           <>
                             <Link
                               to="/history"
@@ -731,7 +736,7 @@ const Navbar = () => {
                               <span className="block text-xs text-amber-700/80 dark:text-amber-300/80">
                                 {isAgent
                                   ? isPaid
-                                    ? 'Unlimited CVs & downloads'
+                                    ? `${displayCredits ?? 0} CV credits · unlimited downloads`
                                     : 'Get an agent plan · tap to upgrade'
                                   : isPaid
                                     ? `${minutesLeft ?? 0} interview min left`
@@ -744,7 +749,7 @@ const Navbar = () => {
                           </span>
                         </Link>
 
-                        {/* A.I credits (text prep) — not shown for agents (unlimited on plan) */}
+                        {/* A.I credits (text prep) — paid tiers now spend a credit allowance too */}
                         {!isAgent && (
                           <Link
                             to="/credits"
@@ -758,7 +763,9 @@ const Navbar = () => {
                               </span>
                             </div>
                             <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md">
-                              {isPaid ? '∞' : credits !== null ? credits : '...'}
+                              {displayCredits !== null && displayCredits !== undefined
+                                ? displayCredits
+                                : '...'}
                             </span>
                           </Link>
                         )}
@@ -794,8 +801,6 @@ const Navbar = () => {
                           </div>
                         </Link>
 
-
-
                         <button
                           onClick={() => {
                             setIsMobileMenuOpen(false);
@@ -809,6 +814,13 @@ const Navbar = () => {
                       </>
                     ) : (
                       <div className="space-y-2">
+                        <Link
+                          to="/pricing"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors font-semibold"
+                        >
+                          Pricing
+                        </Link>
                         <Link
                           to="/login"
                           onClick={() => setIsMobileMenuOpen(false)}

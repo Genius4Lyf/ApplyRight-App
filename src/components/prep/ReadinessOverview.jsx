@@ -1,5 +1,14 @@
 import React from 'react';
-import { Target, PlayCircle, ArrowRight, CheckCircle2, Sparkles, Loader, Sparkle, GraduationCap } from 'lucide-react';
+import {
+  Target,
+  PlayCircle,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  Loader,
+  Sparkle,
+  GraduationCap,
+} from 'lucide-react';
 import { computeReadiness, getJobQuestions } from '../../utils/interviewPrep';
 
 // Small SVG score ring. Color tracks the score band.
@@ -134,7 +143,7 @@ const ReadinessOverview = ({
       {/* Tiny stars for dark mode */}
       <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
       <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
-      
+
       {/* Education icon for light mode */}
       <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
 

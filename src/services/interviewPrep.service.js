@@ -173,18 +173,38 @@ const InterviewPrepService = {
     return response.data;
   },
 
+  // "Who's likely to interview you" — the 3-person panel (HR + 2 JD-derived
+  // interviewers) for this role + style. Returns { panel:[{seat,name,role,focus,
+  // voice}], style }. Open to all tiers (shown as an upsell teaser for free).
+  getPanel: async (applicationId, style = 'balanced') => {
+    const response = await api.get(`/interview-prep/${applicationId}/panel`, {
+      params: { style },
+    });
+    return response.data;
+  },
+
+  // Premium multi-voice panel: mint the NEXT seat's realtime session (its own
+  // voice) under the SAME reservation. No new minutes are reserved. meta =
+  // { reservationId, seatIndex, timeOfDay, candidateName, style, questionSpine }.
+  // Returns { clientSecret, model, voice, mainSec, graceSec, seatIndex, name, role }.
+  createRealtimeSegment: async (applicationId, meta = {}) => {
+    const response = await api.post(`/interview-prep/${applicationId}/realtime-segment`, meta);
+    return response.data;
+  },
+
   // Assess a finished conversational interview from its transcript (AI grade
   // grounded in CV + job). Persists as the prep's last session.
   // Returns { assessment, lastInterviewSession }.
   assessInterview: async (
     applicationId,
-    { transcript, durationSec, plannedSec, reservationId }
+    { transcript, durationSec, plannedSec, reservationId, interviewerSeatIndex }
   ) => {
     const response = await api.post(`/interview-prep/${applicationId}/assess-interview`, {
       transcript,
       durationSec,
       plannedSec,
       reservationId, // reconciles the live-minute reservation (realtime sessions only)
+      interviewerSeatIndex, // records this round against the chosen interviewer (loop)
     });
     return response.data;
   },

@@ -91,7 +91,9 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-indigo-900 dark:text-slate-100">{title}</p>
           {!expanded && intro && (
-            <p className="text-xs text-indigo-700/80 dark:text-slate-400 mt-0.5 truncate">{intro}</p>
+            <p className="text-xs text-indigo-700/80 dark:text-slate-400 mt-0.5 truncate">
+              {intro}
+            </p>
           )}
         </div>
         <motion.div
@@ -115,11 +117,16 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
           >
             <div className="px-4 pb-4 pt-1 border-t border-indigo-200/60 dark:border-slate-800">
               {intro && (
-                <p className="text-xs text-indigo-800/90 dark:text-slate-300 leading-relaxed mt-2 mb-2">{intro}</p>
+                <p className="text-xs text-indigo-800/90 dark:text-slate-300 leading-relaxed mt-2 mb-2">
+                  {intro}
+                </p>
               )}
               <ul className="space-y-1.5">
                 {tips.map((tip, i) => (
-                  <li key={i} className="flex gap-2 text-xs text-indigo-900/90 dark:text-slate-300 leading-relaxed">
+                  <li
+                    key={i}
+                    className="flex gap-2 text-xs text-indigo-900/90 dark:text-slate-300 leading-relaxed"
+                  >
                     <span className="text-indigo-400 mt-0.5 shrink-0">•</span>
                     <span dangerouslySetInnerHTML={{ __html: tip }} />
                   </li>

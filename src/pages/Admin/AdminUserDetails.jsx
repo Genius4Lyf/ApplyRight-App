@@ -22,6 +22,28 @@ const AdminUserDetails = () => {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
   const [updatingPlan, setUpdatingPlan] = useState(false);
+  const [updatingUnlock, setUpdatingUnlock] = useState(false);
+
+  // Support grant: unlock ALL interview-loop interviewers for this user (bypass
+  // the 65% gate). Used when a user reaches out asking to skip the gamification.
+  const handleInterviewUnlock = async (unlock) => {
+    setUpdatingUnlock(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await api.put(`/admin/users/${id}/interview-unlock`, { unlock }, config);
+      setUserData((prev) => ({
+        ...prev,
+        user: { ...prev.user, unlockAllInterviewers: unlock },
+      }));
+      toast.success(unlock ? 'All interviewers unlocked' : 'Interviewer unlock removed');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to update interviewer unlock');
+    } finally {
+      setUpdatingUnlock(false);
+    }
+  };
 
   const handlePlanChange = async (newPlan) => {
     if (newPlan === userData?.user?.plan) return;
@@ -169,6 +191,31 @@ const AdminUserDetails = () => {
                     size="md"
                   />
                   {updatingPlan && (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="w-4 h-4 text-slate-400 mt-1" />
+              <div className="flex-1">
+                <p className="text-xs text-slate-500">Interview loop</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleInterviewUnlock(!user.unlockAllInterviewers)}
+                    disabled={updatingUnlock}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+                      user.unlockAllInterviewers
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {user.unlockAllInterviewers
+                      ? 'All interviewers unlocked — click to re-lock'
+                      : 'Unlock all interviewers'}
+                  </button>
+                  {updatingUnlock && (
                     <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
                   )}
                 </div>

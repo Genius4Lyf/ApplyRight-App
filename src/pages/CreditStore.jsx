@@ -30,6 +30,26 @@ const CreditStore = () => {
   const [loadingCode, setLoadingCode] = useState(true);
   const [config, setConfig] = useState(null); // Store system config
   const [entitlement, setEntitlement] = useState(null); // subscription tier + live minutes
+  const [buyingPack, setBuyingPack] = useState(null); // catalog id mid-checkout
+
+  // Buyable credit packs (must match the backend catalog ids/amounts).
+  const CREDIT_PACKS = [
+    { id: 'credits_500', credits: 75, ngn: 500 },
+    { id: 'credits_1000', credits: 150, ngn: 1000 },
+  ];
+
+  // Start a Flutterwave checkout for a credit pack and redirect to the hosted link.
+  const buyCredits = async (planId) => {
+    try {
+      setBuyingPack(planId);
+      const { link } = await billingService.checkout(planId, 'NGN');
+      if (link) window.location.href = link;
+      else setBuyingPack(null);
+    } catch (error) {
+      setBuyingPack(null);
+      alert(error.response?.data?.message || 'Could not start checkout. Please try again.');
+    }
+  };
 
   React.useEffect(() => {
     const fetchConfig = async () => {
@@ -214,8 +234,10 @@ const CreditStore = () => {
                 </p>
               ) : (
                 <p className="text-slate-600 dark:text-slate-300">
-                  <span className="font-semibold capitalize">{entitlement.planId || entitlement.tier} plan</span> ·{' '}
-                  {entitlement.minutesRemaining} live interview min left
+                  <span className="font-semibold capitalize">
+                    {entitlement.planId || entitlement.tier} plan
+                  </span>{' '}
+                  · {entitlement.minutesRemaining} live interview min left
                   {entitlement.expiresAt
                     ? ` · until ${new Date(entitlement.expiresAt).toLocaleDateString()}`
                     : ''}
@@ -228,6 +250,50 @@ const CreditStore = () => {
             >
               {entitlement.tier === 'free' ? 'See plans' : 'Add minutes'}
             </button>
+          </div>
+        )}
+
+        {/* A.I credit balance + buy packs. Paid tiers spend their plan allowance
+            first, then this wallet; packs and ad credits always persist. */}
+        {entitlement && (
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+              <div className="text-center sm:text-left">
+                <p className="text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                  Your A.I credits
+                </p>
+                <p className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 leading-tight">
+                  {entitlement.availableCredits ?? entitlement.walletCredits ?? 0}
+                </p>
+                {entitlement.tier !== 'free' && (entitlement.planCredits ?? 0) >= 0 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {entitlement.planCredits ?? 0} plan · {entitlement.walletCredits ?? 0} wallet
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs text-center sm:text-right">
+                Out of credits? Buy a pack below or watch an ad — both add to your wallet and never
+                expire.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {CREDIT_PACKS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => buyCredits(p.id)}
+                  disabled={!!buyingPack}
+                  className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 p-4 transition-colors disabled:opacity-60"
+                >
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+                    {p.credits} credits
+                  </span>
+                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300 mt-1">
+                    {buyingPack === p.id ? 'Starting…' : `₦${p.ngn.toLocaleString()}`}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

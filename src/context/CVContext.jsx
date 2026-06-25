@@ -57,7 +57,6 @@ export const CVBuilderProvider = ({ children }) => {
     setCoachState({});
   }, [id]);
 
-
   // The active step registers a getter here that returns its current
   // in-progress data slice (e.g. () => ({ skills: [...] })). Each step holds
   // its own local form state, so this is how the wizard reaches in to flush
@@ -152,20 +151,6 @@ export const CVBuilderProvider = ({ children }) => {
           title: title || '',
           description: plainDescription,
         },
-      }));
-    }
-  }, [id, location.state]);
-
-  // Agent flow: when a CV agent starts a CV for a specific client, the client
-  // id + name ride in on navigation state. File the new draft under that client
-  // (clientId is persisted on the first save since handleNext sends all cvData).
-  useEffect(() => {
-    if (id === 'new' && location.state?.clientForCv) {
-      const { clientId, clientName } = location.state.clientForCv;
-      setCvData((prev) => ({
-        ...prev,
-        clientId: clientId || prev.clientId || null,
-        title: clientName ? `CV for ${clientName}` : prev.title,
       }));
     }
   }, [id, location.state]);
@@ -393,42 +378,40 @@ export const CVBuilderProvider = ({ children }) => {
   // back up. Clears stepDirty so the beforeunload listener doesn't fire.
   const exitWizard = useCallback(() => {
     setStepDirty(false);
-    // Agents manage CVs from their own workspace; send them back there. If the
-    // CV is filed under a client, return to that client's folder.
-    if (user?.role === 'agent') {
-      navigate(cvData.clientId ? `/agent/clients/${cvData.clientId}` : '/agent');
-    } else {
-      navigate('/my-cvs');
-    }
-  }, [navigate, user, cvData.clientId]);
+    // Agents return to their workspace; everyone else to their CV listing.
+    navigate(user?.role === 'agent' ? '/agent' : '/my-cvs');
+  }, [navigate, user]);
 
   // Saved CV data overlaid with the active step's live (unsaved) edits — what the
   // user actually sees on screen right now. The coach panel + journey use this so
   // they're never stale on the section being edited.
   const liveCvData = liveStepData ? { ...cvData, ...liveStepData } : cvData;
 
-  const isStepComplete = useCallback((stepId) => {
-    switch (stepId) {
-      case 'target_job':
-        return !!cvData.targetJob?.title?.trim();
-      case 'heading':
-        return !!cvData.personalInfo?.fullName;
-      case 'history':
-        return (cvData.experience?.length || 0) > 0;
-      case 'projects':
-        return (cvData.projects?.length || 0) > 0;
-      case 'education':
-        return (cvData.education?.length || 0) > 0;
-      case 'skills':
-        return (cvData.skills?.length || 0) > 0;
-      case 'summary':
-        return !!cvData.professionalSummary?.trim();
-      case 'finalize':
-        return true; // Review step — nothing to fill in here.
-      default:
-        return false;
-    }
-  }, [cvData]);
+  const isStepComplete = useCallback(
+    (stepId) => {
+      switch (stepId) {
+        case 'target_job':
+          return !!cvData.targetJob?.title?.trim();
+        case 'heading':
+          return !!cvData.personalInfo?.fullName;
+        case 'history':
+          return (cvData.experience?.length || 0) > 0;
+        case 'projects':
+          return (cvData.projects?.length || 0) > 0;
+        case 'education':
+          return (cvData.education?.length || 0) > 0;
+        case 'skills':
+          return (cvData.skills?.length || 0) > 0;
+        case 'summary':
+          return !!cvData.professionalSummary?.trim();
+        case 'finalize':
+          return true; // Review step — nothing to fill in here.
+        default:
+          return false;
+      }
+    },
+    [cvData]
+  );
 
   const value = {
     cvData,

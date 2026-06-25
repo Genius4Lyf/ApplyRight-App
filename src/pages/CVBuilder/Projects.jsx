@@ -344,7 +344,7 @@ const Projects = () => {
             {projects.map((proj, index) => {
               const isExpanded = expandedId === proj._sortId;
               return (
-                 <SortableItem
+                <SortableItem
                   key={proj._sortId}
                   id={proj._sortId}
                   index={index}
@@ -371,7 +371,8 @@ const Projects = () => {
                             {proj.title || 'Untitled Project'}
                             {proj.link && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
-                                {' '}• {proj.link}
+                                {' '}
+                                • {proj.link}
                               </span>
                             )}
                           </h4>
@@ -460,7 +461,8 @@ const Projects = () => {
                                     val = '• ' + val;
                                     setTimeout(() => {
                                       if (e.target)
-                                        e.target.selectionStart = e.target.selectionEnd = val.length;
+                                        e.target.selectionStart = e.target.selectionEnd =
+                                          val.length;
                                     }, 0);
                                   }
                                   handleChange(index, 'description', val);
@@ -472,10 +474,13 @@ const Projects = () => {
                               />
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                  Tip: 1-3 short bullets is enough. Lead with what it does, not how you built
-                                  it.
+                                  Tip: 1-3 short bullets is enough. Lead with what it does, not how
+                                  you built it.
                                 </p>
-                                <InlineExample kind="project" targetTitle={cvData.targetJob?.title} />
+                                <InlineExample
+                                  kind="project"
+                                  targetTitle={cvData.targetJob?.title}
+                                />
                               </div>
                             </div>
 

@@ -652,8 +652,14 @@ const Skills = () => {
                               setOpenEvidenceIndex(globalIndex);
                             }
                           }}
-                          aria-label={showLock ? `Unlock interview talking points for ${skill.name}` : `Why ${skill.name} is on your CV`}
-                          title={showLock ? "Unlock STAR talking points" : "Where this skill comes from"}
+                          aria-label={
+                            showLock
+                              ? `Unlock interview talking points for ${skill.name}`
+                              : `Why ${skill.name} is on your CV`
+                          }
+                          title={
+                            showLock ? 'Unlock STAR talking points' : 'Where this skill comes from'
+                          }
                           className="text-indigo-400 hover:text-indigo-700 transition-colors"
                         >
                           {showLock ? (
@@ -902,9 +908,13 @@ const Skills = () => {
 
                 <div className="space-y-4">
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Want to know how to answer questions about <strong className="text-slate-800 dark:text-slate-200">"{openProLockSkill}"</strong> in an interview?
+                    Want to know how to answer questions about{' '}
+                    <strong className="text-slate-800 dark:text-slate-200">
+                      "{openProLockSkill}"
+                    </strong>{' '}
+                    in an interview?
                   </p>
-                  
+
                   <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 dark:to-slate-800/90 pointer-events-none" />
                     <div className="flex items-center gap-1.5 mb-2 shrink-0">
@@ -914,12 +924,14 @@ const Skills = () => {
                       </p>
                     </div>
                     <p className="text-xs italic text-slate-400 select-none blur-[2px]">
-                      "At my previous role, I spear-headed the implementation of this method which resulted in a 40% efficiency gain by..."
+                      "At my previous role, I spear-headed the implementation of this method which
+                      resulted in a 40% efficiency gain by..."
                     </p>
                   </div>
 
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    ApplyRight Pro analyzes your background, maps your skills directly to your experience, and generates ready-to-use STAR response guides for recruiters.
+                    ApplyRight Pro analyzes your background, maps your skills directly to your
+                    experience, and generates ready-to-use STAR response guides for recruiters.
                   </p>
 
                   <div className="pt-2 flex flex-col gap-2">

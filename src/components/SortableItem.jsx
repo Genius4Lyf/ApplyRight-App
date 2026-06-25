@@ -124,7 +124,10 @@ const SortableItem = ({
               </button>
               {onDelete && (
                 <>
-                  <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true" />
+                  <span
+                    className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5"
+                    aria-hidden="true"
+                  />
                   <button
                     type="button"
                     onClick={(e) => {
@@ -151,11 +154,7 @@ const SortableItem = ({
           title={isOpen ? 'Hide actions' : 'Show actions'}
           className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
         >
-          {isOpen ? (
-            <X className="w-3.5 h-3.5" />
-          ) : (
-            <Settings className="w-3.5 h-3.5" />
-          )}
+          {isOpen ? <X className="w-3.5 h-3.5" /> : <Settings className="w-3.5 h-3.5" />}
         </button>
       </div>
       {children}
@@ -164,4 +163,3 @@ const SortableItem = ({
 };
 
 export default SortableItem;
-

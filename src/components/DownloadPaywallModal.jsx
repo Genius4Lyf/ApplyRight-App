@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Download, Crown, X } from 'lucide-react';
+import { Download, Crown, X, FileCheck2, ScanLine, Sparkles } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
 
-// Shown when a download is blocked (free taste used up). Two ways forward:
+// Shown when a download is blocked (no pass / not subscribed). Two ways forward:
 //   - one-time ₦500 single-download pass (Flutterwave hosted checkout)
 //   - any paid subscription (unlimited downloads)
+// The copy sells the real PDF over a screenshot: ATS-readable selectable text,
+// crisp print quality, exact template formatting.
 const DownloadPaywallModal = ({ open, onClose }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -42,12 +44,36 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           <Download className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
-          Download this CV
+          Get the recruiter-ready PDF
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
-          You’ve used your free download. Grab this CV as a clean PDF for ₦500, or go unlimited with
-          a plan.
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          A screenshot is just a picture — applicant tracking systems can’t read it, and it prints
+          blurry. For ₦500 you get the real thing:
         </p>
+
+        <ul className="space-y-2 mb-5">
+          <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <ScanLine className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <span>
+              <span className="font-semibold">ATS-readable</span> — real selectable text the hiring
+              software can actually parse (screenshots get auto-rejected).
+            </span>
+          </li>
+          <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <span>
+              <span className="font-semibold">Pixel-perfect</span> — exact template formatting,
+              crisp at any size, no cut-offs or fuzzy print.
+            </span>
+          </li>
+          <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <span>
+              <span className="font-semibold">Send-ready in one tap</span> — no retyping into
+              another tool, no AI rebuild. Done in seconds.
+            </span>
+          </li>
+        </ul>
 
         <button
           onClick={buySingle}

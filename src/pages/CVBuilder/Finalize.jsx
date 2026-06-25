@@ -229,7 +229,8 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
 const Finalize = () => {
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob, isStepComplete } = context || {};
+  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob, isStepComplete } =
+    context || {};
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -267,14 +268,11 @@ const Finalize = () => {
     );
   }
 
-  const isComplete = isStepComplete ? [
-    'heading',
-    'history',
-    'projects',
-    'education',
-    'skills',
-    'summary'
-  ].every((stepId) => isStepComplete(stepId)) : false;
+  const isComplete = isStepComplete
+    ? ['heading', 'history', 'projects', 'education', 'skills', 'summary'].every((stepId) =>
+        isStepComplete(stepId)
+      )
+    : false;
 
   // Score guidance for inline display (when modal is dismissed)
   const afterScore = atsScores?.after?.fitScore || 0;
@@ -470,7 +468,8 @@ const Finalize = () => {
             <div>
               <p className="font-bold text-slate-800 dark:text-slate-200">Journey Incomplete</p>
               <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                You have incomplete sections in your CV journey. The final preview and download are locked until all sections are filled in.
+                You have incomplete sections in your CV journey. The final preview and download are
+                locked until all sections are filled in.
               </p>
             </div>
           </div>

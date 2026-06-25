@@ -27,13 +27,16 @@ import {
   Lock,
   MicOff,
   Captions,
+  Briefcase,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
 import billingService from '../services/billing.service';
 import { getJobQuestions, computeReadiness, getInterviewTrend } from '../utils/interviewPrep';
 import { BreathingExercise } from '../components/prep/CalmKit';
-import VoiceVisualizer from '../components/prep/VoiceVisualizer';
+import InterviewerPanel from '../components/prep/InterviewerPanel';
+import MeetingStage from '../components/prep/MeetingStage';
+import { seatUnlocked } from '../utils/interviewLoop';
 import AudioPlayer from '../components/AudioPlayer';
 import AssessmentReport from '../components/prep/AssessmentReport';
 import { VoiceStyleSelector, DeviceCheck } from '../components/prep/InterviewSetup';
@@ -73,6 +76,9 @@ const READINESS_LABEL = {
 };
 // Seconds remaining at which we nudge the live interviewer to start its closing.
 const REALTIME_NUDGE_SEC = 45;
+// Seconds before a panel seat's budget ends at which we pre-connect the NEXT
+// interviewer in the background, so the hand-off is a seamless crossfade.
+const REALTIME_PREWARM_LEAD_SEC = 30;
 
 // Minimum time the "connecting" call screen stays up, so the connect animation
 // always reads as a deliberate beat instead of flashing past when the
@@ -178,6 +184,9 @@ const MockInterviewPage = () => {
   // Live-minute reservation id from createRealtimeSession; echoed back at assess
   // so the backend reconciles the right reservation (null for turn-based runs).
   const reservationRef = useRef(null);
+  // Which roster seat ran this session (pick-a-role), so grading records the round
+  // against the right interviewer. null for solo/free/panel.
+  const sessionSeatRef = useRef(null);
   const nudgedRef = useRef(false); // wrap-up nudge sent once near the time cap
   // ── time-up wind-down ──
   // When the main time runs out we DON'T hard-cut: we enter a grace window so the
@@ -185,6 +194,29 @@ const MockInterviewPage = () => {
   const [inGrace, setInGrace] = useState(false);
   const graceSecRef = useRef(90); // grace window length (from the backend session)
   const graceKickRef = useRef(null); // silent-room fallback timer during grace
+  // ── Premium/Pro multi-voice panel orchestration ──
+  // The interview runs as a sequence of realtime sessions, one per panel seat
+  // (each its own voice). We accumulate the transcript across segments for
+  // grading, and track which seat is currently speaking.
+  const panelModeRef = useRef('solo');
+  const segmentsRef = useRef([]); // per-seat plan from the backend
+  const segmentIdxRef = useRef(0); // current seat index
+  const accumTranscriptRef = useRef([]); // transcript from completed segments
+  const segStartRef = useRef(0); // start time of the current segment (per-seg recording)
+  const advancingRef = useRef(false); // guard against double-advance on a seat
+  // Pre-warmed NEXT interviewer ({ ctl, state }) — connected silently in the
+  // background so the hand-off is a seamless crossfade, not a reconnect gap.
+  const nextCtlRef = useRef(null);
+  const prewarmingRef = useRef(false); // guard against double pre-warm
+  // The panel seats for the live session, in a ref so the set_active_speaker
+  // handler maps names → seats without a stale closure.
+  const livePanelRef = useRef([]);
+  const [activeSeat, setActiveSeat] = useState(null); // {name, role} currently speaking
+  // True while we swap one interviewer's voice session for the next, IN PLACE
+  // (no leaving the call screen). Pauses the countdown and shows a "joining" beat
+  // on the incoming tile instead of the full dialing screen.
+  const [handingOff, setHandingOff] = useState(false);
+  const handingOffRef = useRef(false);
 
   // ── "connecting" call beat ──
   // Hold the connecting screen for at least CONNECT_MIN_MS so the call-connect
@@ -221,9 +253,56 @@ const MockInterviewPage = () => {
   // Personalization: interviewer voice + interview style (remembered per device).
   const [voice, setVoice] = useState(() => localStorage.getItem('interview_voice') || 'marin');
   const [style, setStyle] = useState(() => localStorage.getItem('interview_style') || 'balanced');
+  // How hard the panel pushes (gentle | realistic | tough). Set before the interview.
+  const [challenge, setChallenge] = useState(
+    () => localStorage.getItem('interview_challenge') || 'realistic'
+  );
   // Optional live captions of what the interviewer says (accessibility).
   const [captionsOn, setCaptionsOn] = useState(false);
   const [caption, setCaption] = useState('');
+  // The 3-person interview panel (paid tiers) returned by createRealtimeSession;
+  // shown on the connecting screen. Empty for free/solo interviews.
+  const [panel, setPanel] = useState([]);
+  // Panel shown on the SETUP screen (fetched ahead of time) so the user sees who's
+  // interviewing them BEFORE they start. Free tier gets a generic teaser (blurred).
+  const [setupPanel, setSetupPanel] = useState([]);
+  const [panelLoading, setPanelLoading] = useState(true);
+  // Pick-a-role: which roster interviewer the user chose to run this round (index
+  // into setupPanel). Defaults to HR (seat 0), or a ?interviewer= deep link from
+  // the loop board.
+  const [chosenSeatIndex, setChosenSeatIndex] = useState(() => {
+    const p = Number(new URLSearchParams(window.location.search).get('interviewer'));
+    return Number.isInteger(p) && p >= 0 ? p : 0;
+  });
+  // Loop gating for the chooser: which seats are locked + each seat's best score.
+  // A support-granted override unlocks everyone.
+  const loopRounds = application?.interviewPrep?.rounds || [];
+  const unlockAllInterviewers = !!application?.unlockAllInterviewers;
+  const lockedIndices = useMemo(
+    () =>
+      setupPanel
+        .map((_, i) => i)
+        .filter((i) => !seatUnlocked(i, loopRounds, unlockAllInterviewers)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setupPanel, application]
+  );
+  const seatScores = useMemo(() => {
+    const m = {};
+    (loopRounds || []).forEach((r) => {
+      if (r && typeof r.score === 'number') m[r.seatIndex] = r.score;
+    });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [application]);
+  // If the chosen seat is locked (e.g. a stale deep link), fall back to the first
+  // unlocked interviewer.
+  useEffect(() => {
+    if (lockedIndices.includes(chosenSeatIndex)) {
+      const firstOpen = setupPanel.findIndex((_, i) => !lockedIndices.includes(i));
+      setChosenSeatIndex(firstOpen >= 0 ? firstOpen : 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedIndices]);
 
   const chooseVoice = (v) => {
     setVoice(v);
@@ -237,6 +316,14 @@ const MockInterviewPage = () => {
     setStyle(s);
     try {
       localStorage.setItem('interview_style', s);
+    } catch {
+      /* ignore */
+    }
+  };
+  const chooseChallenge = (c) => {
+    setChallenge(c);
+    try {
+      localStorage.setItem('interview_challenge', c);
     } catch {
       /* ignore */
     }
@@ -271,6 +358,29 @@ const MockInterviewPage = () => {
     refreshEntitlement();
   }, [refreshEntitlement]);
 
+  // Fetch the interview panel for the setup screen (conversational/live mode) so
+  // the user sees who's interviewing them before starting. Re-fetches when the
+  // style changes (the panel mix depends on it). Paid → real panel (cached);
+  // free → generic teaser. Non-blocking: a failure just hides the card.
+  useEffect(() => {
+    if (mode !== 'conversational' || (phase !== 'intro' && phase !== 'choose')) return undefined;
+    let cancelled = false;
+    setPanelLoading(true);
+    InterviewPrepService.getPanel(applicationId, style)
+      .then((res) => {
+        if (!cancelled && Array.isArray(res?.panel)) setSetupPanel(res.panel);
+      })
+      .catch(() => {
+        /* the setup panel card is a nicety, not core to the flow */
+      })
+      .finally(() => {
+        if (!cancelled) setPanelLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, phase, style, applicationId]);
+
   // Seconds of live interview the user can still start (paid minutes or free taste).
   const liveSecondsAvailable = entitlement
     ? entitlement.tier !== 'free'
@@ -287,10 +397,16 @@ const MockInterviewPage = () => {
   // End-of-interview wrap-up window. Default ON; draws from the user's balance so
   // the interviewer can close out. Off = hard cut at time-up (every second to Q&A).
   const [wrapUp, setWrapUp] = useState(true);
-  const lengthMaxSec = entitlement
+  // The slider picks the TOTAL session length (the interview + its wrap-up) —
+  // matching the backend, which carves the wrap-up out of it. Range: a 5-minute
+  // minimum up to the per-tier cap (15 min) or the remaining balance, whichever is
+  // smaller. 10 minutes is the recommended sweet spot for a complete interview.
+  const RECOMMENDED_SEC = 600; // 10 min
+  const budgetCapSec = entitlement
     ? Math.max(0, Math.min(entitlement.maxSessionSec || 0, liveSecondsAvailable || 0))
     : 0;
-  const lengthMinSec = Math.max(60, Math.min(180, lengthMaxSec || 180));
+  const lengthMaxSec = budgetCapSec;
+  const lengthMinSec = lengthMaxSec > 0 ? Math.min(300, lengthMaxSec) : 300;
 
   useEffect(() => {
     let cancelled = false;
@@ -342,9 +458,11 @@ const MockInterviewPage = () => {
   // into [lengthMinSec, lengthMaxSec]. Free tier never uses this.
   useEffect(() => {
     if (!isPaidTier || lengthSec != null || !lengthMaxSec) return;
-    const def = Math.max(lengthMinSec, Math.min(plannedSec || lengthMaxSec, lengthMaxSec));
+    // Default to the recommended 10 min, clamped into the available range.
+    const def = Math.max(lengthMinSec, Math.min(RECOMMENDED_SEC, lengthMaxSec));
     setLengthSec(def);
-  }, [isPaidTier, lengthSec, lengthMaxSec, lengthMinSec, plannedSec]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPaidTier, lengthSec, lengthMaxSec, lengthMinSec]);
 
   // ── audio ──
   const stopAudio = () => {
@@ -399,6 +517,7 @@ const MockInterviewPage = () => {
       clearTimeout(graceKickRef.current);
       // Tear down any live realtime session + recorder on unmount.
       realtimeRef.current?.stop();
+      nextCtlRef.current?.ctl?.stop();
       recorderRef.current?.stop();
     };
   }, []);
@@ -408,6 +527,9 @@ const MockInterviewPage = () => {
   useEffect(() => {
     if (phase !== 'live') return undefined;
     const id = setInterval(() => {
+      // Pause the clock while we swap voices between panel interviewers — that
+      // reconnect time shouldn't burn the candidate's minutes or trip time-up.
+      if (handingOffRef.current) return;
       setSecondsLeft((t) => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(id);
@@ -415,7 +537,30 @@ const MockInterviewPage = () => {
 
   useEffect(() => {
     if (phase !== 'live') return;
+    // Multi-voice panel, not the last seat: pre-connect the next interviewer ~30s
+    // before this seat's budget ends, so the hand-off (tool-driven or time-up) is
+    // an instant crossfade. Cheap: a pre-warmed session is idle until activated.
+    if (
+      panelModeRef.current === 'multi-voice' &&
+      segmentIdxRef.current < segmentsRef.current.length - 1 &&
+      !handingOffRef.current &&
+      secondsLeft > 0 &&
+      secondsLeft <= REALTIME_PREWARM_LEAD_SEC &&
+      !nextCtlRef.current &&
+      !prewarmingRef.current
+    ) {
+      prewarmNextSegment();
+    }
     if (secondsLeft === 0) {
+      // Multi-voice panel: if this isn't the LAST seat and the interviewer hasn't
+      // already handed off via the tool, the time backstop crossfades to the next.
+      if (
+        panelModeRef.current === 'multi-voice' &&
+        segmentIdxRef.current < segmentsRef.current.length - 1
+      ) {
+        performHandoff();
+        return;
+      }
       // Wrap-up turned off (graceSec 0) → hard cut at time-up: close + grade now.
       if (!inGrace && graceSecRef.current <= 0) {
         endRealtime();
@@ -692,6 +837,25 @@ const MockInterviewPage = () => {
     setSavedRecordingBlob(null);
     setSavedRecordingDuration(0);
     setInGrace(false);
+    // Reset multi-voice panel orchestration.
+    panelModeRef.current = 'solo';
+    segmentsRef.current = [];
+    segmentIdxRef.current = 0;
+    accumTranscriptRef.current = [];
+    advancingRef.current = false;
+    handingOffRef.current = false;
+    setHandingOff(false);
+    // Tear down any pre-warmed next interviewer from a prior run.
+    try {
+      nextCtlRef.current?.ctl?.stop();
+    } catch {
+      /* noop */
+    }
+    nextCtlRef.current = null;
+    prewarmingRef.current = false;
+    livePanelRef.current = [];
+    setActiveSeat(null);
+    setPanel([]);
   };
 
   const beginTurnBasedConversation = async () => {
@@ -742,6 +906,246 @@ const MockInterviewPage = () => {
     endRealtime();
   };
 
+  // Map a spoken first name → a panel seat (fuzzy match against livePanelRef).
+  const seatByName = (name) => {
+    const seats = livePanelRef.current || [];
+    if (!name) return null;
+    const lc = String(name).toLowerCase().trim();
+    return (
+      seats.find((p) => p.name && p.name.toLowerCase() === lc) ||
+      seats.find(
+        (p) => p.name && (p.name.toLowerCase().includes(lc) || lc.includes(p.name.toLowerCase()))
+      ) ||
+      null
+    );
+  };
+
+  // Move the panel highlight to whoever a spoken name resolves to.
+  const highlightSpeaker = (name) => {
+    const m = seatByName(name);
+    if (m) setActiveSeat({ name: m.name, role: m.role });
+  };
+
+  // Detect WHOSE question the HR host is asking, from what they just said. The
+  // host attributes each colleague's question by name ("this is from Marcus",
+  // "Marcus wanted me to ask", "over to Marcus's area") and returns to themselves
+  // for HR questions ("I'm Renee", "on the HR side"). Names merely MENTIONED in
+  // the opening panel introduction (e.g. "Marcus, our Engineering Lead" with no
+  // attribution verb) don't match, so the highlight only moves on a real change.
+  // Reliable fallback for when the model skips the set_active_speaker tool.
+  const detectSpeakerFromText = (text) => {
+    const seats = livePanelRef.current || [];
+    if (!text || seats.length < 2) return null;
+    for (const p of seats) {
+      const n = (p.name || '').toLowerCase().replace(/[^a-z]/g, '');
+      if (!n) continue;
+      const re = new RegExp(
+        // self-intro / attribution lead-ins: "I'm X", "this is X", "from X", "on behalf of X"
+        `(?:\\bi'?m|\\bi am|\\bthis is|\\bfrom|on behalf of)\\s+${n}\\b` +
+          // "X here", "X wanted/wants/would want/asks/is curious/would like"
+          `|\\b${n}\\b\\s+(?:here|wanted|wants|would want|would like|asks?|is curious)` +
+          // explicit handoff verbs
+          `|(?:over to|bring in|hand(?:ing)?\\s+(?:it\\s+|you\\s+)?(?:over\\s+)?to|pass(?:ing)?\\s+(?:it\\s+|you\\s+)?to)\\s+${n}\\b`,
+        'i'
+      );
+      if (re.test(text)) return p;
+    }
+    return null;
+  };
+
+  // Build a realtime controller for ONE panel seat, with all live-interview wiring.
+  // `silent` builds a PRE-WARMED seat: it connects in the background but stays
+  // muted (no voice, no mic, no UI takeover) until activate() promotes it. Its
+  // callbacks are gated on `state.active` so a pre-warming seat never touches the
+  // UI of the seat that's currently talking. Returns { ctl, state }.
+  const buildSegmentController = ({ clientSecret, model, silent }) => {
+    const state = { active: !silent, ready: false, wired: false, local: null, remote: null };
+
+    // Wire mic + recorder to THIS seat's streams — only once it's the active seat.
+    const wire = () => {
+      if (state.wired || !state.local) return;
+      state.wired = true;
+      setMicStream(state.local);
+      recorderRef.current = createMixedRecorder(state.local, state.remote);
+    };
+
+    const ctl = createRealtimeWebRTC({
+      clientSecret,
+      model,
+      autoGreet: !silent, // pre-warmed seats stay silent until activate()
+      startSilent: silent,
+      onReady: () => {
+        state.ready = true;
+      },
+      // Conversation-driven hand-off: this interviewer finished + said its hand-off
+      // line, so crossfade to the next seat. Only meaningful once it's active.
+      onHandoff: () => {
+        if (state.active) performHandoff();
+      },
+      // Single-voice panel: the model explicitly signals who's now talking (the
+      // set_active_speaker tool) → move the on-screen highlight to their tile.
+      onSpeakerChange: (name) => {
+        if (state.active) highlightSpeaker(name);
+      },
+      onState: (s) => {
+        if (!state.active) return; // a pre-warming seat must not drive the UI
+        setVoiceState(s === 'speaking' ? 'speaking' : s === 'connecting' ? 'loading' : 'idle');
+        if (s === 'listening' || s === 'speaking') {
+          leaveConnecting('live'); // no-op after the first segment
+          if (handingOffRef.current) {
+            handingOffRef.current = false;
+            setHandingOff(false);
+          }
+        }
+      },
+      onError: (err) => {
+        // A pre-warm failure must NOT end the interview — just drop it; the
+        // hand-off will connect on demand. Only the ACTIVE seat's errors are fatal.
+        if (state.active) {
+          handleRealtimeError(err);
+        } else {
+          if (nextCtlRef.current && nextCtlRef.current.state === state) nextCtlRef.current = null;
+          prewarmingRef.current = false;
+        }
+      },
+      onStream: ({ local, remote }) => {
+        state.local = local;
+        state.remote = remote;
+        if (state.active) wire();
+      },
+      onCaption: (turn) => {
+        if (!state.active || turn.role !== 'interviewer') return;
+        setCaption(turn.text);
+        // Reliable fallback for the highlight: detect a speaker change from what
+        // the interviewer actually said (self-intro / hand-off), in case the model
+        // didn't call the set_active_speaker tool.
+        const sp = detectSpeakerFromText(turn.text);
+        if (sp) setActiveSeat({ name: sp.name, role: sp.role });
+      },
+    });
+
+    return { ctl, state, wire };
+  };
+
+  // Stop + persist the CURRENT segment's recording (best-effort, silent). Used at
+  // each multi-voice handoff so no segment's audio is lost.
+  const saveSegmentRecording = async () => {
+    try {
+      const blob = await recorderRef.current?.stop();
+      recorderRef.current = null;
+      if (blob) {
+        const durationSec = Math.round((Date.now() - segStartRef.current) / 1000);
+        await saveRecording({ applicationId, blob, durationSec, createdAt: Date.now() });
+      }
+    } catch {
+      /* recording is best-effort */
+    }
+  };
+
+  // Pre-connect the NEXT panel seat in the background (its own voice), muted, so
+  // the hand-off is an instant crossfade instead of a reconnect gap. Idempotent.
+  const prewarmNextSegment = async () => {
+    if (nextCtlRef.current || prewarmingRef.current) return nextCtlRef.current;
+    const nextIdx = segmentIdxRef.current + 1;
+    if (nextIdx >= segmentsRef.current.length) return null; // last seat: nobody after
+    prewarmingRef.current = true;
+    try {
+      const hour = new Date().getHours();
+      const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+      const seg = await InterviewPrepService.createRealtimeSegment(applicationId, {
+        reservationId: reservationRef.current,
+        seatIndex: nextIdx,
+        timeOfDay,
+        candidateName: firstName && firstName !== 'there' ? firstName : '',
+        style,
+        challenge,
+        questionSpine: spinePayload(),
+      });
+      const built = buildSegmentController({
+        clientSecret: seg.clientSecret,
+        model: seg.model,
+        silent: true,
+      });
+      nextCtlRef.current = built;
+      await built.ctl.start(); // connects silently; onReady flips state.ready
+      prewarmingRef.current = false;
+      return built;
+    } catch {
+      prewarmingRef.current = false;
+      nextCtlRef.current = null;
+      return null;
+    }
+  };
+
+  const waitUntil = (cond, timeoutMs) =>
+    new Promise((resolve) => {
+      if (cond()) return resolve(true);
+      const t0 = Date.now();
+      const iv = setInterval(() => {
+        if (cond() || Date.now() - t0 > timeoutMs) {
+          clearInterval(iv);
+          resolve(cond());
+        }
+      }, 100);
+    });
+
+  // Seamless multi-voice hand-off: crossfade from the current interviewer to the
+  // pre-warmed next one — no reconnect gap, no leaving the call screen. Triggered
+  // either by the interviewer's hand_off_to_next tool (conversation-driven) or, as
+  // a backstop, by the segment's time running out.
+  const performHandoff = async () => {
+    if (advancingRef.current) return;
+    if (panelModeRef.current !== 'multi-voice') return;
+    const curIdx = segmentIdxRef.current;
+    if (curIdx >= segmentsRef.current.length - 1) return; // last seat never hands off
+    advancingRef.current = true;
+    handingOffRef.current = true;
+    setHandingOff(true);
+
+    // Make sure the next seat is connected (pre-warmed ideally; else connect now).
+    let nxt = nextCtlRef.current || (await prewarmNextSegment());
+    if (nxt) await waitUntil(() => nxt.state.ready, 6000);
+    if (!nxt || !nxt.state.ready) {
+      advancingRef.current = false;
+      handingOffRef.current = false;
+      setHandingOff(false);
+      toast.error('Could not bring in the next interviewer — scoring the interview so far.');
+      endRealtime();
+      return;
+    }
+
+    // Stash the outgoing interviewer's transcript + recording before we swap.
+    const prev = realtimeRef.current;
+    const segTx = prev?.getTranscript?.() || [];
+    accumTranscriptRef.current = [...accumTranscriptRef.current, ...segTx];
+    await saveSegmentRecording();
+
+    // Promote the pre-warmed seat to active and move the countdown to its budget.
+    const nextIdx = curIdx + 1;
+    nxt.state.active = true;
+    realtimeRef.current = nxt.ctl;
+    nextCtlRef.current = null;
+    segmentIdxRef.current = nextIdx;
+    const plan = segmentsRef.current[nextIdx] || {};
+    setActiveSeat({ name: plan.name, role: plan.role });
+    setCaption('');
+    setMuted(false);
+    nudgedRef.current = false;
+    setInGrace(false);
+    maxSessionSecRef.current = plan.mainSec || 60;
+    graceSecRef.current = plan.graceSec ?? 0;
+    setSecondsLeft(maxSessionSecRef.current);
+    segStartRef.current = Date.now();
+    nxt.wire(); // attach mic + recorder to the new seat (if its stream is ready)
+
+    // Crossfade: the next voice fades in + starts speaking while the previous
+    // fades out — the seamless baton-pass.
+    await Promise.all([nxt.ctl.activate({ fadeMs: 300 }), prev?.fadeOut?.(300)]);
+    prev?.stop?.();
+
+    advancingRef.current = false;
+  };
+
   const beginRealtime = async () => {
     // Live-minute paywall: block before minting if we know the balance is empty.
     // (null = entitlement not loaded yet → let the server be the gate.)
@@ -771,36 +1175,73 @@ const MockInterviewPage = () => {
         candidateName: firstName && firstName !== 'there' ? firstName : '',
         voice,
         style,
+        challenge,
+        // Pick-a-role: which roster interviewer runs this round (paid).
+        interviewerSeatIndex: isPaidTier ? chosenSeatIndex : undefined,
         // Paid users pick a length; free is fixed server-side (taste). wrapUp drives
         // the billed end-of-interview close-out window.
         requestedSec: isPaidTier && lengthSec ? lengthSec : undefined,
         wrapUp,
       });
       reservationRef.current = sess.reservationId || null;
+
+      // CV guard: if this interview isn't grounded in the candidate's CV (no CV /
+      // resume content found), the interviewer can't reference their background —
+      // warn so they know to attach/upload a CV for a tailored interview.
+      if (sess.cvGrounded === false) {
+        toast(
+          "Heads up — this interview isn't tied to your CV, so it won't reference your background. Attach or upload your CV/resume to this application for a tailored interview.",
+          { icon: '⚠️', duration: 7000 }
+        );
+      }
+
+      // Pick-a-role single interviewer: one chosen person runs the whole round in
+      // their own voice. Show just them (a focused 1:1 call). No panel/segments.
+      const isSingleInterviewer = sess.panelMode === 'single-interviewer' && sess.interviewer;
+      // Remember which seat ran this session so grading records the loop round.
+      sessionSeatRef.current = isSingleInterviewer
+        ? (sess.interviewer.seatIndex ?? chosenSeatIndex)
+        : null;
+      const seats = isSingleInterviewer
+        ? [sess.interviewer]
+        : Array.isArray(sess.panel)
+          ? sess.panel
+          : [];
+      setPanel(seats);
+      livePanelRef.current = seats;
+
+      // Multi-voice (paid): the interview runs as a sequence of realtime sessions,
+      // one per panel seat (each its own voice). seg0 (HR) starts here; later seats
+      // are PRE-CONNECTED in the background and crossfaded in (performHandoff) so
+      // each baton-pass is seamless. Without this the candidate only meets HR.
+      const isMultiVoice =
+        sess.panelMode === 'multi-voice' &&
+        Array.isArray(sess.segments) &&
+        sess.segments.length >= 2;
+      panelModeRef.current = isMultiVoice ? 'multi-voice' : sess.panelMode || 'solo';
+      segmentsRef.current = isMultiVoice ? sess.segments : [];
+      segmentIdxRef.current = 0;
+      accumTranscriptRef.current = [];
+      advancingRef.current = false;
+      nextCtlRef.current = null;
+      prewarmingRef.current = false;
+      // Highlight the active interviewer: the chosen one (single) or HR (panel).
+      setActiveSeat(seats.length >= 1 ? { name: seats[0].name, role: seats[0].role } : null);
+
       // mainSec = the speaking countdown; graceSec = the wrap-up that runs after it
       // (0 when the user turned wrap-up off → hard cut). Both bill against the balance.
       maxSessionSecRef.current = sess.mainSec || sess.maxSessionSec || 360;
       graceSecRef.current = sess.graceSec ?? 0;
       setSecondsLeft(maxSessionSecRef.current);
 
-      const ctl = createRealtimeWebRTC({
+      const { ctl } = buildSegmentController({
         clientSecret: sess.clientSecret,
         model: sess.model,
-        onState: (s) => {
-          setVoiceState(s === 'speaking' ? 'speaking' : s === 'connecting' ? 'loading' : 'idle');
-          if (s === 'listening' || s === 'speaking') leaveConnecting('live');
-        },
-        onError: handleRealtimeError,
-        onStream: ({ local, remote }) => {
-          setMicStream(local);
-          recorderRef.current = createMixedRecorder(local, remote);
-        },
-        onCaption: (turn) => {
-          if (turn.role === 'interviewer') setCaption(turn.text);
-        },
+        silent: false,
       });
       realtimeRef.current = ctl;
       startedAtRef.current = Date.now();
+      segStartRef.current = Date.now();
       await ctl.start();
     } catch (e) {
       const code = e.response?.data?.code;
@@ -827,12 +1268,16 @@ const MockInterviewPage = () => {
   // then AI-assess the interview.
   const endRealtime = async () => {
     clearTimeout(graceKickRef.current);
-    const liveTranscript = realtimeRef.current?.getTranscript?.() || [];
+    // Multi-voice: stitch the final seat's transcript onto the earlier segments'.
+    const liveTranscript = [
+      ...accumTranscriptRef.current,
+      ...(realtimeRef.current?.getTranscript?.() || []),
+    ];
     try {
       const blob = await recorderRef.current?.stop();
       recorderRef.current = null;
       if (blob) {
-        const durationSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+        const durationSec = Math.round((Date.now() - segStartRef.current) / 1000);
         const id = await saveRecording({ applicationId, blob, durationSec, createdAt: Date.now() });
         if (id) {
           setSavedRecordingBlob(blob);
@@ -845,6 +1290,14 @@ const MockInterviewPage = () => {
     }
     realtimeRef.current?.stop();
     realtimeRef.current = null;
+    // Tear down any pre-warmed next interviewer that never got activated.
+    try {
+      nextCtlRef.current?.ctl?.stop();
+    } catch {
+      /* noop */
+    }
+    nextCtlRef.current = null;
+    prewarmingRef.current = false;
     setMicStream(null);
     finishConversation(liveTranscript);
   };
@@ -903,6 +1356,7 @@ const MockInterviewPage = () => {
         durationSec,
         plannedSec,
         reservationId: reservationRef.current,
+        interviewerSeatIndex: sessionSeatRef.current ?? undefined,
       });
       // Reservation is now reconciled server-side; don't double-reconcile on a re-run.
       reservationRef.current = null;
@@ -916,6 +1370,9 @@ const MockInterviewPage = () => {
               interviewPrep: {
                 ...prev.interviewPrep,
                 lastInterviewSession: res.lastInterviewSession,
+                // Fold in the updated loop rounds so the chooser locks + scores
+                // refresh live (e.g. passing HR immediately unlocks the next).
+                ...(Array.isArray(res.rounds) ? { rounds: res.rounds } : {}),
               },
             }
           : prev
@@ -1035,7 +1492,9 @@ const MockInterviewPage = () => {
     >
       <header
         className={`backdrop-blur sticky top-0 z-10 border-b ${
-          immersive ? 'border-white/10 bg-slate-950/50' : 'border-slate-200/70 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80'
+          immersive
+            ? 'border-white/10 bg-slate-950/50'
+            : 'border-slate-200/70 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80'
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
@@ -1098,8 +1557,12 @@ const MockInterviewPage = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-4 sm:py-5">
-        <div className="w-full max-w-3xl">
+      <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-2 sm:py-3.5">
+        <div
+          className={`w-full transition-all duration-300 ${
+            phase === 'intro' && mode === 'conversational' ? 'max-w-3xl lg:max-w-5xl' : 'max-w-3xl'
+          }`}
+        >
           {phase === 'choose' &&
             (simQuestions.length === 0 ? (
               <IntroView
@@ -1126,98 +1589,110 @@ const MockInterviewPage = () => {
 
           {phase === 'intro' && (
             <>
-              {entitlement && (
-                <div className="max-w-2xl mx-auto mb-3 flex items-center justify-center gap-2 text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    {entitlement.tier === 'free'
-                      ? `Free interview minutes left: ${Math.ceil((liveSecondsAvailable || 0) / 60)}`
-                      : `${entitlement.minutesRemaining} live interview minutes left`}
-                  </span>
-                  {(liveSecondsAvailable || 0) <= 60 && (
-                    <button
-                      onClick={() => navigate('/upgrade')}
-                      className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-                    >
-                      {entitlement.tier === 'free' ? 'Upgrade' : 'Top up'}
-                    </button>
-                  )}
-                </div>
-              )}
-
               {/* Live-interview length + wrap-up controls (the realtime voice mode only). */}
-              {mode === 'conversational' && entitlement && (
-                <div className="max-w-2xl mx-auto mb-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 space-y-4">
-                  {isPaidTier && lengthMaxSec >= lengthMinSec ? (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          htmlFor="interview-length"
-                          className="text-sm font-semibold text-slate-700 dark:text-slate-200"
-                        >
-                          Interview length
-                        </label>
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                          {Math.round((lengthSec || lengthMinSec) / 60)} min
-                        </span>
-                      </div>
-                      <input
-                        id="interview-length"
-                        type="range"
-                        min={lengthMinSec}
-                        max={lengthMaxSec}
-                        step={60}
-                        value={lengthSec || lengthMinSec}
-                        onChange={(e) => setLengthSec(Number(e.target.value))}
-                        className="w-full accent-indigo-600"
+              {mode === 'conversational' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch text-left">
+                  {/* Left Column: Config Settings */}
+                  <div className="lg:col-span-5 flex flex-col gap-4">
+                    {/* Who's interviewing you today — the panel, shown before you
+                        start. Paid → tailored panel; free → generic teaser (locked). */}
+                    {/* Unified Interviewer Panel & Style Selector Card */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-sm space-y-3">
+                      {(panelLoading || setupPanel.length >= 2) && (
+                        <div>
+                          <InterviewerPanel
+                            panel={setupPanel}
+                            locked={!isPaidTier}
+                            loading={panelLoading}
+                            heading={
+                              isPaidTier ? 'Choose your interviewer' : 'Likely to interview you'
+                            }
+                            onSelect={isPaidTier ? setChosenSeatIndex : null}
+                            selectedIndex={isPaidTier ? chosenSeatIndex : -1}
+                            lockedIndices={isPaidTier ? lockedIndices : []}
+                            scores={isPaidTier ? seatScores : {}}
+                          />
+                          <p className="mt-2 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+                            {isPaidTier
+                              ? setupPanel[chosenSeatIndex]?.description ||
+                                'Pick who runs this round — each interviews you in their own voice, on what they care about.'
+                              : 'On a paid plan, you pick who interviews you from this panel.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {(panelLoading || setupPanel.length >= 2) && (
+                        <hr className="border-slate-100 dark:border-slate-800/80" />
+                      )}
+
+                      <VoiceStyleSelector
+                        voice={voice}
+                        style={style}
+                        onVoiceChange={chooseVoice}
+                        onStyleChange={chooseStyle}
+                        className="flex-grow"
+                        // Paid users pick a specific interviewer whose role sets the
+                        // voice AND the interview type — so hide voice + style for them
+                        // and leave only the difficulty picker.
+                        showVoice={!isPaidTier}
+                        showStyle={!isPaidTier}
+                        borderless={true}
+                        challenge={challenge}
+                        onChallengeChange={chooseChallenge}
                       />
-                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                        {`Min ${Math.round(lengthMinSec / 60)} · Max ${Math.round(
-                          lengthMaxSec / 60
-                        )} min · Balance ${Math.floor((liveSecondsAvailable || 0) / 60)} min`}
-                      </p>
                     </div>
-                  ) : (
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                      {entitlement.tier === 'free'
-                        ? `Your free interview runs up to ${Math.ceil((liveSecondsAvailable || 0) / 60)} min.`
-                        : 'Add minutes to run a longer interview.'}
-                    </p>
-                  )}
+                  </div>
 
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={wrapUp}
-                      onChange={(e) => setWrapUp(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 accent-indigo-600"
+                  {/* Right Column: Info & Actions */}
+                  <div className="lg:col-span-7">
+                    <IntroView
+                      firstName={firstName}
+                      title={title}
+                      count={simQuestions.length}
+                      plannedSec={
+                        isPaidTier ? lengthSec || plannedSec : liveSecondsAvailable || 180
+                      }
+                      lastSession={lastSession}
+                      trend={getInterviewTrend(application)}
+                      mode={mode}
+                      voice={voice}
+                      style={style}
+                      onVoiceChange={chooseVoice}
+                      onStyleChange={chooseStyle}
+                      onStart={handleStartClick}
+                      onCancel={() => setPhase('choose')}
+                      showSelectors={false}
+                      className="h-full"
+                      entitlement={entitlement}
+                      isPaidTier={isPaidTier}
+                      lengthSec={lengthSec}
+                      setLengthSec={setLengthSec}
+                      lengthMinSec={lengthMinSec}
+                      lengthMaxSec={lengthMaxSec}
+                      liveSecondsAvailable={liveSecondsAvailable}
+                      wrapUp={wrapUp}
+                      setWrapUp={setWrapUp}
                     />
-                    <span className="text-sm text-slate-700 dark:text-slate-200">
-                      Allow a short wrap-up (~90s)
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        {wrapUp
-                          ? 'Counts toward your minutes so the interviewer can finish your answer and close out. Turn off for a hard stop at time — every second goes to your answers.'
-                          : 'The interview stops exactly at time — no wrap-up. Every second goes to your answers.'}
-                      </span>
-                    </span>
-                  </label>
+                  </div>
                 </div>
+              ) : (
+                <IntroView
+                  firstName={firstName}
+                  title={title}
+                  count={simQuestions.length}
+                  plannedSec={plannedSec}
+                  lastSession={lastSession}
+                  trend={getInterviewTrend(application)}
+                  mode={mode}
+                  voice={voice}
+                  style={style}
+                  onVoiceChange={chooseVoice}
+                  onStyleChange={chooseStyle}
+                  onStart={handleStartClick}
+                  onCancel={() => setPhase('choose')}
+                  showSelectors={false}
+                />
               )}
-
-              <IntroView
-                firstName={firstName}
-                title={title}
-                count={simQuestions.length}
-                plannedSec={plannedSec}
-                lastSession={lastSession}
-                trend={getInterviewTrend(application)}
-                mode={mode}
-                voice={voice}
-                style={style}
-                onVoiceChange={chooseVoice}
-                onStyleChange={chooseStyle}
-                onStart={handleStartClick}
-                onCancel={() => setPhase('choose')}
-              />
             </>
           )}
 
@@ -1228,6 +1703,10 @@ const MockInterviewPage = () => {
               mode={mode}
               dark={mode === 'conversational'}
               connected={connected}
+              panel={panel}
+              activeSeat={activeSeat}
+              activeSeatIndex={segmentIdxRef.current}
+              isHandoff={panelModeRef.current === 'multi-voice' && segmentIdxRef.current > 0}
             />
           )}
 
@@ -1258,6 +1737,10 @@ const MockInterviewPage = () => {
               onToggleCaptions={() => setCaptionsOn((v) => !v)}
               onToggleMute={toggleRealtimeMute}
               onEnd={endRealtime}
+              activeSeat={panel.length >= 1 ? activeSeat : null}
+              panel={panel}
+              candidateName={firstName && firstName !== 'there' ? firstName : 'You'}
+              handingOff={handingOff}
             />
           )}
 
@@ -1361,10 +1844,10 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
+      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
     >
       <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-100 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200/60 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
           <AlertTriangle className="w-5 h-5" />
         </div>
         <div className="min-w-0">
@@ -1383,18 +1866,18 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row gap-2">
+      <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
         <button
           type="button"
           onClick={onStay}
-          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-100 select-none cursor-pointer"
+          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
         >
           Stay in the interview
         </button>
         <button
           type="button"
           onClick={onLeave}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors select-none cursor-pointer"
+          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
         >
           Leave anyway
         </button>
@@ -1418,7 +1901,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
+      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
     >
       <button
         type="button"
@@ -1430,27 +1913,27 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       </button>
 
       <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/15 border border-amber-100 dark:border-amber-500/30 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-250 dark:border-amber-500/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
           <AlertTriangle className="w-5 h-5" />
         </div>
         <div className="min-w-0 pr-6">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
             Ready for this interview?
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-550 dark:text-slate-450 mt-0.5 font-normal">
             Some essentials are still missing
           </p>
         </div>
       </div>
 
-      <div className="mt-5 bg-slate-50 dark:bg-slate-900 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
+      <div className="mt-5 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/80">
         <div className="flex justify-between items-center text-xs mb-2">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">
+          <span className="font-semibold text-slate-650 dark:text-slate-350">
             Your readiness score
           </span>
           <span className="font-bold text-slate-900 dark:text-slate-100">{readiness}%</span>
         </div>
-        <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-200 dark:bg-slate-750 rounded-full overflow-hidden">
           <div
             className="h-full bg-amber-500 rounded-full transition-all duration-500"
             style={{ width: `${readiness}%` }}
@@ -1480,24 +1963,24 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
         </ul>
       </div>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400 bg-indigo-50/40 dark:bg-indigo-500/15 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg p-3 mt-5 leading-relaxed">
-        <span className="font-semibold text-indigo-800 dark:text-indigo-300">Tip:</span> Preparing
+      <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 mt-5 leading-relaxed">
+        <span className="font-semibold text-indigo-600 dark:text-indigo-400">Tip:</span> Preparing
         these essentials enables the AI interviewer to ask targeted questions grounded in your
         actual history.
       </p>
 
-      <div className="mt-6 flex flex-col sm:flex-row gap-2">
+      <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
         <button
           type="button"
           onClick={onPrepare}
-          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-100 hover:shadow-indigo-200 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
         >
           Prepare these first
         </button>
         <button
           type="button"
           onClick={onStartAnyway}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-350 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors select-none cursor-pointer"
+          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center"
         >
           Start anyway
         </button>
@@ -1515,7 +1998,18 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
 // `dark` styles it for the immersive conversational call room.
 const CONNECT_STEPS = ['Dialing…', 'Ringing…', 'Connecting…'];
 
-const ConnectingView = ({ firstName, title, mode, dark, connected }) => {
+const ConnectingView = ({
+  firstName,
+  title,
+  mode,
+  dark,
+  connected,
+  panel = [],
+  activeSeat = null,
+  activeSeatIndex = 0,
+  isHandoff = false,
+}) => {
+  const hasPanel = Array.isArray(panel) && panel.length >= 2;
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (connected) return undefined; // freeze the stepper once connected
@@ -1531,14 +2025,14 @@ const ConnectingView = ({ firstName, title, mode, dark, connected }) => {
         {!connected && (
           <div className="absolute w-20 h-20 sm:w-24 sm:h-24" aria-hidden>
             {[0, 1, 2].map((i) => (
-              <motion.span
+              <span
                 key={i}
                 className={`absolute inset-0 rounded-full border ${
                   dark ? 'border-indigo-400/40' : 'border-indigo-300/60'
-                }`}
-                initial={{ scale: 0.85, opacity: 0.55 }}
-                animate={{ scale: 2.3, opacity: 0 }}
-                transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.8, ease: 'easeOut' }}
+                } animate-sonar`}
+                style={{
+                  animationDelay: `${i * 0.8}s`,
+                }}
               />
             ))}
           </div>
@@ -1587,8 +2081,19 @@ const ConnectingView = ({ firstName, title, mode, dark, connected }) => {
       )}
 
       <h2 className={`mt-3 text-lg sm:text-xl font-bold ${dark ? 'text-white' : 'text-slate-900'}`}>
-        {connected ? 'Connected — here we go.' : 'Connecting you with your interviewer…'}
+        {connected
+          ? 'Connected — here we go.'
+          : isHandoff && activeSeat
+            ? `Bringing in ${activeSeat.name}…`
+            : hasPanel
+              ? 'Connecting you with your panel…'
+              : 'Connecting you with your interviewer…'}
       </h2>
+      {!connected && isHandoff && activeSeat && (
+        <p className={`mt-1 text-sm font-semibold ${dark ? 'text-indigo-200' : 'text-indigo-600'}`}>
+          {activeSeat.role}
+        </p>
+      )}
       <p className={`mt-1 text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
         {connected
           ? 'Putting you through…'
@@ -1596,10 +2101,22 @@ const ConnectingView = ({ firstName, title, mode, dark, connected }) => {
               title ? ` ${title}` : ''
             }`}
       </p>
-      {!connected && mode === 'conversational' && (
+      {!connected && mode === 'conversational' && !hasPanel && (
         <p className={`mt-2 text-xs max-w-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
           Setting up a live conversation — this works best on a strong, stable connection.
         </p>
+      )}
+
+      {/* Paid tiers: the panel about to interview them. During a multi-voice
+          handoff, highlight whoever is taking over. */}
+      {hasPanel && (
+        <div className="mt-7 w-full max-w-md px-2">
+          <InterviewerPanel
+            panel={panel}
+            dark={dark}
+            activeIndex={isHandoff ? activeSeatIndex : -1}
+          />
+        </div>
       )}
 
       {/* progress dots advance with the call steps; all fill on connect */}
@@ -1652,29 +2169,6 @@ const GradingView = () => (
   </div>
 );
 
-// Optional pre-interview centering — a skippable "take a breath" that reveals
-// the 4-7-8 breathing tool inline. Walking in calm is half the battle.
-const BreatheToggle = () => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative z-10 mt-4 text-center">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200"
-      >
-        <Wind className="w-3.5 h-3.5" />
-        {open ? 'Hide breathing' : 'Feeling nervous? Take a breath first'}
-      </button>
-      {open && (
-        <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
-          <BreathingExercise compact />
-        </div>
-      )}
-    </div>
-  );
-};
-
 // ── Intro ──
 const IntroView = ({
   firstName,
@@ -1690,177 +2184,383 @@ const IntroView = ({
   onStyleChange,
   onStart,
   onCancel,
-}) => (
-  <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-7 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
-    {/* ambient brand glow */}
+  showSelectors = true,
+  className = '',
+  entitlement,
+  isPaidTier,
+  lengthSec,
+  setLengthSec,
+  lengthMinSec,
+  lengthMaxSec,
+  liveSecondsAvailable,
+  wrapUp,
+  setWrapUp,
+}) => {
+  const [activeSubView, setActiveSubView] = useState('main'); // 'main' | 'mic' | 'breathe' | 'length'
+
+  return (
     <div
-      aria-hidden
-      className="pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
-    />
+      className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3.5 sm:p-4 shadow-sm h-full flex flex-col ${className}`}
+    >
+      <AnimatePresence mode="wait">
+        {activeSubView === 'main' && (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="flex-grow flex flex-col justify-between h-full"
+          >
+            <div className="flex-grow flex flex-col justify-center">
+              <div className="relative z-10 text-center mb-2.5">
+                <h1 className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-300 flex items-center justify-center gap-2">
+                  <Briefcase className="w-4.5 h-4.5 shrink-0" />
+                  <span>
+                    {title.toLowerCase().endsWith('interview') ? title : `${title} Interview`}
+                  </span>
+                </h1>
+              </div>
 
-    <div className="relative z-10 text-center">
-      {/* The interviewer, ready and waiting for you */}
-      <div className="w-16 h-16 rounded-2xl bg-white border border-indigo-200 ring-4 ring-indigo-100/70 flex items-center justify-center mx-auto mb-3 p-2.5 shadow-sm">
-        <img
-          src="/applyright-icon.png"
-          alt="ApplyRight AI interviewer"
-          className="w-full h-full object-contain"
-        />
-      </div>
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-        {mode === 'conversational' ? 'Conversational interview' : 'Guided interview'}
-      </h1>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{title}</p>
+              {count === 0 ? (
+                <>
+                  <p className="relative z-10 text-sm text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
+                    No interview questions yet. Generate interview prep first to activate the
+                    simulation.
+                  </p>
+                  <div className="relative z-10 mt-6 text-center">
+                    <button
+                      type="button"
+                      onClick={onCancel}
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors cursor-pointer shadow-sm select-none"
+                    >
+                      Back to prep
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {mode === 'conversational' ? (
+                    <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed text-center">
+                      Hi{' '}
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        {firstName}
+                      </span>{' '}
+                      — take a breath. Your ApplyRight AI interviewer will{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">
+                        actually talk with you
+                      </strong>
+                      : it reacts to your answers and asks natural follow-ups. Reply by voice or
+                      text — just have the conversation.
+                    </p>
+                  ) : (
+                    <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-305 mt-2 leading-relaxed text-center">
+                      Hi{' '}
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        {firstName}
+                      </span>{' '}
+                      — take a breath. Your ApplyRight AI interviewer will ask each question aloud.
+                      Answer out loud as if you’re in the room, then{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">
+                        reveal a model answer
+                      </strong>{' '}
+                      and rate how it felt.
+                    </p>
+                  )}
+                  {mode === 'conversational' && (
+                    <div className="relative z-10 mt-2 rounded-xl border border-amber-150/40 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/10 p-2 flex items-start gap-2">
+                      <Mic className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          Find a quiet spot first.
+                        </span>{' '}
+                        The interviewer is always listening. Earphones help a lot.
+                      </p>
+                    </div>
+                  )}
+                  {mode === 'conversational' && showSelectors && (
+                    <VoiceStyleSelector
+                      voice={voice}
+                      style={style}
+                      onVoiceChange={onVoiceChange}
+                      onStyleChange={onStyleChange}
+                    />
+                  )}
+                  {trend && trend.count >= 1 && (
+                    <div className="relative z-10 mt-2 rounded-xl border border-emerald-150/40 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/10 p-2 flex items-start gap-2">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+                      <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          You’ve done {trend.count} {trend.count === 1 ? 'interview' : 'interviews'}
+                          .
+                        </span>{' '}
+                        {trend.trend === 'up' && trend.firstConfidence && trend.lastConfidence
+                          ? `Your nerves are easing — ${CONF_WORD[trend.firstConfidence]} → ${CONF_WORD[trend.lastConfidence]}. `
+                          : ''}
+                        Each rep builds confidence.
+                      </p>
+                    </div>
+                  )}
+                  <div className="relative z-10 mt-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-2 gap-2 divide-x divide-slate-100 dark:divide-slate-800">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                        <HelpCircle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+                          Questions
+                        </p>
+                        <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                          {count}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={
+                        mode === 'conversational' ? () => setActiveSubView('length') : undefined
+                      }
+                      className={`flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5 ${
+                        mode === 'conversational'
+                          ? 'cursor-pointer hover:bg-slate-55/60 dark:hover:bg-slate-800/40 rounded-xl p-1 -m-1 transition-colors'
+                          : ''
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 leading-none">
+                          <p className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            Duration
+                          </p>
+                          {mode === 'conversational' && (
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold underline decoration-dotted">
+                              Edit
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                          ~{Math.round(plannedSec / 60)} min
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {lastSession && (
+                    <div className="relative z-10 mt-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-indigo-50/40 dark:bg-indigo-500/10 p-2 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      <div>
+                        <span className="font-semibold text-slate-705 dark:text-slate-295">
+                          Last session:
+                        </span>{' '}
+                        {typeof lastSession.score === 'number'
+                          ? `${lastSession.score}% overall · `
+                          : ''}
+                        {lastSession.flagged?.length
+                          ? `${lastSession.flagged.length} flagged questions to practice`
+                          : 'no questions flagged'}
+                        .
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {count > 0 && (
+              <div className="mt-3 shrink-0">
+                <div className="relative z-10 flex items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-550 mb-2.5 flex-wrap">
+                  {mode === 'conversational' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSubView('length')}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                      >
+                        <Clock className="w-3.5 h-3.5" /> Adjust duration
+                      </button>
+                      <span className="text-slate-200 dark:text-slate-750">|</span>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubView('mic')}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                  >
+                    <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
+                  </button>
+                  <span className="text-slate-200 dark:text-slate-750">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubView('breathe')}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                  >
+                    <Wind className="w-3.5 h-3.5" /> Take a breath first
+                  </button>
+                </div>
+                <div className="relative z-10 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={onStart}
+                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer"
+                  >
+                    Start interview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeSubView === 'mic' && (
+          <motion.div
+            key="mic"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col justify-between h-full"
+          >
+            <DeviceCheck inline={true} onDone={() => setActiveSubView('main')} />
+          </motion.div>
+        )}
+
+        {activeSubView === 'breathe' && (
+          <motion.div
+            key="breathe"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col justify-between h-full"
+          >
+            <div className="w-full flex flex-col justify-between h-full">
+              <div>
+                <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-4 text-center">
+                  Take a breath
+                </p>
+                <div className="flex items-center justify-center py-4">
+                  <BreathingExercise compact />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubView('main')}
+                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeSubView === 'length' && (
+          <motion.div
+            key="length"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="flex-grow flex flex-col justify-between h-full"
+          >
+            <div className="w-full flex-grow flex flex-col justify-center">
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-5 text-center">
+                Set interview length
+              </p>
+
+              <div className="max-w-sm mx-auto w-full bg-slate-55/40 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-5">
+                {isPaidTier && lengthMaxSec >= lengthMinSec ? (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label
+                          htmlFor="inline-interview-length"
+                          className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                        >
+                          Duration
+                        </label>
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                          {Math.round((lengthSec || lengthMinSec) / 60)} min
+                          {Math.round((lengthSec || lengthMinSec) / 60) === 10 && (
+                            <span className="ml-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+                              recommended
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <input
+                        id="inline-interview-length"
+                        type="range"
+                        min={lengthMinSec}
+                        max={lengthMaxSec}
+                        step={60}
+                        value={lengthSec || lengthMinSec}
+                        onChange={(e) => setLengthSec(Number(e.target.value))}
+                        className="w-full accent-indigo-600 cursor-pointer"
+                      />
+                      <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-450">
+                        {`Min ${Math.round(lengthMinSec / 60)} · Max ${Math.round(
+                          lengthMaxSec / 60
+                        )} min · Balance ${Math.floor((liveSecondsAvailable || 0) / 60)} min`}
+                      </p>
+                      <p className="mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        💡 10 minutes is recommended for a complete interview.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {entitlement?.tier === 'free'
+                      ? `Your free interview runs up to ${Math.ceil((liveSecondsAvailable || 0) / 60)} min.`
+                      : 'Add minutes to run a longer interview.'}
+                  </p>
+                )}
+
+                <hr className="border-slate-200/60 dark:border-slate-800" />
+
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={wrapUp}
+                    onChange={(e) => setWrapUp(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-indigo-600 cursor-pointer"
+                  />
+                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                    Allow a short wrap-up (~90s)
+                    <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5 leading-normal">
+                      {wrapUp
+                        ? 'Counts toward your minutes so the interviewer can finish your answer and close out.'
+                        : 'The interview stops exactly at time — no wrap-up.'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
+              <button
+                type="button"
+                onClick={() => setActiveSubView('main')}
+                className="px-4.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+              >
+                Back to setup
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-
-    {count === 0 ? (
-      <>
-        <p className="relative z-10 text-sm text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
-          No interview questions yet. Generate interview prep first to activate the simulation.
-        </p>
-        <div className="relative z-10 mt-6 text-center">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all cursor-pointer shadow-md select-none"
-          >
-            Back to prep
-          </button>
-        </div>
-      </>
-    ) : (
-      <>
-        {mode === 'conversational' ? (
-          <p className="relative z-10 text-sm text-slate-600 dark:text-slate-300 mt-4 leading-relaxed text-center">
-            Hi <span className="font-semibold text-slate-900 dark:text-slate-100">{firstName}</span>{' '}
-            — take a breath. Your ApplyRight AI interviewer will{' '}
-            <strong className="text-slate-900 dark:text-slate-100">actually talk with you</strong>:
-            it reacts to your answers and asks natural follow-ups. Reply by voice or text — just
-            have the conversation, like the real thing.
-          </p>
-        ) : (
-          <p className="relative z-10 text-sm text-slate-600 dark:text-slate-300 mt-4 leading-relaxed text-center">
-            Hi <span className="font-semibold text-slate-900 dark:text-slate-100">{firstName}</span>{' '}
-            — take a breath. Your ApplyRight AI interviewer will ask each question aloud. Answer out
-            loud as if you’re in the room, then{' '}
-            <strong className="text-slate-900 dark:text-slate-100">reveal a model answer</strong>{' '}
-            and rate how it felt.
-          </p>
-        )}
-        {mode === 'conversational' && (
-          <div className="relative z-10 mt-4 rounded-xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/15 p-3 flex items-start gap-2.5">
-            <Mic className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                Find a quiet spot first.
-              </span>{' '}
-              The interviewer is always listening, so background noise or other voices can interrupt
-              it. Earphones or a headset help a lot.
-            </p>
-          </div>
-        )}
-        {mode === 'conversational' && (
-          <VoiceStyleSelector
-            voice={voice}
-            style={style}
-            onVoiceChange={onVoiceChange}
-            onStyleChange={onStyleChange}
-          />
-        )}
-        {mode === 'conversational' && <DeviceCheck />}
-        {trend && trend.count >= 1 && (
-          <div className="relative z-10 mt-4 rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/15 p-3 flex items-start gap-2.5">
-            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                You’ve done {trend.count} {trend.count === 1 ? 'interview' : 'interviews'}.
-              </span>{' '}
-              {trend.trend === 'up' && trend.firstConfidence && trend.lastConfidence
-                ? `Your nerves are easing — ${CONF_WORD[trend.firstConfidence]} → ${CONF_WORD[trend.lastConfidence]}. `
-                : ''}
-              Each rep makes the real room feel more familiar.
-            </p>
-          </div>
-        )}
-        <div className="relative z-10 mt-4 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-3 gap-2.5 divide-x divide-slate-100 dark:divide-slate-800">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-              <HelpCircle className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-                Questions
-              </p>
-              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-                {count}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-                Duration
-              </p>
-              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-                ~{Math.round(plannedSec / 60)} min
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-                Credits
-              </p>
-              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-                Free
-              </p>
-            </div>
-          </div>
-        </div>
-        {lastSession && (
-          <div className="relative z-10 mt-4 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-            <div>
-              <span className="font-semibold text-slate-700 dark:text-slate-300">
-                Last session:
-              </span>{' '}
-              {typeof lastSession.score === 'number' ? `${lastSession.score}% overall · ` : ''}
-              {lastSession.flagged?.length
-                ? `${lastSession.flagged.length} flagged questions to practice`
-                : 'no questions flagged'}
-              .
-            </div>
-          </div>
-        )}
-        <BreatheToggle />
-        <div className="relative z-10 mt-6 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={onStart}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
-          >
-            {mode === 'conversational' ? 'Start the conversation' : 'Take your seat'}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
-          >
-            Back
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-);
+  );
+};
 
 // Adaptive follow-up — the premium "real interview" upgrade. The user types or
 // dictates their answer and the AI interviewer asks one dynamic follow-up.
@@ -2009,21 +2709,15 @@ const RunningView = ({
       </div>
 
       {/* Interviewer "video tile" — the AI is present and talking to you */}
-      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
-        {/* ambient brand glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
-        />
-
+      <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 shadow-sm">
         <div className="relative z-10 flex items-center gap-4">
           {/* Interviewer avatar */}
           <div className="relative shrink-0">
             <div
               className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
                 speaking
-                  ? 'border-indigo-300 ring-4 ring-indigo-200/60 shadow-lg shadow-indigo-300/40 scale-[1.03]'
-                  : 'border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800'
+                  ? 'border-indigo-600 ring-2 ring-indigo-500/40 scale-[1.03]'
+                  : 'border-slate-200 dark:border-slate-700 ring-1 ring-slate-100 dark:ring-slate-800'
               }`}
             >
               <img
@@ -2033,7 +2727,7 @@ const RunningView = ({
               />
             </div>
             {speaking && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-900 rounded-full px-1.5 py-0.5 shadow-sm border border-indigo-100 dark:border-indigo-500/30">
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-900 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-200 dark:border-slate-800">
                 <span className="w-0.5 h-2 bg-indigo-500 rounded-full animate-pulse" />
                 <span
                   className="w-0.5 h-3 bg-indigo-500 rounded-full animate-pulse"
@@ -2299,16 +2993,10 @@ const ReviewView = ({
         : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-8 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
-      {/* ambient brand glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
-      />
-
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-8 shadow-sm">
       <div className="relative z-10">
         <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
+          <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
             {overall != null ? (
               <span className={`text-xl font-bold ${scoreTone(overall)}`}>{overall}%</span>
             ) : (
@@ -2331,12 +3019,17 @@ const ReviewView = ({
 
         {/* Recording of the live session — replay it right here */}
         {recordingUrl && (
-          <div className="mt-5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-4">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-2">
-              Your interview recording
-            </p>
+          <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-55/40 dark:bg-slate-950/40 p-4.5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
+                Your interview recording
+              </p>
+              <span className="text-[9px] font-semibold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                Saved locally
+              </span>
+            </div>
             <AudioPlayer src={recordingUrl} durationHint={recordingDuration} />
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-3.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
               Saved on this device — find it again under “Past interviews” on your prep page.
             </p>
           </div>
@@ -2656,7 +3349,8 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         badge="Recommended"
         accent={{
           topLine: true,
-          border: 'border-indigo-300/60 dark:border-indigo-500/40 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 transition-all duration-300',
+          border:
+            'border-indigo-300/60 dark:border-indigo-500/40 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 transition-all duration-300',
           glow: '',
           iconBg:
             'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30',
@@ -2668,7 +3362,7 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         }}
         onPick={() => onPick('conversational')}
       />
- 
+
       <ModeCard
         icon={<BookOpen className="w-5 h-5" />}
         name="Guided question reader"
@@ -2685,7 +3379,8 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         accent={{
           topLine: false,
-          border: 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 transition-all duration-300',
+          border:
+            'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 transition-all duration-300',
           glow: '',
           iconBg:
             'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
@@ -2717,18 +3412,14 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
   const speaking = voiceState === 'speaking';
   const loading = voiceState === 'loading';
   return (
-    <div className="shrink-0 relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.6)]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/15 blur-3xl"
-      />
+    <div className="shrink-0 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-sm">
       <div className="relative z-10 flex items-center gap-4">
         <div className="relative shrink-0">
           <div
             className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
               speaking
-                ? 'border-indigo-300 ring-4 ring-indigo-400/40 shadow-lg shadow-indigo-500/40 scale-[1.03]'
-                : 'border-white/20 ring-2 ring-white/10'
+                ? 'border-indigo-600 ring-2 ring-indigo-500/40 scale-[1.03]'
+                : 'border-white/20 ring-1 ring-white/10'
             }`}
           >
             <img
@@ -2901,10 +3592,16 @@ const RealtimeView = ({
   onToggleCaptions,
   onToggleMute,
   onEnd,
+  activeSeat = null,
+  panel = [],
+  candidateName = '',
+  handingOff = false,
 }) => {
+  // Meet-stage view whenever there's a roster interviewer (a chosen 1:1 person, or
+  // a full panel). Solo/free (no roster) keeps the single generic tile.
+  const isPanel = Array.isArray(panel) && panel.length >= 1;
   const speaking = voiceState === 'speaking';
   const connecting = voiceState === 'loading';
-  const listening = !speaking && !connecting;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -2913,9 +3610,17 @@ const RealtimeView = ({
       className="flex flex-col h-[calc(100dvh-5.5rem)]"
     >
       <div className="shrink-0 flex items-center justify-between mb-3 px-1">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-          Live voice interview
-        </p>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+            Live voice interview
+          </p>
+          {activeSeat && activeSeat.name && (
+            <p className="text-[11px] font-bold text-indigo-300 truncate">
+              {activeSeat.name}
+              {activeSeat.role ? ` · ${activeSeat.role}` : ''}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -2937,23 +3642,41 @@ const RealtimeView = ({
         </div>
       </div>
 
-      <InterviewerTile voiceState={voiceState} />
+      {/* Panel interview (paid) → a Google-Meet-style stage of all participants.
+          Solo interview → the single interviewer tile. */}
+      {isPanel ? (
+        <MeetingStage
+          panel={panel}
+          activeSeat={activeSeat}
+          candidateName={candidateName}
+          muted={muted}
+          speaking={speaking}
+          micStream={micStream}
+          handingOff={handingOff}
+        />
+      ) : (
+        <InterviewerTile voiceState={voiceState} />
+      )}
 
       {/* Big live status */}
       <div className="shrink-0 mt-5 text-center">
         <p className="text-lg sm:text-xl font-bold text-white">
-          {inGrace
-            ? 'We’re at time — any questions for me?'
-            : connecting
-              ? 'Connecting…'
-              : speaking
-                ? 'Interviewer is speaking'
-                : 'Go ahead — I’m listening'}
+          {handingOff
+            ? `Bringing in ${activeSeat?.name || 'the next interviewer'}…`
+            : inGrace
+              ? 'We’re at time — any questions for me?'
+              : connecting
+                ? 'Connecting…'
+                : speaking
+                  ? `${activeSeat?.name || 'Interviewer'} is speaking`
+                  : 'Go ahead — I’m listening'}
         </p>
         <p className="mt-1 text-sm text-slate-400">
-          {inGrace
-            ? 'Just wrapping up — ask anything you’d like, then we’ll close.'
-            : 'Just talk — the interviewer hears you and replies in real time.'}
+          {handingOff
+            ? 'Handing you over to the next person on the panel — one moment.'
+            : inGrace
+              ? 'Just wrapping up — ask anything you’d like, then we’ll close.'
+              : 'Just talk — the interviewer hears you and replies in real time.'}
         </p>
       </div>
 
@@ -2966,11 +3689,6 @@ const RealtimeView = ({
           <p className="text-sm text-slate-200 leading-relaxed">{caption || '…'}</p>
         </div>
       )}
-
-      {/* Voice tracker — lights up + tracks your mic on your turn */}
-      <div className="flex-1 min-h-0 flex flex-col justify-center mt-5">
-        <VoiceVisualizer stream={micStream} active={listening && !muted} dark />
-      </div>
 
       {/* Controls (pinned) */}
       <div className="shrink-0 mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-3">

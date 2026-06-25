@@ -39,8 +39,16 @@ const AGENT_VALUE_PROPS = [
 
 // Static accent class sets so Tailwind keeps them at build time.
 const CARD_ACCENTS = {
-  indigo: { on: 'border-indigo-500 bg-indigo-50', icon: 'bg-indigo-100 text-indigo-600', dot: 'border-indigo-500 bg-indigo-500' },
-  amber: { on: 'border-amber-500 bg-amber-50', icon: 'bg-amber-100 text-amber-600', dot: 'border-amber-500 bg-amber-500' },
+  indigo: {
+    on: 'border-indigo-500 bg-indigo-50',
+    icon: 'bg-indigo-100 text-indigo-600',
+    dot: 'border-indigo-500 bg-indigo-500',
+  },
+  amber: {
+    on: 'border-amber-500 bg-amber-50',
+    icon: 'bg-amber-100 text-amber-600',
+    dot: 'border-amber-500 bg-amber-500',
+  },
 };
 
 // One compact option in the "I'm signing up as" selector: small icon, a label,
@@ -279,8 +287,8 @@ const Register = () => {
               {showInfo && (
                 <div className="absolute left-0 top-6 z-20 w-72 p-3 rounded-lg border border-slate-200 bg-white shadow-lg text-xs leading-relaxed text-slate-600 space-y-2">
                   <p>
-                    <span className="font-semibold text-indigo-700">Job seeker</span> — optimize your
-                    own CV, score your fit for a job, and practice interviews with voice AI.
+                    <span className="font-semibold text-indigo-700">Job seeker</span> — optimize
+                    your own CV, score your fit for a job, and practice interviews with voice AI.
                   </p>
                   <p>
                     <span className="font-semibold text-amber-700">CV agent</span> — build and

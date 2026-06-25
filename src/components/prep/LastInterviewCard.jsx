@@ -73,11 +73,11 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
       <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
         {/* Top-accent gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
-        
+
         {/* Tiny stars for dark mode */}
         <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
         <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
-        
+
         {/* Education icon for light mode */}
         <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
 
@@ -125,11 +125,11 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
     <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
       {/* Top-accent gradient line */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
-      
+
       {/* Tiny stars for dark mode */}
       <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
       <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
-      
+
       {/* Education icon for light mode */}
       <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
 
@@ -150,7 +150,7 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
               {count} {count === 1 ? 'session' : 'sessions'} · your progress
             </p>
           </div>
-          
+
           {nervesEasing && (
             <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
               <TrendingUp className="w-3.5 h-3.5" /> Improving

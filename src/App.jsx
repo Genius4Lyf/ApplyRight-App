@@ -52,7 +52,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
 import ATSGuide from './pages/ATSGuide';
+import Pricing from './pages/Pricing';
 import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
+import HowToAceYourInterview from './pages/HowToAceYourInterview';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
 import MaintenanceGuard from './components/MaintenanceGuard';
@@ -302,8 +304,7 @@ import AdminAIFeedback from './pages/Admin/AdminAIFeedback';
 
 // CV-agent pages (separate CV-only workspace)
 import AgentDashboard from './pages/Agent/AgentDashboard';
-import AgentClients from './pages/Agent/AgentClients';
-import AgentClientDetail from './pages/Agent/AgentClientDetail';
+import AgentEarnings from './pages/Agent/AgentEarnings';
 
 // ... existing router configuration ...
 
@@ -349,8 +350,17 @@ const router = createBrowserRouter([
         element: <ATSGuide />,
       },
       {
+        // Public, logged-out pricing page (the only place with the seeker/agent toggle).
+        path: '/pricing',
+        element: <Pricing />,
+      },
+      {
         path: '/how-ats-recruiters-work',
         element: <HowATSRecruitersWork />,
+      },
+      {
+        path: '/how-to-ace-your-interview',
+        element: <HowToAceYourInterview />,
       },
       {
         path: '/feedback',
@@ -572,7 +582,7 @@ const router = createBrowserRouter([
         ],
       },
 
-      // CV-Agent Routes (CV-only workspace; no interview/job-search)
+      // CV-Agent Routes (overview + earnings; no interview/job-search)
       {
         path: '/agent',
         element: (
@@ -584,21 +594,11 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/agent/clients',
+        path: '/agent/earnings',
         element: (
           <MaintenanceGuard>
             <AgentRoute>
-              <AgentClients />
-            </AgentRoute>
-          </MaintenanceGuard>
-        ),
-      },
-      {
-        path: '/agent/clients/:id',
-        element: (
-          <MaintenanceGuard>
-            <AgentRoute>
-              <AgentClientDetail />
+              <AgentEarnings />
             </AgentRoute>
           </MaintenanceGuard>
         ),

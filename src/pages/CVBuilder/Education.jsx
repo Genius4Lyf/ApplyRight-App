@@ -189,7 +189,8 @@ const Education = () => {
                             {edu.degree || 'Untitled Qualification'}
                             {edu.school && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
-                                {' '}• {edu.school}
+                                {' '}
+                                • {edu.school}
                               </span>
                             )}
                           </h4>
@@ -255,7 +256,9 @@ const Education = () => {
                                   id={`education-grad-${index}`}
                                   type="text"
                                   value={edu.graduationDate}
-                                  onChange={(e) => handleChange(index, 'graduationDate', e.target.value)}
+                                  onChange={(e) =>
+                                    handleChange(index, 'graduationDate', e.target.value)
+                                  }
                                   placeholder="e.g. May 2019"
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
@@ -271,7 +274,9 @@ const Education = () => {
                                   id={`education-description-${index}`}
                                   type="text"
                                   value={edu.description}
-                                  onChange={(e) => handleChange(index, 'description', e.target.value)}
+                                  onChange={(e) =>
+                                    handleChange(index, 'description', e.target.value)
+                                  }
                                   placeholder="e.g. Honors: Cum Laude, GPA: 3.8"
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />

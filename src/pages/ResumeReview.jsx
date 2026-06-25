@@ -57,6 +57,8 @@ import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
+import PreviewWatermark from '../components/PreviewWatermark';
+import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import {
   Lock,
@@ -87,10 +89,11 @@ const ResumeReview = () => {
   const [isDraftMode, setIsDraftMode] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'resume'); // 'resume' or 'cover-letter'
   const [isDownloading, setIsDownloading] = useState(false);
+  // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
+  const screenshotObscured = useScreenshotGuard();
   // Keep the loader visible long enough for users to read a tip even when the
   // underlying task finishes faster than the rotation interval.
   const showLoader = useMinVisible(loading, 4000);
-  const showDownloadLoader = useMinVisible(isDownloading, 4000);
 
   // Fullscreen-style focus mode: hides Navbar + page header + action bar so
   // the CV gets the whole viewport.
@@ -181,7 +184,6 @@ const ResumeReview = () => {
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
   const [showDownloadPaywall, setShowDownloadPaywall] = useState(false); // Web ₦500 download paywall
-  const [downloadSuccess, setDownloadSuccess] = useState(false); // Success state for download loader
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [templateToUnlock, setTemplateToUnlock] = useState(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -411,13 +413,9 @@ const ResumeReview = () => {
   // Download Ad Logic
   const performDownload = async () => {
     try {
+      // Inline spinner on the button (isDownloading) — no overlay, no artificial
+      // delay. Just generate and hand over the file.
       setIsDownloading(true);
-
-      // PHASE 1: Show tips for 5 seconds BEFORE starting PDF generation
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
-      // PHASE 2: Now start PDF generation (user has seen tips for full 5s)
-      toast.info('Generating High-Quality PDF...', { duration: 2000 });
 
       const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
       const element = document.getElementById(elementId);
@@ -426,6 +424,10 @@ const ResumeReview = () => {
 
       // Clone and reset transform to ensure PDF is generated at 100% scale
       const clone = element.cloneNode(true);
+      // Strip the on-screen preview watermark + any screenshot-guard blur so the
+      // paid PDF is always clean.
+      clone.querySelectorAll('[data-preview-watermark]').forEach((el) => el.remove());
+      clone.style.filter = 'none';
       clone.style.transform = 'none';
       clone.style.transformOrigin = 'top left';
       clone.style.width = '210mm';
@@ -513,28 +515,20 @@ const ResumeReview = () => {
       const filename = `${userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
       await downloadBlob(blob, filename);
 
-      // PHASE 3: Show success state in the loader
-      setDownloadSuccess(true);
+      setIsDownloading(false);
       toast.success('PDF Downloaded');
 
-      // PHASE 4: Wait 2.5 seconds before closing the loader, then show feedback prompt
-      setTimeout(() => {
-        setIsDownloading(false);
-        setDownloadSuccess(false);
+      // Completion moment — interstitial (no-op on web / paid / non-eligible).
+      triggerInterstitial('pdf_download_success');
 
-        // Fire interstitial here — completion moment, before any feedback
-        // prompt. No-op on web / paid / non-eligible users.
-        triggerInterstitial('pdf_download_success');
-
-        // Show feedback prompt once per session
-        const hasSeenFeedback = sessionStorage.getItem('feedback_prompt_shown');
-        if (!hasSeenFeedback) {
-          setTimeout(() => {
-            setShowFeedbackPrompt(true);
-            sessionStorage.setItem('feedback_prompt_shown', 'true');
-          }, 500);
-        }
-      }, 2500);
+      // Show the feedback prompt once per session, just after the download.
+      const hasSeenFeedback = sessionStorage.getItem('feedback_prompt_shown');
+      if (!hasSeenFeedback) {
+        setTimeout(() => {
+          setShowFeedbackPrompt(true);
+          sessionStorage.setItem('feedback_prompt_shown', 'true');
+        }, 800);
+      }
     } catch (e) {
       console.error('PDF Download Error Details:', e);
 
@@ -745,7 +739,8 @@ const ResumeReview = () => {
               Preview & Download Locked
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-sm mx-auto font-medium">
-              You must complete all steps of your CV journey in the builder before you can view templates or download the PDF.
+              You must complete all steps of your CV journey in the builder before you can view
+              templates or download the PDF.
             </p>
 
             {/* Checklist of missing sections */}
@@ -755,18 +750,33 @@ const ResumeReview = () => {
               </span>
               {[
                 { label: 'Heading', done: !!application.rawDraft?.personalInfo?.fullName },
-                { label: 'Work History', done: (application.rawDraft?.experience?.length || 0) > 0 },
+                {
+                  label: 'Work History',
+                  done: (application.rawDraft?.experience?.length || 0) > 0,
+                },
                 { label: 'Projects', done: (application.rawDraft?.projects?.length || 0) > 0 },
                 { label: 'Education', done: (application.rawDraft?.education?.length || 0) > 0 },
                 { label: 'Skills', done: (application.rawDraft?.skills?.length || 0) > 0 },
                 { label: 'Summary', done: !!application.rawDraft?.professionalSummary?.trim() },
               ].map((sec, idx) => (
                 <div key={idx} className="flex items-center justify-between text-xs font-semibold">
-                  <span className={sec.done ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 font-bold'}>
+                  <span
+                    className={
+                      sec.done
+                        ? 'text-slate-600 dark:text-slate-300'
+                        : 'text-slate-400 dark:text-slate-500 font-bold'
+                    }
+                  >
                     {idx + 1}. {sec.label}
                   </span>
-                  <span className={sec.done ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-700'}>
-                    {sec.done ? <Check className="w-4 h-4 inline" /> : <Lock className="w-3.5 h-3.5 inline" />}
+                  <span
+                    className={sec.done ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-700'}
+                  >
+                    {sec.done ? (
+                      <Check className="w-4 h-4 inline" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 inline" />
+                    )}
                   </span>
                 </div>
               ))}
@@ -1206,12 +1216,20 @@ const ResumeReview = () => {
             <div
               ref={previewContentRef}
               id="resume-content"
-              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform"
+              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
+                filter: screenshotObscured ? 'blur(16px)' : undefined,
               }}
+              onContextMenu={(e) => e.preventDefault()}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
             >
+              {/* Faint anti-screenshot watermark — stripped from the PDF clone in
+                  performDownload, so the paid download is clean. */}
+              <PreviewWatermark />
+
               {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 
               {activeTab === 'resume' ? (
@@ -1877,16 +1895,6 @@ const ResumeReview = () => {
           </div>
         </div>
       </div>
-
-      {/* Loading Overlay with Ad - Shows during PDF generation */}
-      {showDownloadLoader && (
-        <LoadingWithAd
-          messages={['Generating your high-quality PDF...']}
-          showProgress={false}
-          isSuccess={downloadSuccess}
-          successMessage="Your PDF is ready!"
-        />
-      )}
     </div>
   );
 };

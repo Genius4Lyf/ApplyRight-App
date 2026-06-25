@@ -21,7 +21,6 @@ import { computeCvHealth, healthColor } from '../../utils/cvHealth';
 import { getStepCoaching, getQuickReplies } from '../../utils/cvCoach';
 import { useCVBuilder } from '../../context/CVContext';
 
-
 // Small fade/rise wrapper for staggering result cards in.
 const Reveal = ({ children, delay = 0 }) => (
   <motion.div
@@ -696,7 +695,6 @@ const MANUAL_STEPS = new Set(['target_job']);
 // persisted per draft for the active builder session, so leaving the panel (switching
 // to the preview, navigating away) and coming back restores the conversation.
 
-
 // The STATIC invite shown on a manual step before the user triggers the coach — a
 // fixed string so nothing reacts as they type the role or paste the description.
 const MANUAL_PROMPT = {
@@ -733,7 +731,6 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const { coachState: aiByStep, setCoachState: setAiByStep } = useCVBuilder();
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLimited, setAiLimited] = useState(false);
-
 
   // Record which quick reply the user picked (persisted alongside the reply) so the
   // card restores its resolved button state (Recheck / "Looks solid ✓") on return.

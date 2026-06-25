@@ -18,7 +18,8 @@
 
   /* Body: humanist sans, like BaissonCV. Heading: Merriweather serif (the
      "editorial / professional" signal). Georgia is the offline fallback. */
-  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-sans:
+    'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-heading: Merriweather, Georgia, 'Times New Roman', serif;
 
   /* Softer, hairline-style shadows so cards read as paper, not panels. */
@@ -29,6 +30,17 @@
   --animate-marquee: marquee 30s linear infinite;
   --animate-fade-slide-in: fadeSlideIn 0.8s ease-out forwards;
   --animate-gradient: gradient 6s ease infinite;
+  --animate-mini-bounce: mini-bounce 0.8s ease-in-out infinite;
+
+  @keyframes mini-bounce {
+    0%,
+    100% {
+      transform: scaleY(0.25);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
 
   @keyframes fadeInUp {
     0% {
@@ -118,7 +130,9 @@
   body {
     @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-indigo-100 selection:text-indigo-900 dark:text-slate-100 dark:selection:bg-indigo-500/30 dark:selection:text-indigo-100;
     /* Stylistic-set + character variants for a cleaner humanist sans. */
-    font-feature-settings: 'ss01' on, 'cv11' on;
+    font-feature-settings:
+      'ss01' on,
+      'cv11' on;
     text-rendering: optimizeLegibility;
   }
 
@@ -227,6 +241,22 @@
 
   .animate-laser-sweep {
     animation: laser-sweep 2.2s ease-in-out infinite;
+  }
+
+  @keyframes custom-sonar {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(2.3);
+      opacity: 0;
+    }
+  }
+
+  .animate-sonar {
+    animation: custom-sonar 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    will-change: transform, opacity;
   }
 
   @media print {
@@ -343,11 +373,11 @@
 }
 
 /* Custom styling for Jobberman metadata tags converted to spans */
-.job-description span[data-badge="true"] {
+.job-description span[data-badge='true'] {
   @apply inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium mr-2 mb-3 border border-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700;
 }
 
-.job-description span[data-badge="true"]:hover {
+.job-description span[data-badge='true']:hover {
   @apply bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200;
 }
 

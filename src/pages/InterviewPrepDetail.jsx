@@ -22,6 +22,7 @@ import {
   ClipboardList,
   Target,
   Wind,
+  Award,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -45,6 +46,10 @@ import NervesTrend from '../components/prep/NervesTrend';
 import LastInterviewCard from '../components/prep/LastInterviewCard';
 import RecordingsPanel from '../components/prep/RecordingsPanel';
 import LastAssessmentCard from '../components/prep/LastAssessmentCard';
+import RoundReviews from '../components/prep/RoundReviews';
+import InterviewerPanel from '../components/prep/InterviewerPanel';
+import LoopBoard from '../components/prep/LoopBoard';
+import DressGuide from '../components/prep/DressGuide';
 import { CONFIDENCE_OPTIONS } from '../components/prep/PracticeRunner';
 import AdPlayer from '../components/AdPlayer';
 import CVViewModal from '../components/CVViewModal';
@@ -99,6 +104,14 @@ const InterviewPrepDetail = () => {
   // Only needed for AdMob SSV — credit balance is tracked globally via the
   // navbar, not in this component.
   const [userId, setUserId] = useState(() => readStoredUser()._id || readStoredUser().id || null);
+  // Interview roster ("who interviews you") — lazily fetched when the Role tab
+  // opens; powers the loop board (paid) / locked teaser (free).
+  const [panel, setPanel] = useState([]);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const isFreeTier = (readStoredUser().tier || 'free') === 'free';
+  // Recordings count (device-local) — tracked so the Recordings tab can show an
+  // empty state and a badge.
+  const [recordingsCount, setRecordingsCount] = useState(null);
 
   useEffect(() => {
     const refresh = () => {
@@ -108,6 +121,30 @@ const InterviewPrepDetail = () => {
     window.addEventListener('userDataUpdated', refresh);
     return () => window.removeEventListener('userDataUpdated', refresh);
   }, []);
+
+  // Lazily load the interview roster the first time the Role tab is opened.
+  // NOTE: panelLoading must NOT be in the deps — setting it would re-run the
+  // effect, fire the cleanup, and cancel the in-flight request (leaving the
+  // skeleton stuck forever). Deps are only activeTab + applicationId.
+  useEffect(() => {
+    if (activeTab !== 'role' || panel.length > 0 || panelLoading) return undefined;
+    let cancelled = false;
+    setPanelLoading(true);
+    InterviewPrepService.getPanel(applicationId)
+      .then((res) => {
+        if (!cancelled && Array.isArray(res?.panel)) setPanel(res.panel);
+      })
+      .catch(() => {
+        /* non-blocking — the roster is a nicety, not core to the page */
+      })
+      .finally(() => {
+        if (!cancelled) setPanelLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, applicationId]);
 
   const reload = async () => {
     const { application: app } = await InterviewPrepService.getOne(applicationId);
@@ -426,6 +463,9 @@ const InterviewPrepDetail = () => {
       (fa.matchedSkills || []).length > 0 ||
       (fa.missingSkills || []).length > 0);
 
+  // Completed interview-loop rounds (per-interviewer scores + assessments).
+  const rounds = application?.interviewPrep?.rounds || [];
+
   const tabs = [
     ...(hasRoleBrief ? [{ id: 'role', label: 'Role', icon: Target, count: 0 }] : []),
     { id: 'stories', label: 'Stories', icon: BookOpen, count: stories.length },
@@ -433,6 +473,12 @@ const InterviewPrepDetail = () => {
     { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
     { id: 'gameday', label: 'Game day', icon: Wind, count: 0 },
     { id: 'notes', label: 'My notes', icon: StickyNote, count: notes.length },
+    // Reviews (per-interviewer scores + feedback) — only once a round is done.
+    ...(rounds.length > 0
+      ? [{ id: 'reviews', label: 'Reviews', icon: Award, count: rounds.length }]
+      : []),
+    // Recordings (device-local) — after Reviews.
+    { id: 'recordings', label: 'Recordings', icon: PlayCircle, count: recordingsCount || 0 },
   ];
 
   const startPracticeAllQuestions = () => {
@@ -517,6 +563,17 @@ const InterviewPrepDetail = () => {
               <span className="hidden sm:inline">Brief</span>
             </Link>
 
+            <Link
+              to="/how-to-ace-your-interview"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+              aria-label="How scoring works"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">How scoring works</span>
+            </Link>
+
             {isCvOnly ? (
               <Link
                 to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
@@ -584,12 +641,15 @@ const InterviewPrepDetail = () => {
           </div>
         )}
 
-        {/* Re-readable AI assessment from the last conversational interview */}
-        <div className="mb-6 space-y-4">
-          <LastAssessmentCard application={application} />
-          {/* Past live-interview recordings (device-local; hidden when none) */}
-          <RecordingsPanel applicationId={applicationId} />
-        </div>
+        {/* Re-readable AI assessment — only the fallback case (no interview-loop
+            rounds, e.g. a free/solo interview). For the loop, each interviewer's
+            full assessment lives on their card in the Reviews tab, and recordings
+            moved to the Recordings tab. */}
+        {rounds.length === 0 && (
+          <div className="mb-6">
+            <LastAssessmentCard application={application} />
+          </div>
+        )}
 
         {/* Tabs */}
         <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto">
@@ -640,11 +700,32 @@ const InterviewPrepDetail = () => {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
             >
-              <RoleBrief
-                application={application}
-                onGenerateDressGuide={handleGenerateDressGuide}
-                generatingDress={generatingDress}
-              />
+              {/* Paid: the interview LOOP — pick each interviewer for a focused 1:1
+                  round and build a combined readiness. Free: the locked teaser. */}
+              {!isFreeTier && panel.length >= 2 ? (
+                <div className="mb-4">
+                  <LoopBoard
+                    seats={panel}
+                    rounds={rounds}
+                    unlockAll={!!application?.unlockAllInterviewers}
+                    onStart={(seatIndex) =>
+                      navigate(`/interview-prep/${applicationId}/mock?interviewer=${seatIndex}`)
+                    }
+                  />
+                </div>
+              ) : (
+                (panelLoading || panel.length >= 2) && (
+                  <div className="mb-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 sm:p-5">
+                    <InterviewerPanel panel={panel} locked={isFreeTier} loading={panelLoading} />
+                    <p className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                      On a paid plan, you pick each of these interviewers for a focused 1:1 round —
+                      and complete your interview loop.
+                    </p>
+                  </div>
+                )
+              )}
+
+              <RoleBrief application={application} />
             </MotionDiv>
           )}
 
@@ -735,6 +816,11 @@ const InterviewPrepDetail = () => {
               </div>
               <div className="space-y-4">
                 <NervesTrend application={application} />
+                <DressGuide
+                  application={application}
+                  onGenerate={handleGenerateDressGuide}
+                  generating={generatingDress}
+                />
                 <CalmKit />
                 <BodyLanguage />
               </div>
@@ -757,6 +843,43 @@ const InterviewPrepDetail = () => {
                   onSeedConsumed={() => setNotesSeed(null)}
                 />
               </section>
+            </MotionDiv>
+          )}
+
+          {activeTab === 'reviews' && (
+            <MotionDiv
+              key="reviews"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <RoundReviews rounds={rounds} />
+            </MotionDiv>
+          )}
+
+          {activeTab === 'recordings' && (
+            <MotionDiv
+              key="recordings"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <RecordingsPanel
+                applicationId={applicationId}
+                onItemsChange={(rows) => setRecordingsCount(rows.length)}
+              />
+              {recordingsCount === 0 && (
+                <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    No recordings yet
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    Your live interviews are saved here on this device so you can replay them.
+                  </p>
+                </div>
+              )}
             </MotionDiv>
           )}
         </AnimatePresence>

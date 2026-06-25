@@ -25,7 +25,7 @@ const fmtDate = (ms) => {
   }
 };
 
-const RecordingsPanel = ({ applicationId }) => {
+const RecordingsPanel = ({ applicationId, onItemsChange }) => {
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [activeId, setActiveId] = useState(null);
@@ -37,6 +37,9 @@ const RecordingsPanel = ({ applicationId }) => {
     const rows = await listRecordings(applicationId);
     setItems(rows);
     setLoaded(true);
+    if (typeof onItemsChange === 'function') {
+      onItemsChange(rows);
+    }
   };
 
   useEffect(() => {

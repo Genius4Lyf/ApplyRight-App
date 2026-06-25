@@ -58,8 +58,8 @@ const HistoryTutorial = ({ isOpen, onClose }) => {
                         Be specific about role &amp; company
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                        Use the <strong>exact job title and company name</strong>. The AI uses these to
-                        tailor suggestions to your industry.
+                        Use the <strong>exact job title and company name</strong>. The AI uses these
+                        to tailor suggestions to your industry.
                       </p>
                     </div>
                   </div>
@@ -88,7 +88,7 @@ const HistoryTutorial = ({ isOpen, onClose }) => {
                 <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Example Transformation
                 </h4>
-                
+
                 <div className="space-y-3.5">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
@@ -98,15 +98,17 @@ const HistoryTutorial = ({ isOpen, onClose }) => {
                       "helped clients and sold more products"
                     </p>
                   </div>
-                  
+
                   <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-2"></div>
-                  
+
                   <div>
                     <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> ApplyRight AI Optimized
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> ApplyRight
+                      AI Optimized
                     </span>
                     <p className="text-xs text-slate-800 dark:text-slate-200 font-semibold mt-1 leading-relaxed">
-                      "Managed 15+ key accounts and resolved billing inquiries, boosting quarterly customer retention by 18%."
+                      "Managed 15+ key accounts and resolved billing inquiries, boosting quarterly
+                      customer retention by 18%."
                     </p>
                   </div>
                 </div>
