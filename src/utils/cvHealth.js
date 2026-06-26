@@ -89,6 +89,22 @@ export function computeCvHealth(cvData = {}) {
     requirements: [{ label: 'Add a project to showcase hands-on work', met: projects.length >= 1 }],
   };
 
+  // Certifications — recommended, NOT scored (like Projects). High value for
+  // licence-gated roles, but a CV can still hit 100% without it.
+  const certs = (cvData.certifications || []).filter((c) =>
+    typeof c === 'string' ? c.trim() : (c?.name || '').trim()
+  );
+  const certificationsSection = {
+    id: 'certifications',
+    title: 'Certifications',
+    recommended: true,
+    status: certs.length >= 1 ? 'complete' : 'missing',
+    detail: certs.length ? `${certs.length} added` : 'None yet',
+    requirements: [
+      { label: 'Add any licences, certificates, or training', met: certs.length >= 1 },
+    ],
+  };
+
   // Education (15)
   const eduEarned = edu.length >= 1 ? 15 : 0;
   const education = {
@@ -129,7 +145,15 @@ export function computeCvHealth(cvData = {}) {
 
   // Listed in the SAME order as the CV Builder steps so the coach can nudge the
   // user not to skip a section. Projects is shown in place but flagged recommended.
-  const sections = [contact, history, projectsSection, education, skillsSection, summary];
+  const sections = [
+    contact,
+    history,
+    projectsSection,
+    education,
+    certificationsSection,
+    skillsSection,
+    summary,
+  ];
   const score = sections.filter((s) => !s.recommended).reduce((sum, s) => sum + (s.earned || 0), 0); // scored sections sum to 100
 
   return { score, sections };
@@ -142,4 +166,68 @@ export function healthColor(score) {
   if (score >= 60)
     return { text: 'text-amber-600 dark:text-amber-400', ring: '#f59e0b', label: 'Getting there' };
   return { text: 'text-rose-600 dark:text-rose-400', ring: '#f43f5e', label: 'Needs work' };
+}
+
+// ─── Role Match (JD relevance) ───
+// Minimum CV content before a Role Match verdict is FAIR. Below this the match
+// would read red purely because the CV is still being built (a software dev on an
+// empty form would look like a 0% match) — the UX trap. So we withhold the verdict
+// (reason: 'too_early') until there's enough to judge.
+const ROLE_MATCH_MIN_SKILLS = 5;
+const ROLE_MATCH_MIN_BULLETS = 3;
+
+const countBullets = (exp) =>
+  (exp || []).reduce(
+    (n, e) => n + (e.description || '').split('\n').filter((b) => b.trim()).length,
+    0
+  );
+
+/**
+ * Role Match — a coarse honesty band that contextualizes the (completeness) CV
+ * Health score against the TARGET JOB. Without it, a CV built for the wrong field
+ * can reach a falsely-reassuring green 100%. Relevance is intentionally NOT folded
+ * into the 0-100 completeness score (that stays about "is the CV finished"); this
+ * is a SEPARATE signal so the two are never conflated.
+ *
+ * `coverage` is the backend keyword-coverage result ({ covered, total, mustHave* })
+ * — the SAME synonym/fuzzy signal the JobKeywordPanel uses — so the verdict never
+ * relies on naive substring matching. Pass `null` while it loads (→ 'pending').
+ *
+ * Callers can pass `coverage = null` first to read `.reason`: 'no_jd'/'too_early'
+ * mean "don't bother fetching coverage", 'pending' means "fetch it".
+ *
+ * @returns {{ applicable: boolean, reason?: string, pct?, level?, covered?, total?, mustHaveCovered?, mustHaveTotal? }}
+ */
+export function computeRoleMatch(cvData = {}, coverage = null) {
+  const hasJD = !!(cvData.targetJob?.description || '').trim();
+  if (!hasJD) return { applicable: false, reason: 'no_jd' };
+
+  const skills = (cvData.skills || []).map(skillName).filter(Boolean);
+  const enoughContent =
+    skills.length >= ROLE_MATCH_MIN_SKILLS ||
+    countBullets(cvData.experience) >= ROLE_MATCH_MIN_BULLETS;
+  if (!enoughContent) return { applicable: false, reason: 'too_early' };
+
+  if (!coverage || !coverage.total) return { applicable: false, reason: 'pending' };
+
+  const pct = Math.round((coverage.covered / coverage.total) * 100);
+  const level = pct >= 60 ? 'high' : pct >= 30 ? 'medium' : 'low';
+  return {
+    applicable: true,
+    pct,
+    level,
+    covered: coverage.covered,
+    total: coverage.total,
+    mustHaveCovered: coverage.mustHaveCovered || 0,
+    mustHaveTotal: coverage.mustHaveTotal || 0,
+  };
+}
+
+// Tailwind palette for a Role Match level, mirroring healthColor's bands.
+export function roleMatchColor(level) {
+  if (level === 'high')
+    return { text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500' };
+  if (level === 'medium')
+    return { text: 'text-amber-600 dark:text-amber-400', bar: 'bg-amber-500' };
+  return { text: 'text-rose-600 dark:text-rose-400', bar: 'bg-rose-400' };
 }

@@ -34,6 +34,7 @@ export const CVBuilderProvider = ({ children }) => {
     experience: [],
     projects: [],
     education: [],
+    certifications: [],
     skills: [],
   });
   const [currentStepIndex, setCurrentStepIndex] = useState(0);

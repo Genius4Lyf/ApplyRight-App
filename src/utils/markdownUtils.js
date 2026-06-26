@@ -4,6 +4,7 @@ const generateMarkdownFromDraft = (draft) => {
     professionalSummary,
     experience = [],
     education = [],
+    certifications = [],
     skills = [],
     projects = [], // Add projects support
   } = draft;
@@ -124,6 +125,18 @@ const generateMarkdownFromDraft = (draft) => {
       }
       md += '\n';
     });
+  }
+
+  // 5b. Certifications & Training (after Education). Compact bullet list so it
+  // renders cleanly across every markdown-based template.
+  const certList = (certifications || []).filter((c) => c && (c.name || '').trim());
+  if (certList.length > 0) {
+    md += `## Certifications\n`;
+    certList.forEach((cert) => {
+      const meta = [cert.issuer, cert.date].filter((p) => (p || '').trim()).join(', ');
+      md += `- **${cert.name.trim()}**${meta ? ` — ${meta}` : ''}\n`;
+    });
+    md += '\n';
   }
 
   // 6. Projects (Moved to Last)

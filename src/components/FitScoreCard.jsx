@@ -18,6 +18,7 @@ import {
   ThumbsDown,
   HelpCircle,
   BarChart3,
+  Quote,
 } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -271,6 +272,41 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
           </div>
         </div>
       </motion.div>
+
+      {/* What stood out — verbatim quotes pulled from the resume (Slice 2a). This
+          is what makes the analysis feel bespoke rather than generic. Only renders
+          when the AI found real, validated quotes. */}
+      {Array.isArray(fitAnalysis?.evidence) && fitAnalysis.evidence.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.04 }}
+          className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Quote className="w-5 h-5 text-indigo-500" />
+            <h4 className="font-semibold text-slate-800 dark:text-slate-200">
+              What stood out in your resume
+            </h4>
+          </div>
+          <ul className="space-y-4">
+            {fitAnalysis.evidence.map((e, idx) => (
+              <li key={idx} className="border-l-2 border-indigo-200 dark:border-indigo-500/40 pl-4">
+                <p className="text-sm italic text-slate-700 dark:text-slate-200">“{e.quote}”</p>
+                {e.issue && (
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{e.issue}</p>
+                )}
+                {e.fix && (
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1 flex items-start gap-1.5">
+                    <Wrench className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span>{e.fix}</span>
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Score Breakdown — collapsible. Closed by default; the score itself is
           the headline, this is "show me the math" for users who want to verify. */}

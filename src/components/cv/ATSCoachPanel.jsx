@@ -17,7 +17,12 @@ import {
   ScanLine,
 } from 'lucide-react';
 import CVService from '../../services/cv.service';
-import { computeCvHealth, healthColor } from '../../utils/cvHealth';
+import {
+  computeCvHealth,
+  healthColor,
+  computeRoleMatch,
+  roleMatchColor,
+} from '../../utils/cvHealth';
 import { getStepCoaching, getQuickReplies } from '../../utils/cvCoach';
 import { useCVBuilder } from '../../context/CVContext';
 
@@ -680,6 +685,49 @@ const Journey = ({ health, cvComplete, sectionsLeft, isPaidHint, onEnterScan }) 
   );
 };
 
+// ─── Role Match band (free honesty signal) ───
+// Sits above the coach so a COMPLETE CV can't read as a GREAT one for the target
+// job: completeness (the 0-100 health score) and relevance are shown separately.
+// The clash copy fires when the CV is finished but barely matches the role — the
+// exact "falsely-reassuring green 100%" case this band exists to prevent.
+const RoleMatchBand = ({ roleMatch, completeness }) => {
+  const c = roleMatchColor(roleMatch.level);
+  const clash = completeness >= 80 && roleMatch.level === 'low';
+  let msg;
+  if (clash) {
+    msg = `Your CV is complete, but it covers only ${roleMatch.pct}% of what this job asks for. A finished CV isn't the same as a matched one — weave in the keywords that are genuinely true for you.`;
+  } else if (roleMatch.level === 'low') {
+    msg = `Your CV covers little of this role's keywords so far (${roleMatch.covered}/${roleMatch.total}). Add the ones that are genuinely true for you.`;
+  } else if (roleMatch.level === 'medium') {
+    msg = `Partial match — ${roleMatch.covered}/${roleMatch.total} of this role's key terms are covered. Close the gaps to climb higher.`;
+  } else {
+    msg = `Strong alignment — ${roleMatch.covered}/${roleMatch.total} of this role's key terms are covered. Nice work.`;
+  }
+  return (
+    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <Target className={`w-4 h-4 ${c.text}`} />
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">Role match</h3>
+        </div>
+        <span className={`text-xs font-extrabold ${c.text}`}>{roleMatch.pct}%</span>
+      </div>
+      <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
+        <div
+          className={`h-full ${c.bar} transition-all duration-500`}
+          style={{ width: `${roleMatch.pct}%` }}
+        />
+      </div>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{msg}</p>
+      {roleMatch.mustHaveTotal > 0 && (
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+          must-haves {roleMatch.mustHaveCovered}/{roleMatch.mustHaveTotal}
+        </p>
+      )}
+    </section>
+  );
+};
+
 // Steps the coach verifies LIVE and deterministically (no AI round-trip), so they
 // re-verify the instant they're complete. Contact is pure fill-in fields, so its
 // scripted verdict (computed from liveCvData) is exact and updates as you type.
@@ -712,6 +760,64 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const health = useMemo(() => computeCvHealth(cvData), [cvData]);
   const scripted = useMemo(() => getStepCoaching(currentStepId, cvData), [currentStepId, cvData]);
   const healthMeta = healthColor(health.score);
+
+  // ── Role Match (free JD-relevance honesty band) ──
+  // Pre-check with no coverage to read eligibility: only fetch the (free, no-AI)
+  // backend coverage once there's a JD AND enough content — so we never show a
+  // red "low match" on a barely-started CV, and never fetch needlessly.
+  const roleMatchPre = useMemo(() => computeRoleMatch(cvData, null), [cvData]);
+  const shouldFetchCoverage = roleMatchPre.reason === 'pending';
+  const [coverage, setCoverage] = useState(null);
+  const skillNames = useMemo(
+    () => (cvData.skills || []).map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean),
+    [cvData.skills]
+  );
+  const bulletsText = useMemo(
+    () => (cvData.experience || []).map((e) => e.description || '').join('\n'),
+    [cvData.experience]
+  );
+  const coverageSig = `${(cvData.targetJob?.description || '').trim()}::${skillNames.join('|')}::${bulletsText}`;
+
+  useEffect(() => {
+    if (!shouldFetchCoverage) {
+      setCoverage(null);
+      return undefined;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        // Prefer the paid AI keyword set cached on the draft; else the free
+        // deterministic baseline. Same two endpoints the JobKeywordPanel uses.
+        const cached = cvData.targetJob?.aiKeywords;
+        let keywords = Array.isArray(cached) && cached.length ? cached : null;
+        if (!keywords) {
+          const kw = await CVService.getJobKeywords({
+            title: cvData.targetJob?.title || '',
+            description: cvData.targetJob?.description || '',
+          });
+          keywords = Array.isArray(kw?.keywords) ? kw.keywords : [];
+        }
+        if (keywords.length === 0) {
+          if (!cancelled) setCoverage(null);
+          return;
+        }
+        const cov = await CVService.getKeywordCoverage(keywords, {
+          text: bulletsText,
+          skills: skillNames,
+        });
+        if (!cancelled) setCoverage(cov);
+      } catch {
+        if (!cancelled) setCoverage(null); // degrade silently — it's a guidance band
+      }
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldFetchCoverage, coverageSig]);
+
+  const roleMatch = useMemo(() => computeRoleMatch(cvData, coverage), [cvData, coverage]);
   const cvComplete = health.sections.every((s) => s.recommended || s.status === 'complete');
   const sectionsLeft = health.sections.filter(
     (s) => !s.recommended && s.status !== 'complete'
@@ -852,6 +958,12 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           transition={{ duration: 0.2 }}
           className="space-y-4"
         >
+          {/* Role Match honesty band — keeps a complete CV from reading as a great
+              fit for the wrong job. Free, shown to everyone once applicable. */}
+          {roleMatch.applicable && (
+            <RoleMatchBand roleMatch={roleMatch} completeness={health.score} />
+          )}
+
           {/* The conversational coach is paid-only (the hero). Free users get the
               deterministic Journey below + a slim unlock teaser here. */}
           {isPaidHint ? (

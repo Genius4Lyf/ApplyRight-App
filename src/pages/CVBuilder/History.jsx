@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
 import SectionTips from '../../components/SectionTips';
 import InlineExample from '../../components/InlineExample';
+import JobKeywordPanel from '../../components/cv/JobKeywordPanel';
 import {
   DndContext,
   closestCenter,
@@ -455,6 +456,19 @@ const History = () => {
     }
   };
 
+  // Persist the paid AI keyword extraction back into cvData so the wizard's
+  // auto-save keeps it (and the backend's charge-once check stays valid). Mirrors
+  // the Skills step so the same enhanced keyword set follows the user across steps.
+  const handleKeywordsEnhanced = ({ keywords, aiKeywordsHash }) => {
+    updateCvData?.({
+      targetJob: { ...cvData.targetJob, aiKeywords: keywords, aiKeywordsHash },
+    });
+  };
+
+  // All bullet text across every role — the content the keyword coverage tracker
+  // scans on the History step (vs. the discrete skills list on the Skills step).
+  const allBulletsText = history.map((r) => r.description || '').join('\n');
+
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
@@ -499,6 +513,17 @@ const History = () => {
           'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
           'Use the AI rewrite button after writing 2+ bullets — it sharpens what you already have.',
         ]}
+      />
+
+      {/* Live keyword coverage for the target job — scans the bullets the user is
+          writing (no onAddKeyword here: keywords get woven into bullets, not added
+          as discrete skills). Floating + portaled, so it pins across steps. */}
+      <JobKeywordPanel
+        floating
+        targetJob={cvData?.targetJob}
+        coveredText={allBulletsText}
+        draftId={draftId}
+        onEnhanced={handleKeywordsEnhanced}
       />
 
       {history.length === 0 && (

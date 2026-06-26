@@ -77,15 +77,17 @@ const CVService = {
     return response.data;
   },
 
-  // Generate categorized skills
-  generateSkills: async (education, experience, projects, targetJob) => {
+  // Generate categorized skills. draftId lets the backend cache the result against
+  // the profile inputs so re-opening the modal / re-clicking doesn't re-charge.
+  generateSkills: async (education, experience, projects, targetJob, draftId) => {
     const response = await api.post('/ai/generate-skills', {
       education,
       experience,
       projects,
       targetJob,
+      draftId,
     });
-    return response.data; // Returns { suggestions, remainingCredits }
+    return response.data; // { suggestions, bestForRole, isPaid, fromCache, remainingCredits }
   },
 
   // Suggest ATS keywords for the target job. Baseline is free; pass

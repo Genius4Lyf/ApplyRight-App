@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
+import { GraduationCap, ArrowRight, ArrowLeft, Plus, Award, X } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import {
   DndContext,
@@ -35,6 +35,9 @@ const Education = () => {
   const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   const [education, setEducation] = useState(() => ensureIds(cvData?.education));
+  // Certifications & training share this step (no separate wizard step). Empty
+  // rows are dropped on save so a half-typed entry never persists.
+  const [certifications, setCertifications] = useState(() => cvData?.certifications || []);
   const [expandedId, setExpandedId] = useState(() => {
     const initial = ensureIds(cvData?.education);
     if (initial.length === 1 && !initial[0].school && !initial[0].degree) {
@@ -43,12 +46,17 @@ const Education = () => {
     return null;
   });
 
+  const cleanCertifications = (rows) => rows.filter((c) => (c.name || '').trim());
+
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
   useEffect(() => {
-    registerStepData?.(() => ({ education: education.map(({ isNew, ...rest }) => rest) }));
+    registerStepData?.(() => ({
+      education: education.map(({ isNew, ...rest }) => rest),
+      certifications: cleanCertifications(certifications),
+    }));
     return () => registerStepData?.(null);
-  }, [education, registerStepData]);
+  }, [education, certifications, registerStepData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -105,10 +113,28 @@ const Education = () => {
     setEducation(newEd);
   };
 
+  const addCertification = () => {
+    setStepDirty?.(true);
+    setCertifications((c) => [...c, { name: '', issuer: '', date: '' }]);
+  };
+
+  const removeCertification = (index) => {
+    setStepDirty?.(true);
+    setCertifications((c) => c.filter((_, i) => i !== index));
+  };
+
+  const handleCertChange = (index, field, value) => {
+    setStepDirty?.(true);
+    setCertifications((c) => c.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
-    handleNext({ education: education.map(({ isNew, ...rest }) => rest) });
+    handleNext({
+      education: education.map(({ isNew, ...rest }) => rest),
+      certifications: cleanCertifications(certifications),
+    });
   };
 
   return (
@@ -313,6 +339,72 @@ const Education = () => {
           <Plus className="w-4 h-4" /> Add Another
         </button>
       )}
+
+      {/* Certifications & Training — optional sub-section of this step. Renders
+          into the CV after Education. High value for licence-gated roles. */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 md:p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
+            <Award className="w-4.5 h-4.5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
+              Certifications &amp; Training{' '}
+              <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
+            </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 leading-snug">
+              Licences, certificates, and professional training — often the gating requirement for
+              trades, operations, and healthcare roles.
+            </p>
+          </div>
+        </div>
+
+        {certifications.length > 0 && (
+          <div className="space-y-2">
+            {certifications.map((cert, index) => (
+              <div key={index} className="flex flex-col sm:flex-row gap-2 items-stretch">
+                <input
+                  type="text"
+                  value={cert.name}
+                  onChange={(e) => handleCertChange(index, 'name', e.target.value)}
+                  placeholder="Certification (e.g. NEBOSH IGC, PMP)"
+                  className="flex-[2] p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                />
+                <input
+                  type="text"
+                  value={cert.issuer}
+                  onChange={(e) => handleCertChange(index, 'issuer', e.target.value)}
+                  placeholder="Issuer (e.g. NEBOSH)"
+                  className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                />
+                <input
+                  type="text"
+                  value={cert.date}
+                  onChange={(e) => handleCertChange(index, 'date', e.target.value)}
+                  placeholder="Year"
+                  className="sm:w-24 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCertification(index)}
+                  aria-label="Remove certification"
+                  className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0 self-center"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={addCertification}
+          className="text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 inline-flex items-center gap-1.5 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Add certification
+        </button>
+      </div>
 
       <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
         <button
