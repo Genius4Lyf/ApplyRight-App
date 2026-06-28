@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link2, Search, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 
-const JobLinkInput = ({ onJobExtracted }) => {
+const JobLinkInput = ({ onJobExtracted, embedded = false }) => {
   const [mode, setMode] = useState('url'); // 'url' or 'text'
   const [jobUrl, setJobUrl] = useState('');
   const [description, setDescription] = useState('');
@@ -73,20 +73,28 @@ const JobLinkInput = ({ onJobExtracted }) => {
   };
 
   return (
-    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600">
-      <div className="flex items-center gap-3 mb-4 lg:mb-6">
-        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-          <Link2 className="w-5 h-5 lg:w-6 lg:h-6" />
+    <div
+      className={`h-full flex flex-col ${
+        embedded
+          ? ''
+          : 'lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600'
+      }`}
+    >
+      {!embedded && (
+        <div className="flex items-center gap-3 mb-4 lg:mb-6">
+          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
+            <Link2 className="w-5 h-5 lg:w-6 lg:h-6" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Step 2 · Job listing
+            </h3>
+            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
+              Provide the job details for analysis
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Step 2 · Job listing
-          </h3>
-          <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
-            Provide the job details for analysis
-          </p>
-        </div>
-      </div>
+      )}
 
       <div className="flex-grow flex flex-col">
         <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg mb-6">

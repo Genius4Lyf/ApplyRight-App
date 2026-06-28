@@ -4,7 +4,15 @@ import api from '../services/api';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) => {
+const CVUploader = ({
+  onUploadSuccess,
+  onError,
+  endpoint = '/resumes/upload',
+  // When embedded inside a host card that already supplies its own heading and
+  // framing (e.g. the "Step 1" card on InterviewStart), drop this component's
+  // own header + card chrome so they don't double up.
+  embedded = false,
+}) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -60,20 +68,28 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
   return (
     /* Card framing only on lg+; on mobile/tablet the uploader sits flush
        with the page so the dropzone gets the full viewport width. */
-    <div className="h-full flex flex-col lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600">
-      <div className="flex items-center gap-3 mb-4 lg:mb-6">
-        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-          <FileText className="w-5 h-5 lg:w-6 lg:h-6" />
+    <div
+      className={`h-full flex flex-col ${
+        embedded
+          ? ''
+          : 'lg:bg-surface lg:border lg:border-border lg:shadow-clean lg:rounded-xl lg:p-6 lg:transition-all lg:duration-200 lg:hover:shadow-card lg:hover:border-slate-300 dark:lg:hover:border-slate-600'
+      }`}
+    >
+      {!embedded && (
+        <div className="flex items-center gap-3 mb-4 lg:mb-6">
+          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
+            <FileText className="w-5 h-5 lg:w-6 lg:h-6" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Step 1 · Resume
+            </h3>
+            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
+              Upload your latest CV or portfolio
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Step 1 · Resume
-          </h3>
-          <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
-            Upload your latest CV or portfolio
-          </p>
-        </div>
-      </div>
+      )}
 
       <div
         className={`
@@ -163,7 +179,7 @@ const CVUploader = ({ onUploadSuccess, onError, endpoint = '/resumes/upload' }) 
         disabled={!file || uploading}
         className={`mt-4 w-full h-12 rounded-lg font-semibold transition-all ${
           !file || uploading
-            ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+            ? 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
             : 'btn-primary'
         }`}
       >

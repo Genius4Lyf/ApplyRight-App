@@ -19,6 +19,7 @@ export const FREE_TIER = {
   features: [
     '5 live interview minutes (free taste)',
     'Free AI credits to start (earn more via ads & referrals)',
+    'Standard AI model (GPT-4o-mini) for CV writing',
     'Professional summary — 1 tone',
     'Up to 3 bullets per role',
     'Apply up to 3 AI suggestions',
@@ -28,6 +29,7 @@ export const FREE_TIER = {
   // What the free plan does NOT include — rendered as greyed-out ✗ rows so
   // visitors can see exactly what upgrading unlocks.
   excluded: [
+    'Premium AI model (GPT-4o) for sharper CV writing',
     'ATS Coach — live CV health & keyword score',
     'Unlimited bullets & every summary tone',
     'All premium templates',
@@ -37,6 +39,7 @@ export const FREE_TIER = {
 // Paid CV feature set shared by every paid tier (job seeker + agent). These all
 // gate on isPaidActive in the backend, so they're identical across paid plans.
 const PAID_CV_FEATURES = [
+  'Premium AI model (GPT-4o) — sharper CVs, bullets, summaries & cover letters',
   'ATS Coach — live CV health & keyword score',
   'Unlimited bullets + apply all AI suggestions',
   'Every summary tone & all premium templates',

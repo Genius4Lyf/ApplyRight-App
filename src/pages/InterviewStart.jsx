@@ -168,7 +168,7 @@ const InterviewStart = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Step 1 — choose CV */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6">
+          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
                 <FileText className="w-5 h-5" />
@@ -208,93 +208,98 @@ const InterviewStart = () => {
               </button>
             </div>
 
-            {cvMode === 'saved' ? (
-              draftsLoading ? (
-                <div className="space-y-2">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="h-14 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse"
-                    />
-                  ))}
+            <div className="flex-1 min-h-0">
+              {cvMode === 'saved' ? (
+                draftsLoading ? (
+                  <div className="space-y-2">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="h-14 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : drafts.length === 0 ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
+                    No saved CVs yet — switch to <strong>Upload</strong> to use a PDF.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-none pr-1">
+                    {drafts.map((d) => {
+                      const selected = selectedDraftId === d._id;
+                      const label = d.title || d.personalInfo?.fullName || 'Untitled CV';
+                      return (
+                        <button
+                          key={d._id}
+                          type="button"
+                          onClick={() => setSelectedDraftId(d._id)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                            selected
+                              ? 'border-indigo-400 dark:border-indigo-500/60 bg-indigo-50 dark:bg-indigo-500/15 shadow-sm'
+                              : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/20 hover:border-indigo-200 dark:hover:border-indigo-500/40 hover:bg-white dark:hover:bg-slate-800/40'
+                          }`}
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
+                            <FileText className="w-4.5 h-4.5" />
+                          </div>
+                          <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {label}
+                          </span>
+                          {selected && <CheckCircle className="w-5 h-5 text-indigo-500 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              ) : uploadedResume ? (
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15">
+                  <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-300 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                      Resume uploaded
+                    </p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 truncate">
+                      {uploadedResume.parsedData?.experience?.[0]?.role || 'Ready to interview'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setUploadedResume(null)}
+                    className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:underline shrink-0"
+                  >
+                    Change
+                  </button>
                 </div>
-              ) : drafts.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
-                  No saved CVs yet — switch to <strong>Upload</strong> to use a PDF.
-                </p>
               ) : (
-                <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-none pr-1">
-                  {drafts.map((d) => {
-                    const selected = selectedDraftId === d._id;
-                    const label = d.title || d.personalInfo?.fullName || 'Untitled CV';
-                    return (
-                      <button
-                        key={d._id}
-                        type="button"
-                        onClick={() => setSelectedDraftId(d._id)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                          selected
-                            ? 'border-indigo-400 dark:border-indigo-500/60 bg-indigo-50 dark:bg-indigo-500/15 shadow-sm'
-                            : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/20 hover:border-indigo-200 dark:hover:border-indigo-500/40 hover:bg-white dark:hover:bg-slate-800/40'
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
-                          <FileText className="w-4.5 h-4.5" />
-                        </div>
-                        <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                          {label}
-                        </span>
-                        {selected && <CheckCircle className="w-5 h-5 text-indigo-500 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )
-            ) : uploadedResume ? (
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15">
-                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-300 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-                    Resume uploaded
-                  </p>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300 truncate">
-                    {uploadedResume.parsedData?.experience?.[0]?.role || 'Ready to interview'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setUploadedResume(null)}
-                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:underline shrink-0"
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <CVUploader onUploadSuccess={setUploadedResume} />
-            )}
+                <CVUploader embedded onUploadSuccess={setUploadedResume} />
+              )}
+            </div>
           </section>
 
           {/* Step 2 — job description (required) */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6">
-            {job ? (
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                      Step 2 · Target job
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      We'll tailor the interview to this role
-                    </p>
-                  </div>
-                </div>
-                <JobAcknowledgement job={job} onChange={() => setJob(null)} />
+          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                <Briefcase className="w-5 h-5" />
               </div>
-            ) : (
-              <JobLinkInput onJobExtracted={setJob} />
-            )}
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Step 2 · Target job
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {job
+                    ? "We'll tailor the interview to this role"
+                    : 'Provide the job details for analysis'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0">
+              {job ? (
+                <JobAcknowledgement job={job} onChange={() => setJob(null)} />
+              ) : (
+                <JobLinkInput embedded onJobExtracted={setJob} />
+              )}
+            </div>
           </section>
         </div>
 

@@ -1,5 +1,5 @@
 // Shape-matched skeleton for Dashboard.jsx's landing layout (welcome heading,
-// two workflow cards, drafts grid). Rendered while the first drafts fetch is
+// three workflow cards, drafts grid). Rendered while the first drafts fetch is
 // in flight so the page never paints empty between splash-hide and data load.
 
 const Shimmer = ({ className = '' }) => (
@@ -15,8 +15,8 @@ const DashboardSkeleton = () => (
       <Shimmer className="h-5 w-1/2" />
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-      {[0, 1].map((i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+      {[0, 1, 2].map((i) => (
         <div
           key={i}
           className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col"

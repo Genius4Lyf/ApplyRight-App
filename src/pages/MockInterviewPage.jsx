@@ -32,7 +32,13 @@ import {
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
 import billingService from '../services/billing.service';
-import { getJobQuestions, computeReadiness, getInterviewTrend } from '../utils/interviewPrep';
+import {
+  getJobQuestions,
+  computeReadiness,
+  getInterviewTrend,
+  computeInterviewGate,
+} from '../utils/interviewPrep';
+import InterviewReadinessChecklist from '../components/prep/InterviewReadinessChecklist';
 import { BreathingExercise } from '../components/prep/CalmKit';
 import InterviewerPanel from '../components/prep/InterviewerPanel';
 import MeetingStage from '../components/prep/MeetingStage';
@@ -461,7 +467,6 @@ const MockInterviewPage = () => {
     // Default to the recommended 10 min, clamped into the available range.
     const def = Math.max(lengthMinSec, Math.min(RECOMMENDED_SEC, lengthMaxSec));
     setLengthSec(def);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPaidTier, lengthSec, lengthMaxSec, lengthMinSec]);
 
   // ── audio ──
@@ -1469,6 +1474,39 @@ const MockInterviewPage = () => {
     );
   }
   if (!application) return null;
+
+  // Hard gate: the interview is locked until the readiness checklist is done.
+  // The entry-point buttons are already disabled, but guard a direct URL hit too.
+  const gate = computeInterviewGate(application);
+  if (!gate.unlocked) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm text-center">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+            <Lock className="w-5 h-5" />
+          </div>
+          <h1 className="mt-3 text-base font-bold text-slate-900 dark:text-slate-100">
+            Finish your interview readiness first
+          </h1>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Complete a few quick prep tasks and your interview unlocks — you'll walk in genuinely
+            ready.
+          </p>
+          <div className="mt-4 text-left">
+            <InterviewReadinessChecklist gate={gate} />
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(`/interview-prep/${applicationId}`)}
+            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+          >
+            Go to prep
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const title = application.jobTitle || application.jobId?.title || 'Interview';
 
   // Dark "call room" theme for the conversational interview itself — the live

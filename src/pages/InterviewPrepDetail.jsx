@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   EyeOff,
   Play,
+  Lock,
   BookOpen,
   ClipboardList,
   Target,
@@ -35,6 +36,7 @@ import {
   getSkillPrep,
   getStories,
   getInterviewTrend,
+  computeInterviewGate,
 } from '../utils/interviewPrep';
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
@@ -65,6 +67,14 @@ const readStoredUser = () => {
   } catch {
     return {};
   }
+};
+
+// Seed for the "draft your weakness" note — the title keyword ("weakness") is
+// what the readiness checks key off, so seeding it makes the task completable in
+// one click. Shared by ReadinessOverview, the gate checklist, and gap coaching.
+const WEAKNESS_SEED = {
+  title: 'My weakness / growth area',
+  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
 };
 
 const InterviewPrepDetail = () => {
@@ -448,6 +458,9 @@ const InterviewPrepDetail = () => {
   const skillsWithEvidence = getSkillPrep(application);
   const questionsToAsk = getQuestionsToAsk(application);
   const stories = getStories(application);
+  // Gamified readiness gate: starting an interview is locked until the prep
+  // checklist is complete (see computeInterviewGate). Drives both entry points.
+  const interviewGate = computeInterviewGate(application);
   const storyWarnings = application.interviewPrep?.storyFabricationWarnings || [];
   const notes = Array.isArray(application.interviewPrep?.userNotes)
     ? application.interviewPrep.userNotes
@@ -498,7 +511,15 @@ const InterviewPrepDetail = () => {
   };
 
   const startMockInterview = () => {
+    // Hard gate — the button is disabled when locked, but guard the nav too.
+    if (!interviewGate.unlocked) return;
     navigate(`/interview-prep/${applicationId}/mock`);
+  };
+
+  // Seed + open the weakness note (completes the "draft your weakness" readiness task).
+  const draftWeakness = () => {
+    setNotesSeed(WEAKNESS_SEED);
+    setActiveTab('notes');
   };
 
   return (
@@ -606,37 +627,24 @@ const InterviewPrepDetail = () => {
               history={application.interviewPrep?.interviewHistory}
               trend={getInterviewTrend(application)}
               onStart={startMockInterview}
+              gate={interviewGate}
             />
             <ReadinessOverview
               application={application}
+              gate={interviewGate}
               onPracticeWeak={startPracticeWeak}
               onGoToTab={setActiveTab}
-              onGenerateEssential={handleGenerateEssential}
-              generatingEssential={generatingEssential}
-              onDraftWeakness={() => {
-                setNotesSeed({
-                  title: 'My weakness / growth area',
-                  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
-                });
-                setActiveTab('notes');
-              }}
+              onDraftWeakness={draftWeakness}
             />
           </div>
         ) : (
           <div className="mb-6">
             <ReadinessOverview
               application={application}
+              gate={interviewGate}
               onPracticeWeak={startPracticeWeak}
               onGoToTab={setActiveTab}
-              onGenerateEssential={handleGenerateEssential}
-              generatingEssential={generatingEssential}
-              onDraftWeakness={() => {
-                setNotesSeed({
-                  title: 'My weakness / growth area',
-                  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
-                });
-                setActiveTab('notes');
-              }}
+              onDraftWeakness={draftWeakness}
             />
           </div>
         )}
@@ -704,13 +712,21 @@ const InterviewPrepDetail = () => {
                   round and build a combined readiness. Free: the locked teaser. */}
               {!isFreeTier && panel.length >= 2 ? (
                 <div className="mb-4">
+                  {!interviewGate.unlocked && (
+                    <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-500/5 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                      <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      Finish your interview readiness checklist to unlock these rounds.
+                    </div>
+                  )}
                   <LoopBoard
                     seats={panel}
                     rounds={rounds}
+                    locked={!interviewGate.unlocked}
                     unlockAll={!!application?.unlockAllInterviewers}
-                    onStart={(seatIndex) =>
-                      navigate(`/interview-prep/${applicationId}/mock?interviewer=${seatIndex}`)
-                    }
+                    onStart={(seatIndex) => {
+                      if (!interviewGate.unlocked) return;
+                      navigate(`/interview-prep/${applicationId}/mock?interviewer=${seatIndex}`);
+                    }}
                   />
                 </div>
               ) : (
@@ -794,6 +810,7 @@ const InterviewPrepDetail = () => {
                 newQuestionIndices={newQuestionIndices}
                 isCvOnly={isCvOnly}
                 onConfidenceChange={reload}
+                gate={interviewGate}
               />
             </MotionDiv>
           )}
@@ -1331,10 +1348,7 @@ const ESSENTIALS = [
     q: 'What’s your biggest weakness / a gap in your experience?',
     tip: 'Pick a real growth area (not a humblebrag), then show what you’re actively doing about it — mirror the gaps flagged in the Role tab.',
     generatable: false,
-    noteSeed: {
-      title: 'My weakness / growth area',
-      body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
-    },
+    noteSeed: WEAKNESS_SEED,
   },
 ];
 
@@ -1426,10 +1440,12 @@ const QuestionsTab = ({
   newQuestionIndices,
   isCvOnly,
   onConfidenceChange,
+  gate,
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   const canGenerateMore = !isCvOnly && jobQuestions.length > 0;
+  const interviewLocked = gate && !gate.unlocked;
 
   return (
     <div className="space-y-6">
@@ -1469,14 +1485,26 @@ const QuestionsTab = ({
                 <PlayCircle className="w-3.5 h-3.5" />
                 Practice all
               </button>
-              <button
-                type="button"
-                onClick={onStartMock}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
-              >
-                <Play className="w-3.5 h-3.5" />
-                Interview Mode
-              </button>
+              {interviewLocked ? (
+                <button
+                  type="button"
+                  disabled
+                  title="Complete your interview readiness to unlock"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  Complete prep to unlock
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onStartMock}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  Interview Mode
+                </button>
+              )}
             </div>
           </div>
 

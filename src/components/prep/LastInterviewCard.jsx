@@ -1,6 +1,40 @@
 import React from 'react';
-import { ArrowRight, Sparkles, TrendingUp, Sparkle, GraduationCap } from 'lucide-react';
+import { ArrowRight, Sparkles, TrendingUp, Sparkle, GraduationCap, Lock } from 'lucide-react';
 import ScoringInfo from './ScoringInfo';
+
+// The interview start CTA. While the readiness gate is locked, show a disabled
+// "locked" button that points to the readiness checklist (hosted in the Interview
+// readiness card beside this one); once every prep task is done, swap in the live
+// start button. `gate` is omitted (=> always unlocked) by callers that don't gate.
+const StartCTA = ({ gate, onStart, label }) => {
+  if (gate && !gate.unlocked) {
+    const remaining = gate.requiredCount - gate.doneCount;
+    return (
+      <div className="w-full">
+        <button
+          type="button"
+          disabled
+          title="Complete your interview readiness to unlock"
+          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-not-allowed select-none"
+        >
+          <Lock className="w-3.5 h-3.5" /> Complete prep to unlock
+        </button>
+        <p className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+          {remaining} task{remaining === 1 ? '' : 's'} left in your readiness checklist →
+        </p>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onStart}
+      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer select-none"
+    >
+      {label} <ArrowRight className="w-3.5 h-3.5" />
+    </button>
+  );
+};
 
 // How an interview went + a short, plain-English meaning. Works for both
 // self-rated (guided) and AI-graded (conversational) sessions.
@@ -49,7 +83,7 @@ const fmtWhen = (value) => {
 // Recent interviews + how each went, so users can see their progress. The most
 // recent is shown prominently with a plain-English read on the status; earlier
 // ones are a compact list below. Driven by interviewHistory.
-const LastInterviewCard = ({ session, history, trend, onStart }) => {
+const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
   const hist = Array.isArray(history) ? history : [];
   const rows = (
     hist.length
@@ -103,13 +137,7 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
         <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-center">
           {/* NOTE: "Start your first interview" is planned to become a paid/premium
               service later — keep this entry point but gate it when that lands. */}
-          <button
-            type="button"
-            onClick={onStart}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer select-none"
-          >
-            Start your first interview <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <StartCTA gate={gate} onStart={onStart} label="Start your first interview" />
         </div>
       </section>
     );
@@ -211,13 +239,7 @@ const LastInterviewCard = ({ session, history, trend, onStart }) => {
       </div>
 
       <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-        <button
-          type="button"
-          onClick={onStart}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer select-none"
-        >
-          Start a new interview <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <StartCTA gate={gate} onStart={onStart} label="Start a new interview" />
       </div>
     </section>
   );

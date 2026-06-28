@@ -145,6 +145,104 @@ export const computeReadiness = (application) => {
   return { total, rated, counts, score, weakQuestionIndices, flaggedCount, nextAction };
 };
 
+// Does the user have a note covering their weakness / growth area? Same signal
+// ReadinessOverview uses — a note whose title or body mentions it. Drafting one
+// is the "have a weakness answer ready" prep task.
+const hasWeaknessNote = (application) => {
+  const notes = Array.isArray(application?.interviewPrep?.userNotes)
+    ? application.interviewPrep.userNotes
+    : [];
+  return notes.some(
+    (n) =>
+      n?.title?.toLowerCase().includes('weakness') ||
+      n?.title?.toLowerCase().includes('growth area') ||
+      (typeof n?.body === 'string' && n.body.toLowerCase().includes('weakness'))
+  );
+};
+
+// Hard gate for STARTING an interview. The interview is the reward at the end of
+// an "interview readiness" checklist — finishing the prep tasks unlocks it, which
+// gamifies preparation and pushes the user to do the work that earns a high score.
+//
+// Job-linked prep requires the full set: generate prep (questions) + a pitch
+// ("Tell me about yourself") + "Why this role" + a drafted weakness + questions to
+// ask the interviewer + at least one STAR story. CV-only (draft) prep has no
+// job-context fields (no jobQuestions/questionsToAsk, no generatable essentials —
+// see DraftCV.js + InterviewPrepDetail's `onGenerateEssential` gating), so it only
+// requires the achievable tasks: a drafted weakness + a STAR story. Pure — no
+// side effects.
+export const computeInterviewGate = (application) => {
+  const questions = getJobQuestions(application);
+  const stories = getStories(application);
+  const asks = getQuestionsToAsk(application);
+  const isCvOnly =
+    application?.source === 'draft' || (!application?.jobId && !application?.jobTitle);
+
+  const hasType = (t) => questions.some((q) => (q.type || '').toLowerCase() === t);
+
+  const tasks = [];
+
+  if (!isCvOnly) {
+    tasks.push(
+      {
+        key: 'questions',
+        label: 'Generate interview prep',
+        hint: 'Your likely questions for this role.',
+        tab: 'questions',
+        done: questions.length > 0,
+      },
+      {
+        key: 'pitch',
+        label: 'Prepare your pitch',
+        hint: '“Tell me about yourself.”',
+        tab: 'questions',
+        done: hasType('intro'),
+      },
+      {
+        key: 'motivation',
+        label: 'Prepare “Why this role”',
+        hint: 'Show why you want this job.',
+        tab: 'questions',
+        done: hasType('motivation'),
+      }
+    );
+  }
+
+  tasks.push({
+    key: 'weakness',
+    label: 'Draft your weakness',
+    hint: 'A real growth area + what you’re doing about it.',
+    tab: 'notes',
+    done: hasWeaknessNote(application),
+  });
+
+  if (!isCvOnly) {
+    tasks.push({
+      key: 'asks',
+      label: 'Questions to ask the interviewer',
+      hint: 'Have a few sharp questions ready.',
+      tab: 'questions',
+      done: asks.length > 0,
+    });
+  }
+
+  tasks.push({
+    key: 'story',
+    label: 'Build a STAR story',
+    hint: 'At least one story to draw on.',
+    tab: 'stories',
+    done: stories.length > 0,
+  });
+
+  const doneCount = tasks.filter((t) => t.done).length;
+  const requiredCount = tasks.length;
+  const unlocked = doneCount === requiredCount;
+  const pct = requiredCount ? Math.round((doneCount / requiredCount) * 100) : 100;
+  const nextTask = tasks.find((t) => !t.done) || null;
+
+  return { tasks, doneCount, requiredCount, unlocked, pct, nextTask, isCvOnly };
+};
+
 export const mergeInterviewPrepResponse = (application, payload) => {
   const existingPrep = getInterviewPrep(application);
   const incomingPrep = payload?.interviewPrep || {};

@@ -19,6 +19,8 @@ import {
   GitCompare,
   ChevronRight,
   FileSearch,
+  ArrowUpDown,
+  Check,
 } from 'lucide-react';
 
 /**
@@ -84,6 +86,84 @@ const SectionHeader = ({ icon: Icon, title, subtitle }) => (
   </div>
 );
 
+/**
+ * Modern custom sort dropdown — replaces the native <select> (which renders the
+ * OS default style and can't be themed). Click-outside + Escape to close, with
+ * a check mark on the active option. Full-width on mobile, fixed width on sm+.
+ */
+const SortDropdown = ({ value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = options.find((o) => o.id === value) || options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative w-full sm:w-56 shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 transition-colors"
+      >
+        <span className="flex items-center gap-2 min-w-0">
+          <ArrowUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+          <span className="truncate">{current.label}</span>
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 z-30 mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg shadow-slate-900/5 py-1.5 animate-in fade-in slide-in-from-top-1 duration-150"
+        >
+          {options.map((opt) => {
+            const active = opt.id === value;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onChange(opt.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 text-sm text-left transition-colors ${
+                  active
+                    ? 'text-indigo-600 dark:text-indigo-300 font-semibold bg-indigo-50/60 dark:bg-indigo-500/10'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                {opt.label}
+                {active && <Check className="w-4 h-4 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const JobHistory = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -95,7 +175,6 @@ const JobHistory = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCL, setGeneratingCL] = useState(false);
   const [generatingInterview, setGeneratingInterview] = useState(false);
@@ -484,7 +563,7 @@ const JobHistory = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 pt-8 pb-0">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">My Applications</h1>
           <p className="text-slate-500 dark:text-slate-400">
@@ -510,84 +589,79 @@ const JobHistory = () => {
               section.
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* List Column: Hidden on mobile if an app is selected */}
-            <div
-              className={`lg:col-span-1 space-y-4 ${selectedApp ? 'hidden lg:block' : 'block'} lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-8`}
-            >
-              {/* Search + sort */}
-              <div className="flex flex-col gap-2">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by job title or company"
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
-                  />
-                </div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 text-slate-600 dark:text-slate-300"
-                >
-                  {SORT_OPTIONS.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      Sort: {opt.label}
-                    </option>
-                  ))}
-                </select>
+        ) : !selectedApp ? (
+          /* Full-width list. Clicking a row swaps the whole page to the
+             focused, full-width detail view below — so users concentrate on
+             one application instead of squinting at a cramped side panel. */
+          <div className="space-y-3 pb-8">
+            {/* Search + sort */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by job title or company"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-300 transition-colors"
+                />
               </div>
+              <SortDropdown value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+            </div>
 
-              {filteredApplications.length === 0 && (
-                <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
-                  {searchQuery.trim()
-                    ? 'No applications match your search.'
-                    : 'No applications yet.'}
-                </div>
-              )}
+            {filteredApplications.length === 0 && (
+              <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
+                {searchQuery.trim() ? 'No applications match your search.' : 'No applications yet.'}
+              </div>
+            )}
 
-              {filteredApplications.map((app) => (
+            {filteredApplications.map((app) => {
+              const title = app.jobId?.title || app.jobTitle || 'Unknown Role';
+              const company = app.jobId?.company || app.jobCompany || 'Unknown Company';
+              const noAssets =
+                !app.optimizedCV && !app.draftCVId && !app.coverLetter && !hasInterviewPrep(app);
+              return (
                 <div
                   key={app._id}
                   onClick={() => {
                     setSelectedApp(app);
                     setSelectedTemplate(app.templateId || 'ats-clean');
-                    // Scroll to top on mobile when selecting
-                    if (window.innerWidth < 1024) {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`
-                                        p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md
-                                        ${
-                                          selectedApp?._id === app._id
-                                            ? 'bg-white dark:bg-slate-900 border-primary shadow-md ring-1 ring-primary/20'
-                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
-                                        }
-                                    `}
+                  className="group flex items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/60 hover:shadow-md cursor-pointer transition-all"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-1">
-                      {app.jobId?.title || app.jobTitle || 'Unknown Role'}
-                    </h3>
-                    <span
-                      className="text-xs font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap"
-                      title={new Date(app.createdAt).toLocaleString()}
-                    >
-                      {formatRelativeDate(app.createdAt)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
-                    <Building className="w-3 h-3" />
-                    <span className="line-clamp-1">
-                      {app.jobId?.company || app.jobCompany || 'Unknown Company'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 justify-between">
-                    <div className="flex gap-2 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        {title}
+                      </h3>
+                      {app.fitScore !== undefined && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                            app.fitScore >= 80
+                              ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              : app.fitScore >= 50
+                                ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
+                          }`}
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          {app.fitScore}% Match
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
+                      <Building className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{company}</span>
+                      <span className="text-slate-300 dark:text-slate-600">·</span>
+                      <span
+                        className="whitespace-nowrap"
+                        title={new Date(app.createdAt).toLocaleString()}
+                      >
+                        {formatRelativeDate(app.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
                       {(app.optimizedCV || app.draftCVId) && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-xs font-medium border border-emerald-200 dark:border-emerald-500/30">
                           <FileText className="w-3 h-3" /> CV
@@ -603,416 +677,382 @@ const JobHistory = () => {
                           <MessageSquare className="w-3 h-3" /> Interview
                         </span>
                       )}
-                      {!app.optimizedCV &&
-                        !app.draftCVId &&
-                        !app.coverLetter &&
-                        !hasInterviewPrep(app) && (
-                          <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs font-medium border border-slate-200 dark:border-slate-700">
-                            Analysis only
-                          </span>
-                        )}
+                      {noAssets && (
+                        <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs font-medium border border-slate-200 dark:border-slate-700">
+                          Analysis only
+                        </span>
+                      )}
                     </div>
-                    {app.fitScore !== undefined && (
-                      <span
-                        className={`
-                                                flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold
-                                                ${
-                                                  app.fitScore >= 80
-                                                    ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                                    : app.fitScore >= 50
-                                                      ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                                      : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
-                                                }
-                                            `}
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        {app.fitScore}% Match
-                      </span>
-                    )}
                   </div>
-                  <button
-                    onClick={(e) => handleDelete(e, app._id)}
-                    className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg transition-colors mt-2 w-full flex justify-center items-center bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800"
-                    title="Delete application"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
 
-            {/* Preview Column: Hidden on mobile if NO app is selected */}
-            <div
-              className={`lg:col-span-2 ${selectedApp ? 'block' : 'hidden lg:block'} lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)]`}
-            >
-              {selectedApp ? (
-                /* Outer card framing kicks in only at lg+. On mobile the
-                   panel is already full-width inside the page — adding a
-                   bordered card here just nests padding inside padding and
-                   crushes the inner content on small phones. */
-                <div className="overflow-hidden min-h-[600px] animate-in slide-in-from-right-4 duration-300 lg:animate-none lg:h-full lg:flex lg:flex-col lg:mb-8 lg:bg-white lg:dark:bg-slate-900 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm">
-                  <div
-                    className={`px-3 py-3 lg:px-4 lg:py-4 border-b transition-all duration-200 z-10 ${isScrolled ? 'shadow-md border-transparent bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'} flex items-center gap-3 lg:gap-4 sticky top-0`}
-                  >
-                    {/* Back Button (Mobile Only) */}
+                  <div className="flex flex-col items-end justify-between self-stretch gap-2 shrink-0">
                     <button
-                      onClick={() => setSelectedApp(null)}
-                      className="lg:hidden p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+                      onClick={(e) => handleDelete(e, app._id)}
+                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg transition-all sm:opacity-0 sm:group-hover:opacity-100"
+                      title="Delete application"
                     >
-                      <ArrowLeft className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
-
-                    <div className="flex-1 flex justify-between items-center gap-3 flex-wrap">
-                      <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                        Application Details
-                      </h2>
-                      <div className="flex items-center gap-3">
-                        {/* View the original job posting this analysis ran
+                    <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 group-hover:gap-2 transition-all">
+                      View
+                      <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Focused detail view — takes the full page width so nothing is
+             crammed into a side panel. The whole page scrolls naturally. */
+          <div className="pb-8">
+            <button
+              onClick={() => setSelectedApp(null)}
+              className="inline-flex items-center gap-1.5 mb-4 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to applications
+            </button>
+            <div className="overflow-hidden min-h-[400px] animate-in fade-in duration-300 lg:bg-white lg:dark:bg-slate-900 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm">
+              <div className="px-3 py-3 lg:px-4 lg:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex items-center gap-3 lg:gap-4">
+                <div className="flex-1 flex justify-between items-center gap-3 flex-wrap">
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                    Application Details
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    {/* View the original job posting this analysis ran
                             against. Reference-only drawer; data already rides
                             on the populated jobId. Shown on mobile too. */}
-                        <button
-                          type="button"
-                          onClick={() => setJobDrawerOpen(true)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
-                          title="View the original job posting"
-                        >
-                          <FileSearch className="w-3 h-3" />
-                          Job posting
-                        </button>
+                    <button
+                      type="button"
+                      onClick={() => setJobDrawerOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
+                      title="View the original job posting"
+                    >
+                      <FileSearch className="w-3 h-3" />
+                      Job posting
+                    </button>
 
-                        {/* Re-run analysis — refreshes fitScore + analysis using
+                    {/* Re-run analysis — refreshes fitScore + analysis using
                             the same resume + job. Useful when prompts/models
                             have been upgraded since the original run. */}
-                        <button
-                          type="button"
-                          onClick={handleReanalyze}
-                          disabled={reanalyzing}
-                          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Re-run analysis (10 credits)"
-                        >
-                          <RefreshCw className={`w-3 h-3 ${reanalyzing ? 'animate-spin' : ''}`} />
-                          {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
-                        </button>
+                    <button
+                      type="button"
+                      onClick={handleReanalyze}
+                      disabled={reanalyzing}
+                      className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Re-run analysis (10 credits)"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${reanalyzing ? 'animate-spin' : ''}`} />
+                      {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
+                    </button>
 
-                        {/* Compare with… — only shows other applications for the
+                    {/* Compare with… — only shows other applications for the
                             same job, since cross-job comparison is apples-to-
                             oranges. Disabled when there's nothing to compare. */}
-                        {(() => {
-                          const sameJobOthers = applications.filter(
-                            (a) =>
-                              a._id !== selectedApp._id &&
-                              (a.jobId?._id || a.jobId) ===
-                                (selectedApp.jobId?._id || selectedApp.jobId)
-                          );
-                          if (sameJobOthers.length === 0) return null;
-                          return (
-                            <div className="relative hidden sm:block">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCompareMenuOpen(!compareMenuOpen);
-                                }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
-                                title="Compare with another analysis for the same job"
-                              >
-                                <GitCompare className="w-3 h-3" />
-                                Compare
-                                <ChevronDown className="w-3 h-3 opacity-60" />
-                              </button>
-                              {compareMenuOpen && (
-                                <div
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
+                    {(() => {
+                      const sameJobOthers = applications.filter(
+                        (a) =>
+                          a._id !== selectedApp._id &&
+                          (a.jobId?._id || a.jobId) ===
+                            (selectedApp.jobId?._id || selectedApp.jobId)
+                      );
+                      if (sameJobOthers.length === 0) return null;
+                      return (
+                        <div className="relative hidden sm:block">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCompareMenuOpen(!compareMenuOpen);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
+                            title="Compare with another analysis for the same job"
+                          >
+                            <GitCompare className="w-3 h-3" />
+                            Compare
+                            <ChevronDown className="w-3 h-3 opacity-60" />
+                          </button>
+                          {compareMenuOpen && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
+                            >
+                              <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                                Compare against
+                              </div>
+                              {sameJobOthers.map((other) => (
+                                <button
+                                  key={other._id}
+                                  onClick={() => {
+                                    setCompareMenuOpen(false);
+                                    navigate(`/compare/${selectedApp._id}/${other._id}`);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between gap-3"
                                 >
-                                  <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                                    Compare against
+                                  <div className="flex flex-col leading-tight min-w-0">
+                                    <span className="text-slate-700 dark:text-slate-300 truncate">
+                                      Resume from {formatRelativeDate(other.resumeId?.createdAt)}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                                      Run {formatRelativeDate(other.createdAt)}
+                                    </span>
                                   </div>
-                                  {sameJobOthers.map((other) => (
-                                    <button
-                                      key={other._id}
-                                      onClick={() => {
-                                        setCompareMenuOpen(false);
-                                        navigate(`/compare/${selectedApp._id}/${other._id}`);
-                                      }}
-                                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between gap-3"
+                                  {typeof other.fitScore === 'number' && (
+                                    <span
+                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        other.fitScore >= 80
+                                          ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                          : other.fitScore >= 50
+                                            ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                            : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
+                                      }`}
                                     >
-                                      <div className="flex flex-col leading-tight min-w-0">
-                                        <span className="text-slate-700 dark:text-slate-300 truncate">
-                                          Resume from{' '}
-                                          {formatRelativeDate(other.resumeId?.createdAt)}
-                                        </span>
-                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                                          Run {formatRelativeDate(other.createdAt)}
-                                        </span>
-                                      </div>
-                                      {typeof other.fitScore === 'number' && (
-                                        <span
-                                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                            other.fitScore >= 80
-                                              ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                              : other.fitScore >= 50
-                                                ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                                : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
-                                          }`}
-                                        >
-                                          {other.fitScore}%
-                                        </span>
-                                      )}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
+                                      {other.fitScore}%
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
                             </div>
-                          );
-                        })()}
-                        <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex flex-col items-end leading-tight">
-                          <span title={new Date(selectedApp.createdAt).toLocaleString()}>
-                            {formatRelativeDate(selectedApp.createdAt)}
-                          </span>
-                          {selectedApp.resumeId?.createdAt && (
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                              Resume from {formatRelativeDate(selectedApp.resumeId.createdAt)}
-                            </span>
                           )}
                         </div>
-                      </div>
+                      );
+                    })()}
+                    <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex flex-col items-end leading-tight">
+                      <span title={new Date(selectedApp.createdAt).toLocaleString()}>
+                        {formatRelativeDate(selectedApp.createdAt)}
+                      </span>
+                      {selectedApp.resumeId?.createdAt && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          Resume from {formatRelativeDate(selectedApp.resumeId.createdAt)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div
-                    className="p-4 space-y-8 sm:space-y-10 lg:p-6 lg:space-y-10 lg:overflow-y-auto custom-scrollbar lg:flex-1"
-                    onScroll={(e) => setIsScrolled(e.target.scrollTop > 0)}
-                  >
-                    {selectedApp.fitAnalysis && (
-                      <section className="space-y-4 sm:space-y-5">
-                        <SectionHeader
-                          icon={Sparkles}
-                          title="Snapshot Analysis"
-                          subtitle="Where you stand against the role"
-                        />
-                        <div className="space-y-5 sm:space-y-6">
-                          <NextBestAction
-                            fitScore={selectedApp.fitScore}
-                            fitAnalysis={selectedApp.fitAnalysis}
-                            application={selectedApp}
-                            onGenerateCV={handleGenerateCV}
-                            onGenerateCoverLetter={handleGenerateCoverLetter}
-                            onGenerateInterview={handleGenerateInterview}
-                            onGenerateBundle={handleGenerateBundle}
-                            onView={() =>
-                              navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}`)
-                            }
-                            generatingCV={generatingCV}
-                            generatingCL={generatingCL}
-                            generatingInterview={generatingInterview}
-                            cvGenStatus={cvGenStatus}
-                          />
-                          <JobRequirementsCard
-                            fitAnalysis={selectedApp.fitAnalysis}
-                            jobTitle={selectedApp.jobTitle}
-                            jobCompany={selectedApp.jobCompany}
-                          />
-                          <FitScoreCard
-                            fitScore={selectedApp.fitScore}
-                            fitAnalysis={selectedApp.fitAnalysis}
-                            actionPlan={selectedApp.actionPlan}
-                            optimizedFitScore={selectedApp.optimizedFitScore}
-                            applicationId={selectedApp._id}
-                          />
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Generated Assets */}
-                    <section className="space-y-4 sm:space-y-5">
-                      <SectionHeader
-                        icon={Briefcase}
-                        title="Generated Assets"
-                        subtitle="CV, cover letter, and interview prep"
+                </div>
+              </div>
+              <div className="p-4 space-y-8 sm:space-y-10 lg:p-6 lg:space-y-10">
+                {selectedApp.fitAnalysis && (
+                  <section className="space-y-4 sm:space-y-5">
+                    <SectionHeader
+                      icon={Sparkles}
+                      title="Snapshot Analysis"
+                      subtitle="Where you stand against the role"
+                    />
+                    <div className="space-y-5 sm:space-y-6">
+                      <NextBestAction
+                        fitScore={selectedApp.fitScore}
+                        fitAnalysis={selectedApp.fitAnalysis}
+                        application={selectedApp}
+                        onGenerateCV={handleGenerateCV}
+                        onGenerateCoverLetter={handleGenerateCoverLetter}
+                        onGenerateInterview={handleGenerateInterview}
+                        onGenerateBundle={handleGenerateBundle}
+                        onView={() =>
+                          navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}`)
+                        }
+                        generatingCV={generatingCV}
+                        generatingCL={generatingCL}
+                        generatingInterview={generatingInterview}
+                        cvGenStatus={cvGenStatus}
                       />
+                      <JobRequirementsCard
+                        fitAnalysis={selectedApp.fitAnalysis}
+                        jobTitle={selectedApp.jobTitle}
+                        jobCompany={selectedApp.jobCompany}
+                      />
+                      <FitScoreCard
+                        fitScore={selectedApp.fitScore}
+                        fitAnalysis={selectedApp.fitAnalysis}
+                        actionPlan={selectedApp.actionPlan}
+                        optimizedFitScore={selectedApp.optimizedFitScore}
+                        applicationId={selectedApp._id}
+                      />
+                    </div>
+                  </section>
+                )}
 
-                      {/* CV + Cover Letter — compact 2-column row. Both are
+                {/* Generated Assets */}
+                <section className="space-y-4 sm:space-y-5">
+                  <SectionHeader
+                    icon={Briefcase}
+                    title="Generated Assets"
+                    subtitle="CV, cover letter, and interview prep"
+                  />
+
+                  {/* CV + Cover Letter — compact 2-column row. Both are
                           "click to view" assets that open in dedicated pages,
                           so the cards just need state + a single CTA. */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* CV Card */}
-                        <div
-                          className={`p-4 rounded-xl border ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <FileText
-                              className={`w-4 h-4 ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
-                            />
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                              Optimized CV
-                            </span>
-                          </div>
-                          {selectedApp.optimizedCV || selectedApp.draftCVId ? (
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
-                                )
-                              }
-                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View & Download
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleGenerateCV}
-                              disabled={generatingCV}
-                              className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                                generatingCV
-                                  ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                              }`}
-                            >
-                              {generatingCV ? (
-                                <>
-                                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                                  Generating...
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Cover Letter Card */}
-                        <div
-                          className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <Mail
-                              className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600 dark:text-blue-300' : 'text-slate-400 dark:text-slate-500'}`}
-                            />
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                              Cover Letter
-                            </span>
-                          </div>
-                          {selectedApp.coverLetter ? (
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
-                                )
-                              }
-                              className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-all"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View & Download
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleGenerateCoverLetter}
-                              disabled={generatingCL}
-                              className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                                generatingCL
-                                  ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                              }`}
-                            >
-                              {generatingCL ? (
-                                <>
-                                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                                  Generating...
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)
-                                </>
-                              )}
-                            </button>
-                          )}
-                          {/* Fact-check warnings — claims the letter makes that
-                              the resume doesn't directly support. Non-blocking. */}
-                          {selectedApp.coverLetter &&
-                            selectedApp.coverLetterWarnings?.length > 0 && (
-                              <div className="mt-3 p-2 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-300">
-                                <div className="font-bold uppercase tracking-wide mb-1">
-                                  Verify before sending
-                                </div>
-                                <ul className="space-y-0.5 list-disc pl-3">
-                                  {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
-                                    <li key={i}>{w}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                        </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* CV Card */}
+                    <div
+                      className={`p-4 rounded-xl border ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText
+                          className={`w-4 h-4 ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
+                        />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Optimized CV
+                        </span>
                       </div>
+                      {selectedApp.optimizedCV || selectedApp.draftCVId ? (
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
+                            )
+                          }
+                          className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View & Download
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleGenerateCV}
+                          disabled={generatingCV}
+                          className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                            generatingCV
+                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          }`}
+                        >
+                          {generatingCV ? (
+                            <>
+                              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
 
-                      {/* Interview Prep entry point — links to the dedicated
+                    {/* Cover Letter Card */}
+                    <div
+                      className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Mail
+                          className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600 dark:text-blue-300' : 'text-slate-400 dark:text-slate-500'}`}
+                        />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Cover Letter
+                        </span>
+                      </div>
+                      {selectedApp.coverLetter ? (
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
+                            )
+                          }
+                          className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-all"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View & Download
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleGenerateCoverLetter}
+                          disabled={generatingCL}
+                          className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                            generatingCL
+                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          }`}
+                        >
+                          {generatingCL ? (
+                            <>
+                              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {/* Fact-check warnings — claims the letter makes that
+                              the resume doesn't directly support. Non-blocking. */}
+                      {selectedApp.coverLetter && selectedApp.coverLetterWarnings?.length > 0 && (
+                        <div className="mt-3 p-2 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-300">
+                          <div className="font-bold uppercase tracking-wide mb-1">
+                            Verify before sending
+                          </div>
+                          <ul className="space-y-0.5 list-disc pl-3">
+                            {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
+                              <li key={i}>{w}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Interview Prep entry point — links to the dedicated
                           /interview-prep/:applicationId page where users can
                           drill into questions + answers + skill talking points
                           and add personal notes. Replaces the previously inline
                           two-column section that lived here. */}
-                      {hasInterviewPrep(selectedApp) ? (
-                        <Link
-                          to={`/interview-prep/${selectedApp._id}`}
-                          className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors p-4 flex items-center gap-3 group"
-                        >
-                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                            <MessageSquare className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              Interview prep ready
-                            </h4>
-                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                              {getPrepSummary(selectedApp)}
-                            </p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors shrink-0" />
-                        </Link>
-                      ) : (
-                        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0">
-                            <MessageSquare className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              Interview prep
-                            </h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                              Generate likely questions + suggested answers tailored to your CV and
-                              this role.
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleGenerateInterview}
-                            disabled={generatingInterview}
-                            className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                              generatingInterview
-                                ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                            }`}
-                          >
-                            {generatingInterview ? (
-                              <>
-                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-3.5 h-3.5" /> Generate (5 cr)
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </section>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                  <Briefcase className="w-12 h-12 mb-4 opacity-50" />
-                  <p>Select an application to view details</p>
-                </div>
-              )}
+                  {hasInterviewPrep(selectedApp) ? (
+                    <Link
+                      to={`/interview-prep/${selectedApp._id}`}
+                      className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors p-4 flex items-center gap-3 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          Interview prep ready
+                        </h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                          {getPrepSummary(selectedApp)}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors shrink-0" />
+                    </Link>
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          Interview prep
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Generate likely questions + suggested answers tailored to your CV and this
+                          role.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleGenerateInterview}
+                        disabled={generatingInterview}
+                        className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          generatingInterview
+                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        }`}
+                      >
+                        {generatingInterview ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" /> Generate (5 cr)
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </section>
+              </div>
             </div>
           </div>
         )}
