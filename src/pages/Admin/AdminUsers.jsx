@@ -11,6 +11,12 @@ const AdminUsers = () => {
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  // Filters / sorting
+  const [planFilter, setPlanFilter] = useState('');
+  const [tierFilter, setTierFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sortBy, setSortBy] = useState('joined');
 
   const fetchUsers = async () => {
     try {
@@ -22,7 +28,11 @@ const AdminUsers = () => {
         },
         params: {
           keyword,
-          pageNumber: page,
+          page,
+          plan: planFilter,
+          tier: tierFilter,
+          status: statusFilter,
+          sortBy,
         },
       };
 
@@ -30,6 +40,7 @@ const AdminUsers = () => {
       setUsers(response.data.users);
       setPage(response.data.page);
       setTotalPages(response.data.pages);
+      setTotal(response.data.total || 0);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
@@ -40,7 +51,13 @@ const AdminUsers = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, keyword]); // Refetch when page or keyword changes
+    // Refetch on any filter/sort/page/search change
+  }, [page, keyword, planFilter, tierFilter, statusFilter, sortBy]);
+
+  // Reset to page 1 whenever a filter/search narrows the result set
+  useEffect(() => {
+    setPage(1);
+  }, [keyword, planFilter, tierFilter, statusFilter, sortBy]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -124,6 +141,48 @@ const AdminUsers = () => {
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </form>
+      </div>
+
+      {/* Filters & sorting */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="">All subscriptions</option>
+          <option value="active">Paid (active sub)</option>
+          <option value="free">Free (no active sub)</option>
+        </select>
+        <select
+          value={tierFilter}
+          onChange={(e) => setTierFilter(e.target.value)}
+          className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="">All tiers</option>
+          <option value="free">Free</option>
+          <option value="plus">Plus</option>
+          <option value="pro">Pro</option>
+        </select>
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value)}
+          className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="">All plans</option>
+          <option value="free">Plan: Free</option>
+          <option value="paid">Plan: Paid</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="joined">Sort: Newest</option>
+          <option value="credits">Sort: Most credits</option>
+          <option value="expiry">Sort: Expiry soonest</option>
+        </select>
+        <span className="ml-auto text-sm text-slate-500">{total} users</span>
       </div>
 
       {loading ? (

@@ -1,7 +1,33 @@
 import React from 'react';
-import { Search, MoreVertical, Trash2, Edit, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PlanSelect from './PlanSelect';
+
+// Effective subscription tier: the stored tier only counts while the sub is live
+// (expiresAt in the future) — otherwise the user is effectively free.
+const effectiveTier = (user) => {
+  const exp = user.subscription?.expiresAt;
+  if (exp && new Date(exp) > new Date()) return user.subscription?.tier || 'free';
+  return 'free';
+};
+
+const tierBadgeClass = (tier) =>
+  tier === 'pro'
+    ? 'bg-amber-100 text-amber-800'
+    : tier === 'plus'
+      ? 'bg-indigo-100 text-indigo-800'
+      : 'bg-slate-100 text-slate-600';
+
+// { text, expired } describing the subscription expiry, or null if no sub.
+const expiryInfo = (user) => {
+  const exp = user.subscription?.expiresAt;
+  if (!exp) return null;
+  const d = new Date(exp);
+  const now = new Date();
+  if (d <= now) return { text: 'Expired', expired: true };
+  const days = Math.ceil((d - now) / 86400000);
+  return { text: `${days}d left`, expired: false };
+};
 
 const UserTable = ({ users, onPlanUpdate, onDelete }) => {
   return (
@@ -13,7 +39,9 @@ const UserTable = ({ users, onPlanUpdate, onDelete }) => {
               <th className="px-6 py-4">User</th>
               <th className="px-6 py-4">Role</th>
               <th className="px-6 py-4">Plan</th>
-              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Tier</th>
+              <th className="px-6 py-4">Expires</th>
+              <th className="px-6 py-4">Minutes</th>
               <th className="px-6 py-4">Joined</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -54,9 +82,30 @@ const UserTable = ({ users, onPlanUpdate, onDelete }) => {
                   />
                 </td>
                 <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
+                  {(() => {
+                    const tier = effectiveTier(user);
+                    return (
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${tierBadgeClass(tier)}`}
+                      >
+                        {tier}
+                      </span>
+                    );
+                  })()}
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  {(() => {
+                    const info = expiryInfo(user);
+                    if (!info) return <span className="text-slate-400">—</span>;
+                    return (
+                      <span className={info.expired ? 'text-red-500' : 'text-slate-600'}>
+                        {info.text}
+                      </span>
+                    );
+                  })()}
+                </td>
+                <td className="px-6 py-4 text-slate-600 text-sm">
+                  {Math.floor((user.liveInterview?.secondsRemaining || 0) / 60)}m
                 </td>
                 <td className="px-6 py-4 text-slate-500 text-sm">
                   {new Date(user.createdAt).toLocaleDateString()}

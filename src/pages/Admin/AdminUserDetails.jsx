@@ -12,6 +12,9 @@ import {
   Coins,
   ShieldCheck,
   CreditCard,
+  Clock,
+  Download,
+  Banknote,
 } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'sonner';
@@ -105,7 +108,14 @@ const AdminUserDetails = () => {
     );
   }
 
-  const { user, stats, transactions } = userData;
+  const { user, stats, transactions, payments = [] } = userData;
+
+  // Effective subscription state (expiresAt is the source of truth).
+  const sub = user.subscription || {};
+  const subActive = sub.expiresAt && new Date(sub.expiresAt) > new Date();
+  const daysLeft = subActive ? Math.ceil((new Date(sub.expiresAt) - new Date()) / 86400000) : 0;
+  const minutesLeft = Math.floor((user.liveInterview?.secondsRemaining || 0) / 60);
+  const ngn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 
   return (
     <AdminLayout>
@@ -180,6 +190,17 @@ const AdminUserDetails = () => {
               </div>
             </div>
             <div className="flex items-start gap-3">
+              <Calendar className="w-4 h-4 text-slate-400 mt-1" />
+              <div>
+                <p className="text-xs text-slate-500">Last login</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {user.lastLoginAt
+                    ? `${new Date(user.lastLoginAt).toLocaleString()} · ${user.loginCount || 0} logins`
+                    : '—'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
               <ShieldCheck className="w-4 h-4 text-slate-400 mt-1" />
               <div className="flex-1">
                 <p className="text-xs text-slate-500">Plan</p>
@@ -244,11 +265,70 @@ const AdminUserDetails = () => {
           </div>
         </div>
 
-        {/* Quick Actions (Future) */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center opacity-50">
-          <CreditCard className="w-8 h-8 text-slate-300 mb-2" />
-          <p className="text-sm font-medium text-slate-500">Payment Methods</p>
-          <p className="text-xs text-slate-400">Coming Soon</p>
+        {/* Subscription & Entitlements */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            Subscription
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Tier</span>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${
+                  subActive
+                    ? sub.tier === 'pro'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-indigo-100 text-indigo-800'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {subActive ? sub.tier : 'free'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Plan</span>
+              <span className="font-medium text-slate-900">{sub.planId || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Status</span>
+              <span className={`font-medium ${subActive ? 'text-emerald-600' : 'text-slate-500'}`}>
+                {subActive ? `Active · ${daysLeft}d left` : 'No active subscription'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Expires</span>
+              <span className="font-medium text-slate-900">
+                {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Sub credits left</span>
+              <span className="font-medium text-slate-900">{sub.creditsRemaining ?? 0}</span>
+            </div>
+            <hr className="border-slate-100" />
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Live minutes left
+              </span>
+              <span className="font-medium text-slate-900">{minutesLeft}m</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5" /> Download passes
+              </span>
+              <span className="font-medium text-slate-900">
+                {user.downloads?.passRemaining ?? 0}
+                {user.downloads?.freeDownloadUsed ? '' : ' (+1 free)'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Ever purchased</span>
+              <span className="font-medium text-slate-900">
+                {user.hasEverPurchased ? 'Yes' : 'No'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -312,6 +392,68 @@ const AdminUserDetails = () => {
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-slate-500">
                     No transactions found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Payments (real money, NGN) */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-emerald-600" />
+            Payments (₦)
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+              <tr>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Purpose</th>
+                <th className="px-6 py-4">Plan</th>
+                <th className="px-6 py-4">Amount</th>
+                <th className="px-6 py-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {payments.length > 0 ? (
+                payments.map((p) => (
+                  <tr key={p._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-slate-500 text-sm">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize">
+                        {p.purpose}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{p.planId || '-'}</td>
+                    <td className="px-6 py-4 font-bold text-sm text-slate-900">
+                      {ngn(p.amountNgn)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                          p.status === 'successful'
+                            ? 'bg-green-100 text-green-800'
+                            : p.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {p.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">
+                    No payments yet.
                   </td>
                 </tr>
               )}

@@ -11,6 +11,8 @@ import {
   MessageSquare,
   FileImage,
   ThumbsUp,
+  Banknote,
+  BarChart3,
 } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon.png';
 import GlobalBanner from '../GlobalBanner';
@@ -21,7 +23,9 @@ const AdminLayout = ({ children }) => {
 
   const menuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/admin/users', icon: Users, label: 'Users' },
+    { path: '/admin/payments', icon: Banknote, label: 'Payments' },
     { path: '/admin/transactions', icon: Coins, label: 'Transactions' },
     { path: '/admin/reports', icon: FileImage, label: 'Ad Reports' },
     { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },

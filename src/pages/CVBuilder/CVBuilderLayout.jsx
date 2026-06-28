@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Outlet, useParams } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import logo from '../../assets/logo/applyright-icon.png';
 import {
   Save,
   LogOut,
@@ -14,81 +13,22 @@ import {
   X,
   Sparkles,
   FileText,
-  ScanLine,
   Target,
   Lock,
   Crown,
-  Loader2,
 } from 'lucide-react';
 import { CVBuilderProvider, useCVBuilder } from '../../context/CVContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ATSCoachPanel from '../../components/cv/ATSCoachPanel';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
-import { getSectionProgress } from '../../utils/cvCoach';
-import CVService from '../../services/cv.service';
-import { healthColor } from '../../utils/cvHealth';
-import { toast } from 'sonner';
 
-// ScoreRing component for the ATS fit score preview
-const ScoreRing = ({ score }) => {
-  const { ring, text } = healthColor(score);
-  const radius = 30;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  return (
-    <div className="relative w-[76px] h-[76px] shrink-0">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
-        <circle
-          cx="40"
-          cy="40"
-          r={radius}
-          fill="none"
-          strokeWidth="6"
-          className="stroke-slate-200 dark:stroke-slate-700"
-        />
-        <motion.circle
-          cx="40"
-          cy="40"
-          r={radius}
-          fill="none"
-          strokeWidth="6"
-          stroke={ring}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-lg font-extrabold ${text}`}>{score}</span>
-        <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500">/ 100</span>
-      </div>
-    </div>
-  );
-};
-
-const ScaledCVPreview = ({ cvData, setActiveTab }) => {
+const ScaledCVPreview = ({ cvData }) => {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
-  const { id: draftId } = useParams();
-  const { updateCvData, isStepComplete, steps, goToStep } = useCVBuilder();
+  const { isStepComplete, steps, goToStep } = useCVBuilder();
   const [scale, setScale] = useState(1);
   const [scaledHeight, setScaledHeight] = useState(0);
-
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState(null);
-  const [showResults, setShowResults] = useState(false);
-  const [showJdPrompt, setShowJdPrompt] = useState(false);
-  const [pastedJd, setPastedJd] = useState(cvData.targetJob?.description || '');
-
-  // Keep pastedJd in sync if cvData updates
-  useEffect(() => {
-    if (cvData.targetJob?.description && !pastedJd) {
-      setPastedJd(cvData.targetJob.description);
-    }
-  }, [cvData.targetJob?.description]);
 
   const previewApplication = useMemo(() => {
     const { optimizedCV } = generateMarkdownFromDraft(cvData);
@@ -139,28 +79,6 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
     };
   }, [cvData]);
 
-  const triggerScan = async (jdText) => {
-    setScanning(true);
-    try {
-      const data = await CVService.coachDeepScan(draftId, jdText);
-      setScanResult(data);
-      setShowResults(true);
-    } catch (error) {
-      console.error('Scan failed:', error);
-      toast.error('Failed to run ATS scan. Please try again.');
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  const handleScanClick = () => {
-    if (!cvData.targetJob?.description || cvData.targetJob.description.trim().length < 10) {
-      setShowJdPrompt(true);
-    } else {
-      triggerScan(cvData.targetJob.description);
-    }
-  };
-
   const scaledWidth = 794 * scale;
 
   const journeySteps = steps.filter((s) => s.id !== 'finalize' && s.id !== 'target_job');
@@ -190,7 +108,7 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
             Live Preview Locked
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-[280px] leading-relaxed font-medium">
-            Complete all sections of your CV journey to unlock the template rendering and ATS scan.
+            Complete all sections of your CV journey to unlock the template rendering.
           </p>
 
           {/* Progress bar */}
@@ -277,224 +195,12 @@ const ScaledCVPreview = ({ cvData, setActiveTab }) => {
             position: 'absolute',
             left: 0,
             top: 0,
-            filter: scanning || showResults ? 'blur(4px) opacity(50%)' : 'none',
-            transition: 'filter 0.4s ease, opacity 0.4s ease',
           }}
           className="bg-white shadow-xl rounded-sm border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[1123px] text-left"
         >
           <CVTemplateRenderer application={previewApplication} userProfile={previewUserProfile} />
         </div>
-
-        {/* Laser Sweep Line */}
-        {scanning && (
-          <div
-            style={{
-              width: '794px',
-              height: '3px',
-              transform: `scale(${scale})`,
-              transformOrigin: 'top left',
-              position: 'absolute',
-              left: 0,
-            }}
-            className="bg-indigo-500 shadow-[0_0_12px_#4f46e5] animate-laser-sweep z-10 pointer-events-none"
-          />
-        )}
-
-        {/* Loading Pulsing Overlay */}
-        {scanning && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none p-4">
-            <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 animate-pulse">
-              <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Scanning CV...
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Scan Results Overlay */}
-        {showResults && scanResult && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/10 dark:bg-slate-950/20 backdrop-blur-xs">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <ScanLine className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                    ATS Scan Results
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowResults(false);
-                    setScanResult(null);
-                  }}
-                  className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Score Ring */}
-              <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                <ScoreRing score={scanResult.jobMatch?.fitScore || 0} />
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    ATS Fit Score
-                  </span>
-                  <p className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">
-                    {scanResult.jobMatch?.fitScore >= 75
-                      ? 'Strong match 🎯'
-                      : scanResult.jobMatch?.fitScore >= 50
-                        ? 'Decent match'
-                        : 'Needs tailoring'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Match / Gaps lists */}
-              <div className="space-y-3">
-                {scanResult.jobMatch?.missingSkills?.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500 mb-1">
-                      Missing Keywords ({scanResult.jobMatch.missingSkills.length})
-                    </p>
-                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
-                      {scanResult.jobMatch.missingSkills.slice(0, 8).map((s, i) => (
-                        <span
-                          key={i}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100/50 dark:border-rose-900/30"
-                        >
-                          {s.name}
-                        </span>
-                      ))}
-                      {scanResult.jobMatch.missingSkills.length > 8 && (
-                        <span className="text-[9px] text-slate-400 self-center pl-1">
-                          +{scanResult.jobMatch.missingSkills.length - 8} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {scanResult.jobMatch?.matchedSkills?.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-1">
-                      Matched Keywords ({scanResult.jobMatch.matchedSkills.length})
-                    </p>
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar">
-                      {scanResult.jobMatch.matchedSkills.slice(0, 8).map((s, i) => (
-                        <span
-                          key={i}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-955/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30"
-                        >
-                          {s.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('coach');
-                    setShowResults(false);
-                    setScanResult(null);
-                  }}
-                  className="flex-1 text-xs font-bold py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all text-center flex items-center justify-center gap-1.5"
-                >
-                  <Sparkles className="w-3.5 h-3.5" /> View Coach Tips
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowResults(false);
-                    setScanResult(null);
-                  }}
-                  className="text-xs font-semibold py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Missing JD Prompt Overlay */}
-        {showJdPrompt && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/10 dark:bg-slate-950/20 backdrop-blur-xs">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200 flex flex-col gap-4 text-left">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center shrink-0">
-                    <img src={logo} alt="ApplyRight" className="w-full h-full object-contain" />
-                  </div>
-                  <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                    Paste Target Job
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowJdPrompt(false)}
-                  className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Paste the job description of the role you are targeting to run an ATS scan against
-                your current CV.
-              </p>
-              <textarea
-                value={pastedJd}
-                onChange={(e) => setPastedJd(e.target.value)}
-                placeholder="Paste job description here..."
-                className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-2.5 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none h-40 custom-scrollbar"
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const jdText = pastedJd.trim();
-                    if (!jdText) return;
-                    setShowJdPrompt(false);
-                    await updateCvData({ targetJob: { ...cvData.targetJob, description: jdText } });
-                    triggerScan(jdText);
-                  }}
-                  disabled={!pastedJd.trim()}
-                  className="flex-1 text-xs font-bold py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition-colors text-center"
-                >
-                  Save & Scan
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowJdPrompt(false)}
-                  className="text-xs font-semibold py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Floating ATS Scan Button */}
-      {!scanning && !showResults && !showJdPrompt && (
-        <button
-          type="button"
-          onClick={handleScanClick}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all active:scale-[0.98] border border-indigo-500/30"
-        >
-          <ScanLine className="w-4 h-4 animate-pulse" />
-          <span>ATS Scan CV</span>
-        </button>
-      )}
     </div>
   );
 };
@@ -833,7 +539,7 @@ const CVBuilderInner = () => {
                         />
                       </div>
                     ) : (
-                      <ScaledCVPreview cvData={cvData} setActiveTab={setActiveTab} />
+                      <ScaledCVPreview cvData={cvData} />
                     )}
                   </div>
                 </div>
@@ -934,7 +640,7 @@ const CVBuilderInner = () => {
                     />
                   </div>
                 ) : (
-                  <ScaledCVPreview cvData={cvData} setActiveTab={setActiveTab} />
+                  <ScaledCVPreview cvData={cvData} />
                 )}
               </div>
             </motion.div>

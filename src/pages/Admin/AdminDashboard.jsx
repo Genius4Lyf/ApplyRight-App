@@ -135,6 +135,33 @@ const AdminDashboard = () => {
                   icon={TrendingUp}
                 />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <DashboardStats
+                  title="Most Popular Plan"
+                  value={revenue.mostPopularPlan?.label || '—'}
+                  change={
+                    revenue.mostPopularPlan
+                      ? `${revenue.mostPopularPlan.count} sold · ${ngn(revenue.mostPopularPlan.revenue)}`
+                      : 'No sales yet'
+                  }
+                  trend="up"
+                  icon={CreditCard}
+                />
+                <DashboardStats
+                  title="Minute Top-ups"
+                  value={revenue.topupStats?.count || 0}
+                  change={`${revenue.topupStats?.buyers || 0} buyers · ${ngn(revenue.topupStats?.revenue)}`}
+                  trend="up"
+                  icon={Clock}
+                />
+                <DashboardStats
+                  title="Expiring in 7 days"
+                  value={revenue.expiringSoon || 0}
+                  change="subscriptions"
+                  trend={revenue.expiringSoon ? 'down' : 'up'}
+                  icon={Banknote}
+                />
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-xl border border-slate-200 p-5">
                   <h3 className="text-sm font-semibold text-slate-700 mb-3">

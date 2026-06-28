@@ -54,6 +54,7 @@ import Contact from './pages/Contact';
 import ATSGuide from './pages/ATSGuide';
 import Pricing from './pages/Pricing';
 import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
+import CVBuilderGuide from './pages/CVBuilderGuide';
 import HowToAceYourInterview from './pages/HowToAceYourInterview';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
@@ -296,6 +297,8 @@ const AdminRoute = ({ children }) => {
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminTransactions from './pages/Admin/AdminTransactions';
+import AdminPayments from './pages/Admin/AdminPayments';
+import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
 import AdminSettings from './pages/Admin/AdminSettings';
 import AdminReportStudio from './pages/Admin/AdminReportStudio';
@@ -357,6 +360,10 @@ const router = createBrowserRouter([
       {
         path: '/how-ats-recruiters-work',
         element: <HowATSRecruitersWork />,
+      },
+      {
+        path: '/cv-builder-guide',
+        element: <CVBuilderGuide />,
       },
       {
         path: '/how-to-ace-your-interview',
@@ -626,6 +633,22 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminTransactions />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: '/admin/payments',
+        element: (
+          <AdminRoute>
+            <AdminPayments />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: '/admin/analytics',
+        element: (
+          <AdminRoute>
+            <AdminAnalytics />
           </AdminRoute>
         ),
       },
