@@ -195,36 +195,57 @@ const Upgrade = () => {
 
           {/* Top-ups (interview minutes — job seekers only) */}
           {audience === 'seeker' && (
-            <div className="mt-12 max-w-2xl mx-auto">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">
-                Out of minutes?
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-5 text-center">
-                Add more live interview minutes any time. They use your current plan’s interviewer.
-              </p>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mt-14 max-w-2xl mx-auto">
+              <div className="text-center mb-5">
+                <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
+                  Live interview minutes
+                </p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                  Out of minutes?
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">
+                  Add more live interview minutes any time. They use your current plan’s
+                  interviewer.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
                 {TOPUPS.map((p) => {
+                  const best = p.id === 'topup_15';
                   const priceLabel =
                     currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
+                  const perMin =
+                    currency === 'NGN'
+                      ? `₦${Math.round(p.priceNgn / p.minutes).toLocaleString()} / min`
+                      : `$${(p.priceUsd / p.minutes).toFixed(2)} / min`;
                   return (
-                    <div
+                    <button
                       key={p.id}
-                      className="rounded-xl p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
+                      type="button"
+                      onClick={() => startCheckout(p.id)}
+                      disabled={loadingId === p.id}
+                      className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
+                        best
+                          ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
+                      }`}
                     >
-                      <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                        {p.label}
-                      </span>
-                      <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 my-1">
-                        {priceLabel}
-                      </span>
-                      <button
-                        onClick={() => startCheckout(p.id)}
-                        disabled={loadingId === p.id}
-                        className="mt-3 w-full py-2 rounded-lg font-semibold text-xs sm:text-sm bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-70"
-                      >
-                        {loadingId === p.id ? 'Loading…' : `Buy ${p.minutes} min`}
-                      </button>
-                    </div>
+                      {best && (
+                        <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                          Best value
+                        </span>
+                      )}
+                      <div>
+                        <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                          {p.minutes} <span className="text-base font-semibold">min</span>
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                          {perMin}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
+                        {loadingId === p.id ? 'Starting…' : priceLabel}
+                      </div>
+                    </button>
                   );
                 })}
               </div>
@@ -232,37 +253,57 @@ const Upgrade = () => {
           )}
 
           {/* Credit packs — top up AI credits any time (added to your wallet). */}
-          <div className="mt-12 max-w-2xl mx-auto">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">
-              Need more AI credits?
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-5 text-center">
-              Top up credits for CV tailoring, cover letters and written prep. Added to your wallet
-              — they never expire.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="mt-14 max-w-2xl mx-auto">
+            <div className="text-center mb-5">
+              <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
+                One-time purchase
+              </p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                Need more AI credits?
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">
+                Top up credits for CV tailoring, cover letters and written prep. Added to your
+                wallet — they never expire.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
               {CREDIT_PACKS.map((p) => {
+                const best = p.id === 'credits_1000';
                 const priceLabel =
                   currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
+                const perCredit =
+                  currency === 'NGN'
+                    ? `₦${(p.priceNgn / p.credits).toFixed(1)} per credit`
+                    : `$${(p.priceUsd / p.credits).toFixed(2)} per credit`;
                 return (
-                  <div
+                  <button
                     key={p.id}
-                    className="rounded-xl p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center text-center shadow-sm"
+                    type="button"
+                    onClick={() => startCheckout(p.id)}
+                    disabled={loadingId === p.id}
+                    className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
+                      best
+                        ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
+                    }`}
                   >
-                    <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 my-1">
-                      {p.credits} credits
-                    </span>
-                    <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                      {priceLabel}
-                    </span>
-                    <button
-                      onClick={() => startCheckout(p.id)}
-                      disabled={loadingId === p.id}
-                      className="mt-3 w-full py-2 rounded-lg font-semibold text-xs sm:text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors disabled:opacity-70"
-                    >
-                      {loadingId === p.id ? 'Loading…' : `Buy ${p.credits} credits`}
-                    </button>
-                  </div>
+                    {best && (
+                      <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                        Best value
+                      </span>
+                    )}
+                    <div>
+                      <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                        {p.credits} <span className="text-base font-semibold">credits</span>
+                      </p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        {perCredit}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
+                      {loadingId === p.id ? 'Starting…' : priceLabel}
+                    </div>
+                  </button>
                 );
               })}
             </div>

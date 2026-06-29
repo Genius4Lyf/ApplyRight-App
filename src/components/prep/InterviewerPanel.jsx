@@ -52,7 +52,7 @@ const getAvatarUrl = (name = '') => {
   }
 };
 
-const InterviewerCard = ({ person, index, dark, active = false, dim = false }) => {
+const InterviewerCard = ({ person, index, dark, active = false, dim = false, compact = false }) => {
   const accent = ACCENTS[index % ACCENTS.length];
   const [imgOk, setImgOk] = useState(true);
   const avatar = getAvatarUrl(person.name);
@@ -63,7 +63,7 @@ const InterviewerCard = ({ person, index, dark, active = false, dim = false }) =
         active ? 'scale-105' : dim ? 'opacity-40' : ''
       }`}
     >
-      <div className="relative shrink-0 mb-2">
+      <div className={`relative shrink-0 ${compact ? 'mb-1.5' : 'mb-2'}`}>
         {imgOk ? (
           <img
             src={avatar}
@@ -90,16 +90,18 @@ const InterviewerCard = ({ person, index, dark, active = false, dim = false }) =
         )}
       </div>
       <h4
-        className={`text-sm sm:text-base font-bold leading-tight min-h-[1.25rem] flex items-center justify-center ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}
+        className={`text-sm sm:text-base font-bold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[1.25rem]'} ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}
       >
         {person.name}
       </h4>
       <p
-        className={`mt-0.5 text-xs sm:text-sm font-semibold leading-tight min-h-[2rem] flex items-center justify-center ${dark ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-300'}`}
+        className={`mt-0.5 text-xs sm:text-sm font-semibold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[2rem]'} ${dark ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-300'}`}
       >
         {person.role}
       </p>
-      {person.focus && (
+      {/* The per-seat focus blurb is the tallest block; hide it in compact mode
+          (free-tier teaser is blurred behind the lock, so it's never read). */}
+      {person.focus && !compact && (
         <p
           className={`mt-1 text-xs leading-snug min-h-[3rem] flex items-start justify-center ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}
         >
@@ -133,6 +135,7 @@ const InterviewerPanel = ({
   heading = 'Likely to interview you',
   lockedIndices = [], // chooser: indices the user hasn't unlocked yet
   scores = {}, // chooser: index -> score (shown as a badge on done seats)
+  compact = false, // tighten card heights (free-tier locked teaser)
 }) => {
   const isLocked = (i) => Array.isArray(lockedIndices) && lockedIndices.includes(i);
   const seats = Array.isArray(panel) ? panel.filter((p) => p && p.role) : [];
@@ -142,7 +145,7 @@ const InterviewerPanel = ({
   return (
     <div className="w-full">
       {showHeading && (
-        <div className="flex items-center justify-center gap-2 mb-4">
+        <div className={`flex items-center justify-center gap-2 ${compact ? 'mb-2.5' : 'mb-4'}`}>
           <Users className={`w-4 h-4 ${dark ? 'text-indigo-300' : 'text-indigo-500'}`} />
           <span
             className={`text-xs font-bold uppercase tracking-wider ${dark ? 'text-slate-300' : 'text-slate-400'}`}
@@ -214,6 +217,7 @@ const InterviewerPanel = ({
                 dark={dark}
                 active={activeIndex === i}
                 dim={activeIndex >= 0 && activeIndex !== i}
+                compact={compact}
               />
             ))
           )}

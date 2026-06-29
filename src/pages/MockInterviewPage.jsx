@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
@@ -45,6 +45,7 @@ import MeetingStage from '../components/prep/MeetingStage';
 import { seatUnlocked } from '../utils/interviewLoop';
 import AudioPlayer from '../components/AudioPlayer';
 import AssessmentReport from '../components/prep/AssessmentReport';
+import InterviewPaywallModal from '../components/InterviewPaywallModal';
 import { VoiceStyleSelector, DeviceCheck } from '../components/prep/InterviewSetup';
 import {
   isRealtimeSupported,
@@ -137,6 +138,7 @@ const readStoredUser = () => {
 const MockInterviewPage = () => {
   const { applicationId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -149,6 +151,10 @@ const MockInterviewPage = () => {
   const [mode, setMode] = useState(null); // 'scripted' | 'conversational'
   const [showReadyCheck, setShowReadyCheck] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  // Seconds elapsed when the user tapped End — drives the confirm modal copy
+  // (review vs. early-exit) and whether the AI scorecard is even offered.
+  const [endElapsedSec, setEndElapsedSec] = useState(0);
   const [missing, setMissing] = useState([]);
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -184,6 +190,8 @@ const MockInterviewPage = () => {
   // Transcript kept around so a failed assessment can be re-run from review.
   const [gradingTranscript, setGradingTranscript] = useState(null);
   const [gradeError, setGradeError] = useState(false);
+  // Free taste finishes without an AI scorecard (gated server-side, cost upsell).
+  const [analysisLocked, setAnalysisLocked] = useState(false);
   const realtimeRef = useRef(null);
   const recorderRef = useRef(null);
   const maxSessionSecRef = useRef(360);
@@ -364,6 +372,32 @@ const MockInterviewPage = () => {
     refreshEntitlement();
   }, [refreshEntitlement]);
 
+  // Buy a ₦600 Practice Pass (one scored solo run) via the hosted Flutterwave
+  // checkout. Returns to /billing/return, which grants the minutes; the user comes
+  // back with secondsRemaining > 0 and can run a scored session.
+  const [buyingPass, setBuyingPass] = useState(false);
+  // Pre-interview paywall modal — shown when a free user out of taste taps Start.
+  const [showInterviewPaywall, setShowInterviewPaywall] = useState(false);
+  const buyPracticePass = async () => {
+    if (buyingPass) return;
+    setBuyingPass(true);
+    try {
+      // Remember this interview so BillingReturn can send the buyer straight back
+      // here (and auto-start the call) instead of dumping them on the dashboard —
+      // the Flutterwave redirect wipes React state, so we stash it in localStorage.
+      localStorage.setItem('arPostCheckout', window.location.pathname);
+      const { link } = await billingService.checkout('practice_pass', 'NGN');
+      if (link) window.location.href = link;
+      else {
+        toast.error('Could not start checkout — please try again.');
+        setBuyingPass(false);
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not start checkout — please try again.');
+      setBuyingPass(false);
+    }
+  };
+
   // Fetch the interview panel for the setup screen (conversational/live mode) so
   // the user sees who's interviewing them before starting. Re-fetches when the
   // style changes (the panel mix depends on it). Paid → real panel (cached);
@@ -388,12 +422,18 @@ const MockInterviewPage = () => {
   }, [mode, phase, style, applicationId]);
 
   // Seconds of live interview the user can still start (paid minutes or free taste).
+  // Spend PURCHASED minutes first (subscription / top-up / ₦600 Practice Pass),
+  // then fall back to the lifetime free taste — mirrors the backend's reservation
+  // order, so a free-tier Practice Pass buyer can start a (scored) session.
   const liveSecondsAvailable = entitlement
-    ? entitlement.tier !== 'free'
-      ? entitlement.secondsRemaining || 0
+    ? (entitlement.secondsRemaining || 0) > 0
+      ? entitlement.secondsRemaining
       : entitlement.freeTasteRemainingSec || 0
     : null; // null = unknown (entitlement not loaded yet)
 
+  // Tier still gates the PANEL experience (role selection, length slider, sharper
+  // model) — a Practice Pass buyer stays "free" tier and gets the solo interviewer,
+  // just with their scorecard unlocked. Paid plans remain the upgrade for the panel.
   const isPaidTier = !!entitlement && entitlement.tier !== 'free';
 
   // Live-interview length control (paid only). Bounded by the per-tier cap and the
@@ -404,15 +444,17 @@ const MockInterviewPage = () => {
   // the interviewer can close out. Off = hard cut at time-up (every second to Q&A).
   const [wrapUp, setWrapUp] = useState(true);
   // The slider picks the TOTAL session length (the interview + its wrap-up) —
-  // matching the backend, which carves the wrap-up out of it. Range: a 5-minute
-  // minimum up to the per-tier cap (15 min) or the remaining balance, whichever is
-  // smaller. 10 minutes is the recommended sweet spot for a complete interview.
+  // matching the backend, which carves the wrap-up out of it. Range: a 10-minute
+  // floor (sessions shorter than this make a weak scorecard) up to the per-tier
+  // cap (15 min for Pro, 20 for Premium) or the remaining balance, whichever is
+  // smaller. Steps of 5 min → 10 / 15 / 20. 10 minutes is the recommended sweet
+  // spot. The floor gracefully shrinks to the balance when a user has < 10 min left.
   const RECOMMENDED_SEC = 600; // 10 min
   const budgetCapSec = entitlement
     ? Math.max(0, Math.min(entitlement.maxSessionSec || 0, liveSecondsAvailable || 0))
     : 0;
   const lengthMaxSec = budgetCapSec;
-  const lengthMinSec = lengthMaxSec > 0 ? Math.min(300, lengthMaxSec) : 300;
+  const lengthMinSec = lengthMaxSec > 0 ? Math.min(600, lengthMaxSec) : 600;
 
   useEffect(() => {
     let cancelled = false;
@@ -826,6 +868,29 @@ const MockInterviewPage = () => {
     return beginTurnBasedConversation();
   };
 
+  // Returning from a Practice Pass purchase (BillingReturn sends ?paid=1): the
+  // minutes are now granted, so auto-start the live call instead of making the
+  // buyer hunt for "Start" again. Fires ONCE, and only when the page + entitlement
+  // have loaded, minutes are present, and the readiness gate is open — otherwise it
+  // no-ops and the normal Start button stays (their purchased minutes aren't lost).
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (searchParams.get('paid') !== '1') return;
+    if (!application || !entitlement) return; // wait for both async loads
+    if ((liveSecondsAvailable || 0) <= 0) return; // minutes must have landed
+    if (!computeInterviewGate(application).unlocked) return; // respect the prep gate
+    autoStartedRef.current = true;
+    // Strip the flag so a refresh / re-render can't re-trigger the call.
+    const next = new URLSearchParams(searchParams);
+    next.delete('paid');
+    setSearchParams(next, { replace: true });
+    toast.success('Practice Pass active — starting your interview.');
+    setMode('conversational');
+    beginConversation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, application, entitlement, liveSecondsAvailable]);
+
   const resetSessionState = () => {
     reservationRef.current = null; // only a realtime mint sets a live reservation
     setShowReadyCheck(false);
@@ -837,6 +902,7 @@ const MockInterviewPage = () => {
     setTranscript([]);
     setSpineIndex(0);
     setAssessment(null);
+    setAnalysisLocked(false);
     setGradingTranscript(null);
     setGradeError(false);
     setSavedRecordingBlob(null);
@@ -1155,12 +1221,15 @@ const MockInterviewPage = () => {
     // Live-minute paywall: block before minting if we know the balance is empty.
     // (null = entitlement not loaded yet → let the server be the gate.)
     if (liveSecondsAvailable === 0) {
-      toast.error(
-        entitlement?.tier === 'free'
-          ? 'You’ve used your free interview minutes. Upgrade to keep practicing.'
-          : 'You’re out of interview minutes. Grab a plan or a top-up.'
-      );
-      navigate('/upgrade');
+      // Free user at peak "I want to practice now" intent → offer the ₦600 Practice
+      // Pass right here (the modal, not the pricing page). Paid users who've burned
+      // their allowance need a plan/top-up, so send them to /upgrade as before.
+      if (entitlement?.tier === 'free') {
+        setShowInterviewPaywall(true);
+      } else {
+        toast.error('You’re out of interview minutes. Grab a plan or a top-up.');
+        navigate('/upgrade');
+      }
       return;
     }
 
@@ -1271,6 +1340,17 @@ const MockInterviewPage = () => {
 
   // End the live session: grab the transcript, stop + persist the recording,
   // then AI-assess the interview.
+  // The live "End" button: snapshot how long they've been interviewing, then open
+  // the confirm modal. Past the review threshold it's "End & review" (grades);
+  // before it, the modal is framed as an early exit (no score, minutes still spent).
+  const requestEndReview = () => {
+    const elapsed = startedAtRef.current
+      ? Math.round((Date.now() - startedAtRef.current) / 1000)
+      : 0;
+    setEndElapsedSec(elapsed);
+    setShowEndConfirm(true);
+  };
+
   const endRealtime = async () => {
     clearTimeout(graceKickRef.current);
     // Multi-voice: stitch the final seat's transcript onto the earlier segments'.
@@ -1366,8 +1446,27 @@ const MockInterviewPage = () => {
       // Reservation is now reconciled server-side; don't double-reconcile on a re-run.
       reservationRef.current = null;
       refreshEntitlement(); // reflect the minutes just spent
-      setAssessment(res.assessment);
       setGradingTranscript(null);
+      // Free taste: the server meters the minutes but returns no scorecard — show
+      // the upsell instead of a report, and don't touch persisted prep state.
+      if (res.analysisLocked) {
+        setAnalysisLocked(true);
+        setAssessment(null);
+        setPhase('review');
+        return;
+      }
+      // Too short to score: the server reconciled the minutes used but skipped the
+      // (costly) AI review. Nothing to show — let them know their minutes counted
+      // and head back, rather than parking on an empty review screen.
+      if (res.tooShort) {
+        toast.message(
+          res.message ||
+            'That interview was too short for a scored review — the minutes you used were counted.'
+        );
+        exitToDetail();
+        return;
+      }
+      setAssessment(res.assessment);
       setApplication((prev) =>
         prev
           ? {
@@ -1635,7 +1734,7 @@ const MockInterviewPage = () => {
                     {/* Who's interviewing you today — the panel, shown before you
                         start. Paid → tailored panel; free → generic teaser (locked). */}
                     {/* Unified Interviewer Panel & Style Selector Card */}
-                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-sm space-y-3">
+                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-sm space-y-3">
                       {(panelLoading || setupPanel.length >= 2) && (
                         <div>
                           <InterviewerPanel
@@ -1649,8 +1748,13 @@ const MockInterviewPage = () => {
                             selectedIndex={isPaidTier ? chosenSeatIndex : -1}
                             lockedIndices={isPaidTier ? lockedIndices : []}
                             scores={isPaidTier ? seatScores : {}}
+                            // Free tier sees the panel blurred behind a lock, so
+                            // render it compactly — the per-seat detail is hidden
+                            // anyway and the tall min-height reservations only made
+                            // the column overflow the viewport.
+                            compact={!isPaidTier}
                           />
-                          <p className="mt-2 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+                          <p className="mt-1.5 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
                             {isPaidTier
                               ? setupPanel[chosenSeatIndex]?.description ||
                                 'Pick who runs this round — each interviews you in their own voice, on what they care about.'
@@ -1774,7 +1878,7 @@ const MockInterviewPage = () => {
               caption={caption}
               onToggleCaptions={() => setCaptionsOn((v) => !v)}
               onToggleMute={toggleRealtimeMute}
-              onEnd={endRealtime}
+              onEnd={requestEndReview}
               activeSeat={panel.length >= 1 ? activeSeat : null}
               panel={panel}
               candidateName={firstName && firstName !== 'there' ? firstName : 'You'}
@@ -1819,6 +1923,10 @@ const MockInterviewPage = () => {
               recordingBlob={savedRecordingBlob}
               recordingDuration={savedRecordingDuration}
               gradeError={gradeError && !assessment && !!gradingTranscript}
+              analysisLocked={analysisLocked}
+              onUpgrade={() => navigate('/upgrade')}
+              onBuyPracticePass={buyPracticePass}
+              buyingPass={buyingPass}
               onRetryAssessment={retryAssessment}
               onSave={saveSession}
               onPracticeWeak={() =>
@@ -1862,7 +1970,23 @@ const MockInterviewPage = () => {
             onStay={() => setShowExitConfirm(false)}
           />
         )}
+        {showEndConfirm && (
+          <EndReviewConfirmModal
+            elapsedSec={endElapsedSec}
+            minReviewSec={entitlement?.minReviewSec || 480}
+            onConfirm={() => {
+              setShowEndConfirm(false);
+              endRealtime();
+            }}
+            onCancel={() => setShowEndConfirm(false)}
+          />
+        )}
       </AnimatePresence>
+
+      <InterviewPaywallModal
+        open={showInterviewPaywall}
+        onClose={() => setShowInterviewPaywall(false)}
+      />
     </div>
   );
 };
@@ -1923,6 +2047,84 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
     </motion.div>
   </div>
 );
+
+// ── End & review confirmation (live interview only — minutes are metered) ──
+// Two faces, decided by how long they've interviewed:
+//   • Past the review threshold (default 8 min) → "End & review": grades the session.
+//   • Before it → an early-EXIT warning: a scored review needs the full threshold,
+//     so leaving now gives no score, and the minutes already used are still spent.
+// Either way the backend reconciles minutes (refunds only the UNUSED remainder),
+// and the server independently refuses to grade a sub-threshold session — this
+// modal just sets expectations so users don't keep ending early to re-trigger it.
+const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, onCancel }) => {
+  const canReview = elapsedSec >= minReviewSec;
+  const minReviewMin = Math.round(minReviewSec / 60);
+  const spentLabel = elapsedSec < 60 ? 'less than a minute' : `${Math.floor(elapsedSec / 60)} min`;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onCancel}
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
+      >
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/15 border border-amber-200/60 dark:border-amber-500/30 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {canReview ? 'End the interview now?' : 'Exit the interview?'}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              {canReview ? (
+                <>
+                  The interview minutes you’ve used will be counted toward your balance — they won’t
+                  be returned. For the most useful feedback, it’s best to complete the full
+                  interview before ending.
+                </>
+              ) : (
+                <>
+                  You’re only <span className="font-semibold">{spentLabel}</span> in. A scored
+                  review needs at least{' '}
+                  <span className="font-semibold">{minReviewMin} minutes</span> of interview, so
+                  exiting now means <span className="font-semibold">no score</span> — and the{' '}
+                  {spentLabel} you’ve used will still be deducted from your minutes. Keep going to
+                  unlock your review.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
+          >
+            Keep going
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
+          >
+            {canReview ? 'End & review' : 'Exit anyway'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // ── Ready check ──
 const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose }) => (
@@ -2238,7 +2440,7 @@ const IntroView = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3.5 sm:p-4 shadow-sm h-full flex flex-col ${className}`}
+      className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3.5 sm:p-4 shadow-sm flex flex-col ${className}`}
     >
       <AnimatePresence mode="wait">
         {activeSubView === 'main' && (
@@ -2540,7 +2742,7 @@ const IntroView = ({
                         type="range"
                         min={lengthMinSec}
                         max={lengthMaxSec}
-                        step={60}
+                        step={300}
                         value={lengthSec || lengthMinSec}
                         onChange={(e) => setLengthSec(Number(e.target.value))}
                         className="w-full accent-indigo-600 cursor-pointer"
@@ -2989,6 +3191,10 @@ const ReviewView = ({
   recordingBlob,
   recordingDuration,
   gradeError,
+  analysisLocked,
+  onUpgrade,
+  onBuyPracticePass,
+  buyingPass,
   onRetryAssessment,
   onSave,
   onPracticeWeak,
@@ -3074,7 +3280,42 @@ const ReviewView = ({
         )}
 
         {/* AI assessment (conversational) — replaces self-rating */}
-        {assessment ? (
+        {analysisLocked ? (
+          <div className="mt-6 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-500/10 dark:to-slate-900 p-6 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+              <Lock className="w-6 h-6 text-indigo-600 dark:text-indigo-300" />
+            </div>
+            <h2 className="mt-4 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+              Nice — you finished your free practice run!
+            </h2>
+            <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+              That was a free taste — practice only. Grab a Practice Pass to run a full mock
+              interview <span className="font-semibold">with a scored review</span>: your readiness
+              score, per-answer feedback, and exactly what to fix.
+            </p>
+            <div className="mt-5 flex flex-col items-center gap-2.5">
+              <button
+                type="button"
+                onClick={onBuyPracticePass}
+                disabled={buyingPass}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                {buyingPass ? 'Starting checkout…' : 'Interview & Score Review — ₦1,000'}
+              </button>
+              <button
+                type="button"
+                onClick={onUpgrade}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors cursor-pointer"
+              >
+                Or see all plans <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <p className="mt-3 text-[11px] text-slate-450 dark:text-slate-500">
+              One scored practice run. No subscription.
+            </p>
+          </div>
+        ) : assessment ? (
           <AssessmentReport assessment={assessment} />
         ) : gradeError ? (
           <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/15 p-4 text-center">
@@ -3618,6 +3859,10 @@ const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }
   </motion.div>
 );
 
+// Generic interviewer shown on the Meet-style stage for free/solo live sessions
+// (no AI-generated panel). Gives free users the same polished call surface.
+const SOLO_SEAT = { name: 'ApplyRight AI', role: 'Your interviewer' };
+
 // ── Realtime (live voice) view — VOICE ONLY, no text, no question on screen ──
 const RealtimeView = ({
   voiceState,
@@ -3635,9 +3880,16 @@ const RealtimeView = ({
   candidateName = '',
   handingOff = false,
 }) => {
-  // Meet-stage view whenever there's a roster interviewer (a chosen 1:1 person, or
-  // a full panel). Solo/free (no roster) keeps the single generic tile.
-  const isPanel = Array.isArray(panel) && panel.length >= 1;
+  // Everyone gets the Google-Meet-style stage — the polished call surface costs
+  // nothing. Paid interviews show the real roster (named, JD-tailored seats +
+  // multi-voice); free/solo (no roster) shows the SAME stage with one generic
+  // ApplyRight AI interviewer, so the free live-interview UX feels identical.
+  const hasRoster = Array.isArray(panel) && panel.length >= 1;
+  const stageSeats = hasRoster ? panel : [SOLO_SEAT];
+  // Light up the generic seat's tile while it's speaking; a real roster has the
+  // orchestrator drive activeSeat. Header (above) keeps using the raw activeSeat
+  // so it only shows a name for a real named interviewer.
+  const stageActiveSeat = hasRoster ? activeSeat : SOLO_SEAT;
   const speaking = voiceState === 'speaking';
   const connecting = voiceState === 'loading';
   return (
@@ -3680,21 +3932,17 @@ const RealtimeView = ({
         </div>
       </div>
 
-      {/* Panel interview (paid) → a Google-Meet-style stage of all participants.
-          Solo interview → the single interviewer tile. */}
-      {isPanel ? (
-        <MeetingStage
-          panel={panel}
-          activeSeat={activeSeat}
-          candidateName={candidateName}
-          muted={muted}
-          speaking={speaking}
-          micStream={micStream}
-          handingOff={handingOff}
-        />
-      ) : (
-        <InterviewerTile voiceState={voiceState} />
-      )}
+      {/* Meet-style stage for everyone. Paid → real named panel; free/solo → the
+          same stage with a single generic ApplyRight AI interviewer. */}
+      <MeetingStage
+        panel={stageSeats}
+        activeSeat={stageActiveSeat}
+        candidateName={candidateName}
+        muted={muted}
+        speaking={speaking}
+        micStream={micStream}
+        handingOff={handingOff}
+      />
 
       {/* Big live status */}
       <div className="shrink-0 mt-5 text-center">

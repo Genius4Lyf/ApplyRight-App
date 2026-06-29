@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import billingService from '../services/billing.service';
@@ -13,6 +13,27 @@ const BillingReturn = () => {
   const [params] = useSearchParams();
   const [state, setState] = useState('verifying'); // verifying | success | failed
   const [entitlement, setEntitlement] = useState(null);
+
+  // Where to send the user after a successful payment. A flow that stashed a path
+  // (e.g. the live-interview Practice Pass) returns there with ?paid=1 so the page
+  // can pick up + auto-start; everything else lands on the dashboard. Read once.
+  const [returnTo] = useState(() => {
+    try {
+      return localStorage.getItem('arPostCheckout') || null;
+    } catch {
+      return null;
+    }
+  });
+  const successPath = returnTo ? `${returnTo}?paid=1` : '/dashboard';
+  const isInterviewReturn = !!returnTo && returnTo.includes('/mock');
+  const goToSuccess = useCallback(() => {
+    try {
+      localStorage.removeItem('arPostCheckout');
+    } catch {
+      /* non-fatal */
+    }
+    navigate(successPath);
+  }, [navigate, successPath]);
 
   useEffect(() => {
     const status = params.get('status');
@@ -46,7 +67,7 @@ const BillingReturn = () => {
         setEntitlement(result.entitlement);
         setState('success');
         toast.success('Payment confirmed — your plan is active!');
-        setTimeout(() => navigate('/dashboard'), 2200);
+        setTimeout(goToSuccess, 2200);
       } else {
         setState('failed');
       }
@@ -55,7 +76,7 @@ const BillingReturn = () => {
     return () => {
       cancelled = true;
     };
-  }, [params, navigate]);
+  }, [params, goToSuccess]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
@@ -79,15 +100,17 @@ const BillingReturn = () => {
               You’re all set!
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {entitlement?.minutesRemaining != null
-                ? `${entitlement.minutesRemaining} live interview minutes are ready.`
-                : 'Your plan is now active.'}
+              {isInterviewReturn
+                ? `Your ${entitlement?.minutesRemaining ?? ''} interview minutes are ready — taking you back to start your interview…`
+                : entitlement?.minutesRemaining != null
+                  ? `${entitlement.minutesRemaining} live interview minutes are ready.`
+                  : 'Your plan is now active.'}
             </p>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={goToSuccess}
               className="mt-6 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
             >
-              Go to dashboard
+              {isInterviewReturn ? 'Start my interview' : 'Go to dashboard'}
             </button>
           </>
         )}

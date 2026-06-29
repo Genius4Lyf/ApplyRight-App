@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Share2, X, Check } from 'lucide-react';
+import { Zap, Share2, X, Check, Play, Crown, ArrowRight, Sparkles } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
+import { TIERS, formatNgn } from '../lib/plans';
 import AdPlayer from '../components/AdPlayer';
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
+// Small, reusable section heading so the three store zones (earn / top up /
+// go unlimited) read with consistent hierarchy.
+const SectionHeading = ({ eyebrow, title, subtitle }) => (
+  <div className="mb-5">
+    {eyebrow && (
+      <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
+        {eyebrow}
+      </p>
+    )}
+    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{title}</h2>
+    {subtitle && <p className="text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+  </div>
+);
 
 const CreditStore = () => {
   const navigate = useNavigate();
@@ -35,7 +50,7 @@ const CreditStore = () => {
   // Buyable credit packs (must match the backend catalog ids/amounts).
   const CREDIT_PACKS = [
     { id: 'credits_500', credits: 75, ngn: 500 },
-    { id: 'credits_1000', credits: 150, ngn: 1000 },
+    { id: 'credits_1000', credits: 150, ngn: 1000, best: true },
   ];
 
   // Start a Flutterwave checkout for a credit pack and redirect to the hosted link.
@@ -180,6 +195,8 @@ const CreditStore = () => {
     ? config?.credits?.adRewardAndroid || 10
     : config?.credits?.adReward || 5;
 
+  const referralBonus = config?.credits?.referralBonus || 10;
+
   // Pre-check the per-user ad cooldown before opening the ad, so the user never
   // watches one the server would reject (web Monetag + Android AdMob alike).
   const handleWatchClick = async () => {
@@ -197,6 +214,9 @@ const CreditStore = () => {
     setShowAdPlayer(true);
   };
 
+  const isPaid = entitlement && entitlement.tier !== 'free';
+  const availableCredits = entitlement?.availableCredits ?? entitlement?.walletCredits ?? 0;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Back Button */}
@@ -208,196 +228,281 @@ const CreditStore = () => {
         <X className="w-5 h-5" />
       </button>
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+      <div className="max-w-5xl mx-auto space-y-12 relative z-10">
         {/* Header */}
-        <div className="text-center space-y-4 mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-2xl mb-4">
-            <Zap className="w-8 h-8 fill-indigo-600" />
+        <div className="text-center space-y-3 pt-2">
+          <div className="inline-flex items-center justify-center p-3 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-2xl">
+            <Zap className="w-7 h-7 fill-indigo-600 dark:fill-indigo-300" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Free A.I Credits Store
+            Credits &amp; Plans
           </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            ApplyRight is 100% free. Watch ads to earn A.I credits for premium templates and AI
-            features.
+          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Earn credits for free, top up instantly, or go unlimited with a plan. Credits power AI
+            CV writing, cover letters, ATS scoring and premium templates.
           </p>
         </div>
 
-        {/* Subscription / live-interview minutes summary + upsell. */}
+        {/* ── Balance hero ──────────────────────────────────────────────
+            Anchors the page: how many credits you have + your current plan
+            and live-interview minutes, all in one glance. */}
         {entitlement && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-center sm:text-left">
-              {entitlement.tier === 'free' ? (
-                <p className="text-slate-600 dark:text-slate-300">
-                  <span className="font-semibold">Free plan</span> · live interview taste:{' '}
-                  {Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} min left
-                </p>
-              ) : (
-                <p className="text-slate-600 dark:text-slate-300">
-                  <span className="font-semibold capitalize">
-                    {entitlement.planId || entitlement.tier} plan
-                  </span>{' '}
-                  · {entitlement.minutesRemaining} live interview min left
-                  {entitlement.expiresAt
-                    ? ` · until ${new Date(entitlement.expiresAt).toLocaleDateString()}`
-                    : ''}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={() => navigate('/upgrade')}
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors whitespace-nowrap"
-            >
-              {entitlement.tier === 'free' ? 'See plans' : 'Add minutes'}
-            </button>
-          </div>
-        )}
-
-        {/* A.I credit balance + buy packs. Paid tiers spend their plan allowance
-            first, then this wallet; packs and ad credits always persist. */}
-        {entitlement && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
-              <div className="text-center sm:text-left">
-                <p className="text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-700 p-6 sm:p-8 text-white shadow-xl">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-wider font-bold text-indigo-200">
                   Your A.I credits
                 </p>
-                <p className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 leading-tight">
-                  {entitlement.availableCredits ?? entitlement.walletCredits ?? 0}
-                </p>
-                {entitlement.tier !== 'free' && (entitlement.planCredits ?? 0) >= 0 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {entitlement.planCredits ?? 0} plan · {entitlement.walletCredits ?? 0} wallet
+                <p className="text-5xl font-black leading-tight mt-1">{availableCredits}</p>
+                {isPaid && (entitlement.planCredits ?? 0) >= 0 && (
+                  <p className="text-sm text-indigo-100/80 mt-1">
+                    {entitlement.planCredits ?? 0} from plan · {entitlement.walletCredits ?? 0} in
+                    wallet
                   </p>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs text-center sm:text-right">
-                Out of credits? Buy a pack below or watch an ad — both add to your wallet and never
-                expire.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {CREDIT_PACKS.map((p) => (
+
+              {/* Plan + minutes status */}
+              <div className="sm:text-right">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold backdrop-blur">
+                  {isPaid ? (
+                    <>
+                      <Crown className="w-4 h-4 text-amber-300" />
+                      <span className="capitalize">
+                        {entitlement.planId || entitlement.tier} plan
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Free plan</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-sm text-indigo-100/90 mt-2">
+                  {isPaid
+                    ? `${entitlement.minutesRemaining} live interview min left`
+                    : `${Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} free interview min left`}
+                  {isPaid && entitlement.expiresAt
+                    ? ` · until ${new Date(entitlement.expiresAt).toLocaleDateString()}`
+                    : ''}
+                </p>
                 <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => buyCredits(p.id)}
-                  disabled={!!buyingPack}
-                  className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 p-4 transition-colors disabled:opacity-60"
+                  onClick={() => navigate('/upgrade')}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition-colors"
                 >
-                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                    {p.credits} credits
-                  </span>
-                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300 mt-1">
-                    {buyingPack === p.id ? 'Starting…' : `₦${p.ngn.toLocaleString()}`}
-                  </span>
+                  {isPaid ? 'Manage plan' : 'See all plans'}
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Earn credits by watching an ad — Monetag on web, AdMob on Android. */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative transform transition-all hover:shadow-2xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 dark:bg-purple-500/15 rounded-full blur-3xl -ml-16 -mb-16 opacity-50"></div>
-
-          <div className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row items-center gap-12">
-            <div className="flex-1 space-y-6 text-center md:text-left">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 text-xs font-bold uppercase tracking-wider mb-4">
-                  Instant Reward
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {isAndroidNative()
-                    ? 'Watch Video to Earn Credits'
-                    : 'Watch an Ad to Earn Credits'}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-lg">
-                  {isAndroidNative() ? 'Watch a short video ad' : 'View a quick sponsored offer'}{' '}
-                  and earn{' '}
-                  <span className="text-indigo-600 dark:text-indigo-300 font-bold">
-                    {platformReward} A.I Credits
-                  </span>
-                  .
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Takes only 5 seconds</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Instant reward</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Unlimited daily views</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-none">
-              <button
-                onClick={handleWatchClick}
-                className="group relative flex flex-col items-center justify-center w-64 h-64 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg hover:scale-105 transition-all duration-300"
-              >
-                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform">
-                  <Zap className="w-10 h-10 text-indigo-600 ml-1" />
-                </div>
-                <span className="text-white font-bold text-2xl">
-                  {isAndroidNative() ? 'Watch Video' : 'Watch Ad'}
-                </span>
-                <span className="text-indigo-200 font-medium mt-1">
-                  +{platformReward} A.I Credits
-                </span>
-
-                {adStats.streak > 0 && (
-                  <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                    🔥 {adStats.streak} Day Streak
+        {/* ══ ZONE 1 — Earn free credits ══════════════════════════════ */}
+        <section>
+          <SectionHeading
+            eyebrow="No payment needed"
+            title="Earn free credits"
+            subtitle="Top up your wallet without spending a naira. Earned credits never expire."
+          />
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Watch ad */}
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
+              <div className="relative z-10 p-7 flex flex-col flex-1">
+                <div className="flex items-start justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-md">
+                    <Play className="w-6 h-6 ml-0.5 fill-white" />
                   </div>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+                  {adStats.streak > 0 && (
+                    <div className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                      🔥 {adStats.streak} day streak
+                    </div>
+                  )}
+                </div>
 
-        {/* Secondary Actions Grid */}
-        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
-          {/* Invite Friend */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Share2 className="w-32 h-32 text-slate-900 dark:text-slate-100" />
-            </div>
-            <div className="relative z-10">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/15 rounded-xl flex items-center justify-center mb-6 text-blue-600 dark:text-blue-300">
-                <Share2 className="w-6 h-6" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
+                  {isAndroidNative() ? 'Watch a video' : 'Watch a quick ad'}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                  Earn{' '}
+                  <span className="font-bold text-indigo-600 dark:text-indigo-300">
+                    +{platformReward} credits
+                  </span>{' '}
+                  in about 5 seconds.
+                </p>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" /> Instant reward
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" /> Unlimited daily
+                  </span>
+                </div>
+
+                <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
+                  <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white font-bold hover:opacity-95 transition-opacity shadow-md">
+                    <Zap className="w-5 h-5 fill-white" />
+                    {isAndroidNative() ? 'Watch video' : 'Watch ad'} · +{platformReward}
+                  </span>
+                </button>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                Invite Friends
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6">
-                Get{' '}
-                <span className="font-bold text-slate-900 dark:text-slate-100">
-                  {config?.credits?.referralBonus || 10} A.I Credits
-                </span>{' '}
-                for every friend who joins using your link.
-              </p>
-              <button
-                onClick={() => setShowInviteModal(true)}
-                className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-colors"
-              >
-                Get Invite Link
-              </button>
+            </div>
+
+            {/* Invite friends */}
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50 dark:bg-blue-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
+              <div className="relative z-10 p-7 flex flex-col flex-1">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-300">
+                  <Share2 className="w-6 h-6" />
+                </div>
+
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
+                  Invite friends
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                  Get{' '}
+                  <span className="font-bold text-blue-600 dark:text-blue-300">
+                    +{referralBonus} credits
+                  </span>{' '}
+                  for every friend who joins with your link.
+                </p>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" /> No limit on invites
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" /> Credits never expire
+                  </span>
+                </div>
+
+                <button onClick={() => setShowInviteModal(true)} className="mt-auto pt-6 w-full">
+                  <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <Share2 className="w-5 h-5" />
+                    Get invite link
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* ══ ZONE 2 — Top up instantly ═══════════════════════════════ */}
+        <section>
+          <SectionHeading
+            eyebrow="One-time purchase"
+            title="Top up instantly"
+            subtitle="Buy a credit pack with card or transfer. Added to your wallet, never expires."
+          />
+          <div className="grid sm:grid-cols-2 gap-4">
+            {CREDIT_PACKS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => buyCredits(p.id)}
+                disabled={!!buyingPack}
+                className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
+                  p.best
+                    ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
+                }`}
+              >
+                {p.best && (
+                  <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                    Best value
+                  </span>
+                )}
+                <div>
+                  <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                    {p.credits} <span className="text-base font-semibold">credits</span>
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    {(p.ngn / p.credits).toFixed(1)} ₦ per credit
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
+                  {buyingPack === p.id ? 'Starting…' : `₦${p.ngn.toLocaleString()}`}
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ══ ZONE 3 — Go unlimited (subscriptions) ═══════════════════ */}
+        <section>
+          <SectionHeading
+            eyebrow="Best for active job hunts"
+            title="Go unlimited with a plan"
+            subtitle="Plans unlock unlimited AI writing, the sharper GPT-4o model, premium templates and live interview minutes."
+          />
+          <div className="grid md:grid-cols-3 gap-4">
+            {TIERS.map((t) => {
+              const featured = t.featuredFor === 'NGN' || t.highlight;
+              return (
+                <div
+                  key={t.id}
+                  className={`relative flex flex-col rounded-2xl border p-6 transition-shadow hover:shadow-md ${
+                    featured
+                      ? 'border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-900 ring-1 ring-indigo-200 dark:ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
+                  }`}
+                >
+                  {t.badge && (
+                    <span className="absolute -top-2.5 left-6 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                      {t.badge}
+                    </span>
+                  )}
+                  <p className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    {t.label}
+                  </p>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+                      {formatNgn(t.priceNgn)}
+                    </span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">/ {t.period}</span>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                      {t.credits.toLocaleString()} credits
+                    </span>{' '}
+                    + {t.minutes} live interview min
+                  </p>
+                  <button
+                    onClick={() => navigate('/upgrade')}
+                    className="mt-auto pt-6 w-full text-sm font-bold"
+                  >
+                    <span
+                      className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl transition-colors ${
+                        featured
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                          : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Choose {t.label}
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
+            Need just a few more interview minutes?{' '}
+            <button
+              onClick={() => navigate('/upgrade')}
+              className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              See minute top-ups →
+            </button>
+          </p>
+        </section>
 
         {/* Info Footer */}
-        <div className="text-center pt-8 border-t border-slate-200/50 dark:border-slate-700/50">
+        <div className="text-center pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
           <p className="text-sm text-slate-400 dark:text-slate-500">
             Need help? Contact support@applyright.com.ng
           </p>
@@ -480,14 +585,11 @@ const CreditStore = () => {
 
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    Invite Friends & Earn
+                    Invite Friends &amp; Earn
                   </h3>
                   <p className="text-slate-600 dark:text-slate-300 mt-2">
                     Share your code with friends. When they sign up, <b>you get</b>{' '}
-                    <span className="text-green-600 font-bold">
-                      {config?.credits?.referralBonus || 10} A.I Credits
-                    </span>
-                    !
+                    <span className="text-green-600 font-bold">{referralBonus} A.I Credits</span>!
                   </p>
                 </div>
 
