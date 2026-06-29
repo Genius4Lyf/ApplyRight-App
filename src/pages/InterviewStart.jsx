@@ -108,30 +108,82 @@ const InterviewStart = () => {
     }
   };
 
-  // ── Paid-only gate ──
-  if (!entLoading && isFreeTier) {
+  // While the entitlement is still loading, render a neutral loading state
+  // instead of the full (paid) flow. Otherwise a free user briefly sees the
+  // interview setup before it's replaced by the upgrade gate — a jarring flash.
+  if (entLoading) {
     return (
       <div className="min-h-screen bg-transparent flex flex-col">
         <Navbar />
-        <main className="flex-1 max-w-2xl mx-auto w-full px-4 pt-8 pb-16">
+        <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-16">
           <BackLink navigate={navigate} />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-8 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center mx-auto mb-5">
-              <Crown className="w-7 h-7" />
+          <div className="flex items-center justify-center py-32">
+            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ── Paid-only gate ──
+  if (isFreeTier) {
+    return (
+      <div className="min-h-screen bg-transparent flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-8 pb-16">
+          <BackLink navigate={navigate} />
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/30">
+            {/* Soft warm glow behind the badge for a premium feel */}
+            <div className="pointer-events-none absolute inset-x-0 -top-20 h-44 bg-gradient-to-b from-amber-200/50 dark:from-amber-500/10 to-transparent blur-2xl" />
+
+            <div className="relative px-7 py-9 sm:px-10 sm:py-10">
+              <div className="flex justify-center mb-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200/70 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+                  <Crown className="w-3.5 h-3.5" /> Pro
+                </span>
+              </div>
+
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30 ring-1 ring-white/20">
+                <Mic className="w-8 h-8" />
+              </div>
+
+              <h1 className="text-2xl font-bold text-center text-slate-900 dark:text-slate-100 mb-2.5">
+                Direct interviews are a Pro feature
+              </h1>
+              <p className="text-center text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-7">
+                Skip the analysis and go straight into a live, voice-based mock interview against
+                any job description.
+              </p>
+
+              <ul className="space-y-3 mb-8 max-w-xs mx-auto">
+                {[
+                  'Live, voice-based mock interviews',
+                  'Tailored to any job you paste',
+                  'Instant feedback — no full analysis needed',
+                ].map((feature) => (
+                  <li
+                    key={feature}
+                    className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
+                  >
+                    <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => navigate('/upgrade')}
+                className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl btn-primary font-semibold"
+              >
+                <Sparkles className="w-5 h-5" /> Upgrade to Pro
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full mt-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              >
+                Not now
+              </button>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-              Direct interviews are a Pro feature
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-              Jump straight into a live, voice-based mock interview against any job description — no
-              full analysis required. Upgrade to unlock it.
-            </p>
-            <button
-              onClick={() => navigate('/upgrade')}
-              className="inline-flex items-center justify-center gap-2 px-6 h-12 rounded-lg btn-primary font-semibold"
-            >
-              <Sparkles className="w-5 h-5" /> Upgrade to Pro
-            </button>
           </div>
         </main>
       </div>

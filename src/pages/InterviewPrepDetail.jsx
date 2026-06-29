@@ -660,7 +660,7 @@ const InterviewPrepDetail = () => {
         )}
 
         {/* Tabs */}
-        <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto">
+        <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;

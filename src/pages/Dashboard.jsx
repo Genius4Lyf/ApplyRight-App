@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
+import CVPicker from '../components/CVPicker';
 import JobLinkInput from '../components/JobLinkInput';
 import Preview from './Preview';
 import api from '../services/api';
@@ -29,6 +30,7 @@ import {
   Mic,
   Crown,
   RefreshCw,
+  Link2,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
@@ -67,6 +69,10 @@ const Dashboard = () => {
   }, [location]);
 
   const [resume, setResume] = useState(null);
+  // Step 1 CV source for the ApplyRight analysis flow. 'saved' picks an existing
+  // ApplyRight CV (selectedDraftId); 'upload' uses a freshly uploaded resume.
+  const [cvMode, setCvMode] = useState('saved');
+  const [selectedDraftId, setSelectedDraftId] = useState(null);
   const [job, setJob] = useState(null);
   const [application, setApplication] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -108,6 +114,11 @@ const Dashboard = () => {
   // New Feature State
   const [workflowMode, setWorkflowMode] = useState(null); // 'upload' (optimize), 'create-upload' (new feature)
   const [myDrafts, setMyDrafts] = useState([]);
+
+  // Resolved Step 1 selection for the analysis flow, derived from cvMode.
+  const selectedDraft =
+    cvMode === 'saved' ? myDrafts.find((d) => d._id === selectedDraftId) || null : null;
+  const cvChosen = cvMode === 'saved' ? !!selectedDraftId : !!resume;
   // True until the first drafts fetch resolves. Drives the dashboard skeleton
   // and also gates the Capacitor splash (via signalReady) on mobile so the app
   // doesn't flash an empty dashboard between splash-hide and first paint.
@@ -182,20 +193,20 @@ const Dashboard = () => {
     const analyzeFit = async () => {
       const shouldAutoRun = user?.settings?.autoGenerateAnalysis === true;
 
-      if (resume && job && !fitResult && shouldAutoRun) {
+      if (cvChosen && job && !fitResult && shouldAutoRun) {
         performAnalysis();
       }
     };
 
     analyzeFit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resume, job]);
+  }, [resume, selectedDraftId, job]);
 
   const performAnalysis = async () => {
     setAnalyzing(true);
     try {
       const res = await api.post('/analysis/analyze', {
-        resumeId: resume._id,
+        ...(cvMode === 'saved' ? { draftCVId: selectedDraftId } : { resumeId: resume._id }),
         jobId: job._id,
       });
       setFitResult(res.data);
@@ -242,7 +253,7 @@ const Dashboard = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!resume || !job) return;
+    if (!cvChosen || !job) return;
     try {
       const result = await performAnalysis();
       if (result) {
@@ -513,6 +524,7 @@ const Dashboard = () => {
   // keep the job so the user only needs to swap one input.
   const handleChangeResume = () => {
     setResume(null);
+    setSelectedDraftId(null);
     setFitResult(null);
     setApplication(null);
     setTimeout(() => {
@@ -543,7 +555,11 @@ const Dashboard = () => {
       <Navbar />
       <GlobalBanner />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 relative">
+      <main
+        className={`flex-1 max-w-5xl mx-auto w-full px-4 relative ${
+          workflowMode ? 'pt-8 pb-12' : 'py-12'
+        }`}
+      >
         {showProfileBanner && (
           <div className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
             <div
@@ -661,6 +677,9 @@ const Dashboard = () => {
                 <div
                   onClick={() => {
                     setResume(null);
+                    setSelectedDraftId(null);
+                    // Default to the Saved CV tab when the user has CVs, else Upload.
+                    setCvMode(myDrafts.length > 0 ? 'saved' : 'upload');
                     setJob(null);
                     setFitResult(null);
                     setApplication(null);
@@ -875,6 +894,7 @@ const Dashboard = () => {
             <button
               onClick={() => {
                 setResume(null);
+                setSelectedDraftId(null);
                 setJob(null);
                 setFitResult(null);
                 setApplication(null);
@@ -884,31 +904,85 @@ const Dashboard = () => {
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
+            {!fitResult && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      ApplyRight
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      Check your CV against a job — we'll score the fit and tailor it to match.
+                    </p>
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                  <Zap className="w-3.5 h-3.5" />
+                  {user.credits || 0} AI credits remaining
+                </div>
+              </div>
+            )}
             {!fitResult ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-12">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
-                  <CVUploader onUploadSuccess={setResume} />
-                </div>
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-8 lg:bg-transparent lg:border-0 lg:shadow-none lg:p-0 lg:rounded-none">
-                  <JobLinkInput key={jobInputKey} onJobExtracted={setJob} />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {/* Step 1 — choose CV. Card chrome lives on the section
+                    (matching the Interview Me page); CVPicker is chrome-less. */}
+                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
+                  <CVPicker
+                    cvMode={cvMode}
+                    onCvModeChange={setCvMode}
+                    drafts={myDrafts}
+                    draftsLoading={initialLoading}
+                    selectedDraftId={selectedDraftId}
+                    onSelectDraft={setSelectedDraftId}
+                    uploadedResume={resume}
+                    onUploadedResume={setResume}
+                  />
+                </section>
+
+                {/* Step 2 — job listing. Header supplied here so JobLinkInput
+                    runs embedded (no duplicate chrome), same as Interview Me. */}
+                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                      <Link2 className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                        Step 2 · Job listing
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Provide the job details for analysis
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-h-0">
+                    <JobLinkInput key={jobInputKey} embedded onJobExtracted={setJob} />
+                  </div>
+                </section>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                {resume && (
+                {(resume || selectedDraft) && (
                   <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        <CheckCircle className="w-3 h-3 text-emerald-500" /> Resume uploaded
+                        <CheckCircle className="w-3 h-3 text-emerald-500" />{' '}
+                        {selectedDraft ? 'Saved CV' : 'Resume uploaded'}
                       </div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                        {resume.parsedData?.experience?.[0]?.role || 'Your resume'}
-                        {resume.parsedData?.skills?.length
-                          ? ` · ${resume.parsedData.skills.length} skills`
-                          : ''}
+                        {selectedDraft
+                          ? selectedDraft.title || selectedDraft.personalInfo?.fullName || 'Your CV'
+                          : `${resume.parsedData?.experience?.[0]?.role || 'Your resume'}${
+                              resume.parsedData?.skills?.length
+                                ? ` · ${resume.parsedData.skills.length} skills`
+                                : ''
+                            }`}
                       </p>
                     </div>
                     <button
@@ -1430,17 +1504,17 @@ const Dashboard = () => {
 
             <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS} className="w-full max-w-xl">
               <div className="relative group flex justify-center">
-                {(!resume || !job) && (
+                {(!cvChosen || !job) && (
                   <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
                 )}
 
                 <button
                   onClick={handleAnalyze}
-                  disabled={!resume || !job || analyzing}
+                  disabled={!cvChosen || !job || analyzing}
                   className={`
                     relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
                     ${
-                      !resume || !job || analyzing
+                      !cvChosen || !job || analyzing
                         ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                         : 'btn-primary hover:scale-105 active:scale-95'
                     }
@@ -1465,7 +1539,7 @@ const Dashboard = () => {
               </div>
             </CreditGate>
 
-            {!resume || !job ? (
+            {!cvChosen || !job ? (
               <div className="mt-8 flex items-center gap-3 text-slate-400 dark:text-slate-500 font-medium bg-slate-50 dark:bg-slate-900 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700">
                 <div className="w-5 h-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px]">
                   !
@@ -1499,14 +1573,14 @@ const Dashboard = () => {
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2 text-xs font-medium">
                 <span
-                  className={`flex items-center gap-1 ${resume ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
+                  className={`flex items-center gap-1 ${cvChosen ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
                 >
-                  {resume ? (
+                  {cvChosen ? (
                     <CheckCircle className="w-3.5 h-3.5" />
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-600" />
                   )}
-                  Resume
+                  CV
                 </span>
                 <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600" />
                 <span
@@ -1527,15 +1601,15 @@ const Dashboard = () => {
             <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS}>
               <button
                 onClick={handleAnalyze}
-                disabled={!resume || !job || analyzing}
+                disabled={!cvChosen || !job || analyzing}
                 className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
-                  !resume || !job || analyzing
+                  !cvChosen || !job || analyzing
                     ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                     : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                {!resume || !job ? 'Complete both steps to continue' : 'Analyze Fit'}
+                {!cvChosen || !job ? 'Complete both steps to continue' : 'Analyze Fit'}
               </button>
             </CreditGate>
           </div>
