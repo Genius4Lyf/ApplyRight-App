@@ -4,20 +4,20 @@ import Navbar from '../components/Navbar';
 import api from '../services/api';
 import {
   User,
-  Award,
+  LayoutDashboard,
   BookOpen,
   Settings,
+  ShieldCheck,
   Save,
   CheckCircle,
-  Crown,
-  CreditCard,
   Sparkles,
   AlertTriangle,
-  Wallet,
   LogOut,
   MessageSquare,
   Sun,
   Moon,
+  Target,
+  Bell,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
@@ -26,8 +26,12 @@ import { useTheme } from '../context/ThemeContext';
 
 import CVService from '../services/cv.service';
 import ApplicationService from '../services/application.service';
-import { billingService } from '../services';
 import UserService from '../services/user.service';
+import PlanCard from '../components/PlanCard';
+import ActivityCard from '../components/ActivityCard';
+import ReferralCard from '../components/ReferralCard';
+import TagInput from '../components/TagInput';
+import AccountSecurity from '../components/AccountSecurity';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -36,7 +40,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [credits, setCredits] = useState(0);
+
+  // Active tab for the Account & Career Hub shell (Phase 0). Future phases add
+  // tabs (Billing history, Notifications) without touching this scaffold.
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Unsaved Changes State
   const [initialFormData, setInitialFormData] = useState(null);
@@ -53,6 +60,16 @@ const Profile = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
+  };
+
+  // Keep the page + localStorage in sync after an email change (done in the
+  // self-contained AccountSecurity component, outside the profile form).
+  const handleEmailUpdated = (email) => {
+    setUser((prev) => ({ ...prev, email }));
+    const stored = JSON.parse(localStorage.getItem('user') || '{}');
+    stored.email = email;
+    localStorage.setItem('user', JSON.stringify(stored));
+    window.dispatchEvent(new Event('userDataUpdated'));
   };
 
   const handleDeleteAccount = async () => {
@@ -95,7 +112,17 @@ const Profile = () => {
     graduationYear: '',
     university: '',
     discipline: '',
+    careerGoals: [],
+    skills: [],
     autoGenerateAnalysis: false,
+    showOnboardingTutorials: true,
+    hideSkillsAiPrompt: false,
+    notifications: {
+      productUpdates: true,
+      interviewReminders: true,
+      applicationNudges: true,
+      marketingEmails: false,
+    },
   });
 
   useEffect(() => {
@@ -155,18 +182,14 @@ const Profile = () => {
       const userData = res.data || {};
       setUser(userData);
 
-      // Fetch Credits
-      try {
-        const creditData = await billingService.getBalance();
-        setCredits(creditData.credits || 0);
-      } catch (err) {
-        console.error('Failed to fetch credits', err);
-      }
+      // Credits + plan entitlements are now self-fetched by <PlanCard /> via
+      // GET /billing/entitlement, so no balance fetch is needed here.
 
       // Safe access to nested properties
       const education = userData.education || {};
       const settings = userData.settings || {};
 
+      const notifications = settings.notifications || {};
       const loadedData = {
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
@@ -179,7 +202,18 @@ const Profile = () => {
         graduationYear: education.graduationYear || '',
         university: education.university || '',
         discipline: education.discipline || '',
+        careerGoals: Array.isArray(userData.careerGoals) ? userData.careerGoals : [],
+        skills: Array.isArray(userData.skills) ? userData.skills : [],
         autoGenerateAnalysis: settings.autoGenerateAnalysis || false,
+        // Defaults match the schema (tutorials on, hide-prompt off) when unset.
+        showOnboardingTutorials: settings.showOnboardingTutorials !== false,
+        hideSkillsAiPrompt: settings.hideSkillsAiPrompt || false,
+        notifications: {
+          productUpdates: notifications.productUpdates !== false,
+          interviewReminders: notifications.interviewReminders !== false,
+          applicationNudges: notifications.applicationNudges !== false,
+          marketingEmails: notifications.marketingEmails || false,
+        },
       };
 
       setFormData(loadedData);
@@ -239,7 +273,8 @@ const Profile = () => {
   };
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    // Callable both as a form onSubmit and directly from a button (tabbed layout).
+    e?.preventDefault?.();
     setSaving(true);
     try {
       const updatePayload = {
@@ -256,8 +291,13 @@ const Profile = () => {
           university: formData.university,
           discipline: formData.discipline,
         },
+        careerGoals: formData.careerGoals,
+        skills: formData.skills,
         settings: {
           autoGenerateAnalysis: formData.autoGenerateAnalysis,
+          showOnboardingTutorials: formData.showOnboardingTutorials,
+          hideSkillsAiPrompt: formData.hideSkillsAiPrompt,
+          notifications: formData.notifications,
         },
       };
 
@@ -312,7 +352,7 @@ const Profile = () => {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen lg:h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
       {/* Unsaved Changes Modal */}
@@ -346,468 +386,698 @@ const Profile = () => {
         </div>
       </Modal>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center gap-3">
+      <main className="flex-1 lg:min-h-0 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col">
+        <div className="mb-6 flex items-center gap-3">
           <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your Profile</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your Account</h1>
             <p className="text-slate-500 dark:text-slate-400">
-              Manage your personal details and app settings.
+              Your plan, career details and app settings — all in one place.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column: Settings Form */}
-          <div className="md:col-span-2 space-y-6">
-            <form
-              onSubmit={handleSave}
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 relative"
+        {/* Settings layout — a vertical nav rail on desktop, a horizontally
+            scrollable pill row on mobile; the content fills the remaining width
+            and is anchored left (not floating in the centre). The route never
+            changes, so the unsaved-changes blocker only fires on page leave. */}
+        <div className="flex flex-col lg:flex-row lg:gap-8 lg:flex-1 lg:min-h-0">
+          <aside className="lg:w-56 shrink-0 mb-6 lg:mb-0">
+            <div
+              className="flex lg:flex-col gap-1 overflow-x-auto overflow-y-hidden lg:overflow-visible scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0"
+              role="tablist"
             >
-              {/* Dirty Indicator */}
-              {isDirty && (
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 px-3 py-1 rounded-full text-xs font-medium animate-in fade-in">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                  Unsaved Changes
-                </div>
-              )}
+              {[
+                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                { id: 'profile', label: 'Career Profile', icon: User },
+                { id: 'preferences', label: 'Preferences', icon: Settings },
+                { id: 'notifications', label: 'Notifications', icon: Bell },
+                { id: 'account', label: 'Account', icon: ShieldCheck },
+              ].map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors lg:w-full ${
+                      isActive
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
+                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <TabIcon className="w-4 h-4 shrink-0" />
+                    {tab.label}
+                    {/* Unsaved-changes dot on the tabs that own editable fields */}
+                    {isDirty &&
+                      (tab.id === 'profile' ||
+                        tab.id === 'preferences' ||
+                        tab.id === 'notifications') && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 lg:ml-auto" />
+                      )}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
 
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                General Settings
-              </h2>
+          {/* Content column — the only region that scrolls on desktop, so the
+              heading + nav rail stay fixed while settings content scrolls.
+              scrollbar-none hides the scrollbar (still scrollable). */}
+          <div className="flex-1 min-w-0 lg:overflow-y-auto lg:min-h-0 scrollbar-none">
+            {/* ── Overview tab ── plan + activity + referrals + quick links (the
+                hub). Single column on mobile; tiles into two columns on desktop
+                so the cards fill the width instead of a narrow centred ribbon. */}
+            {activeTab === 'overview' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start animate-in fade-in duration-200">
+                {/* Each column stacks independently so cards pack tightly with no
+                row-alignment gaps. Pairing the tall plan card with the short
+                quick-links (left) against activity + referral (right) keeps the
+                two columns roughly level. */}
+                <div className="space-y-6">
+                  <PlanCard />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                  >
-                    First Name
-                  </label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                  />
+                  {/* Quick links — surfaces destinations that previously lived in the
+                  Navbar account dropdown so mobile users (where the dropdown is
+                  gone) still have one-tap access. */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/interview-prep')}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          Interview Prep
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Questions, answers, talking points
+                        </p>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/credits')}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          Buy credits
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Top up your A.I credit balance
+                        </p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                  >
-                    Last Name
-                  </label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="otherName"
-                    className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                  >
-                    Other Name
-                  </label>
-                  <input
-                    id="otherName"
-                    type="text"
-                    name="otherName"
-                    value={formData.otherName}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    placeholder="Optional"
-                  />
+
+                <div className="space-y-6">
+                  <ActivityCard />
+                  <ReferralCard />
                 </div>
               </div>
+            )}
 
-              <div className="mb-4">
-                <label
-                  htmlFor="currentJobTitle"
-                  className="block text-xs font-semibold text-slate-500 uppercase mb-1"
+            {/* ── Career Profile tab ── personal/contact/education fields */}
+            {activeTab === 'profile' && (
+              <div className="max-w-3xl animate-in fade-in duration-200">
+                <form
+                  onSubmit={handleSave}
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 relative"
                 >
-                  Current Job Title
-                </label>
-                <input
-                  id="currentJobTitle"
-                  type="text"
-                  name="currentJobTitle"
-                  value={formData.currentJobTitle}
-                  onChange={handleChange}
-                  placeholder="e.g. Full Stack Developer"
-                  className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  Displayed prominently on your CV header.
-                </p>
-              </div>
-
-              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4">
-                  Contact Information
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                    >
-                      Phone Number
-                    </label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="e.g. 09017134882"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="portfolioUrl"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                    >
-                      Portfolio URL
-                    </label>
-                    <input
-                      id="portfolioUrl"
-                      type="text"
-                      name="portfolioUrl"
-                      value={formData.portfolioUrl}
-                      onChange={handleChange}
-                      onBlur={handleUrlBlur}
-                      placeholder="yourportfolio.com"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor="linkedinUrl"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                    >
-                      LinkedIn Profile
-                    </label>
-                    <input
-                      id="linkedinUrl"
-                      type="text"
-                      name="linkedinUrl"
-                      value={formData.linkedinUrl}
-                      onChange={handleChange}
-                      onBlur={handleUrlBlur}
-                      placeholder="linkedin.com/in/yourprofile"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">
-                  Career Stage
-                </span>
-                <CustomSelect
-                  name="currentStatus"
-                  value={formData.currentStatus}
-                  onChange={(e) => handleChange(e)}
-                  options={[
-                    { value: 'student', label: 'Student / New Grad' },
-                    { value: 'professional', label: 'Working Professional' },
-                    { value: 'career_switcher', label: 'Career Switcher' },
-                  ]}
-                />
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  This helps the AI adjust the tone of your CV.
-                </p>
-              </div>
-
-              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                  <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                  Appearance
-                </h3>
-                <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Theme
+                  {/* Dirty Indicator */}
+                  {isDirty && (
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 px-3 py-1 rounded-full text-xs font-medium animate-in fade-in">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                      Unsaved Changes
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Dark mode applies across the app on this device.
+                  )}
+
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                    <User className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                    Personal Details
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="firstName"
+                        className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                      >
+                        First Name
+                      </label>
+                      <input
+                        id="firstName"
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="lastName"
+                        className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                      >
+                        Last Name
+                      </label>
+                      <input
+                        id="lastName"
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="otherName"
+                        className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                      >
+                        Other Name
+                      </label>
+                      <input
+                        id="otherName"
+                        type="text"
+                        name="otherName"
+                        value={formData.otherName}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        placeholder="Optional"
+                      />
                     </div>
                   </div>
-                  <div
-                    role="group"
-                    aria-label="Theme"
-                    className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setTheme('light')}
-                      aria-pressed={theme === 'light'}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                        theme === 'light'
-                          ? 'bg-white text-slate-900 shadow-sm'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                      }`}
-                    >
-                      <Sun className="w-3.5 h-3.5" />
-                      Light
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTheme('dark')}
-                      aria-pressed={theme === 'dark'}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                        theme === 'dark'
-                          ? 'bg-slate-700 text-white shadow-sm'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                      }`}
-                    >
-                      <Moon className="w-3.5 h-3.5" />
-                      Dark
-                    </button>
-                  </div>
-                </div>
-              </div>
 
-              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                  Automation Preferences
-                </h3>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
-                  <input
-                    type="checkbox"
-                    id="autoGenerate"
-                    name="autoGenerateAnalysis"
-                    checked={formData.autoGenerateAnalysis}
-                    onChange={(e) =>
-                      setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })
-                    }
-                    className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
-                  />
-                  <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
-                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Auto-Run Match Analysis
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Automatically analyze compatibility when job and resume are uploaded.
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
-                <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                  Education Context
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="mb-4">
                     <label
-                      htmlFor="university"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                      htmlFor="currentJobTitle"
+                      className="block text-xs font-semibold text-slate-500 uppercase mb-1"
                     >
-                      University
+                      Current Job Title
                     </label>
                     <input
-                      id="university"
+                      id="currentJobTitle"
                       type="text"
-                      name="university"
-                      value={formData.university}
+                      name="currentJobTitle"
+                      value={formData.currentJobTitle}
                       onChange={handleChange}
-                      placeholder="e.g. Stanford University"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                      placeholder="e.g. Full Stack Developer"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="discipline"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                    >
-                      Discipline
-                    </label>
-                    <input
-                      id="discipline"
-                      type="text"
-                      name="discipline"
-                      value={formData.discipline}
-                      onChange={handleChange}
-                      placeholder="e.g. Computer Science"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="graduationYear"
-                      className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
-                    >
-                      Graduation Year
-                    </label>
-                    <input
-                      id="graduationYear"
-                      type="number"
-                      name="graduationYear"
-                      value={formData.graduationYear}
-                      onChange={handleChange}
-                      placeholder="YYYY"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                    />
-                    <p className="text-[10px] text-amber-600 mt-1 font-medium">
-                      Critical for "Context-Aware" AI.
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Displayed prominently on your CV header.
                     </p>
                   </div>
-                </div>
-              </div>
 
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
-                {successMsg && (
-                  <span className="text-emerald-600 text-sm font-medium flex items-center gap-1 animate-in fade-in">
-                    <CheckCircle className="w-4 h-4" /> {successMsg}
-                  </span>
-                )}
-                <button
-                  type="submit"
-                  disabled={saving || !isDirty} // Disable if clean
-                  className={`btn-primary w-full sm:w-auto sm:ml-auto px-6 py-2 flex items-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {saving ? (
-                    'Saving...'
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" /> Save Changes
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
+                  <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                    <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4">
+                      Contact Information
+                    </h3>
 
-          {/* Right Column: Plan Info */}
-          <div className="space-y-6">
-            {/* Credit Wallet Card */}
-            <div className="rounded-2xl shadow-lg border border-indigo-100 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 relative overflow-hidden group">
-              {/* Decorative Background Elements */}
-              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/15 transition-colors"></div>
-              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
-
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-100 flex items-center gap-2">
-                    Available A.I Credits
-                  </h3>
-                  {user?.plan === 'paid' && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full text-amber-300 border border-white/10">
-                      <Crown className="w-3 h-3" /> PRO
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col mb-8">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-indigo-300" />
-                    <span className="text-5xl font-extrabold tracking-tight">{credits}</span>
-                    <span className="text-lg text-indigo-200 font-medium self-end mb-2">
-                      A.I credits
-                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="phone"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          Phone Number
+                        </label>
+                        <input
+                          id="phone"
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="e.g. 09017134882"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="portfolioUrl"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          Portfolio URL
+                        </label>
+                        <input
+                          id="portfolioUrl"
+                          type="text"
+                          name="portfolioUrl"
+                          value={formData.portfolioUrl}
+                          onChange={handleChange}
+                          onBlur={handleUrlBlur}
+                          placeholder="yourportfolio.com"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label
+                          htmlFor="linkedinUrl"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          LinkedIn Profile
+                        </label>
+                        <input
+                          id="linkedinUrl"
+                          type="text"
+                          name="linkedinUrl"
+                          value={formData.linkedinUrl}
+                          onChange={handleChange}
+                          onBlur={handleUrlBlur}
+                          placeholder="linkedin.com/in/yourprofile"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-indigo-200 mt-2 pl-1">
-                    Use A.I credits to generate CVs and Cover Letters.
-                  </p>
-                </div>
 
-                <button
-                  onClick={() => navigate('/credits')}
-                  className="w-full py-3.5 bg-white text-indigo-700 hover:bg-slate-50 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 group-hover/btn:scale-110 transition-transform" />
-                  Get More A.I Credits
-                </button>
+                  <div className="mb-4">
+                    <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                      Career Stage
+                    </span>
+                    <CustomSelect
+                      name="currentStatus"
+                      value={formData.currentStatus}
+                      onChange={(e) => handleChange(e)}
+                      options={[
+                        { value: 'student', label: 'Student / New Grad' },
+                        { value: 'professional', label: 'Working Professional' },
+                        { value: 'career_switcher', label: 'Career Switcher' },
+                      ]}
+                    />
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      This helps the AI adjust the tone of your CV.
+                    </p>
+                  </div>
+
+                  <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
+                    <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                      Education Context
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="university"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          University
+                        </label>
+                        <input
+                          id="university"
+                          type="text"
+                          name="university"
+                          value={formData.university}
+                          onChange={handleChange}
+                          placeholder="e.g. Stanford University"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="discipline"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          Discipline
+                        </label>
+                        <input
+                          id="discipline"
+                          type="text"
+                          name="discipline"
+                          value={formData.discipline}
+                          onChange={handleChange}
+                          placeholder="e.g. Computer Science"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="graduationYear"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          Graduation Year
+                        </label>
+                        <input
+                          id="graduationYear"
+                          type="number"
+                          name="graduationYear"
+                          value={formData.graduationYear}
+                          onChange={handleChange}
+                          placeholder="YYYY"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                        <p className="text-[10px] text-amber-600 mt-1 font-medium">
+                          Critical for "Context-Aware" AI.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Career goals + skills — collected at signup but previously not
+                  editable. Both feed AI quality (tone, skill matching). */}
+                  <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6 space-y-5">
+                    <div>
+                      <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                        Career Goals
+                      </h3>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                        What you're aiming for — helps the AI tailor tone and direction.
+                      </p>
+                      <TagInput
+                        values={formData.careerGoals}
+                        onChange={(next) => setFormData((prev) => ({ ...prev, careerGoals: next }))}
+                        placeholder="e.g. Land a senior backend role"
+                      />
+                    </div>
+
+                    <div>
+                      <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                        Skills
+                      </h3>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                        Core skills the AI can match against job requirements.
+                      </p>
+                      <TagInput
+                        values={formData.skills}
+                        onChange={(next) => setFormData((prev) => ({ ...prev, skills: next }))}
+                        placeholder="e.g. React, Node.js, SQL"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
+                    {successMsg && (
+                      <span className="text-emerald-600 text-sm font-medium flex items-center gap-1 animate-in fade-in">
+                        <CheckCircle className="w-4 h-4" /> {successMsg}
+                      </span>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={saving || !isDirty} // Disable if clean
+                      className={`btn-primary w-full sm:w-auto sm:ml-auto px-6 py-2 flex items-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {saving ? (
+                        'Saving...'
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" /> Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
+            )}
 
-            {/* Quick links — surfaces destinations that previously lived in the
-                Navbar account dropdown so mobile users (where the dropdown is
-                gone) still have one-tap access. */}
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-sm">
-              <button
-                type="button"
-                onClick={() => navigate('/interview-prep')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <MessageSquare className="w-4 h-4" />
+            {/* ── Preferences tab ── appearance + automation. Theme is instant;
+            the automation toggle is part of formData and persists via Save. */}
+            {activeTab === 'preferences' && (
+              <div className="max-w-3xl space-y-6 animate-in fade-in duration-200">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                    <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    Appearance
+                  </h3>
+                  <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Theme
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Dark mode applies across the app on this device.
+                      </div>
+                    </div>
+                    <div
+                      role="group"
+                      aria-label="Theme"
+                      className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setTheme('light')}
+                        aria-pressed={theme === 'light'}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                          theme === 'light'
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        <Sun className="w-3.5 h-3.5" />
+                        Light
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTheme('dark')}
+                        aria-pressed={theme === 'dark'}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                          theme === 'dark'
+                            ? 'bg-slate-700 text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        <Moon className="w-3.5 h-3.5" />
+                        Dark
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Interview Prep
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Questions, answers, talking points
-                  </p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/credits')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Buy credits
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Top up your A.I credit balance
-                  </p>
-                </div>
-              </button>
-            </div>
 
-            {/* Sign out — destructive action sits separately, with confirmation. */}
-            <button
-              type="button"
-              onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-500/10 font-semibold transition-colors shadow-sm"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign out
-            </button>
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    Automation Preferences
+                  </h3>
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      id="autoGenerate"
+                      name="autoGenerateAnalysis"
+                      checked={formData.autoGenerateAnalysis}
+                      onChange={(e) =>
+                        setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })
+                      }
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                    />
+                    <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Auto-Run Match Analysis
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Automatically analyze compatibility when job and resume are uploaded.
+                      </div>
+                    </label>
+                  </div>
 
-            {/* Danger Zone — for compliance & data privacy (deleting user data) */}
-            <div className="rounded-2xl border border-rose-100 bg-rose-50/30 dark:border-rose-500/20 dark:bg-rose-500/5 p-5 shadow-sm space-y-3">
-              <h4 className="text-sm font-bold text-rose-900 dark:text-rose-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-500" />
-                Danger Zone
-              </h4>
-              <p className="text-xs text-rose-600/80 dark:text-rose-400/80 leading-relaxed">
-                Permanently delete your ApplyRight account and all your resumes, CVs, and AI
-                generation history. This action is irreversible.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteConfirmText('');
-                  setShowDeleteModal(true);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition-all shadow-md shadow-rose-200 hover:scale-[1.01]"
-              >
-                Delete Account
-              </button>
-            </div>
+                  {/* App helpers — previously model-only flags, now user-controllable. */}
+                  <div className="flex items-center gap-3 p-3 mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      id="showTutorials"
+                      checked={formData.showOnboardingTutorials}
+                      onChange={(e) =>
+                        setFormData({ ...formData, showOnboardingTutorials: e.target.checked })
+                      }
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                    />
+                    <label htmlFor="showTutorials" className="cursor-pointer flex-1">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Show onboarding tips
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Display guided tutorials and hints around the app.
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      id="hideSkillsPrompt"
+                      checked={formData.hideSkillsAiPrompt}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hideSkillsAiPrompt: e.target.checked })
+                      }
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                    />
+                    <label htmlFor="hideSkillsPrompt" className="cursor-pointer flex-1">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Hide the AI skills prompt
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Stop suggesting AI skill auto-fill in the CV builder.
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Save footer — automation toggle persists to the profile. */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-5">
+                    {successMsg && (
+                      <span className="text-emerald-600 text-sm font-medium flex items-center gap-1 animate-in fade-in">
+                        <CheckCircle className="w-4 h-4" /> {successMsg}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving || !isDirty}
+                      className={`btn-primary w-full sm:w-auto sm:ml-auto px-6 py-2 flex items-center justify-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {saving ? (
+                        'Saving...'
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" /> Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Notifications tab ── email/notification preferences */}
+            {activeTab === 'notifications' && (
+              <div className="max-w-3xl animate-in fade-in duration-200">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    Notifications
+                  </h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+                    Choose what we email you about. You can change these any time.
+                  </p>
+
+                  <div className="space-y-3">
+                    {[
+                      {
+                        key: 'interviewReminders',
+                        title: 'Interview reminders',
+                        desc: 'Nudges to practice before an upcoming interview.',
+                      },
+                      {
+                        key: 'applicationNudges',
+                        title: 'Application nudges',
+                        desc: 'Reminders to follow up on jobs you analyzed.',
+                      },
+                      {
+                        key: 'productUpdates',
+                        title: 'Product updates',
+                        desc: 'New features and improvements to ApplyRight.',
+                      },
+                      {
+                        key: 'marketingEmails',
+                        title: 'Tips & offers',
+                        desc: 'Occasional career tips and promotional offers.',
+                      },
+                    ].map((row) => (
+                      <div
+                        key={row.key}
+                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`notif-${row.key}`}
+                          checked={formData.notifications[row.key]}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              notifications: { ...prev.notifications, [row.key]: e.target.checked },
+                            }))
+                          }
+                          className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                        />
+                        <label htmlFor={`notif-${row.key}`} className="cursor-pointer flex-1">
+                          <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {row.title}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {row.desc}
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Save footer */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-5">
+                    {successMsg && (
+                      <span className="text-emerald-600 text-sm font-medium flex items-center gap-1 animate-in fade-in">
+                        <CheckCircle className="w-4 h-4" /> {successMsg}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving || !isDirty}
+                      className={`btn-primary w-full sm:w-auto sm:ml-auto px-6 py-2 flex items-center justify-center ${!isDirty ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {saving ? (
+                        'Saving...'
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" /> Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Account tab ── security, session + irreversible actions */}
+            {activeTab === 'account' && (
+              <div className="max-w-3xl space-y-6 animate-in fade-in duration-200">
+                {/* Email / password / data export */}
+                <AccountSecurity currentEmail={user.email} onEmailUpdated={handleEmailUpdated} />
+
+                {/* Sign out — destructive action sits separately, with confirmation. */}
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-500/10 font-semibold transition-colors shadow-sm"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out
+                </button>
+
+                {/* Danger Zone — for compliance & data privacy (deleting user data) */}
+                <div className="rounded-2xl border border-rose-100 bg-rose-50/30 dark:border-rose-500/20 dark:bg-rose-500/5 p-5 shadow-sm space-y-3">
+                  <h4 className="text-sm font-bold text-rose-900 dark:text-rose-300 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-500" />
+                    Danger Zone
+                  </h4>
+                  <p className="text-xs text-rose-600/80 dark:text-rose-400/80 leading-relaxed">
+                    Permanently delete your ApplyRight account and all your resumes, CVs, and AI
+                    generation history. This action is irreversible.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteConfirmText('');
+                      setShowDeleteModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition-all shadow-md shadow-rose-200 hover:scale-[1.01]"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
