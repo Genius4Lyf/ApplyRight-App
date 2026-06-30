@@ -16,11 +16,14 @@ import {
   Target,
   Lock,
   Crown,
+  Bot,
+  MessageCircle,
 } from 'lucide-react';
 import { CVBuilderProvider, useCVBuilder } from '../../context/CVContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import ATSCoachPanel from '../../components/cv/ATSCoachPanel';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
+import { getBotNudge } from '../../utils/cvCoach';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
 
 const ScaledCVPreview = ({ cvData }) => {
@@ -205,6 +208,146 @@ const ScaledCVPreview = ({ cvData }) => {
   );
 };
 
+// ─── Draggable floating Coach bot (mobile) ───
+// A friendly AI-bot button the user can fling to either side of the screen and
+// slide up/down. Replaces the old fixed "Coach & Preview" FAB that collided with
+// the global dark-mode toggle. When the coach has something new to say (the user
+// moved to a new builder step while the sheet was closed), the bot pulses and
+// pops a little chat bubble so it reads like an incoming message.
+const FAB_SIZE = 56; // px — keep in sync with the w-14 h-14 below
+const FAB_MARGIN = 16;
+
+const CoachBotFab = ({ hasNew, message, onOpen }) => {
+  const initial = () => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 375;
+    const h = typeof window !== 'undefined' ? window.innerHeight : 700;
+    // Default to the RIGHT edge, lifted to sit just ABOVE the bottom-right
+    // dark-mode toggle so the two stack without overlapping.
+    return { x: w - FAB_SIZE - FAB_MARGIN, y: h - FAB_SIZE - 88 };
+  };
+  const start = initial();
+  const x = useMotionValue(start.x);
+  const y = useMotionValue(start.y);
+  const draggedRef = useRef(false);
+  // Which edge the bot is parked on — drives which way the speech bubble opens.
+  const [side, setSide] = useState(
+    start.x + FAB_SIZE / 2 < (typeof window !== 'undefined' ? window.innerWidth : 375) / 2
+      ? 'left'
+      : 'right'
+  );
+  const [dragging, setDragging] = useState(false);
+
+  // Snap to the nearest vertical edge and keep the bot fully on-screen.
+  const snapToEdge = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const onLeft = x.get() + FAB_SIZE / 2 < w / 2;
+    const targetX = onLeft ? FAB_MARGIN : w - FAB_SIZE - FAB_MARGIN;
+    const targetY = Math.min(Math.max(y.get(), FAB_MARGIN + 64), h - FAB_SIZE - FAB_MARGIN);
+    const spring = { type: 'spring', stiffness: 500, damping: 32 };
+    animate(x, targetX, spring);
+    animate(y, targetY, spring);
+    setSide(onLeft ? 'left' : 'right');
+  };
+
+  // Keep it on-screen if the viewport changes (rotation / keyboard).
+  useEffect(() => {
+    const onResize = () => snapToEdge();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleOpen = () => {
+    if (!draggedRef.current) onOpen();
+  };
+
+  return (
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragElastic={0.06}
+      whileDrag={{ scale: 1.06 }}
+      style={{ x, y }}
+      onDragStart={() => {
+        draggedRef.current = true;
+        setDragging(true);
+      }}
+      onDragEnd={() => {
+        snapToEdge();
+        setDragging(false);
+        // Let the click handler that fires right after pointer-up see the drag.
+        setTimeout(() => {
+          draggedRef.current = false;
+        }, 60);
+      }}
+      className="lg:hidden fixed top-0 left-0 z-40 touch-none select-none"
+    >
+      <div className="relative">
+        {/* Proactive speech bubble — pops beside the bot, opening away from the edge */}
+        <AnimatePresence>
+          {message && !dragging && (
+            <motion.div
+              key={message}
+              initial={{ opacity: 0, scale: 0.8, x: side === 'right' ? 8 : -8 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpen();
+              }}
+              style={{ transformOrigin: side === 'right' ? 'right center' : 'left center' }}
+              className={`absolute top-1/2 -translate-y-1/2 w-max max-w-[200px] cursor-pointer rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100 text-[11px] leading-snug font-medium px-3 py-2 shadow-xl shadow-indigo-900/20 border border-slate-200 dark:border-slate-700 ${
+                side === 'right' ? 'right-full mr-3' : 'left-full ml-3'
+              }`}
+            >
+              {message}
+              {/* Little tail pointing at the bot */}
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${
+                  side === 'right' ? '-right-1 border-t border-r' : '-left-1 border-b border-l'
+                }`}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* The bot button */}
+        <motion.button
+          type="button"
+          aria-label="Open ATS Coach & Preview"
+          whileTap={{ scale: 0.92 }}
+          onClick={handleOpen}
+          className="relative w-14 h-14 rounded-full shadow-xl shadow-indigo-900/30 bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 text-white flex items-center justify-center cursor-grab active:cursor-grabbing border border-white/20"
+        >
+          {/* Pulsing halo while a new message waits */}
+          {hasNew && (
+            <span className="absolute inset-0 rounded-full bg-indigo-400/60 animate-ping" />
+          )}
+
+          <Bot className="w-7 h-7 relative z-10" />
+
+          {/* Incoming-message badge */}
+          <AnimatePresence>
+            {hasNew && (
+              <motion.span
+                initial={{ scale: 0, opacity: 0, y: 4 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                className="absolute -top-1.5 -right-1.5 z-20 w-6 h-6 rounded-full bg-amber-400 text-indigo-950 flex items-center justify-center shadow-md border-2 border-white"
+              >
+                <MessageCircle className="w-3 h-3" fill="currentColor" />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+};
+
 const CVBuilderInner = () => {
   const {
     cvData,
@@ -230,10 +373,63 @@ const CVBuilderInner = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('coach'); // 'coach' | 'preview'
+  // Drives the bot's "new message" pulse: the coach has fresh guidance for the
+  // step the user just landed on, but they haven't opened the sheet to read it.
+  const [coachHasNew, setCoachHasNew] = useState(true);
+  // The short proactive line the bot "speaks" a few seconds after the user lands
+  // on a step (null = no bubble showing).
+  const [botMessage, setBotMessage] = useState(null);
 
   // The step the user is on now — drives the dynamic coaching and the tab
   // auto-switch below.
   const currentStepId = steps[currentStepIndex]?.id;
+
+  // Each time the user moves to a new step while the mobile sheet is closed, the
+  // coach has something new to say — light up the bot. Opening the sheet clears it.
+  // Adjusted DURING RENDER (React's recommended alternative to a setState-in-effect),
+  // mirroring the tab auto-switch below.
+  const [coachStepSeen, setCoachStepSeen] = useState(currentStepId);
+  if (currentStepId !== coachStepSeen) {
+    setCoachStepSeen(currentStepId);
+    if (!mobilePreviewOpen) setCoachHasNew(true);
+  }
+
+  const openMobileCoach = () => {
+    setMobilePreviewOpen(true);
+    setCoachHasNew(false);
+    setBotMessage(null); // opening the coach consumes the nudge
+  };
+
+  // ── Proactive bot nudge ──────────────────────────────────────────────────
+  // A few seconds after the user lands on a NEW step (and only while the coach
+  // sheet is closed), the bot pops a short, step-aware speech bubble — an invite
+  // to review, a "looks done" celebration, or a quick motivation tip. Once per
+  // step entry; auto-dismisses after a few seconds.
+  const previewOpenRef = useRef(mobilePreviewOpen); // latest value for the timers
+  previewOpenRef.current = mobilePreviewOpen;
+  const hasGreetedRef = useRef(false); // first nudge of the session greets
+
+  useEffect(() => {
+    // Re-runs on genuine step change only (not on sheet open/close or re-renders).
+    const showTimer = setTimeout(() => {
+      if (previewOpenRef.current) return; // sheet open — say nothing
+      setBotMessage(
+        getBotNudge(currentStepId, liveCvData, {
+          isComplete: isStepComplete(currentStepId),
+          firstTime: !hasGreetedRef.current,
+        })
+      );
+      hasGreetedRef.current = true;
+    }, 3500);
+    return () => clearTimeout(showTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepId]);
+
+  useEffect(() => {
+    if (!botMessage) return undefined;
+    const hideTimer = setTimeout(() => setBotMessage(null), 7000);
+    return () => clearTimeout(hideTimer);
+  }, [botMessage]);
 
   // Coach the user through every building step, then hand them the live preview
   // the moment they reach Review (finalize) for a "here's your finished CV" moment.
@@ -549,37 +745,31 @@ const CVBuilderInner = () => {
         </div>
       </div>
 
-      {/* Mobile Floating Action Button */}
+      {/* Mobile floating Coach bot — draggable, snaps to either side */}
       {!mobilePreviewOpen && (
-        <button
-          type="button"
-          onClick={() => setMobilePreviewOpen(true)}
-          className="lg:hidden fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-3 px-5 rounded-full shadow-lg flex items-center gap-2 transition-all duration-200 border border-indigo-500/20"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span className="text-xs font-bold tracking-wide">Coach & Preview</span>
-        </button>
+        <CoachBotFab hasNew={coachHasNew} message={botMessage} onOpen={openMobileCoach} />
       )}
 
-      {/* Mobile Coach & Preview Bottom Sheet */}
+      {/* Mobile Coach & Preview — floating bubble window (Android-bubble style) */}
       <AnimatePresence>
         {mobilePreviewOpen && (
           <>
-            {/* Backdrop */}
+            {/* Soft scrim — dims the page but keeps the floating feel */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobilePreviewOpen(false)}
-              className="lg:hidden fixed inset-0 bg-black/60 z-50 backdrop-blur-xs"
+              className="lg:hidden fixed inset-0 bg-black/40 z-50 backdrop-blur-xs"
             />
-            {/* Bottom Sheet Drawer */}
+            {/* Floating bubble window — pops open from the bot, doesn't fill the screen */}
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="lg:hidden fixed inset-x-0 bottom-0 top-16 bg-slate-50 dark:bg-slate-950 z-50 rounded-t-2xl shadow-2xl flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-800"
+              initial={{ opacity: 0, scale: 0.6, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.6, y: 24 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              style={{ transformOrigin: 'bottom right' }}
+              className="lg:hidden fixed inset-x-3 top-16 bottom-24 z-50 bg-slate-50 dark:bg-slate-950 rounded-3xl shadow-2xl shadow-indigo-950/40 flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 ring-1 ring-black/5"
             >
               {/* Sheet Header */}
               <div className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 flex items-center justify-between shrink-0">

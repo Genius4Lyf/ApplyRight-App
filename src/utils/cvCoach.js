@@ -326,3 +326,64 @@ export function getQuickReplies(stepId) {
   }
   return { kind: null, replies: [] };
 }
+
+// Human label for the step the user is on (matches the coaching copy above).
+const STEP_LABELS = {
+  ...Object.fromEntries(BUILDING_STEPS.map((s) => [s.id, s.label])),
+  finalize: 'CV',
+};
+
+// Tiny generic motivation pool, used only when the step has no state-aware tip
+// of its own. Short enough to fit the floating bubble.
+const GENERIC_TIPS = [
+  'Strong verbs win — Led, Built, Shipped, Grew 💪',
+  'Numbers make bullets pop — try adding one 📈',
+  'Mirror the wording in the job post 🧩',
+  'One clear win beats three vague duties ✨',
+];
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+/**
+ * A short, proactive one-liner the floating mobile bot "says" a few seconds after
+ * the user lands on a step. Deterministic + client-side (no AI, no network), so
+ * it's free for everyone. Adapts to whether the step's criteria are already met,
+ * and sprinkles in a short motivation tip at random.
+ *
+ * @param {string} stepId       current builder step id
+ * @param {object} cvData       live CV data (for the name + tip state-awareness)
+ * @param {{ isComplete?: boolean, firstTime?: boolean }} opts
+ * @returns {string} one line, ≤ ~90 chars
+ */
+export function getBotNudge(stepId, cvData = {}, { isComplete = false, firstTime = false } = {}) {
+  const name = firstNameOf(cvData);
+  const label = STEP_LABELS[stepId] || 'CV';
+
+  // First hello of the session — a one-off greeting so the bot introduces itself.
+  if (firstTime) {
+    return `Hey${name ? ` ${name}` : ''}! I'm your ATS coach 🤖 — tap me anytime and we'll polish your CV together.`;
+  }
+
+  if (stepId === 'finalize') {
+    return "Your CV's ready 🎉 — tap me and let's give it one last review together.";
+  }
+
+  // Roughly 1-in-3 nudges is a motivation tip rather than a review invite. Prefer
+  // the step's own state-aware tip (already short + ordered by importance).
+  if (Math.random() < 0.34) {
+    const stepTip = getStepCoaching(stepId, cvData)?.tips?.[0];
+    return stepTip || pick(GENERIC_TIPS);
+  }
+
+  if (isComplete) {
+    return pick([
+      `Your ${label} looks done — tap me and let's review it together ✅`,
+      `Nice, ${label} sorted! Want me to check it over? 🎯`,
+    ]);
+  }
+
+  return pick([
+    `Take your time — ping me when you're done with your ${label} and we'll review it together 👀`,
+    `Working on your ${label}? I'm right here when you want a second pair of eyes 🙌`,
+  ]);
+}

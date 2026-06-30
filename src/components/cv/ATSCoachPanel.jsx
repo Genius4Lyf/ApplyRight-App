@@ -15,6 +15,8 @@ import {
   Lightbulb,
   ArrowLeft,
   ScanLine,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import {
@@ -352,6 +354,84 @@ const Typewriter = ({ text = '', speed = 16 }) => {
   );
 };
 
+// Friendly per-step nouns for the "Analyzing your …" headline (web only — the
+// native app keeps its own coach surface).
+const STEP_NOUNS = {
+  target_job: 'target job',
+  heading: 'contact details',
+  history: 'work history',
+  projects: 'projects',
+  education: 'education',
+  skills: 'skills',
+  summary: 'summary',
+};
+
+// Warm, professional status lines cycled while the coach reads the current step,
+// so the wait reads as "your coach is looking" rather than a blank placeholder.
+const ANALYZING_LINES = [
+  'Reading what you’ve added…',
+  'Checking it against your target role…',
+  'Lining up the keywords recruiters scan for…',
+  'Putting your guidance together…',
+];
+
+// The "the coach is looking at this section" state — a floating bot, a rotating
+// status line, and shimmer lines standing in for the message that's coming. Shown
+// in place of the scripted text on a step's FIRST analysis so the user never sees
+// a throwaway default get typed out and then swapped for the real reply.
+const CoachAnalyzing = ({ sectionLabel }) => {
+  const [line, setLine] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setLine((v) => (v + 1) % ANALYZING_LINES.length), 1600);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="flex flex-col items-center text-center py-4">
+      {/* Floating coach bot — same icon, gradient & ping halo as the mobile FAB. */}
+      <motion.div
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        className="relative w-10 h-10"
+      >
+        <span className="absolute inset-0 rounded-full bg-indigo-400/50 animate-ping" />
+        <span className="relative z-10 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-900/30 border border-white/20">
+          <Bot className="w-5 h-5" />
+        </span>
+        <motion.span
+          animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-0.5 -right-0.5 z-20 text-amber-300"
+        >
+          <Sparkles className="w-3 h-3" />
+        </motion.span>
+      </motion.div>
+
+      <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+        Analyzing your {sectionLabel}…
+      </p>
+      <div className="h-4 mt-1">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={line}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.3 }}
+            className="text-[11px] text-slate-500 dark:text-slate-400"
+          >
+            {ANALYZING_LINES[line]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+
+      <div className="mt-3 w-full max-w-[200px] space-y-1.5" aria-hidden="true">
+        <div className="h-2 rounded bg-slate-200 dark:bg-slate-700 animate-pulse w-full" />
+        <div className="h-2 rounded bg-slate-200 dark:bg-slate-700 animate-pulse w-4/5 mx-auto" />
+      </div>
+    </div>
+  );
+};
+
 // The hero card: a live, conversational coach. When it flags something it can
 // help with, it ASKS — tapping the offer opens the focused island helper. The
 // scripted fallback shows tips instead of an offer.
@@ -396,6 +476,8 @@ const FreeCoachTeaser = ({ score, healthMeta, onUpgrade }) => (
 const CoachCard = ({
   coaching,
   loading,
+  analyzing,
+  sectionLabel,
   limited,
   score,
   healthMeta,
@@ -516,7 +598,7 @@ const CoachCard = ({
           <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Your Coach
           </span>
-          {loading && (
+          {loading && !analyzing && (
             <span className="flex items-center gap-0.5" title="Thinking…">
               <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]" />
               <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]" />
@@ -551,25 +633,46 @@ const CoachCard = ({
         </div>
       </div>
 
-      <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-        <Typewriter text={coaching.message} />
-      </p>
+      <AnimatePresence mode="wait" initial={false}>
+        {analyzing ? (
+          <motion.div
+            key="analyzing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <CoachAnalyzing sectionLabel={sectionLabel} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="message"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+              <Typewriter text={coaching.message} />
+            </p>
 
-      {coaching.tips?.length > 0 && (
-        <ul className="mt-2.5 space-y-1.5">
-          {coaching.tips.map((t, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-300"
-            >
-              <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
-              <span>{t}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+            {coaching.tips?.length > 0 && (
+              <ul className="mt-2.5 space-y-1.5">
+                {coaching.tips.map((t, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-300"
+                  >
+                    <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-      {quickNode}
+            {quickNode}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {limited && (
         <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">
@@ -761,6 +864,12 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const scripted = useMemo(() => getStepCoaching(currentStepId, cvData), [currentStepId, cvData]);
   const healthMeta = healthColor(health.score);
 
+  // Coach conversation (per-step replies + interaction) AND the role-match coverage
+  // result are cached in the builder context, so leaving the panel — e.g. closing
+  // the mobile coach bubble or flipping to the Preview tab — and returning restores
+  // them instead of re-fetching. See `_roleCoverage` in the coverage effect below.
+  const { coachState: aiByStep, setCoachState: setAiByStep } = useCVBuilder();
+
   // ── Role Match (free JD-relevance honesty band) ──
   // Pre-check with no coverage to read eligibility: only fetch the (free, no-AI)
   // backend coverage once there's a JD AND enough content — so we never show a
@@ -781,6 +890,14 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   useEffect(() => {
     if (!shouldFetchCoverage) {
       setCoverage(null);
+      return undefined;
+    }
+    // Reuse the coverage already computed for these exact inputs. This survives the
+    // panel unmounting (mobile: closing the coach bubble / switching to Preview), so
+    // reopening does NOT re-hit /ai/job-keywords + /ai/keyword-coverage every time.
+    const cachedCov = aiByStep._roleCoverage;
+    if (cachedCov?.sig === coverageSig) {
+      setCoverage(cachedCov.coverage);
       return undefined;
     }
     let cancelled = false;
@@ -805,7 +922,11 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           text: bulletsText,
           skills: skillNames,
         });
-        if (!cancelled) setCoverage(cov);
+        if (!cancelled) {
+          setCoverage(cov);
+          // Cache against the inputs so a remount reuses it instead of re-fetching.
+          setAiByStep((m) => ({ ...m, _roleCoverage: { sig: coverageSig, coverage: cov } }));
+        }
       } catch {
         if (!cancelled) setCoverage(null); // degrade silently — it's a guidance band
       }
@@ -830,11 +951,10 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null); // { message, agent? }
 
-  // Live AI coach: per step we keep { message, tone } (the reply) plus the quick-
-  // reply interaction ({ answered, canRecheck, ignored }). Retrieved from parent context
-  // (CVBuilderContext) so leaving the panel and returning restores the conversation,
-  // not the intro. Never fires on keystrokes — only on step change + explicit acts.
-  const { coachState: aiByStep, setCoachState: setAiByStep } = useCVBuilder();
+  // Live AI coach loading/limited flags. The per-step replies + interaction live in
+  // the builder context (`aiByStep`, destructured near the top) so leaving the panel
+  // and returning restores the conversation, not the intro. Never fires on keystrokes
+  // — only on step change + explicit acts.
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLimited, setAiLimited] = useState(false);
 
@@ -861,10 +981,15 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           [step]: { ...m[step], message: data.message, tone: data.tone || 'progress' },
         }));
         setAiLimited(false);
+      } else {
+        // data.fallback (AI off) → keep the scripted coach, but mark the step
+        // settled so the "Analyzing…" bot resolves to it instead of spinning.
+        setAiByStep((m) => ({ ...m, [step]: { ...m[step], settled: true } }));
       }
-      // data.fallback (AI off/error) → keep the scripted coach, no change.
     } catch {
-      // network/other → keep the scripted coach.
+      // network/other → fall back to the scripted coach, and settle so the bot
+      // doesn't hang on this step.
+      setAiByStep((m) => ({ ...m, [step]: { ...m[step], settled: true } }));
     } finally {
       setAiLoading(false);
     }
@@ -902,11 +1027,43 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const coaching = {
     message: aiEntry?.message || fallback.message,
     tone: aiEntry?.tone || fallback.tone,
-    tips: aiEntry ? [] : fallback.tips || [],
+    tips: aiEntry?.message ? [] : fallback.tips || [],
   };
 
   // Quick replies the user can hand to the coach on this step (explicit only).
   const quickReplies = useMemo(() => getQuickReplies(currentStepId), [currentStepId]);
+
+  // Steps that get the conversational AI coach (and therefore the analyzing→typing
+  // flow). Live/manual steps never auto-fetch, so they skip the bot entirely.
+  const usesAiCoach = isPaidHint && !!currentStepId && !isLiveStep && !isManualStep;
+
+  // Minimum time the "Analyzing…" bot stays up. A fast (or cached) AI reply would
+  // otherwise flicker past before the user registers it — so the reveal waits for
+  // BOTH the reply AND this dwell to elapse, then hands off to the typewriter.
+  const MIN_ANALYZE_MS = 1100;
+  const [dwelledStep, setDwelledStep] = useState(null);
+  useEffect(() => {
+    if (!usesAiCoach) return undefined;
+    const step = currentStepId;
+    setDwelledStep(null);
+    const t = setTimeout(() => setDwelledStep(step), MIN_ANALYZE_MS);
+    return () => clearTimeout(t);
+  }, [currentStepId, usesAiCoach]);
+  const minDwellElapsed = dwelledStep === currentStepId;
+
+  // Show the floating-bot "Analyzing…" state on a step's FIRST read, from the very
+  // first frame (derived, not tied to the in-flight request) so the scripted default
+  // never flashes before it. It clears once the step settles (an AI reply or the
+  // AI-off/error settle marker make `aiEntry` truthy) AND the min dwell has passed.
+  // A rate-limit drops it immediately to the upsell. The `!currentStepId` arm covers
+  // the brief builder-load window where the step id hasn't resolved yet — without it,
+  // a paid user would see the generic scripted default flash before the bot.
+  const analyzing =
+    isPaidHint &&
+    !aiLimited &&
+    !isLiveStep &&
+    !isManualStep &&
+    (!currentStepId || !aiEntry || !minDwellElapsed);
 
   const enterScan = () => {
     setJd(cvData.targetJob?.description || '');
@@ -978,6 +1135,8 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                 <CoachCard
                   coaching={coaching}
                   loading={aiLoading}
+                  analyzing={analyzing}
+                  sectionLabel={STEP_NOUNS[currentStepId] || 'CV'}
                   limited={aiLimited}
                   score={health.score}
                   healthMeta={healthMeta}
