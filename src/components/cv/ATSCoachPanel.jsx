@@ -18,6 +18,7 @@ import {
   Bot,
   Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import {
   computeCvHealth,
@@ -267,6 +268,450 @@ const RedFlagsCard = ({ flags }) => (
   </div>
 );
 
+// A placeholder is any [bracketed] fill-in left by the ATS rewrite (e.g. "[X]%").
+const PLACEHOLDER_RE = /\[[^\]]+\]/;
+
+// Bullet openers / filler that read weak — mirrors the backend detectRedFlags lists
+// so the coach's live, per-role hints match what a Deep Scan would flag.
+const WEAK_OPENERS = [
+  'responsible for',
+  'worked on',
+  'helped',
+  'assisted',
+  'duties included',
+  'tasked with',
+  'in charge of',
+  'involved in',
+];
+const BUZZWORDS = [
+  'team player',
+  'hard worker',
+  'go-getter',
+  'synergy',
+  'detail-oriented',
+  'self-starter',
+  'results-driven',
+  'fast learner',
+];
+
+// Deterministic, instant per-role issues for the coach card (no AI / network) — the
+// same checks the Deep Scan runs, so "rewrite this role" can show WHY it's worth it.
+const roleIssues = (description) => {
+  const bullets = (description || '')
+    .split('\n')
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const issues = [];
+  if (bullets.length < 2) issues.push('Add 2+ bullets');
+  if (bullets.length > 0 && !bullets.some((b) => /\d/.test(b))) issues.push('No numbers');
+  const stripped = (b) => b.replace(/^[•\-*\s]+/, '').toLowerCase();
+  if (bullets.some((b) => WEAK_OPENERS.some((w) => stripped(b).startsWith(w))))
+    issues.push('Passive opener');
+  if (BUZZWORDS.some((w) => bullets.join('\n').toLowerCase().includes(w))) issues.push('Buzzwords');
+  if (bullets.some((b) => PLACEHOLDER_RE.test(b))) issues.push('Fill in numbers');
+  return issues;
+};
+
+// One role/project row in a fix list — shared by the coach card and the Deep-Scan
+// TailorCard so the states read identically. Three states, animated:
+//   • applied   → green "Sharpened ✓" (+ gentle amber "Finish: …" if a placeholder
+//                 survived), the loud button demoted to a subtle "Rewrite again".
+//   • has issues → amber chips + prominent "✨ Rewrite".
+//   • clean      → muted "Looks strong ✓" + a quiet "Rewrite" link.
+// `locked` (free Deep-Scan users) overrides the action with an Upgrade CTA.
+const FixRow = ({ title, subtitle, issues = [], applied, disabled, locked, onRewrite }) => {
+  const hasIssues = issues.length > 0;
+  const wrap = applied
+    ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-900/15'
+    : 'border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/40';
+
+  let action;
+  if (locked) {
+    action = (
+      <button
+        onClick={onRewrite}
+        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1"
+      >
+        <Lock className="w-3 h-3" /> Upgrade
+      </button>
+    );
+  } else if (applied) {
+    action = (
+      <button
+        onClick={onRewrite}
+        disabled={disabled}
+        className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/50 inline-flex items-center gap-1 disabled:opacity-40"
+      >
+        <RefreshCw className="w-2.5 h-2.5" /> Rewrite again
+      </button>
+    );
+  } else if (hasIssues) {
+    action = (
+      <button
+        onClick={onRewrite}
+        disabled={disabled}
+        title={disabled ? 'Save this role once, then rewrite' : undefined}
+        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white inline-flex items-center gap-1"
+      >
+        <Sparkles className="w-3 h-3" /> Rewrite
+      </button>
+    );
+  } else {
+    action = (
+      <button
+        onClick={onRewrite}
+        disabled={disabled}
+        className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 inline-flex items-center gap-1 disabled:opacity-40"
+      >
+        <Sparkles className="w-2.5 h-2.5" /> Rewrite
+      </button>
+    );
+  }
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-lg border p-2.5 flex items-start justify-between gap-2 ${wrap}`}
+    >
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate">
+          {title}
+        </p>
+        {subtitle && (
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{subtitle}</p>
+        )}
+
+        {applied ? (
+          <>
+            <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+              <Check className="w-2.5 h-2.5" /> Sharpened
+            </p>
+            {hasIssues && (
+              <p className="text-[9px] text-amber-600 dark:text-amber-400 mt-0.5">
+                Finish: {issues.slice(0, 2).join(', ')}
+              </p>
+            )}
+          </>
+        ) : hasIssues ? (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {issues.slice(0, 3).map((lbl) => (
+              <span
+                key={lbl}
+                className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+              >
+                {lbl}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+            <Check className="w-2.5 h-2.5" /> Looks strong
+          </p>
+        )}
+      </div>
+      {action}
+    </motion.div>
+  );
+};
+
+// "Tailor your bullets to this job" — the fix station. Lists each work-history
+// role + project with the recruiter flags it triggered, and a button to generate
+// role-targeted ATS bullet rewrites. This is the literal "use these on this role,
+// these on that role" loop. Rewrites are paid; free users get an upgrade CTA.
+const TailorCard = ({
+  entries,
+  issuesBySortId,
+  isPaid,
+  appliedSortIds = {},
+  onRewrite,
+  onUpgrade,
+}) => {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900">
+      <div className="flex items-center gap-2 mb-1">
+        <Sparkles className="w-4 h-4 text-indigo-500" />
+        <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          Tailor your bullets to this job
+        </h4>
+      </div>
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2.5">
+        Rewrite a role’s bullets in the language this job screens for — then Recheck to turn its
+        flags green.
+      </p>
+      {entries.length === 0 && (
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          Add a work-history role or project to get role-targeted rewrites.
+        </p>
+      )}
+      <div className="space-y-2">
+        {entries.map((en) => (
+          <FixRow
+            key={`${en.section}:${en.sortId || en.title}`}
+            title={en.title}
+            subtitle={en.subtitle}
+            issues={[...new Set(issuesBySortId[en.sortId] || [])]}
+            applied={isPaid && !!appliedSortIds[en.sortId]}
+            disabled={isPaid && !en.sortId}
+            locked={!isPaid}
+            onRewrite={() => (isPaid ? onRewrite(en.section, en.sortId, en.title) : onUpgrade())}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// SURGICAL rewrite preview — rendered INLINE as a coach-card surface (not a modal),
+// so on web and mobile the coach area itself becomes the "here's how I'd sharpen this
+// role" view and animates back to the coach when you apply or go back. The coach KEEPS
+// the strong bullets untouched and shows the weak ones as before → after; the user can
+// fill in [bracketed] numbers, toggle an improvement off to keep the original, and
+// apply — only the weak lines change.
+const RewritePreview = ({ rewrite, applying, onToggle, onEdit, onApply, onClose, onRetry }) => {
+  if (!rewrite) return null;
+  const items = rewrite.items || [];
+  const ready = !rewrite.loading && !rewrite.error;
+  const improved = items.filter((it) => it.original !== null && !it.keep).length;
+  const kept = items.filter((it) => it.original !== null && it.keep).length;
+  const isNew = items.filter((it) => it.original === null).length;
+  // Lines that will actually be written (mirrors applyRewrite).
+  const willWrite = items.filter((it) =>
+    it.original === null ? it.apply && it.text.trim() : it.keep || true
+  ).length;
+  // A bullet contributes its (edited) text when it's an applied rewrite or an added
+  // new bullet. We must NOT ship a raw "[X]" placeholder to the CV — it reads as
+  // unfinished AND never satisfies the coach's "add a number" flag, so the loop
+  // can't converge. Block Apply until every such bullet's placeholders are filled
+  // in (a real number) or edited out.
+  const contributesText = (it) => it.apply && (it.original === null || !it.keep);
+  const unfilled = items.filter((it) => contributesText(it) && PLACEHOLDER_RE.test(it.text)).length;
+  // The AI kept every bullet (nothing improved, nothing new) — there's genuinely
+  // nothing to apply, so don't show a confusing all-green Apply screen.
+  const nothingToApply = ready && improved === 0 && isNew === 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden"
+    >
+      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+        <button
+          onClick={onClose}
+          className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 inline-flex items-center gap-1 mb-2"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to coach
+        </button>
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4 text-indigo-500" /> Sharpening {rewrite.title}
+        </h3>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+          {!ready
+            ? 'Reviewing each bullet…'
+            : nothingToApply
+              ? 'Good news — these bullets are already strong. Nothing to rewrite here. 👍'
+              : kept === 0 && isNew > 0
+                ? 'Fresh bullets for this role — fill in any [numbers], then apply.'
+                : 'I kept your strong bullets and rewrote the rest — fill in any [numbers], then apply.'}
+        </p>
+      </div>
+
+      {ready && (improved > 0 || kept > 0 || isNew > 0) && (
+        <div className="px-4 pt-2.5 flex flex-wrap gap-1.5">
+          {kept > 0 && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+              {kept} kept
+            </span>
+          )}
+          {improved > 0 && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
+              {improved} improved
+            </span>
+          )}
+          {isNew > 0 && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+              {isNew} new
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="p-4 space-y-2">
+        {rewrite.loading && (
+          <div className="flex flex-col items-center justify-center py-10 text-slate-500 dark:text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mb-2" />
+            <span className="text-xs">Finding the bullets worth improving…</span>
+          </div>
+        )}
+
+        {!rewrite.loading && rewrite.error === 'locked' && (
+          <div className="text-center py-8">
+            <Lock className="w-6 h-6 text-indigo-500 mx-auto mb-2" />
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+              Bullet rewrites are a Pro feature.
+            </p>
+            <button
+              onClick={onClose}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white"
+            >
+              Got it
+            </button>
+          </div>
+        )}
+
+        {!rewrite.loading && rewrite.error && rewrite.error !== 'locked' && (
+          <div className="text-center py-8">
+            <p className="text-[11px] text-rose-600 dark:text-rose-300 mb-3">{rewrite.error}</p>
+            <button
+              onClick={onRetry}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3 h-3" /> Try again
+            </button>
+          </div>
+        )}
+
+        {ready &&
+          items.map((it) => {
+            // Already-strong bullet — kept verbatim, not editable.
+            if (it.original !== null && it.keep) {
+              return (
+                <div
+                  key={it.id}
+                  className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 p-2.5"
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mb-0.5">
+                    <Check className="w-2.5 h-2.5" /> Kept
+                    {it.reason ? ` · ${it.reason}` : ' — already strong'}
+                  </p>
+                  <p className="text-[11px] leading-snug text-slate-600 dark:text-slate-300">
+                    {it.original}
+                  </p>
+                </div>
+              );
+            }
+
+            // Weak bullet (before → after) or a brand-new starter bullet.
+            const fresh = it.original === null;
+            const hasPh = PLACEHOLDER_RE.test(it.text);
+            return (
+              <div
+                key={it.id}
+                className={`rounded-xl border p-2.5 ${
+                  it.apply
+                    ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-900/10'
+                    : 'border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                    {fresh ? 'New bullet' : 'Improved'}
+                    {it.reason ? (
+                      <span className="text-slate-400 normal-case"> · {it.reason}</span>
+                    ) : null}
+                  </span>
+                  <button
+                    onClick={() => onToggle(it.id)}
+                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                      it.apply
+                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                        : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {it.apply
+                      ? fresh
+                        ? 'Adding ✓'
+                        : 'Using new ✓'
+                      : fresh
+                        ? 'Skipped'
+                        : 'Keep original'}
+                  </button>
+                </div>
+
+                {!fresh && (
+                  <p className="text-[10px] leading-snug text-slate-400 dark:text-slate-500 line-through mb-1">
+                    {it.original}
+                  </p>
+                )}
+
+                {it.apply ? (
+                  <>
+                    <textarea
+                      value={it.text}
+                      onChange={(e) => onEdit(it.id, e.target.value)}
+                      rows={2}
+                      className="w-full text-[11px] leading-snug bg-transparent text-slate-700 dark:text-slate-200 resize-none focus:outline-none"
+                    />
+                    {hasPh && (
+                      <p className="text-[9px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <AlertTriangle className="w-2.5 h-2.5" /> Replace the [bracketed] parts with
+                        your real numbers
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[11px] leading-snug text-slate-600 dark:text-slate-300">
+                    {fresh ? '(won’t be added)' : it.original}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+      </div>
+
+      {ready && nothingToApply && (
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+          <button
+            onClick={onClose}
+            className="w-full text-xs font-bold px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center justify-center gap-1.5"
+          >
+            <ArrowLeft className="w-3 h-3" /> Back to coach
+          </button>
+        </div>
+      )}
+
+      {ready && !nothingToApply && (
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+          {unfilled > 0 && (
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 mb-2 flex items-start gap-1">
+              <AlertTriangle className="w-2.5 h-2.5 mt-0.5 shrink-0" />
+              Fill in the [bracketed] numbers with your real figures (or edit them out) to apply —
+              that’s what turns the coach’s flag green.
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 inline-flex items-center justify-center gap-1.5"
+            >
+              <ArrowLeft className="w-3 h-3" /> Back
+            </button>
+            <button
+              onClick={onApply}
+              disabled={willWrite === 0 || applying || unfilled > 0}
+              title={
+                unfilled > 0 ? 'Fill in or remove the [bracketed] placeholders first' : undefined
+              }
+              className="flex-1 text-xs font-bold px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white inline-flex items-center justify-center gap-1.5"
+            >
+              {applying ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Check className="w-3 h-3" />
+              )}
+              {unfilled > 0 ? `Fill ${unfilled} number${unfilled > 1 ? 's' : ''}` : 'Apply to role'}
+            </button>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 // Blurred upsell teaser shown to free users who've used their taste.
 const LockedTeaser = ({ onUpgrade }) => (
   <div className="relative rounded-xl border border-indigo-200 dark:border-indigo-800 overflow-hidden">
@@ -326,7 +771,7 @@ const TONE_STYLES = {
 // a real coach typing to you, right now. Re-types whenever the message changes.
 // The reset is done DURING RENDER (React's recommended alternative to a
 // setState-in-effect) so only the interval callback updates state.
-const Typewriter = ({ text = '', speed = 16 }) => {
+const Typewriter = ({ text = '', speed = 16, onDone }) => {
   const [shown, setShown] = useState('');
   const [prevText, setPrevText] = useState(text);
   if (text !== prevText) {
@@ -339,9 +784,14 @@ const Typewriter = ({ text = '', speed = 16 }) => {
     const id = setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));
-      if (i >= text.length) clearInterval(id);
+      if (i >= text.length) {
+        clearInterval(id);
+        onDone?.(); // coach finished "speaking" — lets the card reveal its opt-in offer
+      }
     }, speed);
     return () => clearInterval(id);
+    // onDone intentionally omitted — it fires exactly once when typing completes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, speed]);
   const done = shown.length >= text.length;
   return (
@@ -487,6 +937,9 @@ const CoachCard = ({
   onQuickReply,
   onRefresh,
   onUpgrade,
+  fixTargets,
+  onRewrite,
+  appliedSortIds = {},
 }) => {
   const tone = TONE_STYLES[coaching.tone] || TONE_STYLES.start;
   // Interaction state is owned + persisted by the panel so it survives leaving and
@@ -495,6 +948,43 @@ const CoachCard = ({
   const ignored = interaction?.ignored ?? false;
   const canRecheck = interaction?.canRecheck ?? false;
   const replies = quickReplies?.replies || [];
+
+  // The rewrite suggestions are OPT-IN: they only appear after the coach finishes
+  // "speaking" (Typewriter onDone) AND the user accepts the coach's offer — so the
+  // user engages with the coach first, instead of fixes popping in mid-sentence.
+  const [typingDone, setTypingDone] = useState(false);
+  const [showFixes, setShowFixes] = useState(false);
+  const [offerDismissed, setOfferDismissed] = useState(false);
+  // Reset the opt-in whenever the coach says something new (step change, or a fresh
+  // reply after a recheck) — render-time reset, same pattern as Typewriter.
+  const [prevMsg, setPrevMsg] = useState(coaching.message);
+  if (coaching.message !== prevMsg) {
+    setPrevMsg(coaching.message);
+    setTypingDone(false);
+    setShowFixes(false);
+    setOfferDismissed(false);
+  }
+  // Roles/projects the rewrite can actually improve (weak phrasing / empty) — NOT
+  // ones whose only gap is numbers (that's the user's to add). Drives the offer.
+  const fixable = (fixTargets || []).filter((t) => t.rewritable);
+  const fixNoun = (fixTargets || [])[0]?.section === 'project' ? 'project' : 'role';
+  // Don't offer suggestions when the coach has just CONFIRMED the section is good
+  // (tone "win" — "looks solid / good to move on"). Pushing "I can sharpen 2 roles"
+  // right under a green verdict contradicts it. The offer is for the intro ("start")
+  // and flaw ("progress") states, where there's genuinely something to act on.
+  const canOffer =
+    !analyzing &&
+    !loading &&
+    typingDone &&
+    fixable.length > 0 &&
+    !showFixes &&
+    !offerDismissed &&
+    coaching.tone !== 'win';
+  // Progress for the "smooth finish": how many of the listed roles are sharpened, and
+  // whether nothing's left to fix (every role applied or already clean).
+  const appliedCount = (fixTargets || []).filter((t) => appliedSortIds[t.sortId]).length;
+  const allSharpened =
+    appliedCount > 0 && (fixTargets || []).every((t) => appliedSortIds[t.sortId] || !t.rewritable);
 
   const greenBar = (text, spinning) => (
     <div className="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-3 py-2 flex items-center gap-2">
@@ -652,7 +1142,7 @@ const CoachCard = ({
             transition={{ duration: 0.3 }}
           >
             <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-              <Typewriter text={coaching.message} />
+              <Typewriter text={coaching.message} onDone={() => setTypingDone(true)} />
             </p>
 
             {coaching.tips?.length > 0 && (
@@ -673,6 +1163,86 @@ const CoachCard = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Opt-in offer — shown only AFTER the coach finishes speaking and only when it
+          actually caught something fixable. The user engages with the coach first,
+          then chooses to see the suggestions (placed right under the quick replies). */}
+      {canOffer && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/20 p-2.5"
+        >
+          <p className="text-[11px] text-slate-700 dark:text-slate-200 flex items-start gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500 mt-px shrink-0" />
+            <span>
+              I can sharpen {fixable.length} {fixNoun}
+              {fixable.length > 1 ? 's' : ''} to fit this job. Want to see my suggestions?
+            </span>
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              onClick={() => setShowFixes(true)}
+              className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 transition-colors"
+            >
+              <Sparkles className="w-3 h-3" /> Show me
+            </button>
+            <button
+              onClick={() => setOfferDismissed(true)}
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-700/50 transition-colors"
+            >
+              Not now
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Role-targeted fixes — revealed once the user accepts the offer. Applying
+          updates the bullets in place; the row flips to a green "Sharpened ✓", the
+          issue chips clear live, and the coach's "how's it look?" review confirms. */}
+      {showFixes && fixTargets?.length > 0 && (
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 space-y-1.5"
+        >
+          {allSharpened ? (
+            <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-900/20 px-2.5 py-2 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Check className="w-3 h-3" />
+              </span>
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                All sharpened — ask me “how’s it look?” to confirm.
+              </span>
+            </div>
+          ) : (
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Pick a {fixNoun} for me to sharpen
+              {appliedCount > 0 && (
+                <span className="text-emerald-500 dark:text-emerald-400 normal-case">
+                  {' '}
+                  · {appliedCount} done
+                </span>
+              )}
+            </p>
+          )}
+          {/* Only list roles the rewrite can actually improve (or were just sharpened,
+              to keep the green confirmation) — an already-strong role has nothing to do. */}
+          {fixTargets
+            .filter((t) => t.rewritable || appliedSortIds[t.sortId])
+            .map((t) => (
+              <FixRow
+                key={`${t.section}:${t.sortId || t.title}`}
+                title={t.title}
+                issues={t.issues}
+                applied={!!appliedSortIds[t.sortId]}
+                disabled={!t.sortId}
+                onRewrite={() => onRewrite?.(t.section, t.sortId, t.title)}
+              />
+            ))}
+        </motion.div>
+      )}
 
       {limited && (
         <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">
@@ -834,7 +1404,7 @@ const RoleMatchBand = ({ roleMatch, completeness }) => {
 // Steps the coach verifies LIVE and deterministically (no AI round-trip), so they
 // re-verify the instant they're complete. Contact is pure fill-in fields, so its
 // scripted verdict (computed from liveCvData) is exact and updates as you type.
-const LIVE_STEPS = new Set(['heading']);
+const LIVE_STEPS = new Set(['heading', 'finalize']);
 
 // Steps where the coach must NOT speak automatically on entry — it waits for the
 // user to explicitly trigger it. Target Job only reads the JD when the user clicks
@@ -868,7 +1438,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   // result are cached in the builder context, so leaving the panel — e.g. closing
   // the mobile coach bubble or flipping to the Preview tab — and returning restores
   // them instead of re-fetching. See `_roleCoverage` in the coverage effect below.
-  const { coachState: aiByStep, setCoachState: setAiByStep } = useCVBuilder();
+  const { coachState: aiByStep, setCoachState: setAiByStep, applyRoleEdit } = useCVBuilder();
 
   // ── Role Match (free JD-relevance honesty band) ──
   // Pre-check with no coverage to read eligibility: only fetch the (free, no-AI)
@@ -944,12 +1514,194 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
     (s) => !s.recommended && s.status !== 'complete'
   ).length;
   const isPaidHint = user?.plan === 'paid';
+  // Roles the user has sharpened this session (persisted in coachState/sessionStorage),
+  // so their rows render the green "Sharpened ✓" state. See applyRewrite.
+  const appliedRoles = aiByStep._appliedRoles || {};
 
   const [mode, setMode] = useState('coach'); // 'coach' | 'scan'
   const [jd, setJd] = useState(cvData.targetJob?.description || '');
   const [scan, setScan] = useState(null); // server response
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null); // { message, agent? }
+
+  // ── Role-targeted rewrites + recheck (the "fix it" loop) ──
+  // `rewrite` drives the preview modal; null when closed. `recheckSummary` holds
+  // the green-flip result (which flags cleared + score delta) after a recheck.
+  const [rewrite, setRewrite] = useState(null);
+  const [applying, setApplying] = useState(false);
+  const [rechecking, setRechecking] = useState(false);
+  const [recheckSummary, setRecheckSummary] = useState(null);
+
+  // Every work-history role + project, with the recruiter flags it triggered (keyed
+  // off the stable _sortId the scan reports in each flag's `affected`). Drives the
+  // "Tailor your bullets" fix station.
+  const scanEntries = useMemo(() => {
+    const exp = (cvData.experience || []).map((e) => ({
+      section: 'experience',
+      sortId: e._sortId,
+      title: e.title || 'Untitled role',
+      subtitle: e.company || '',
+    }));
+    const proj = (cvData.projects || []).map((p) => ({
+      section: 'project',
+      sortId: p._sortId,
+      title: p.title || 'Untitled project',
+      subtitle: '',
+    }));
+    return [...exp, ...proj];
+  }, [cvData.experience, cvData.projects]);
+
+  const issuesBySortId = useMemo(() => {
+    const map = {};
+    (scan?.redFlags || []).forEach((f) =>
+      (f.affected || []).forEach((a) => {
+        if (!a.sortId) return;
+        (map[a.sortId] = map[a.sortId] || []).push(f.label);
+      })
+    );
+    return map;
+  }, [scan]);
+
+  // Roles/projects on the CURRENT builder step, each with its live deterministic
+  // issues — drives the coach card's per-role "Rewrite" buttons. Empty off the
+  // History/Projects steps (only those store rewritable bullets).
+  const fixTargets = useMemo(() => {
+    const sectionKey =
+      currentStepId === 'history' ? 'experience' : currentStepId === 'projects' ? 'project' : null;
+    if (!sectionKey) return [];
+    const list = sectionKey === 'experience' ? cvData.experience || [] : cvData.projects || [];
+    return list.map((e) => {
+      const desc = e.description || '';
+      const issues = roleIssues(desc);
+      const bulletCount = desc.split('\n').filter((b) => b.trim()).length;
+      // The surgical rewrite fixes weak PHRASING (passive openers, buzzwords) and
+      // writes fresh bullets for an EMPTY role — it does NOT invent numbers or touch
+      // already-strong bullets. So a role whose only issue is "No numbers" has nothing
+      // for the rewrite to do (that's the user's to add). Only offer/list a rewrite
+      // when it will genuinely change something — otherwise the preview is all-green.
+      const rewritable =
+        bulletCount === 0 || issues.includes('Passive opener') || issues.includes('Buzzwords');
+      return {
+        section: sectionKey,
+        sortId: e._sortId,
+        title: e.title || (sectionKey === 'experience' ? 'Untitled role' : 'Untitled project'),
+        issues,
+        rewritable,
+      };
+    });
+  }, [currentStepId, cvData.experience, cvData.projects]);
+
+  // Surgically improve a role's bullets and open the preview. The server keeps the
+  // strong bullets (keep:true) and rewrites only the weak ones. Server 402 → 'locked'.
+  // Each item: { id, original, keep, reason, text, apply } where `apply` means "use
+  // the improved/new text" (vs keeping the original).
+  const openRewrite = async (section, sortId, title) => {
+    setRewrite({ section, sortId, title, loading: true, error: null, items: [] });
+    try {
+      const data = await CVService.coachRewriteRole(draftId, section, sortId);
+      setRewrite({
+        section,
+        sortId,
+        title: data.title || title,
+        loading: false,
+        error: null,
+        items: (data.bullets || []).map((b, i) => ({
+          id: i,
+          original: b.original ?? null,
+          keep: !!b.keep,
+          reason: b.reason || '',
+          text: b.text || b.original || '',
+          // Default: apply improvements + new bullets; kept bullets stay as the original.
+          apply: b.original === null ? true : !b.keep,
+        })),
+      });
+    } catch (err) {
+      const locked = err?.response?.status === 402;
+      setRewrite((r) =>
+        r
+          ? {
+              ...r,
+              loading: false,
+              error: locked
+                ? 'locked'
+                : err?.response?.data?.message || 'Could not improve this role. Please try again.',
+            }
+          : r
+      );
+    }
+  };
+
+  const toggleItem = (id) =>
+    setRewrite((r) =>
+      r
+        ? { ...r, items: r.items.map((it) => (it.id === id ? { ...it, apply: !it.apply } : it)) }
+        : r
+    );
+  const editItem = (id, text) =>
+    setRewrite((r) =>
+      r ? { ...r, items: r.items.map((it) => (it.id === id ? { ...it, text } : it)) } : r
+    );
+
+  // Merge the choices back into the role IN ORDER: kept bullets stay verbatim, weak
+  // bullets become their rewrite (or stay original if the user toggled the fix off),
+  // and accepted new bullets are appended. Only the weak lines ever change.
+  const applyRewrite = async () => {
+    if (!rewrite) return;
+    const lines = (rewrite.items || [])
+      .flatMap((it) => {
+        if (it.original === null) return it.apply && it.text.trim() ? [it.text] : []; // new bullet
+        if (it.keep) return [it.original]; // already strong — untouched
+        return [it.apply ? it.text : it.original]; // weak: rewrite, or keep original
+      })
+      .map((t) => `• ${t.trim().replace(/^[•\-*\s]+/, '')}`)
+      .filter((l) => l.length > 2);
+    if (lines.length === 0) {
+      toast.error('Nothing to apply.');
+      return;
+    }
+    setApplying(true);
+    try {
+      const ok = await applyRoleEdit(rewrite.section, rewrite.sortId, lines.join('\n'));
+      if (ok) {
+        // Mark this role sharpened so its row flips to the green "Sharpened ✓" state.
+        // Persisted in coachState (sessionStorage) so it survives panel remounts.
+        setAiByStep((m) => ({
+          ...m,
+          _appliedRoles: { ...(m._appliedRoles || {}), [rewrite.sortId]: true },
+        }));
+        toast.success(`Sharpened ${rewrite.title} ✓`);
+        setRewrite(null);
+      }
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  // Re-verify after fixes: recompute red-flags + fit score, then show which
+  // originally-flagged items cleared (green) and how the score moved.
+  const runRecheck = async () => {
+    if (rechecking || !scan) return;
+    const prevLabels = (scan.redFlags || []).map((f) => f.label);
+    const prevScore = scan.jobMatch?.available ? scan.jobMatch.fitScore : null;
+    setRechecking(true);
+    try {
+      const res = await CVService.coachRecheck(draftId);
+      const newLabels = (res.redFlags || []).map((f) => f.label);
+      const resolved = prevLabels.filter((l) => !newLabels.includes(l));
+      const newScore = res.jobMatch?.available ? res.jobMatch.fitScore : null;
+      setScan((s) => ({ ...s, jobMatch: res.jobMatch, redFlags: res.redFlags }));
+      setRecheckSummary({ resolved, from: prevScore, to: newScore });
+    } catch (err) {
+      const locked = err?.response?.status === 402;
+      toast.error(
+        locked
+          ? 'Upgrade to recheck your CV.'
+          : err?.response?.data?.message || 'Recheck failed. Please try again.'
+      );
+    } finally {
+      setRechecking(false);
+    }
+  };
 
   // Live AI coach loading/limited flags. The per-step replies + interaction live in
   // the builder context (`aiByStep`, destructured near the top) so leaving the panel
@@ -1076,6 +1828,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
     const jobDescription = jd.trim();
     setLoading(true);
     setError(null);
+    setRecheckSummary(null);
     try {
       const data = await CVService.coachDeepScan(draftId, jobDescription);
       setScan(data);
@@ -1098,6 +1851,8 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const newScan = () => {
     setScan(null);
     setError(null);
+    setRecheckSummary(null);
+    setRewrite(null);
   };
 
   const tooEmpty = scan?.tooEmpty;
@@ -1106,7 +1861,28 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      {mode === 'coach' ? (
+      {rewrite ? (
+        // The rewrite preview TAKES OVER the panel (the coach area becomes the
+        // "sharpen this role" surface). Closing/applying clears `rewrite` and
+        // animates back to whichever mode launched it — coach card or Deep Scan.
+        <motion.div
+          key="rewrite"
+          initial={{ opacity: 0, x: 12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 12 }}
+          transition={{ duration: 0.2 }}
+        >
+          <RewritePreview
+            rewrite={rewrite}
+            applying={applying}
+            onToggle={toggleItem}
+            onEdit={editItem}
+            onApply={applyRewrite}
+            onClose={() => setRewrite(null)}
+            onRetry={() => openRewrite(rewrite.section, rewrite.sortId, rewrite.title)}
+          />
+        </motion.div>
+      ) : mode === 'coach' ? (
         <motion.div
           key="coach"
           initial={{ opacity: 0, x: -12 }}
@@ -1148,6 +1924,9 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                     isLiveStep || isManualStep ? undefined : () => fetchGuide(currentStepId)
                   }
                   onUpgrade={() => navigate('/upgrade')}
+                  fixTargets={fixTargets}
+                  onRewrite={openRewrite}
+                  appliedSortIds={appliedRoles}
                 />
               </motion.div>
             </AnimatePresence>
@@ -1267,6 +2046,42 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                 </Reveal>
               )}
 
+              {/* Green-flip celebration after a recheck — which originally-flagged
+                  items cleared, and how the match score moved. */}
+              {recheckSummary && (
+                <Reveal>
+                  <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3">
+                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                      <Check className="w-4 h-4" /> Recheck complete
+                    </p>
+                    {recheckSummary.resolved.length > 0 ? (
+                      <div className="mt-1.5 space-y-1">
+                        {recheckSummary.resolved.map((l) => (
+                          <p
+                            key={l}
+                            className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5"
+                          >
+                            <Check className="w-3 h-3 shrink-0" /> Fixed: {l}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-1">
+                        No flags cleared yet — apply a rewrite below, then recheck.
+                      </p>
+                    )}
+                    {recheckSummary.from != null &&
+                      recheckSummary.to != null &&
+                      recheckSummary.to !== recheckSummary.from && (
+                        <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 mt-1.5">
+                          Match {recheckSummary.from}% → {recheckSummary.to}%
+                          {recheckSummary.to > recheckSummary.from ? ' ▲' : ''}
+                        </p>
+                      )}
+                  </div>
+                </Reveal>
+              )}
+
               <Reveal delay={0.06}>
                 <JobMatchCard jobMatch={scan.jobMatch} />
               </Reveal>
@@ -1277,7 +2092,33 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                 <RedFlagsCard flags={scan.redFlags} />
               </Reveal>
 
+              {/* Fix station — rewrite each role's bullets to this job, then recheck. */}
+              <Reveal delay={0.24}>
+                <TailorCard
+                  entries={scanEntries}
+                  issuesBySortId={issuesBySortId}
+                  isPaid={scan.isPaid}
+                  appliedSortIds={appliedRoles}
+                  onRewrite={openRewrite}
+                  onUpgrade={() => navigate('/upgrade')}
+                />
+              </Reveal>
+
               <div className="flex gap-2 pt-1">
+                {scan.isPaid && (
+                  <button
+                    onClick={runRecheck}
+                    disabled={rechecking}
+                    className="flex-1 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white inline-flex items-center justify-center gap-1.5"
+                  >
+                    {rechecking ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3" />
+                    )}
+                    Recheck
+                  </button>
+                )}
                 <button
                   onClick={newScan}
                   className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 inline-flex items-center justify-center gap-1.5"

@@ -53,6 +53,13 @@ export const CVBuilderProvider = ({ children }) => {
   // Conversation state for the ATS Coach, scoped to the current CV builder session.
   const [coachState, setCoachState] = useState({});
 
+  // Bumped whenever the ATS Coach applies a bullet rewrite to a role/project from
+  // the side panel. History/Projects steps seed their local form state ONCE from
+  // cvData and only sync local→parent, so they'd never see a panel-driven edit
+  // while mounted. They watch this nonce and re-seed when it changes. See
+  // applyRoleEdit below.
+  const [externalEditNonce, setExternalEditNonce] = useState(0);
+
   // Reset coach state when draft ID changes (i.e. user switches CVs or starts fresh)
   useEffect(() => {
     setCoachState({});
@@ -243,6 +250,36 @@ export const CVBuilderProvider = ({ children }) => {
     setCvData((prev) => ({ ...prev, ...partialData }));
   }, []);
 
+  // Apply a coach-generated bullet rewrite to ONE role/project in place. The ATS
+  // Coach panel calls this on "Apply": replace that entry's `description`, persist
+  // immediately (so a follow-up recheck reads the new bullets server-side), and
+  // bump externalEditNonce so a mounted History/Projects step re-seeds from the
+  // fresh cvData. `section` is the backend's 'experience' | 'project'.
+  const applyRoleEdit = useCallback(
+    async (section, sortId, newDescription) => {
+      const key = section === 'project' ? 'projects' : 'experience';
+      const list = (cvData[key] || []).map((e) =>
+        e._sortId === sortId ? { ...e, description: newDescription } : e
+      );
+      const updated = { ...cvData, [key]: list };
+      setCvData(updated);
+      setExternalEditNonce((n) => n + 1);
+
+      if (id && id !== 'new') {
+        try {
+          await CVService.saveDraft({ ...updated, _id: id });
+          return true;
+        } catch (error) {
+          console.error('Failed to save applied rewrite', error);
+          toast.error('Applied to your CV, but saving failed — re-save before rechecking.');
+          return false;
+        }
+      }
+      return true;
+    },
+    [cvData, id]
+  );
+
   // CV agents need an active plan to CREATE a CV — the backend returns 402
   // { code: 'NEED_AGENT_SUB' } from /cv/save. Route them to the agent plans
   // instead of a generic "save failed" toast. Returns true if it handled it.
@@ -418,6 +455,8 @@ export const CVBuilderProvider = ({ children }) => {
     cvData,
     liveCvData,
     updateCvData,
+    applyRoleEdit,
+    externalEditNonce,
     handleNext,
     handleBack,
     goToStep,

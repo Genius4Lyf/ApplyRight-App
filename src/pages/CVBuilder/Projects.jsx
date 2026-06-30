@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -57,6 +57,7 @@ const Projects = () => {
     user,
     setStepDirty,
     registerStepData,
+    externalEditNonce,
   } = context || {};
 
   const navigate = useNavigate();
@@ -158,6 +159,21 @@ const Projects = () => {
     registerStepData?.(() => ({ projects: projects.map(({ isNew, ...rest }) => rest) }));
     return () => registerStepData?.(null);
   }, [projects, registerStepData]);
+
+  // Re-seed local state when the ATS Coach applies a bullet rewrite from the side
+  // panel (externalEditNonce bumps). This step seeds its local state once and only
+  // syncs local→parent, so without this it would keep showing the pre-rewrite
+  // bullets while mounted. We skip the initial mount so we never clobber typing.
+  const seededOnce = useRef(false);
+  useEffect(() => {
+    if (!seededOnce.current) {
+      seededOnce.current = true;
+      return;
+    }
+    setProjects(ensureIds(cvData?.projects));
+    // Only react to the nonce — cvData is read fresh on each coach-driven bump.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalEditNonce]);
 
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).

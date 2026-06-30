@@ -68,6 +68,22 @@ const CVService = {
     return response.data;
   },
 
+  // Turn a Deep-Scan red-flag into a fix: generate role-targeted ATS bullet
+  // rewrites for ONE work-history role or project. Paid only — a 402 ({ locked })
+  // surfaces as a thrown error. Returns { section, sortId, title, suggestions[] }.
+  coachRewriteRole: async (draftId, section, sortId) => {
+    const response = await api.post('/coach/rewrite-role', { draftId, section, sortId });
+    return response.data;
+  },
+
+  // Re-verify the CV after applying fixes — recompute red-flags + fit score so
+  // resolved items flip green. Paid, repeatable (no Career Match AI). The draft
+  // must already be saved with the applied edits. Returns { jobMatch, redFlags }.
+  coachRecheck: async (draftId) => {
+    const response = await api.post('/coach/recheck', { draftId });
+    return response.data;
+  },
+
   // Live conversational AI coach message for the current builder step. Returns
   // { message, guide, tone, limited, remaining } — or { limited:true } when the
   // free daily quota is spent, or { fallback:true } when AI is unavailable. The

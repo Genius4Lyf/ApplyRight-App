@@ -4,6 +4,8 @@
 // THIS step, reacting to what they've actually entered, and building confidence —
 // not just ticking "section present / absent" boxes.
 
+import { computeCvHealth } from './cvHealth';
+
 // The seven building steps (Review/finalize is excluded — there the panel
 // switches to a live preview). Used for the "sections complete" progress that
 // teases the preview waiting at Review.
@@ -261,6 +263,41 @@ function baseStepCoaching(stepId, cvData = {}) {
           'Strong, specific and the right length. You’ve done the hard part — head to Review to see it all come together.',
         tips: [],
         tone: 'win',
+      };
+    }
+
+    // Review/finalize — the finish line, NOT a section to review. Give a holistic
+    // wrap-up: at 100% celebrate + point onward; otherwise name the single most
+    // impactful blocker (the first incomplete required section + its first unmet
+    // requirement) so the user knows exactly what stands between them and done.
+    // Deterministic from CV Health, so it updates live as they fix things.
+    case 'finalize': {
+      const { score, sections } = computeCvHealth(cv);
+      const first = (cv.personalInfo?.fullName || '').trim().split(/\s+/)[0];
+      const hi = first && first.toLowerCase() !== 'candidate' ? `${first}, ` : '';
+      const incomplete = sections.filter((s) => !s.recommended && s.status !== 'complete');
+
+      if (incomplete.length === 0) {
+        return {
+          title: 'Your CV’s ready 🎉',
+          message: `${hi}everything’s complete and reads strong — your CV’s ready. Run an ATS Deep Scan to see how you match the role, or grab it from the Live Preview.`,
+          tips: [],
+          tone: 'win',
+        };
+      }
+
+      const main = incomplete[0];
+      const unmet = (main.requirements || []).find((r) => !r.met);
+      const need = unmet ? unmet.label.toLowerCase() : 'a little more detail';
+      const left =
+        incomplete.length === 1
+          ? `the one thing left is your ${main.title} — ${need}`
+          : `${incomplete.length} sections to finish — start with your ${main.title}: ${need}`;
+      return {
+        title: 'Almost at the finish line 🏁',
+        message: `${hi}you’re at ${score}% — ${left}. Finish that and you hit 100%, which unlocks your ATS Deep Scan and your full preview.`,
+        tips: [],
+        tone: 'progress',
       };
     }
 

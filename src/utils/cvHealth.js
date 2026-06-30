@@ -67,7 +67,7 @@ export function computeCvHealth(cvData = {}) {
     earned: workEarned,
     status: statusFor(workEarned, 30),
     detail: exp.length
-      ? `${exp.length} role${exp.length > 1 ? 's' : ''} · ${quantified}/${allBullets.length} bullets quantified`
+      ? `${exp.length} role${exp.length > 1 ? 's' : ''} · ${allBullets.length} bullet${allBullets.length === 1 ? '' : 's'}, ${quantified} with numbers`
       : 'Not started',
     requirements: [
       { label: 'Add at least 2 roles', met: exp.length >= 2 },
