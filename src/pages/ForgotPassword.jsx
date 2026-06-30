@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { ArrowRight, Sparkles, Phone, Lock, Hash } from 'lucide-react';
+import { ArrowRight, Sparkles, Mail, Lock, Hash } from 'lucide-react';
 
 const ForgotPassword = () => {
-  const [step, setStep] = useState(1); // 1: Phone, 2: OTP + New Password
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP + New Password
   const [formData, setFormData] = useState({
-    phone: '',
+    email: '',
     otp: '',
     newPassword: '',
     confirmNewPassword: '',
@@ -17,7 +17,7 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { phone, otp, newPassword, confirmNewPassword } = formData;
+  const { email, otp, newPassword, confirmNewPassword } = formData;
 
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -28,13 +28,12 @@ const ForgotPassword = () => {
     setSuccess('');
 
     try {
-      await api.post('/auth/forgotpassword', { phone });
-      setSuccess('WhatsApp OTP sent! Please check your phone.');
+      await api.post('/auth/forgotpassword', { email });
+      setSuccess('If an account exists for that email, a reset code is on its way. Check your inbox.');
       setStep(2);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
-          'Failed to send OTP. using simulated WhatsApp? Check console.'
+        err.response?.data?.message || 'Failed to send reset code. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -53,7 +52,7 @@ const ForgotPassword = () => {
     setSuccess('');
 
     try {
-      await api.post('/auth/resetpassword', { phone, otp, password: newPassword });
+      await api.post('/auth/resetpassword', { email, otp, password: newPassword });
       setSuccess('Password reset successfully! Redirecting to login...');
       setTimeout(() => {
         navigate('/login');
@@ -99,8 +98,8 @@ const ForgotPassword = () => {
             </h2>
             <p className="text-slate-500">
               {step === 1
-                ? 'Enter your phone number to receive a WhatsApp OTP.'
-                : 'Enter the code sent to your WhatsApp and your new password.'}
+                ? 'Enter your email and we’ll send you a reset code.'
+                : 'Enter the code sent to your email and your new password.'}
             </p>
           </div>
 
@@ -120,19 +119,19 @@ const ForgotPassword = () => {
               {step === 1 && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                    Phone Number
+                    Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-slate-400" />
+                      <Mail className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
-                      name="phone"
-                      type="tel"
+                      name="email"
+                      type="email"
                       required
                       className="input-field w-full pl-10"
-                      placeholder="+1234567890"
-                      value={phone}
+                      placeholder="you@example.com"
+                      value={email}
                       onChange={onChange}
                       disabled={isLoading}
                       autoFocus
@@ -145,7 +144,7 @@ const ForgotPassword = () => {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                      WhatsApp OTP Code
+                      Reset Code
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -239,7 +238,7 @@ const ForgotPassword = () => {
                 </>
               ) : (
                 <>
-                  {step === 1 ? 'Send WhatsApp OTP' : 'Reset Password'}
+                  {step === 1 ? 'Send Reset Code' : 'Reset Password'}
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
