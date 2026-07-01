@@ -57,7 +57,9 @@ const SortSelect = ({ value, onChange, options, ariaLabel = 'Sort by', className
         }`}
       >
         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-        <span className="hidden font-medium text-slate-400 dark:text-slate-500 sm:inline">Sort:</span>
+        <span className="hidden font-medium text-slate-400 dark:text-slate-500 sm:inline">
+          Sort:
+        </span>
         <span className="max-w-[130px] truncate">{selected?.label}</span>
         <ChevronDown
           className={`w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${
