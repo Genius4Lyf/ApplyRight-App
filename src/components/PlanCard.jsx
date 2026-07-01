@@ -89,7 +89,7 @@ const PlanCard = () => {
   const [loading, setLoading] = useState(true);
   const [buyingPass, setBuyingPass] = useState(false);
 
-  // One-off ₦500 single-download pass via the Flutterwave hosted checkout — same
+  // One-off ₦750 single-download pass via the Flutterwave hosted checkout — same
   // flow as DownloadPaywallModal. Redirects out; returns to /billing/return.
   const buyDownloadPass = async () => {
     setBuyingPass(true);

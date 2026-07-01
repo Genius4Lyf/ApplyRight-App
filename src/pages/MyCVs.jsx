@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FileText, Plus, Search, X, ArrowUpDown, Trash2, Sparkles } from 'lucide-react';
+import { FileText, Plus, Search, X, Trash2, Sparkles } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import CVCard from '../components/CVCard';
+import SortSelect from '../components/ui/SortSelect';
 import CVService from '../services/cv.service';
 import { getCompletionStatus } from '../lib/cvCompleteness';
 import { useMinVisible } from '../hooks/useMinVisible';
@@ -235,21 +236,7 @@ const MyCVs = () => {
                 })}
               </div>
 
-              <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                <ArrowUpDown className="w-3.5 h-3.5" />
-                <span className="sr-only">Sort by</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <option key={o.key} value={o.key}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SortSelect value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
             </div>
           </div>
         )}

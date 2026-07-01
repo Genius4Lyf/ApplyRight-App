@@ -771,15 +771,22 @@ const TONE_STYLES = {
 // a real coach typing to you, right now. Re-types whenever the message changes.
 // The reset is done DURING RENDER (React's recommended alternative to a
 // setState-in-effect) so only the interval callback updates state.
-const Typewriter = ({ text = '', speed = 16, onDone }) => {
-  const [shown, setShown] = useState('');
+const Typewriter = ({ text = '', speed = 16, instant = false, onDone }) => {
+  const [shown, setShown] = useState(instant ? text : '');
   const [prevText, setPrevText] = useState(text);
   if (text !== prevText) {
     setPrevText(text);
-    setShown('');
+    setShown(instant ? text : '');
   }
   useEffect(() => {
     if (!text) return undefined;
+    // Already seen this exact message (e.g. reopening the coach on the same step) —
+    // show it in full at once instead of re-typing it out every time.
+    if (instant) {
+      setShown(text);
+      onDone?.();
+      return undefined;
+    }
     let i = 0;
     const id = setInterval(() => {
       i += 1;
@@ -792,7 +799,7 @@ const Typewriter = ({ text = '', speed = 16, onDone }) => {
     return () => clearInterval(id);
     // onDone intentionally omitted — it fires exactly once when typing completes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, speed]);
+  }, [text, speed, instant]);
   const done = shown.length >= text.length;
   return (
     <span>
@@ -940,6 +947,8 @@ const CoachCard = ({
   fixTargets,
   onRewrite,
   appliedSortIds = {},
+  messageSeen = false,
+  onMessageDone,
 }) => {
   const tone = TONE_STYLES[coaching.tone] || TONE_STYLES.start;
   // Interaction state is owned + persisted by the panel so it survives leaving and
@@ -952,7 +961,7 @@ const CoachCard = ({
   // The rewrite suggestions are OPT-IN: they only appear after the coach finishes
   // "speaking" (Typewriter onDone) AND the user accepts the coach's offer — so the
   // user engages with the coach first, instead of fixes popping in mid-sentence.
-  const [typingDone, setTypingDone] = useState(false);
+  const [typingDone, setTypingDone] = useState(messageSeen);
   const [showFixes, setShowFixes] = useState(false);
   const [offerDismissed, setOfferDismissed] = useState(false);
   // Reset the opt-in whenever the coach says something new (step change, or a fresh
@@ -1142,7 +1151,14 @@ const CoachCard = ({
             transition={{ duration: 0.3 }}
           >
             <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-              <Typewriter text={coaching.message} onDone={() => setTypingDone(true)} />
+              <Typewriter
+                text={coaching.message}
+                instant={messageSeen}
+                onDone={() => {
+                  setTypingDone(true);
+                  onMessageDone?.();
+                }}
+              />
             </p>
 
             {coaching.tips?.length > 0 && (
@@ -1927,6 +1943,20 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                   fixTargets={fixTargets}
                   onRewrite={openRewrite}
                   appliedSortIds={appliedRoles}
+                  // The coach only "types" a message the first time it's shown. Once
+                  // seen, reopening the panel on the same step renders it in full — no
+                  // re-writing. Tracked in the persisted context so it survives remount.
+                  messageSeen={!!aiByStep._typedMsgs?.[coaching.message]}
+                  onMessageDone={() =>
+                    setAiByStep((m) =>
+                      m._typedMsgs?.[coaching.message]
+                        ? m
+                        : {
+                            ...m,
+                            _typedMsgs: { ...(m._typedMsgs || {}), [coaching.message]: true },
+                          }
+                    )
+                  }
                 />
               </motion.div>
             </AnimatePresence>

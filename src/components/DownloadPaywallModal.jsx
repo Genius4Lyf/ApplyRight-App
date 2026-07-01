@@ -6,7 +6,7 @@ import billingService from '../services/billing.service';
 import { toast } from 'sonner';
 
 // Shown when a download is blocked (no pass / not subscribed). Two ways forward:
-//   - one-time ₦500 single-download pass (Flutterwave hosted checkout)
+//   - one-time ₦750 single-download pass (Flutterwave hosted checkout)
 //   - any paid subscription (unlimited downloads)
 // The copy sells the real PDF over a screenshot: ATS-readable selectable text,
 // crisp print quality, exact template formatting.
@@ -48,7 +48,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
           A screenshot is just a picture — applicant tracking systems can’t read it, and it prints
-          blurry. For ₦500 you get the real thing:
+          blurry. For ₦750 you get the real thing:
         </p>
 
         <ul className="space-y-2 mb-5">
@@ -84,7 +84,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <Download className="w-5 h-5" /> Pay ₦500 — download
+              <Download className="w-5 h-5" /> Pay ₦750 — download
             </>
           )}
         </button>

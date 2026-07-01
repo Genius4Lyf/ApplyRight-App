@@ -577,7 +577,7 @@ const CVBuilderInner = () => {
 
             <nav
               ref={navRef}
-              className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto custom-scrollbar before:m-auto before:content-[''] after:m-auto after:content-['']"
+              className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto scrollbar-none before:m-auto before:content-[''] after:m-auto after:content-['']"
             >
               {steps.map((step, index) => {
                 const isCurrent = index === currentStepIndex;
