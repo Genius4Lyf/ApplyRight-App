@@ -203,7 +203,7 @@ const RootLayout = () => {
       {/* Global Educative / AI-themed Background */}
       <div className="fixed inset-0 z-[-1] pointer-events-none bg-slate-50 dark:bg-slate-950">
         {/* Subtle dot matrix pattern - slightly darker/more visible */}
-        <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#475569_1px,transparent_1px)] [background-size:24px_24px] opacity-60 dark:opacity-35"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#475569_1px,transparent_1px)] [background-size:24px_24px] opacity-40 dark:opacity-35"></div>
         {/* Soft ambient gradients - hidden in dark mode for solid background */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/60 rounded-full blur-3xl mix-blend-multiply translate-x-1/3 -translate-y-1/3 dark:hidden"></div>
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl mix-blend-multiply -translate-x-1/4 translate-y-1/4 dark:hidden"></div>

@@ -404,7 +404,7 @@ const Profile = () => {
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:flex-1 lg:min-h-0">
           <aside className="lg:w-56 shrink-0 mb-6 lg:mb-0">
             <div
-              className="flex lg:flex-col gap-1 overflow-x-auto overflow-y-hidden lg:overflow-visible scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0"
+              className="flex lg:flex-col gap-1 overflow-x-auto overflow-y-hidden lg:overflow-visible scrollbar-none p-1 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl shadow-sm ring-1 ring-black/5 dark:ring-white/5"
               role="tablist"
             >
               {[
@@ -423,10 +423,10 @@ const Profile = () => {
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors lg:w-full ${
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all lg:w-full ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
-                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
+                        ? 'bg-white/80 text-indigo-700 shadow-[0_1px_3px_rgba(15,23,42,0.10)] ring-1 ring-black/5 backdrop-blur-md dark:bg-white/10 dark:text-indigo-200 dark:ring-white/10'
+                        : 'text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-slate-200'
                     }`}
                   >
                     <TabIcon className="w-4 h-4 shrink-0" />

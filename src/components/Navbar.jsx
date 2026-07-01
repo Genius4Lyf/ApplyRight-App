@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -48,7 +48,7 @@ const Navbar = () => {
   // can't scroll or jump.
   useBodyScrollLock(isMobileMenuOpen);
 
-  // Shared styling for drawer nav links â€” active items get a gradient pill, ring
+  // Shared styling for drawer nav links — active items get a gradient pill, ring
   // and a left accent bar so the menu reads as a polished app shell, not a v1 list.
   const navLinkClass = (active) =>
     `group relative flex items-center gap-3 p-3.5 rounded-xl font-semibold transition-all ${
@@ -140,7 +140,7 @@ const Navbar = () => {
             window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.credits }));
           }
         } catch {
-          // localStorage unavailable â€” non-fatal, navbar state still updates.
+          // localStorage unavailable — non-fatal, navbar state still updates.
         }
       } catch (error) {
         console.error('Failed to fetch credits', error);
@@ -151,19 +151,19 @@ const Navbar = () => {
 
     // Listen for real-time updates from other components
     const handleCreditUpdate = (event) => {
-      // console.log('ðŸ“¥ Navbar: Received credit_updated event:', event.detail);
+      // console.log('📥 Navbar: Received credit_updated event:', event.detail);
       if (typeof event.detail === 'number') {
-        // console.log('âœ… Navbar: Updating credits display to:', event.detail);
+        // console.log('✅ Navbar: Updating credits display to:', event.detail);
         setCredits(event.detail);
       } else {
-        console.warn('âš ï¸ Navbar: Invalid credit value received:', event.detail);
+        console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
       }
     };
 
-    // console.log('ðŸ‘‚ Navbar: Listening for credit_updated events');
+    // console.log('👂 Navbar: Listening for credit_updated events');
     window.addEventListener('credit_updated', handleCreditUpdate);
     return () => {
-      // console.log('ðŸ”‡ Navbar: Removing credit_updated listener');
+      // console.log('🔇 Navbar: Removing credit_updated listener');
       window.removeEventListener('credit_updated', handleCreditUpdate);
     };
   }, [isAuthenticated]);
@@ -315,12 +315,12 @@ const Navbar = () => {
           {isAuthenticated && (
             <div className="flex items-center gap-4">
               {/* Agents have no interview minutes. With a plan, the scarce
-                  resource is CV credits (for tailoring) â€” show the balance and
+                  resource is CV credits (for tailoring) — show the balance and
                   link to top up. Without a plan, prompt them to subscribe. */}
               {isAgent ? (
                 <Link
                   to={isPaid ? '/credits' : '/upgrade'}
-                  aria-label={isPaid ? 'CV credits â€” tap to top up' : 'Choose an agent plan'}
+                  aria-label={isPaid ? 'CV credits — tap to top up' : 'Choose an agent plan'}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
                     isPaid
                       ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25'
@@ -333,7 +333,7 @@ const Navbar = () => {
                       <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
                         {displayCredits !== null && displayCredits !== undefined
                           ? displayCredits
-                          : 'â€¦'}
+                          : '…'}
                       </span>
                     </>
                   ) : (
@@ -347,7 +347,7 @@ const Navbar = () => {
                 </Link>
               ) : (
                 /* Unified wallet pill: shows the scarce resource for the user's
-                  plan â€” minutes for paid, credits for free â€” and opens a popover
+                  plan — minutes for paid, credits for free — and opens a popover
                   with the full picture (plan, live minutes, credits). */
                 <div className="relative" ref={popoverRef}>
                   <button
@@ -450,13 +450,13 @@ const Navbar = () => {
                                 <li className="flex items-center justify-between">
                                   <span>Full application kit</span>
                                   <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                    â‰ˆ{Math.floor((credits || 0) / 18)}
+                                    ≈{Math.floor((credits || 0) / 18)}
                                   </span>
                                 </li>
                                 <li className="flex items-center justify-between">
                                   <span>Optimized CV</span>
                                   <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                    â‰ˆ{Math.floor((credits || 0) / 10)}
+                                    ≈{Math.floor((credits || 0) / 10)}
                                   </span>
                                 </li>
                               </ul>
@@ -479,7 +479,7 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Account avatar + dropdown menu â€” single trigger replaces the
+              {/* Account avatar + dropdown menu — single trigger replaces the
                 old "ACCOUNT" label + name + avatar + standalone logout cluster.
                 Logout sits inside the menu (one extra click), not as a top-level
                 icon, because it's a destructive action. */}
@@ -608,7 +608,7 @@ const Navbar = () => {
               the Profile tab now, and primary nav happens via the bottom bar.
             - Mobile-web browser: hamburger opens the slide-out drawer.
             - Both mobile contexts show a compact credit pill so users know
-              their balance before scrolling â€” was previously desktop-only,
+              their balance before scrolling — was previously desktop-only,
               which hid the most relevant info on the smallest screens. */}
         <div className="md:hidden flex items-center gap-2">
           {isAuthenticated && isAgent ? (
@@ -616,7 +616,7 @@ const Navbar = () => {
               type="button"
               onClick={() => navigate('/upgrade')}
               className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 rounded-full border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors"
-              aria-label="Agent plan â€” tap for plans"
+              aria-label="Agent plan — tap for plans"
             >
               <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
               <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -630,7 +630,7 @@ const Navbar = () => {
                 type="button"
                 onClick={() => navigate('/upgrade')}
                 className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 rounded-full border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors"
-                aria-label={`${minutesLeft ?? 0} interview minutes left â€” tap for plans`}
+                aria-label={`${minutesLeft ?? 0} interview minutes left — tap for plans`}
               >
                 <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -642,7 +642,7 @@ const Navbar = () => {
                 type="button"
                 onClick={() => navigate('/credits')}
                 className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/15 rounded-full border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
-                aria-label={`${credits ?? '...'} credits â€” tap to top up`}
+                aria-label={`${credits ?? '...'} credits — tap to top up`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
                 <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
@@ -686,7 +686,7 @@ const Navbar = () => {
                   transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
                   className="md:hidden fixed top-0 right-0 bottom-0 w-[86%] max-w-sm bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 z-[110] shadow-2xl ring-1 ring-black/5 dark:ring-white/5 flex flex-col overflow-hidden"
                 >
-                  {/* Drawer Header â€” branded gradient bar */}
+                  {/* Drawer Header — branded gradient bar */}
                   <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 px-4 pt-5 pb-4">
                     {/* soft glow accents */}
                     <div className="pointer-events-none absolute -top-10 -right-6 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
@@ -701,9 +701,7 @@ const Navbar = () => {
                             ApplyRight
                           </span>
                           <span className="block text-[11px] font-medium text-indigo-100/80">
-                            {isAuthenticated && user?.firstName
-                              ? `Hi, ${user.firstName} ðŸ‘‹`
-                              : 'Menu'}
+                            {isAuthenticated && user?.firstName ? `Hi, ${user.firstName}` : 'Menu'}
                           </span>
                         </div>
                       </div>
@@ -787,57 +785,56 @@ const Navbar = () => {
                           <span className="h-px flex-1 bg-slate-200/70 dark:bg-slate-800" />
                         </div>
 
-                        {/* Plan + live interview minutes â€” premium gradient card */}
+                        {/* Plan status — calm neutral card, minutes live in their own row below */}
                         <Link
                           to="/upgrade"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="relative overflow-hidden flex items-center justify-between p-3.5 rounded-2xl mb-3 shadow-md ring-1 ring-amber-400/20 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 dark:from-amber-500 dark:via-amber-600 dark:to-orange-600"
+                          className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors mb-2.5"
                         >
-                          <div className="pointer-events-none absolute -top-6 -right-4 w-24 h-24 rounded-full bg-white/20 blur-xl" />
-                          <div className="relative flex items-center gap-3">
-                            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/25 ring-1 ring-white/30">
-                              <Crown className="w-5 h-5 text-white fill-white" />
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-500/15 shrink-0">
+                              <Crown className="w-5 h-5 text-amber-500 fill-amber-400" />
                             </div>
-                            <div>
-                              <span className="block font-extrabold text-white leading-tight">
+                            <div className="leading-tight">
+                              <span className="block font-bold text-slate-900 dark:text-slate-100">
                                 {isPaid
                                   ? planLabelFor(entitlement)
                                   : isAgent
                                     ? 'No plan yet'
                                     : 'Free plan'}
                               </span>
-                              <span className="block text-xs font-medium text-white/85">
+                              <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
                                 {isAgent
                                   ? isPaid
-                                    ? `${displayCredits ?? 0} CV credits Â· unlimited downloads`
-                                    : 'Get an agent plan Â· tap to upgrade'
+                                    ? `${displayCredits ?? 0} CV credits`
+                                    : 'Get an agent plan'
                                   : isPaid
-                                    ? `${minutesLeft ?? 0} interview min left`
-                                    : `${freeTasteMin ?? 0} free min Â· tap to upgrade`}
+                                    ? 'Active plan'
+                                    : 'Tap to upgrade'}
                               </span>
                             </div>
                           </div>
-                          <span className="relative text-[11px] font-bold text-amber-700 bg-white px-2.5 py-1 rounded-full shadow-sm">
-                            {isAgent ? 'Plans' : isPaid ? 'Add min' : 'Upgrade'}
+                          <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 px-2.5 py-1 rounded-full shrink-0">
+                            {isAgent ? 'Plans' : isPaid ? 'Manage' : 'Upgrade'}
                           </span>
                         </Link>
 
-                        {/* A.I credits (text prep) â€” paid tiers now spend a credit allowance too */}
+                        {/* A.I credits (text prep) — paid tiers now spend a credit allowance too */}
                         {!isAgent && (
                           <Link
                             to="/credits"
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center justify-between p-3.5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/60 hover:bg-indigo-50 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/15 transition-colors ${isActive('/credits') ? 'ring-1 ring-indigo-200 dark:ring-indigo-500/40' : ''}`}
+                            className={`flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors mb-2.5 ${isActive('/credits') ? 'ring-1 ring-indigo-200 dark:ring-indigo-500/40' : ''}`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-500/20">
-                                <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 shrink-0">
+                                <Sparkles className="w-5 h-5 text-indigo-500 fill-indigo-500" />
                               </div>
-                              <span className="font-bold text-indigo-900 dark:text-indigo-200">
+                              <span className="font-bold text-slate-900 dark:text-slate-100">
                                 A.I Credits
                               </span>
                             </div>
-                            <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2.5 py-1 rounded-lg">
+                            <span className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                               {displayCredits !== null && displayCredits !== undefined
                                 ? displayCredits
                                 : '...'}
@@ -850,24 +847,26 @@ const Navbar = () => {
                           <Link
                             to="/upgrade"
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className="mt-3 flex items-center justify-between p-3.5 rounded-2xl border border-sky-100 dark:border-sky-500/30 bg-sky-50/60 hover:bg-sky-50 dark:bg-sky-500/10 dark:hover:bg-sky-500/15 transition-colors"
+                            className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-500/20">
-                                <Clock className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-500/15 shrink-0">
+                                <Clock className="w-5 h-5 text-sky-500" />
                               </div>
                               <div className="leading-tight">
-                                <span className="block font-bold text-sky-900 dark:text-sky-200">
+                                <span className="block font-bold text-slate-900 dark:text-slate-100">
                                   Interview Minutes
                                 </span>
-                                <span className="block text-[11px] font-medium text-sky-700/70 dark:text-sky-300/70">
+                                <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
                                   {isPaid ? 'Live voice mock' : 'Free taste · tap to add'}
                                 </span>
                               </div>
                             </div>
-                            <span className="font-black text-sky-700 bg-sky-100 dark:text-sky-300 dark:bg-sky-500/20 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                            <span className="text-base font-extrabold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                               {(isPaid ? minutesLeft : freeTasteMin) ?? 0}
-                              <span className="text-[10px] font-bold ml-0.5">min</span>
+                              <span className="text-[10px] font-bold text-slate-400 ml-0.5">
+                                min
+                              </span>
                             </span>
                           </Link>
                         )}
@@ -972,6 +971,10 @@ const Navbar = () => {
                               {user?.email || 'View Profile Settings'}
                             </p>
                           </div>
+                          {/* Explicit gear so users know tapping the profile opens settings */}
+                          <div className="flex items-center gap-1 shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                            <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" />
+                          </div>
                         </Link>
 
                         <button
@@ -1017,7 +1020,7 @@ const Navbar = () => {
           </AnimatePresence>,
           document.body
         )}
-      {/* Logout Confirmation Modal â€” portaled to body to escape header's stacking context */}
+      {/* Logout Confirmation Modal — portaled to body to escape header's stacking context */}
       {showLogoutConfirm &&
         typeof document !== 'undefined' &&
         createPortal(
