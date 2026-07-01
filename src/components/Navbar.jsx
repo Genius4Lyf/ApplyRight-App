@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -18,10 +18,14 @@ import {
   Clock,
   Mic,
   Wallet,
+  Briefcase,
+  TrendingUp,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
+import UserService from '../services/user.service';
 import { isMobile } from '../utils/platform';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import logo from '../assets/logo/applyright-icon.png';
 
@@ -40,6 +44,23 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // Pin the page while the slide-out drawer is open so the content behind it
+  // can't scroll or jump.
+  useBodyScrollLock(isMobileMenuOpen);
+
+  // Shared styling for drawer nav links â€” active items get a gradient pill, ring
+  // and a left accent bar so the menu reads as a polished app shell, not a v1 list.
+  const navLinkClass = (active) =>
+    `group relative flex items-center gap-3 p-3.5 rounded-xl font-semibold transition-all ${
+      active
+        ? 'bg-gradient-to-r from-indigo-50 to-indigo-50/30 text-indigo-700 shadow-sm ring-1 ring-indigo-100 dark:from-indigo-500/20 dark:to-indigo-500/[0.04] dark:text-indigo-200 dark:ring-indigo-500/30'
+        : 'text-slate-600 hover:bg-slate-100/70 hover:translate-x-0.5 dark:text-slate-300 dark:hover:bg-slate-800/70'
+    }`;
+  const activeBar = (show) =>
+    show ? (
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-indigo-500" />
+    ) : null;
+
   const isAuthenticated = !!localStorage.getItem('token');
 
   let user = {};
@@ -55,6 +76,9 @@ const Navbar = () => {
 
   const [credits, setCredits] = useState(null);
   const [entitlement, setEntitlement] = useState(null);
+  // Activity snapshot shown inside the drawer. Fetched lazily the first time the
+  // menu opens so we don't add an API call to every page load.
+  const [activity, setActivity] = useState(null);
   const [showCreditPopover, setShowCreditPopover] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const popoverRef = React.useRef(null);
@@ -116,7 +140,7 @@ const Navbar = () => {
             window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.credits }));
           }
         } catch {
-          // localStorage unavailable — non-fatal, navbar state still updates.
+          // localStorage unavailable â€” non-fatal, navbar state still updates.
         }
       } catch (error) {
         console.error('Failed to fetch credits', error);
@@ -127,19 +151,19 @@ const Navbar = () => {
 
     // Listen for real-time updates from other components
     const handleCreditUpdate = (event) => {
-      // console.log('📥 Navbar: Received credit_updated event:', event.detail);
+      // console.log('ðŸ“¥ Navbar: Received credit_updated event:', event.detail);
       if (typeof event.detail === 'number') {
-        // console.log('✅ Navbar: Updating credits display to:', event.detail);
+        // console.log('âœ… Navbar: Updating credits display to:', event.detail);
         setCredits(event.detail);
       } else {
-        console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
+        console.warn('âš ï¸ Navbar: Invalid credit value received:', event.detail);
       }
     };
 
-    // console.log('👂 Navbar: Listening for credit_updated events');
+    // console.log('ðŸ‘‚ Navbar: Listening for credit_updated events');
     window.addEventListener('credit_updated', handleCreditUpdate);
     return () => {
-      // console.log('🔇 Navbar: Removing credit_updated listener');
+      // console.log('ðŸ”‡ Navbar: Removing credit_updated listener');
       window.removeEventListener('credit_updated', handleCreditUpdate);
     };
   }, [isAuthenticated]);
@@ -158,6 +182,24 @@ const Navbar = () => {
     window.addEventListener('entitlement_updated', fetchEntitlement);
     return () => window.removeEventListener('entitlement_updated', fetchEntitlement);
   }, [isAuthenticated]);
+
+  // Load the activity snapshot the first time the drawer opens (agents don't have
+  // interview/job stats, so skip them). Refetched if the drawer reopens after an
+  // 'entitlement_updated' cleared it — otherwise cached for the session.
+  React.useEffect(() => {
+    if (!isMobileMenuOpen || !isAuthenticated || isAgent || activity !== null) return;
+    let alive = true;
+    UserService.getActivityStats()
+      .then((data) => {
+        if (alive) setActivity(data || {});
+      })
+      .catch(() => {
+        if (alive) setActivity({});
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isMobileMenuOpen, isAuthenticated, isAgent, activity]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -273,12 +315,12 @@ const Navbar = () => {
           {isAuthenticated && (
             <div className="flex items-center gap-4">
               {/* Agents have no interview minutes. With a plan, the scarce
-                  resource is CV credits (for tailoring) — show the balance and
+                  resource is CV credits (for tailoring) â€” show the balance and
                   link to top up. Without a plan, prompt them to subscribe. */}
               {isAgent ? (
                 <Link
                   to={isPaid ? '/credits' : '/upgrade'}
-                  aria-label={isPaid ? 'CV credits — tap to top up' : 'Choose an agent plan'}
+                  aria-label={isPaid ? 'CV credits â€” tap to top up' : 'Choose an agent plan'}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
                     isPaid
                       ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25'
@@ -291,7 +333,7 @@ const Navbar = () => {
                       <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
                         {displayCredits !== null && displayCredits !== undefined
                           ? displayCredits
-                          : '…'}
+                          : 'â€¦'}
                       </span>
                     </>
                   ) : (
@@ -305,7 +347,7 @@ const Navbar = () => {
                 </Link>
               ) : (
                 /* Unified wallet pill: shows the scarce resource for the user's
-                  plan — minutes for paid, credits for free — and opens a popover
+                  plan â€” minutes for paid, credits for free â€” and opens a popover
                   with the full picture (plan, live minutes, credits). */
                 <div className="relative" ref={popoverRef}>
                   <button
@@ -408,13 +450,13 @@ const Navbar = () => {
                                 <li className="flex items-center justify-between">
                                   <span>Full application kit</span>
                                   <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                    ≈{Math.floor((credits || 0) / 18)}
+                                    â‰ˆ{Math.floor((credits || 0) / 18)}
                                   </span>
                                 </li>
                                 <li className="flex items-center justify-between">
                                   <span>Optimized CV</span>
                                   <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                    ≈{Math.floor((credits || 0) / 10)}
+                                    â‰ˆ{Math.floor((credits || 0) / 10)}
                                   </span>
                                 </li>
                               </ul>
@@ -437,7 +479,7 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Account avatar + dropdown menu — single trigger replaces the
+              {/* Account avatar + dropdown menu â€” single trigger replaces the
                 old "ACCOUNT" label + name + avatar + standalone logout cluster.
                 Logout sits inside the menu (one extra click), not as a top-level
                 icon, because it's a destructive action. */}
@@ -566,7 +608,7 @@ const Navbar = () => {
               the Profile tab now, and primary nav happens via the bottom bar.
             - Mobile-web browser: hamburger opens the slide-out drawer.
             - Both mobile contexts show a compact credit pill so users know
-              their balance before scrolling — was previously desktop-only,
+              their balance before scrolling â€” was previously desktop-only,
               which hid the most relevant info on the smallest screens. */}
         <div className="md:hidden flex items-center gap-2">
           {isAuthenticated && isAgent ? (
@@ -574,7 +616,7 @@ const Navbar = () => {
               type="button"
               onClick={() => navigate('/upgrade')}
               className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 rounded-full border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors"
-              aria-label="Agent plan — tap for plans"
+              aria-label="Agent plan â€” tap for plans"
             >
               <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
               <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -588,7 +630,7 @@ const Navbar = () => {
                 type="button"
                 onClick={() => navigate('/upgrade')}
                 className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 rounded-full border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors"
-                aria-label={`${minutesLeft ?? 0} interview minutes left — tap for plans`}
+                aria-label={`${minutesLeft ?? 0} interview minutes left â€” tap for plans`}
               >
                 <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -600,7 +642,7 @@ const Navbar = () => {
                 type="button"
                 onClick={() => navigate('/credits')}
                 className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/15 rounded-full border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
-                aria-label={`${credits ?? '...'} credits — tap to top up`}
+                aria-label={`${credits ?? '...'} credits â€” tap to top up`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
                 <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
@@ -642,22 +684,37 @@ const Navbar = () => {
                   animate={{ x: 0 }}
                   exit={{ x: '100%' }}
                   transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                  className="md:hidden fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white dark:bg-slate-900 z-[110] shadow-2xl flex flex-col overflow-y-auto"
+                  className="md:hidden fixed top-0 right-0 bottom-0 w-[86%] max-w-sm bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 z-[110] shadow-2xl ring-1 ring-black/5 dark:ring-white/5 flex flex-col overflow-hidden"
                 >
-                  {/* Drawer Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <img src={logo} alt="ApplyRight Logo" className="h-7 w-auto" />
-                      <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                        Menu
-                      </span>
+                  {/* Drawer Header â€” branded gradient bar */}
+                  <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 px-4 pt-5 pb-4">
+                    {/* soft glow accents */}
+                    <div className="pointer-events-none absolute -top-10 -right-6 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
+                    <div className="pointer-events-none absolute -bottom-8 left-8 w-24 h-24 rounded-full bg-violet-300/20 blur-2xl" />
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20">
+                          <img src={logo} alt="ApplyRight Logo" className="h-6 w-auto" />
+                        </div>
+                        <div className="leading-tight">
+                          <span className="block text-base font-extrabold text-white tracking-tight">
+                            ApplyRight
+                          </span>
+                          <span className="block text-[11px] font-medium text-indigo-100/80">
+                            {isAuthenticated && user?.firstName
+                              ? `Hi, ${user.firstName} ðŸ‘‹`
+                              : 'Menu'}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                        aria-label="Close menu"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 dark:text-slate-400 dark:hover:text-slate-100 dark:bg-slate-900 rounded-full transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
                   </div>
 
                   {/* Primary Nav Links */}
@@ -667,46 +724,53 @@ const Navbar = () => {
                         <Link
                           to={homePath}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive(homePath) ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                          className={navLinkClass(isActive(homePath))}
                         >
+                          {activeBar(isActive(homePath))}
                           <LayoutDashboard className="w-5 h-5" />
-                          <span className="font-semibold">Dashboard</span>
+                          <span>Dashboard</span>
                         </Link>
                         {isAgent && (
                           <Link
                             to="/agent/earnings"
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/agent/earnings') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                            className={navLinkClass(
+                              location.pathname.startsWith('/agent/earnings')
+                            )}
                           >
+                            {activeBar(location.pathname.startsWith('/agent/earnings'))}
                             <Wallet className="w-5 h-5" />
-                            <span className="font-semibold">Earnings</span>
+                            <span>Earnings</span>
                           </Link>
                         )}
                         <Link
                           to="/my-cvs"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 p-3.5 rounded-xl ${location.pathname.startsWith('/my-cvs') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                          className={navLinkClass(location.pathname.startsWith('/my-cvs'))}
                         >
+                          {activeBar(location.pathname.startsWith('/my-cvs'))}
                           <FileText className="w-5 h-5" />
-                          <span className="font-semibold">My CVs</span>
+                          <span>My CVs</span>
                         </Link>
                         {!isAgent && (
                           <>
                             <Link
                               to="/history"
                               onClick={() => setIsMobileMenuOpen(false)}
-                              className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/history') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                              className={navLinkClass(isActive('/history'))}
                             >
+                              {activeBar(isActive('/history'))}
                               <History className="w-5 h-5" />
-                              <span className="font-semibold">My Applications</span>
+                              <span>My Applications</span>
                             </Link>
                             <Link
                               to="/interview-prep"
                               onClick={() => setIsMobileMenuOpen(false)}
-                              className={`flex items-center gap-3 p-3.5 rounded-xl ${isActive('/interview-prep') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                              className={navLinkClass(isActive('/interview-prep'))}
                             >
+                              {activeBar(isActive('/interview-prep'))}
                               <MessageSquare className="w-5 h-5" />
-                              <span className="font-semibold">Interview Prep</span>
+                              <span>Interview Prep</span>
                             </Link>
                           </>
                         )}
@@ -715,59 +779,168 @@ const Navbar = () => {
 
                     {isAuthenticated && (
                       <>
-                        <div className="h-px bg-slate-100 dark:bg-slate-900 my-4" />
+                        <div className="flex items-center gap-2 px-1 mb-2">
+                          <span className="h-px flex-1 bg-slate-200/70 dark:bg-slate-800" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Your account
+                          </span>
+                          <span className="h-px flex-1 bg-slate-200/70 dark:bg-slate-800" />
+                        </div>
 
-                        {/* Plan + live interview minutes */}
+                        {/* Plan + live interview minutes â€” premium gradient card */}
                         <Link
                           to="/upgrade"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center justify-between p-3.5 rounded-xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 mb-3"
+                          className="relative overflow-hidden flex items-center justify-between p-3.5 rounded-2xl mb-3 shadow-md ring-1 ring-amber-400/20 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 dark:from-amber-500 dark:via-amber-600 dark:to-orange-600"
                         >
-                          <div className="flex items-center gap-3">
-                            <Crown className="w-5 h-5 text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
+                          <div className="pointer-events-none absolute -top-6 -right-4 w-24 h-24 rounded-full bg-white/20 blur-xl" />
+                          <div className="relative flex items-center gap-3">
+                            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/25 ring-1 ring-white/30">
+                              <Crown className="w-5 h-5 text-white fill-white" />
+                            </div>
                             <div>
-                              <span className="block font-bold text-amber-900 dark:text-amber-200 leading-tight">
+                              <span className="block font-extrabold text-white leading-tight">
                                 {isPaid
                                   ? planLabelFor(entitlement)
                                   : isAgent
                                     ? 'No plan yet'
                                     : 'Free plan'}
                               </span>
-                              <span className="block text-xs text-amber-700/80 dark:text-amber-300/80">
+                              <span className="block text-xs font-medium text-white/85">
                                 {isAgent
                                   ? isPaid
-                                    ? `${displayCredits ?? 0} CV credits · unlimited downloads`
-                                    : 'Get an agent plan · tap to upgrade'
+                                    ? `${displayCredits ?? 0} CV credits Â· unlimited downloads`
+                                    : 'Get an agent plan Â· tap to upgrade'
                                   : isPaid
                                     ? `${minutesLeft ?? 0} interview min left`
-                                    : `${freeTasteMin ?? 0} free min · tap to upgrade`}
+                                    : `${freeTasteMin ?? 0} free min Â· tap to upgrade`}
                               </span>
                             </div>
                           </div>
-                          <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                            {isAgent ? 'Plans' : isPaid ? 'Add min' : 'Plans'}
+                          <span className="relative text-[11px] font-bold text-amber-700 bg-white px-2.5 py-1 rounded-full shadow-sm">
+                            {isAgent ? 'Plans' : isPaid ? 'Add min' : 'Upgrade'}
                           </span>
                         </Link>
 
-                        {/* A.I credits (text prep) — paid tiers now spend a credit allowance too */}
+                        {/* A.I credits (text prep) â€” paid tiers now spend a credit allowance too */}
                         {!isAgent && (
                           <Link
                             to="/credits"
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 ${isActive('/credits') ? 'bg-indigo-50 dark:bg-indigo-500/15' : ''}`}
+                            className={`flex items-center justify-between p-3.5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/60 hover:bg-indigo-50 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/15 transition-colors ${isActive('/credits') ? 'ring-1 ring-indigo-200 dark:ring-indigo-500/40' : ''}`}
                           >
                             <div className="flex items-center gap-3">
-                              <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-500/20">
+                                <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-600 dark:text-indigo-400 dark:fill-indigo-400" />
+                              </div>
                               <span className="font-bold text-indigo-900 dark:text-indigo-200">
                                 A.I Credits
                               </span>
                             </div>
-                            <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md">
+                            <span className="font-black text-indigo-700 bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/20 px-2.5 py-1 rounded-lg">
                               {displayCredits !== null && displayCredits !== undefined
                                 ? displayCredits
                                 : '...'}
                             </span>
                           </Link>
+                        )}
+
+                        {/* Interview minutes — live voice wallet (paid balance or free taste) */}
+                        {!isAgent && (
+                          <Link
+                            to="/upgrade"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="mt-3 flex items-center justify-between p-3.5 rounded-2xl border border-sky-100 dark:border-sky-500/30 bg-sky-50/60 hover:bg-sky-50 dark:bg-sky-500/10 dark:hover:bg-sky-500/15 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-500/20">
+                                <Clock className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                              </div>
+                              <div className="leading-tight">
+                                <span className="block font-bold text-sky-900 dark:text-sky-200">
+                                  Interview Minutes
+                                </span>
+                                <span className="block text-[11px] font-medium text-sky-700/70 dark:text-sky-300/70">
+                                  {isPaid ? 'Live voice mock' : 'Free taste · tap to add'}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="font-black text-sky-700 bg-sky-100 dark:text-sky-300 dark:bg-sky-500/20 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                              {(isPaid ? minutesLeft : freeTasteMin) ?? 0}
+                              <span className="text-[10px] font-bold ml-0.5">min</span>
+                            </span>
+                          </Link>
+                        )}
+
+                        {/* Activity snapshot — fills the drawer with the user's momentum */}
+                        {!isAgent && (
+                          <div className="mt-5">
+                            <div className="flex items-center gap-2 px-1 mb-2">
+                              <TrendingUp className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                Your activity
+                              </span>
+                              <span className="h-px flex-1 bg-slate-200/70 dark:bg-slate-800" />
+                            </div>
+
+                            {activity === null ? (
+                              <div className="grid grid-cols-3 gap-2">
+                                {[0, 1, 2].map((i) => (
+                                  <div
+                                    key={i}
+                                    className="h-[68px] rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse"
+                                  />
+                                ))}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {[
+                                    {
+                                      iconEl: <FileText className="w-4 h-4 text-emerald-500" />,
+                                      value: activity.cvsCreated ?? 0,
+                                      label: 'CVs',
+                                    },
+                                    {
+                                      iconEl: <Briefcase className="w-4 h-4 text-indigo-500" />,
+                                      value: activity.applicationsAnalyzed ?? 0,
+                                      label: 'Jobs',
+                                    },
+                                    {
+                                      iconEl: <Mic className="w-4 h-4 text-amber-500" />,
+                                      value: activity.interviewsPracticed ?? 0,
+                                      label: 'Mocks',
+                                    },
+                                  ].map(({ iconEl, value, label }) => (
+                                    <div
+                                      key={label}
+                                      className="flex flex-col items-center justify-center gap-1 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 py-3"
+                                    >
+                                      {iconEl}
+                                      <span className="text-lg font-extrabold text-slate-900 dark:text-slate-100 leading-none">
+                                        {value}
+                                      </span>
+                                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                        {label}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {typeof activity.bestInterviewScore === 'number' && (
+                                  <div className="mt-2 flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 px-3 py-2.5">
+                                    <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                      <Mic className="w-3.5 h-3.5" />
+                                      Best interview score
+                                    </span>
+                                    <span className="text-sm font-extrabold text-amber-700 dark:text-amber-300">
+                                      {activity.bestInterviewScore}%
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
@@ -844,7 +1017,7 @@ const Navbar = () => {
           </AnimatePresence>,
           document.body
         )}
-      {/* Logout Confirmation Modal — portaled to body to escape header's stacking context */}
+      {/* Logout Confirmation Modal â€” portaled to body to escape header's stacking context */}
       {showLogoutConfirm &&
         typeof document !== 'undefined' &&
         createPortal(

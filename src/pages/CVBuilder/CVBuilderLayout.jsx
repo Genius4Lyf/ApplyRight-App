@@ -24,6 +24,7 @@ import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion'
 import ATSCoachPanel from '../../components/cv/ATSCoachPanel';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import { getBotNudge } from '../../utils/cvCoach';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
 
 const ScaledCVPreview = ({ cvData }) => {
@@ -373,6 +374,9 @@ const CVBuilderInner = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('coach'); // 'coach' | 'preview'
+
+  // Pin the page behind the coach/preview sheet so it can't scroll or jump while open.
+  useBodyScrollLock(mobilePreviewOpen);
   // Drives the bot's "new message" pulse: the coach has fresh guidance for the
   // step the user just landed on, but they haven't opened the sheet to read it.
   const [coachHasNew, setCoachHasNew] = useState(true);

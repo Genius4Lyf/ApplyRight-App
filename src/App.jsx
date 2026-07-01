@@ -224,10 +224,10 @@ const RootLayout = () => {
         <AnimatePresence>
           {isDarkEligibleRoute(location.pathname) && (
             <motion.div
-              className={`fixed right-6 z-40 flex items-center justify-center ${
+              className={`fixed right-4 md:right-6 z-40 flex items-center justify-center ${
                 showNav
-                  ? 'bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6'
-                  : 'bottom-6'
+                  ? 'bottom-[calc(7.5rem+env(safe-area-inset-bottom))] md:bottom-6'
+                  : 'bottom-24 md:bottom-6'
               }`}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
