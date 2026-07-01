@@ -218,13 +218,12 @@ const ScaledCVPreview = ({ cvData }) => {
 const FAB_SIZE = 56; // px — keep in sync with the w-14 h-14 below
 const FAB_MARGIN = 16;
 
-const CoachBotFab = ({ hasNew, message, onOpen }) => {
+const CoachBotFab = ({ hasNew, message, onOpen, hidden }) => {
   const initial = () => {
     const w = typeof window !== 'undefined' ? window.innerWidth : 375;
-    const h = typeof window !== 'undefined' ? window.innerHeight : 700;
-    // Default to the RIGHT edge, lifted to sit just ABOVE the bottom-right
-    // dark-mode toggle so the two stack without overlapping.
-    return { x: w - FAB_SIZE - FAB_MARGIN, y: h - FAB_SIZE - 88 };
+    // Default to the RIGHT edge, at the "Tips for this section" row — where the user
+    // expects the coach to live — clear of the bottom-right dark-mode toggle.
+    return { x: w - FAB_SIZE - FAB_MARGIN, y: 200 };
   };
   const start = initial();
   const x = useMotionValue(start.x);
@@ -260,7 +259,9 @@ const CoachBotFab = ({ hasNew, message, onOpen }) => {
   }, []);
 
   const handleOpen = () => {
-    if (!draggedRef.current) onOpen();
+    // Pass the bot's current CENTRE so the coach window can grow out of exactly
+    // where the bot sits (wherever the user has dragged it), not a fixed corner.
+    if (!draggedRef.current) onOpen({ cx: x.get() + FAB_SIZE / 2, cy: y.get() + FAB_SIZE / 2 });
   };
 
   return (
@@ -282,7 +283,9 @@ const CoachBotFab = ({ hasNew, message, onOpen }) => {
           draggedRef.current = false;
         }, 60);
       }}
-      className="lg:hidden fixed top-0 left-0 z-40 touch-none select-none"
+      className={`lg:hidden fixed top-0 left-0 z-40 touch-none select-none transition-opacity duration-200 ${
+        hidden ? 'pointer-events-none opacity-0' : 'opacity-100'
+      }`}
     >
       <div className="relative">
         {/* Proactive speech bubble — pops beside the bot, opening away from the edge */}
@@ -383,6 +386,9 @@ const CVBuilderInner = () => {
   // The short proactive line the bot "speaks" a few seconds after the user lands
   // on a step (null = no bubble showing).
   const [botMessage, setBotMessage] = useState(null);
+  // Viewport-centre of the bot at the moment the coach was opened, so the window
+  // animates OUT of the bot's position (wherever it is) instead of a fixed corner.
+  const [bubbleOrigin, setBubbleOrigin] = useState(null);
 
   // The step the user is on now — drives the dynamic coaching and the tab
   // auto-switch below.
@@ -398,7 +404,8 @@ const CVBuilderInner = () => {
     if (!mobilePreviewOpen) setCoachHasNew(true);
   }
 
-  const openMobileCoach = () => {
+  const openMobileCoach = (origin) => {
+    if (origin) setBubbleOrigin(origin);
     setMobilePreviewOpen(true);
     setCoachHasNew(false);
     setBotMessage(null); // opening the coach consumes the nudge
@@ -750,9 +757,14 @@ const CVBuilderInner = () => {
       </div>
 
       {/* Mobile floating Coach bot — draggable, snaps to either side */}
-      {!mobilePreviewOpen && (
-        <CoachBotFab hasNew={coachHasNew} message={botMessage} onOpen={openMobileCoach} />
-      )}
+      {/* Kept mounted (just hidden) while the coach is open so it remembers wherever
+          the user dragged it, instead of snapping back to the default on reopen. */}
+      <CoachBotFab
+        hasNew={coachHasNew}
+        message={botMessage}
+        onOpen={openMobileCoach}
+        hidden={mobilePreviewOpen}
+      />
 
       {/* Mobile Coach & Preview — floating bubble window (Android-bubble style) */}
       <AnimatePresence>
@@ -766,13 +778,19 @@ const CVBuilderInner = () => {
               onClick={() => setMobilePreviewOpen(false)}
               className="lg:hidden fixed inset-0 bg-black/40 z-50 backdrop-blur-xs"
             />
-            {/* Floating bubble window — pops open from the bot, doesn't fill the screen */}
+            {/* Floating bubble window — grows OUT of the bot, doesn't fill the screen.
+                The window sits at inset-x-3 (12px) / top-16 (64px), so we convert the
+                bot's viewport centre into the window's local coordinates for the origin. */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.6, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.6, y: 24 }}
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.4 }}
               transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-              style={{ transformOrigin: 'bottom right' }}
+              style={{
+                transformOrigin: bubbleOrigin
+                  ? `${bubbleOrigin.cx - 12}px ${bubbleOrigin.cy - 64}px`
+                  : 'top right',
+              }}
               className="lg:hidden fixed inset-x-3 top-16 bottom-24 z-50 bg-slate-50 dark:bg-slate-950 rounded-3xl shadow-2xl shadow-indigo-950/40 flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 ring-1 ring-black/5"
             >
               {/* Sheet Header */}
