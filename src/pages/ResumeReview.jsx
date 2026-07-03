@@ -1530,7 +1530,7 @@ const ResumeReview = () => {
             "More" button opens the existing sidebar drawer for templates etc.
             Hidden in fullscreen so the CV truly fills the screen. */}
         {!immersive && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 py-2.5 flex items-center gap-2">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex items-center gap-2">
             <button
               type="button"
               disabled={isDownloading}

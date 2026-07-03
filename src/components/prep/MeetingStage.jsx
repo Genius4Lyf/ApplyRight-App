@@ -207,6 +207,9 @@ const MeetingStage = ({
   // Tiles = interviewers + the candidate. 1:1 (2 tiles) → one row; a panel (4
   // tiles) → 2×2 grid.
   const rowsClass = seats.length + 1 <= 2 ? 'grid-rows-1' : 'grid-rows-2';
+  // With 2 interviewers (3 tiles total) a plain 2×2 grid leaves a lopsided
+  // empty cell, so let the candidate span the full bottom row.
+  const candidateSpan = seats.length === 2 ? 'col-span-2' : '';
   return (
     <div className={`flex-grow min-h-0 grid grid-cols-2 ${rowsClass} gap-2 sm:gap-3`}>
       {seats.map((p, i) => (
@@ -220,12 +223,14 @@ const MeetingStage = ({
       ))}
       {/* While swapping interviewers the candidate isn't "live" yet — don't show
           their tile as listening. */}
-      <CandidateTile
-        name={candidateName}
-        muted={muted}
-        listening={!speaking && !handingOff}
-        stream={micStream}
-      />
+      <div className={`min-h-0 ${candidateSpan}`}>
+        <CandidateTile
+          name={candidateName}
+          muted={muted}
+          listening={!speaking && !handingOff}
+          stream={micStream}
+        />
+      </div>
     </div>
   );
 };

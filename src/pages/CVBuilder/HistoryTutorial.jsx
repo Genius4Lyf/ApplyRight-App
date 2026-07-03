@@ -20,7 +20,7 @@ const HistoryTutorial = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="bg-white dark:bg-slate-900 w-full sm:max-w-3xl rounded-2xl shadow-2xl relative overflow-hidden border border-slate-100 dark:border-slate-800"
+        className="bg-white dark:bg-slate-900 w-full sm:max-w-3xl rounded-2xl shadow-2xl relative overflow-hidden max-h-[90dvh] overflow-y-auto border border-slate-100 dark:border-slate-800"
       >
         <button
           type="button"

@@ -252,7 +252,7 @@ const JobKeywordPanel = ({
           No common keywords detected — try AI tailoring below.
         </p>
       ) : (
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2.5 mt-3">
           {displayed.map((kw) => {
             if (isCovered(kw.name)) {
               return (
@@ -266,7 +266,7 @@ const JobKeywordPanel = ({
               );
             }
             const baseClass =
-              'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs font-medium';
+              'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs font-medium';
             if (onAddKeyword) {
               return (
                 <button

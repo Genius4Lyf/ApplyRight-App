@@ -37,7 +37,12 @@ const ProfessionalSummary = () => {
   // Auto-prompt for AI Summary if empty
   useEffect(() => {
     // Only run if summary is empty/short and we haven't asked yet
-    if (cvData && (!summary || summary.trim().length < 10) && !hasAutoOpened.current) {
+    if (
+      cvData &&
+      (!summary || summary.trim().length < 10) &&
+      !hasAutoOpened.current &&
+      window.matchMedia('(min-width: 1024px)').matches
+    ) {
       hasAutoOpened.current = true;
       // Small timeout to allow UI to settle/animate in
       setTimeout(() => {

@@ -8,7 +8,7 @@ const StatCard = ({ label, value, sub, icon: Icon, tone }) => (
       {Icon && <Icon className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
     </div>
     <p
-      className={`text-2xl font-extrabold leading-tight ${tone || 'text-slate-900 dark:text-slate-100'}`}
+      className={`text-2xl font-extrabold leading-tight break-words ${tone || 'text-slate-900 dark:text-slate-100'}`}
     >
       {value}
     </p>

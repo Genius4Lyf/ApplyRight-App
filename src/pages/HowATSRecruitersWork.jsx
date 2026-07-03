@@ -103,7 +103,7 @@ const HowATSRecruitersWork = () => {
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
               The reality, minus the myths
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               How ATS &amp; Recruiters{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">
                 Actually Work

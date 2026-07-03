@@ -51,8 +51,10 @@ const SortableItem = ({
   const isFirst = index === 0;
   const isLast = index === total - 1;
 
+  // Icon buttons get a ≥40px hit area on touch (from ~26px) so reorder/delete
+  // are actually tappable; the compact desktop density is restored from `sm`.
   const btnBase =
-    'p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
+    'inline-flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
 
   const handleToggle = (e) => {
     e.stopPropagation();
@@ -136,7 +138,7 @@ const SortableItem = ({
                     }}
                     aria-label="Delete"
                     title="Delete"
-                    className="p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
+                    className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -152,7 +154,7 @@ const SortableItem = ({
           onClick={handleToggle}
           aria-label={isOpen ? 'Hide actions' : 'Show actions'}
           title={isOpen ? 'Hide actions' : 'Show actions'}
-          className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
+          className="min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
         >
           {isOpen ? <X className="w-3.5 h-3.5" /> : <Settings className="w-3.5 h-3.5" />}
         </button>

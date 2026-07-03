@@ -41,7 +41,7 @@ const CVPicker = ({
         <button
           type="button"
           onClick={() => onCvModeChange('saved')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
             cvMode === 'saved'
               ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -52,7 +52,7 @@ const CVPicker = ({
         <button
           type="button"
           onClick={() => onCvModeChange('upload')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
             cvMode === 'upload'
               ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -94,7 +94,7 @@ const CVPicker = ({
                     }`}
                   >
                     <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
-                      <FileText className="w-4.5 h-4.5" />
+                      <FileText className="w-4 h-4" />
                     </div>
                     <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                       {label}

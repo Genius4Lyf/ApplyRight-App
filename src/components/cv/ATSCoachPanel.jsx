@@ -330,7 +330,7 @@ const FixRow = ({ title, subtitle, issues = [], applied, disabled, locked, onRew
     action = (
       <button
         onClick={onRewrite}
-        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1"
+        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 min-h-[36px] rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1"
       >
         <Lock className="w-3 h-3" /> Upgrade
       </button>
@@ -340,7 +340,7 @@ const FixRow = ({ title, subtitle, issues = [], applied, disabled, locked, onRew
       <button
         onClick={onRewrite}
         disabled={disabled}
-        className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/50 inline-flex items-center gap-1 disabled:opacity-40"
+        className="shrink-0 text-[10px] font-semibold px-2 py-1.5 min-h-[36px] rounded-lg text-slate-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/50 inline-flex items-center gap-1 disabled:opacity-40"
       >
         <RefreshCw className="w-2.5 h-2.5" /> Rewrite again
       </button>
@@ -351,7 +351,7 @@ const FixRow = ({ title, subtitle, issues = [], applied, disabled, locked, onRew
         onClick={onRewrite}
         disabled={disabled}
         title={disabled ? 'Save this role once, then rewrite' : undefined}
-        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white inline-flex items-center gap-1"
+        className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 min-h-[36px] rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white inline-flex items-center gap-1"
       >
         <Sparkles className="w-3 h-3" /> Rewrite
       </button>
@@ -361,7 +361,7 @@ const FixRow = ({ title, subtitle, issues = [], applied, disabled, locked, onRew
       <button
         onClick={onRewrite}
         disabled={disabled}
-        className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 inline-flex items-center gap-1 disabled:opacity-40"
+        className="shrink-0 text-[10px] font-semibold px-2 py-1.5 min-h-[36px] rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 inline-flex items-center gap-1 disabled:opacity-40"
       >
         <Sparkles className="w-2.5 h-2.5" /> Rewrite
       </button>
@@ -644,7 +644,7 @@ const RewritePreview = ({ rewrite, applying, onToggle, onEdit, onApply, onClose,
                       value={it.text}
                       onChange={(e) => onEdit(it.id, e.target.value)}
                       rows={2}
-                      className="w-full text-[11px] leading-snug bg-transparent text-slate-700 dark:text-slate-200 resize-none focus:outline-none"
+                      className="w-full text-[16px] sm:text-[11px] leading-snug bg-transparent text-slate-700 dark:text-slate-200 resize-none focus:outline-none"
                     />
                     {hasPh && (
                       <p className="text-[9px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
@@ -1025,7 +1025,7 @@ const CoachCard = ({
                 onInteraction?.({ answered: q.label, canRecheck: !!q.recheck, ignored: false });
                 onQuickReply?.(q.signal);
               }}
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-700/50 disabled:opacity-40 transition-colors"
+              className="text-[11px] font-semibold px-2.5 py-1.5 min-h-[36px] inline-flex items-center rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-700/50 disabled:opacity-40 transition-colors"
             >
               {q.label}
             </button>
@@ -1048,7 +1048,7 @@ const CoachCard = ({
               disabled={loading}
               onClick={() => onQuickReply?.(quickReplies.recheckSignal)}
               title="Edited the job description? Have the coach take another look."
-              className="mt-2 text-[11px] font-bold px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+              className="mt-2 text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
             >
               <RefreshCw className="w-3 h-3" /> Recheck
             </button>
@@ -1064,7 +1064,7 @@ const CoachCard = ({
           <button
             disabled={loading}
             onClick={() => onQuickReply?.(quickReplies.recheckSignal)}
-            className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+            className="text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
           >
             <RefreshCw className="w-3 h-3" /> Recheck
           </button>
@@ -1074,7 +1074,7 @@ const CoachCard = ({
               onInteraction?.({ ignored: true });
               onQuickReply?.(quickReplies.ignoreSignal);
             }}
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-700/50 disabled:opacity-40 transition-colors"
+            className="text-[11px] font-semibold px-3 py-1.5 min-h-[36px] inline-flex items-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-700/50 disabled:opacity-40 transition-colors"
           >
             Ignore
           </button>
@@ -2190,7 +2190,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
                   }}
                   rows={8}
                   placeholder="Paste the full job description here…"
-                  className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-2.5 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none custom-scrollbar"
+                  className="w-full text-[16px] sm:text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-2.5 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none custom-scrollbar"
                 />
                 <button
                   onClick={runScan}

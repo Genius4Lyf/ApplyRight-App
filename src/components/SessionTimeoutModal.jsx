@@ -11,7 +11,7 @@ const SessionTimeoutModal = ({ isOpen, remainingTime, onExtendSession, onLogout 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative overflow-hidden"
+            className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative overflow-hidden"
           >
             {/* decorative background element */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-50 rounded-full blur-2xl opacity-50 pointer-events-none"></div>
@@ -21,11 +21,11 @@ const SessionTimeoutModal = ({ isOpen, remainingTime, onExtendSession, onLogout 
                 <Clock className="w-8 h-8 animate-pulse" />
               </div>
 
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2 tracking-tight">
                 Are you still there?
               </h3>
 
-              <p className="text-slate-600 mb-6 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
                 For your security, you will be logged out due to inactivity in:
               </p>
 

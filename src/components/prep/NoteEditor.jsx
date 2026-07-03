@@ -77,7 +77,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Note title (optional)"
-          className="flex-1 text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none bg-transparent"
+          className="flex-1 text-[16px] sm:text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none bg-transparent"
         />
         {savedHint && (
           <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -94,9 +94,9 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
         rows={6}
         ref={(el) => el && note?.id === '__new__' && el.focus()}
         placeholder="Jot down anything you want to remember — STAR stories, follow-ups, things to research…"
-        className="w-full text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 resize-y"
+        className="w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 resize-y"
       />
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={handleSave}

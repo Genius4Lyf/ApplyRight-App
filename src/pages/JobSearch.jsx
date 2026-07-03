@@ -287,7 +287,7 @@ const JobSearch = () => {
             </div>
 
             {displayPagination && displayPagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
                 <button
                   onClick={() =>
                     isSearchActive
@@ -295,10 +295,11 @@ const JobSearch = () => {
                       : handleTabPageChange(displayPagination.page - 1)
                   }
                   disabled={!displayPagination.hasPrevPage}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
+                  className="flex items-center gap-1 px-3 min-h-[44px] text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -317,7 +318,7 @@ const JobSearch = () => {
                           onClick={() =>
                             isSearchActive ? handleSearchPageChange(p) : handleTabPageChange(p)
                           }
-                          className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
+                          className={`w-11 h-11 sm:w-9 sm:h-9 text-sm font-medium rounded-lg transition-colors ${
                             p === displayPagination.page
                               ? 'bg-indigo-600 text-white'
                               : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -336,9 +337,10 @@ const JobSearch = () => {
                       : handleTabPageChange(displayPagination.page + 1)
                   }
                   disabled={!displayPagination.hasNextPage}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
+                  className="flex items-center gap-1 px-3 min-h-[44px] text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>

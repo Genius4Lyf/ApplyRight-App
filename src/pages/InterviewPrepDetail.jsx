@@ -619,7 +619,7 @@ const InterviewPrepDetail = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
         {!isCvOnly ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
             <LastInterviewCard
@@ -659,8 +659,11 @@ const InterviewPrepDetail = () => {
           </div>
         )}
 
-        {/* Tabs */}
-        <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto scrollbar-none">
+        {/* Tabs — horizontally scrollable on mobile; a right-edge fade signals
+            there are more tabs off-screen (the strip otherwise cuts off flush). */}
+        <div className="relative mb-6">
+          <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-px w-8 z-10 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent" />
+          <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -697,7 +700,8 @@ const InterviewPrepDetail = () => {
               </button>
             );
           })}
-        </nav>
+          </nav>
+        </div>
 
         <AnimatePresence mode="wait">
           {activeTab === 'role' && (

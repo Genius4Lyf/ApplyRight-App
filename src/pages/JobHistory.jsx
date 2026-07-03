@@ -718,7 +718,7 @@ const JobHistory = () => {
                   <h2 className="font-semibold text-slate-900 dark:text-slate-100">
                     Application Details
                   </h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {/* View the original job posting this analysis ran
                             against. Reference-only drawer; data already rides
                             on the populated jobId. Shown on mobile too. */}
@@ -739,7 +739,7 @@ const JobHistory = () => {
                       type="button"
                       onClick={handleReanalyze}
                       disabled={reanalyzing}
-                      className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Re-run analysis (10 credits)"
                     >
                       <RefreshCw className={`w-3 h-3 ${reanalyzing ? 'animate-spin' : ''}`} />
@@ -758,14 +758,14 @@ const JobHistory = () => {
                       );
                       if (sameJobOthers.length === 0) return null;
                       return (
-                        <div className="relative hidden sm:block">
+                        <div className="relative">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setCompareMenuOpen(!compareMenuOpen);
                             }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
                             title="Compare with another analysis for the same job"
                           >
                             <GitCompare className="w-3 h-3" />

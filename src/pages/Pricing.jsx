@@ -61,7 +61,7 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setAudience('seeker')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${
+                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 ${
                   audience === 'seeker'
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-700'
@@ -72,7 +72,7 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setAudience('agent')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 inline-flex items-center gap-1.5 ${
+                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 inline-flex items-center gap-1.5 ${
                   audience === 'agent'
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-700'
@@ -89,7 +89,7 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setCurrency('NGN')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'NGN'
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-700'
@@ -101,7 +101,7 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setCurrency('USD')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'USD'
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-700'

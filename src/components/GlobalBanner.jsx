@@ -108,8 +108,8 @@ const GlobalBanner = () => {
                 }}
               />
 
-              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center">
-                <div className="flex items-center gap-3">
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   {/* Icon badge */}
                   <div
                     className={`flex-shrink-0 w-7 h-7 rounded-lg ${theme.iconBg} backdrop-blur-sm flex items-center justify-center`}
@@ -118,7 +118,7 @@ const GlobalBanner = () => {
                   </div>
 
                   {/* Message */}
-                  <p className="text-sm font-medium text-white/95 tracking-wide">
+                  <p className="text-sm font-medium text-white/95 tracking-wide min-w-0">
                     {banner.message}
                   </p>
                 </div>
@@ -126,7 +126,7 @@ const GlobalBanner = () => {
                 {/* Dismiss button */}
                 <button
                   onClick={() => setIsVisible(false)}
-                  className={`absolute right-4 sm:right-6 p-1.5 rounded-lg ${theme.closeBg} text-white/70 hover:text-white transition-all duration-200`}
+                  className={`shrink-0 p-1.5 rounded-lg ${theme.closeBg} text-white/70 hover:text-white transition-all duration-200`}
                   aria-label="Dismiss notification"
                 >
                   <X className="w-3.5 h-3.5" />

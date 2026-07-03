@@ -45,9 +45,9 @@ const Contact = () => {
 
             <a
               href="mailto:support@applyright.com.ng"
-              className="inline-flex items-center gap-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-8 py-4 rounded-xl text-lg font-bold transition-colors"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 sm:px-8 py-4 rounded-xl text-base sm:text-lg font-bold transition-colors break-all"
             >
-              <MessageSquare size={20} />
+              <MessageSquare size={20} className="shrink-0" />
               support@applyright.com.ng
             </a>
 

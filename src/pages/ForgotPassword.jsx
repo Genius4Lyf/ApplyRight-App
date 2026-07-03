@@ -91,7 +91,7 @@ const ForgotPassword = () => {
           </div>
         </div>
 
-        <div className="clean-card w-full p-8 space-y-8">
+        <div className="clean-card w-full p-6 sm:p-8 space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">
               {step === 1 ? 'Reset Password' : 'Verify & Reset'}

@@ -171,7 +171,7 @@ const ApplicationReview = () => {
               <img src={logo} alt="ApplyRight Logo" className="w-4 h-4 object-contain" />
               ApplyRight AI Co-Pilot
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight font-heading">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight font-heading">
               How ApplyRight{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
                 AI Works
@@ -271,9 +271,9 @@ const ApplicationReview = () => {
               transition={{ duration: 0.8 }}
               className="order-2 md:order-1 flex justify-center"
             >
-              <div className="w-[300px] h-[300px] rounded-full flex items-center justify-center relative bg-white shadow-2xl">
+              <div className="w-[280px] h-[280px] sm:w-[300px] sm:h-[300px] max-w-full rounded-full flex items-center justify-center relative bg-white shadow-2xl">
                 <div className="text-center z-10">
-                  <span className="block text-9xl font-black text-slate-900 tracking-tighter leading-none">
+                  <span className="block text-8xl sm:text-9xl font-black text-slate-900 tracking-tighter leading-none">
                     6
                   </span>
                   <span className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 block">

@@ -48,7 +48,7 @@ const TagInput = ({ values = [], onChange, placeholder = 'Type and press Enter',
             <button
               type="button"
               onClick={() => removeTag(idx)}
-              className="hover:text-indigo-900 dark:hover:text-indigo-100"
+              className="p-1.5 -m-1 inline-flex items-center justify-center hover:text-indigo-900 dark:hover:text-indigo-100"
               aria-label={`Remove ${tag}`}
             >
               <X className="w-3 h-3" />

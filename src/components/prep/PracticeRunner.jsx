@@ -168,7 +168,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             type="button"
             onClick={() => setIndex(Math.max(safeIndex - 1, 0))}
             disabled={safeIndex === 0}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+            className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
             Previous
           </button>
@@ -176,14 +176,14 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             type="button"
             onClick={() => setIndex(Math.min(safeIndex + 1, total - 1))}
             disabled={safeIndex === total - 1}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+            className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
             Next
           </button>
           <button
             type="button"
             onClick={() => setShowAnswer((v) => !v)}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-500/20"
+            className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-500/20"
           >
             {showAnswer ? 'Hide answer' : 'Reveal answer'}
           </button>

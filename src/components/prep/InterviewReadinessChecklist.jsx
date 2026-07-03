@@ -106,7 +106,7 @@ const InterviewReadinessChecklist = ({
               <button
                 type="button"
                 onClick={() => runTask(t)}
-                className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
+                className="shrink-0 inline-flex items-center gap-0.5 py-2 px-1 -my-1 min-h-[36px] text-[11px] font-bold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
               >
                 Do it <ArrowRight className="w-3 h-3" />
               </button>

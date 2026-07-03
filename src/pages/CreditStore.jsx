@@ -230,7 +230,7 @@ const CreditStore = () => {
 
       <div className="max-w-5xl mx-auto space-y-12 relative z-10">
         {/* Header */}
-        <div className="text-center space-y-3 pt-2">
+        <div className="text-center space-y-3 pt-14 sm:pt-2">
           <div className="inline-flex items-center justify-center p-3 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-2xl">
             <Zap className="w-7 h-7 fill-indigo-600 dark:fill-indigo-300" />
           </div>
@@ -311,7 +311,7 @@ const CreditStore = () => {
             {/* Watch ad */}
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
-              <div className="relative z-10 p-7 flex flex-col flex-1">
+              <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
                 <div className="flex items-start justify-between">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-md">
                     <Play className="w-6 h-6 ml-0.5 fill-white" />
@@ -355,7 +355,7 @@ const CreditStore = () => {
             {/* Invite friends */}
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50 dark:bg-blue-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
-              <div className="relative z-10 p-7 flex flex-col flex-1">
+              <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-300">
                   <Share2 className="w-6 h-6" />
                 </div>

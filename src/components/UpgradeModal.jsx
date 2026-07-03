@@ -7,7 +7,7 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -23,17 +23,18 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 md:grid-cols-2"
+          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl z-10 grid grid-cols-1 md:grid-cols-2"
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-20"
+            aria-label="Close"
+            className="absolute top-4 right-4 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-20"
           >
             <X className="w-6 h-6" />
           </button>
 
           {/* Free Plan (Current) */}
-          <div className="p-8 md:p-10 bg-slate-50 dark:bg-slate-900 flex flex-col relative border-r border-slate-100 dark:border-slate-800">
+          <div className="p-6 sm:p-8 md:p-10 bg-slate-50 dark:bg-slate-900 flex flex-col relative border-r border-slate-100 dark:border-slate-800">
             {userPlan !== 'paid' && (
               <span className="absolute top-8 right-8 px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-full">
                 Current Plan
@@ -80,7 +81,7 @@ const UpgradeModal = ({ isOpen, onClose, onUpgrade, userPlan }) => {
           </div>
 
           {/* Pro Plan (Upgrade) */}
-          <div className="p-8 md:p-10 bg-slate-900 text-white flex flex-col relative overflow-hidden">
+          <div className="p-6 sm:p-8 md:p-10 bg-slate-900 text-white flex flex-col relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/2"></div>

@@ -91,7 +91,7 @@ const AgentDashboard = () => {
         )}
 
         {/* Overview — four equal, aligned cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <StatCard
             label="CV credits"
             icon={Sparkles}
@@ -114,7 +114,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Quick links */}
-        <div className="flex items-center justify-end gap-4 mb-8 text-sm font-semibold">
+        <div className="flex flex-wrap items-center justify-end gap-4 mb-8 text-sm font-semibold">
           <Link
             to="/credits"
             className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1"

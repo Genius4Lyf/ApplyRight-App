@@ -226,15 +226,16 @@ const TemplateSelector = ({
                                 }
                             `}
             >
-              {/* Overlay */}
-              <div className="absolute inset-0 z-20 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-300 flex items-center justify-center">
+              {/* Overlay — on touch (no hover) the CTA is always visible so the
+                  preview action is reachable; from lg up it fades in on hover. */}
+              <div className="absolute inset-0 z-20 bg-slate-900/0 lg:group-hover:bg-slate-900/10 transition-colors duration-300 flex items-center justify-center">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSelect(template);
                     if (onPreview) onPreview();
                   }}
-                  className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-4 py-2 rounded-full shadow-lg font-bold text-sm flex items-center hover:scale-105"
+                  className="opacity-100 translate-y-0 lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-4 py-2 min-h-[44px] rounded-full shadow-lg font-bold text-sm flex items-center hover:scale-105"
                 >
                   <FileText className="w-4 h-4 mr-2 text-indigo-600" />
                   {locked ? 'Preview' : 'View CV'}

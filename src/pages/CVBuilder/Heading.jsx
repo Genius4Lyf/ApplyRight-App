@@ -250,7 +250,7 @@ const Heading = () => {
                 <button
                   type="button"
                   onClick={() => toggleField('address')}
-                  className="text-slate-400 dark:text-slate-500 hover:text-rose-500"
+                  className="p-2 -m-1 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-500"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -282,7 +282,7 @@ const Heading = () => {
                 <button
                   type="button"
                   onClick={() => toggleField('linkedin')}
-                  className="text-slate-400 dark:text-slate-500 hover:text-rose-500"
+                  className="p-2 -m-1 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-500"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -315,7 +315,7 @@ const Heading = () => {
                 <button
                   type="button"
                   onClick={() => toggleField('website')}
-                  className="text-slate-400 dark:text-slate-500 hover:text-rose-500"
+                  className="p-2 -m-1 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-500"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -348,7 +348,7 @@ const Heading = () => {
                 <button
                   type="button"
                   onClick={() => toggleField('nationality')}
-                  className="text-slate-400 dark:text-slate-500 hover:text-rose-500"
+                  className="p-2 -m-1 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-500"
                 >
                   <X className="w-3 h-3" />
                 </button>

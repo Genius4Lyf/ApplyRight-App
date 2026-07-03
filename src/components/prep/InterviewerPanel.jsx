@@ -155,7 +155,7 @@ const InterviewerPanel = ({
         </div>
       )}
       <div className="relative">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
           {loading ? (
             <>
               <InterviewerSkeleton />
@@ -193,7 +193,7 @@ const InterviewerPanel = ({
                   {locked && (
                     <div className="mt-1.5 flex items-center justify-center gap-1 rounded-lg bg-amber-100 dark:bg-amber-500/20 px-1.5 py-1 text-amber-800 dark:text-amber-300">
                       <Lock className="w-3 h-3 shrink-0" />
-                      <span className="text-[10px] sm:text-[11px] font-bold leading-tight">
+                      <span className="text-[10px] sm:text-[11px] font-bold leading-tight break-words">
                         Reach {INTERVIEW_PASS_SCORE}% with{' '}
                         {seats[i - 1]?.name || 'the previous one'}
                       </span>

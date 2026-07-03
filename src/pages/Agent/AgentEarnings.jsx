@@ -91,14 +91,14 @@ const AgentEarnings = () => {
           </div>
 
           {/* Date range */}
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="date"
               value={range.from}
               max={range.to || undefined}
               onChange={onDate('from')}
-              className="input-field py-1.5 px-2.5 text-xs"
+              className="input-field flex-1 min-w-0 py-1.5 px-2.5 text-[16px] sm:text-xs"
               aria-label="From date"
             />
             <span className="text-slate-400">→</span>
@@ -107,7 +107,7 @@ const AgentEarnings = () => {
               value={range.to}
               min={range.from || undefined}
               onChange={onDate('to')}
-              className="input-field py-1.5 px-2.5 text-xs"
+              className="input-field flex-1 min-w-0 py-1.5 px-2.5 text-[16px] sm:text-xs"
               aria-label="To date"
             />
           </div>

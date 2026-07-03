@@ -39,7 +39,7 @@ const ATSGuide = () => {
             <span className="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-6">
               Ultimate Guide & Walkthrough
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               How to Beat the <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">
                 Resume Robots
@@ -214,7 +214,7 @@ const ATSGuide = () => {
             <span className="text-lg font-bold text-slate-900">ApplyRight</span>
           </div>
 
-          <div className="flex gap-6 text-sm font-medium text-slate-600">
+          <div className="flex flex-wrap gap-6 justify-center text-sm font-medium text-slate-600">
             <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
               Privacy Policy
             </Link>

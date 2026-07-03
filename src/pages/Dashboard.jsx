@@ -1201,7 +1201,7 @@ const Dashboard = () => {
                 </h3>
               </div>
               {job && (job.title || job.company) && (
-                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full truncate">
                   For:{' '}
                   <span className="text-slate-900 dark:text-slate-100 font-bold">
                     {job.title || 'Role'}

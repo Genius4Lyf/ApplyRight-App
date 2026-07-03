@@ -791,7 +791,7 @@ const CVBuilderInner = () => {
                   ? `${bubbleOrigin.cx - 12}px ${bubbleOrigin.cy - 64}px`
                   : 'top right',
               }}
-              className="lg:hidden fixed inset-x-3 top-16 bottom-24 z-50 bg-slate-50 dark:bg-slate-950 rounded-3xl shadow-2xl shadow-indigo-950/40 flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 ring-1 ring-black/5"
+              className="lg:hidden fixed inset-x-3 top-16 bottom-[max(6rem,env(safe-area-inset-bottom))] z-50 bg-slate-50 dark:bg-slate-950 rounded-3xl shadow-2xl shadow-indigo-950/40 flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 ring-1 ring-black/5"
             >
               {/* Sheet Header */}
               <div className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 flex items-center justify-between shrink-0">

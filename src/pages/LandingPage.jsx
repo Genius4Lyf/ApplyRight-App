@@ -339,7 +339,7 @@ const LandingPage = () => {
               </Link>
               <Link
                 to="/login"
-                className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+                className="inline-flex items-center min-h-[44px] px-3 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
               >
                 Login
               </Link>

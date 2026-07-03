@@ -160,7 +160,7 @@ const Onboarding = () => {
               }}
             />
 
-            <div className="relative z-10 p-8 text-center">
+            <div className="relative z-10 p-5 sm:p-8 text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-slate-900 mb-4 shadow-sm text-primary">
                 {step === 1 && <User className="w-6 h-6" />}
                 {step === 2 && <GraduationCap className="w-6 h-6" />}
@@ -176,10 +176,10 @@ const Onboarding = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6">
             {step === 1 && (
               <div className="space-y-5 animate-fadeIn">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                       First Name

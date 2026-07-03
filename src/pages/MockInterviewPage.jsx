@@ -2863,7 +2863,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…"
-        className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className="w-full text-[16px] sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
       />
       <div className="mt-2 flex items-center gap-2">
         {sttSupported && (
@@ -3148,7 +3148,7 @@ const RunningView = ({
       </div>
 
       {/* Controls (pinned to the bottom of the viewport-height column) */}
-      <div className="shrink-0 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={onSkip}
@@ -3782,7 +3782,7 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
         onChange={(e) => setAnswer(e.target.value)}
         rows={4}
         placeholder={placeholder || 'Answer naturally — speak or type…'}
-        className="w-full text-sm rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
+        className="w-full text-[16px] sm:text-sm rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
       />
       <div className="mt-2 flex items-center gap-2">
         {sttSupported && (
@@ -3977,7 +3977,7 @@ const RealtimeView = ({
       )}
 
       {/* Controls (pinned) */}
-      <div className="shrink-0 mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-white/10 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={onToggleMute}

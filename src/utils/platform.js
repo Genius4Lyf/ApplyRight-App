@@ -26,5 +26,12 @@ const BOTTOM_NAV_PATHS = [
   '/interview-prep',
 ];
 
+// Full-screen, immersive sub-routes (live voice interview + flash-card
+// practice) pin their own control bar to the bottom of the screen. The fixed
+// bottom nav would sit on top of those controls, so it's suppressed here.
+const IMMERSIVE_PATH_RE = /\/(mock|practice)$/;
+
 export const shouldShowBottomNav = (pathname) =>
-  isMobile() && BOTTOM_NAV_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  isMobile() &&
+  !IMMERSIVE_PATH_RE.test(pathname) &&
+  BOTTOM_NAV_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));

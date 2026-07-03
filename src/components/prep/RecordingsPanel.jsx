@@ -102,7 +102,7 @@ const RecordingsPanel = ({ applicationId, onItemsChange }) => {
               <button
                 type="button"
                 onClick={() => play(r.id)}
-                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5" /> Play
               </button>
@@ -122,14 +122,14 @@ const RecordingsPanel = ({ applicationId, onItemsChange }) => {
                   <button
                     type="button"
                     onClick={() => remove(r.id)}
-                    className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     Delete
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmId(null)}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -139,7 +139,7 @@ const RecordingsPanel = ({ applicationId, onItemsChange }) => {
                   type="button"
                   onClick={() => setConfirmId(r.id)}
                   title="Delete recording"
-                  className="shrink-0 p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors cursor-pointer"
+                  className="shrink-0 p-2 min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

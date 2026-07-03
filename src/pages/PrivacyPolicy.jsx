@@ -40,7 +40,7 @@ const PrivacyPolicy = () => {
             <p className="text-lg text-slate-600">Last Updated: {LAST_UPDATED}</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 space-y-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-12 space-y-10">
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                 <FileText className="text-indigo-500" size={24} />

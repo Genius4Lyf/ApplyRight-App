@@ -118,7 +118,7 @@ const CVCard = ({ draft, onDelete, layout = 'compact' }) => {
           <button
             type="button"
             onClick={handleDeleteClick}
-            className="text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-rose-600 flex items-center gap-1 transition-colors"
+            className="p-2 -m-2 text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-rose-600 flex items-center gap-1 transition-colors"
             title="Delete CV"
             aria-label={`Delete ${draft.title || 'Untitled CV'}`}
           >

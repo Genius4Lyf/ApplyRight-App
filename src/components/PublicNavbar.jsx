@@ -57,16 +57,16 @@ const PublicNavbar = () => {
           <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
           <span className="text-xl font-bold font-heading text-slate-900">ApplyRight</span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             to="/login"
-            className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+            className="inline-flex items-center min-h-[44px] px-3 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
           >
             Login
           </Link>
           <Link
             to="/register"
-            className="btn-primary py-2 px-4 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            className="btn-primary py-2.5 px-4 min-h-[44px] text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
           >
             Get Started
           </Link>

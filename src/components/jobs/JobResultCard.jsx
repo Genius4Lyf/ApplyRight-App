@@ -29,9 +29,9 @@ const JobResultCard = ({ result, searchId, onViewDetails, onApplyClick }) => {
           </h3>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
-            <span className="flex items-center gap-1">
-              <Building2 className="w-3 h-3" />
-              {result.company}
+            <span className="flex items-center gap-1 min-w-0">
+              <Building2 className="w-3 h-3 shrink-0" />
+              <span className="truncate">{result.company}</span>
             </span>
             {result.location && (
               <span className="flex items-center gap-1">

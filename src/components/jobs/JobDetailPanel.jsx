@@ -290,7 +290,7 @@ const FormattedDescription = ({ text }) => {
 
   return (
     <div
-      className="job-description text-sm text-slate-600 leading-relaxed"
+      className="job-description text-sm text-slate-600 leading-relaxed overflow-x-auto"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

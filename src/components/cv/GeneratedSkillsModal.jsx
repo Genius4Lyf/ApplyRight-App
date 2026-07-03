@@ -268,7 +268,7 @@ const GeneratedSkillsModal = ({
                         return (
                           <div
                             key={row.name}
-                            className={`group inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                            className={`group inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1.5 min-h-[40px] rounded-lg border text-sm font-medium transition-all ${
                               row.isAdded
                                 ? 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                                 : isSel
@@ -356,8 +356,8 @@ const GeneratedSkillsModal = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0 flex items-center justify-between gap-3">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-0 truncate">
               {isPaid ? (
                 <span>{selected.length} selected</span>
               ) : (
@@ -376,7 +376,7 @@ const GeneratedSkillsModal = ({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={onClose}

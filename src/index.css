@@ -134,6 +134,10 @@
       'ss01' on,
       'cv11' on;
     text-rendering: optimizeLegibility;
+    /* Safety net so a single stray wide element can't scroll the whole page
+       sideways on mobile. `clip` (not `hidden`) avoids creating a scroll
+       container, so the sticky navbar keeps working. */
+    overflow-x: clip;
   }
 
   h1:not(.cv-template-container *),
@@ -172,7 +176,9 @@
   }
 
   .input-field {
-    @apply bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500;
+    /* 16px floor on mobile stops iOS Safari from zooming the viewport on
+       focus; the compact 13px (text-sm) density is restored from `sm` up. */
+    @apply bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-[16px] sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500;
   }
 
   .btn-primary {
