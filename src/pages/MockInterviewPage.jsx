@@ -55,6 +55,7 @@ import { createMixedRecorder } from '../lib/recorder';
 import { saveRecording } from '../lib/recordings';
 import { useMinVisible } from '../hooks/useMinVisible';
 import { speak, stopSpeaking, startDictation, isSpeechRecognitionSupported } from '../lib/speech';
+import { useTheme } from '../context/ThemeContext';
 
 const MINUTES_BY_TYPE = {
   intro: 2,
@@ -139,6 +140,12 @@ const MockInterviewPage = () => {
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // The immersive "call room" now follows the app theme like every other
+  // screen. `.dark` is applied on this (dark-eligible) route whenever the
+  // preference is dark, so `dark:` variants below do the work; the one place
+  // that needs the boolean is ConnectingView, which themes via a `dark` prop.
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1623,21 +1630,21 @@ const MockInterviewPage = () => {
     <div
       className={`min-h-screen flex flex-col ${
         immersive
-          ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100'
+          ? 'bg-gradient-to-b from-slate-50 via-white to-indigo-50 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'
       }`}
     >
       <header
         className={`backdrop-blur sticky top-0 z-10 border-b ${
           immersive
-            ? 'border-white/10 bg-slate-950/50'
+            ? 'border-slate-200/70 dark:border-white/10 bg-white/70 dark:bg-slate-950/50'
             : 'border-slate-200/70 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80'
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <span
             className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${
-              immersive ? 'text-indigo-300' : 'text-indigo-600'
+              immersive ? 'text-indigo-600 dark:text-indigo-300' : 'text-indigo-600'
             }`}
           >
             {(phase === 'running' || phase === 'conversation' || phase === 'live') && (
@@ -1667,10 +1674,10 @@ const MockInterviewPage = () => {
               <span
                 className={`inline-flex items-center gap-1.5 text-sm font-bold tabular-nums ${
                   inGrace
-                    ? 'text-amber-300'
+                    ? 'text-amber-600 dark:text-amber-300'
                     : secondsLeft <= 30
-                      ? 'text-rose-400'
-                      : 'text-slate-200'
+                      ? 'text-rose-500 dark:text-rose-400'
+                      : 'text-slate-700 dark:text-slate-200'
                 }`}
                 title={inGrace ? 'Wrapping up' : 'Time left in this interview'}
               >
@@ -1684,7 +1691,7 @@ const MockInterviewPage = () => {
               onClick={handleExitClick}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded-md text-xs font-semibold transition-colors ${
                 immersive
-                  ? 'bg-white/5 border border-white/15 hover:bg-white/10 text-slate-200'
+                  ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/15 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
@@ -1843,7 +1850,7 @@ const MockInterviewPage = () => {
               firstName={firstName}
               title={title}
               mode={mode}
-              dark={mode === 'conversational'}
+              dark={isDark}
               connected={connected}
               panel={panel}
               activeSeat={activeSeat}
@@ -2383,7 +2390,7 @@ const GradingView = () => (
   <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
     <div className="relative mb-6">
       <span className="absolute -inset-3 rounded-[1.75rem] bg-indigo-300/40 blur-2xl animate-pulse" />
-      <div className="relative w-20 h-20 rounded-3xl bg-white border border-white/20 ring-4 ring-indigo-500/30 flex items-center justify-center p-3 shadow-xl">
+      <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-4 ring-indigo-500/30 flex items-center justify-center p-3 shadow-xl">
         <img
           src="/applyright-icon.png"
           alt="ApplyRight AI"
@@ -2391,8 +2398,10 @@ const GradingView = () => (
         />
       </div>
     </div>
-    <h2 className="mt-1 text-lg sm:text-xl font-bold text-white">Scoring your interview…</h2>
-    <p className="mt-1 text-sm text-slate-400 max-w-sm">
+    <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+      Scoring your interview…
+    </h2>
+    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
       Assessing your answers against your CV and the role — the things interviewers look for.
     </p>
     <div className="mt-5 flex items-center gap-1.5" aria-hidden>
@@ -3691,14 +3700,14 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
   const speaking = voiceState === 'speaking';
   const loading = voiceState === 'loading';
   return (
-    <div className="shrink-0 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-sm">
+    <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-sm">
       <div className="relative z-10 flex items-center gap-4">
         <div className="relative shrink-0">
           <div
             className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
               speaking
                 ? 'border-indigo-600 ring-2 ring-indigo-500/40 scale-[1.03]'
-                : 'border-white/20 ring-1 ring-white/10'
+                : 'border-slate-200 dark:border-white/20 ring-1 ring-slate-200 dark:ring-white/10'
             }`}
           >
             <img
@@ -3710,19 +3719,23 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm sm:text-base font-bold text-white">ApplyRight AI</p>
-          <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+          <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+            ApplyRight AI
+          </p>
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
             Your interviewer
           </p>
           <div className="mt-1.5">
             {speaking ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-300">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" /> Speaking…
               </span>
             ) : loading ? (
-              <span className="text-[11px] font-bold text-slate-400 animate-pulse">Thinking…</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 animate-pulse">
+                Thinking…
+              </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Listening
               </span>
             )}
@@ -3734,7 +3747,7 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
             type="button"
             onClick={onReplay}
             title="Hear that again"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold transition-colors cursor-pointer select-none"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer select-none"
           >
             <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
           </button>
@@ -3776,13 +3789,13 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-4">
       <textarea
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         rows={4}
         placeholder={placeholder || 'Answer naturally — speak or type…'}
-        className="w-full text-[16px] sm:text-sm rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
+        className="w-full text-[16px] sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
       />
       <div className="mt-2 flex items-center gap-2">
         {sttSupported && (
@@ -3791,8 +3804,8 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
             onClick={toggleMic}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${
               listening
-                ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
-                : 'border-white/15 bg-white/5 text-slate-200 hover:bg-white/10'
+                ? 'border-rose-300 dark:border-rose-400/40 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
             }`}
           >
             <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
@@ -3829,13 +3842,13 @@ const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }
   >
     {/* header row */}
     <div className="shrink-0 flex items-center justify-between mb-3 px-1">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
         Conversation in progress
       </p>
       <button
         type="button"
         onClick={onEnd}
-        className="text-[11px] font-semibold text-slate-400 hover:text-white transition-colors"
+        className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
       >
         End &amp; review
       </button>
@@ -3845,12 +3858,12 @@ const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }
 
     {/* Your turn — listen to the interviewer, then answer (no question shown) */}
     <div className="flex-1 min-h-0 flex flex-col mt-4">
-      <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2 px-1">
+      <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-2 px-1">
         Your turn
       </p>
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
         <AnswerComposer onSubmit={onSubmit} loading={turnLoading} />
-        <p className="mt-3 text-center text-xs text-slate-400 leading-relaxed">
+        <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
           Listen to the interviewer, then answer like you would in a real interview — they respond
           to what you say.
         </p>
@@ -3912,11 +3925,11 @@ const RealtimeView = ({
     >
       <div className="shrink-0 flex items-center justify-between mb-3 px-1">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
             Live voice interview
           </p>
           {activeSeat && activeSeat.name && (
-            <p className="text-[11px] font-bold text-indigo-300 truncate">
+            <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-300 truncate">
               {activeSeat.name}
               {activeSeat.role ? ` · ${activeSeat.role}` : ''}
             </p>
@@ -3929,14 +3942,20 @@ const RealtimeView = ({
             title="Toggle captions"
             aria-pressed={captionsOn}
             className={`inline-flex items-center gap-1 py-2 px-2 -my-1 rounded-lg text-[11px] font-bold transition-colors ${
-              captionsOn ? 'text-indigo-300 bg-indigo-500/10' : 'text-slate-400 hover:text-slate-200'
+              captionsOn
+                ? 'text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/10'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             <Captions className="w-3.5 h-3.5" /> CC
           </button>
           <span
             className={`text-[11px] font-bold tabular-nums ${
-              inGrace ? 'text-amber-300' : secondsLeft <= 30 ? 'text-rose-400' : 'text-slate-400'
+              inGrace
+                ? 'text-amber-600 dark:text-amber-300'
+                : secondsLeft <= 30
+                  ? 'text-rose-500 dark:text-rose-400'
+                  : 'text-slate-500 dark:text-slate-400'
             }`}
           >
             {inGrace ? `Wrapping up · ${fmt(secondsLeft)}` : `${fmt(secondsLeft)} left`}
@@ -3959,8 +3978,8 @@ const RealtimeView = ({
       {/* Big live status — desktop only; on mobile it's consolidated into the
           control dock below so the bottom of the screen reads as one unit. */}
       <div className="hidden sm:block shrink-0 mt-5 text-center">
-        <p className="text-lg sm:text-xl font-bold text-white">{statusPrimary}</p>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{statusPrimary}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {handingOff
             ? 'Handing you over to the next person on the panel — one moment.'
             : inGrace
@@ -3971,27 +3990,29 @@ const RealtimeView = ({
 
       {/* Optional captions of what the interviewer just said (accessibility) */}
       {captionsOn && (
-        <div className="shrink-0 mt-4 mx-1 rounded-xl border border-white/10 bg-white/5 p-3 min-h-[3rem]">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+        <div className="shrink-0 mt-4 mx-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 min-h-[3rem]">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
             Interviewer (captions)
           </p>
-          <p className="text-sm text-slate-200 leading-relaxed">{caption || '…'}</p>
+          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{caption || '…'}</p>
         </div>
       )}
 
       {/* Control dock — on mobile the status line + Mute + End read as one unit
           pinned above the safe area; desktop keeps its original two-button row. */}
-      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-white/10">
+      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-slate-200 dark:border-white/10">
         {/* Compact status line (mobile only — the big block above is sm:+). */}
-        <p className="sm:hidden text-center text-base font-bold text-white mb-3">{statusPrimary}</p>
+        <p className="sm:hidden text-center text-base font-bold text-slate-900 dark:text-white mb-3">
+          {statusPrimary}
+        </p>
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onToggleMute}
             className={`inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl border text-sm sm:text-xs font-bold transition-all cursor-pointer select-none ${
               muted
-                ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
-                : 'border-white/15 bg-white/5 hover:bg-white/10 text-slate-200'
+                ? 'border-rose-300 dark:border-rose-400/40 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
             }`}
           >
             {muted ? <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}

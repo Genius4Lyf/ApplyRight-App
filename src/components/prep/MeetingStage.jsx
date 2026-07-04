@@ -109,19 +109,19 @@ const initials = (name = '') =>
 const InterviewerTile = ({ person, active, speaking, joining = false }) => {
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
+      className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
         active
           ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/20'
-          : 'ring-1 ring-white/10'
+          : 'ring-1 ring-slate-200 dark:ring-white/10'
       } ${joining ? 'opacity-80' : ''}`}
     >
       <div className="relative">
         {active && speaking && !joining ? (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
             <MiniVoiceIndicator active={true} />
           </div>
         ) : (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-500/25 text-indigo-100 flex items-center justify-center text-lg font-extrabold">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-100 flex items-center justify-center text-lg font-extrabold">
             {initials(person.name)}
           </div>
         )}
@@ -137,13 +137,15 @@ const InterviewerTile = ({ person, active, speaking, joining = false }) => {
       </div>
 
       <div className="absolute bottom-2.5 left-2.5 right-2.5 text-left">
-        <p className="text-xs font-bold text-white truncate drop-shadow">{person.name}</p>
-        <p className="text-[10px] text-slate-350 truncate">{person.role}</p>
+        <p className="text-xs font-bold text-slate-900 dark:text-white truncate drop-shadow-sm dark:drop-shadow">
+          {person.name}
+        </p>
+        <p className="text-[10px] text-slate-500 dark:text-slate-300 truncate">{person.role}</p>
       </div>
 
       <div className="absolute top-2.5 right-2.5">
         {active && (
-          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-indigo-200 bg-black/40 px-1.5 py-0.5 rounded">
+          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 dark:text-indigo-200 dark:bg-black/40 px-1.5 py-0.5 rounded">
             {joining ? 'Joining…' : speaking ? 'Speaking' : 'On the call'}
           </span>
         )}
@@ -154,19 +156,19 @@ const InterviewerTile = ({ person, active, speaking, joining = false }) => {
 
 const CandidateTile = ({ name, muted, listening, stream }) => (
   <div
-    className={`relative rounded-2xl overflow-hidden bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
+    className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
       listening && !muted
         ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/20'
-        : 'ring-1 ring-white/10'
+        : 'ring-1 ring-slate-200 dark:ring-white/10'
     }`}
   >
     <div className="relative">
       {listening && !muted ? (
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
           <MiniVoiceIndicator active={true} stream={stream} />
         </div>
       ) : (
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-500/25 text-sky-100 flex items-center justify-center text-lg font-extrabold">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/25 dark:text-sky-100 flex items-center justify-center text-lg font-extrabold">
           {initials(name)}
         </div>
       )}
@@ -180,10 +182,12 @@ const CandidateTile = ({ name, muted, listening, stream }) => (
     </div>
 
     <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
-      <p className="text-xs font-bold text-white truncate drop-shadow">You</p>
+      <p className="text-xs font-bold text-slate-900 dark:text-white truncate drop-shadow-sm dark:drop-shadow">
+        You
+      </p>
       <span
         className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-          muted ? 'bg-rose-500/80 text-white' : 'bg-white/15 text-slate-200'
+          muted ? 'bg-rose-500/80 text-white' : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
         }`}
       >
         {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
@@ -224,18 +228,20 @@ const MobileCallStage = ({
                 key={p.seat ?? i}
                 className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 border transition-colors ${
                   on
-                    ? 'border-indigo-400/60 bg-indigo-500/20'
-                    : 'border-white/10 bg-white/5'
+                    ? 'border-indigo-300 bg-indigo-100 dark:border-indigo-400/60 dark:bg-indigo-500/20'
+                    : 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/5'
                 }`}
               >
                 <span
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
-                    on ? 'bg-indigo-500/50 text-white' : 'bg-white/10 text-slate-300'
+                    on
+                      ? 'bg-indigo-500 text-white dark:bg-indigo-500/50'
+                      : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'
                   }`}
                 >
                   {initials(p.name)}
                 </span>
-                <span className="text-[11px] font-semibold text-slate-200 max-w-[80px] truncate">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 max-w-[80px] truncate">
                   {p.name?.split(/\s+/)[0]}
                 </span>
               </div>
@@ -246,25 +252,25 @@ const MobileCallStage = ({
 
       {/* Hero interviewer — fills the remaining height */}
       <div
-        className={`relative flex-grow min-h-0 rounded-3xl overflow-hidden bg-slate-800/90 flex flex-col items-center justify-center px-4 text-center transition-all duration-300 ${
+        className={`relative flex-grow min-h-0 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 flex flex-col items-center justify-center px-4 text-center transition-all duration-300 ${
           heroActive
             ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/25'
-            : 'ring-1 ring-white/10'
+            : 'ring-1 ring-slate-200 dark:ring-white/10'
         } ${handingOff ? 'opacity-90' : ''}`}
       >
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-100 bg-black/40 px-2 py-1 rounded-full">
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 dark:text-indigo-100 dark:bg-black/40 px-2 py-1 rounded-full">
           {handingOff ? 'Joining…' : heroActive ? 'Speaking' : 'On the call'}
         </span>
 
         <div className="relative">
           {heroActive && !handingOff ? (
-            <div className="w-28 h-28 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+            <div className="w-28 h-28 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
               <div className="scale-[1.9]">
                 <MiniVoiceIndicator active={true} />
               </div>
             </div>
           ) : (
-            <div className="w-28 h-28 rounded-full bg-indigo-500/25 text-indigo-100 flex items-center justify-center text-3xl font-extrabold">
+            <div className="w-28 h-28 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-100 flex items-center justify-center text-3xl font-extrabold">
               {initials(heroSeat?.name)}
             </div>
           )}
@@ -279,36 +285,42 @@ const MobileCallStage = ({
         </div>
 
         <div className="mt-5">
-          <p className="text-lg font-bold text-white leading-tight">{heroSeat?.name}</p>
+          <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+            {heroSeat?.name}
+          </p>
           {heroSeat?.role && (
-            <p className="mt-0.5 text-sm text-slate-300 leading-snug">{heroSeat.role}</p>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-300 leading-snug">
+              {heroSeat.role}
+            </p>
           )}
         </div>
 
         {/* "You" picture-in-picture self-view */}
         <div
-          className={`absolute bottom-3 right-3 w-[92px] h-28 rounded-2xl overflow-hidden bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center transition-all duration-300 ${
+          className={`absolute bottom-3 right-3 w-[92px] h-28 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center transition-all duration-300 ${
             youListening
-              ? 'ring-2 ring-indigo-400 dark:ring-indigo-300 shadow-lg shadow-indigo-500/25'
-              : 'ring-1 ring-white/15'
+              ? 'ring-2 ring-indigo-500 dark:ring-indigo-300 shadow-lg shadow-indigo-500/25'
+              : 'ring-1 ring-slate-200 dark:ring-white/15'
           }`}
         >
           <div className="relative">
             {youListening ? (
-              <div className="w-11 h-11 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
                 <MiniVoiceIndicator active={true} stream={micStream} />
               </div>
             ) : (
-              <div className="w-11 h-11 rounded-full bg-sky-500/25 text-sky-100 flex items-center justify-center text-sm font-extrabold">
+              <div className="w-11 h-11 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/25 dark:text-sky-100 flex items-center justify-center text-sm font-extrabold">
                 {initials(candidateName)}
               </div>
             )}
           </div>
           <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-white drop-shadow">You</span>
+            <span className="text-[10px] font-bold text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">
+              You
+            </span>
             <span
               className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                muted ? 'bg-rose-500/80 text-white' : 'bg-white/15 text-slate-200'
+                muted ? 'bg-rose-500/80 text-white' : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
               }`}
             >
               {muted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
