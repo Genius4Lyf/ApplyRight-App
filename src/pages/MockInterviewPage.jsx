@@ -1682,7 +1682,7 @@ const MockInterviewPage = () => {
             <button
               type="button"
               onClick={handleExitClick}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded-md text-xs font-semibold transition-colors ${
                 immersive
                   ? 'bg-white/5 border border-white/15 hover:bg-white/10 text-slate-200'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -3892,6 +3892,17 @@ const RealtimeView = ({
   const stageActiveSeat = hasRoster ? activeSeat : SOLO_SEAT;
   const speaking = voiceState === 'speaking';
   const connecting = voiceState === 'loading';
+  // Single source of truth for the live status line — shown large on desktop and
+  // compact inside the mobile control dock so the two never drift.
+  const statusPrimary = handingOff
+    ? `Bringing in ${activeSeat?.name || 'the next interviewer'}…`
+    : inGrace
+      ? 'We’re at time — any questions for me?'
+      : connecting
+        ? 'Connecting…'
+        : speaking
+          ? `${activeSeat?.name || 'Interviewer'} is speaking`
+          : 'Go ahead — I’m listening';
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -3911,13 +3922,14 @@ const RealtimeView = ({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={onToggleCaptions}
             title="Toggle captions"
-            className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors ${
-              captionsOn ? 'text-indigo-300' : 'text-slate-400 hover:text-slate-200'
+            aria-pressed={captionsOn}
+            className={`inline-flex items-center gap-1 py-2 px-2 -my-1 rounded-lg text-[11px] font-bold transition-colors ${
+              captionsOn ? 'text-indigo-300 bg-indigo-500/10' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Captions className="w-3.5 h-3.5" /> CC
@@ -3944,19 +3956,10 @@ const RealtimeView = ({
         handingOff={handingOff}
       />
 
-      {/* Big live status */}
-      <div className="shrink-0 mt-5 text-center">
-        <p className="text-lg sm:text-xl font-bold text-white">
-          {handingOff
-            ? `Bringing in ${activeSeat?.name || 'the next interviewer'}…`
-            : inGrace
-              ? 'We’re at time — any questions for me?'
-              : connecting
-                ? 'Connecting…'
-                : speaking
-                  ? `${activeSeat?.name || 'Interviewer'} is speaking`
-                  : 'Go ahead — I’m listening'}
-        </p>
+      {/* Big live status — desktop only; on mobile it's consolidated into the
+          control dock below so the bottom of the screen reads as one unit. */}
+      <div className="hidden sm:block shrink-0 mt-5 text-center">
+        <p className="text-lg sm:text-xl font-bold text-white">{statusPrimary}</p>
         <p className="mt-1 text-sm text-slate-400">
           {handingOff
             ? 'Handing you over to the next person on the panel — one moment.'
@@ -3976,27 +3979,32 @@ const RealtimeView = ({
         </div>
       )}
 
-      {/* Controls (pinned) */}
-      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-white/10 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onToggleMute}
-          className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none ${
-            muted
-              ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
-              : 'border-white/15 bg-white/5 hover:bg-white/10 text-slate-200'
-          }`}
-        >
-          {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          {muted ? 'Unmute' : 'Mute'}
-        </button>
-        <button
-          type="button"
-          onClick={onEnd}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
-        >
-          End &amp; review
-        </button>
+      {/* Control dock — on mobile the status line + Mute + End read as one unit
+          pinned above the safe area; desktop keeps its original two-button row. */}
+      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-white/10">
+        {/* Compact status line (mobile only — the big block above is sm:+). */}
+        <p className="sm:hidden text-center text-base font-bold text-white mb-3">{statusPrimary}</p>
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onToggleMute}
+            className={`inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl border text-sm sm:text-xs font-bold transition-all cursor-pointer select-none ${
+              muted
+                ? 'border-rose-400/40 bg-rose-500/10 text-rose-300'
+                : 'border-white/15 bg-white/5 hover:bg-white/10 text-slate-200'
+            }`}
+          >
+            {muted ? <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
+            {muted ? 'Unmute' : 'Mute'}
+          </button>
+          <button
+            type="button"
+            onClick={onEnd}
+            className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm sm:text-xs font-bold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
+          >
+            End &amp; review
+          </button>
+        </div>
       </div>
     </motion.div>
   );

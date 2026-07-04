@@ -192,6 +192,134 @@ const CandidateTile = ({ name, muted, listening, stream }) => (
   </div>
 );
 
+// ── Mobile call layout (< sm) ──────────────────────────────────────────────
+// A purpose-built phone-call surface instead of the shrunken desktop grid: the
+// active interviewer is a full-bleed hero tile, "You" is a picture-in-picture
+// self-view pinned to the corner, and a panel (>1 interviewer) gets a small
+// avatar filmstrip up top so the roster is still visible.
+const MobileCallStage = ({
+  seats,
+  activeName,
+  candidateName,
+  muted,
+  speaking,
+  micStream,
+  handingOff,
+}) => {
+  // Spotlight the speaker; fall back to the first seat when nobody is active
+  // (e.g. while the candidate is talking) so the hero never goes blank.
+  const heroSeat = seats.find((s) => s.name === activeName) || seats[0];
+  const heroActive = !!activeName && heroSeat?.name === activeName && (speaking || handingOff);
+  const youListening = !speaking && !handingOff && !muted;
+
+  return (
+    <div className="sm:hidden flex-grow min-h-0 flex flex-col gap-3">
+      {/* Panel filmstrip — only when there's more than one interviewer */}
+      {seats.length > 1 && (
+        <div className="shrink-0 flex flex-wrap items-center justify-center gap-2">
+          {seats.map((p, i) => {
+            const on = p.name === activeName;
+            return (
+              <div
+                key={p.seat ?? i}
+                className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 border transition-colors ${
+                  on
+                    ? 'border-indigo-400/60 bg-indigo-500/20'
+                    : 'border-white/10 bg-white/5'
+                }`}
+              >
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
+                    on ? 'bg-indigo-500/50 text-white' : 'bg-white/10 text-slate-300'
+                  }`}
+                >
+                  {initials(p.name)}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-200 max-w-[80px] truncate">
+                  {p.name?.split(/\s+/)[0]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Hero interviewer — fills the remaining height */}
+      <div
+        className={`relative flex-grow min-h-0 rounded-3xl overflow-hidden bg-slate-800/90 flex flex-col items-center justify-center px-4 text-center transition-all duration-300 ${
+          heroActive
+            ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/25'
+            : 'ring-1 ring-white/10'
+        } ${handingOff ? 'opacity-90' : ''}`}
+      >
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-100 bg-black/40 px-2 py-1 rounded-full">
+          {handingOff ? 'Joining…' : heroActive ? 'Speaking' : 'On the call'}
+        </span>
+
+        <div className="relative">
+          {heroActive && !handingOff ? (
+            <div className="w-28 h-28 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+              <div className="scale-[1.9]">
+                <MiniVoiceIndicator active={true} />
+              </div>
+            </div>
+          ) : (
+            <div className="w-28 h-28 rounded-full bg-indigo-500/25 text-indigo-100 flex items-center justify-center text-3xl font-extrabold">
+              {initials(heroSeat?.name)}
+            </div>
+          )}
+          {heroActive && (
+            <span
+              className={`absolute -inset-2 rounded-full ring-2 ring-indigo-400/70 ${
+                handingOff ? 'animate-pulse' : 'animate-ping'
+              }`}
+              aria-hidden
+            />
+          )}
+        </div>
+
+        <div className="mt-5">
+          <p className="text-lg font-bold text-white leading-tight">{heroSeat?.name}</p>
+          {heroSeat?.role && (
+            <p className="mt-0.5 text-sm text-slate-300 leading-snug">{heroSeat.role}</p>
+          )}
+        </div>
+
+        {/* "You" picture-in-picture self-view */}
+        <div
+          className={`absolute bottom-3 right-3 w-[92px] h-28 rounded-2xl overflow-hidden bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center transition-all duration-300 ${
+            youListening
+              ? 'ring-2 ring-indigo-400 dark:ring-indigo-300 shadow-lg shadow-indigo-500/25'
+              : 'ring-1 ring-white/15'
+          }`}
+        >
+          <div className="relative">
+            {youListening ? (
+              <div className="w-11 h-11 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+                <MiniVoiceIndicator active={true} stream={micStream} />
+              </div>
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-sky-500/25 text-sky-100 flex items-center justify-center text-sm font-extrabold">
+                {initials(candidateName)}
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-white drop-shadow">You</span>
+            <span
+              className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
+                muted ? 'bg-rose-500/80 text-white' : 'bg-white/15 text-slate-200'
+              }`}
+            >
+              {muted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MeetingStage = ({
   panel = [],
   activeSeat = null,
@@ -211,27 +339,41 @@ const MeetingStage = ({
   // empty cell, so let the candidate span the full bottom row.
   const candidateSpan = seats.length === 2 ? 'col-span-2' : '';
   return (
-    <div className={`flex-grow min-h-0 grid grid-cols-2 ${rowsClass} gap-2 sm:gap-3`}>
-      {seats.map((p, i) => (
-        <InterviewerTile
-          key={p.seat ?? i}
-          person={p}
-          active={activeName === p.name}
-          speaking={speaking && activeName === p.name}
-          joining={handingOff && activeName === p.name}
-        />
-      ))}
-      {/* While swapping interviewers the candidate isn't "live" yet — don't show
-          their tile as listening. */}
-      <div className={`min-h-0 ${candidateSpan}`}>
-        <CandidateTile
-          name={candidateName}
-          muted={muted}
-          listening={!speaking && !handingOff}
-          stream={micStream}
-        />
+    <>
+      {/* Phones (< sm): dedicated call UI. */}
+      <MobileCallStage
+        seats={seats}
+        activeName={activeName}
+        candidateName={candidateName}
+        muted={muted}
+        speaking={speaking}
+        micStream={micStream}
+        handingOff={handingOff}
+      />
+
+      {/* Tablet / desktop (≥ sm): the original Meet-style grid, unchanged. */}
+      <div className={`hidden sm:grid flex-grow min-h-0 grid-cols-2 ${rowsClass} gap-3`}>
+        {seats.map((p, i) => (
+          <InterviewerTile
+            key={p.seat ?? i}
+            person={p}
+            active={activeName === p.name}
+            speaking={speaking && activeName === p.name}
+            joining={handingOff && activeName === p.name}
+          />
+        ))}
+        {/* While swapping interviewers the candidate isn't "live" yet — don't show
+            their tile as listening. */}
+        <div className={`min-h-0 ${candidateSpan}`}>
+          <CandidateTile
+            name={candidateName}
+            muted={muted}
+            listening={!speaking && !handingOff}
+            stream={micStream}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
