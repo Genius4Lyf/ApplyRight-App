@@ -19,6 +19,16 @@ const DownloadPaywallModal = ({ open, onClose }) => {
   const buySingle = async () => {
     setLoading(true);
     try {
+      // Stash where we are so BillingReturn sends the user back to this exact CV
+      // page (with ?paid=1) after paying, instead of the dashboard. The download
+      // page auto-fires the download on return — this is a one-time pass, so we
+      // deliver the PDF immediately rather than making them hunt for it again.
+      try {
+        localStorage.setItem('arPostCheckout', window.location.pathname);
+        localStorage.setItem('arCheckoutIntent', 'download');
+      } catch {
+        /* non-fatal — falls back to the dashboard */
+      }
       const { link } = await billingService.checkout('download_single');
       if (!link) throw new Error('No link');
       window.location.href = link; // hosted checkout; returns to /billing/return

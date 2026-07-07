@@ -602,6 +602,36 @@ const ResumeReview = () => {
     performDownload();
   };
 
+  // Auto-download after a successful CV-download purchase. When a free user pays
+  // for the ₦750 single-download pass, BillingReturn sends them back here with
+  // ?paid=1. The pass is now on their account, so we fire the download straight
+  // away — a one-time pass should deliver the PDF, not dump them on a page to
+  // hunt for the button again. The Download button stays visible as a fallback in
+  // case the browser blocks the programmatic save (some mobile in-app webviews).
+  const autoDownloadFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoDownloadFiredRef.current) return;
+    if (searchParams.get('paid') !== '1') return;
+    // Wait until the application + preview are loaded so #resume-content exists
+    // for serialization.
+    if (loading || !application) return;
+
+    autoDownloadFiredRef.current = true;
+
+    // Strip ?paid=1 (keep any other params, e.g. tab) so a refresh won't re-fire.
+    const cleanParams = new URLSearchParams(searchParams);
+    cleanParams.delete('paid');
+    const qs = cleanParams.toString();
+    navigate(`${location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
+
+    toast.success('Payment confirmed — starting your download…');
+    // Defer a tick so the preview DOM is painted before we serialize it.
+    setTimeout(() => {
+      performDownload();
+    }, 400);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, application, searchParams]);
+
   // MERGE PROFILE DATA: Prioritize draft personal info (CV Builder) over user profile
   const mergedUserProfile = React.useMemo(() => {
     if (!userProfile) return null;

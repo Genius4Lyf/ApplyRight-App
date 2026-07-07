@@ -143,7 +143,14 @@ const AdminPayments = () => {
                         {p.purpose}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{p.planId || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      <span className="font-medium text-slate-800">
+                        {p.planLabel || p.planId || '-'}
+                      </span>
+                      {p.planId && p.planLabel && p.planLabel !== p.planId && (
+                        <span className="block text-xs text-slate-400">{p.planId}</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 font-bold text-sm text-slate-900">
                       {ngn(p.amountNgn)}
                     </td>

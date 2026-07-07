@@ -24,11 +24,23 @@ const BillingReturn = () => {
       return null;
     }
   });
+  // What kind of purchase this was, so we can tailor the copy (a CV-download pass
+  // reads very differently from a subscription or interview minutes). Read once.
+  const [intent] = useState(() => {
+    try {
+      return localStorage.getItem('arCheckoutIntent') || null;
+    } catch {
+      return null;
+    }
+  });
+  const isDownloadReturn = intent === 'download';
+
   const successPath = returnTo ? `${returnTo}?paid=1` : '/dashboard';
   const isInterviewReturn = !!returnTo && returnTo.includes('/mock');
   const goToSuccess = useCallback(() => {
     try {
       localStorage.removeItem('arPostCheckout');
+      localStorage.removeItem('arCheckoutIntent');
     } catch {
       /* non-fatal */
     }
@@ -66,8 +78,12 @@ const BillingReturn = () => {
         }
         setEntitlement(result.entitlement);
         setState('success');
-        toast.success('Payment confirmed — your plan is active!');
-        setTimeout(goToSuccess, 2200);
+        toast.success(
+          isDownloadReturn
+            ? 'Payment confirmed — your download is ready!'
+            : 'Payment confirmed — your plan is active!'
+        );
+        setTimeout(goToSuccess, isDownloadReturn ? 1400 : 2200);
       } else {
         setState('failed');
       }
@@ -76,7 +92,7 @@ const BillingReturn = () => {
     return () => {
       cancelled = true;
     };
-  }, [params, goToSuccess]);
+  }, [params, goToSuccess, isDownloadReturn]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
@@ -100,17 +116,23 @@ const BillingReturn = () => {
               You’re all set!
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {isInterviewReturn
-                ? `Your ${entitlement?.minutesRemaining ?? ''} interview minutes are ready — taking you back to start your interview…`
-                : entitlement?.minutesRemaining != null
-                  ? `${entitlement.minutesRemaining} live interview minutes are ready.`
-                  : 'Your plan is now active.'}
+              {isDownloadReturn
+                ? 'Your CV download is ready — taking you back to save your PDF…'
+                : isInterviewReturn
+                  ? `Your ${entitlement?.minutesRemaining ?? ''} interview minutes are ready — taking you back to start your interview…`
+                  : entitlement?.minutesRemaining
+                    ? `${entitlement.minutesRemaining} live interview minutes are ready.`
+                    : 'Your plan is now active.'}
             </p>
             <button
               onClick={goToSuccess}
               className="mt-6 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
             >
-              {isInterviewReturn ? 'Start my interview' : 'Go to dashboard'}
+              {isDownloadReturn
+                ? 'Download my CV'
+                : isInterviewReturn
+                  ? 'Start my interview'
+                  : 'Go to dashboard'}
             </button>
           </>
         )}
