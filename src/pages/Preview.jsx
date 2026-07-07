@@ -19,6 +19,7 @@ import { getJobQuestions, getQuestionsToAsk, hasInterviewPrep } from '../utils/i
 import Modal from '../components/Modal';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import PreviewWatermark from '../components/PreviewWatermark';
+import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
 // Import Templates
@@ -65,6 +66,16 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
   const [showDownloadPaywall, setShowDownloadPaywall] = useState(false);
   // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
   const screenshotObscured = useScreenshotGuard();
+  // Account plan (the on-screen watermark is a FREE-user deterrent only). The
+  // `userProfile` above is parsed from the CV markdown and carries no plan, so read
+  // the stored account. Not memoized on purpose — cheap and always current.
+  const isFreeUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}').plan !== 'paid';
+    } catch {
+      return true;
+    }
+  })();
 
   // Dynamic Scale for Mobile "Paper View"
   useEffect(() => {
@@ -584,15 +595,19 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
       >
         <div
           id="resume-content"
-          className="p-0 bg-slate-100 min-h-[500px] flex justify-center overflow-x-hidden overflow-y-auto custom-scrollbar relative select-none transition-[filter] duration-200"
-          style={{ filter: screenshotObscured ? 'blur(16px)' : undefined }}
+          className="p-0 bg-slate-100 min-h-[500px] flex justify-center overflow-x-hidden overflow-y-auto custom-scrollbar relative select-none"
+          // Copy-protection: block long-press callout / drag-to-save on mobile.
+          style={{ WebkitTouchCallout: 'none' }}
           onContextMenu={(e) => e.preventDefault()}
           onCopy={(e) => e.preventDefault()}
           onCut={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
         >
-          {/* Faint anti-screenshot watermark — stripped from the PDF clone before
-              download, so the paid file is clean. */}
-          <PreviewWatermark />
+          {/* Faint anti-screenshot watermark — free users only; stripped from the
+              PDF clone before download, so the file is always clean. */}
+          {isFreeUser && <PreviewWatermark />}
+          {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
+          <ScreenshotCover show={screenshotObscured} />
 
           {/* Scaling Wrapper */}
           <div

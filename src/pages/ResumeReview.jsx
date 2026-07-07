@@ -58,6 +58,7 @@ import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
 import PreviewWatermark from '../components/PreviewWatermark';
+import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import {
@@ -1220,15 +1221,21 @@ const ResumeReview = () => {
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
-                filter: screenshotObscured ? 'blur(16px)' : undefined,
+                // Copy-protection: block long-press callout / drag-to-save on mobile.
+                WebkitTouchCallout: 'none',
               }}
               onContextMenu={(e) => e.preventDefault()}
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
             >
-              {/* Faint anti-screenshot watermark — stripped from the PDF clone in
-                  performDownload, so the paid download is clean. */}
-              <PreviewWatermark />
+              {/* Faint anti-screenshot watermark — free users only; stripped from
+                  the PDF clone in performDownload, so downloads are always clean. */}
+              {userProfile?.plan !== 'paid' && (
+                <PreviewWatermark dark={templateId === 'luxury-royal'} />
+              )}
+              {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
+              <ScreenshotCover show={screenshotObscured} />
 
               {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 

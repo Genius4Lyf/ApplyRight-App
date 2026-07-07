@@ -6,6 +6,7 @@ import ApplicationService from '../services/application.service';
 import api from '../services/api';
 import CVTemplateRenderer from './CVTemplateRenderer';
 import PreviewWatermark from './PreviewWatermark';
+import ScreenshotCover from './ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
 const readStoredUser = () => {
@@ -203,17 +204,22 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           </div>
         ) : (
           <div
-            className="bg-white shadow-2xl mx-auto relative select-none transition-[filter] duration-200"
+            className="bg-white shadow-2xl mx-auto relative select-none"
             style={{
               zoom: scale,
               width: `${A4_WIDTH}px`,
-              filter: screenshotObscured ? 'blur(16px)' : undefined,
+              // Copy-protection: block long-press callout / drag-to-save on mobile.
+              WebkitTouchCallout: 'none',
             }}
             onContextMenu={(e) => e.preventDefault()}
             onCopy={(e) => e.preventDefault()}
             onCut={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
           >
-            <PreviewWatermark />
+            {/* Faint anti-screenshot watermark — free users only. */}
+            {profile?.plan !== 'paid' && <PreviewWatermark />}
+            {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
+            <ScreenshotCover show={screenshotObscured} />
             <CVTemplateRenderer application={app} userProfile={profile} />
           </div>
         )}
