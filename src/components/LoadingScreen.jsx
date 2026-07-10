@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Loader } from 'lucide-react';
 
 /**
- * LoadingWithAd - Loading screen with MoneyTag 728×90 Banner Ad
- *
- * SETUP INSTRUCTIONS:
- * 1. Create a Banner zone (728×90) in MoneyTag dashboard
- * 2. Get your zone ID
- * 3. Replace 'YOUR_ZONE_ID_HERE' below with your actual zone ID
- * 4. Test that ads appear during loading states
+ * LoadingScreen - Full-screen loading overlay with a rotating "ApplyRight Pro
+ * Tip" card and an optional progress bar. Shown during longer async operations
+ * (e.g. loading a CV for review, generating a PDF) so the wait feels productive.
+ * It renders no ads.
  *
  * @param {string[]} messages - Array of loading messages to rotate through
- * @param {boolean} showProgress - Whether to show progress bar
+ * @param {boolean} showProgress - Whether to show the progress bar
  * @param {function} onComplete - Callback when minimum display time reached
+ * @param {number} duration - Minimum display time in ms (default 10000)
  */
-const LoadingWithAd = ({
+const LoadingScreen = ({
   messages = ['Processing...'],
   showProgress = false,
   onComplete = null,
@@ -25,9 +23,6 @@ const LoadingWithAd = ({
 
   const MIN_DISPLAY_TIME = duration; // Use prop duration
   const MESSAGE_ROTATION_TIME = 3500; // Rotate messages every 3.5 seconds
-
-  // TODO: Replace with your actual MoneyTag Zone ID
-  const MONETAG_ZONE_ID = 'YOUR_ZONE_ID_HERE';
 
   // Rotate through messages
   useEffect(() => {
@@ -103,7 +98,7 @@ const LoadingWithAd = ({
           <p className="text-slate-500 dark:text-slate-400 mt-2">This will only take a moment</p>
         </div>
 
-        {/* ApplyRight Tips Banner (Replaces Ad) */}
+        {/* ApplyRight Pro Tip card */}
         <div className="my-6">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 p-6 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
             {/* Decorative Background */}
@@ -158,4 +153,4 @@ const LoadingWithAd = ({
   );
 };
 
-export default LoadingWithAd;
+export default LoadingScreen;

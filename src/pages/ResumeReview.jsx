@@ -56,7 +56,7 @@ import { downloadBlob } from '../utils/download';
 import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
-import LoadingWithAd from '../components/LoadingWithAd'; // Import LoadingWithAd for PDF download
+import LoadingScreen from '../components/LoadingScreen'; // Full-screen loading overlay with rotating tips
 import PreviewWatermark from '../components/PreviewWatermark';
 import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
@@ -666,7 +666,7 @@ const ResumeReview = () => {
 
   if (showLoader)
     return (
-      <LoadingWithAd
+      <LoadingScreen
         messages={[
           'Loading your CV...',
           'Preparing templates...',

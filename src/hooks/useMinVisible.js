@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
  *
  * Usage:
  *   const showLoader = useMinVisible(isLoading, 4000);
- *   {showLoader && <LoadingWithAd ... />}
+ *   {showLoader && <LoadingScreen ... />}
  */
 export function useMinVisible(active, minMs = 4000) {
   const [visible, setVisible] = useState(active);

@@ -114,7 +114,10 @@ const PrivacyPolicy = () => {
                   To operate the credit system, including credits earned from ads and referrals.
                 </li>
                 <li>To process purchases and maintain transaction records.</li>
-                <li>To serve advertisements and reward ad engagement (see Section 5).</li>
+                <li>
+                  To serve advertisements in our Android app and reward ad engagement (see Section
+                  5).
+                </li>
                 <li>To respond to your inquiries and provide customer support.</li>
                 <li>To monitor usage, prevent fraud and abuse, and secure the Service.</li>
                 <li>To send service-related and, where permitted, promotional communications.</li>
@@ -149,20 +152,11 @@ const PrivacyPolicy = () => {
                 5. Advertising &amp; Tracking Technologies
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">
-                Our credit-based model lets you earn credits by engaging with advertisements. We
-                work with the following advertising partners, each of which may collect data under
-                their own policies:
+                Our credit-based model lets you earn credits by engaging with advertisements in our
+                Android app. Our website does not display ads. We work with the following partners,
+                each of which may collect data under their own policies:
               </p>
               <div className="space-y-4">
-                <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                  <h3 className="font-bold text-slate-900 mb-2">Monetag (Web)</h3>
-                  <p className="text-slate-600 text-sm">
-                    On our website, we display sponsored offers provided by Monetag. Selecting an
-                    offer opens an external advertiser page in a new tab. Monetag and its
-                    advertisers may set cookies and collect device and usage information to deliver
-                    and measure ads.
-                  </p>
-                </div>
                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                   <h3 className="font-bold text-slate-900 mb-2">Google AdMob (Android App)</h3>
                   <p className="text-slate-600 text-sm">
@@ -199,7 +193,7 @@ const PrivacyPolicy = () => {
                   our payment processor.
                 </li>
                 <li>
-                  <strong>Advertising partners</strong> (Monetag, Google AdMob, Google Analytics) as
+                  <strong>Advertising partners</strong> (Google AdMob, Google Analytics) as
                   described in Section 5.
                 </li>
                 <li>

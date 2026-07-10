@@ -170,8 +170,9 @@ const CreditStore = () => {
 
   const referralBonus = config?.credits?.referralBonus || 10;
 
-  // Pre-check the per-user ad cooldown before opening the ad, so the user never
-  // watches one the server would reject (web Monetag + Android AdMob alike).
+  // Pre-check the per-user AdMob cooldown before opening the ad, so the user
+  // never watches one the server would reject (native Android only — web has no
+  // ads and never reaches this card).
   const handleWatchClick = async () => {
     try {
       const stats = await billingService.getAdStats();

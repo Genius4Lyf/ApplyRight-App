@@ -103,10 +103,10 @@ const TermsOfService = () => {
                   consume credits.
                 </li>
                 <li>
-                  Credits may be earned by engaging with advertisements (including Monetag offers on
-                  the web and Google AdMob rewarded videos in the app) and through referrals, or
-                  purchased where available. Credits earned from ads are granted only after the ad
-                  network confirms a valid view.
+                  Credits may be earned by engaging with advertisements (Google AdMob rewarded
+                  videos in our Android app only; the website does not display ads) and through
+                  referrals, or purchased where available. Credits earned from ads are granted only
+                  after the ad network confirms a valid view.
                 </li>
                 <li>
                   Credits have no monetary value, are not transferable, cannot be redeemed for cash,
