@@ -76,6 +76,10 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'; // Import extra icons
 
+// Watch-ad-for-credits is native-only; web has no ads. Downloads on web are
+// gated by the server-side paywall (DownloadPaywallModal), not an ad.
+const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
 const ResumeReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -367,16 +371,12 @@ const ResumeReview = () => {
     }
   };
 
+  // NATIVE ANDROID ONLY: AdMob SSV has already credited the account server-side,
+  // so we just refresh the user profile. The AdPlayer never mounts on web, so
+  // this only runs on native.
   const handleAdForCreditsComplete = async () => {
     setAdForCreditsOpen(false);
     try {
-      // On Android, AdMob SSV has already credited the account server-side.
-      // Skip the /watch-ad call and just refresh the user profile.
-      const isAndroidNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
-      if (!isAndroidNative) {
-        await api.post('/billing/watch-ad', { type: 'video' });
-      }
-
       const res = await api.get('/auth/me');
       // console.log('User profile refreshed:', res.data);
       setUserProfile(res.data);
@@ -832,20 +832,20 @@ const ResumeReview = () => {
         onClose={() => setShowDownloadPaywall(false)}
       />
 
-      {downloadAdOpen && (
+      {downloadAdOpen && isAndroidNative() && (
         <AdPlayer
           userId={userProfile?._id || userProfile?.id}
           onComplete={handleDownloadAdComplete}
           onClose={() => setDownloadAdOpen(false)} // User can close, but won't get reward
-          title="Unlock High-Quality PDF"
-          subtitle="View our sponsor's offer to unlock your download instantly."
-          buttonText="Unlock Download"
-          successTitle="Ready to Download!"
-          successMessage="Your PDF will start downloading shortly."
+          androidTitle="Unlock High-Quality PDF"
+          androidSubtitle="Watch a short video to unlock your download instantly."
+          androidButtonText="Unlock Download"
+          androidSuccessTitle="Ready to Download!"
+          androidSuccessMessage="Your PDF will start downloading shortly."
         />
       )}
 
-      {adForCreditsOpen && (
+      {adForCreditsOpen && isAndroidNative() && (
         <AdPlayer
           userId={userProfile?._id || userProfile?.id}
           onComplete={handleAdForCreditsComplete}
@@ -970,25 +970,48 @@ const ResumeReview = () => {
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="bg-white dark:bg-slate-900 px-2 text-slate-500 dark:text-slate-400">
-                    or earn A.I credits
+                    {isAndroidNative() ? 'or earn A.I credits' : 'or'}
                   </span>
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setUnlockModalOpen(false);
-                  setAdForCreditsOpen(true);
-                }}
-                className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-100"
-              >
-                <PlayCircle className="w-5 h-5" />
-                View Offer for +5 A.I Credits
-              </button>
+              {isAndroidNative() ? (
+                // NATIVE ANDROID: earn credits by watching a rewarded video.
+                <>
+                  <button
+                    onClick={() => {
+                      setUnlockModalOpen(false);
+                      setAdForCreditsOpen(true);
+                    }}
+                    className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-100"
+                  >
+                    <PlayCircle className="w-5 h-5" />
+                    View Offer for +5 A.I Credits
+                  </button>
 
-              <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed px-4">
-                💚 We use ads to keep ApplyRight free for everyone. Thank you for your support!
-              </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed px-4">
+                    💚 We use ads to keep ApplyRight free for everyone. Thank you for your support!
+                  </p>
+                </>
+              ) : (
+                // WEB: no ads. Buy more credits, or go unlimited (a plan unlocks
+                // every premium template).
+                <>
+                  <button
+                    onClick={() => navigate('/credits')}
+                    className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Get more credits
+                  </button>
+                  <button
+                    onClick={() => navigate('/upgrade')}
+                    className="w-full py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:underline"
+                  >
+                    Or go unlimited — unlock all premium templates →
+                  </button>
+                </>
+              )}
 
               {(userProfile?.credits || 0) < templateToUnlock.cost && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-2">

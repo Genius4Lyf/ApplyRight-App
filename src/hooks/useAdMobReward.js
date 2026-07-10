@@ -4,13 +4,14 @@ import { prepareRewarded, showRewarded, isAndroidAdMob } from '../services/admob
 /**
  * Hook for the AdMob Rewarded Video flow on native Android.
  *
- * The actual credit grant happens server-side via Google's SSV callback —
- * this hook does NOT call the watch-ad endpoint. After `showAd()` resolves
- * with `rewarded: true`, the caller should poll their credit balance (see
- * `billingService.pollBalanceUntilIncrease`) and update UI when SSV lands.
+ * The actual credit grant happens server-side via Google's SSV callback.
+ * After `showAd()` resolves with `rewarded: true`, the caller should poll their
+ * credit balance (see `billingService.pollBalanceUntilIncrease`) and update UI
+ * when SSV lands.
  *
- * On non-Android platforms `enabled` is false and `showAd()` rejects — the
- * caller should branch on platform and use the Monetag flow instead.
+ * On non-Android platforms `enabled` is false and `showAd()` returns
+ * `{ rewarded: false, reason: 'unsupported' }`. Web has no ads at all, so the
+ * caller simply won't mount any ad UI there.
  */
 export default function useAdMobReward(userId) {
   const enabled = isAndroidAdMob();

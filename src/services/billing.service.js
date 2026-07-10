@@ -13,13 +13,7 @@ const billingService = {
     return response.data;
   },
 
-  // Watch Ad Reward
-  watchAd: async (type = 'video') => {
-    const response = await api.post('/billing/watch-ad', { type });
-    return response.data;
-  },
-
-  // Get Ad Stats
+  // Get Ad Stats (native AdMob cooldown pre-check)
   getAdStats: async () => {
     const response = await api.get('/billing/ad-stats');
     return response.data;

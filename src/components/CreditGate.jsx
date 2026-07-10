@@ -58,34 +58,20 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
     }
   };
 
-  // Reconcile credits after the ad. WEB: claim the Monetag reward here. ANDROID:
-  // AdPlayer already granted via AdMob SSV and polled until it landed, so we only
-  // re-sync the balance (re-polling here was double work and caused false
-  // "didn't land" errors). Then broadcast so the gate unlocks automatically.
+  // Reconcile credits after the ad. NATIVE ANDROID ONLY: AdPlayer already granted
+  // via AdMob SSV and polled until it landed, so we only re-sync the balance
+  // (re-polling here was double work and caused false "didn't land" errors). Then
+  // broadcast so the gate unlocks automatically. Web has no ads — the AdPlayer
+  // never mounts there, so this only runs on native.
   const handleAdComplete = async () => {
     setShowAd(false);
     try {
-      if (isAndroidNative()) {
-        const bal = await billingService.getBalance();
-        if (typeof bal?.credits === 'number') {
-          window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
-        }
-      } else {
-        const res = await billingService.watchAd('video');
-        if (typeof res?.credits === 'number') {
-          window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.credits }));
-          toast.success(`+${res.added ?? 5} credits added.`);
-        }
+      const bal = await billingService.getBalance();
+      if (typeof bal?.credits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
       }
-    } catch (e) {
-      const code = e.response?.data?.code;
-      if (code === 'COOLDOWN') {
-        toast.error(e.response?.data?.message || 'Please wait before watching another ad.');
-      } else if (code === 'DAILY_CAP') {
-        toast.error('Daily ad limit reached. Come back tomorrow.');
-      } else {
-        toast.error('Could not award credits. Please try again.');
-      }
+    } catch {
+      toast.error('Could not refresh your balance. Please try again.');
     }
   };
 
@@ -120,17 +106,21 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
             </div>
           </div>
           <div className={`flex gap-2 ${isCard ? 'w-full' : 'shrink-0'}`}>
-            <button
-              type="button"
-              onClick={startAd}
-              disabled={checking}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
-                isCard ? 'flex-1' : ''
-              }`}
-            >
-              <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
-              {checking ? 'Checking…' : 'Watch ad'}
-            </button>
+            {/* Watch-ad-for-credits is NATIVE ANDROID ONLY. Web has no ads — the
+                sole web CTA is "Get credits" (→ /credits paid top-up store). */}
+            {isAndroidNative() && (
+              <button
+                type="button"
+                onClick={startAd}
+                disabled={checking}
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+                  isCard ? 'flex-1' : ''
+                }`}
+              >
+                <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
+                {checking ? 'Checking…' : 'Watch ad'}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => navigate('/credits')}
@@ -152,7 +142,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
         {children}
       </div>
 
-      {showAd && (
+      {showAd && isAndroidNative() && (
         <AdPlayer
           userId={readStoredUserId()}
           onComplete={handleAdComplete}

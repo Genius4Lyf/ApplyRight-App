@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TEMPLATES } from '../data/templates';
 import {
   CheckCircle,
@@ -10,6 +11,7 @@ import {
   Loader,
   Zap,
   X,
+  Sparkles,
 } from 'lucide-react';
 
 import TemplateThumbnail from './TemplateThumbnail';
@@ -19,6 +21,10 @@ import { Capacitor } from '@capacitor/core';
 
 import { toast } from 'sonner';
 
+// Watch-ad-for-credits is native-only; web has no ads and routes to the paid
+// credit store / subscription upgrade instead.
+const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
 const TemplateSelector = ({
   selectedTemplate,
   onSelect,
@@ -26,6 +32,7 @@ const TemplateSelector = ({
   onPreview,
   isCompact = false,
 }) => {
+  const navigate = useNavigate();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [templateToUnlock, setTemplateToUnlock] = useState(null);
   const [adOpen, setAdOpen] = useState(false);
@@ -92,14 +99,12 @@ const TemplateSelector = ({
     }
   };
 
+  // NATIVE ANDROID ONLY: AdMob SSV has already credited the account server-side,
+  // so we just refresh the profile. The AdPlayer never mounts on web, so this
+  // only runs on native.
   const handleAdComplete = async () => {
     setAdOpen(false);
     try {
-      const isAndroidNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
-      if (!isAndroidNative) {
-        await api.post('/billing/watch-ad');
-      }
-
       const res = await api.get('/auth/me');
       window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: res.data }));
       toast.success('Credits earned! You can now unlock the template.');
@@ -124,7 +129,7 @@ const TemplateSelector = ({
 
   return (
     <div className="w-full relative">
-      {adOpen && (
+      {adOpen && isAndroidNative() && (
         <AdPlayer
           userId={user?._id || user?.id}
           onComplete={handleAdComplete}
@@ -194,13 +199,34 @@ const TemplateSelector = ({
                     </span>
                     <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
                   </div>
-                  <button
-                    onClick={() => setAdOpen(true)}
-                    className="w-full py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <PlayCircle className="w-5 h-5 text-green-500" />
-                    Watch Ad for +5 A.I Credits
-                  </button>
+                  {isAndroidNative() ? (
+                    // NATIVE ANDROID: earn credits by watching a rewarded video.
+                    <button
+                      onClick={() => setAdOpen(true)}
+                      className="w-full py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                    >
+                      <PlayCircle className="w-5 h-5 text-green-500" />
+                      Watch Ad for +5 A.I Credits
+                    </button>
+                  ) : (
+                    // WEB: no ads. Buy more credits, or go unlimited (a plan
+                    // unlocks every premium template).
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => navigate('/credits')}
+                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        Get more credits
+                      </button>
+                      <button
+                        onClick={() => navigate('/upgrade')}
+                        className="w-full py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:underline"
+                      >
+                        Or go unlimited — unlock all premium templates →
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

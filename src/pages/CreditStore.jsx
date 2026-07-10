@@ -35,8 +35,6 @@ const CreditStore = () => {
     lastWatch: null,
     streak: 0,
   });
-  const [showReward, setShowReward] = useState(false);
-  const [rewardMessage, setRewardMessage] = useState('');
 
   // Referral State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -130,49 +128,24 @@ const CreditStore = () => {
     setTimeout(() => setCopySuccess(''), 2000);
   };
 
+  // NATIVE ANDROID ONLY. The credit grant lands via AdMob SSV — no client-side
+  // /watch-ad call. Pull the fresh balance and ad stats from the server. Web has
+  // no ads (the AdPlayer never mounts there), so this only runs on native.
   const handleAdSuccess = async () => {
     try {
-      // On Android the credit grant lands via AdMob SSV — no client-side
-      // /watch-ad call. Pull the fresh balance and ad stats from the server.
-      if (isAndroidNative()) {
-        const [bal, stats] = await Promise.all([
-          billingService.getBalance().catch(() => null),
-          billingService.getAdStats().catch(() => null),
-        ]);
-        if (bal?.credits != null) {
-          window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
-        }
-        if (stats) setAdStats(stats);
-        // The AdPlayer's own completion modal already shows the thank-you +
-        // credits-awarded message, so we don't fire the extra celebration
-        // overlay here (that produced a duplicate success modal).
-        setRewardMessage('');
-        setShowAdPlayer(false);
-        return;
+      const [bal, stats] = await Promise.all([
+        billingService.getBalance().catch(() => null),
+        billingService.getAdStats().catch(() => null),
+      ]);
+      if (bal?.credits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
       }
-
-      // Web (Monetag) — server awards on this call.
-      const result = await billingService.watchAd();
-
-      window.dispatchEvent(new CustomEvent('credit_updated', { detail: result.credits }));
-
-      setAdStats((prev) => ({
-        ...prev,
-        watchCount: result.watchCount,
-        streak: result.streak,
-      }));
-
-      setRewardMessage(result.streakMessage || '');
+      if (stats) setAdStats(stats);
+      // The AdPlayer's own completion modal already shows the thank-you +
+      // credits-awarded message, so we don't fire any extra celebration overlay.
       setShowAdPlayer(false);
-      setShowReward(true);
-      setTimeout(() => {
-        setShowReward(false);
-        setRewardMessage('');
-      }, 4000);
     } catch (error) {
       console.error('Ad reward failed:', error);
-      const serverMsg = error.response?.data?.message || error.message || 'Unknown error';
-      alert(`Failed to claim reward: ${serverMsg}`);
       setShowAdPlayer(false);
     }
   };
@@ -308,7 +281,9 @@ const CreditStore = () => {
             subtitle="Top up your wallet without spending a naira. Earned credits never expire."
           />
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Watch ad */}
+            {/* Watch ad — NATIVE ANDROID ONLY. Web has no ads; the earn-credits
+                surface on web is "Invite friends" + the paid top-up zones below. */}
+            {isAndroidNative() && (
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
               <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
@@ -324,7 +299,7 @@ const CreditStore = () => {
                 </div>
 
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
-                  {isAndroidNative() ? 'Watch a video' : 'Watch a quick ad'}
+                  Watch a video
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 mt-1">
                   Earn{' '}
@@ -346,11 +321,12 @@ const CreditStore = () => {
                 <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
                   <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white font-bold hover:opacity-95 transition-opacity shadow-md">
                     <Zap className="w-5 h-5 fill-white" />
-                    {isAndroidNative() ? 'Watch video' : 'Watch ad'} · +{platformReward}
+                    Watch video · +{platformReward}
                   </span>
                 </button>
               </div>
             </div>
+            )}
 
             {/* Invite friends */}
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
@@ -509,8 +485,8 @@ const CreditStore = () => {
         </div>
       </div>
 
-      {/* Ad Player Modal */}
-      {showAdPlayer && (
+      {/* Ad Player Modal — NATIVE ANDROID ONLY (web has no ads). */}
+      {showAdPlayer && isAndroidNative() && (
         <AdPlayer
           userId={getStoredUserId()}
           onComplete={handleAdSuccess}
@@ -518,41 +494,6 @@ const CreditStore = () => {
         />
       )}
 
-      {/* Reward Celebration Overlay */}
-      <AnimatePresence>
-        {showReward && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none"
-          >
-            <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20 shadow-2xl flex flex-col items-center text-center">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', bounce: 0.5 }}
-                className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-yellow-400/50"
-              >
-                <Zap className="w-12 h-12 text-white fill-white" />
-              </motion.div>
-              <h2 className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                +{platformReward} A.I Credits!
-              </h2>
-              {rewardMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-orange-500 text-white px-3 py-1 rounded-full font-bold text-sm mb-2 shadow-lg"
-                >
-                  {rewardMessage}
-                </motion.div>
-              )}
-              <p className="text-white/80 font-medium">Reward Claimed Successfully</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Invite Friend Modal */}
       <AnimatePresence>

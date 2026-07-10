@@ -44,7 +44,6 @@ import FitScoreCard from '../components/FitScoreCard';
 import NextBestAction from '../components/NextBestAction';
 import JobRequirementsCard from '../components/JobRequirementsCard';
 import DashboardTour from '../components/dashboard/DashboardTour';
-import MonetagBanner from '../components/MonetagBanner';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import {
   getPrepId,
@@ -649,9 +648,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Monetag Banner - Top */}
-        {/* <MonetagBanner style={{ marginBottom: '2rem' }} /> */}
-
         {/* Workflow Selection Cards
             "ApplyRight" is always surfaced as the recommended path so the badge
             is consistent across web and the Android/Capacitor build (it no longer
@@ -873,11 +869,6 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-
-        {/* Monetag Banner - Bottom */}
-        {/* {!workflowMode && (
-                    <MonetagBanner style={{ marginBottom: '2rem' }} />
-                )} */}
 
         {/* My Recent CVs widget was removed — /my-cvs is now the canonical
             home for CV listings (linked from the Navbar and mobile bottom

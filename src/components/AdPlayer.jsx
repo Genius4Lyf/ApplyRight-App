@@ -1,24 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, ExternalLink, Loader, CheckCircle, ArrowRight, PlayCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Loader, CheckCircle, ArrowRight, PlayCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Capacitor } from '@capacitor/core';
 import billingService from '../services/billing.service';
 import useAdMobReward from '../hooks/useAdMobReward';
 
-// True when running inside the Android Capacitor build. AdMob Rewarded Video
-// replaces the Monetag link-out on this platform; web behavior is unchanged.
-const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+// AdMob Rewarded Video → SSV → credits. NATIVE ANDROID ONLY: web has no ads, so
+// every render site mounts this component only on native. The former web
+// (Monetag link-out) branch has been removed entirely.
 
 const AdPlayer = (props) => {
   const {
     onComplete,
     onClose,
-    userId, // required on Android for AdMob SSV `user_id` field
-    title = 'Sponsored Offer',
-    subtitle = "View our sponsor's offer to unlock 5 free A.I credits instantly.",
-    successMessage = '5 A.I credits have been added to your account.',
-    buttonText = 'View Offer',
-    successTitle = '+5 A.I Credits Unlocked!',
+    userId, // required for AdMob SSV `user_id` field
     androidTitle = 'Watch a Quick Video',
     androidSubtitle = 'Watch a short video to unlock 10 A.I credits.',
     androidButtonText = 'Watch Video',
@@ -26,88 +20,21 @@ const AdPlayer = (props) => {
     androidSuccessMessage = 'Thank you for supporting ApplyRight. We look forward to making it better for you.',
   } = props;
 
-  const usingAdMob = isAndroidNative();
   const { showAd: showRewardedAd } = useAdMobReward(userId);
 
-  // States: 'initial', 'verifying', 'allocating', 'completed', 'tab-closed', 'failed'
-  // ('allocating' is Android-only: shown while the SSV reward is being verified)
+  // States: 'initial', 'verifying', 'allocating', 'completed', 'pending', 'tab-closed', 'failed'
+  // ('allocating' is shown while the SSV reward is being verified)
   const [adState, setAdState] = useState('initial');
-  const [timeLeft, setTimeLeft] = useState(10);
   const [verifyMessage, setVerifyMessage] = useState('');
-  const intervalRef = useRef(null);
-  const adWindowRef = useRef(null);
-  const windowCheckInterval = useRef(null);
   const completedRef = useRef(false);
-
-  const DIRECT_LINK_URL = 'https://otieu.com/4/10562647';
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (windowCheckInterval.current) clearInterval(windowCheckInterval.current);
-    };
-  }, []);
-
-  // ---------- Web (Monetag) flow ----------
-
-  const handleStartWebAd = () => {
-    const adWindow = window.open(DIRECT_LINK_URL, '_blank');
-    adWindowRef.current = adWindow;
-
-    setAdState('verifying');
-    completedRef.current = false;
-    startTimer();
-
-    if (adWindow) {
-      startWindowCheck();
-    }
-  };
-
-  const startTimer = () => {
-    setTimeLeft(10);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          handleAdComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const startWindowCheck = () => {
-    windowCheckInterval.current = setInterval(() => {
-      if (adWindowRef.current && adWindowRef.current.closed && !completedRef.current) {
-        clearInterval(intervalRef.current);
-        clearInterval(windowCheckInterval.current);
-        setAdState('tab-closed');
-      }
-    }, 500);
-  };
-
-  const handleAdComplete = () => {
-    if (completedRef.current) return;
-    completedRef.current = true;
-
-    if (windowCheckInterval.current) clearInterval(windowCheckInterval.current);
-
-    setAdState('completed');
-    setTimeout(() => {
-      onComplete();
-    }, 2000);
-  };
 
   // ---------- Android (AdMob Rewarded) flow ----------
   //
   // After the ad plays, credit awarding happens server-side via Google's
   // SSV callback. The client just polls /balance to detect when SSV lands.
 
-  const handleStartAdMobAd = async () => {
-    console.log(`[AdFlow] handleStartAdMobAd: AD CLICKED. userId=${userId}`);
+  const handleStartAd = async () => {
+    console.log(`[AdFlow] handleStartAd: AD CLICKED. userId=${userId}`);
     completedRef.current = false;
     setAdState('verifying');
     setVerifyMessage('Loading ad…');
@@ -159,37 +86,20 @@ const AdPlayer = (props) => {
     }
   };
 
-  const handleStartAd = usingAdMob ? handleStartAdMobAd : handleStartWebAd;
-
   const handleRetry = () => {
     setAdState('initial');
-    setTimeLeft(10);
     setVerifyMessage('');
   };
 
   const handleClose = () => {
-    if (adState === 'completed') {
-      onClose();
-    } else if (adState === 'verifying') {
-      if (window.confirm("Cancel verification? You won't receive the reward.")) {
-        onClose();
-      }
-    } else {
-      onClose();
-    }
+    onClose();
   };
 
-  const displayTitle = usingAdMob ? androidTitle : title;
-  const displaySubtitle = usingAdMob ? androidSubtitle : subtitle;
-  const displayButton = usingAdMob ? androidButtonText : buttonText;
-  const displaySuccessTitle = usingAdMob ? androidSuccessTitle : successTitle;
-  const displaySuccessMessage = usingAdMob ? androidSuccessMessage : successMessage;
-
-  // On Android the native AdMob video fills the screen on its own, and the
-  // reward lands server-side right after it ends. Hide our own modal while it's
-  // playing/loading so the user goes straight from the tap to the video, then
-  // to the success modal — no redundant "playing" spinner.
-  if (usingAdMob && adState === 'verifying') return null;
+  // The native AdMob video fills the screen on its own, and the reward lands
+  // server-side right after it ends. Hide our own modal while it's playing/
+  // loading so the user goes straight from the tap to the video, then to the
+  // success modal — no redundant "playing" spinner.
+  if (adState === 'verifying') return null;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -209,38 +119,7 @@ const AdPlayer = (props) => {
           <div className="w-24 h-24 mx-auto mb-6 relative">
             {adState === 'initial' && (
               <div className="w-full h-full bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center animate-pulse">
-                {usingAdMob ? (
-                  <PlayCircle className="w-10 h-10" />
-                ) : (
-                  <ExternalLink className="w-10 h-10" />
-                )}
-              </div>
-            )}
-            {adState === 'verifying' && !usingAdMob && (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <svg
-                  className="absolute inset-0 w-full h-full rotate-[-90deg]"
-                  viewBox="0 0 100 100"
-                >
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke="#4f46e5"
-                    strokeWidth="8"
-                    strokeDasharray="283"
-                    strokeDashoffset={283 - 283 * ((10 - timeLeft) / 10)}
-                    className="transition-all duration-1000 ease-linear"
-                  />
-                </svg>
-                <span className="text-2xl font-bold text-indigo-600 font-mono">{timeLeft}</span>
-              </div>
-            )}
-            {adState === 'verifying' && usingAdMob && (
-              <div className="w-full h-full bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
-                <Loader className="w-10 h-10 animate-spin" />
+                <PlayCircle className="w-10 h-10" />
               </div>
             )}
             {adState === 'allocating' && (
@@ -261,81 +140,45 @@ const AdPlayer = (props) => {
           </div>
 
           <h3 className="text-2xl font-bold text-slate-900 mb-2">
-            {adState === 'initial' && displayTitle}
-            {adState === 'verifying' && (usingAdMob ? 'Playing…' : 'Verifying...')}
+            {adState === 'initial' && androidTitle}
             {adState === 'allocating' && 'Allocating Credits'}
-            {adState === 'completed' && displaySuccessTitle}
+            {adState === 'completed' && androidSuccessTitle}
             {adState === 'pending' && 'Reward Pending'}
-            {adState === 'tab-closed' && (usingAdMob ? 'Ad Closed Early' : 'Ad Tab Closed')}
+            {adState === 'tab-closed' && 'Ad Closed Early'}
             {adState === 'failed' && 'Ad Failed to Load'}
           </h3>
 
           <p className="text-slate-500 mb-8 min-h-[48px]">
-            {adState === 'initial' && displaySubtitle}
-            {adState === 'verifying' && !usingAdMob && (
-              <>
-                <strong className="text-orange-600">Keep the ad tab open!</strong> Don't close it
-                until verification completes.
-              </>
-            )}
-            {adState === 'verifying' &&
-              usingAdMob &&
-              (verifyMessage || 'Watch through to the end to earn your reward.')}
+            {adState === 'initial' && androidSubtitle}
             {adState === 'allocating' &&
               'Allocating credits to your account — please wait while we verify your reward…'}
-            {adState === 'completed' && (verifyMessage || displaySuccessMessage)}
+            {adState === 'completed' && (verifyMessage || androidSuccessMessage)}
             {adState === 'pending' &&
               (verifyMessage ||
                 'Your reward is being verified and will appear in your balance shortly.')}
             {adState === 'tab-closed' &&
-              !usingAdMob &&
-              'You closed the ad tab too early. Please try again and keep the tab open for the full duration.'}
-            {adState === 'tab-closed' &&
-              usingAdMob &&
               'You closed the ad before it finished. Watch the full video to earn the reward.'}
             {adState === 'failed' &&
               "We couldn't load an ad right now. Please try again in a moment."}
           </p>
 
           {adState === 'initial' && (
-            <button
-              onClick={handleStartAd}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-            >
-              {displayButton} <ArrowRight className="w-5 h-5" />
-            </button>
-          )}
-
-          {adState === 'initial' && usingAdMob && (
-            <p className="mt-4 text-xs text-slate-400 leading-relaxed">
-              ApplyRight uses ads to make it free for everyone.
-            </p>
+            <>
+              <button
+                onClick={handleStartAd}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                {androidButtonText} <ArrowRight className="w-5 h-5" />
+              </button>
+              <p className="mt-4 text-xs text-slate-400 leading-relaxed">
+                ApplyRight uses ads to make it free for everyone.
+              </p>
+            </>
           )}
 
           {adState === 'completed' && (
             <div className="w-full py-4 bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-200 flex items-center justify-center gap-2">
               Success!
-            </div>
-          )}
-
-          {adState === 'verifying' && (
-            <div className="space-y-4">
-              <button
-                disabled
-                className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-bold text-lg cursor-wait flex items-center justify-center gap-2"
-              >
-                <Loader className="w-5 h-5 animate-spin" />
-                {usingAdMob ? 'Playing video…' : 'Verifying...'}
-              </button>
-
-              {!usingAdMob && (
-                <div className="flex items-start gap-2 bg-green-50 border border-green-100 rounded-lg p-3">
-                  <span className="text-green-600 text-lg">💚</span>
-                  <p className="text-sm text-green-700 leading-relaxed">
-                    We use ads to keep ApplyRight free for everyone. Thank you for your support!
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
@@ -369,7 +212,7 @@ const AdPlayer = (props) => {
         </div>
 
         <div className="bg-slate-50 p-4 text-xs text-center text-slate-400 border-t border-slate-100">
-          {usingAdMob ? 'AdMob — Google Mobile Ads' : 'Trusted Partner Network'}
+          AdMob — Google Mobile Ads
         </div>
       </motion.div>
     </div>

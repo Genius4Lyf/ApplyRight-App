@@ -210,12 +210,10 @@ const InterviewPrepDetail = () => {
   // syncs localStorage + fires the credit events, and returns the final balance.
   // Returns -1 on a hard failure (already toasted by the caller's catch).
   const claimAdReward = async (toastId) => {
-    // Web: claim the Monetag reward synchronously. Android: AdMob credits
-    // server-side via SSV, which can lag a few seconds — covered by the poll.
-    if (!isAndroidNative()) {
-      await api.post('/billing/watch-ad', { type: 'video' });
-    }
-
+    // NATIVE ANDROID ONLY: AdMob credits the account server-side via SSV, which
+    // can lag a few seconds — covered by the poll below. Web has no ads (this
+    // path is only reached after an AdPlayer completion, which only mounts on
+    // native), so there is no client-side reward call.
     const deadline = Date.now() + 20000;
     let credits = 0;
     let fresh = null;
@@ -906,7 +904,7 @@ const InterviewPrepDetail = () => {
         </AnimatePresence>
       </main>
 
-      {adForMoreOpen && (
+      {adForMoreOpen && adRewarded && (
         <AdPlayer
           userId={userId}
           onComplete={handleAdForMoreComplete}
@@ -924,7 +922,7 @@ const InterviewPrepDetail = () => {
         />
       )}
 
-      {adForStoriesOpen && (
+      {adForStoriesOpen && adRewarded && (
         <AdPlayer
           userId={userId}
           onComplete={handleAdForStoriesComplete}
@@ -942,7 +940,7 @@ const InterviewPrepDetail = () => {
         />
       )}
 
-      {adEssentialKind && (
+      {adEssentialKind && adRewarded && (
         <AdPlayer
           userId={userId}
           onComplete={handleAdForEssentialComplete}
@@ -960,7 +958,7 @@ const InterviewPrepDetail = () => {
         />
       )}
 
-      {adForDressOpen && (
+      {adForDressOpen && adRewarded && (
         <AdPlayer
           userId={userId}
           onComplete={handleAdForDressComplete}
