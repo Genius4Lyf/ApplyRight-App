@@ -1,9 +1,14 @@
-// Credit cost table. Costs are *enforced* on the backend
-// (applyright-backend/src/controllers/analysis.controller.js:11-22,
-//  ai.controller.js:114, resume.controller.js:8). This table mirrors them so
-// the UI can do preflight checks and show "you need N more credits" before
-// the user clicks. Keep both sides in sync if either changes.
-
+// Credit cost table for UI preflight checks ("you need N more credits" before
+// the user clicks). The backend is authoritative — costs live in
+// applyright-backend/src/config/creditCosts.js and are resolved (with any admin
+// overrides) via GET /auth/config → `creditCosts`. On app load we hydrate this
+// table from that response (see hydrateCreditCosts). The literals below are the
+// OFFLINE FALLBACK used until the fetch resolves (or if it fails); they mirror
+// the backend defaults.
+//
+// IMPORTANT: this is a live singleton. Consumers import `CREDIT_COSTS` once and
+// read fields at render time, so hydrate MUTATES this same object in place rather
+// than reassigning it — that way every importer sees updated values.
 export const CREDIT_COSTS = {
   FIT_ANALYSIS: 10,
   GENERATE_CV: 10,
@@ -16,7 +21,7 @@ export const CREDIT_COSTS = {
   GENERATE_SKILLS: 10,
   // Paid "Find more keywords" in the CV builder — richer AI extraction of ATS
   // keywords from the pasted job description. Enforced in ai.controller.js
-  // (JD_KEYWORDS_COST) and charged once per unique JD (cached on the draft).
+  // (GENERATE_JD_KEYWORDS) and charged once per unique JD (cached on the draft).
   GENERATE_JD_KEYWORDS: 5,
   // Interview Mode (a full live run). Defined for the planned premium gate but
   // NOT enforced yet — Interview Mode is free during testing (first-free-then-
@@ -25,3 +30,21 @@ export const CREDIT_COSTS = {
   // "What to wear" — tailored interview-attire guide. Web charges; Android ad-rewarded.
   GENERATE_DRESS_GUIDE: 2,
 };
+
+// The backend uses the canonical key ANALYSIS for what the frontend calls
+// FIT_ANALYSIS. Every other key matches 1:1, so we only remap this one.
+const BACKEND_TO_FRONTEND_KEY = {
+  ANALYSIS: 'FIT_ANALYSIS',
+};
+
+// Merge server-resolved costs into the live CREDIT_COSTS singleton. Called once
+// on app load with the `creditCosts` map from GET /auth/config. Missing/invalid
+// input is ignored so the offline fallback stays intact.
+export function hydrateCreditCosts(serverCosts) {
+  if (!serverCosts || typeof serverCosts !== 'object') return;
+  Object.entries(serverCosts).forEach(([key, value]) => {
+    if (typeof value !== 'number' || Number.isNaN(value)) return;
+    const localKey = BACKEND_TO_FRONTEND_KEY[key] || key;
+    CREDIT_COSTS[localKey] = value;
+  });
+}

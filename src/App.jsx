@@ -31,6 +31,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isMobile, shouldShowBottomNav } from './utils/platform';
 import { waitForReady } from './utils/splash';
+import api from './services/api';
+import { hydrateCreditCosts } from './lib/credits';
 import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
@@ -710,6 +712,16 @@ const router = createBrowserRouter([
 import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
+  // Hydrate the credit-cost table from the backend (real defaults + any admin
+  // overrides) so preflight checks reflect live prices. Runs on all platforms;
+  // on failure the offline fallback in lib/credits.js stays in effect.
+  useEffect(() => {
+    api
+      .get('/auth/config')
+      .then((res) => hydrateCreditCosts(res?.data?.creditCosts))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!isMobile()) return;
     StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});

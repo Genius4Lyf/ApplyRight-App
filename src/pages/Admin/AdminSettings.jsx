@@ -17,6 +17,50 @@ import { motion } from 'framer-motion';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import CustomSelect from '../../components/ui/CustomSelect';
 
+// Human labels + descriptions for every per-action credit cost. Keys are the
+// canonical backend names from config/creditCosts.js. Any key present in the
+// backend defaults but missing here still renders (falls back to the raw key).
+const CREDIT_COST_META = {
+  ANALYSIS: { label: 'Fit Analysis', help: 'CV ↔ job-description match analysis.' },
+  GENERATE_CV: { label: 'Generate CV', help: 'Tailored CV generation for an application.' },
+  GENERATE_COVER_LETTER: { label: 'Cover Letter', help: 'AI cover letter for an application.' },
+  GENERATE_INTERVIEW: {
+    label: 'Interview Prep',
+    help: 'Initial grounded question set + STAR answers.',
+  },
+  GENERATE_INTERVIEW_MORE: {
+    label: 'More Interview Questions',
+    help: 'Append more questions to an existing prep.',
+  },
+  GENERATE_STORIES: { label: 'Story Bank', help: 'STAR story generation (Android: ad-rewarded).' },
+  GENERATE_ESSENTIAL: {
+    label: 'Essential Answer',
+    help: '“Tell me about yourself” / “Why this company”.',
+  },
+  GENERATE_DRESS_GUIDE: { label: 'What to Wear', help: 'Tailored interview-attire guide.' },
+  GENERATE_BUNDLE: {
+    label: 'Bundle',
+    help: 'CV + cover letter + interview prep (flat, all-or-nothing).',
+  },
+  CREATE_FROM_UPLOAD: {
+    label: 'Create from Upload',
+    help: 'Parse an uploaded resume into a draft CV.',
+  },
+  GENERATE_SKILLS: { label: 'AI Skills', help: 'AI-powered skills generation.' },
+  GENERATE_JD_KEYWORDS: {
+    label: 'Find More Keywords',
+    help: 'Rich ATS keyword extraction (charged once per JD).',
+  },
+  GRADE_ANSWER: { label: 'Grade Answer', help: 'AI grading of a practiced interview answer.' },
+  GRADE_STORY: { label: 'Grade Story', help: 'AI grading of a STAR story.' },
+  FOLLOWUP: { label: 'Follow-up Question', help: 'AI follow-up in interview practice.' },
+  INTERVIEW_MODE: {
+    label: 'Interview Mode',
+    help: 'Full live run. DEFINED BUT NOT ENFORCED today.',
+  },
+  TEMPLATE_UNLOCK: { label: 'Template Unlock', help: 'Unlock a premium CV template.' },
+};
+
 const AdminSettings = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +108,25 @@ const AdminSettings = () => {
           newVal: settings.credits[key],
         });
       }
+    });
+
+    // Check per-action credit-cost overrides. A change is: a new override, a
+    // removed override (reverting to default), or a changed override value.
+    const defaults = settings.creditCostDefaults || {};
+    const oldCosts = originalSettings.creditCosts || {};
+    const newCosts = settings.creditCosts || {};
+    const costKeys = new Set([...Object.keys(oldCosts), ...Object.keys(newCosts)]);
+    costKeys.forEach((key) => {
+      const oldVal = oldCosts[key];
+      const newVal = newCosts[key];
+      if (oldVal === newVal) return;
+      const label = (CREDIT_COST_META[key] && CREDIT_COST_META[key].label) || key;
+      changesList.push({
+        category: 'Credit Cost',
+        key: label,
+        oldVal: oldVal ?? `${defaults[key]} (default)`,
+        newVal: newVal ?? `${defaults[key]} (default)`,
+      });
     });
 
     // Check Features
@@ -140,8 +203,13 @@ const AdminSettings = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
+      // Strip read-only helper fields the GET attached (resolved costs + defaults)
+      // so we only persist the actual override map + settings.
+      // eslint-disable-next-line no-unused-vars
+      const { creditCostDefaults, creditCostsResolved, ...payload } = settings;
+
       // Send update request
-      const res = await api.put('/admin/settings', settings, config);
+      const res = await api.put('/admin/settings', payload, config);
 
       setSettings(res.data.data);
       setOriginalSettings(JSON.parse(JSON.stringify(res.data.data))); // Update original to new state
@@ -169,6 +237,24 @@ const AdminSettings = () => {
         [key]: value,
       },
     }));
+  };
+
+  // Set a per-action credit-cost OVERRIDE. Only overridden keys live in
+  // settings.creditCosts; everything else falls back to the backend defaults.
+  const handleCreditCostChange = (key, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      creditCosts: { ...(prev.creditCosts || {}), [key]: value },
+    }));
+  };
+
+  // Remove an override so the action reverts to its backend default.
+  const resetCreditCost = (key) => {
+    setSettings((prev) => {
+      const next = { ...(prev.creditCosts || {}) };
+      delete next[key];
+      return { ...prev, creditCosts: next };
+    });
   };
 
   if (loading)
@@ -244,7 +330,7 @@ const AdminSettings = () => {
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <CreditCard className="w-5 h-5 text-primary" />
-                    A.I Credit Costs & Rewards
+                    Grants &amp; Rewards
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -274,58 +360,6 @@ const AdminSettings = () => {
                       <p className="text-xs text-slate-500">A.I Credits awarded to the referrer.</p>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Analysis Cost</label>
-                      <input
-                        type="number"
-                        value={settings.credits.analysisCost}
-                        onChange={(e) =>
-                          handleChange('credits', 'analysisCost', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">Cost for full Resume Analysis.</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Upload Cost</label>
-                      <input
-                        type="number"
-                        value={settings.credits.uploadCost}
-                        onChange={(e) =>
-                          handleChange('credits', 'uploadCost', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">
-                        Cost for simple Resume parsing (no job desc).
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">AI Skills Cost</label>
-                      <input
-                        type="number"
-                        value={settings.credits.aiSkillsCost}
-                        onChange={(e) =>
-                          handleChange('credits', 'aiSkillsCost', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">
-                        Cost for AI-powered skills generation.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Ad Reward</label>
-                      <input
-                        type="number"
-                        value={settings.credits.adReward}
-                        onChange={(e) =>
-                          handleChange('credits', 'adReward', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">Credits earned by watching an ad.</p>
-                    </div>
-                    <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
                         Ad Reward (Android)
                       </label>
@@ -344,43 +378,60 @@ const AdminSettings = () => {
                   </div>
                 </div>
 
-                {/* Job Feature Credit Costs */}
+                {/* Per-action Credit Costs (admin-editable overrides) */}
                 <div className="pt-6 border-t border-slate-100">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
                     <Briefcase className="w-5 h-5 text-primary" />
-                    Job Feature Credit Costs
+                    Credit Costs (per action)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Tailor CV Cost</label>
-                      <input
-                        type="number"
-                        value={settings.credits.tailorCVCost}
-                        onChange={(e) =>
-                          handleChange('credits', 'tailorCVCost', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">
-                        Cost to tailor a CV for a specific job listing.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Tailor Bundle Cost
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.credits.tailorBundleCost}
-                        onChange={(e) =>
-                          handleChange('credits', 'tailorBundleCost', parseInt(e.target.value))
-                        }
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-slate-500">
-                        Cost for full bundle (CV + Cover Letter + Interview Prep).
-                      </p>
-                    </div>
+                  <p className="text-xs text-slate-500 mb-4">
+                    What each AI/PDF action charges. Blank fields use the system default. Set a
+                    value to override; click Reset to revert an action to its default.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    {Object.keys(settings.creditCostDefaults || {}).map((key) => {
+                      const meta = CREDIT_COST_META[key] || { label: key, help: '' };
+                      const def = settings.creditCostDefaults?.[key];
+                      const override = settings.creditCosts?.[key];
+                      const isOverridden = override !== undefined && override !== null;
+                      return (
+                        <div key={key} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-semibold text-slate-700">
+                              {meta.label}
+                            </label>
+                            {isOverridden && (
+                              <button
+                                type="button"
+                                onClick={() => resetCreditCost(key)}
+                                className="text-xs text-primary hover:underline"
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            type="number"
+                            min="0"
+                            value={isOverridden ? override : ''}
+                            placeholder={`${def} (default)`}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              if (raw === '') {
+                                resetCreditCost(key);
+                              } else {
+                                const n = parseInt(raw, 10);
+                                handleCreditCostChange(key, Number.isNaN(n) ? 0 : n);
+                              }
+                            }}
+                            className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none ${
+                              isOverridden ? 'border-primary/40 bg-primary/5' : 'border-slate-200'
+                            }`}
+                          />
+                          <p className="text-xs text-slate-500">{meta.help}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
