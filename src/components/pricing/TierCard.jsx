@@ -25,7 +25,7 @@ const TierCard = ({
   const isFree = !t.priceNgn;
   const tagline = t.tagline || t.subtitle || '';
   const paySubline = isFree ? 'No card required' : 'pay with card, transfer or USSD';
-  // The featured plan can depend on currency: NGN spotlights the cheap weekly
+  // The featured plan can depend on currency: NGN spotlights the cheap 2-week
   // plan ("Best for Nigeria"), USD spotlights the better-value monthly plan
   // ("Best worldwide"). `featuredFor` makes a tier currency-conditional; tiers
   // with a plain `highlight`/`badge` (e.g. agent plans) stay the same either way.

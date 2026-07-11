@@ -53,21 +53,21 @@ export const TIERS = [
   {
     id: 'weekly_pro',
     label: 'Starter Pack',
-    tagline: 'Pay only the week you’re interviewing.',
+    tagline: 'Pay only the 2 weeks you’re interviewing.',
     priceNgn: 3500,
     priceUsd: 4,
-    period: 'week',
+    period: '14 days',
     minutes: 15,
     credits: 150,
     model: 'Standard interviewer',
-    // Spotlighted only in NGN — the cheap weekly plan is the local sweet spot.
+    // Spotlighted only in NGN — the cheap 2-week plan is the local sweet spot.
     featuredFor: 'NGN',
     badge: 'Best for Nigeria',
     features: [
-      '15 live interview minutes / week',
+      '15 live interview minutes over 2 weeks',
       '150 AI credits for CVs, cover letters & prep',
       ...PAID_CV_FEATURES,
-      'Pay only the week you’re interviewing',
+      'Pay only the 2 weeks you’re interviewing',
     ],
   },
   {

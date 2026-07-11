@@ -30,7 +30,7 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import logo from '../assets/logo/applyright-icon.png';
 
 const PLAN_LABELS = {
-  weekly_pro: 'Weekly Pro',
+  weekly_pro: '2-Week Pro',
   monthly_pro: 'Monthly Pro',
   monthly_premium: 'Premium',
 };
