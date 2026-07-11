@@ -43,7 +43,7 @@ const NotificationCenter = () => {
         {
           _id: '2',
           title: 'Free A.I Credits',
-          message: 'You earned 5 A.I credits for watching an ad.',
+          message: 'You earned 5 A.I credits from a referral.',
           type: 'credit',
           isRead: true,
           createdAt: new Date(Date.now() - 86400000),

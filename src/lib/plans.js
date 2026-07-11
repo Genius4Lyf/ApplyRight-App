@@ -18,7 +18,7 @@ export const FREE_TIER = {
   model: 'free taste',
   features: [
     '5 live interview minutes (free taste)',
-    'Free AI credits to start (earn more via ads & referrals)',
+    'Free AI credits to start (earn more via referrals)',
     'Standard AI model (GPT-4o-mini) for CV writing',
     'Professional summary — 1 tone',
     'Up to 3 bullets per role',
