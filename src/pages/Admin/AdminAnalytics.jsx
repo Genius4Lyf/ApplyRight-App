@@ -5,6 +5,8 @@ import { Users, Activity, Clock, TrendingUp, UserCheck, UserX } from 'lucide-rea
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,8 +27,20 @@ const OP_LABELS = {
   conversationTurn: 'Interview chat (text)',
   gradeAnswer: 'Answer grading',
   generateCoverLetter: 'Cover letters',
+  coachMessage: 'ATS coach chat',
+  extractResumeProfile: 'Resume profile extraction',
+  enhanceCVContent: 'CV content enhancement',
+  assessInterview: 'Interview scorecard',
+  extractCandidateData: 'Candidate data extraction',
+  generateEssentialAnswer: 'Essential answers',
+  categorizeSkillsList: 'Skill categorization',
+  factCheckInterviewQuestions: 'Interview fact-check',
+  generateAnalysisFeedback: 'CV analysis feedback',
 };
 const opLabel = (op) => OP_LABELS[op] || op;
+
+// ₦ formatter for the estimated AI-spend view.
+const fmtNgn = (n) => `₦${Math.round(Number(n) || 0).toLocaleString('en-NG')}`;
 
 const AdminAnalytics = () => {
   const [data, setData] = useState(null);
@@ -67,8 +81,23 @@ const AdminAnalytics = () => {
     );
   }
 
-  const { activeUsers, activeOverTime, featureAdoption, liveUsage, funnel, subscriptions } = data;
+  const {
+    activeUsers,
+    activeOverTime,
+    featureAdoption,
+    liveUsage,
+    funnel,
+    subscriptions,
+    aiTextCost,
+    totalAiSpendNgn,
+  } = data;
   const maxCalls = Math.max(1, ...(featureAdoption || []).map((f) => f.calls));
+
+  // Top ~8 operations by estimated cost, for the AI-spend bar chart.
+  const aiSpendRows = aiTextCost?.byOperation || [];
+  const aiSpendChart = aiSpendRows
+    .slice(0, 8)
+    .map((r) => ({ name: opLabel(r.operation), costNgn: r.costNgn }));
   const funnelSteps = [
     { label: 'Signed up', value: funnel.signups },
     { label: 'Created a CV', value: funnel.createdCv },
@@ -255,6 +284,97 @@ const AdminAnalytics = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* AI Spend (estimated) */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-1">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">AI Spend (estimated, last 30 days)</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              Estimate only — OpenAI list prices × tokens we logged per call (
+              {aiTextCost?.windowDays || 30}-day window), <strong>not</strong> the OpenAI invoice.
+              Covers text AI (CV, analysis, cover letters, interview prep). Live-interview minutes
+              are estimated separately.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-extrabold text-slate-900">
+              ~{fmtNgn(aiTextCost?.totalNgn)}
+            </p>
+            <p className="text-xs text-slate-500">
+              text AI · ~${aiTextCost?.totalUsd ?? 0}
+              {typeof totalAiSpendNgn === 'number' && (
+                <>
+                  {' '}
+                  · all AI ~{fmtNgn(totalAiSpendNgn)}
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {aiSpendChart.length > 0 && (
+          <div className="h-64 mt-5 mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={aiSpendChart} layout="vertical" margin={{ left: 20, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₦${v}`} />
+                <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => [fmtNgn(v), 'Est. cost']} />
+                <Bar dataKey="costNgn" fill="#6366f1" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className="overflow-x-auto">
+          {aiSpendRows.length > 0 ? (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 pr-4 font-medium">Operation</th>
+                  <th className="py-2 pr-4 font-medium">Model</th>
+                  <th className="py-2 pr-4 font-medium text-right">Calls</th>
+                  <th className="py-2 pr-4 font-medium text-right">Avg tokens (in/out)</th>
+                  <th className="py-2 font-medium text-right">Est. cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aiSpendRows.map((r) => (
+                  <tr
+                    key={`${r.operation}-${r.model}`}
+                    className="border-b border-slate-100 last:border-0"
+                  >
+                    <td className="py-2 pr-4 font-medium text-slate-700">{opLabel(r.operation)}</td>
+                    <td className="py-2 pr-4 text-slate-500">{r.model}</td>
+                    <td className="py-2 pr-4 text-right text-slate-600">{r.calls}</td>
+                    <td className="py-2 pr-4 text-right text-slate-500">
+                      {r.avgIn}/{r.avgOut}
+                    </td>
+                    <td className="py-2 text-right font-semibold text-slate-800">
+                      ~{fmtNgn(r.costNgn)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-slate-200">
+                  <td className="py-2 pr-4 font-bold text-slate-900" colSpan={4}>
+                    Total (text AI)
+                  </td>
+                  <td className="py-2 text-right font-bold text-slate-900">
+                    ~{fmtNgn(aiTextCost?.totalNgn)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          ) : (
+            <p className="text-center text-slate-400 text-sm py-4">
+              No text-AI usage with logged tokens in the last 30 days.
+            </p>
+          )}
         </div>
       </div>
     </AdminLayout>
