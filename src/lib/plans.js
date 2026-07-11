@@ -23,13 +23,15 @@ export const FREE_TIER = {
     'Professional summary — 1 tone',
     'Up to 3 bullets per role',
     'Apply up to 3 AI suggestions',
+    'Standard CV-vs-job-description analysis (AI suggestions)',
     'Basic templates only',
-    'Clean CV downloads at ₦500 each',
+    'Clean CV downloads at ₦750 each',
   ],
   // What the free plan does NOT include — rendered as greyed-out ✗ rows so
   // visitors can see exactly what upgrading unlocks.
   excluded: [
     'Premium AI model (GPT-4o) for sharper CV writing',
+    'ApplyRight ATS — recruiter-grade CV-vs-job analysis on our premium AI',
     'ATS Coach — live CV health & keyword score',
     'Unlimited bullets & every summary tone',
     'All premium templates',
@@ -40,6 +42,7 @@ export const FREE_TIER = {
 // gate on isPaidActive in the backend, so they're identical across paid plans.
 const PAID_CV_FEATURES = [
   'Premium AI model (GPT-4o) — sharper CVs, bullets, summaries & cover letters',
+  'ApplyRight ATS — recruiter-grade CV-vs-job-description analysis on our premium AI',
   'ATS Coach — live CV health & keyword score',
   'Unlimited bullets + apply all AI suggestions',
   'Every summary tone & all premium templates',
@@ -51,7 +54,7 @@ export const TIERS = [
     id: 'weekly_pro',
     label: 'Starter Pack',
     tagline: 'Pay only the week you’re interviewing.',
-    priceNgn: 3000,
+    priceNgn: 3500,
     priceUsd: 4,
     period: 'week',
     minutes: 15,
@@ -71,7 +74,7 @@ export const TIERS = [
     id: 'monthly_pro',
     label: 'Level Up',
     tagline: 'More minutes and credits, every month.',
-    priceNgn: 9000,
+    priceNgn: 9500,
     priceUsd: 12,
     period: 'month',
     minutes: 50,

@@ -16,6 +16,7 @@ import {
   PenTool,
   MessageSquare,
   AlertTriangle,
+  Crown,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -1705,6 +1706,18 @@ const ResumeReview = () => {
                       is optimized for{' '}
                       {application.jobId?.title || application.jobTitle || 'the role'}.
                     </p>
+                    {/* Free users get the standard analysis (GPT-4o-mini); nudge them
+                        toward the premium ApplyRight ATS analysis (GPT-4o). */}
+                    {userProfile?.plan !== 'paid' && (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/upgrade')}
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 hover:underline"
+                      >
+                        <Crown className="w-3.5 h-3.5" />
+                        Upgrade to ApplyRight ATS for our sharpest, recruiter-grade analysis
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
