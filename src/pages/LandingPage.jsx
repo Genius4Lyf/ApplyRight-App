@@ -55,8 +55,8 @@ const FEATURES = [
   {
     icon: GitCompare,
     kicker: 'CV tools · Compare',
-    title: 'CV Comparison Studio',
-    body: 'Compare two iterations of your CV side-by-side to target a specific job. See a detailed breakdown of which CV scores higher in each dimension, which must-have skills are missing, and exactly what updates increased your fit score.',
+    title: 'CV Comparison',
+    body: 'Compare two of your CVs side-by-side against the same job. See a detailed breakdown of which one scores higher overall and in each dimension, and exactly which must-have skills each one is still missing.',
     tags: ['Side-by-Side Analysis', 'Score Breakdown Diff', 'Target Job Benchmarking'],
     Vignette: CvCompareVignette,
   },

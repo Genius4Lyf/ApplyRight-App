@@ -125,11 +125,11 @@ export const PreCallBriefVignette = () => (
   </div>
 );
 
-/* 4 — CV Comparison Studio (mini side-by-side diff, reuses the ATS-bar motif) */
+/* 4 — CV comparison (mini side-by-side diff, reuses the ATS-bar motif) */
 const DIMS = [
-  { label: 'Keyword match', b: 94 },
-  { label: 'Impact & metrics', b: 88 },
-  { label: 'Skills coverage', b: 90 },
+  { label: 'Skills', b: 94 },
+  { label: 'Experience', b: 88 },
+  { label: 'Education', b: 90 },
 ];
 
 export const CvCompareVignette = () => (

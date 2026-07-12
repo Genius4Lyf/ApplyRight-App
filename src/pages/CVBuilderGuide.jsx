@@ -309,16 +309,16 @@ const CVBuilderGuide = () => {
             {/* Copy */}
             <div className="flex flex-col gap-3">
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                Compare two versions
+                Compare two CVs
               </p>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-                Not sure which draft is stronger?
+                Not sure which CV is stronger?
               </h2>
               <p className="text-lg text-slate-600 leading-relaxed">
-                Built two versions for the same job? The CV Comparison Studio scores them
-                head-to-head against the target role — showing which one scores higher on each
-                dimension, which must-have skills are still missing, and exactly which edits lifted
-                your fit score. Stop guessing which draft to send.
+                Ran two CVs against the same job? From your Applications history, compare the two
+                analyses side-by-side — see which one scores higher overall and on each dimension
+                (skills, experience, education…), plus which must-have skills each one is still
+                missing. No more guessing which to send.
               </p>
             </div>
 
@@ -343,9 +343,9 @@ const CVBuilderGuide = () => {
               </div>
               <div className="flex flex-col gap-2.5">
                 {[
-                  { label: 'Keyword match', b: 94 },
-                  { label: 'Impact & metrics', b: 88 },
-                  { label: 'Skills coverage', b: 90 },
+                  { label: 'Skills', b: 94 },
+                  { label: 'Experience', b: 88 },
+                  { label: 'Education', b: 90 },
                 ].map((d) => (
                   <div key={d.label}>
                     <div className="mb-1 flex justify-between font-mono text-[0.56rem] uppercase tracking-wide text-slate-400">
