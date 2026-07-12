@@ -28,6 +28,12 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
 };
 
+// Light stagger for list items — children reuse `fadeIn`.
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
 // The six question types you'll actually meet, with the move that wins each one.
 const QUESTION_TYPES = [
   {
@@ -170,9 +176,12 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-12"
+            className="mb-10 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              What they’re listening for
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               What Interviewers Are Actually Listening For
             </h2>
           </motion.div>
@@ -213,18 +222,27 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              The STAR method
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               The STAR Method — the Backbone of Strong Answers
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               The single most reliable way to structure a behavioural answer. Four beats that turn a
               vague memory into a story that lands.
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-14"
+          >
             {[
               {
                 letter: 'S',
@@ -247,24 +265,20 @@ const HowToAceYourInterview = () => {
                 body: 'How did it end? Quantify wherever you honestly can — “cut processing time 30%” beats “it went well.”',
               },
             ].map((s, idx) => (
-              <motion.div
-                key={idx}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                className="p-7 bg-white rounded-2xl shadow-sm border border-slate-100"
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-sky-500 text-white flex items-center justify-center text-2xl font-bold mb-4">
+              <motion.div key={idx} variants={fadeIn}>
+                <div
+                  aria-hidden="true"
+                  className="font-heading text-5xl text-indigo-600 leading-none mb-4"
+                >
                   {s.letter}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{s.title}</h3>
                 <p className="text-slate-600 leading-relaxed">{s.body}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Weak vs STAR */}
+          {/* Weak vs STAR — flat before/after */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -272,11 +286,10 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="grid md:grid-cols-2 gap-6"
           >
-            <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <XCircle className="text-rose-500 shrink-0" size={22} />
-                <span className="font-bold text-rose-600">Weak answer</span>
-              </div>
+            <div className="rounded-xl border border-slate-200 p-8">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-rose-500 mb-4">
+                Weak answer
+              </p>
               <p className="text-sm text-slate-400 italic mb-3">
                 “Tell me about a time you solved a difficult problem.”
               </p>
@@ -289,11 +302,10 @@ const HowToAceYourInterview = () => {
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle className="text-emerald-500 shrink-0" size={22} />
-                <span className="font-bold text-emerald-600">STAR answer</span>
-              </div>
+            <div className="rounded-xl border border-slate-200 p-8">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-emerald-600 mb-4">
+                STAR answer
+              </p>
               <p className="text-sm text-slate-400 italic mb-3">Same question.</p>
               <p className="text-slate-700 leading-relaxed">
                 “Our checkout page was timing out for about 1 in 5 users <em>(Situation)</em>. I
@@ -318,39 +330,40 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              The six question types
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               The Six Question Types — and How to Handle Each
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Almost every interview question is a variation of these. Know the move for each and
               nothing catches you off guard.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {QUESTION_TYPES.map((q, idx) => {
-              const Icon = q.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeIn}
-                  className="p-7 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all group"
-                >
-                  <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-5 text-indigo-600 group-hover:scale-110 transition-transform">
-                    <Icon size={26} />
-                  </div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-2 gap-x-12 gap-y-10"
+          >
+            {QUESTION_TYPES.map((q, idx) => (
+              <motion.div key={idx} variants={fadeIn} className="flex gap-4">
+                <span className="font-mono text-sm tabular-nums text-slate-400 pt-1 shrink-0">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
                   <h3 className="text-lg font-bold text-slate-900 mb-1">{q.title}</h3>
-                  <p className="text-sm text-indigo-600 font-medium mb-3">{q.example}</p>
+                  <p className="text-sm text-indigo-600 mb-2">{q.example}</p>
                   <p className="text-slate-600 leading-relaxed">{q.approach}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
@@ -362,9 +375,12 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Before &amp; during
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               Before &amp; During — the Practical Checklist
             </h2>
           </motion.div>
@@ -375,12 +391,12 @@ const HowToAceYourInterview = () => {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeIn}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8"
+              className="rounded-xl border border-slate-200 bg-white p-8"
             >
-              <div className="flex items-center gap-3 mb-5">
-                <ClipboardCheck className="text-indigo-600 shrink-0" size={24} />
-                <h3 className="text-xl font-bold text-slate-900">Before the interview</h3>
-              </div>
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+                Before
+              </p>
+              <h3 className="text-xl font-bold text-slate-900 mb-5">Before the interview</h3>
               <ul className="space-y-3 text-slate-600">
                 {[
                   'Research the company and the role — read the job description twice and find something specific about the team or product.',
@@ -402,12 +418,12 @@ const HowToAceYourInterview = () => {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeIn}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8"
+              className="rounded-xl border border-slate-200 bg-white p-8"
             >
-              <div className="flex items-center gap-3 mb-5">
-                <Mic className="text-indigo-600 shrink-0" size={24} />
-                <h3 className="text-xl font-bold text-slate-900">During the interview</h3>
-              </div>
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+                During
+              </p>
+              <h3 className="text-xl font-bold text-slate-900 mb-5">During the interview</h3>
               <ul className="space-y-3 text-slate-600">
                 {[
                   'Answer the question that was actually asked — don’t pivot to a rehearsed speech.',
@@ -433,7 +449,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mt-6 grid md:grid-cols-2 gap-6"
           >
-            <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-8">
+            <div className="border-l-4 border-indigo-600 pl-6">
               <h3 className="text-lg font-bold text-slate-900 mb-3">A note on delivery</h3>
               <p className="text-slate-600 leading-relaxed">
                 In a real, in-person interview, delivery matters too — eye contact (or camera
@@ -444,7 +460,7 @@ const HowToAceYourInterview = () => {
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-rose-100 p-8">
+            <div className="rounded-xl border border-slate-200 bg-white p-8">
               <div className="flex items-center gap-3 mb-3">
                 <AlertTriangle className="text-rose-500 shrink-0" size={22} />
                 <h3 className="text-lg font-bold text-slate-900">Common mistakes to avoid</h3>
@@ -469,71 +485,69 @@ const HowToAceYourInterview = () => {
         </div>
       </section>
 
-      {/* Real interview loops */}
+      {/* Real interview loops — numbered editorial sequence */}
       <section className="py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-12"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Interviews come in rounds
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               Real Interviews Come in Rounds
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Most hiring processes aren’t one conversation — they’re a sequence of rounds, each
               with a different person looking for something different.
             </p>
           </motion.div>
 
-          <div className="space-y-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="flex flex-col gap-10"
+          >
             {[
               {
-                icon: Users,
                 title: 'The recruiter / HR screen',
                 body: 'First contact. They’re checking motivation, basic fit, and whether your story holds together — “why this role, why now?”',
               },
               {
-                icon: Briefcase,
                 title: 'The technical / specialist round',
                 body: 'A deep dive with someone who does your job. Here it’s all about depth, reasoning, and real examples of your work.',
               },
               {
-                icon: Trophy,
                 title: 'The hiring manager',
                 body: 'The person who’ll lead you. They weigh role fit, how you’d work with the team, and whether they want you on it.',
               },
-            ].map((r, idx) => {
-              const Icon = r.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeIn}
-                  className="flex items-start gap-5 p-6 bg-slate-50 rounded-2xl border border-slate-100"
+            ].map((r, idx) => (
+              <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
+                <span
+                  aria-hidden="true"
+                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
                 >
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-indigo-600 shrink-0 border border-slate-100">
-                    <Icon size={24} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-indigo-600 mb-1">Round {idx + 1}</div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-1">{r.title}</h3>
-                    <p className="text-slate-600 leading-relaxed">{r.body}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="pt-1 md:pt-2">
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">{r.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{r.body}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
           <motion.p
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center text-slate-600 mt-8 leading-relaxed"
+            className="text-slate-600 mt-10 leading-relaxed"
           >
             That’s exactly why ApplyRight lets you{' '}
             <span className="font-semibold text-slate-900">pick your interviewer</span> and clear
