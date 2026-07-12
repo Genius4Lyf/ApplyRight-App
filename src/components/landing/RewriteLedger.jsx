@@ -118,12 +118,7 @@ const RewriteLedger = () => {
           ))}
 
           {/* Footer — ATS bar animating 48% → 92% */}
-          <motion.div
-            className={`${GRID} max-sm:!grid-cols-1 max-sm:gap-2 bg-slate-50 px-4 py-4 sm:px-6`}
-            initial={reduce ? false : 'hidden'}
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.6 }}
-          >
+          <div className={`${GRID} max-sm:!grid-cols-1 max-sm:gap-2 bg-slate-50 px-4 py-4 sm:px-6`}>
             <span className="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.05em] text-slate-400">
               ATS
               <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-slate-100">
@@ -140,20 +135,21 @@ const RewriteLedger = () => {
             <span className="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.05em] text-indigo-800">
               ATS
               <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-slate-100">
-                <motion.span
-                  className="block h-full rounded-full bg-indigo-600"
-                  variants={{
-                    hidden: { width: '0%' },
-                    visible: { width: '92%' },
-                  }}
-                  initial={reduce ? false : 'hidden'}
-                  animate={reduce ? { width: '92%' } : undefined}
-                  transition={reduce ? undefined : { duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
-                />
+                {reduce ? (
+                  <span className="block h-full w-[92%] rounded-full bg-indigo-600" />
+                ) : (
+                  <motion.span
+                    className="block h-full rounded-full bg-indigo-600"
+                    initial={{ width: '0%' }}
+                    whileInView={{ width: '92%' }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
+                  />
+                )}
               </span>
               <span className="text-[0.82rem] font-bold tabular-nums">92%</span>
             </span>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </section>

@@ -3,10 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   FileText,
-  Search,
-  Zap,
-  CheckCircle,
-  AlertCircle,
+  Filter,
   XCircle,
   Volume2,
   BookOpen,
@@ -62,6 +59,16 @@ const LandingPage = () => {
   const heroItem = {
     hidden: { opacity: 0, y: 16 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.2, 0.7, 0.2, 1] } },
+  };
+
+  // Restrained scroll-in reveal shared by the restyled sections (matches RewriteLedger).
+  const revealUp = {
+    hidden: { opacity: 0, y: 22 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.2, 0.7, 0.2, 1] } },
+  };
+  const revealStagger = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.12 } },
   };
 
   return (
@@ -239,157 +246,209 @@ const LandingPage = () => {
         {/* Rewrite Ledger — before / after */}
         <RewriteLedger />
 
-        {/* EDUCATIONAL SECTION: The Problem */}
-        <motion.section
-          id="education"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          variants={fadeInUp}
-          className="py-24 bg-slate-50/80 backdrop-blur-sm border-y border-slate-200"
-        >
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">
-                The Invisible Barrier
-              </h2>
-              <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
-                Why Good Candidates Get Rejected
-              </h3>
-              <p className="mt-4 text-xl text-slate-600 max-w-3xl mx-auto">
-                It's not about your skills. It's about your keywords.
+        {/* EDUCATIONAL SECTION: The Problem — asymmetric funnel + editorial truth */}
+        <section id="education" className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
+          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
+            <motion.div
+              initial={reduce ? false : 'hidden'}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.4 }}
+              variants={revealUp}
+              className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
+            >
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+                The invisible barrier
               </p>
-            </div>
+              <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
+                Why good candidates get rejected
+              </h2>
+              <p className="text-lg leading-relaxed text-slate-600">
+                Most rejections aren&rsquo;t a human decision — they happen before anyone reads a
+                word you wrote.
+              </p>
+            </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* The Diagram Visual */}
-              <div className="relative bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-                <div className="absolute -top-4 -right-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold text-sm shadow-sm rotate-3">
-                  TYPICAL PROCESS
-                </div>
+            <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-14">
+              {/* The rejection funnel */}
+              <motion.div
+                initial={reduce ? false : 'hidden'}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.25 }}
+                variants={revealUp}
+                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean sm:p-7"
+              >
+                <p className="mb-6 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-400">
+                  Typical process
+                </p>
 
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 opacity-50">
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                      <FileText className="text-slate-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-slate-700">You apply</h4>
-                      <p className="text-sm text-slate-500">Generic Resume sent</p>
-                    </div>
-                  </div>
-                  <div className="h-8 border-l-2 border-dashed border-slate-200 ml-6"></div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center relative">
-                      <Search className="text-red-600" />
-                      <div className="absolute -right-1 -top-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
-                    </div>
-                    <div className="flex-1 p-4 bg-red-50 rounded-lg border border-red-100">
-                      <h4 className="font-bold text-red-900">ATS Filtration (The Killer)</h4>
-                      <p className="text-sm text-red-700 mt-1">
-                        The bot scans for specific keywords from the Job Description. <br />
-                        <strong>No match? Auto-Reject.</strong>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="h-8 border-l-2 border-dashed border-slate-200 ml-6"></div>
-
-                  <div className="flex items-center gap-4 opacity-30 grayscale">
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                      <XCircle className="text-slate-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-slate-700">Human Review</h4>
-                      <p className="text-sm text-slate-500">Never sees your resume.</p>
-                    </div>
+                {/* Stage 01 — you apply */}
+                <div className="flex items-start gap-4">
+                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-400">
+                    <FileText size={18} />
+                  </span>
+                  <div className="pt-0.5">
+                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+                      Stage 01
+                    </p>
+                    <h3 className="font-semibold text-slate-700">You apply</h3>
+                    <p className="text-sm leading-relaxed text-slate-500">Generic résumé sent.</p>
                   </div>
                 </div>
-              </div>
 
-              {/* The Explanation */}
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <AlertCircle className="text-indigo-600" /> What is an ATS?
-                  </h4>
-                  <p className="text-slate-600 leading-relaxed">
-                    Applicant Tracking Systems (ATS) are software used by 99% of Fortune 500
-                    companies. They filter thousands of applications automatically. If your resume
-                    doesn't <span className="font-semibold text-slate-900">exactly match</span> the
-                    language of the job description, you are filtered out before a human ever clicks
-                    "Open".
+                <div className="ml-[22px] h-6 w-px bg-slate-200" />
+
+                {/* Stage 02 — the ATS filter (the danger step: red-600 only here) */}
+                <div className="flex items-start gap-4 border-l-2 border-red-600 pl-4">
+                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-red-200 bg-red-50 text-red-600">
+                    <Filter size={18} />
+                  </span>
+                  <div className="pt-0.5">
+                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">
+                      Stage 02
+                    </p>
+                    <h3 className="font-semibold text-red-700">ATS filter — auto-reject</h3>
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      Scans for the exact keywords in the job description.{' '}
+                      <span className="font-semibold text-red-600">No match? Rejected</span> before
+                      a human looks.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="ml-[22px] h-6 w-px bg-slate-200" />
+
+                {/* Stage 03 — human review that never happens */}
+                <div className="flex items-start gap-4 opacity-60">
+                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-400">
+                    <XCircle size={18} />
+                  </span>
+                  <div className="pt-0.5">
+                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+                      Stage 03
+                    </p>
+                    <h3 className="font-semibold text-slate-700">Human review</h3>
+                    <p className="text-sm leading-relaxed text-slate-500">
+                      Never happens — a person never sees your résumé.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* The hard truth + the facts */}
+              <motion.div
+                initial={reduce ? false : 'hidden'}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.25 }}
+                variants={revealStagger}
+                className="flex flex-col gap-8"
+              >
+                <motion.p
+                  variants={revealUp}
+                  className="font-heading text-2xl font-bold leading-snug text-slate-900 sm:text-[2rem] sm:leading-[1.2]"
+                >
+                  It&rsquo;s not your skills that get you rejected. It&rsquo;s your{' '}
+                  <span className="text-indigo-600">keywords.</span>
+                </motion.p>
+
+                <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
+                  <h3 className="font-heading text-lg font-bold text-slate-900">What is an ATS?</h3>
+                  <p className="mt-2 leading-relaxed text-slate-600">
+                    Applicant Tracking Systems screen applications at{' '}
+                    <b className="font-semibold text-indigo-800">99% of Fortune 500</b> companies,
+                    filtering thousands automatically. If your résumé doesn&rsquo;t{' '}
+                    <span className="font-semibold text-slate-900">exactly match</span> the language
+                    of the job description, you&rsquo;re filtered out before a human ever clicks
+                    &ldquo;Open&rdquo;.
                   </p>
-                </div>
-                <div>
-                  <h4 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <AlertCircle className="text-indigo-600" /> The "Spray and Pray" Mistake
-                  </h4>
-                  <p className="text-slate-600 leading-relaxed">
+                </motion.div>
+
+                <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
+                  <h3 className="font-heading text-lg font-bold text-slate-900">
+                    The &ldquo;spray and pray&rdquo; mistake
+                  </h3>
+                  <p className="mt-2 leading-relaxed text-slate-600">
                     Sending the same generic CV to 100 jobs guarantees 100 rejections. Each job
-                    description is unique, with its own required skills and "magic words".
+                    description is unique, with its own required skills and &ldquo;magic
+                    words&rdquo;.
                   </p>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
-        </motion.section>
+        </section>
 
-        {/* SOLUTION SECTION: "Why ApplyRight" */}
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          variants={fadeInUp}
-          className="py-24 relative"
-        >
-          {/* Add a subtle glass effect or just keep transparent (particles visible) */}
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">
-                The Solution
+        {/* SOLUTION SECTION: the fix — flat numbered sequence */}
+        <section className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
+          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
+            <motion.div
+              initial={reduce ? false : 'hidden'}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.4 }}
+              variants={revealUp}
+              className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
+            >
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+                The fix
+              </p>
+              <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
+                We tailor your CV for every single job.
               </h2>
-              <h3 className="text-3xl md:text-5xl font-bold text-slate-900">
-                We Tailor Your CV for Every Single Job.
-              </h3>
-            </div>
+              <p className="text-lg leading-relaxed text-slate-600">
+                Three moves that turn a generic résumé into one the software waves through.
+              </p>
+            </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div className="p-8 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all group">
-                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                  <Search size={32} />
-                </div>
-                <h4 className="text-xl font-bold text-slate-900 mb-3">1. We Scan the Job</h4>
-                <p className="text-slate-600">
+            <motion.div
+              initial={reduce ? false : 'hidden'}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={revealStagger}
+              className="grid gap-5 sm:gap-6 md:grid-cols-3"
+            >
+              <motion.div
+                variants={revealUp}
+                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
+              >
+                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">01</p>
+                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
+                  We scan the job
+                </h3>
+                <p className="mt-2 leading-relaxed text-slate-600">
                   Paste the job link. Our AI reads it like an ATS would, finding the critical
                   keywords, skills, and requirements hidden in the text.
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="p-8 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all group">
-                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                  <Zap size={32} />
-                </div>
-                <h4 className="text-xl font-bold text-slate-900 mb-3">2. We Re-Write Your CV</h4>
-                <p className="text-slate-600">
-                  We don't just add keywords. We rewrite your bullet points to highlight the{' '}
+              <motion.div
+                variants={revealUp}
+                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
+              >
+                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">02</p>
+                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
+                  We re-write your CV
+                </h3>
+                <p className="mt-2 leading-relaxed text-slate-600">
+                  We don&rsquo;t just add keywords. We rewrite your bullet points to highlight the{' '}
                   <em>relevant</em> experience that matches <em>this specific job</em>.
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="p-8 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all group">
-                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                  <CheckCircle size={32} />
-                </div>
-                <h4 className="text-xl font-bold text-slate-900 mb-3">3. You Pass the Filter</h4>
-                <p className="text-slate-600">
+              <motion.div
+                variants={revealUp}
+                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
+              >
+                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">03</p>
+                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
+                  You pass the filter
+                </h3>
+                <p className="mt-2 leading-relaxed text-slate-600">
                   You get a tailored PDF for that specific application. The ATS sees a 95%+ match,
-                  and your resume lands on the recruiter's desk.
+                  and your résumé lands on the recruiter&rsquo;s desk.
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
-        </motion.section>
+        </section>
 
         {/* ADVANCED FEATURES SECTION: Next-Gen Tools */}
         <motion.section
