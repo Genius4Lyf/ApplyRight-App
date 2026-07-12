@@ -1,29 +1,74 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  FileText,
-  CheckCircle,
-  Smartphone,
-  Zap,
-  ArrowRight,
-  XCircle,
-  AlertTriangle,
-  Search,
-  Eye,
-} from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Bot } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
+
+// Light stagger for list items — children reuse `fadeIn`.
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+// Inside the "Black Hole" — accurate, search-first framing (consistent with the
+// How ATS & Recruiters page: no "a bot auto-rejects you" absolutes).
+const STEPS = [
+  {
+    title: 'Parsing',
+    body: 'The ATS strips your resume of all design and reads it as plain text. Columns, graphics, or unusual fonts can scramble your best content into digital gibberish it can’t read.',
+  },
+  {
+    title: 'Keyword matching',
+    body: 'Recruiters search the ATS database by the skills a role needs — “React”, “Project Management”. The system reads your parsed text; if those terms aren’t there, you don’t appear in their search.',
+  },
+  {
+    title: 'Ranking',
+    body: 'Recruiters review the candidates their search surfaces — usually the ones whose skills line up with what they looked for. If your real experience isn’t written in the words they search, you never surface. It’s not a bot hard-rejecting you; you’re just invisible to the search.',
+  },
+];
+
+const DONTS = [
+  "Don't use two-column layouts (confuses parsers)",
+  "Don't use headers/footers for important info",
+  "Don't use charts, graphs, or rating bars for skills",
+  "Don't place contact info in text boxes",
+  "Don't use complex fonts or symbols",
+];
+
+const DOS = [
+  'Use a clean, single-column layout',
+  'Use standard section headings (Experience, Education)',
+  'Use standard fonts (Arial, Calibri, Roboto)',
+  'Include keywords exactly as they appear in the job ad',
+  'Save as a standard PDF or DOCX',
+];
+
+// How ApplyRight actually gets your real experience past the filter.
+const HELPS = [
+  {
+    title: 'ApplyRight ATS',
+    body: 'Reads the exact job you’re applying to, finds the keywords recruiters search for, and reframes your real experience in their language — quantified, ATS-clean, and 100% truthful. Free AI suggestions to start; recruiter-grade ApplyRight ATS on a paid plan.',
+  },
+  {
+    title: 'The live ATS Coach',
+    body: 'As you build, it scores your CV Health 0–100 in real time. A Deep Scan reads the job description to surface matched vs. missing keywords and a concrete action plan.',
+  },
+  {
+    title: 'Clean, ATS-friendly templates',
+    body: 'Single-column, plain-text-friendly layouts that parse cleanly — no columns or graphics to scramble your content.',
+  },
+];
 
 const ATSGuide = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const fadeIn = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-  };
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
@@ -49,130 +94,99 @@ const ATSGuide = () => {
         </div>
       </section>
 
-      {/* What is ATS? - Visual Explanation */}
-      <section className="py-24 bg-white relative">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Inside the Black Hole — numbered editorial sequence */}
+      <section className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Inside the "Black Hole"
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Inside the black hole
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Inside the “Black Hole”
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Understanding how the system works is the first step to beating it.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-slate-50 rounded-2xl p-8 border border-slate-100"
-            >
-              <div className="w-16 h-16 bg-white rounded-xl shadow-sm flex items-center justify-center mb-6 text-indigo-600">
-                <FileText size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">1. Parsing</h3>
-              <p className="text-slate-600">
-                The ATS strips your resume of all design. It looks for text. If you used columns,
-                graphics, or weird fonts, your resume turns into digital gibberish.
-              </p>
-            </motion.div>
-
-            {/* Step 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-slate-50 rounded-2xl p-8 border border-slate-100"
-            >
-              <div className="w-16 h-16 bg-white rounded-xl shadow-sm flex items-center justify-center mb-6 text-indigo-600">
-                <Search size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">2. Keyword Matching</h3>
-              <p className="text-slate-600">
-                The recruiter sets required skills (e.g., "React", "Project Management"). The system
-                scans your parsed text. No keywords? 0% match score.
-              </p>
-            </motion.div>
-
-            {/* Step 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="bg-slate-50 rounded-2xl p-8 border border-slate-100"
-            >
-              <div className="w-16 h-16 bg-white rounded-xl shadow-sm flex items-center justify-center mb-6 text-indigo-600">
-                <Eye size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">3. Ranking</h3>
-              <p className="text-slate-600">
-                Candidates are ranked by score. Recruiters usually only look at the top 10-20%. The
-                rest are auto-rejected without a glance.
-              </p>
-            </motion.div>
-          </div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="flex flex-col gap-10"
+          >
+            {STEPS.map((step, idx) => (
+              <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
+                <span
+                  aria-hidden="true"
+                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
+                >
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="pt-1 md:pt-2">
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed">{step.body}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Do's and Don'ts */}
+      {/* The Golden Rules — dark, flat editorial columns */}
       <section className="py-24 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">The Golden Rules</h2>
-            <p className="text-indigo-200">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
+          >
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-2">
+              The golden rules
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">The Golden Rules</h2>
+            <p className="text-lg text-slate-300 leading-relaxed">
               What keeps the robots happy (and what makes them angry).
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-14">
             {/* The Don'ts */}
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3 text-red-400">
-                <XCircle className="fill-red-400/20" /> The Don'ts
-              </h3>
+            <div>
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-rose-400 border-b border-slate-800 pb-3 mb-5">
+                Don’t
+              </p>
               <ul className="space-y-4">
-                {[
-                  "Don't use two-column layouts (confuses parsers)",
-                  "Don't use headers/footers for important info",
-                  "Don't use charts, graphs, or rating bars for skills",
-                  "Don't place contact info in text boxes",
-                  "Don't use complex fonts or symbols",
-                ].map((item, i) => (
+                {DONTS.map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
-                    <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    {item}
+                    <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-1" />
+                    <span className="leading-relaxed">{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* The Do's */}
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3 text-green-400">
-                <CheckCircle className="fill-green-400/20" /> The Do's
-              </h3>
+            <div>
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-emerald-400 border-b border-slate-800 pb-3 mb-5">
+                Do
+              </p>
               <ul className="space-y-4">
-                {[
-                  'Use a clean, single-column layout',
-                  'Use standard section headings (Experience, Education)',
-                  'Use standard fonts (Arial, Calibri, Roboto)',
-                  'Include keywords exactly as they appear in the job ad',
-                  'Save as a standard PDF or DOCX',
-                ].map((item, i) => (
+                {DOS.map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-300">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                    {item}
+                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
+                    <span className="leading-relaxed">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -181,220 +195,106 @@ const ATSGuide = () => {
         </div>
       </section>
 
-      {/* Guide: How ApplyRight Helps */}
-      <GuideSection />
-
-      {/* CTA */}
-      <section className="py-24 bg-slate-900 text-white text-center">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-8">
-            Ready to get past the robots?
-          </h2>
-          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            Build your professional, ATS-optimized resume in minutes with ApplyRight.
-          </p>
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 bg-white text-indigo-800 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
+      {/* How ApplyRight beats the ATS — editorial list */}
+      <section className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            Build My Resume Now <ArrowRight className="w-5 h-5" />
-          </Link>
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              How ApplyRight helps
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              How ApplyRight Beats the ATS
+            </h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
+              No black box — here’s exactly how the app gets your real experience past the filter.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            {HELPS.map((item, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeIn}
+                className={`py-6 ${idx > 0 ? 'border-t border-slate-200' : ''}`}
+              >
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{item.body}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="mt-10"
+          >
+            <Link
+              to="/cv-builder-guide"
+              className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
+            >
+              See the full CV Builder walkthrough <ArrowRight size={16} />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA — flat ink band with a bare Bot on the right */}
+      <section className="py-24 bg-slate-900 text-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12"
+          >
+            {/* Copy */}
+            <div className="flex flex-col items-start">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+                Get past the filter
+              </p>
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                Ready to get past the robots?
+              </h2>
+              <p className="text-lg text-slate-400 mb-8 leading-relaxed max-w-[52ch]">
+                Build your professional, ATS-optimized resume in minutes with ApplyRight.
+              </p>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 bg-white text-indigo-800 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
+              >
+                Build My Resume Now <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+
+            {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
+            <div
+              aria-hidden="true"
+              className="hidden md:grid place-items-center text-indigo-300/90"
+              style={{ width: 'clamp(120px, 15vw, 190px)' }}
+            >
+              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
       <Footer />
     </div>
-  );
-};
-
-const GuideSection = () => {
-  const [mode, setMode] = useState('scratch'); // 'scratch' or 'upload'
-
-  return (
-    <section className="py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            How ApplyRight Works
-          </h2>
-          <p className="text-lg text-slate-600">The Step-by-Step Method.</p>
-        </div>
-
-        {/* Toggle */}
-        <div className="flex justify-center mb-16">
-          <div className="inline-flex bg-slate-100 p-1 rounded-full">
-            <button
-              onClick={() => setMode('scratch')}
-              className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${mode === 'scratch' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Start From Scratch
-            </button>
-            <button
-              onClick={() => setMode('upload')}
-              className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${mode === 'upload' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Upload Existing Resume
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-16">
-          {mode === 'scratch' ? (
-            <>
-              {/* Scratch Step 1 */}
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="w-full md:w-1/2">
-                  <div className="aspect-video bg-indigo-50 rounded-2xl flex items-center justify-center border-2 border-indigo-100 p-8 shadow-sm">
-                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md">
-                      <Search className="w-10 h-10 text-indigo-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 font-bold rounded-full text-sm mb-4">
-                    Step 1
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                    Choose Your Aspiring Role
-                  </h3>
-                  <p className="text-slate-600 mb-6">
-                    Tell us the job title you are targeting (e.g., "Product Manager" or "Software
-                    Engineer"). This helps our AI tailor the experience to your specific career
-                    path.
-                  </p>
-                </div>
-              </div>
-
-              {/* Scratch Step 2 */}
-              <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
-                <div className="w-full md:w-1/2">
-                  <div className="aspect-video bg-indigo-50 rounded-2xl flex items-center justify-center border-2 border-indigo-100 p-8 shadow-sm">
-                    <div className="space-y-3 w-3/4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">
-                          AI
-                        </div>
-                        <div className="h-2 bg-indigo-200 rounded w-full"></div>
-                      </div>
-                      <div className="h-2 bg-white rounded w-full"></div>
-                      <div className="h-2 bg-white rounded w-5/6"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 font-bold rounded-full text-sm mb-4">
-                    Step 2
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                    AI-Assisted Content Entry
-                  </h3>
-                  <p className="text-slate-600 mb-6">
-                    Fill out your CV fields with confidence. Our AI co-pilot assists you in
-                    real-time, suggesting impactful action verbs and optimizing your bullet points
-                    for maximum ATS readability.
-                  </p>
-                </div>
-              </div>
-
-              {/* Scratch Step 3 */}
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="w-full md:w-1/2">
-                  <div className="aspect-video bg-indigo-50 rounded-2xl flex items-center justify-center border-2 border-indigo-100 p-8 shadow-sm">
-                    <div className="relative">
-                      <FileText className="w-20 h-24 text-indigo-300" />
-                      <div className="absolute -bottom-2 -right-2 bg-green-500 text-white rounded-full p-2">
-                        <CheckCircle className="w-6 h-6" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 font-bold rounded-full text-sm mb-4">
-                    Step 3
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Review & Download</h3>
-                  <p className="text-slate-600 mb-6">
-                    Preview your resume with our professional, ATS-verified templates. Once you're
-                    satisfied with the review, simply click submit to download your perfect CV.
-                  </p>
-                  <Link
-                    to="/register"
-                    className="text-indigo-600 font-bold hover:gap-2 transition-all inline-flex items-center"
-                  >
-                    Start Building <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Upload Step 1 */}
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="w-full md:w-1/2">
-                  <div className="aspect-video bg-sky-50 rounded-2xl flex items-center justify-center border-2 border-sky-100 p-8 shadow-sm">
-                    <div className="w-24 h-32 border-2 border-dashed border-sky-300 rounded-lg flex items-center justify-center bg-white relative">
-                      <FileText className="w-10 h-10 text-sky-400" />
-                      <div className="absolute top-0 right-0 -mt-2 -mr-2 w-6 h-6 bg-sky-500 rounded-full animate-ping"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="inline-block px-3 py-1 bg-sky-100 text-sky-700 font-bold rounded-full text-sm mb-4">
-                    Step 1
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Upload & Scan</h3>
-                  <p className="text-slate-600 mb-6">
-                    Upload your existing PDF or DOCX resume. ApplyRight instantly scans the
-                    document, parsing your data and identifying formatting issues that might trap
-                    you in the ATS filter.
-                  </p>
-                </div>
-              </div>
-
-              {/* Upload Step 2 */}
-              <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
-                <div className="w-full md:w-1/2">
-                  <div className="aspect-video bg-sky-50 rounded-2xl flex items-center justify-center border-2 border-sky-100 p-8 shadow-sm">
-                    <div className="bg-white p-6 rounded-xl shadow-lg border border-sky-100 flex flex-col gap-3">
-                      <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                        <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                          <Smartphone size={16} />
-                        </span>
-                        <span className="font-semibold text-slate-700">Edit Manually</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sky-600">
-                        <span className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
-                          <Zap size={16} />
-                        </span>
-                        <span className="font-bold">ATS Optimized Version</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="inline-block px-3 py-1 bg-sky-100 text-sky-700 font-bold rounded-full text-sm mb-4">
-                    Step 2
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Edit or Optimize</h3>
-                  <p className="text-slate-600 mb-6">
-                    You have full control. You can manually edit the parsed data to refine details,
-                    OR simply click to get an <strong>ATS Optimized Version</strong> of your resume
-                    automatically generated for you.
-                  </p>
-                  <Link
-                    to="/register"
-                    className="text-sky-600 font-bold hover:gap-2 transition-all inline-flex items-center"
-                  >
-                    Upload Resume <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </section>
   );
 };
 

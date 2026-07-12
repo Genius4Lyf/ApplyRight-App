@@ -15,8 +15,8 @@ import {
   Wand2,
   LayoutTemplate,
   PlayCircle,
-  Lightbulb,
   ArrowRight,
+  Bot,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Seo from '../components/Seo';
@@ -26,6 +26,12 @@ import { Link } from 'react-router-dom';
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
+
+// Light stagger for list items — children reuse `fadeIn`.
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -180,31 +186,34 @@ const CVBuilderGuide = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
               Step-by-step video tutorials
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               The 8-Step Flow, Explained
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               The builder guides you through eight steps in order. Watch the short video for each
               one, then read the tips below it.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-2 gap-6"
+          >
             {STEPS.map((step, idx) => {
               const Icon = step.icon;
               return (
                 <motion.div
                   key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
                   variants={fadeIn}
-                  className="flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg hover:border-indigo-100 transition-all"
+                  className="flex flex-col rounded-xl border border-slate-200 overflow-hidden"
                 >
                   {/* Per-step video — 16:9 responsive frame */}
                   <div className="relative w-full aspect-video bg-slate-100">
@@ -227,25 +236,23 @@ const CVBuilderGuide = () => {
 
                   {/* Step copy */}
                   <div className="p-8">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="shrink-0 w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <Icon size={24} />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-indigo-600">Step {idx + 1}</div>
-                        <h3 className="text-xl font-bold text-slate-900">{step.title}</h3>
-                      </div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-mono text-sm tabular-nums text-slate-400">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
+                      <Icon size={18} className="text-indigo-600 shrink-0" />
+                      <h3 className="text-lg font-bold text-slate-900">{step.title}</h3>
                     </div>
                     <p className="text-slate-600 leading-relaxed">{step.body}</p>
                   </div>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ATS Coach */}
+      {/* ATS Coach — flat editorial cards */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
@@ -253,111 +260,195 @@ const CVBuilderGuide = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Your Live ATS Coach
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              The live ATS Coach
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Your Live ATS Coach</h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
               As you build, a coaching panel scores your CV in real time and tells you exactly what
               to fix next.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {COACH_FEATURES.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeIn}
-                  className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                      <Icon size={28} />
-                    </div>
-                    <span className="text-xs font-bold py-1 px-3 rounded-full bg-slate-100 text-slate-600">
-                      {item.tag}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
-                  <p className="text-slate-600 leading-relaxed">{item.body}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-3 gap-6"
+          >
+            {COACH_FEATURES.map((item, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeIn}
+                className="rounded-xl border border-slate-200 bg-white p-8"
+              >
+                <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-indigo-800 mb-4">
+                  {item.tag}
+                </p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{item.body}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Pro tips */}
+      {/* Compare Two Versions — the CV Comparison Studio */}
       <section className="py-24 bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="grid items-center gap-10 md:grid-cols-2 md:gap-14"
+          >
+            {/* Copy */}
+            <div className="flex flex-col gap-3">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+                Compare two versions
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+                Not sure which draft is stronger?
+              </h2>
+              <p className="text-lg text-slate-600 leading-relaxed">
+                Built two versions for the same job? The CV Comparison Studio scores them
+                head-to-head against the target role — showing which one scores higher on each
+                dimension, which must-have skills are still missing, and exactly which edits lifted
+                your fit score. Stop guessing which draft to send.
+              </p>
+            </div>
+
+            {/* Flat before/after panel */}
+            <div className="rounded-xl border border-slate-200 p-6">
+              <p className="mb-4 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-slate-400">
+                CV A vs CV B
+              </p>
+              <div className="mb-4 grid grid-cols-2 gap-3">
+                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-center">
+                  <p className="font-mono text-[0.55rem] uppercase tracking-wider text-slate-400">
+                    CV A
+                  </p>
+                  <p className="font-heading text-2xl font-bold tabular-nums text-slate-500">78</p>
+                </div>
+                <div className="rounded border border-indigo-200 bg-indigo-50 p-3 text-center">
+                  <p className="font-mono text-[0.55rem] uppercase tracking-wider text-indigo-800">
+                    CV B
+                  </p>
+                  <p className="font-heading text-2xl font-bold tabular-nums text-indigo-800">91</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { label: 'Keyword match', b: 94 },
+                  { label: 'Impact & metrics', b: 88 },
+                  { label: 'Skills coverage', b: 90 },
+                ].map((d) => (
+                  <div key={d.label}>
+                    <div className="mb-1 flex justify-between font-mono text-[0.56rem] uppercase tracking-wide text-slate-400">
+                      <span>{d.label}</span>
+                      <span className="text-indigo-800">{d.b}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <span
+                        className="block h-full rounded-full bg-indigo-600"
+                        style={{ width: `${d.b}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pro tips — flat editorial cards */}
+      <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-amber-100 text-amber-700 text-sm font-bold mb-4">
-              <Lightbulb size={16} />
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
               Pro tips
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Quick Wins</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Quick Wins</h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
               Small habits that make a big difference to how your CV performs.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-3 gap-6"
+          >
             {TIPS.map((tip, idx) => {
               const Icon = tip.icon;
               return (
                 <motion.div
                   key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
                   variants={fadeIn}
-                  className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100"
+                  className="rounded-xl border border-slate-200 bg-white p-8"
                 >
-                  <div className="w-14 h-14 bg-amber-50 rounded-xl flex items-center justify-center mb-6 text-amber-600">
-                    <Icon size={28} />
-                  </div>
+                  <Icon size={20} className="text-indigo-600 mb-4" />
                   <h3 className="text-xl font-bold text-slate-900 mb-3">{tip.title}</h3>
                   <p className="text-slate-600 leading-relaxed">{tip.body}</p>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — flat ink band with a bare Bot on the right */}
       <section className="py-24 bg-slate-900 text-white">
-        <div className="max-w-3xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
+            className="grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to build yours?</h2>
-            <p className="text-lg text-slate-300 mb-10 leading-relaxed">
-              Put the guide into practice. Create your CV, watch your CV Health score climb, and
-              download an ATS-ready PDF — your first one is free.
-            </p>
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-xl shadow-lg font-semibold transition-colors"
+            {/* Copy */}
+            <div className="flex flex-col items-start">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+                Put it into practice
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Ready to build yours?
+              </h2>
+              <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-[52ch]">
+                Put the guide into practice. Create your CV, watch your CV Health score climb, and
+                download an ATS-ready PDF — your first one is free.
+              </p>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
+              >
+                Start building free
+                <ArrowRight size={20} />
+              </Link>
+            </div>
+
+            {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
+            <div
+              aria-hidden="true"
+              className="hidden md:grid place-items-center text-indigo-300/90"
+              style={{ width: 'clamp(120px, 15vw, 190px)' }}
             >
-              Start building free
-              <ArrowRight size={20} />
-            </Link>
+              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            </div>
           </motion.div>
         </div>
       </section>
