@@ -1,25 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, MessageSquare, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Mail, MessageSquare } from 'lucide-react';
+import PublicNavbar from '../components/PublicNavbar';
+import Footer from '../components/Footer';
 
 const Contact = () => {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center gap-2 group text-slate-600 hover:text-indigo-600 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Back to Home</span>
-          </Link>
-          <div className="font-bold text-xl tracking-tight text-indigo-600">ApplyRight</div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      <PublicNavbar />
 
-      <main className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <main className="flex-grow w-full max-w-4xl mx-auto px-6 pt-24 pb-12 md:pt-28 md:pb-20">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -27,7 +17,10 @@ const Contact = () => {
           className="max-w-2xl mx-auto"
         >
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-indigo-600 text-white mb-6 shadow-xl shadow-indigo-200">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-4">
+              Support · we reply within 24h
+            </p>
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-indigo-600 text-white mb-6">
               <Mail size={40} />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Get in Touch</h1>
@@ -36,7 +29,7 @@ const Contact = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 text-center">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 md:p-12 text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-6">Support & Inquiries</h2>
             <p className="text-slate-600 mb-8 leading-relaxed">
               For all support requests, business inquiries, or if you just want to say hello, please
@@ -61,6 +54,8 @@ const Contact = () => {
           </div>
         </motion.div>
       </main>
+
+      <Footer />
     </div>
   );
 };

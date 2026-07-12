@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import logo from '../assets/logo/applyright-icon.png';
-import Particles, { initParticlesEngine } from '@tsparticles/react';
-import { loadSlim } from '@tsparticles/slim';
+import PublicNavbar from '../components/PublicNavbar';
 import { Handshake } from 'lucide-react';
 
 const FeedbackPage = () => {
@@ -16,59 +14,6 @@ const FeedbackPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [init, setInit] = useState(false);
-
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
-  }, []);
-
-  const ParticleBackground = React.memo(({ init }) => {
-    const particlesOptions = useMemo(
-      () => ({
-        fullScreen: { enable: false },
-        background: { color: { value: 'transparent' } },
-        fpsLimit: 120,
-        interactivity: {
-          events: {
-            onHover: { enable: true, mode: 'repulse' },
-            onClick: { enable: true, mode: 'push' },
-            resize: true,
-          },
-          modes: {
-            repulse: { distance: 100, duration: 0.4 },
-            push: { quantity: 4 },
-          },
-        },
-        particles: {
-          color: { value: '#4F46E5' },
-          links: { color: '#4F46E5', distance: 150, enable: true, opacity: 0.3, width: 1 },
-          move: {
-            enable: true,
-            speed: 1,
-            direction: 'none',
-            random: false,
-            straight: false,
-            outModes: 'out',
-          },
-          number: { density: { enable: true, area: 800 }, value: 90 },
-          opacity: { value: 0.4 },
-          shape: { type: 'circle' },
-          size: { value: { min: 1, max: 3 } },
-        },
-      }),
-      []
-    );
-
-    if (!init) return null;
-
-    return (
-      <Particles id="feedback-particles" className="absolute inset-0" options={particlesOptions} />
-    );
-  });
 
   const checkUser = async (e) => {
     e.preventDefault();
@@ -118,26 +63,7 @@ const FeedbackPage = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Fixed Background Layer */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Solid Background Base */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100"></div>
-
-        {/* Particles */}
-        <ParticleBackground init={init} />
-      </div>
-
-      {/* Fixed Header with Logo */}
-      <header className="fixed top-0 left-0 right-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <Link to="/" className="inline-flex items-center gap-2 group">
-            <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">
-              ApplyRight
-            </span>
-          </Link>
-        </div>
-      </header>
+      <PublicNavbar />
 
       {/* Content Layer */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-24">
@@ -176,7 +102,7 @@ const FeedbackPage = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
                 <p className="text-gray-600 mb-6">Your feedback has been submitted successfully.</p>
-                <Link to="/" className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link to="/" className="text-indigo-600 hover:text-indigo-800 font-medium">
                   Return to Home
                 </Link>
               </motion.div>
