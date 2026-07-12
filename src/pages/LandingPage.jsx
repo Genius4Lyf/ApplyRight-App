@@ -15,6 +15,7 @@ import Seo from '../components/Seo';
 import { motion, useReducedMotion, useScroll, useMotionValueEvent } from 'framer-motion';
 import axios from 'axios';
 import FeedbackCard from '../components/FeedbackCard';
+import Footer from '../components/Footer';
 import LiveInterviewCard from '../components/landing/LiveInterviewCard';
 import RewriteLedger from '../components/landing/RewriteLedger';
 import {
@@ -641,63 +642,7 @@ const LandingPage = () => {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 py-12">
-          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-slate-100 dark:border-slate-800 mb-8">
-              <div className="flex items-center gap-2">
-                <img src={logo} alt="ApplyRight Logo" className="h-6 w-auto" />
-                <span className="font-heading text-lg font-bold tracking-tight text-slate-900">
-                  Apply<span className="text-indigo-600">Right</span>
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-600 justify-center">
-                <Link to="/pricing" className="hover:text-indigo-600 transition-colors">
-                  Pricing
-                </Link>
-                <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
-                  Privacy Policy
-                </Link>
-                <Link to="/terms" className="hover:text-indigo-600 transition-colors">
-                  Terms of Service
-                </Link>
-                <Link to="/contact" className="hover:text-indigo-600 transition-colors">
-                  Contact Us
-                </Link>
-                <Link to="/feedback" className="hover:text-indigo-600 transition-colors">
-                  Give Feedback
-                </Link>
-                <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
-                  ATS Guide
-                </Link>
-                <Link
-                  to="/how-ats-recruiters-work"
-                  className="hover:text-indigo-600 transition-colors"
-                >
-                  How ATS &amp; Recruiters Work
-                </Link>
-                <Link
-                  to="/how-to-ace-your-interview"
-                  className="hover:text-indigo-600 transition-colors"
-                >
-                  How to Ace Your Interview
-                </Link>
-              </div>
-
-              <div className="text-slate-500 text-sm">
-                © {new Date().getFullYear()} ApplyRight. All rights reserved.
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
-              <strong>Disclaimer:</strong> ApplyRight is an interview preparation tool. All mock
-              sessions, voice conversations, and generated questions are designed solely for
-              practice and confidence-building purposes. The questions simulated in our application
-              are illustrative and do not guarantee the actual questions that will be encountered in
-              your live hiring process.
-            </p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </motion.div>
   );
