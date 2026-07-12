@@ -6,11 +6,11 @@ import {
   FileText,
   XCircle,
   CheckCircle,
-  Quote,
   Target,
   BarChart3,
   ShieldCheck,
   ArrowRight,
+  Bot,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
@@ -19,6 +19,12 @@ import { Link } from 'react-router-dom';
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
+
+// Light stagger for list items — children reuse `fadeIn`.
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 // The reality, minus the myths. Each row pairs a popular myth with what
@@ -112,90 +118,107 @@ const HowATSRecruitersWork = () => {
         </div>
       </section>
 
-      {/* Myth vs Reality */}
+      {/* Myth vs Reality — tracked-corrections ledger */}
       <section className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Myth vs. Reality</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Myth vs reality
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Myth vs. Reality</h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
               Most “ATS hacks” are built on fear. The truth is more useful — and far less scary.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
             {MYTHS.map((item, idx) => (
               <motion.div
                 key={idx}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
                 variants={fadeIn}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8"
+                className={`flex gap-4 py-6 ${idx > 0 ? 'border-t border-slate-200' : ''}`}
               >
-                <div className="flex items-start gap-3 mb-5">
-                  <XCircle className="text-rose-500 shrink-0 mt-0.5" size={22} />
-                  <p className="text-slate-500 font-medium italic">{item.myth}</p>
-                </div>
-                <div className="flex items-start gap-3 pt-5 border-t border-slate-100">
-                  <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={22} />
-                  <p className="text-slate-800 leading-relaxed">{item.reality}</p>
+                <span className="font-mono text-sm tabular-nums text-slate-400 pt-0.5 leading-relaxed">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-2">
+                    <XCircle className="text-rose-400 shrink-0 mt-1" size={15} />
+                    <p className="text-slate-400 italic line-through decoration-rose-400/70 decoration-2 leading-relaxed">
+                      {item.myth}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex items-start gap-2">
+                    <ArrowRight className="text-indigo-600 shrink-0 mt-1" size={16} />
+                    <p className="text-slate-800 font-medium leading-relaxed">{item.reality}</p>
+                  </div>
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* What actually happens */}
+      {/* What actually happens — numbered editorial sequence */}
       <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              What actually happens
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               What Actually Happens to Your Application
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Three real steps — none of them a mysterious robot judge.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {REALITY_STEPS.map((step, idx) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeIn}
-                  className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all group"
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="flex flex-col gap-10"
+          >
+            {REALITY_STEPS.map((step, idx) => (
+              <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
+                <span
+                  aria-hidden="true"
+                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
                 >
-                  <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                    <Icon size={30} />
-                  </div>
-                  <div className="text-sm font-bold text-indigo-600 mb-2">Step {idx + 1}</div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{step.title}</h3>
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="pt-1 md:pt-2">
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
+                    {step.title}
+                  </h3>
                   <p className="text-slate-600 leading-relaxed">{step.body}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Recruiter pull-quote */}
+      {/* Recruiter pull-quote — flat editorial quote */}
       <section className="py-20 bg-white">
         <div className="max-w-3xl mx-auto px-6">
           <motion.div
@@ -203,83 +226,156 @@ const HowATSRecruitersWork = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="relative bg-indigo-50 rounded-3xl p-10 border border-indigo-100"
+            className="border-l-4 border-indigo-600 pl-6 md:pl-8"
           >
-            <Quote className="text-indigo-300 mb-4" size={36} />
-            <p className="text-xl md:text-2xl font-medium text-slate-800 leading-relaxed">
+            <p className="font-heading text-2xl md:text-3xl text-slate-900 leading-snug">
               “I don’t reject resumes for missing a buzzword. I search for the skills the role needs
               — and I only find the candidates who wrote them down.”
             </p>
-            <p className="mt-6 text-slate-500 font-semibold">— How recruiters actually screen</p>
+            <p className="mt-6 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+              — How recruiters actually screen
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* The honest playbook */}
+      {/* The honest playbook — alternating editorial rows */}
       <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              The honest playbook
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               So What Actually Works?
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Not tricks. Just your real experience, written in the language recruiters search for.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="flex flex-col gap-14 md:gap-20"
+          >
             {PLAYBOOK.map((item, idx) => {
               const Icon = item.icon;
+              const reverse = idx % 2 === 1;
               return (
                 <motion.div
                   key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
                   variants={fadeIn}
-                  className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100"
+                  className="grid items-center gap-8 md:grid-cols-2 md:gap-14"
                 >
-                  <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6 text-indigo-600">
-                    <Icon size={28} />
+                  {/* Copy */}
+                  <div className={reverse ? 'md:order-2' : ''}>
+                    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+                      Playbook · {String(idx + 1).padStart(2, '0')}
+                    </p>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-3">{item.title}</h3>
+                    <p className="text-slate-600 leading-relaxed">{item.body}</p>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
-                  <p className="text-slate-600 leading-relaxed">{item.body}</p>
+
+                  {/* Visual — flat bordered panel */}
+                  <div className={reverse ? 'md:order-1' : ''}>
+                    <div className="rounded-xl border border-slate-200 bg-white p-6">
+                      <Icon size={20} className="text-indigo-600 mb-4" />
+                      {idx === 0 && (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-slate-400 italic line-through decoration-rose-400/70 decoration-2">
+                            “Handled customer issues”
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <ArrowRight className="text-indigo-600 shrink-0" size={16} />
+                            <p className="font-semibold text-indigo-800">
+                              “stakeholder management”
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {idx === 1 && (
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="font-mono text-xl md:text-2xl font-bold tabular-nums text-indigo-800">
+                            4.2s → 0.8s
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 font-mono text-sm font-bold text-indigo-800">
+                            ↑ 12%
+                          </span>
+                        </div>
+                      )}
+                      {idx === 2 && (
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-start gap-2">
+                            <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={16} />
+                            <p className="text-slate-800">“Led a 4-person support desk.”</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <XCircle className="text-rose-400 shrink-0 mt-0.5" size={16} />
+                            <p className="text-slate-400 italic line-through decoration-rose-400/70 decoration-2">
+                              “Managed a $5M budget.”
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — flat ink band with a bare Bot on the right */}
       <section className="py-24 bg-slate-900 text-white">
-        <div className="max-w-3xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
+            className="grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">ApplyRight does this for you</h2>
-            <p className="text-lg text-slate-300 mb-10 leading-relaxed">
-              Our <span className="font-semibold text-white">ApplyRight ATS suggestions</span> read
-              the job you’re applying to, find the keywords recruiters search for, and reframe your
-              real experience in their language — quantified, ATS-clean, and 100% truthful. No
-              fabrication, no stuffing.
-            </p>
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-xl shadow-lg font-semibold transition-colors"
+            {/* Copy */}
+            <div className="flex flex-col items-start">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+                ATS-ready, honestly
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                ApplyRight does this for you
+              </h2>
+              <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-[52ch]">
+                Our <span className="font-semibold text-white">ApplyRight ATS suggestions</span>{' '}
+                read the job you’re applying to, find the keywords recruiters search for, and
+                reframe your real experience in their language — quantified, ATS-clean, and 100%
+                truthful. No fabrication, no stuffing.
+              </p>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
+              >
+                Build an ATS-ready CV free
+                <ArrowRight size={20} />
+              </Link>
+            </div>
+
+            {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
+            <div
+              aria-hidden="true"
+              className="hidden md:grid place-items-center text-indigo-300/90"
+              style={{ width: 'clamp(120px, 15vw, 190px)' }}
             >
-              Build an ATS-ready CV free
-              <ArrowRight size={20} />
-            </Link>
+              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            </div>
           </motion.div>
         </div>
       </section>
