@@ -18,6 +18,7 @@ import {
   Trophy,
   ClipboardCheck,
   AlertTriangle,
+  Bot,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
@@ -449,7 +450,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mt-6 grid md:grid-cols-2 gap-6"
           >
-            <div className="border-l-4 border-indigo-600 pl-6">
+            <div className="rounded-xl border border-slate-200 p-8">
               <h3 className="text-lg font-bold text-slate-900 mb-3">A note on delivery</h3>
               <p className="text-slate-600 leading-relaxed">
                 In a real, in-person interview, delivery matters too — eye contact (or camera
@@ -460,7 +461,7 @@ const HowToAceYourInterview = () => {
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-8">
+            <div className="rounded-xl border border-slate-200 p-8">
               <div className="flex items-center gap-3 mb-3">
                 <AlertTriangle className="text-rose-500 shrink-0" size={22} />
                 <h3 className="text-lg font-bold text-slate-900">Common mistakes to avoid</h3>
@@ -565,44 +566,48 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-indigo-500/20 text-indigo-300 text-sm font-bold mb-6">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-2">
               The exact rubric
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
               How ApplyRight Scores Your Mock Interview
             </h2>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-300 leading-relaxed">
               No black box. After every interview we read your transcript and rate it across seven
               dimensions — the same things real interviewers look for. Here’s exactly how it works.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
-            {RUBRIC.map((d, idx) => {
-              const Icon = d.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeIn}
-                  className="p-6 bg-slate-800/60 rounded-2xl border border-slate-700"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-300 shrink-0">
-                      <Icon size={20} />
-                    </div>
-                    <h3 className="font-bold text-white leading-tight">{d.label}</h3>
-                  </div>
-                  <p className="text-slate-300 text-sm leading-relaxed">{d.body}</p>
-                  <div className="mt-4 text-xs font-semibold text-slate-500">Scored 0–100</div>
-                </motion.div>
-              );
-            })}
-          </div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-2 gap-x-12 mb-14"
+          >
+            {RUBRIC.map((d, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeIn}
+                className={`flex gap-4 py-6 border-slate-800 ${
+                  idx > 0 ? 'border-t' : ''
+                } ${idx === 1 ? 'md:border-t-0' : ''}`}
+              >
+                <span className="font-mono text-sm tabular-nums text-slate-500 pt-0.5 shrink-0">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-white leading-tight mb-1">{d.label}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">{d.body}</p>
+                  <p className="mt-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-500">
+                    Scored 0–100
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
           {/* Band legend */}
           <motion.div
@@ -704,18 +709,27 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Practise with a conversation
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               Practise With a Real Conversation
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed">
               Reading about interviews only gets you so far. ApplyRight’s live voice interview lets
               you actually do it — and get scored.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {[
               {
                 icon: Mic,
@@ -752,48 +766,59 @@ const HowToAceYourInterview = () => {
               return (
                 <motion.div
                   key={idx}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
                   variants={fadeIn}
-                  className="p-7 bg-slate-50 rounded-2xl border border-slate-100"
+                  className="rounded-xl border border-slate-200 p-7"
                 >
-                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 text-indigo-600">
-                    <Icon size={24} />
-                  </div>
+                  <Icon size={22} className="text-indigo-600 mb-4" />
                   <h3 className="text-lg font-bold text-slate-900 mb-2">{f.title}</h3>
                   <p className="text-slate-600 leading-relaxed">{f.body}</p>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Primary CTA */}
+      {/* Primary CTA — flat ink band with a bare Bot on the right */}
       <section className="py-24 bg-slate-900 text-white">
-        <div className="max-w-3xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
+            className="grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
-              Ready to find out where you stand?
-            </h2>
-            <p className="text-lg text-slate-400 mb-10 leading-relaxed">
-              Everything on this page is something you can practise right now — in a real, scored
-              conversation grounded in your CV and the job you want.
-            </p>
-            <button
-              onClick={startInterview}
-              className="inline-flex items-center gap-2 bg-white text-indigo-800 hover:bg-slate-100 hover:-translate-y-0.5 py-4 px-8 rounded-md shadow-sm font-bold text-lg transition-all"
+            {/* Copy */}
+            <div className="flex flex-col items-start">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+                See where you stand
+              </p>
+              <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight text-white">
+                Ready to find out where you stand?
+              </h2>
+              <p className="text-lg text-slate-400 mb-8 leading-relaxed max-w-[52ch]">
+                Everything on this page is something you can practise right now — in a real, scored
+                conversation grounded in your CV and the job you want.
+              </p>
+              <button
+                onClick={startInterview}
+                className="inline-flex items-center gap-2 bg-white text-indigo-800 hover:bg-slate-100 hover:-translate-y-0.5 py-4 px-8 rounded-md shadow-sm font-bold text-lg transition-all"
+              >
+                Take an Interview Session and See your Score
+                <ArrowRight size={22} />
+              </button>
+              <p className="mt-5 text-sm text-slate-400">Free 5-minute taste — no card needed.</p>
+            </div>
+
+            {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
+            <div
+              aria-hidden="true"
+              className="hidden md:grid place-items-center text-indigo-300/90"
+              style={{ width: 'clamp(120px, 15vw, 190px)' }}
             >
-              Take an Interview Session and See your Score
-              <ArrowRight size={22} />
-            </button>
-            <p className="mt-5 text-sm text-slate-400">Free 5-minute taste — no card needed.</p>
+              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -806,14 +831,20 @@ const HowToAceYourInterview = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-12"
+            className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Questions, Answered
-            </h2>
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              Questions, answered
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Questions, Answered</h2>
           </motion.div>
 
-          <div className="space-y-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
             {[
               {
                 q: 'Is the score harsh?',
@@ -838,17 +869,14 @@ const HowToAceYourInterview = () => {
             ].map((item, idx) => (
               <motion.div
                 key={idx}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
                 variants={fadeIn}
-                className="bg-slate-50 rounded-2xl border border-slate-100 p-7"
+                className={`py-7 ${idx > 0 ? 'border-t border-slate-200' : ''}`}
               >
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{item.q}</h3>
                 <p className="text-slate-600 leading-relaxed">{item.a}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
