@@ -36,7 +36,7 @@ const TierCard = ({
     <div
       className={`relative h-full w-full rounded-2xl p-7 flex flex-col bg-white dark:bg-slate-900 border transition-all duration-300 ease-out hover:-translate-y-1 ${
         highlight
-          ? 'border-indigo-500 ring-1 ring-indigo-500/40 shadow-xl shadow-indigo-500/10 lg:scale-[1.03] z-10'
+          ? 'border-indigo-500 ring-1 ring-indigo-500/40 shadow-md lg:scale-[1.03] z-10'
           : 'border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md'
       }`}
     >
@@ -81,7 +81,7 @@ const TierCard = ({
         disabled={current || loading || disabled}
         className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
           highlight
-            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
             : 'border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
         }`}
       >

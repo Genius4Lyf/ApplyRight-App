@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileDown } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import PublicNavbar from '../components/PublicNavbar';
+import Footer from '../components/Footer';
 import TierCard from '../components/pricing/TierCard';
 import { TIERS, AGENT_TIERS, FREE_TIER } from '../lib/plans';
 
@@ -29,12 +30,15 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
+      <PublicNavbar />
 
-      <main className="flex-grow py-12 px-4">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-grow pt-24 pb-12 sm:pt-28">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+              Pricing · one-time · no auto-renewal
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight text-slate-900 leading-tight">
               {audience === 'agent'
                 ? 'Create CVs for clients at scale'
                 : 'Land more interviews, for less'}
@@ -57,13 +61,13 @@ const Pricing = () => {
 
           {/* Audience toggle — public page only */}
           <div className="flex justify-center mb-6">
-            <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200/50 shadow-inner">
+            <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200">
               <button
                 type="button"
                 onClick={() => setAudience('seeker')}
                 className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 ${
                   audience === 'seeker'
-                    ? 'bg-slate-900 text-white shadow-md'
+                    ? 'bg-slate-900 text-white'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -74,7 +78,7 @@ const Pricing = () => {
                 onClick={() => setAudience('agent')}
                 className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 inline-flex items-center gap-1.5 ${
                   audience === 'agent'
-                    ? 'bg-slate-900 text-white shadow-md'
+                    ? 'bg-slate-900 text-white'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -85,13 +89,13 @@ const Pricing = () => {
 
           {/* Currency toggle */}
           <div className="flex justify-center mb-10">
-            <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200/50 shadow-inner">
+            <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200">
               <button
                 type="button"
                 onClick={() => setCurrency('NGN')}
                 className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'NGN'
-                    ? 'bg-slate-900 text-white shadow-md'
+                    ? 'bg-slate-900 text-white'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -103,7 +107,7 @@ const Pricing = () => {
                 onClick={() => setCurrency('USD')}
                 className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'USD'
-                    ? 'bg-slate-900 text-white shadow-md'
+                    ? 'bg-slate-900 text-white'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -112,10 +116,13 @@ const Pricing = () => {
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Tiers — agents fit a 3-up grid; job seekers (4 cards) become a
-              horizontal "peek" carousel so the next card hints you can scroll. */}
-          {audience === 'agent' ? (
+        {/* Tiers — agents fit a 3-up grid (centered); job seekers (4 cards) become
+            a full-width horizontal "peek" carousel so the next card hints you can
+            scroll and slides off the true screen edge. */}
+        {audience === 'agent' ? (
+          <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch pt-3">
               {tiers.map((t) => (
                 <TierCard
@@ -127,21 +134,29 @@ const Pricing = () => {
                 />
               ))}
             </div>
-          ) : (
-            <div className="flex gap-6 items-stretch overflow-x-auto snap-x snap-mandatory pt-5 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {tiers.map((t) => (
-                <div key={t.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] lg:w-[30%] flex">
-                  <TierCard
-                    tier={t}
-                    currency={currency}
-                    ctaLabel={t.id === 'free' ? 'Start free' : 'Get started'}
-                    onCta={choose}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
+        ) : (
+          <div
+            className="flex gap-6 items-stretch overflow-x-auto snap-x snap-mandatory pt-5 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{
+              paddingInline: 'max(1rem, calc((100% - 72rem) / 2 + 1rem))',
+              scrollPaddingInline: 'max(1rem, calc((100% - 72rem) / 2 + 1rem))',
+            }}
+          >
+            {tiers.map((t) => (
+              <div key={t.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] lg:w-[30%] flex">
+                <TierCard
+                  tier={t}
+                  currency={currency}
+                  ctaLabel={t.id === 'free' ? 'Start free' : 'Get started'}
+                  onCta={choose}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
+        <div className="max-w-6xl mx-auto px-4">
           <p className="text-center text-xs text-slate-400 mt-10">
             {audience === 'agent'
               ? 'Plus pay-as-you-go credit top-ups. One-time payment via Flutterwave — no auto-renewal.'
@@ -149,6 +164,8 @@ const Pricing = () => {
           </p>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

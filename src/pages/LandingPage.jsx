@@ -11,12 +11,12 @@ import {
   GitCompare,
   Bot,
 } from 'lucide-react';
-import logo from '../assets/logo/applyright-icon.png';
 import Seo from '../components/Seo';
-import { motion, useReducedMotion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import axios from 'axios';
 import FeedbackCard from '../components/FeedbackCard';
 import Footer from '../components/Footer';
+import PublicNavbar from '../components/PublicNavbar';
 import LiveInterviewCard from '../components/landing/LiveInterviewCard';
 import RewriteLedger from '../components/landing/RewriteLedger';
 import {
@@ -65,9 +65,6 @@ const FEATURES = [
 const LandingPage = () => {
   const reduce = useReducedMotion();
 
-  const { scrollY } = useScroll();
-  const [scrolled, setScrolled] = useState(false);
-
   const [featuredFeedbacks, setFeaturedFeedbacks] = useState([]);
 
   useEffect(() => {
@@ -83,10 +80,6 @@ const LandingPage = () => {
     };
     fetchFeatured();
   }, []);
-
-  useMotionValueEvent(scrollY, 'change', (latest) => {
-    setScrolled(latest > 50);
-  });
 
   // Restrained staggered hero load.
   const heroContainer = {
@@ -124,77 +117,7 @@ const LandingPage = () => {
       {/* Scrollable Content Layer */}
       <div className="relative z-10">
         {/* Navigation */}
-        {/* Floating Navigation */}
-        <motion.nav
-          initial={{
-            width: '100%',
-            top: 0,
-            borderRadius: 0,
-            borderBottomWidth: 0,
-            borderBottomColor: 'rgba(241, 245, 249, 0)',
-            backgroundColor: 'rgba(255, 255, 255, 0)',
-            backdropFilter: 'blur(0px)',
-          }}
-          animate={
-            scrolled
-              ? {
-                  width: '90%',
-                  maxWidth: '1080px',
-                  top: 20,
-                  borderRadius: '100px',
-                  borderBottomWidth: 1,
-                  borderBottomColor: 'rgba(241, 245, 249, 1)', // visible border when floating
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow:
-                    '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                }
-              : {
-                  width: '100%',
-                  maxWidth: '100%',
-                  top: 0,
-                  borderRadius: 0,
-                  borderBottomWidth: 0,
-                  borderBottomColor: 'rgba(241, 245, 249, 0)',
-                  backgroundColor: 'rgba(255, 255, 255, 0)',
-                  backdropFilter: 'blur(0px)',
-                  boxShadow: 'none',
-                }
-          }
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className={`fixed z-50 left-0 right-0 mx-auto overflow-hidden`}
-        >
-          <div
-            className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}
-          >
-            <Link to="/" className="flex items-center gap-2 group">
-              <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
-              <span className="font-heading text-xl font-bold tracking-tight text-slate-900">
-                Apply<span className="text-indigo-600">Right</span>
-              </span>
-            </Link>
-            <div className="flex items-center gap-4 sm:gap-6">
-              <Link
-                to="/pricing"
-                className="hidden text-sm text-slate-600 transition-colors hover:text-slate-900 sm:block"
-              >
-                Pricing
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex min-h-[44px] items-center text-sm text-slate-600 transition-colors hover:text-slate-900"
-              >
-                Log in
-              </Link>
-              <Link
-                to="/register"
-                className="inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:border-indigo-800 hover:bg-indigo-800"
-              >
-                Start free
-              </Link>
-            </div>
-          </div>
-        </motion.nav>
+        <PublicNavbar />
 
         {/* Hero Section */}
         <section className="px-5 pt-28 pb-16 sm:px-8 lg:px-12 lg:pt-32 lg:pb-20">
@@ -643,7 +566,10 @@ const LandingPage = () => {
               </div>
 
               {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-              <div aria-hidden="true" className="hidden place-items-center pr-2 text-indigo-300/90 md:grid">
+              <div
+                aria-hidden="true"
+                className="hidden place-items-center pr-2 text-indigo-300/90 md:grid"
+              >
                 <Bot
                   strokeWidth={1.25}
                   className="w-auto"

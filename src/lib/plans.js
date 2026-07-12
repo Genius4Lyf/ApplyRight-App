@@ -30,11 +30,9 @@ export const FREE_TIER = {
   // What the free plan does NOT include — rendered as greyed-out ✗ rows so
   // visitors can see exactly what upgrading unlocks.
   excluded: [
-    'Premium AI model (GPT-4o) for sharper CV writing',
-    'ApplyRight ATS — recruiter-grade CV-vs-job analysis on our premium AI',
-    'ATS Coach — live CV health & keyword score',
-    'Unlimited bullets & every summary tone',
-    'All premium templates',
+    'Premium AI model (GPT-4o) for sharper writing',
+    'ApplyRight ATS — recruiter-grade CV-vs-JD analysis',
+    'Unlimited downloads & all premium templates',
   ],
 };
 
@@ -85,8 +83,9 @@ export const TIERS = [
     badge: 'Best worldwide',
     features: [
       '50 live interview minutes / month',
-      '500 AI credits / month',
-      'Everything in Starter Pack',
+      '500 AI credits for CVs, cover letters & prep',
+      ...PAID_CV_FEATURES,
+      'Fresh minutes & credits every month',
     ],
   },
   {
@@ -100,10 +99,10 @@ export const TIERS = [
     credits: 1000,
     model: 'Sharpest interviewer (premium AI)',
     features: [
-      '45 live minutes with our sharpest AI',
+      '45 live minutes with our sharpest interviewer AI',
       '1,000 AI credits / month',
-      'Everything in Level Up',
-      'Full recordings & AI reports',
+      ...PAID_CV_FEATURES,
+      'Full interview recordings & AI reports',
       'Priority support',
     ],
   },
