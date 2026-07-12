@@ -9,6 +9,7 @@ import {
   BookOpen,
   Printer,
   GitCompare,
+  Bot,
 } from 'lucide-react';
 import logo from '../assets/logo/applyright-icon.png';
 import Seo from '../components/Seo';
@@ -616,27 +617,39 @@ const LandingPage = () => {
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               variants={revealUp}
-              className="flex flex-col items-start gap-5 rounded-xl bg-slate-900 px-6 py-12 sm:px-12 sm:py-14"
+              className="grid grid-cols-1 items-center gap-8 rounded-xl bg-slate-900 px-6 py-12 sm:px-12 sm:py-14 md:grid-cols-[1fr_auto] md:gap-12"
             >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300">
-                One shot at a first impression
-              </p>
-              <h2 className="max-w-[20ch] font-heading text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.7rem]">
-                Stop guessing. Start interviewing.
-              </h2>
-              <p className="max-w-[52ch] text-lg leading-relaxed text-slate-400">
-                Join thousands of job seekers who stopped fighting the system and started making it
-                work for them.
-              </p>
-              <Link
-                to="/register"
-                className="mt-1 inline-flex items-center rounded-md bg-white px-5 py-2.5 font-semibold text-indigo-800 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-100"
-              >
-                Create free account
-              </Link>
-              <p className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-500">
-                No credit card required · Optimized specifically for ATS
-              </p>
+              {/* Copy */}
+              <div className="flex flex-col items-start gap-5">
+                <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300">
+                  One shot at a first impression
+                </p>
+                <h2 className="max-w-[20ch] font-heading text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.7rem]">
+                  Stop guessing. Start interviewing.
+                </h2>
+                <p className="max-w-[52ch] text-lg leading-relaxed text-slate-400">
+                  Join thousands of job seekers who stopped fighting the system and started making
+                  it work for them.
+                </p>
+                <Link
+                  to="/register"
+                  className="mt-1 inline-flex items-center rounded-md bg-white px-5 py-2.5 font-semibold text-indigo-800 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  Create free account
+                </Link>
+                <p className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-500">
+                  No credit card required · Optimized specifically for ATS
+                </p>
+              </div>
+
+              {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
+              <div aria-hidden="true" className="hidden place-items-center pr-2 text-indigo-300/90 md:grid">
+                <Bot
+                  strokeWidth={1.25}
+                  className="w-auto"
+                  style={{ height: 'clamp(120px, 15vw, 190px)' }}
+                />
+              </div>
             </motion.div>
           </div>
         </section>
