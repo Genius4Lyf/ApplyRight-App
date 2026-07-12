@@ -12,6 +12,7 @@ import {
   Eye,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
+import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 
 const ATSGuide = () => {
@@ -30,20 +31,14 @@ const ATSGuide = () => {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
-        {/* Background Elements */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60"></div>
-
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-6">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
               Ultimate Guide & Walkthrough
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               How to Beat the <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">
-                Resume Robots
-              </span>
+              <span className="text-indigo-600">Resume Robots</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
               Most companies use Applicant Tracking Systems (ATS), and recruiters search them by
@@ -190,17 +185,17 @@ const ATSGuide = () => {
       <GuideSection />
 
       {/* CTA */}
-      <section className="py-24 bg-gradient-to-br from-indigo-900 to-indigo-800 text-white text-center">
+      <section className="py-24 bg-slate-900 text-white text-center">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-8">
             Ready to get past the robots?
           </h2>
-          <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
             Build your professional, ATS-optimized resume in minutes with ApplyRight.
           </p>
           <Link
             to="/register"
-            className="inline-flex items-center gap-2 bg-white text-indigo-900 font-bold py-4 px-10 rounded-xl hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            className="inline-flex items-center gap-2 bg-white text-indigo-800 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
           >
             Build My Resume Now <ArrowRight className="w-5 h-5" />
           </Link>
@@ -208,32 +203,7 @@ const ATSGuide = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-slate-900">ApplyRight</span>
-          </div>
-
-          <div className="flex flex-wrap gap-6 justify-center text-sm font-medium text-slate-600">
-            <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="hover:text-indigo-600 transition-colors">
-              Terms of Service
-            </Link>
-            <Link to="/contact" className="hover:text-indigo-600 transition-colors">
-              Contact Us
-            </Link>
-            <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
-              ATS Guide
-            </Link>
-          </div>
-
-          <div className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} ApplyRight. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

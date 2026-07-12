@@ -20,7 +20,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
-import { Link, useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer';
+import { useNavigate } from 'react-router-dom';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
@@ -137,25 +138,18 @@ const HowToAceYourInterview = () => {
 
       {/* Hero */}
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60"></div>
-
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-6">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
               Interviewing is a learnable skill
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
-              How to{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">
-                Ace Your Interview
-              </span>
+              How to <span className="text-indigo-600">Ace Your Interview</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
               Nobody is born good at interviews — it’s a skill you practise. This guide shows you
-              exactly what great answers look like, and exactly how we score you, so you can rehearse
-              for the real thing with confidence.
+              exactly what great answers look like, and exactly how we score you, so you can
+              rehearse for the real thing with confidence.
             </p>
             <button
               onClick={startInterview}
@@ -198,8 +192,9 @@ const HowToAceYourInterview = () => {
             <p>
               Vague, generic, or rehearsed-sounding answers are noise — they could come from any
               candidate for any job. The candidates who stand out aren’t the smoothest talkers;
-              they’re the ones who give <span className="font-semibold text-slate-900">specific,
-              evidenced answers</span> that clearly map to what the role needs.
+              they’re the ones who give{' '}
+              <span className="font-semibold text-slate-900">specific, evidenced answers</span> that
+              clearly map to what the role needs.
             </p>
             <p>
               Everything below — the STAR method, the question playbook, and how we score you — is
@@ -444,8 +439,8 @@ const HowToAceYourInterview = () => {
                 In a real, in-person interview, delivery matters too — eye contact (or camera
                 contact on video), steady pacing, structure over rambling, staying calm under
                 pressure. Our score reads a transcript, so it judges your{' '}
-                <span className="font-semibold text-slate-900">content only</span> — but in the room,
-                how you say it counts. Practise both.
+                <span className="font-semibold text-slate-900">content only</span> — but in the
+                room, how you say it counts. Practise both.
               </p>
             </div>
 
@@ -488,8 +483,8 @@ const HowToAceYourInterview = () => {
               Real Interviews Come in Rounds
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Most hiring processes aren’t one conversation — they’re a sequence of rounds, each with
-              a different person looking for something different.
+              Most hiring processes aren’t one conversation — they’re a sequence of rounds, each
+              with a different person looking for something different.
             </p>
           </motion.div>
 
@@ -541,8 +536,8 @@ const HowToAceYourInterview = () => {
             className="text-center text-slate-600 mt-8 leading-relaxed"
           >
             That’s exactly why ApplyRight lets you{' '}
-            <span className="font-semibold text-slate-900">pick your interviewer</span> and clear one
-            round to unlock the next — it mirrors a real hiring loop, so you practise the whole
+            <span className="font-semibold text-slate-900">pick your interviewer</span> and clear
+            one round to unlock the next — it mirrors a real hiring loop, so you practise the whole
             journey, not just one chat.
           </motion.p>
         </div>
@@ -762,7 +757,7 @@ const HowToAceYourInterview = () => {
       </section>
 
       {/* Primary CTA */}
-      <section className="py-24 bg-gradient-to-br from-indigo-600 to-sky-500 text-white">
+      <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div
             initial="hidden"
@@ -773,20 +768,18 @@ const HowToAceYourInterview = () => {
             <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
               Ready to find out where you stand?
             </h2>
-            <p className="text-lg text-indigo-100 mb-10 leading-relaxed">
+            <p className="text-lg text-slate-400 mb-10 leading-relaxed">
               Everything on this page is something you can practise right now — in a real, scored
               conversation grounded in your CV and the job you want.
             </p>
             <button
               onClick={startInterview}
-              className="inline-flex items-center gap-2 bg-white text-indigo-700 hover:bg-indigo-50 py-4 px-8 rounded-xl shadow-xl font-bold text-lg transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-indigo-800 hover:bg-slate-100 hover:-translate-y-0.5 py-4 px-8 rounded-md shadow-sm font-bold text-lg transition-all"
             >
               Take an Interview Session and See your Score
               <ArrowRight size={22} />
             </button>
-            <p className="mt-5 text-sm text-indigo-100">
-              Free 5-minute taste — no card needed.
-            </p>
+            <p className="mt-5 text-sm text-slate-400">Free 5-minute taste — no card needed.</p>
           </motion.div>
         </div>
       </section>
@@ -846,33 +839,7 @@ const HowToAceYourInterview = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <span className="text-lg font-bold text-slate-900">ApplyRight</span>
-            <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-600 justify-center">
-              <Link to="/how-ats-recruiters-work" className="hover:text-indigo-600 transition-colors">
-                How ATS &amp; Recruiters Work
-              </Link>
-              <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
-                ATS Guide
-              </Link>
-              <Link to="/contact" className="hover:text-indigo-600 transition-colors">
-                Contact Us
-              </Link>
-              <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-indigo-600 transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-            <div className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} ApplyRight. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

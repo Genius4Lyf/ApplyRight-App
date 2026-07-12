@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
+import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 
 const fadeIn = {
@@ -94,20 +95,13 @@ const HowATSRecruitersWork = () => {
 
       {/* Hero */}
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60"></div>
-
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-6">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
               The reality, minus the myths
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
-              How ATS &amp; Recruiters{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500">
-                Actually Work
-              </span>
+              How ATS &amp; Recruiters <span className="text-indigo-600">Actually Work</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-4 leading-relaxed">
               The internet is full of scary “the robots rejected you” myths. Here’s what genuinely
@@ -291,30 +285,7 @@ const HowATSRecruitersWork = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <span className="text-lg font-bold text-slate-900">ApplyRight</span>
-            <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-600 justify-center">
-              <Link to="/ats-guide" className="hover:text-indigo-600 transition-colors">
-                ATS Guide
-              </Link>
-              <Link to="/contact" className="hover:text-indigo-600 transition-colors">
-                Contact Us
-              </Link>
-              <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-indigo-600 transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-            <div className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} ApplyRight. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
