@@ -303,7 +303,7 @@ const FeedbackPage = () => {
 
                     <Link
                       to="/register"
-                      className="block w-full py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-200 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:-translate-y-0.5 mb-4"
+                      className="block w-full py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-indigo-200 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 mb-4"
                     >
                       Sign Up Now
                     </Link>
