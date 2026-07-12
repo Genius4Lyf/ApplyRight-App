@@ -1,0 +1,295 @@
+<title>ApplyRight — Sleek White Concept</title>
+<style>
+  /* Sleek white, ApplyRight brand indigo — FLAT color, no gradients/glows.
+     Serif headings (Merriweather; Georgia offline) + mono UI labels for craft. */
+  :root {
+    --paper: #f8fafc;        /* slate-50 — chosen cool neutral, not pure white */
+    --white: #ffffff;
+    --paper-2: #eef1f6;
+    --ink: #0f172a;          /* slate-900 */
+    --ink-soft: #475569;     /* slate-600 */
+    --ink-faint: #8a94a6;    /* muted — the "before" state */
+    --rule: #dde2ea;         /* hairline */
+    --accent: #4f46e5;       /* indigo-600 — flat brand accent */
+    --accent-deep: #3730a3;  /* indigo-800 — accent text */
+    --accent-soft: #eef2ff;  /* indigo-50 — flat chip tint */
+    --live: #059669;         /* emerald-600 — semantic "live" */
+    --strike: #dc2626;       /* red-600 — proofreader's deletion mark only */
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
+
+  .kicker { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-deep); margin: 0; }
+  h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(2.5rem, 5.6vw, 4.3rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  h1 .accent { color: var(--accent); position: relative; }
+  h1 .accent::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0.02em; height: 3px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
+  .loaded h1 .accent::after { animation: uline 0.5s ease forwards; animation-delay: 0.75s; }
+  @keyframes uline { to { transform: scaleX(1); } }
+  h2 { font-family: var(--serif); font-weight: 700; font-size: clamp(1.85rem, 4vw, 2.7rem); line-height: 1.12; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+  .lede { font-size: clamp(1.05rem, 1.5vw, 1.22rem); color: var(--ink-soft); max-width: 52ch; margin: 0; }
+
+  nav { padding: 1.3rem 0; border-bottom: 1px solid var(--rule); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .word { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
+  .word b { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: clamp(0.9rem, 2vw, 1.8rem); }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; font-size: 0.92rem; }
+  .nav-links a:hover { color: var(--ink); }
+  @media (max-width: 620px) { .hide-sm { display: none; } }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.98rem;
+    padding: 0.7rem 1.35rem; border-radius: 6px; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--white); text-decoration: none;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.12); transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); background: var(--accent-deep); border-color: var(--accent-deep); }
+  .btn.small { padding: 0.48rem 0.95rem; font-size: 0.88rem; }
+  .ghost { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.98rem; display: inline-flex; gap: 0.4rem; align-items: center; border-bottom: 2px solid var(--accent); padding-bottom: 2px; }
+  .ghost:hover { color: var(--accent-deep); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  /* Hero — pulled up */
+  .hero { padding: clamp(1.25rem, 3vw, 2.5rem) 0 clamp(2.5rem, 6vw, 4.5rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.02fr 0.98fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 2.2rem; } }
+  .hero-copy { display: flex; flex-direction: column; gap: 1.35rem; }
+  .cta-row { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+  .microtrust { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-soft); margin: 0; letter-spacing: 0.04em; }
+  .microtrust b { color: var(--accent-deep); font-weight: 500; }
+
+  /* Live interview panel — a crisp real product UI, flat */
+  .card-ui { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 12px 34px -18px rgba(15,23,42,0.28); }
+  .live-card { padding: clamp(1.3rem, 3vw, 1.8rem); display: flex; flex-direction: column; gap: 1.2rem; }
+  .card-top-rule { height: 3px; background: var(--accent); border-radius: 8px 8px 0 0; }
+  .live-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .rec { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.13em; color: var(--live); text-transform: uppercase; }
+  .rec .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 0 rgba(5,150,105,0.5); animation: pulse 1.9s ease-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(5,150,105,0.45); } 100% { box-shadow: 0 0 0 10px rgba(5,150,105,0); } }
+  .seat { font-family: var(--mono); font-size: 0.64rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+  .q-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.45rem; }
+  .question { font-size: 1.12rem; line-height: 1.42; margin: 0; color: var(--ink); }
+  .q-block { display: flex; gap: 0.75rem; align-items: flex-start; }
+  .ai-avatar { flex: none; width: 34px; height: 34px; border-radius: 8px; background: var(--accent); color: var(--white); display: grid; place-items: center; margin-top: 0.15rem; }
+  .ai-avatar svg { width: 20px; height: 20px; }
+  .wave { display: flex; align-items: flex-end; gap: 4px; height: 50px; }
+  .wave i { flex: 1; background: var(--accent); border-radius: 2px; height: 30%; animation: bar 1.1s ease-in-out infinite; }
+  @keyframes bar { 0%, 100% { height: 20%; } 50% { height: 90%; } }
+  .readiness { display: flex; align-items: center; gap: 0.8rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .readiness .label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .meter { flex: 1; height: 6px; background: var(--paper-2); border-radius: 3px; overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 82%; background: var(--accent); }
+  .readiness .pct { font-family: var(--mono); font-weight: 700; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+
+  /* ---- Before / After rewrite ledger (aligned rows) ---- */
+  .rewrite { padding: clamp(2.8rem, 6vw, 5rem) 0; border-top: 1px solid var(--rule); }
+  .rw-head { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2.2rem; max-width: 48ch; }
+  .rw-ledger { border: 1px solid var(--rule); border-radius: 8px; background: var(--white); overflow: hidden; box-shadow: 0 12px 34px -20px rgba(15,23,42,0.22); }
+  .rw-cols, .rw-row, .rw-foot { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; gap: clamp(0.75rem, 2vw, 1.6rem); }
+  .rw-cols { padding: 0.85rem clamp(1rem, 2.5vw, 1.6rem); border-bottom: 1px solid var(--rule); background: var(--paper); }
+  .rw-tag { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 0; }
+  .rw-tag.before { color: var(--ink-faint); }
+  .rw-tag.after { color: var(--accent-deep); }
+  .rw-row { padding: clamp(0.85rem, 2vw, 1.1rem) clamp(1rem, 2.5vw, 1.6rem); border-bottom: 1px solid var(--rule); }
+  .rw-row .line { margin: 0; font-size: 0.97rem; line-height: 1.5; }
+  .rw-row .line.before { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--strike); text-decoration-thickness: 2px; }
+  .rw-row .line.after { color: var(--ink); }
+  .rw-row .line.after b { color: var(--accent-deep); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rw-mk { justify-self: center; color: var(--accent); font-family: var(--mono); font-size: 0.95rem; }
+  .rw-foot { padding: 1.05rem clamp(1rem, 2.5vw, 1.6rem); background: var(--paper); }
+  .ats { display: flex; align-items: center; gap: 0.55rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  .ats .track { flex: 1; height: 5px; background: var(--paper-2); border-radius: 3px; overflow: hidden; }
+  .ats .track i { display: block; height: 100%; border-radius: 3px; }
+  .ats .n { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+  .ats.before { color: var(--ink-faint); }
+  .ats.before .track i { width: 48%; background: var(--ink-faint); }
+  .ats.after { color: var(--accent-deep); }
+  .ats.after .track i { width: 0; background: var(--accent); transition: width 1.1s cubic-bezier(0.2,0.7,0.2,1); }
+  .rw-ledger.in .ats.after .track i { width: 92%; }
+  @media (max-width: 760px) {
+    .rw-cols { display: none; }
+    .rw-row, .rw-foot { grid-template-columns: 1fr; gap: 0.45rem; }
+    .rw-mk { display: none; }
+    .rw-row .line.before::before { content: "WAS "; font-size: 0.6rem; letter-spacing: 0.1em; }
+    .rw-row .line.after::before { content: "NOW "; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--accent-deep); }
+  }
+
+  .steps { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--rule); }
+  .steps-head { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2.4rem; max-width: 46ch; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.2rem, 2.5vw, 2rem); }
+  @media (max-width: 780px) { .grid3 { grid-template-columns: 1fr; gap: 1.3rem; } }
+  .step { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .step .no { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; }
+  .step h3 { font-family: var(--serif); font-size: 1.22rem; margin: 0; font-weight: 700; }
+  .step p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+  .closing { padding: clamp(3rem, 7vw, 5rem) 0; }
+  .closing-inner { background: var(--ink); color: var(--paper); border-radius: 10px; padding: clamp(2.2rem, 5vw, 3.6rem); display: flex; flex-direction: column; gap: 1.35rem; align-items: flex-start; }
+  .closing-inner h2 { color: var(--white); }
+  .closing-inner .kicker { color: #a5b4fc; }
+  .closing-inner .btn { background: var(--white); color: var(--accent-deep); border-color: var(--white); }
+  .closing-inner .btn:hover { background: var(--paper-2); }
+
+  footer { padding: 2.5rem 0 3.5rem; border-top: 1px solid var(--rule); }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .foot .tag { color: var(--ink-soft); font-size: 0.9rem; font-family: var(--serif); font-style: italic; }
+
+  [data-rise] { opacity: 0; transform: translateY(16px); }
+  .loaded [data-rise] { animation: rise 0.65s cubic-bezier(0.2,0.7,0.2,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.2,0.7,0.2,1); }
+  [data-reveal].in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-rise], [data-reveal] { opacity: 1 !important; transform: none !important; animation: none !important; }
+    .wave i { animation: none !important; height: 45% !important; }
+    .rec .dot { animation: none !important; }
+    h1 .accent::after { animation: none !important; transform: scaleX(1) !important; }
+    .after .doc-foot .bar i, .after.in .doc-foot .bar i { transition: none !important; width: 92% !important; }
+    .btn:hover { transform: none; }
+  }
+</style>
+
+<nav>
+  <div class="wrap bar">
+    <div class="word">Apply<b>Right</b></div>
+    <div class="nav-links">
+      <a href="#" class="hide-sm">How it works</a>
+      <a href="#" class="hide-sm">Pricing</a>
+      <a href="#">Log in</a>
+      <a href="#" class="btn small">Start free</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker" data-rise style="animation-delay:.05s">AI résumé · ATS score · live mock interview</p>
+        <h1 data-rise style="animation-delay:.15s">Win on paper. Then win <span class="accent">the room.</span></h1>
+        <p class="lede" data-rise style="animation-delay:.3s">
+          ApplyRight rewrites your CV to clear the ATS, scores it against the exact job you want,
+          then puts you through a real-time AI interview — so you walk in already rehearsed.
+        </p>
+        <div class="cta-row" data-rise style="animation-delay:.45s">
+          <a href="#" class="btn">Start free</a>
+          <a href="#" class="ghost">Hear a sample interview →</a>
+        </div>
+        <p class="microtrust" data-rise style="animation-delay:.6s"><b>1 free CV download</b> · no card needed</p>
+      </div>
+
+      <div class="card-ui" data-rise style="animation-delay:.5s" aria-label="Live AI mock interview in progress">
+        <div class="card-top-rule"></div>
+        <div class="live-card">
+          <div class="live-top">
+            <span class="rec"><span class="dot"></span> Live mock interview</span>
+            <span class="seat">HR PANEL · SEAT 1/3</span>
+          </div>
+          <div class="q-block">
+            <span class="ai-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span>
+            <div>
+              <p class="q-label">Interviewer · ApplyRight AI</p>
+              <p class="question">"Tell me about a time you led a project under real pressure — and what the outcome was."</p>
+            </div>
+          </div>
+          <div class="wave" aria-hidden="true">
+            <i style="animation-delay:0s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.25s"></i>
+            <i style="animation-delay:.05s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.15s"></i>
+            <i style="animation-delay:.35s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.4s"></i>
+            <i style="animation-delay:.12s"></i><i style="animation-delay:.28s"></i><i style="animation-delay:.06s"></i>
+            <i style="animation-delay:.33s"></i><i style="animation-delay:.18s"></i><i style="animation-delay:.24s"></i>
+          </div>
+          <div class="readiness">
+            <span class="label">Readiness</span>
+            <span class="meter"><i></i></span>
+            <span class="pct">82%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rewrite">
+    <div class="wrap">
+      <div class="rw-head">
+        <p class="kicker" data-reveal>The rewrite</p>
+        <h2 data-reveal>Watch a dead line become a callback.</h2>
+        <p class="lede" data-reveal>Same experience, retold the way recruiters and their software actually read. ApplyRight cuts the filler, leads with results, and lands the keywords the job asks for.</p>
+      </div>
+      <div class="rw-ledger" data-reveal>
+        <div class="rw-cols">
+          <p class="rw-tag before">Before — your draft</p>
+          <span></span>
+          <p class="rw-tag after">After ApplyRight</p>
+        </div>
+        <div class="rw-row">
+          <p class="line before">Responsible for the regional sales process</p>
+          <span class="rw-mk">&rarr;</span>
+          <p class="line after">Grew regional revenue <b>42%</b> across 3 quarters</p>
+        </div>
+        <div class="rw-row">
+          <p class="line before">Handled customer relationships day to day</p>
+          <span class="rw-mk">&rarr;</span>
+          <p class="line after">Retained <b>9 of 10</b> key accounts through a pricing overhaul</p>
+        </div>
+        <div class="rw-row">
+          <p class="line before">Worked on improving overall sales</p>
+          <span class="rw-mk">&rarr;</span>
+          <p class="line after">Cut the sales cycle <b>18 days</b> with a new qualifying flow</p>
+        </div>
+        <div class="rw-foot">
+          <span class="ats before">ATS <span class="track"><i></i></span> <span class="n">48%</span></span>
+          <span class="rw-mk">&rarr;</span>
+          <span class="ats after">ATS <span class="track"><i></i></span> <span class="n">92%</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="wrap">
+      <div class="steps-head">
+        <p class="kicker" data-reveal>The whole run, in order</p>
+        <h2 data-reveal>Three steps between you and the offer.</h2>
+      </div>
+      <div class="grid3">
+        <div class="step" data-reveal style="transition-delay:.05s"><span class="no">01</span><h3>Build &amp; tailor</h3><p>Draft a clean CV, then let ApplyRight rewrite each line for the role — stronger verbs, real numbers, the keywords recruiters grep for.</p></div>
+        <div class="step" data-reveal style="transition-delay:.15s"><span class="no">02</span><h3>Score against the job</h3><p>Paste the description and get an honest ATS match — what's missing, what to add, which phrases move the needle.</p></div>
+        <div class="step" data-reveal style="transition-delay:.25s"><span class="no">03</span><h3>Rehearse live</h3><p>Sit a real-time voice interview with an AI panel drawn from the role, then get a scored readiness report before the real thing.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <div class="closing-inner" data-reveal>
+        <p class="kicker">One shot at a first impression</p>
+        <h2>Walk in already rehearsed.</h2>
+        <a href="#" class="btn">Start free — run your first interview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="word">Apply<b>Right</b></div>
+      <div class="tag">Get hired — on paper, and in the room.</div>
+    </div>
+  </footer>
+</main>
+
+<script>
+  requestAnimationFrame(function () { document.body.classList.add("loaded"); });
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var items = document.querySelectorAll("[data-reveal]");
+  if (reduce || !("IntersectionObserver" in window)) { items.forEach(function (el) { el.classList.add("in"); }); }
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }); }, { threshold: 0.15 });
+    items.forEach(function (el) { io.observe(el); });
+  }
+</script>
