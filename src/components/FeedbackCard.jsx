@@ -1,9 +1,11 @@
 import React from 'react';
+// `motion` is used only via <motion.div> in JSX; this eslint config lacks
+// jsx-uses-vars so it reads as unused — suppress the false positive.
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { User, MessageSquare, Download, Star, Shield, Calendar } from 'lucide-react';
 import { domToPng } from 'modern-screenshot';
 import { toast } from 'sonner';
-import logo from '../assets/logo/applyright-icon.png';
 
 const FeedbackCard = ({
   feedback,
@@ -91,35 +93,21 @@ const FeedbackCard = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className={`group relative bg-[#F8FAFC] rounded-sm p-8 shadow-[8px_8px_0px_0px_rgba(79,70,229,0.2)] border-l-4 border-indigo-600 transition-all duration-300 transform -translate-y-1 overflow-hidden ${!hideActions && feedback.isFeatured ? 'ring-2 ring-yellow-400' : ''}`}
+      className={`group relative bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-8 shadow-clean overflow-hidden transition-colors ${!hideActions && feedback.isFeatured ? 'ring-1 ring-amber-300 dark:ring-amber-500/40' : ''}`}
       id={`feedback-card-${feedback._id}`}
     >
-      {/* Paper Texture Effect */}
-      <div
-        className="absolute inset-0 bg-white opacity-40 mix-blend-overlay pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
-          backgroundSize: '16px 16px',
-        }}
-      ></div>
-
-      {/* Watermark Logo */}
-      <div className="absolute bottom-4 right-4 opacity-[0.08] transition-opacity duration-500 scale-150 pointer-events-none">
-        <img src={logo} alt="ApplyRight" className="w-32 h-32 grayscale" />
-      </div>
-
       {/* Header: User Info */}
-      <div className="relative z-10 flex items-center justify-between mb-6 border-b border-slate-100 pb-4 border-dashed">
+      <div className="relative z-10 flex items-center justify-between mb-6 border-b border-dashed border-slate-100 dark:border-slate-700 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-bold font-serif text-sm">
+          <div className="h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold font-serif text-sm">
             {feedback.user?.firstName?.[0] || ''}
             {feedback.user?.lastName?.[0] || ''}
           </div>
           <div>
-            <h3 className="text-slate-900 font-serif font-bold text-lg tracking-tight leading-none">
+            <h3 className="text-slate-900 dark:text-slate-100 font-serif font-bold text-lg tracking-tight leading-none">
               {feedback.user?.firstName} {feedback.user?.lastName}
             </h3>
-            <div className="flex items-center gap-1 text-indigo-500/80 text-xs font-medium uppercase tracking-wider mt-1">
+            <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-xs font-medium uppercase tracking-wider mt-1">
               <span>Verified User</span>
               <Shield className="w-3 h-3" />
             </div>
@@ -146,14 +134,14 @@ const FeedbackCard = ({
           {!hideActions && (
             <button
               onClick={handleDownloadClick}
-              className="download-btn p-2 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+              className="download-btn p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 rounded-full transition-colors"
               title="Download as Image"
             >
               <Download className="w-5 h-5" />
             </button>
           )}
 
-          <div className="text-indigo-300">
+          <div className="text-slate-300 dark:text-slate-600">
             <MessageSquare className="w-5 h-5" />
           </div>
         </div>
@@ -161,7 +149,7 @@ const FeedbackCard = ({
 
       {/* Metadata Row */}
       <div className="relative z-10 flex items-center gap-2 text-xs font-mono text-slate-400 mb-4 pl-1">
-        <Calendar className="w-3 h-3 text-indigo-300" />
+        <Calendar className="w-3 h-3 text-slate-400" />
         <span>
           {new Date(feedback.createdAt).toLocaleDateString('en-US', {
             month: 'short',
@@ -169,13 +157,13 @@ const FeedbackCard = ({
             year: 'numeric',
           })}
         </span>
-        <span className="w-1 h-1 rounded-full bg-indigo-200 mx-1"></span>
-        <span className="text-indigo-400">ApplyRight Feedback</span>
+        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-1"></span>
+        <span className="text-slate-400 dark:text-slate-500">ApplyRight Feedback</span>
       </div>
 
       {/* Body: Handwritten/Typewriter Vibe */}
       <div className="relative z-10 mb-8 min-h-[80px]">
-        <p className="text-slate-700 text-lg leading-relaxed font-serif italic">
+        <p className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed font-serif italic">
           "{feedback.message}"
         </p>
       </div>
