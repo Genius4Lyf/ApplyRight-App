@@ -226,7 +226,11 @@ const InterviewPrepList = () => {
         ) : (
           /* Two-column workspace: identity + momentum rail on the left, the deck
              (or dense list) on the right. */
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8">
+          <div
+            className={`grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8 ${
+              view === 'list' ? 'lg:h-[calc(100vh-8rem)] lg:overflow-hidden' : ''
+            }`}
+          >
             {/* LEFT RAIL */}
             <div className="flex flex-col">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
@@ -301,7 +305,11 @@ const InterviewPrepList = () => {
             </div>
 
             {/* RIGHT MAIN */}
-            <div className="min-w-0">
+            <div
+              className={`min-w-0 ${
+                view === 'list' ? 'lg:h-full lg:flex lg:flex-col lg:min-h-0' : ''
+              }`}
+            >
               {view === 'deck' ? (
                 <CardDeck
                   items={recentItems}
@@ -311,7 +319,9 @@ const InterviewPrepList = () => {
                   label="10 most recent"
                 />
               ) : (
-                <div className="space-y-3">{items.map(renderRow)}</div>
+                <div className="space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-1 scrollbar-none">
+                  {items.map(renderRow)}
+                </div>
               )}
             </div>
           </div>

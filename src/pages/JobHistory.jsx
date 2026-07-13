@@ -748,7 +748,11 @@ const JobHistory = () => {
           /* List state — a two-column workspace: identity + momentum rail on the
              left, the deck (or dense list) on the right. Clicking any item swaps
              the whole page to the detail view below. */
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8">
+          <div
+            className={`grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8 ${
+              view === 'list' ? 'lg:h-[calc(100vh-8rem)] lg:overflow-hidden' : ''
+            }`}
+          >
             {/* LEFT RAIL */}
             <div className="flex flex-col">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
@@ -823,7 +827,11 @@ const JobHistory = () => {
             </div>
 
             {/* RIGHT MAIN */}
-            <div className="min-w-0">
+            <div
+              className={`min-w-0 ${
+                view === 'list' ? 'lg:h-full lg:flex lg:flex-col lg:min-h-0' : ''
+              }`}
+            >
               {view === 'deck' ? (
                 <CardDeck
                   items={recentApps}
@@ -834,8 +842,8 @@ const JobHistory = () => {
                 />
               ) : (
                 /* List view — keeps search + sort */
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div className="space-y-3 lg:flex lg:flex-col lg:h-full lg:min-h-0">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center lg:shrink-0">
                     <div className="relative flex-1">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
                       <input
@@ -849,15 +857,17 @@ const JobHistory = () => {
                     <SortDropdown value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
                   </div>
 
-                  {filteredApplications.length === 0 ? (
-                    <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
-                      {searchQuery.trim()
-                        ? 'No applications match your search.'
-                        : 'No applications yet.'}
-                    </div>
-                  ) : (
-                    filteredApplications.map(renderRow)
-                  )}
+                  <div className="space-y-3 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1 scrollbar-none">
+                    {filteredApplications.length === 0 ? (
+                      <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
+                        {searchQuery.trim()
+                          ? 'No applications match your search.'
+                          : 'No applications yet.'}
+                      </div>
+                    ) : (
+                      filteredApplications.map(renderRow)
+                    )}
+                  </div>
                 </div>
               )}
             </div>

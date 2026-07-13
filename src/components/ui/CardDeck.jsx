@@ -97,7 +97,7 @@ export default function CardDeck({
   const frontNodeRef = useRef(null);
   const measureFront = useCallback(() => {
     const node = frontNodeRef.current;
-    if (node && node.offsetHeight) setStageMinH(node.offsetHeight + 40);
+    if (node && node.offsetHeight) setStageMinH(node.offsetHeight + 68);
   }, []);
 
   useEffect(() => {
@@ -110,25 +110,36 @@ export default function CardDeck({
   }, [measureFront, current, isDesktop, count]);
 
   // ---- Drag / swipe on the front card ----
-  const dragState = useRef({ active: false, startX: 0 });
+  const DRAG_START = 8; // px of movement before a press becomes a drag; below this = a tap
+  const dragState = useRef({ active: false, startX: 0, captured: false });
 
   const onPointerDown = (e) => {
-    dragState.current = { active: true, startX: e.clientX };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+    dragState.current = { active: true, startX: e.clientX, captured: false };
+    // Do NOT setPointerCapture here — capturing on press redirects the click to
+    // this wrapper and swallows the card's tap-to-open. Capture only once a drag
+    // actually starts (see onPointerMove).
     setDrag({ active: true, dx: 0 });
   };
   const onPointerMove = (e) => {
     if (!dragState.current.active) return;
-    setDrag({ active: true, dx: e.clientX - dragState.current.startX });
+    const dx = e.clientX - dragState.current.startX;
+    if (!dragState.current.captured && Math.abs(dx) > DRAG_START) {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      dragState.current.captured = true;
+    }
+    setDrag({ active: true, dx });
   };
   const endDrag = (e) => {
     if (!dragState.current.active) return;
     const dx = e.clientX - dragState.current.startX;
-    dragState.current.active = false;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    const { captured } = dragState.current;
+    dragState.current = { active: false, startX: 0, captured: false };
+    if (captured) e.currentTarget.releasePointerCapture?.(e.pointerId);
     setDrag({ active: false, dx: 0 });
     if (dx > SWIPE_THRESHOLD) next();
     else if (dx < -SWIPE_THRESHOLD) prev();
+    // A tap (never captured, dx≈0) falls through: the native click reaches the
+    // card and NoteCard's onOpen fires.
   };
 
   // Keyboard nav is bound via a listener (not an onKeyDown prop) so the wrapper
@@ -254,9 +265,10 @@ export default function CardDeck({
       {/* Stage wrapper — grows to fill the parent's height and centers the deck
           vertically. The stage itself sizes to the measured card height. */}
       <div className="flex flex-1 items-center">
-        {/* Stage — overflow-x hidden so receding/passing cards never scroll the page */}
+        {/* Stage — both axes clipped so receding/passing cards never spawn a
+            scrollbar (a lone overflow-x promotes overflow-y to auto). */}
         <div
-          className="relative w-full overflow-x-hidden"
+          className="relative w-full overflow-hidden"
           style={{ minHeight: Math.max(240, stageMinH) }}
         >
           {items.map((item, index) => {
@@ -268,7 +280,7 @@ export default function CardDeck({
                 className={cardClassName}
                 style={{
                   position: 'absolute',
-                  top: 20,
+                  top: 48,
                   left: 0,
                   right: 0,
                   margin: '0 auto',
