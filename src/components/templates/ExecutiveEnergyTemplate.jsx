@@ -56,14 +56,20 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
             {roleTitle && (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-1 bg-[#cc0000]"></div>
-                <div className="text-sm font-['Open_Sans',sans-serif] font-bold text-[#495057] uppercase tracking-wider">
+                <div
+                  className="text-sm font-bold text-[#495057] uppercase tracking-wider"
+                  style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}
+                >
                   {roleTitle}
                 </div>
               </div>
             )}
           </div>
 
-          <div className="text-right text-xs font-['Open_Sans',sans-serif] font-semibold text-[#6c757d]">
+          <div
+            className="text-right text-xs font-semibold text-[#6c757d]"
+            style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}
+          >
             {contactItems.map((item, i) => (
               <div
                 key={i}
@@ -78,7 +84,7 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
       </header>
 
       {/* Body */}
-      <div className="p-10 font-['Open_Sans',sans-serif]">
+      <div className="p-10" style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}>
         <ReactMarkdown
           components={{
             h1: () => null,

@@ -45,13 +45,19 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
         <div className="flex justify-between items-start">
           <div>
             <h1
-              className="text-4xl font-['Inter',sans-serif] font-extrabold tracking-tighter text-slate-900 mb-2 uppercase"
-              style={{ color: 'var(--cv-accent, #0f172a)' }}
+              className="text-4xl font-extrabold tracking-tighter text-slate-900 mb-2 uppercase"
+              style={{
+                color: 'var(--cv-accent, #0f172a)',
+                fontFamily: "var(--cv-font, 'Inter', sans-serif)",
+              }}
             >
               {name}
             </h1>
             {roleTitle && (
-              <div className="text-sm font-['Inter',sans-serif] font-semibold text-slate-500 uppercase tracking-widest">
+              <div
+                className="text-sm font-semibold text-slate-500 uppercase tracking-widest"
+                style={{ fontFamily: "var(--cv-font, 'Inter', sans-serif)" }}
+              >
                 {roleTitle}
               </div>
             )}
@@ -69,7 +75,10 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
       </header>
 
       {/* Body */}
-      <div className="px-12 pt-6 pb-12 font-['Inter',sans-serif]">
+      <div
+        className="px-12 pt-6 pb-12"
+        style={{ fontFamily: "var(--cv-font, 'Inter', sans-serif)" }}
+      >
         <ReactMarkdown
           components={{
             h1: () => null,

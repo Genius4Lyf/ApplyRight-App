@@ -126,7 +126,12 @@ const ResumeReview = () => {
   // Design tab controls — drive CSS vars on #resume-content. accent '' = each
   // template's own default. Margins are fully live (preview + PDF) this chunk;
   // accent + density set their vars now and go live when templates read them (2b).
-  const [design, setDesign] = useState({ accent: '', margins: 'normal', density: 'normal' });
+  const [design, setDesign] = useState({
+    accent: '',
+    margins: 'normal',
+    density: 'normal',
+    font: '',
+  });
 
   // Persist the design choices per-CV in localStorage (keyed by CV id) so they
   // survive a reload. Frontend-only — templateId still persists via its own
@@ -1355,6 +1360,7 @@ const ResumeReview = () => {
                 // Design tab: accent + line-height vars (templates consume them in
                 // 2b) and fully-functional page margins.
                 '--cv-accent': design.accent || undefined,
+                '--cv-font': design.font || undefined,
                 '--cv-leading':
                   design.density === 'compact' ? 1.35 : design.density === 'relaxed' ? 1.7 : 1.5,
                 padding:
@@ -1833,6 +1839,34 @@ const ResumeReview = () => {
                 </p>
               ) : railTab === 'design' ? (
                 <div className="space-y-6">
+                  {/* Typeface — body-font override via --cv-font. System fonts, so
+                      no PDF font-loading; each template keeps its own as fallback. */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                      Typeface
+                    </p>
+                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                      {[
+                        { label: 'Default', value: '' },
+                        { label: 'Sans', value: 'Arial, Helvetica, sans-serif' },
+                        { label: 'Serif', value: 'Georgia, "Times New Roman", serif' },
+                      ].map((f) => (
+                        <button
+                          key={f.label}
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, font: f.value }))}
+                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                            design.font === f.value
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Accent — sets --cv-accent; templates paint it in 2b. */}
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">

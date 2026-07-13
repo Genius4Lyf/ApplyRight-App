@@ -68,8 +68,11 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto p-12 font-['Merriweather',serif] text-slate-800 text-[11pt]"
-      style={{ lineHeight: 'var(--cv-leading, 1.625)' }}
+      className="bg-white mx-auto p-12 text-slate-800 text-[11pt]"
+      style={{
+        lineHeight: 'var(--cv-leading, 1.625)',
+        fontFamily: "var(--cv-font, 'Merriweather', serif)",
+      }}
     >
       {/* INJECT FONTS */}
       <style>{`

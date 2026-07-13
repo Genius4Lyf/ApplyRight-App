@@ -72,8 +72,11 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-[#333333] text-[10.5pt]"
-      style={{ lineHeight: 'var(--cv-leading, 1.625)' }}
+      className="bg-white mx-auto p-10 text-[#333333] text-[10.5pt]"
+      style={{
+        lineHeight: 'var(--cv-leading, 1.625)',
+        fontFamily: "var(--cv-font, 'Inter', sans-serif)",
+      }}
     >
       {/* INJECT FONTS */}
       <style>{`

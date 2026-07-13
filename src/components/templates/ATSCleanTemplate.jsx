@@ -63,8 +63,11 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto p-10 font-['Inter',system-ui,sans-serif] text-[#1a1a1a] text-[11pt]"
-      style={{ lineHeight: 'var(--cv-leading, 1.5)' }}
+      className="bg-white mx-auto p-10 text-[#1a1a1a] text-[11pt]"
+      style={{
+        lineHeight: 'var(--cv-leading, 1.5)',
+        fontFamily: "var(--cv-font, 'Inter', system-ui, sans-serif)",
+      }}
     >
       {/* INJECT FONTS */}
       <style>{`

@@ -41,8 +41,11 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto min-h-[1000px] font-['Inter',sans-serif] text-slate-800 flex"
-      style={{ lineHeight: 'var(--cv-leading, 1.25)' }}
+      className="bg-white mx-auto min-h-[1000px] text-slate-800 flex"
+      style={{
+        lineHeight: 'var(--cv-leading, 1.25)',
+        fontFamily: "var(--cv-font, 'Inter', sans-serif)",
+      }}
     >
       {/* Header / Sidebar (Left 30%) */}
       <div className="w-[30%] bg-slate-50 p-8 border-r border-slate-200">
