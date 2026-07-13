@@ -67,7 +67,10 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
   }
 
   return (
-    <div className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-slate-900 leading-relaxed">
+    <div
+      className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-slate-900"
+      style={{ lineHeight: 'var(--cv-leading, 1.5)' }}
+    >
       {/* INJECT FONTS */}
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -80,7 +83,10 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
         </h1>
 
         {roleTitle && (
-          <div className="text-lg font-medium text-indigo-600 mb-3 uppercase tracking-wide">
+          <div
+            className="text-lg font-medium mb-3 uppercase tracking-wide"
+            style={{ color: 'var(--cv-accent, #4f46e5)' }}
+          >
             {roleTitle}
           </div>
         )}
@@ -89,7 +95,7 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
           <div className="text-sm text-slate-600 flex flex-wrap gap-x-4 gap-y-2">
             {contactItems.map((item, i) => (
               <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-                <item.icon size={13} className="text-indigo-500" />
+                <item.icon size={13} style={{ color: 'var(--cv-accent, #4f46e5)' }} />
                 <span>{item.value}</span>
                 {i < contactItems.length - 1 && <span className="text-slate-300 ml-2">|</span>}
               </div>
@@ -143,7 +149,8 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
             // Links
             a: ({ node, ...props }) => (
               <a
-                className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2"
+                className="underline underline-offset-2"
+                style={{ color: 'var(--cv-accent, #4f46e5)' }}
                 {...props}
               />
             ),

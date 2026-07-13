@@ -32,7 +32,10 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
   const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
   return (
-    <div className="bg-white mx-auto font-sans text-slate-800 leading-snug">
+    <div
+      className="bg-white mx-auto font-sans text-slate-800"
+      style={{ lineHeight: 'var(--cv-leading, 1.375)' }}
+    >
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
             `}</style>
@@ -41,7 +44,10 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
       <header className="px-12 py-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-['Inter',sans-serif] font-extrabold tracking-tighter text-slate-900 mb-2 uppercase">
+            <h1
+              className="text-4xl font-['Inter',sans-serif] font-extrabold tracking-tighter text-slate-900 mb-2 uppercase"
+              style={{ color: 'var(--cv-accent, #0f172a)' }}
+            >
               {name}
             </h1>
             {roleTitle && (
@@ -70,6 +76,10 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
             h2: ({ node, ...props }) => (
               <h2
                 className="text-xl font-extrabold text-slate-900 mt-10 mb-4 pb-2 border-b-4 border-slate-200 uppercase tracking-tight"
+                style={{
+                  color: 'var(--cv-accent, #0f172a)',
+                  borderBottomColor: 'var(--cv-accent, #e2e8f0)',
+                }}
                 {...props}
               />
             ),

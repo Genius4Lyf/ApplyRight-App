@@ -32,7 +32,13 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
   const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
   return (
-    <div className="bg-white mx-auto font-sans text-slate-800 leading-relaxed shadow-lg border-t-8 border-[#003366]">
+    <div
+      className="bg-white mx-auto font-sans text-slate-800 shadow-lg border-t-8"
+      style={{
+        lineHeight: 'var(--cv-leading, 1.625)',
+        borderColor: 'var(--cv-accent, #003366)',
+      }}
+    >
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;700&family=Open+Sans:wght@400;600;700&display=swap');
             `}</style>
@@ -41,7 +47,10 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
       <header className="px-10 py-8 bg-[#f8f9fa] border-b border-[#e9ecef]">
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-4xl font-['Oswald',sans-serif] font-bold text-[#003366] uppercase tracking-wide leading-none mb-2">
+            <h1
+              className="text-4xl font-['Oswald',sans-serif] font-bold uppercase tracking-wide leading-none mb-2"
+              style={{ color: 'var(--cv-accent, #003366)' }}
+            >
               {name}
             </h1>
             {roleTitle && (
@@ -58,10 +67,10 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
             {contactItems.map((item, i) => (
               <div
                 key={i}
-                className="mb-1 last:mb-0 hover:text-[#003366] transition-colors cursor-default flex items-center justify-end gap-2"
+                className="mb-1 last:mb-0 hover:text-[color:var(--cv-accent,#003366)] transition-colors cursor-default flex items-center justify-end gap-2"
               >
                 <span>{item.value}</span>
-                <item.icon size={14} className="text-[#003366]" />
+                <item.icon size={14} style={{ color: 'var(--cv-accent, #003366)' }} />
               </div>
             ))}
           </div>
@@ -75,7 +84,8 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
             h1: () => null,
             h2: ({ node, ...props }) => (
               <h2
-                className="text-xl font-['Oswald',sans-serif] font-medium text-[#003366] mt-8 mb-4 border-b-2 border-[#cc0000] pb-1 uppercase inline-block pr-8"
+                className="text-xl font-['Oswald',sans-serif] font-medium mt-8 mb-4 border-b-2 border-[#cc0000] pb-1 uppercase inline-block pr-8"
+                style={{ color: 'var(--cv-accent, #003366)' }}
                 {...props}
               />
             ),
@@ -90,7 +100,7 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
             ),
             ul: ({ node, ...props }) => (
               <ul
-                className="list-square pl-5 mb-4 text-[10.5pt] leading-7 text-[#343a40] marker:text-[#003366]"
+                className="list-square pl-5 mb-4 text-[10.5pt] leading-7 text-[#343a40] marker:text-[color:var(--cv-accent,#003366)]"
                 {...props}
               />
             ),

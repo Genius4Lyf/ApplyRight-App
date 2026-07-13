@@ -17,6 +17,7 @@ import {
   MessageSquare,
   AlertTriangle,
   Crown,
+  ChevronDown,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -118,6 +119,48 @@ const ResumeReview = () => {
     localStorage.setItem(ACCURACY_ADVISORY_KEY, 'true');
     setAdvisoryDismissed(true);
   };
+
+  // Studio rail: collapsible insights strip + Templates/Design tab switch.
+  const [insightsOpen, setInsightsOpen] = useState(true);
+  const [railTab, setRailTab] = useState('templates'); // 'templates' | 'design'
+  // Design tab controls — drive CSS vars on #resume-content. accent '' = each
+  // template's own default. Margins are fully live (preview + PDF) this chunk;
+  // accent + density set their vars now and go live when templates read them (2b).
+  const [design, setDesign] = useState({ accent: '', margins: 'normal', density: 'normal' });
+
+  // Persist the design choices per-CV in localStorage (keyed by CV id) so they
+  // survive a reload. Frontend-only — templateId still persists via its own
+  // backend save. Load once the id is known, merging saved over the defaults.
+  useEffect(() => {
+    const id = application?._id;
+    if (!id) return;
+    try {
+      const saved = localStorage.getItem(`cvDesign:${id}`);
+      if (saved) setDesign((d) => ({ ...d, ...JSON.parse(saved) }));
+    } catch {
+      /* localStorage unavailable — non-fatal */
+    }
+  }, [application?._id]);
+
+  // Save on every change.
+  useEffect(() => {
+    const id = application?._id;
+    if (!id) return;
+    try {
+      localStorage.setItem(`cvDesign:${id}`, JSON.stringify(design));
+    } catch {
+      /* non-fatal */
+    }
+  }, [design, application?._id]);
+
+  // Score → editorial band accent (>=75 emerald / >=50 amber / else rose).
+  const bandText = (s) =>
+    s >= 75
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : s >= 50
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-rose-600 dark:text-rose-400';
+  const bandDot = (s) => (s >= 75 ? 'bg-emerald-500' : s >= 50 ? 'bg-amber-500' : 'bg-rose-500');
 
   // Collapsible controls pill — expanded shows zoom + fit + fullscreen toggle;
   // collapsed shows just a single icon. Auto-collapses on entering immersive.
@@ -495,15 +538,17 @@ const ResumeReview = () => {
                 </html>
             `;
 
-      // 2. Call Backend with margin options
+      // 2. Call Backend with margin options — mirror the Design-tab margin choice.
+      const pdfMargin =
+        design.margins === 'narrow' ? '10px' : design.margins === 'wide' ? '40px' : '25px';
       const blob = await CVService.generatePdf(
         fullHtml,
         {
           margin: {
-            top: '25px',
-            right: '25px',
-            bottom: '25px',
-            left: '25px',
+            top: pdfMargin,
+            right: pdfMargin,
+            bottom: pdfMargin,
+            left: pdfMargin,
           },
         },
         {
@@ -1074,11 +1119,11 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-3 flex items-center gap-3 shrink-0">
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 h-14 flex items-center gap-3 shrink-0">
           <button
             type="button"
             onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
-            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-400 shrink-0"
+            className="p-2 -ml-2 rounded-full transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shrink-0"
             aria-label="Back"
           >
             <ChevronLeft size={20} />
@@ -1086,19 +1131,19 @@ const ResumeReview = () => {
           <div className="flex-1 min-w-0">
             {isDraftMode ? (
               <>
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                   Draft CV
                 </p>
-                <h1 className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+                <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                   {application?.title || 'Untitled draft'}
                 </h1>
               </>
             ) : (
               <>
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                   Application
                 </p>
-                <h1 className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+                <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                   {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
                   {(application?.jobId?.company || application?.jobCompany) && (
                     <span className="text-slate-500 dark:text-slate-400 font-normal">
@@ -1116,14 +1161,14 @@ const ResumeReview = () => {
             The dedicated 52px mobile tab strip we used to render below the
             header was eating into the CV preview height — gone now. */}
           {!isDraftMode && (
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg shrink-0">
+            <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('resume')}
                 className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeTab === 'resume'
-                    ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-300'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                    : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 <span className="sm:hidden">CV</span>
@@ -1134,8 +1179,8 @@ const ResumeReview = () => {
                 onClick={() => setActiveTab('cover-letter')}
                 className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeTab === 'cover-letter'
-                    ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-300'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                    : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 <span className="sm:hidden">Letter</span>
@@ -1143,6 +1188,36 @@ const ResumeReview = () => {
               </button>
             </div>
           )}
+          {/* Desktop primary actions — the mobile action bar is the phone equivalent. */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={
+                isDraftMode ? () => navigate(`/cv-builder/${application._id}/finalize`) : handleEdit
+              }
+              className="inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <PenTool className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+            <button
+              type="button"
+              disabled={isDownloading}
+              onClick={handleDownloadClick}
+              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
+            >
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>{`Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
+            </button>
+          </div>
+          {/* Static studio label — presentation only, no logic. */}
+          <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
+            PDF · A4
+          </span>
         </div>
       )}
 
@@ -1169,12 +1244,12 @@ const ResumeReview = () => {
           the fixed-viewport split with each pane scrolling independently. */}
       <div className="flex-1 flex flex-col lg:flex-row lg:h-[calc(100vh-64px)] lg:overflow-hidden">
         {/* LEFT: Document Preview Area */}
-        <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100/50 dark:bg-slate-900/50 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
+        <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100 dark:bg-slate-950 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
           {/* Zoom + view controls — collapses to a single icon on demand */}
           <motion.div
             layout
             transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
-            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-xl border border-slate-200/60 dark:border-slate-700/60 rounded-full flex items-center overflow-hidden"
+            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-full flex items-center overflow-hidden"
           >
             <AnimatePresence mode="wait" initial={false}>
               {controlsExpanded ? (
@@ -1271,12 +1346,19 @@ const ResumeReview = () => {
             <div
               ref={previewContentRef}
               id="resume-content"
-              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
+              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
                 WebkitTouchCallout: 'none',
+                // Design tab: accent + line-height vars (templates consume them in
+                // 2b) and fully-functional page margins.
+                '--cv-accent': design.accent || undefined,
+                '--cv-leading':
+                  design.density === 'compact' ? 1.35 : design.density === 'relaxed' ? 1.7 : 1.5,
+                padding:
+                  design.margins === 'narrow' ? '8mm' : design.margins === 'wide' ? '24mm' : '15mm',
               }}
               onContextMenu={(e) => e.preventDefault()}
               onCopy={(e) => e.preventDefault()}
@@ -1441,88 +1523,12 @@ const ResumeReview = () => {
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : (
-                  /* DEFAULT / OTHER TEMPLATES FALLBACK */
-                  <>
-                    <div className="bg-white p-12 shadow-sm min-h-screen">
-                      <div className="mb-8 border-b border-slate-200 pb-6">
-                        <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
-                          {mergedUserProfile?.firstName
-                            ? [
-                                mergedUserProfile.firstName,
-                                mergedUserProfile.otherName,
-                                mergedUserProfile.lastName,
-                              ]
-                                .filter(Boolean)
-                                .join(' ')
-                            : 'Your Name'}
-                        </h1>
-                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                          {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
-                          {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
-                          {mergedUserProfile?.city && <span>{mergedUserProfile.city}</span>}
-                          {(mergedUserProfile?.linkedinUrl || mergedUserProfile?.linkedin) && (
-                            <span>
-                              LinkedIn:{' '}
-                              {(
-                                mergedUserProfile.linkedinUrl || mergedUserProfile.linkedin
-                              ).replace(/^https?:\/\/(www\.)?/, '')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              className="text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-none"
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200"
-                              {...props}
-                            />
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />
-                          ),
-                          h4: ({ node, ...props }) => (
-                            <h4
-                              className="text-md font-semibold text-slate-700 mt-4 mb-1"
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul
-                              className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600"
-                              {...props}
-                            />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li className="pl-1 leading-normal" {...props} />
-                          ),
-                          strong: ({ node, ...props }) => (
-                            <strong className="font-semibold text-slate-900" {...props} />
-                          ),
-                          a: ({ node, ...props }) => (
-                            <a
-                              className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2"
-                              {...props}
-                            />
-                          ),
-                          hr: ({ node, ...props }) => (
-                            <hr className="my-6 border-slate-100" {...props} />
-                          ),
-                        }}
-                      >
-                        {application.optimizedCV}
-                      </ReactMarkdown>
-                    </div>
-                  </>
+                  /* Unknown/legacy templateId → safe ATS-clean default so saved
+                     CVs referencing a no-longer-offered template still render. */
+                  <ATSCleanTemplate
+                    markdown={application.optimizedCV}
+                    userProfile={mergedUserProfile || userProfile}
+                  />
                 )
               ) : (
                 /* COVER LETTER RENDER */
@@ -1658,295 +1664,339 @@ const ResumeReview = () => {
             <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
           </div>
 
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <div className="flex-1">
-              <h2 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                Templates & actions
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pick a template and download or edit
-              </p>
-            </div>
+          {/* Mobile close — drawer dismiss on phones (drag handle sits above). */}
+          <div className="lg:hidden flex justify-end px-4 pb-1 -mt-1">
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500"
               aria-label="Close panel"
             >
               <X size={20} />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-8">
-            {/* Tab strip moved to the top of the page — see header above */}
-            {isDraftMode && (
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-3 flex gap-2">
-                <div className="text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5">
-                  <Sparkles size={14} />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Cover letters are generated during the <strong>Application Fit</strong> analysis
-                  when you upload an existing CV.
-                </p>
-              </div>
-            )}
-
-            {/* Suggestions Box - Hide for drafts if no analysis */}
-            {!isDraftMode && (
-              <div className="bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl p-5">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-indigo-100 dark:bg-indigo-500/15 rounded-lg text-indigo-600 dark:text-indigo-300 mt-1">
-                    <Sparkles size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-indigo-900 dark:text-indigo-200 text-sm">
-                      AI Analysis
-                    </h3>
-                    <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1 leading-relaxed">
-                      Your fit score is <strong>{application.fitScore}%</strong>. This application
-                      is optimized for{' '}
-                      {application.jobId?.title || application.jobTitle || 'the role'}.
-                    </p>
-                    {/* Free users get the standard analysis (GPT-4o-mini); nudge them
-                        toward the premium ApplyRight ATS analysis (GPT-4o). */}
-                    {userProfile?.plan !== 'paid' && (
-                      <button
-                        type="button"
-                        onClick={() => navigate('/upgrade')}
-                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 hover:underline"
-                      >
-                        <Crown className="w-3.5 h-3.5" />
-                        Upgrade to ApplyRight ATS for our sharpest, recruiter-grade analysis
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isDraftMode && atsReadiness && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-extrabold border-[3px] ${
-                      atsReadiness.score >= 75
-                        ? 'border-emerald-400 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15'
-                        : atsReadiness.score >= 50
-                          ? 'border-amber-400 dark:border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15'
-                          : 'border-red-400 dark:border-red-500/40 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15'
-                    }`}
-                  >
-                    {atsReadiness.score}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                      ATS Readiness Score
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {atsReadiness.score >= 75
-                        ? 'Well-structured for ATS systems'
-                        : atsReadiness.score >= 50
-                          ? 'Good start — some areas to improve'
-                          : 'Needs more detail for ATS compatibility'}
-                    </p>
-                  </div>
-                </div>
-                {/* Checks */}
-                <div className="space-y-2 mb-4">
-                  {atsReadiness.checks?.map((check, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      {check.passed ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                      )}
-                      <span
-                        className={
-                          check.passed
-                            ? 'text-slate-600 dark:text-slate-300'
-                            : 'text-slate-500 dark:text-slate-400'
-                        }
-                      >
-                        {check.label}
-                        {check.detail && (
-                          <span className="text-slate-400 dark:text-slate-500 ml-1">
-                            ({check.detail})
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                {/* Tips */}
-                {atsReadiness.tips?.length > 0 && (
-                  <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-100 dark:border-amber-500/30 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1.5">
-                      Tips to improve:
-                    </p>
-                    <ul className="space-y-1">
-                      {atsReadiness.tips.slice(0, 3).map((tip, i) => (
-                        <li
-                          key={i}
-                          className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed flex gap-1.5"
-                        >
-                          <span className="text-amber-400 dark:text-amber-500 flex-shrink-0 mt-0.5">
-                            -
-                          </span>
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isDraftMode && !atsReadiness && (
-              <div className="bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 rounded-xl p-5">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-emerald-100 dark:bg-emerald-500/15 rounded-lg text-emerald-600 dark:text-emerald-300 mt-1">
-                    <Check size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">
-                      Draft Preview
-                    </h3>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1 leading-relaxed">
-                      You are viewing a live preview of your draft. Any changes made in the builder
-                      will appear here.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <LayoutTemplate className="w-4 h-4" /> Actions
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  disabled={isDownloading}
-                  onClick={handleDownloadClick}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all group ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
-                >
-                  {isDownloading ? (
-                    <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin mb-1"></div>
-                  ) : (
-                    <Download className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 mb-1" />
-                  )}
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-indigo-700 text-center">
-                    {isDownloading
-                      ? 'Processing...'
-                      : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}
-                  </span>
-                </button>
-
-                {/* Edit Button for both Drafts and Applications */}
-                <button
-                  onClick={
-                    isDraftMode
-                      ? () => navigate(`/cv-builder/${application._id}/finalize`)
-                      : handleEdit
-                  }
-                  className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all group"
-                >
-                  <PenTool className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 mb-1" />
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-indigo-700 text-center">
-                    Edit in Builder
-                  </span>
-                </button>
-
-                {/* Email placeholder */}
-                {isDraftMode && (
+          <div className="flex-1 overflow-y-auto">
+            {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes). */}
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+              {!isDraftMode ? (
+                <>
                   <button
-                    disabled
-                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 opacity-70 cursor-not-allowed transition-all relative overflow-hidden"
+                    type="button"
+                    onClick={() => setInsightsOpen((v) => !v)}
+                    className="w-full flex items-center gap-2.5 text-left"
+                    aria-expanded={insightsOpen}
                   >
-                    <div className="absolute top-1 right-1 bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-[9px] font-bold px-1 rounded uppercase tracking-wide">
-                      Soon
-                    </div>
-                    <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 mb-1" />
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">
-                      Email Docs
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${bandDot(application?.fitScore ?? 0)}`}
+                    />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 flex-1">
+                      Fit score
                     </span>
+                    <span
+                      className={`font-heading text-lg font-bold tabular-nums ${bandText(application?.fitScore ?? 0)}`}
+                    >
+                      {application?.fitScore ?? 0}%
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`text-slate-400 dark:text-slate-500 transition-transform ${insightsOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
-                )}
-              </div>
+                  {insightsOpen && (
+                    <div className="mt-3 space-y-3">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Optimized for{' '}
+                        {application?.jobId?.title || application?.jobTitle || 'the role'}.
+                      </p>
+                      {/* Free users get the standard analysis (GPT-4o-mini); nudge them
+                          toward the premium ApplyRight ATS analysis (GPT-4o). */}
+                      {userProfile?.plan !== 'paid' && (
+                        <button
+                          type="button"
+                          onClick={() => navigate('/upgrade')}
+                          className="inline-flex items-start gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 hover:underline text-left"
+                        >
+                          <Crown className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          Upgrade to ApplyRight ATS for our sharpest, recruiter-grade analysis
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : atsReadiness ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setInsightsOpen((v) => !v)}
+                    className="w-full flex items-center gap-2.5 text-left"
+                    aria-expanded={insightsOpen}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${bandDot(atsReadiness.score)}`}
+                    />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 flex-1">
+                      ATS readiness
+                    </span>
+                    <span
+                      className={`font-heading text-lg font-bold tabular-nums ${bandText(atsReadiness.score)}`}
+                    >
+                      {atsReadiness.score}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`text-slate-400 dark:text-slate-500 transition-transform ${insightsOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {insightsOpen && (
+                    <div className="mt-3 space-y-3">
+                      <div className="space-y-1.5">
+                        {atsReadiness.checks?.map((check, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            {check.passed ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                            ) : (
+                              <X className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
+                            )}
+                            <span
+                              className={
+                                check.passed
+                                  ? 'text-slate-600 dark:text-slate-300'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }
+                            >
+                              {check.label}
+                              {check.detail && (
+                                <span className="text-slate-400 dark:text-slate-500 ml-1">
+                                  ({check.detail})
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {atsReadiness.tips?.length > 0 && (
+                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-1.5">
+                            Tips
+                          </p>
+                          <ul className="space-y-1">
+                            {atsReadiness.tips.slice(0, 3).map((tip, i) => (
+                              <li
+                                key={i}
+                                className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed flex gap-1.5"
+                              >
+                                <span className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
+                                  –
+                                </span>
+                                {tip}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  Live draft preview
+                </p>
+              )}
             </div>
 
-            {/* Templates Selection - Only relevant for Resume currently, maybe simple style for Cover Letter later */}
-            {activeTab === 'resume' && (
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4">
-                  Template Style
-                </h3>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-none pr-1">
-                  {TEMPLATES.map((t) => {
-                    const locked = !isUnlocked(t.id);
-                    return (
-                      <div
-                        key={t.id}
-                        onClick={() => {
-                          setTemplateId(t.id);
-                          setMobileSidebarOpen(false);
-                        }}
-                        className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${
-                          templateId === t.id
-                            ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/15 ring-1 ring-indigo-600'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                        } ${locked ? 'bg-slate-50/50 dark:bg-slate-900/50' : ''}`}
+            {/* b) Rail tabs — Templates / Design (indigo underline like the masthead). */}
+            <div className="px-5 flex gap-5 border-b border-slate-100 dark:border-slate-800">
+              {['templates', 'design'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setRailTab(tab)}
+                  className={`relative py-3 text-xs font-semibold capitalize transition-colors ${
+                    railTab === tab
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {tab}
+                  {railTab === tab && (
+                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* c/d) Rail body — Templates (grouped) or the Design placeholder. */}
+            <div className="p-5">
+              {activeTab !== 'resume' ? (
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-14 px-4 leading-relaxed">
+                  Template styles apply to the CV. Switch to Resume to choose one.
+                </p>
+              ) : railTab === 'design' ? (
+                <div className="space-y-6">
+                  {/* Accent — sets --cv-accent; templates paint it in 2b. */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                      Accent
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Default = clear accent → each template's own default. */}
+                      <button
+                        type="button"
+                        onClick={() => setDesign((d) => ({ ...d, accent: '' }))}
+                        className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
+                          design.accent === ''
+                            ? 'border-indigo-600 ring-2 ring-indigo-600/30 text-slate-900 dark:text-slate-100'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
                       >
-                        <div className="w-10 h-14 mr-3 flex-shrink-0 relative">
-                          <TemplateThumbnail type={t.id} className="rounded-sm" />
-                          {t.isRecommended && (
-                            <div className="absolute top-0 left-0 p-0.5 bg-emerald-500 rounded-br-sm shadow-sm z-10">
-                              <Sparkles size={8} className="text-white fill-white" />
+                        Default
+                      </button>
+                      {[
+                        { name: 'Navy', hex: '#1e3a5f' },
+                        { name: 'Slate', hex: '#334155' },
+                        { name: 'Indigo', hex: '#4f46e5' },
+                        { name: 'Emerald', hex: '#047857' },
+                        { name: 'Burgundy', hex: '#7c2d12' },
+                        { name: 'Charcoal', hex: '#111827' },
+                      ].map((sw) => (
+                        <button
+                          key={sw.hex}
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, accent: sw.hex }))}
+                          title={sw.name}
+                          aria-label={sw.name}
+                          className={`w-8 h-8 rounded-full transition-all ${
+                            design.accent === sw.hex
+                              ? 'ring-2 ring-indigo-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                              : 'ring-1 ring-black/10 dark:ring-white/10 hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: sw.hex }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Margins — fully functional: preview padding + PDF margin. */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                      Margins
+                    </p>
+                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                      {['narrow', 'normal', 'wide'].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, margins: m }))}
+                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
+                            design.margins === m
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Density — sets --cv-leading; templates read it in 2b. */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                      Density
+                    </p>
+                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                      {['compact', 'normal', 'relaxed'].map((den) => (
+                        <button
+                          key={den}
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, density: den }))}
+                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
+                            design.density === den
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {den}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6 scrollbar-none">
+                  {['Simple', 'Professional', 'Editorial', 'Industry'].map((groupName) => {
+                    const groupTemplates = TEMPLATES.filter((t) => t.group === groupName);
+                    if (!groupTemplates.length) return null;
+                    return (
+                      <div key={groupName} className="space-y-2.5">
+                        <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                          {groupName}
+                        </h4>
+                        {groupTemplates.map((t) => {
+                          const locked = !isUnlocked(t.id);
+                          return (
+                            <div
+                              key={t.id}
+                              onClick={() => {
+                                setTemplateId(t.id);
+                                setMobileSidebarOpen(false);
+                              }}
+                              className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${
+                                templateId === t.id
+                                  ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10 ring-1 ring-indigo-600'
+                                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                              } ${locked ? 'bg-slate-50/50 dark:bg-slate-900/40' : ''}`}
+                            >
+                              <div className="w-10 h-14 mr-3 flex-shrink-0 relative">
+                                <TemplateThumbnail type={t.id} className="rounded-sm" />
+                                {/* Tier badge — always visible on the thumbnail so users
+                                    know the cost before clicking. Free templates show
+                                    a green "Free" pill; locked Pro templates show the
+                                    credit cost in slate; unlocked Pro shows "Pro". */}
+                                <div
+                                  className={`absolute bottom-0 right-0 px-1 py-0.5 text-[8px] font-bold rounded-tl-sm leading-none ${
+                                    t.cost === 0
+                                      ? 'bg-emerald-500 text-white'
+                                      : locked
+                                        ? 'bg-slate-800 text-white'
+                                        : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                  }`}
+                                >
+                                  {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
+                                </div>
+                                {locked && (
+                                  <div className="absolute top-0 right-0 p-0.5 bg-slate-800/90 rounded-bl-sm">
+                                    <Lock size={7} className="text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 block truncate">
+                                  {t.name}
+                                </span>
+                                {t.isRecommended && (
+                                  <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                                    Recommended
+                                  </span>
+                                )}
+                                {locked && (
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                    {t.cost} credits to unlock
+                                  </span>
+                                )}
+                              </div>
+                              {templateId === t.id && (
+                                <Check size={16} className="text-indigo-600 dark:text-indigo-400" />
+                              )}
                             </div>
-                          )}
-                          {/* Tier badge — always visible on the thumbnail so users
-                              know the cost before clicking. Free templates show
-                              a green "Free" pill; locked Pro templates show the
-                              credit cost in slate; unlocked Pro shows "Pro". */}
-                          <div
-                            className={`absolute bottom-0 right-0 px-1 py-0.5 text-[8px] font-bold rounded-tl-sm leading-none ${
-                              t.cost === 0
-                                ? 'bg-emerald-500 text-white'
-                                : locked
-                                  ? 'bg-slate-800 text-white'
-                                  : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
-                            }`}
-                          >
-                            {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
-                          </div>
-                          {locked && (
-                            <div className="absolute top-0 right-0 p-0.5 bg-slate-800/90 rounded-bl-sm">
-                              <Lock size={7} className="text-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 block truncate">
-                            {t.name}
-                          </span>
-                          {t.isRecommended && (
-                            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
-                              <Sparkles size={10} className="fill-emerald-600" /> Recommended
-                            </span>
-                          )}
-                          {locked && (
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                              {t.cost} credits to unlock
-                            </span>
-                          )}
-                        </div>
-                        {templateId === t.id && <Check size={16} className="text-indigo-600" />}
+                          );
+                        })}
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">

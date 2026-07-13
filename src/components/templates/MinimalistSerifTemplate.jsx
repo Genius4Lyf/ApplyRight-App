@@ -67,7 +67,10 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
   }
 
   return (
-    <div className="bg-white mx-auto p-12 font-['Merriweather',serif] text-slate-800 leading-relaxed text-[11pt]">
+    <div
+      className="bg-white mx-auto p-12 font-['Merriweather',serif] text-slate-800 text-[11pt]"
+      style={{ lineHeight: 'var(--cv-leading, 1.625)' }}
+    >
       {/* INJECT FONTS */}
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
@@ -75,7 +78,12 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER - Classic Book Style */}
       <header className="text-center mb-14 border-b-2 border-slate-100 pb-10">
-        <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">{name}</h1>
+        <h1
+          className="text-4xl font-bold text-slate-900 mb-4 tracking-tight"
+          style={{ color: 'var(--cv-accent, #0f172a)' }}
+        >
+          {name}
+        </h1>
 
         {roleTitle && (
           <div className="text-sm italic text-slate-600 mb-6 font-light">{roleTitle}</div>
@@ -107,6 +115,7 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
             h2: ({ node, ...props }) => (
               <h2
                 className="text-xl font-bold text-slate-900 mt-10 mb-6 pb-2 border-b border-slate-100"
+                style={{ color: 'var(--cv-accent, #0f172a)' }}
                 {...props}
               />
             ),

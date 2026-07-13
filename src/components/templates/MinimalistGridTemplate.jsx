@@ -40,7 +40,10 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
   const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
 
   return (
-    <div className="bg-white mx-auto min-h-[1000px] font-['Inter',sans-serif] text-slate-800 flex">
+    <div
+      className="bg-white mx-auto min-h-[1000px] font-['Inter',sans-serif] text-slate-800 flex"
+      style={{ lineHeight: 'var(--cv-leading, 1.25)' }}
+    >
       {/* Header / Sidebar (Left 30%) */}
       <div className="w-[30%] bg-slate-50 p-8 border-r border-slate-200">
         <div className="sticky top-8">
@@ -48,7 +51,10 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
             {name}
           </h1>
           {roleTitle && (
-            <div className="text-xs font-semibold uppercase tracking-widest text-indigo-600 mb-8">
+            <div
+              className="text-xs font-semibold uppercase tracking-widest mb-8"
+              style={{ color: 'var(--cv-accent, #4f46e5)' }}
+            >
               {roleTitle}
             </div>
           )}
@@ -100,12 +106,16 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
               ),
               li: ({ node, ...props }) => (
                 <li
-                  className="pl-4 border-l border-slate-200 hover:border-indigo-400 transition-colors"
+                  className="pl-4 border-l border-slate-200 hover:border-[color:var(--cv-accent,#4f46e5)] transition-colors"
                   {...props}
                 />
               ),
               a: ({ node, ...props }) => (
-                <a className="text-indigo-600 font-medium hover:underline" {...props} />
+                <a
+                  className="font-medium hover:underline"
+                  style={{ color: 'var(--cv-accent, #4f46e5)' }}
+                  {...props}
+                />
               ),
             }}
           >

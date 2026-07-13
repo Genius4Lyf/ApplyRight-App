@@ -71,7 +71,10 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
   }
 
   return (
-    <div className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-[#333333] leading-relaxed text-[10.5pt]">
+    <div
+      className="bg-white mx-auto p-10 font-['Inter',sans-serif] text-[#333333] text-[10.5pt]"
+      style={{ lineHeight: 'var(--cv-leading, 1.625)' }}
+    >
       {/* INJECT FONTS */}
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -79,7 +82,10 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER */}
       <header className="border-b-2 border-[#e5e5e5] pb-6 mb-6">
-        <h1 className="text-[28pt] font-bold uppercase tracking-tight text-[#111111] mb-2">
+        <h1
+          className="text-[28pt] font-bold uppercase tracking-tight text-[#111111] mb-2"
+          style={{ color: 'var(--cv-accent, #111111)' }}
+        >
           {name}
         </h1>
 
@@ -116,6 +122,10 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
             h2: ({ node, ...props }) => (
               <h2
                 className="text-[11pt] font-bold uppercase tracking-widest text-[#111111] bg-[#f5f5f5] py-2 px-3 mt-8 mb-4 border-l-4 border-[#999999]"
+                style={{
+                  color: 'var(--cv-accent, #111111)',
+                  borderLeftColor: 'var(--cv-accent, #999999)',
+                }}
                 {...props}
               />
             ),

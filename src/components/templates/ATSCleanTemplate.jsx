@@ -62,7 +62,10 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
   }
 
   return (
-    <div className="bg-white mx-auto p-10 font-['Inter',system-ui,sans-serif] text-[#1a1a1a] leading-[1.5] text-[11pt]">
+    <div
+      className="bg-white mx-auto p-10 font-['Inter',system-ui,sans-serif] text-[#1a1a1a] text-[11pt]"
+      style={{ lineHeight: 'var(--cv-leading, 1.5)' }}
+    >
       {/* INJECT FONTS */}
       <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -70,7 +73,10 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER - Matches HTML template exactly */}
       <header className="text-center mb-8">
-        <h1 className="text-[24pt] font-bold mb-2 uppercase tracking-[-0.02em] text-[#1a1a1a]">
+        <h1
+          className="text-[24pt] font-bold mb-2 uppercase tracking-[-0.02em] text-[#1a1a1a]"
+          style={{ color: 'var(--cv-accent, #1a1a1a)' }}
+        >
           {name}
         </h1>
 
@@ -103,6 +109,7 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
           h2: ({ node, ...props }) => (
             <h2
               className="text-[12pt] font-bold uppercase tracking-[0.05em] text-[#1a1a1a] border-b border-[#e5e5e5] pb-2 mb-4 mt-6 first:mt-0"
+              style={{ color: 'var(--cv-accent, #1a1a1a)' }}
               {...props}
             />
           ),

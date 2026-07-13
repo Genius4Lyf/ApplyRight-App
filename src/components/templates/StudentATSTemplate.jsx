@@ -62,7 +62,10 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
   }
 
   return (
-    <div className="bg-white mx-auto p-10 font-[Arial,sans-serif] text-black leading-[1.6] text-[11pt]">
+    <div
+      className="bg-white mx-auto p-10 font-[Arial,sans-serif] text-black text-[11pt]"
+      style={{ lineHeight: 'var(--cv-leading, 1.6)' }}
+    >
       {/* HEADER - Matches HTML template exactly */}
       <header className="text-center mb-6">
         <h1 className="text-[24pt] font-bold mb-3 tracking-tight uppercase">{name}</h1>
@@ -89,7 +92,11 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
           // H2 = Section Headers (blue-grey, bold, 2px border) - EXACT match to HTML
           h2: ({ node, ...props }) => (
             <h2
-              className="text-[14pt] font-bold text-[#2C3E50] mb-3 pb-1 border-b-2 border-[#2C3E50] uppercase mt-6 first:mt-0"
+              className="text-[14pt] font-bold mb-3 pb-1 border-b-2 uppercase mt-6 first:mt-0"
+              style={{
+                color: 'var(--cv-accent, #2C3E50)',
+                borderColor: 'var(--cv-accent, #2C3E50)',
+              }}
               {...props}
             />
           ),
