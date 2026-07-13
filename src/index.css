@@ -91,6 +91,27 @@
   }
 }
 
+/* Editorial dark palette — deep, layered navy grounds (app-shell mockup).
+   Only the surface shades are retargeted under .dark; slate-700 stays the
+   visible hairline. Light mode keeps Tailwind's default slate. */
+.dark {
+  --color-slate-950: #070c17;  /* deepest wells */
+  --color-slate-900: #0a101e;  /* app canvas / page ground */
+  --color-slate-800: #0f1a2e;  /* raised surfaces: cards, panels, bars */
+}
+
+/* App background texture — faint 45° hairlines (replaces the dot matrix). */
+.app-texture {
+  background-image: repeating-linear-gradient(
+    45deg, transparent, transparent 9px,
+    rgba(100, 116, 139, 0.06) 9px, rgba(100, 116, 139, 0.06) 10px);
+}
+.dark .app-texture {
+  background-image: repeating-linear-gradient(
+    45deg, transparent, transparent 9px,
+    rgba(148, 163, 184, 0.05) 9px, rgba(148, 163, 184, 0.05) 10px);
+}
+
 /* Base Variable Definitions */
 @layer base {
   :root {
