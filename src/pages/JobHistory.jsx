@@ -21,6 +21,11 @@ import {
   FileSearch,
   ArrowUpDown,
   Check,
+  Wrench,
+  TrendingUp,
+  CheckCircle2,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 
 /**
@@ -62,6 +67,59 @@ import {
   mergeInterviewPrepResponse,
 } from '../utils/interviewPrep';
 import { toast } from 'sonner';
+import CardDeck from '../components/ui/CardDeck';
+import ViewToggle from '../components/ui/ViewToggle';
+import { momentumStats, nextMove, bandOf } from '../lib/applicationInsights';
+
+// Semantic accent maps for the editorial list state. Defined once, reused by
+// the momentum strip, deck notes, and list rows so a band's color is identical
+// everywhere. Bands come from bandOf(score); next-move tones from nextMove(app).
+const BAND_TEXT = {
+  ok: 'text-emerald-600 dark:text-emerald-400',
+  warn: 'text-amber-600 dark:text-amber-400',
+  bad: 'text-rose-600 dark:text-rose-400',
+  neutral: 'text-slate-500 dark:text-slate-400',
+};
+const BAND_RULEBG = {
+  ok: 'bg-emerald-500',
+  warn: 'bg-amber-500',
+  bad: 'bg-rose-500',
+  neutral: 'bg-slate-400',
+};
+const NEXT_TONE = {
+  accent: 'text-indigo-600 dark:text-indigo-300',
+  ok: 'text-emerald-600 dark:text-emerald-400',
+  warn: 'text-amber-600 dark:text-amber-400',
+  bad: 'text-rose-600 dark:text-rose-400',
+  neutral: 'text-slate-500 dark:text-slate-400',
+};
+const NEXT_ICON = { Wrench, TrendingUp, Mail, CheckCircle2, ArrowRight };
+
+// Paper-note chrome for CardDeck's front/receding cards. CardDeck owns only
+// transform/opacity/position; this supplies the page look.
+const PAPER_CARD =
+  'rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_16px_34px_-14px_rgba(15,23,42,.16)] dark:shadow-[0_20px_46px_-16px_rgba(0,0,0,.55)] overflow-hidden';
+
+// Ruled-paper backdrop for the verdict text — faint horizontal lines like a
+// legal pad, offset so the baselines sit on the rules.
+const RULED_PAPER = {
+  backgroundImage:
+    'repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(148,163,184,.16) 27px, rgba(148,163,184,.16) 28px)',
+  backgroundPosition: '0 7px',
+};
+
+// Derive every display value a note/row needs from one application record.
+const deriveApp = (a) => {
+  const title = a.jobId?.title || a.jobTitle || 'Unknown Role';
+  const company = a.jobId?.company || a.jobCompany || 'Unknown Company';
+  const score = a.optimizedFitScore ?? a.fitScore;
+  const band = bandOf(score);
+  const improved =
+    typeof a.optimizedFitScore === 'number' &&
+    typeof a.fitScore === 'number' &&
+    a.optimizedFitScore > a.fitScore;
+  return { title, company, score, band, improved, mv: nextMove(a) };
+};
 
 /**
  * Reusable section header for the application detail panel. Gives each major
@@ -180,6 +238,14 @@ const JobHistory = () => {
   const [generatingInterview, setGeneratingInterview] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  // Deck vs list, remembered across visits. Deck is the default first impression.
+  const [view, setView] = useState(() => {
+    try {
+      return localStorage.getItem('appsView') === 'list' ? 'list' : 'deck';
+    } catch (_) {
+      return 'deck';
+    }
+  });
   const [compareMenuOpen, setCompareMenuOpen] = useState(false);
   const [cvGenStatus, setCvGenStatus] = useState(null);
   const [reanalyzing, setReanalyzing] = useState(false);
@@ -275,6 +341,37 @@ const JobHistory = () => {
     const updated = { ...selectedApp, ...updates };
     setSelectedApp(updated);
     setApplications((prev) => prev.map((a) => (a._id === updated._id ? updated : a)));
+  };
+
+  // Opens an application into the full-width detail view. Same behavior the old
+  // list rows had inline — extracted so the deck and list share one code path.
+  const openApp = (app) => {
+    setSelectedApp(app);
+    setSelectedTemplate(app.templateId || 'ats-clean');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleViewChange = (v) => {
+    setView(v);
+    try {
+      localStorage.setItem('appsView', v);
+    } catch (_) {
+      /* private mode — non-critical */
+    }
+  };
+
+  // Tap vs drag disambiguation for deck notes: the front card captures the
+  // pointer to drive swiping, so a click can still fire after a drag. Record the
+  // press point and only treat a near-stationary release as an "open" tap.
+  const notePressRef = useRef({ x: 0, y: 0 });
+  const handleNotePointerDown = (e) => {
+    notePressRef.current = { x: e.clientX, y: e.clientY };
+  };
+  const handleNoteClick = (app, e) => {
+    const dx = Math.abs(e.clientX - notePressRef.current.x);
+    const dy = Math.abs(e.clientY - notePressRef.current.y);
+    if (dx > 8 || dy > 8) return; // was a swipe/drag, not a tap
+    openApp(app);
   };
 
   const filteredApplications = applications
@@ -559,148 +656,342 @@ const JobHistory = () => {
     }
   };
 
+  // Deck shows the 10 most-recent applications, newest-first, independent of the
+  // list view's search/sort state.
+  const recentApps = [...applications]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10);
+
+  // A single application as a paper note for the deck. Tapping opens it.
+  const renderNote = (a) => {
+    const { title, company, score, band, improved, mv } = deriveApp(a);
+    const NextIcon = NEXT_ICON[mv.icon] || ArrowRight;
+    return (
+      <div
+        role="button"
+        tabIndex={-1}
+        aria-label={`Open ${title} at ${company}`}
+        onPointerDown={handleNotePointerDown}
+        onClick={(e) => handleNoteClick(a, e)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openApp(a);
+          }
+        }}
+        className="cursor-pointer select-none"
+      >
+        {/* a. Spiral binding */}
+        <div
+          aria-hidden="true"
+          className="flex items-center gap-4 px-6 h-[26px] border-b border-slate-100 dark:border-slate-700 bg-gradient-to-b from-slate-100/70 dark:from-slate-900/40 to-transparent"
+        >
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span
+              key={i}
+              className="h-[9px] w-[9px] rounded-full bg-slate-50 dark:bg-slate-900 shadow-[inset_0_1px_2px_rgba(0,0,0,.25)]"
+            />
+          ))}
+        </div>
+
+        {/* b. Body */}
+        <div className="relative px-6 pl-10 py-5">
+          {/* Margin rule */}
+          <div
+            aria-hidden="true"
+            className={`absolute top-3.5 bottom-4 left-6 w-0.5 rounded opacity-40 ${BAND_RULEBG[band]}`}
+          />
+
+          {/* Score stamp */}
+          <div className="absolute top-4 right-6 text-right">
+            <div
+              className={`font-heading text-[40px] leading-[.86] font-bold tabular-nums ${BAND_TEXT[band]}`}
+            >
+              {score == null ? (
+                '—'
+              ) : (
+                <>
+                  {score}
+                  <span className="text-[22px]">%</span>
+                </>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              Match
+            </div>
+            {improved && (
+              <div className="mt-1 text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                ↑ from {a.fitScore}
+              </div>
+            )}
+          </div>
+
+          {/* Header */}
+          <div className="pr-24">
+            <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 truncate">
+              {company} · {formatRelativeDate(a.createdAt)}
+            </p>
+            <h3 className="mt-1 font-heading text-[22px] font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {title}
+            </h3>
+          </div>
+
+          {/* Verdict on ruled paper */}
+          {a.fitAnalysis?.overallFeedback && (
+            <p
+              className="mt-4 font-heading text-[16px] leading-[28px] text-slate-800 dark:text-slate-200 line-clamp-3"
+              style={RULED_PAPER}
+            >
+              {a.fitAnalysis.overallFeedback}
+            </p>
+          )}
+
+          {/* Band rail */}
+          <div aria-hidden="true" className="mt-4 grid h-1.5 grid-cols-[45fr_30fr_25fr] gap-0.5">
+            <span className="rounded-sm bg-rose-500/50" />
+            <span className="rounded-sm bg-amber-500/50" />
+            <span className="rounded-sm bg-emerald-500/50" />
+          </div>
+
+          {/* Footer */}
+          <div className="mt-4 flex items-center justify-between border-t border-dashed border-slate-200 dark:border-slate-700 pt-4">
+            <span
+              className={`inline-flex items-center gap-2 text-sm font-semibold min-w-0 ${NEXT_TONE[mv.tone]}`}
+            >
+              <NextIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{mv.label}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              Open
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // A single application as a dense editorial row for the list view.
+  const renderRow = (app) => {
+    const { title, company, score, band, mv } = deriveApp(app);
+    const NextIcon = NEXT_ICON[mv.icon] || ArrowRight;
+    return (
+      <div
+        key={app._id}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${title} at ${company}`}
+        onClick={() => openApp(app)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openApp(app);
+          }
+        }}
+        className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 pl-5 sm:p-5 sm:pl-6 cursor-pointer transition-colors hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:focus-visible:ring-indigo-500/50"
+      >
+        {/* Band left edge */}
+        <span
+          aria-hidden="true"
+          className={`absolute left-0 top-0 bottom-0 w-[3px] ${BAND_RULEBG[band]}`}
+        />
+
+        {/* Score */}
+        <div className="text-center min-w-[3rem]">
+          <div
+            className={`font-heading text-xl sm:text-2xl font-bold tabular-nums leading-none ${BAND_TEXT[band]}`}
+          >
+            {score == null ? '—' : `${score}%`}
+          </div>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+            Match
+          </div>
+        </div>
+
+        {/* Role + next move */}
+        <div className="min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 truncate">
+            {company} · {formatRelativeDate(app.createdAt)}
+          </p>
+          <h3 className="mt-0.5 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
+            {title}
+          </h3>
+          <span
+            className={`mt-1 inline-flex max-w-full items-center gap-1.5 text-xs sm:text-sm font-semibold ${NEXT_TONE[mv.tone]}`}
+          >
+            <NextIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{mv.label}</span>
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <button
+            onClick={(e) => handleDelete(e, app._id)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all sm:opacity-0 sm:group-hover:opacity-100"
+            title="Delete application"
+            aria-label="Delete application"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 whitespace-nowrap group-hover:gap-2 transition-all">
+            Open
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">My Applications</h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            Track and manage your generated applications.
-          </p>
-        </div>
-
         {loading ? (
           <div className="text-center py-12">
             <div className="w-8 h-8 border-4 border-indigo-200 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-slate-400 dark:text-slate-500">Loading history...</p>
           </div>
         ) : applications.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-500" />
-            </div>
-            <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+          /* Editorial empty state — a clear desk, with the one action that
+             starts everything. */
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-14 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+              Your desk is clear
+            </p>
+            <h3 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
               No applications yet
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
-              Start by generating your first tailored CV and cover letter in the "Get Hired"
-              section.
+            <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+              Analyze a role to see how your CV measures up — then tailor it, draft a cover letter,
+              and prep for the interview.
             </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+            >
+              Analyze your first role
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         ) : !selectedApp ? (
-          /* Full-width list. Clicking a row swaps the whole page to the
-             focused, full-width detail view below — so users concentrate on
-             one application instead of squinting at a cramped side panel. */
-          <div className="space-y-3 pb-8">
-            {/* Search + sort */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by job title or company"
-                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-300 transition-colors"
-                />
-              </div>
-              <SortDropdown value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
-            </div>
+          /* List state — a two-column workspace: identity + momentum rail on the
+             left, the deck (or dense list) on the right. Clicking any item swaps
+             the whole page to the detail view below. */
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8">
+            {/* LEFT RAIL */}
+            <div className="flex flex-col">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                Your job hunt
+              </p>
+              <h1 className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
+                Applications
+              </h1>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Every role you&apos;ve analyzed, most recent first.
+              </p>
 
-            {filteredApplications.length === 0 && (
-              <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
-                {searchQuery.trim() ? 'No applications match your search.' : 'No applications yet.'}
-              </div>
-            )}
-
-            {filteredApplications.map((app) => {
-              const title = app.jobId?.title || app.jobTitle || 'Unknown Role';
-              const company = app.jobId?.company || app.jobCompany || 'Unknown Company';
-              const noAssets =
-                !app.optimizedCV && !app.draftCVId && !app.coverLetter && !hasInterviewPrep(app);
-              return (
-                <div
-                  key={app._id}
-                  onClick={() => {
-                    setSelectedApp(app);
-                    setSelectedTemplate(app.templateId || 'ats-clean');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="group flex items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/60 hover:shadow-md cursor-pointer transition-all"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1 flex-wrap">
-                      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
-                        {title}
-                      </h3>
-                      {app.fitScore !== undefined && (
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-                            app.fitScore >= 80
-                              ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                              : app.fitScore >= 50
-                                ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
-                          }`}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {app.fitScore}% Match
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
-                      <Building className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">{company}</span>
-                      <span className="text-slate-300 dark:text-slate-600">·</span>
-                      <span
-                        className="whitespace-nowrap"
-                        title={new Date(app.createdAt).toLocaleString()}
-                      >
-                        {formatRelativeDate(app.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {(app.optimizedCV || app.draftCVId) && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-xs font-medium border border-emerald-200 dark:border-emerald-500/30">
-                          <FileText className="w-3 h-3" /> CV
-                        </span>
-                      )}
-                      {app.coverLetter && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 text-xs font-medium border border-blue-200 dark:border-blue-500/30">
-                          <Mail className="w-3 h-3" /> Letter
-                        </span>
-                      )}
-                      {hasInterviewPrep(app) && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-300 text-xs font-medium border border-purple-200 dark:border-purple-500/30">
-                          <MessageSquare className="w-3 h-3" /> Interview
-                        </span>
-                      )}
-                      {noAssets && (
-                        <span className="inline-flex items-center px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs font-medium border border-slate-200 dark:border-slate-700">
-                          Analysis only
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-end justify-between self-stretch gap-2 shrink-0">
-                    <button
-                      onClick={(e) => handleDelete(e, app._id)}
-                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg transition-all sm:opacity-0 sm:group-hover:opacity-100"
-                      title="Delete application"
+              {/* Momentum — vertical list on desktop */}
+              <div className="mt-8 hidden lg:block">
+                {momentumStats(applications).map((s, i) => (
+                  <div
+                    key={s.label}
+                    className={`flex items-baseline justify-between py-3.5 border-b border-slate-200 dark:border-slate-700 ${
+                      i === 0 ? 'border-t' : ''
+                    }`}
+                  >
+                    <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                      {s.label}
+                    </span>
+                    <span
+                      className={`text-2xl font-bold tabular-nums ${
+                        s.tone === 'ok'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-900 dark:text-slate-100'
+                      }`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 group-hover:gap-2 transition-all">
-                      View
-                      <ChevronRight className="w-4 h-4" />
+                      {s.value}
                     </span>
                   </div>
+                ))}
+              </div>
+
+              {/* Momentum — 2×2 grid on mobile */}
+              <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 lg:hidden">
+                {momentumStats(applications).map((s) => (
+                  <div
+                    key={s.label}
+                    className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
+                  >
+                    <div
+                      className={`text-2xl font-bold tabular-nums ${
+                        s.tone === 'ok'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-900 dark:text-slate-100'
+                      }`}
+                    >
+                      {s.value}
+                    </div>
+                    <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* View toggle + new-role CTA — natural position under the stats */}
+              <div className="mt-6 space-y-3">
+                <ViewToggle value={view} onChange={handleViewChange} className="w-full" />
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  Analyze a new role
+                </button>
+              </div>
+            </div>
+
+            {/* RIGHT MAIN */}
+            <div className="min-w-0">
+              {view === 'deck' ? (
+                <CardDeck
+                  items={recentApps}
+                  getKey={(a) => a._id}
+                  renderItem={renderNote}
+                  cardClassName={PAPER_CARD}
+                  label="10 most recent"
+                />
+              ) : (
+                /* List view — keeps search + sort */
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by job title or company"
+                        className="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-300 transition-colors"
+                      />
+                    </div>
+                    <SortDropdown value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+                  </div>
+
+                  {filteredApplications.length === 0 ? (
+                    <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
+                      {searchQuery.trim()
+                        ? 'No applications match your search.'
+                        : 'No applications yet.'}
+                    </div>
+                  ) : (
+                    filteredApplications.map(renderRow)
+                  )}
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
         ) : (
           /* Focused detail view — takes the full page width so nothing is
