@@ -69,6 +69,7 @@ import {
 import { toast } from 'sonner';
 import CardDeck from '../components/ui/CardDeck';
 import ViewToggle from '../components/ui/ViewToggle';
+import WorkspaceSkeleton from '../components/ui/WorkspaceSkeleton';
 import { momentumStats, nextMove, bandOf } from '../lib/applicationInsights';
 
 // Semantic accent maps for the editorial list state. Defined once, reused by
@@ -849,10 +850,7 @@ const JobHistory = () => {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-400 dark:text-slate-500">Loading history...</p>
-          </div>
+          <WorkspaceSkeleton />
         ) : applications.length === 0 ? (
           /* Editorial empty state — a clear desk, with the one action that
              starts everything. */

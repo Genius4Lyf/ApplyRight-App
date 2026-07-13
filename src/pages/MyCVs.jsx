@@ -11,6 +11,7 @@ import { useMinVisible } from '../hooks/useMinVisible';
 import CardDeck from '../components/ui/CardDeck';
 import ViewToggle from '../components/ui/ViewToggle';
 import NoteCard from '../components/ui/NoteCard';
+import WorkspaceSkeleton from '../components/ui/WorkspaceSkeleton';
 import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD } from '../lib/noteStyles';
 
 const STATUS_FILTERS = [
@@ -315,7 +316,7 @@ const MyCVs = () => {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
         {showLoader ? (
-          <SkeletonGrid />
+          <WorkspaceSkeleton />
         ) : error ? (
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : drafts.length === 0 ? (
@@ -532,27 +533,6 @@ const MyCVs = () => {
     </div>
   );
 };
-
-const SkeletonGrid = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    {[0, 1, 2, 3, 4, 5].map((i) => (
-      <div
-        key={i}
-        className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
-      >
-        <div className="flex justify-between items-start mb-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 animate-pulse" />
-          <div className="h-4 w-16 rounded-full bg-slate-100 dark:bg-slate-700 animate-pulse" />
-        </div>
-        <div className="h-5 w-3/4 mb-2 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-        <div className="h-3 w-full mb-1 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-        <div className="h-3 w-5/6 mb-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-        <div className="h-1.5 w-full mb-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-        <div className="h-4 w-24 mt-auto bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-      </div>
-    ))}
-  </div>
-);
 
 const EmptyState = () => (
   <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-14 text-center">

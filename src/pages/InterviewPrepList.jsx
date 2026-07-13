@@ -9,6 +9,7 @@ import { computeReadiness, getPrepSummary } from '../utils/interviewPrep';
 import CardDeck from '../components/ui/CardDeck';
 import ViewToggle from '../components/ui/ViewToggle';
 import NoteCard from '../components/ui/NoteCard';
+import WorkspaceSkeleton from '../components/ui/WorkspaceSkeleton';
 import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD } from '../lib/noteStyles';
 
 // Score → colour tone for readiness. Unprepped items (no rated questions/
@@ -217,7 +218,7 @@ const InterviewPrepList = () => {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
         {showLoader ? (
-          <SkeletonList />
+          <WorkspaceSkeleton />
         ) : error ? (
           <div className="text-center py-12 text-rose-600 dark:text-rose-300">{error}</div>
         ) : items.length === 0 ? (
@@ -319,24 +320,6 @@ const InterviewPrepList = () => {
     </div>
   );
 };
-
-const SkeletonList = () => (
-  <div className="space-y-3">
-    {[0, 1, 2].map((i) => (
-      <div
-        key={i}
-        className="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 animate-pulse"
-      >
-        <div className="h-10 w-12 rounded bg-slate-100 dark:bg-slate-700 shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 w-1/3 rounded bg-slate-100 dark:bg-slate-700" />
-          <div className="h-5 w-1/2 rounded bg-slate-100 dark:bg-slate-700" />
-          <div className="h-3 w-2/3 rounded bg-slate-100 dark:bg-slate-700" />
-        </div>
-      </div>
-    ))}
-  </div>
-);
 
 const EmptyState = () => (
   <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-14 text-center">
