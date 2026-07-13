@@ -23,3 +23,14 @@ export function getCompletionStatus(cv) {
     isComplete: missing.length === 0,
   };
 }
+
+/**
+ * Map a CV's completion to the editorial band vocabulary used by the note/row
+ * accents. Complete CVs are always 'ok'; otherwise the percent decides.
+ * @returns {'ok'|'warn'|'bad'}
+ */
+export function cvBand(percent, isComplete) {
+  if (isComplete) return 'ok';
+  if (percent >= 50) return 'warn';
+  return 'bad';
+}

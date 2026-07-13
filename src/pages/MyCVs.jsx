@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FileText, Plus, Search, X, Trash2, Sparkles } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Plus, Search, X, Trash2, Eye, PenLine, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import CVCard from '../components/CVCard';
 import SortSelect from '../components/ui/SortSelect';
 import CVService from '../services/cv.service';
-import { getCompletionStatus } from '../lib/cvCompleteness';
+import { getCompletionStatus, cvBand } from '../lib/cvCompleteness';
 import { useMinVisible } from '../hooks/useMinVisible';
+import CardDeck from '../components/ui/CardDeck';
+import ViewToggle from '../components/ui/ViewToggle';
+import NoteCard from '../components/ui/NoteCard';
+import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD } from '../lib/noteStyles';
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' },
@@ -24,7 +28,40 @@ const SORT_OPTIONS = [
 
 const SORT_STORAGE_KEY = 'myCvsSort';
 
+// Momentum figures computed only from fields that exist on a draft. Every value
+// guards against missing fields and falls back to 0 rather than throwing.
+const cvMomentum = (drafts = []) => {
+  const list = Array.isArray(drafts) ? drafts : [];
+  let complete = 0;
+  let sum = 0;
+  list.forEach((d) => {
+    const { percent, isComplete } = getCompletionStatus(d);
+    if (isComplete) complete += 1;
+    sum += percent || 0;
+  });
+  const avg = list.length ? Math.round(sum / list.length) : 0;
+  return [
+    { label: 'CVs', value: list.length, tone: 'neutral' },
+    { label: 'Complete', value: complete, tone: 'neutral' },
+    { label: 'Avg completion', value: `${avg}%`, tone: 'ok' },
+    { label: 'In progress', value: list.length - complete, tone: 'neutral' },
+  ];
+};
+
+// The primitives a note/row needs from one draft — completeness + display bits.
+const deriveCv = (d) => {
+  const { percent, isComplete, missing } = getCompletionStatus(d);
+  const band = cvBand(percent, isComplete);
+  const name = d.personalInfo?.fullName || 'Draft';
+  const relative = d.updatedAt
+    ? formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true })
+    : '';
+  const title = d.title || 'Untitled CV';
+  return { percent, isComplete, missingCount: missing.length, band, name, relative, title };
+};
+
 const MyCVs = () => {
+  const navigate = useNavigate();
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,6 +73,13 @@ const MyCVs = () => {
       return localStorage.getItem(SORT_STORAGE_KEY) || 'recent';
     } catch {
       return 'recent';
+    }
+  });
+  const [view, setView] = useState(() => {
+    try {
+      return localStorage.getItem('cvsView') === 'list' ? 'list' : 'deck';
+    } catch {
+      return 'deck';
     }
   });
   const [draftToDelete, setDraftToDelete] = useState(null);
@@ -73,6 +117,15 @@ const MyCVs = () => {
     }
   }, [sortBy]);
 
+  const handleViewChange = (v) => {
+    setView(v);
+    try {
+      localStorage.setItem('cvsView', v);
+    } catch {
+      /* private mode — non-critical */
+    }
+  };
+
   const counts = useMemo(() => {
     let complete = 0;
     let incomplete = 0;
@@ -82,6 +135,16 @@ const MyCVs = () => {
     });
     return { all: drafts.length, complete, incomplete };
   }, [drafts]);
+
+  // Deck shows the 10 most-recent drafts by updatedAt, independent of the list
+  // view's search/status/sort state.
+  const recentDrafts = useMemo(
+    () =>
+      [...drafts]
+        .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+        .slice(0, 10),
+    [drafts]
+  );
 
   const visibleDrafts = useMemo(() => {
     let list = drafts;
@@ -139,121 +202,285 @@ const MyCVs = () => {
     setStatusFilter('all');
   };
 
+  // The single most useful next action + its accent, shared by note and row.
+  const moveFor = ({ isComplete, missingCount }) =>
+    isComplete
+      ? { label: 'Review & download', tone: 'ok', Icon: Eye }
+      : {
+          label: `Finish your CV — ${missingCount} section${missingCount === 1 ? '' : 's'} left`,
+          tone: 'accent',
+          Icon: PenLine,
+        };
+
+  // A single draft as a paper note for the deck.
+  const renderCvNote = (d) => {
+    const info = deriveCv(d);
+    const { percent, isComplete, band, name, relative, title } = info;
+    return (
+      <NoteCard
+        band={band}
+        stamp={{ value: percent, label: 'Complete' }}
+        eyebrow={`${name} · edited ${relative}`}
+        title={title}
+        verdict={d.professionalSummary || undefined}
+        nextMove={moveFor(info)}
+        openLabel={isComplete ? 'Review' : 'Edit'}
+        onOpen={() => navigate(isComplete ? `/resume/${d._id}` : `/cv-builder/${d._id}`)}
+      />
+    );
+  };
+
+  // A single draft as a dense editorial row for the list view.
+  const renderRow = (d) => {
+    const info = deriveCv(d);
+    const { percent, isComplete, band, name, relative, title } = info;
+    const mv = moveFor(info);
+    const NextIcon = mv.Icon;
+    const open = () => navigate(isComplete ? `/resume/${d._id}` : `/cv-builder/${d._id}`);
+    return (
+      <div
+        key={d._id}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${title}`}
+        onClick={open}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            open();
+          }
+        }}
+        className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 pl-5 sm:p-5 sm:pl-6 cursor-pointer transition-colors hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:focus-visible:ring-indigo-500/50"
+      >
+        {/* Band left edge */}
+        <span
+          aria-hidden="true"
+          className={`absolute left-0 top-0 bottom-0 w-[3px] ${BAND_RULEBG[band]}`}
+        />
+
+        {/* Completion */}
+        <div className="text-center min-w-[3rem]">
+          <div
+            className={`font-heading text-xl sm:text-2xl font-bold tabular-nums leading-none ${BAND_TEXT[band]}`}
+          >
+            {percent}%
+          </div>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+            Complete
+          </div>
+        </div>
+
+        {/* Title + next move */}
+        <div className="min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 truncate">
+            {name} · edited {relative}
+          </p>
+          <h3 className="mt-0.5 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
+            {title}
+          </h3>
+          <span
+            className={`mt-1 inline-flex max-w-full items-center gap-1.5 text-xs sm:text-sm font-semibold ${NEXT_TONE[mv.tone]}`}
+          >
+            <NextIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{mv.label}</span>
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(d);
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all sm:opacity-0 sm:group-hover:opacity-100"
+            title="Delete CV"
+            aria-label="Delete CV"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 whitespace-nowrap group-hover:gap-2 transition-all">
+            {isComplete ? 'Review' : 'Edit'}
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 pb-12">
-        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5 text-indigo-600">
-              <FileText className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">My CVs</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-              {counts.all > 0 ? `${counts.all} CV${counts.all === 1 ? '' : 's'}` : 'Your CVs'}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {counts.all > 0
-                ? `${counts.complete} complete · ${counts.incomplete} in progress`
-                : 'Build a fresh CV or upload an existing resume to get started.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <Sparkles className="w-4 h-4 text-indigo-500" />
-              ApplyRight a job
-            </Link>
-            <Link
-              to="/cv-builder/new"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              New CV
-            </Link>
-          </div>
-        </header>
-
-        {drafts.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-            <div className="relative flex-1 min-w-0">
-              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by title or name…"
-                className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-100"
-                aria-label="Search CVs"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                className="inline-flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-0.5"
-                role="tablist"
-                aria-label="Filter by status"
-              >
-                {STATUS_FILTERS.map((f) => {
-                  const count = counts[f.key];
-                  const active = statusFilter === f.key;
-                  return (
-                    <button
-                      key={f.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setStatusFilter(f.key)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                        active
-                          ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      {f.label}
-                      <span
-                        className={`ml-1.5 text-[10px] ${
-                          active ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <SortSelect value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
-            </div>
-          </div>
-        )}
-
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
         {showLoader ? (
           <SkeletonGrid />
         ) : error ? (
           <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : drafts.length === 0 ? (
           <EmptyState />
-        ) : visibleDrafts.length === 0 ? (
-          <FilteredEmptyState onClear={clearFilters} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {visibleDrafts.map((draft) => (
-              <CVCard key={draft._id} draft={draft} layout="full" onDelete={handleDelete} />
-            ))}
+          /* Two-column workspace: identity + momentum rail on the left, the deck
+             (or dense list) on the right. */
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 items-stretch pb-8">
+            {/* LEFT RAIL */}
+            <div className="flex flex-col">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                Build &amp; tailor
+              </p>
+              <h1 className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
+                My CVs
+              </h1>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Every CV you&apos;re building, most recent first.
+              </p>
+
+              {/* Momentum — vertical list on desktop */}
+              <div className="mt-8 hidden lg:block">
+                {cvMomentum(drafts).map((s, i) => (
+                  <div
+                    key={s.label}
+                    className={`flex items-baseline justify-between py-3.5 border-b border-slate-200 dark:border-slate-700 ${
+                      i === 0 ? 'border-t' : ''
+                    }`}
+                  >
+                    <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                      {s.label}
+                    </span>
+                    <span
+                      className={`text-2xl font-bold tabular-nums ${
+                        s.tone === 'ok'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-900 dark:text-slate-100'
+                      }`}
+                    >
+                      {s.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Momentum — 2×2 grid on mobile */}
+              <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 lg:hidden">
+                {cvMomentum(drafts).map((s) => (
+                  <div
+                    key={s.label}
+                    className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
+                  >
+                    <div
+                      className={`text-2xl font-bold tabular-nums ${
+                        s.tone === 'ok'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-900 dark:text-slate-100'
+                      }`}
+                    >
+                      {s.value}
+                    </div>
+                    <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* View toggle + new-CV CTA — natural position under the stats */}
+              <div className="mt-6 space-y-3">
+                <ViewToggle value={view} onChange={handleViewChange} className="w-full" />
+                <button
+                  onClick={() => navigate('/cv-builder/new')}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  New CV
+                </button>
+              </div>
+            </div>
+
+            {/* RIGHT MAIN */}
+            <div className="min-w-0">
+              {view === 'deck' ? (
+                <CardDeck
+                  items={recentDrafts}
+                  getKey={(d) => d._id}
+                  renderItem={renderCvNote}
+                  cardClassName={PAPER_CARD}
+                  label="10 most recent"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {/* Search + status tabs + sort */}
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+                    <div className="relative flex-1 min-w-0">
+                      <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search by title or name…"
+                        className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-100"
+                        aria-label="Search CVs"
+                      />
+                      {query && (
+                        <button
+                          type="button"
+                          onClick={() => setQuery('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          aria-label="Clear search"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div
+                        className="inline-flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-0.5"
+                        role="tablist"
+                        aria-label="Filter by status"
+                      >
+                        {STATUS_FILTERS.map((f) => {
+                          const count = counts[f.key];
+                          const active = statusFilter === f.key;
+                          return (
+                            <button
+                              key={f.key}
+                              type="button"
+                              role="tab"
+                              aria-selected={active}
+                              onClick={() => setStatusFilter(f.key)}
+                              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                                active
+                                  ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                              }`}
+                            >
+                              {f.label}
+                              <span
+                                className={`ml-1.5 text-[10px] ${
+                                  active ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <SortSelect value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+                    </div>
+                  </div>
+
+                  {/* Rows */}
+                  {visibleDrafts.length === 0 ? (
+                    <FilteredEmptyState onClear={clearFilters} />
+                  ) : (
+                    <div className="space-y-3">{visibleDrafts.map(renderRow)}</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -311,7 +538,7 @@ const SkeletonGrid = () => (
     {[0, 1, 2, 3, 4, 5].map((i) => (
       <div
         key={i}
-        className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
+        className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
       >
         <div className="flex justify-between items-start mb-3">
           <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 animate-pulse" />
@@ -328,28 +555,26 @@ const SkeletonGrid = () => (
 );
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-    <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 mb-5">
-      <FileText className="w-8 h-8" />
-    </div>
-    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-14 text-center">
+    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+      Nothing built yet
+    </p>
+    <h2 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
       No CVs yet
     </h2>
-    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
-      Build a fresh CV from scratch or jump into ApplyRight to optimize an existing resume against a
-      job posting.
+    <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+      Build a fresh CV from scratch, or head to the dashboard to tailor one against a job posting.
     </p>
-    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+    <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
       <Link
         to="/cv-builder/new"
-        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm text-center transition-colors inline-flex items-center justify-center gap-1.5"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
       >
-        <Plus className="w-4 h-4" />
-        Create your first CV
+        <Plus className="h-4 w-4" /> Create your first CV
       </Link>
       <Link
         to="/dashboard"
-        className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-sm text-center transition-colors"
+        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
       >
         Go to dashboard
       </Link>
