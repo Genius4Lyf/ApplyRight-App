@@ -56,6 +56,11 @@ const NextBestAction = ({
   onViewCV,
   onViewCoverLetter,
   onViewInterviewPrep,
+  // When false, the prescriptive default CTA (weak-fit advisory + primary
+  // "Generate…" button + bundle) is suppressed, but the in-flight progress card
+  // and the "just generated" completion card still render. Lets a host that has
+  // its own asset toolkit keep the progress/success feedback without the upsell.
+  showDefaultCta = true,
 }) => {
   // While CV generation is in flight, replace the button with a live progress
   // card driven by the polled status. This is the "feel" the async pipeline
@@ -245,6 +250,10 @@ const NextBestAction = ({
       );
     }
   }
+
+  // Host opted out of the prescriptive upsell — the progress + completion cards
+  // above still rendered; there's nothing more to show here.
+  if (!showDefaultCta) return null;
 
   // Show the bundle option only when nothing has been generated yet — that's
   // when "everything in one click" is most relevant. Once you have a CV,

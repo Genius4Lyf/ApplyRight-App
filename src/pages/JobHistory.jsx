@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Plus,
+  Layers,
 } from 'lucide-react';
 
 /**
@@ -56,8 +57,9 @@ const SORT_OPTIONS = [
 ];
 
 import FitScoreCard from '../components/FitScoreCard';
-import NextBestAction from '../components/NextBestAction';
 import JobRequirementsCard from '../components/JobRequirementsCard';
+import CreditGate from '../components/CreditGate';
+import { CREDIT_COSTS } from '../lib/credits';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import JobPostingDrawer from '../components/JobPostingDrawer';
@@ -70,44 +72,14 @@ import { toast } from 'sonner';
 import CardDeck from '../components/ui/CardDeck';
 import ViewToggle from '../components/ui/ViewToggle';
 import WorkspaceSkeleton from '../components/ui/WorkspaceSkeleton';
+import NoteCard from '../components/ui/NoteCard';
 import { momentumStats, nextMove, bandOf } from '../lib/applicationInsights';
+import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD, RULED_PAPER } from '../lib/noteStyles';
 
-// Semantic accent maps for the editorial list state. Defined once, reused by
-// the momentum strip, deck notes, and list rows so a band's color is identical
-// everywhere. Bands come from bandOf(score); next-move tones from nextMove(app).
-const BAND_TEXT = {
-  ok: 'text-emerald-600 dark:text-emerald-400',
-  warn: 'text-amber-600 dark:text-amber-400',
-  bad: 'text-rose-600 dark:text-rose-400',
-  neutral: 'text-slate-500 dark:text-slate-400',
-};
-const BAND_RULEBG = {
-  ok: 'bg-emerald-500',
-  warn: 'bg-amber-500',
-  bad: 'bg-rose-500',
-  neutral: 'bg-slate-400',
-};
-const NEXT_TONE = {
-  accent: 'text-indigo-600 dark:text-indigo-300',
-  ok: 'text-emerald-600 dark:text-emerald-400',
-  warn: 'text-amber-600 dark:text-amber-400',
-  bad: 'text-rose-600 dark:text-rose-400',
-  neutral: 'text-slate-500 dark:text-slate-400',
-};
+// Maps a nextMove icon name to its lucide component. The band/next-move color
+// tokens and paper-note chrome now live in ../lib/noteStyles (imported above)
+// so the list rows, deck notes, and the shared NoteCard stay in lockstep.
 const NEXT_ICON = { Wrench, TrendingUp, Mail, CheckCircle2, ArrowRight };
-
-// Paper-note chrome for CardDeck's front/receding cards. CardDeck owns only
-// transform/opacity/position; this supplies the page look.
-const PAPER_CARD =
-  'rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_16px_34px_-14px_rgba(15,23,42,.16)] dark:shadow-[0_20px_46px_-16px_rgba(0,0,0,.55)] overflow-hidden';
-
-// Ruled-paper backdrop for the verdict text — faint horizontal lines like a
-// legal pad, offset so the baselines sit on the rules.
-const RULED_PAPER = {
-  backgroundImage:
-    'repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(148,163,184,.16) 27px, rgba(148,163,184,.16) 28px)',
-  backgroundPosition: '0 7px',
-};
 
 // Derive every display value a note/row needs from one application record.
 const deriveApp = (a) => {
@@ -359,20 +331,6 @@ const JobHistory = () => {
     } catch (_) {
       /* private mode — non-critical */
     }
-  };
-
-  // Tap vs drag disambiguation for deck notes: the front card captures the
-  // pointer to drive swiping, so a click can still fire after a drag. Record the
-  // press point and only treat a near-stationary release as an "open" tap.
-  const notePressRef = useRef({ x: 0, y: 0 });
-  const handleNotePointerDown = (e) => {
-    notePressRef.current = { x: e.clientX, y: e.clientY };
-  };
-  const handleNoteClick = (app, e) => {
-    const dx = Math.abs(e.clientX - notePressRef.current.x);
-    const dy = Math.abs(e.clientY - notePressRef.current.y);
-    if (dx > 8 || dy > 8) return; // was a swipe/drag, not a tap
-    openApp(app);
   };
 
   const filteredApplications = applications
@@ -663,112 +621,25 @@ const JobHistory = () => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 10);
 
-  // A single application as a paper note for the deck. Tapping opens it.
+  // A single application as a paper note for the deck — a thin wrapper over the
+  // shared NoteCard (which owns the tap-vs-drag guard, spiral binding, stamp,
+  // ruled verdict, band rail, and footer). Tapping opens it.
   const renderNote = (a) => {
     const { title, company, score, band, improved, mv } = deriveApp(a);
-    const NextIcon = NEXT_ICON[mv.icon] || ArrowRight;
     return (
-      <div
-        role="button"
-        tabIndex={-1}
-        aria-label={`Open ${title} at ${company}`}
-        onPointerDown={handleNotePointerDown}
-        onClick={(e) => handleNoteClick(a, e)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openApp(a);
-          }
+      <NoteCard
+        band={band}
+        stamp={{
+          value: score == null ? '—' : score,
+          label: 'Match',
+          sub: improved ? `↑ from ${a.fitScore}` : undefined,
         }}
-        className="cursor-pointer select-none"
-      >
-        {/* a. Spiral binding */}
-        <div
-          aria-hidden="true"
-          className="flex items-center gap-4 px-6 h-[26px] border-b border-slate-100 dark:border-slate-700 bg-gradient-to-b from-slate-100/70 dark:from-slate-900/40 to-transparent"
-        >
-          {Array.from({ length: 12 }).map((_, i) => (
-            <span
-              key={i}
-              className="h-[9px] w-[9px] rounded-full bg-slate-50 dark:bg-slate-900 shadow-[inset_0_1px_2px_rgba(0,0,0,.25)]"
-            />
-          ))}
-        </div>
-
-        {/* b. Body */}
-        <div className="relative px-6 pl-10 py-5">
-          {/* Margin rule */}
-          <div
-            aria-hidden="true"
-            className={`absolute top-3.5 bottom-4 left-6 w-0.5 rounded opacity-40 ${BAND_RULEBG[band]}`}
-          />
-
-          {/* Score stamp */}
-          <div className="absolute top-4 right-6 text-right">
-            <div
-              className={`font-heading text-[40px] leading-[.86] font-bold tabular-nums ${BAND_TEXT[band]}`}
-            >
-              {score == null ? (
-                '—'
-              ) : (
-                <>
-                  {score}
-                  <span className="text-[22px]">%</span>
-                </>
-              )}
-            </div>
-            <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-              Match
-            </div>
-            {improved && (
-              <div className="mt-1 text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                ↑ from {a.fitScore}
-              </div>
-            )}
-          </div>
-
-          {/* Header */}
-          <div className="pr-24">
-            <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 truncate">
-              {company} · {formatRelativeDate(a.createdAt)}
-            </p>
-            <h3 className="mt-1 font-heading text-[22px] font-bold text-slate-900 dark:text-slate-100 leading-snug">
-              {title}
-            </h3>
-          </div>
-
-          {/* Verdict on ruled paper */}
-          {a.fitAnalysis?.overallFeedback && (
-            <p
-              className="mt-4 font-heading text-[16px] leading-[28px] text-slate-800 dark:text-slate-200 line-clamp-3"
-              style={RULED_PAPER}
-            >
-              {a.fitAnalysis.overallFeedback}
-            </p>
-          )}
-
-          {/* Band rail */}
-          <div aria-hidden="true" className="mt-4 grid h-1.5 grid-cols-[45fr_30fr_25fr] gap-0.5">
-            <span className="rounded-sm bg-rose-500/50" />
-            <span className="rounded-sm bg-amber-500/50" />
-            <span className="rounded-sm bg-emerald-500/50" />
-          </div>
-
-          {/* Footer */}
-          <div className="mt-4 flex items-center justify-between border-t border-dashed border-slate-200 dark:border-slate-700 pt-4">
-            <span
-              className={`inline-flex items-center gap-2 text-sm font-semibold min-w-0 ${NEXT_TONE[mv.tone]}`}
-            >
-              <NextIcon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{mv.label}</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 dark:text-slate-400 shrink-0">
-              Open
-              <ChevronRight className="h-4 w-4" />
-            </span>
-          </div>
-        </div>
-      </div>
+        eyebrow={`${company} · ${formatRelativeDate(a.createdAt)}`}
+        title={title}
+        verdict={a.fitAnalysis?.overallFeedback}
+        nextMove={{ label: mv.label, tone: mv.tone, Icon: NEXT_ICON[mv.icon] || ArrowRight }}
+        onOpen={() => openApp(a)}
+      />
     );
   };
 
@@ -997,158 +868,166 @@ const JobHistory = () => {
           <div className="pb-8">
             <button
               onClick={() => setSelectedApp(null)}
-              className="inline-flex items-center gap-1.5 mb-4 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1.5 mb-6 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to applications
             </button>
-            <div className="overflow-hidden min-h-[400px] animate-in fade-in duration-300 lg:bg-white lg:dark:bg-slate-900 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm">
-              <div className="px-3 py-3 lg:px-4 lg:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex items-center gap-3 lg:gap-4">
-                <div className="flex-1 flex justify-between items-center gap-3 flex-wrap">
-                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                    Application Details
-                  </h2>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* View the original job posting this analysis ran
-                            against. Reference-only drawer; data already rides
-                            on the populated jobId. Shown on mobile too. */}
-                    <button
-                      type="button"
-                      onClick={() => setJobDrawerOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
-                      title="View the original job posting"
-                    >
-                      <FileSearch className="w-3 h-3" />
-                      Job posting
-                    </button>
+            <div className="animate-in fade-in duration-300">
+              {/* Editorial header — the role is the title; a hairline border,
+                  not a filled bar. */}
+              <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-slate-700 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                    Application
+                  </p>
+                  <h1 className="mt-1 font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {selectedApp.jobId?.title || selectedApp.jobTitle || 'Application'}
+                  </h1>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {(selectedApp.jobId?.company || selectedApp.jobCompany) &&
+                      `${selectedApp.jobId?.company || selectedApp.jobCompany} · `}
+                    analyzed {formatRelativeDate(selectedApp.createdAt)}
+                  </p>
+                </div>
 
-                    {/* Re-run analysis — refreshes fitScore + analysis using
-                            the same resume + job. Useful when prompts/models
-                            have been upgraded since the original run. */}
-                    <button
-                      type="button"
-                      onClick={handleReanalyze}
-                      disabled={reanalyzing}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Re-run analysis (10 credits)"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${reanalyzing ? 'animate-spin' : ''}`} />
-                      {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
-                    </button>
+                <div className="flex flex-wrap items-center gap-2 lg:justify-end lg:shrink-0">
+                  {/* View the original job posting this analysis ran
+                          against. Reference-only drawer; data already rides
+                          on the populated jobId. Shown on mobile too. */}
+                  <button
+                    type="button"
+                    onClick={() => setJobDrawerOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    title="View the original job posting"
+                  >
+                    <FileSearch className="w-3.5 h-3.5" />
+                    Job posting
+                  </button>
 
-                    {/* Compare with… — only shows other applications for the
-                            same job, since cross-job comparison is apples-to-
-                            oranges. Disabled when there's nothing to compare. */}
-                    {(() => {
-                      const sameJobOthers = applications.filter(
-                        (a) =>
-                          a._id !== selectedApp._id &&
-                          (a.jobId?._id || a.jobId) ===
-                            (selectedApp.jobId?._id || selectedApp.jobId)
-                      );
-                      if (sameJobOthers.length === 0) return null;
-                      return (
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCompareMenuOpen(!compareMenuOpen);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-colors"
-                            title="Compare with another analysis for the same job"
+                  {/* Re-run analysis — refreshes fitScore + analysis using
+                          the same resume + job. Useful when prompts/models
+                          have been upgraded since the original run. */}
+                  <button
+                    type="button"
+                    onClick={handleReanalyze}
+                    disabled={reanalyzing}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Re-run analysis (10 credits)"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? 'animate-spin' : ''}`} />
+                    {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
+                  </button>
+
+                  {/* Compare with… — only shows other applications for the
+                          same job, since cross-job comparison is apples-to-
+                          oranges. Disabled when there's nothing to compare. */}
+                  {(() => {
+                    const sameJobOthers = applications.filter(
+                      (a) =>
+                        a._id !== selectedApp._id &&
+                        (a.jobId?._id || a.jobId) === (selectedApp.jobId?._id || selectedApp.jobId)
+                    );
+                    if (sameJobOthers.length === 0) return null;
+                    return (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCompareMenuOpen(!compareMenuOpen);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                          title="Compare with another analysis for the same job"
+                        >
+                          <GitCompare className="w-3.5 h-3.5" />
+                          Compare
+                          <ChevronDown className="w-3 h-3 opacity-60" />
+                        </button>
+                        {compareMenuOpen && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
                           >
-                            <GitCompare className="w-3 h-3" />
-                            Compare
-                            <ChevronDown className="w-3 h-3 opacity-60" />
-                          </button>
-                          {compareMenuOpen && (
-                            <div
-                              onClick={(e) => e.stopPropagation()}
-                              className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
-                            >
-                              <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                                Compare against
-                              </div>
-                              {sameJobOthers.map((other) => (
-                                <button
-                                  key={other._id}
-                                  onClick={() => {
-                                    setCompareMenuOpen(false);
-                                    navigate(`/compare/${selectedApp._id}/${other._id}`);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between gap-3"
-                                >
-                                  <div className="flex flex-col leading-tight min-w-0">
-                                    <span className="text-slate-700 dark:text-slate-300 truncate">
-                                      Resume from {formatRelativeDate(other.resumeId?.createdAt)}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                                      Run {formatRelativeDate(other.createdAt)}
-                                    </span>
-                                  </div>
-                                  {typeof other.fitScore === 'number' && (
-                                    <span
-                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                        other.fitScore >= 80
-                                          ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                          : other.fitScore >= 50
-                                            ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                            : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
-                                      }`}
-                                    >
-                                      {other.fitScore}%
-                                    </span>
-                                  )}
-                                </button>
-                              ))}
+                            <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                              Compare against
                             </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                    <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex flex-col items-end leading-tight">
-                      <span title={new Date(selectedApp.createdAt).toLocaleString()}>
-                        {formatRelativeDate(selectedApp.createdAt)}
+                            {sameJobOthers.map((other) => (
+                              <button
+                                key={other._id}
+                                onClick={() => {
+                                  setCompareMenuOpen(false);
+                                  navigate(`/compare/${selectedApp._id}/${other._id}`);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between gap-3"
+                              >
+                                <div className="flex flex-col leading-tight min-w-0">
+                                  <span className="text-slate-700 dark:text-slate-300 truncate">
+                                    Resume from {formatRelativeDate(other.resumeId?.createdAt)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                                    Run {formatRelativeDate(other.createdAt)}
+                                  </span>
+                                </div>
+                                {typeof other.fitScore === 'number' && (
+                                  <span
+                                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                      other.fitScore >= 80
+                                        ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                        : other.fitScore >= 50
+                                          ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                          : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
+                                    }`}
+                                  >
+                                    {other.fitScore}%
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex flex-col items-end leading-tight">
+                    <span title={new Date(selectedApp.createdAt).toLocaleString()}>
+                      {formatRelativeDate(selectedApp.createdAt)}
+                    </span>
+                    {selectedApp.resumeId?.createdAt && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                        Resume from {formatRelativeDate(selectedApp.resumeId.createdAt)}
                       </span>
-                      {selectedApp.resumeId?.createdAt && (
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                          Resume from {formatRelativeDate(selectedApp.resumeId.createdAt)}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="p-4 space-y-8 sm:space-y-10 lg:p-6 lg:space-y-10">
+
+              {/* Wayfinders — thin anchor links, mono/indigo, no buttons. */}
+              <div className="mt-4 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[0.7rem] uppercase tracking-[0.16em]">
                 {selectedApp.fitAnalysis && (
-                  <section className="space-y-4 sm:space-y-5">
-                    <SectionHeader
-                      icon={Sparkles}
-                      title="Snapshot Analysis"
-                      subtitle="Where you stand against the role"
+                  <a
+                    href="#analysis"
+                    className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 transition-colors"
+                  >
+                    See what to fix ↓
+                  </a>
+                )}
+                <a
+                  href="#toolkit"
+                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 transition-colors"
+                >
+                  My CV toolkit ↓
+                </a>
+              </div>
+
+              <div className="space-y-8 sm:space-y-10">
+                {selectedApp.fitAnalysis && (
+                  <section className="space-y-5 sm:space-y-6">
+                    <JobRequirementsCard
+                      fitAnalysis={selectedApp.fitAnalysis}
+                      jobTitle={selectedApp.jobTitle}
+                      jobCompany={selectedApp.jobCompany}
                     />
-                    <div className="space-y-5 sm:space-y-6">
-                      <NextBestAction
-                        fitScore={selectedApp.fitScore}
-                        fitAnalysis={selectedApp.fitAnalysis}
-                        application={selectedApp}
-                        onGenerateCV={handleGenerateCV}
-                        onGenerateCoverLetter={handleGenerateCoverLetter}
-                        onGenerateInterview={handleGenerateInterview}
-                        onGenerateBundle={handleGenerateBundle}
-                        onView={() =>
-                          navigate(`/resume/${selectedApp.draftCVId || selectedApp._id}`)
-                        }
-                        generatingCV={generatingCV}
-                        generatingCL={generatingCL}
-                        generatingInterview={generatingInterview}
-                        cvGenStatus={cvGenStatus}
-                      />
-                      <JobRequirementsCard
-                        fitAnalysis={selectedApp.fitAnalysis}
-                        jobTitle={selectedApp.jobTitle}
-                        jobCompany={selectedApp.jobCompany}
-                      />
+                    <div id="analysis" className="scroll-mt-24">
                       <FitScoreCard
                         fitScore={selectedApp.fitScore}
                         fitAnalysis={selectedApp.fitAnalysis}
@@ -1160,29 +1039,62 @@ const JobHistory = () => {
                   </section>
                 )}
 
-                {/* Generated Assets */}
-                <section className="space-y-4 sm:space-y-5">
-                  <SectionHeader
-                    icon={Briefcase}
-                    title="Generated Assets"
-                    subtitle="CV, cover letter, and interview prep"
-                  />
+                {/* My CV toolkit — the ready-to-use assets. */}
+                <section id="toolkit" className="scroll-mt-24 space-y-4 sm:space-y-5">
+                  <div>
+                    <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                      Ready to use · now that you&apos;ve read the analysis
+                    </p>
+                    <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                      My CV toolkit
+                    </h2>
+                  </div>
 
-                  {/* CV + Cover Letter — compact 2-column row. Both are
-                          "click to view" assets that open in dedicated pages,
-                          so the cards just need state + a single CTA. */}
+                  {/* Discounted bundle — a subtle one-tap shortcut, only offered
+                          before anything has been generated. */}
+                  {!selectedApp.optimizedCV &&
+                    !selectedApp.draftCVId &&
+                    !selectedApp.coverLetter &&
+                    !hasInterviewPrep(selectedApp) && (
+                      <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE}>
+                        <button
+                          type="button"
+                          onClick={handleGenerateBundle}
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors text-left"
+                        >
+                          <span className="flex items-center gap-3 min-w-0">
+                            <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                Generate the full kit
+                              </span>
+                              <span className="block text-xs text-slate-500 dark:text-slate-400">
+                                CV, cover letter &amp; interview prep in one go
+                              </span>
+                            </span>
+                          </span>
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
+                            18 cr{' '}
+                            <span className="text-emerald-600 dark:text-emerald-400">(save 2)</span>
+                          </span>
+                        </button>
+                      </CreditGate>
+                    )}
+
+                  {/* CV + Cover Letter — flat hairline cards. */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* CV Card */}
-                    <div
-                      className={`p-4 rounded-xl border ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText
-                          className={`w-4 h-4 ${selectedApp.optimizedCV || selectedApp.draftCVId ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}
-                        />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                           Optimized CV
                         </span>
+                        {(selectedApp.optimizedCV || selectedApp.draftCVId) && (
+                          <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                          </span>
+                        )}
                       </div>
                       {selectedApp.optimizedCV || selectedApp.draftCVId ? (
                         <button
@@ -1191,45 +1103,63 @@ const JobHistory = () => {
                               `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
                             )
                           }
-                          className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all"
+                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                         >
-                          <Eye className="w-3.5 h-3.5" /> View & Download
+                          <Eye className="w-3.5 h-3.5" /> View &amp; Download
                         </button>
                       ) : (
                         <button
                           onClick={handleGenerateCV}
                           disabled={generatingCV}
-                          className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                             generatingCV
-                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                               : 'bg-indigo-600 text-white hover:bg-indigo-700'
                           }`}
                         >
                           {generatingCV ? (
                             <>
-                              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                              Generating...
+                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
+                              Generating…
                             </>
                           ) : (
-                            <>
-                              <Sparkles className="w-3.5 h-3.5" /> Generate (10 Credits)
-                            </>
+                            'Generate · 10 credits'
                           )}
                         </button>
+                      )}
+                      {/* Optional live progress — keeps the rich pipeline feedback. */}
+                      {generatingCV && cvGenStatus && (
+                        <div className="mt-2.5">
+                          <div className="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.1em] tabular-nums text-slate-500 dark:text-slate-400">
+                            <span className="truncate">
+                              {cvGenStatus.stageMessage || cvGenStatus.stage}
+                            </span>
+                            {typeof cvGenStatus.progress === 'number' && (
+                              <span>{cvGenStatus.progress}%</span>
+                            )}
+                          </div>
+                          <div className="mt-1 h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                            <div
+                              className="h-1 rounded-full bg-indigo-500 transition-all"
+                              style={{ width: `${cvGenStatus.progress || 0}%` }}
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
 
                     {/* Cover Letter Card */}
-                    <div
-                      className={`p-4 rounded-xl border ${selectedApp.coverLetter ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Mail
-                          className={`w-4 h-4 ${selectedApp.coverLetter ? 'text-blue-600 dark:text-blue-300' : 'text-slate-400 dark:text-slate-500'}`}
-                        />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Mail className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                           Cover Letter
                         </span>
+                        {selectedApp.coverLetter && (
+                          <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                          </span>
+                        )}
                       </div>
                       {selectedApp.coverLetter ? (
                         <button
@@ -1238,40 +1168,37 @@ const JobHistory = () => {
                               `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
                             )
                           }
-                          className="w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-all"
+                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                         >
-                          <Eye className="w-3.5 h-3.5" /> View & Download
+                          <Eye className="w-3.5 h-3.5" /> View &amp; Download
                         </button>
                       ) : (
                         <button
                           onClick={handleGenerateCoverLetter}
                           disabled={generatingCL}
-                          className={`w-full mt-2 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                             generatingCL
-                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                               : 'bg-indigo-600 text-white hover:bg-indigo-700'
                           }`}
                         >
                           {generatingCL ? (
                             <>
-                              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                              Generating...
+                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
+                              Generating…
                             </>
                           ) : (
-                            <>
-                              <Sparkles className="w-3.5 h-3.5" /> Generate (5 Credits)
-                            </>
+                            'Generate · 5 credits'
                           )}
                         </button>
                       )}
-                      {/* Fact-check warnings — claims the letter makes that
-                              the resume doesn't directly support. Non-blocking. */}
+                      {/* Fact-check warnings — flat amber-accented note, not a filled box. */}
                       {selectedApp.coverLetter && selectedApp.coverLetterWarnings?.length > 0 && (
-                        <div className="mt-3 p-2 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-300">
-                          <div className="font-bold uppercase tracking-wide mb-1">
+                        <div className="mt-3 border-l-2 border-amber-500 pl-3">
+                          <div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400 mb-1">
                             Verify before sending
                           </div>
-                          <ul className="space-y-0.5 list-disc pl-3">
+                          <ul className="space-y-0.5 list-disc pl-3 text-[11px] text-slate-600 dark:text-slate-300">
                             {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
                               <li key={i}>{w}</li>
                             ))}
@@ -1284,33 +1211,33 @@ const JobHistory = () => {
                   {/* Interview Prep entry point — links to the dedicated
                           /interview-prep/:applicationId page where users can
                           drill into questions + answers + skill talking points
-                          and add personal notes. Replaces the previously inline
-                          two-column section that lived here. */}
+                          and add personal notes. */}
                   {hasInterviewPrep(selectedApp) ? (
                     <Link
                       to={`/interview-prep/${selectedApp._id}`}
-                      className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors p-4 flex items-center gap-3 group"
+                      className="group flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                        <MessageSquare className="w-5 h-5" />
-                      </div>
+                      <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          Interview prep ready
-                        </h4>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            Interview prep
+                          </h4>
+                          <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                           {getPrepSummary(selectedApp)}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
                     </Link>
                   ) : (
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0">
-                        <MessageSquare className="w-5 h-5" />
-                      </div>
+                    <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                           Interview prep
                         </h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1321,21 +1248,19 @@ const JobHistory = () => {
                       <button
                         onClick={handleGenerateInterview}
                         disabled={generatingInterview}
-                        className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                           generatingInterview
-                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
                         {generatingInterview ? (
                           <>
-                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />{' '}
-                            Generating...
+                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
+                            Generating…
                           </>
                         ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5" /> Generate (5 cr)
-                          </>
+                          'Generate · 5 cr'
                         )}
                       </button>
                     </div>

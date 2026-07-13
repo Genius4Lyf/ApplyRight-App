@@ -31,6 +31,7 @@ import {
   Crown,
   RefreshCw,
   Link2,
+  Layers,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
@@ -1184,21 +1185,17 @@ const Dashboard = () => {
             id="analysis-section"
             className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700"
           >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  AI Compatibility Analysis
-                </h3>
-              </div>
-              {job && (job.title || job.company) && (
-                <div className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full truncate">
-                  For:{' '}
-                  <span className="text-slate-900 dark:text-slate-100 font-bold">
-                    {job.title || 'Role'}
-                  </span>{' '}
-                  {job.company && <span>at {job.company}</span>}
-                </div>
+            <div className="mb-6">
+              <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                Your fit
+              </p>
+              <h3 className="mt-1 font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {job?.title || 'Analysis'}
+              </h3>
+              {job?.company && (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {job.company} · just analyzed
+                </p>
               )}
             </div>
 
@@ -1243,6 +1240,7 @@ const Dashboard = () => {
                     const prepId = getPrepId(application);
                     if (prepId) navigate(`/interview-prep/${prepId}`);
                   }}
+                  showDefaultCta={false}
                 />
                 <JobRequirementsCard
                   fitAnalysis={fitResult.fitAnalysis}
@@ -1264,33 +1262,62 @@ const Dashboard = () => {
         {/* Asset Generation Section */}
         {fitResult && application?.applicationId && (
           <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            <div className="flex items-center gap-2 mb-6">
-              <Zap className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Generate Professional Assets
-              </h3>
+            <div className="mb-5">
+              <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                Ready to use · now that you&apos;ve read the analysis
+              </p>
+              <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                My CV toolkit
+              </h2>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Choose which assets to generate. Each is created independently so you only pay for
-              what you need.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Generate CV Card */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
-                      Optimized CV
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      ATS-optimized resume
-                    </p>
-                  </div>
+
+            {/* Discounted bundle — a subtle one-tap shortcut, only offered before
+                anything has been generated. */}
+            {!application.optimizedCV &&
+              !application.coverLetter &&
+              !hasInterviewPrep(application) && (
+                <div className="mb-4">
+                  <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE}>
+                    <button
+                      type="button"
+                      onClick={handleGenerateBundle}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors text-left"
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            Generate the full kit
+                          </span>
+                          <span className="block text-xs text-slate-500 dark:text-slate-400">
+                            CV, cover letter &amp; interview prep in one go
+                          </span>
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
+                        18 cr{' '}
+                        <span className="text-emerald-600 dark:text-emerald-400">(save 2)</span>
+                      </span>
+                    </button>
+                  </CreditGate>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
+              )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Optimized CV — flat hairline card */}
+              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    Optimized CV
+                  </h4>
+                  {application.optimizedCV && (
+                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
                   AI rewrites your resume with role-specific keywords, achievement-oriented bullets,
                   and clean formatting.
                 </p>
@@ -1301,7 +1328,7 @@ const Dashboard = () => {
                         `/resume/${application.draftId || application.applicationId}?tab=resume`
                       )
                     }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                   >
                     <Eye className="w-4 h-4" /> View CV
                   </button>
@@ -1310,43 +1337,39 @@ const Dashboard = () => {
                     <button
                       onClick={handleGenerateCV}
                       disabled={generatingCV}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
                         generatingCV
-                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'btn-primary'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       }`}
                     >
                       {generatingCV ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Generating...
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Generating…
                         </>
                       ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> Generate (10 Credits)
-                        </>
+                        'Generate · 10 credits'
                       )}
                     </button>
                   </CreditGate>
                 )}
               </div>
 
-              {/* Generate Cover Letter Card */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center text-blue-600">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
-                      Cover Letter
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Tailored to the role
-                    </p>
-                  </div>
+              {/* Cover Letter — flat hairline card */}
+              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    Cover Letter
+                  </h4>
+                  {application.coverLetter && (
+                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
                   A personalized cover letter connecting your experience to the job requirements.
                 </p>
                 {application.coverLetter ? (
@@ -1354,7 +1377,7 @@ const Dashboard = () => {
                     onClick={() =>
                       navigate(`/resume/${application.applicationId}?tab=cover-letter`)
                     }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                   >
                     <Eye className="w-4 h-4" /> View Cover Letter
                   </button>
@@ -1363,43 +1386,39 @@ const Dashboard = () => {
                     <button
                       onClick={handleGenerateCoverLetter}
                       disabled={generatingCL}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
                         generatingCL
-                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'btn-primary'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       }`}
                     >
                       {generatingCL ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Generating...
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Generating…
                         </>
                       ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> Generate (5 Credits)
-                        </>
+                        'Generate · 5 credits'
                       )}
                     </button>
                   </CreditGate>
                 )}
               </div>
 
-              {/* Generate Interview Prep Card */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-500/15 flex items-center justify-center text-purple-600">
-                    <MessageSquare className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-slate-100">
-                      Interview Prep
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Questions & strategies
-                    </p>
-                  </div>
+              {/* Interview Prep — flat hairline card */}
+              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    Interview Prep
+                  </h4>
+                  {hasInterviewPrep(application) && (
+                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
                   Role-specific interview questions to practice, plus smart questions to ask the
                   interviewer.
                 </p>
@@ -1409,7 +1428,7 @@ const Dashboard = () => {
                       const prepId = getPrepId(application);
                       if (prepId) navigate(`/interview-prep/${prepId}`);
                     }}
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25"
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                   >
                     <Eye className="w-4 h-4" /> View Interview Prep
                   </button>
@@ -1418,21 +1437,19 @@ const Dashboard = () => {
                     <button
                       onClick={handleGenerateInterview}
                       disabled={generatingInterview}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
                         generatingInterview
-                          ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'btn-primary'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       }`}
                     >
                       {generatingInterview ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Generating...
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Generating…
                         </>
                       ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> Generate (10 Credits)
-                        </>
+                        'Generate · 10 credits'
                       )}
                     </button>
                   </CreditGate>

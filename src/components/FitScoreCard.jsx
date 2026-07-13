@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Info,
-  Target,
-  Award,
-  Briefcase,
-  Lightbulb,
   Wrench,
-  Bot,
   ChevronDown,
   ChevronUp,
-  TrendingUp,
   ThumbsUp,
   ThumbsDown,
   HelpCircle,
-  BarChart3,
-  Quote,
 } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { bandOf } from '../lib/applicationInsights';
+import { BAND_TEXT, BAND_RULEBG } from '../lib/noteStyles';
+
+// Editorial tokens shared across the analysis desk.
+const EYEBROW =
+  'font-mono uppercase text-[0.7rem] tracking-[0.18em] text-indigo-800 dark:text-indigo-300';
+const CARD =
+  'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6';
 
 /**
  * Tiny inline widget to capture 👍/👎 on an AI-generated artifact.
@@ -53,7 +50,7 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
   // shouting after the user has already replied.
   if (submitted) {
     return (
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 rounded-full px-3 py-1.5"
@@ -64,18 +61,18 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
           <ThumbsDown className="w-3.5 h-3.5" />
         )}
         Thanks for the feedback
-      </motion.div>
+      </Motion.div>
     );
   }
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.4, ease: 'easeOut' }}
       className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full pl-3 pr-1.5 py-1 shadow-sm"
     >
-      <motion.div
+      <Motion.div
         // One-time wiggle to draw attention. Loops 2x then stops so it's
         // noticeable on first arrival without becoming visual noise.
         animate={{ rotate: [0, -10, 10, -8, 8, 0] }}
@@ -83,7 +80,7 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
         className="text-indigo-500"
       >
         <HelpCircle className="w-3.5 h-3.5" />
-      </motion.div>
+      </Motion.div>
       <span className="font-medium">{label}</span>
       <button
         type="button"
@@ -103,9 +100,23 @@ const AIFeedbackWidget = ({ applicationId, operation, label = 'Was this helpful?
       >
         <ThumbsDown className="w-4 h-4" />
       </button>
-    </motion.div>
+    </Motion.div>
   );
 };
+
+// Small flat pill for the experience/seniority stat rows — hairline + accent
+// text, never a filled box.
+const StatPill = ({ ok, meetLabel, missLabel }) => (
+  <span
+    className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+      ok
+        ? 'border border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+        : 'border border-amber-500/40 text-amber-600 dark:text-amber-400'
+    }`}
+  >
+    {ok ? meetLabel : missLabel}
+  </span>
+);
 
 const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, applicationId }) => {
   const [skillsExpanded, setSkillsExpanded] = useState(false);
@@ -115,30 +126,6 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [seniorityOpen, setSeniorityOpen] = useState(false);
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-emerald-500';
-    if (score >= 60) return 'text-amber-500';
-    return 'text-red-500';
-  };
-
-  const getScoreBg = (score) => {
-    if (score >= 80)
-      return 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30';
-    if (score >= 60)
-      return 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30';
-    return 'bg-red-50 dark:bg-red-500/15 border-red-200 dark:border-red-500/30';
-  };
-
-  const getBarColor = (score) => {
-    if (score >= 80) return 'bg-emerald-500';
-    if (score >= 60) return 'bg-amber-500';
-    return 'bg-red-500';
-  };
-
-  const textColor = getScoreColor(fitScore);
-  const bgColor = getScoreBg(fitScore);
-  const isAIMode = fitAnalysis?.mode === 'AI';
-
   const matchedSkills = fitAnalysis?.matchedSkills || [];
   const missingSkills = fitAnalysis?.missingSkills || [];
   const expAnalysis = fitAnalysis?.experienceAnalysis || {};
@@ -146,6 +133,10 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
   const breakdown = fitAnalysis?.scoreBreakdown || {};
 
   const totalSkills = matchedSkills.length + missingSkills.length;
+  const mustHaves = missingSkills.filter((s) => s.importance === 'must_have');
+  const niceToHaves = missingSkills.filter((s) => s.importance !== 'must_have');
+
+  const band = bandOf(fitScore);
 
   const levelLabel = (level) => {
     const labels = {
@@ -173,143 +164,216 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
     optimizedFitScore > fitScore;
   const lift = hasLift ? optimizedFitScore - fitScore : 0;
 
+  const hasYears = expAnalysis.candidateYears != null || expAnalysis.requiredYears != null;
+
   return (
     <div className="w-full space-y-6">
-      {/* Optimization lift banner — appears after CV generation succeeds */}
-      {hasLift && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-          className="bg-gradient-to-r from-emerald-50 via-emerald-50 to-indigo-50 dark:from-emerald-500/15 dark:via-emerald-500/15 dark:to-indigo-500/15 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-5 flex items-center gap-4"
-        >
-          <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-              Your optimized CV improved this match
-            </p>
-            <div className="mt-1 flex items-baseline gap-2 flex-wrap">
-              <span className="text-slate-400 dark:text-slate-500 text-sm line-through">
+      {/* 1. Verdict masthead */}
+      <div className={CARD}>
+        <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+          {/* Left — the score + band rail */}
+          <div>
+            <p className={EYEBROW}>Fit analysis</p>
+            <div className="mt-2 flex items-baseline gap-3">
+              <span className={`font-heading text-5xl font-bold tabular-nums ${BAND_TEXT[band]}`}>
                 {fitScore}%
               </span>
-              <span className="text-slate-400 dark:text-slate-500 text-sm">→</span>
-              <span className={`text-2xl font-bold ${getScoreColor(optimizedFitScore)}`}>
-                {optimizedFitScore}%
-              </span>
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">
-                +{lift} pts
-              </span>
             </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Main Score Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col md:flex-row items-center gap-8"
-      >
-        {/* Circular Score */}
-        <div className="relative flex-shrink-0 w-32 h-32 flex items-center justify-center">
-          <svg className="w-full h-full transform -rotate-90">
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              stroke="currentColor"
-              strokeWidth="12"
-              fill="transparent"
-              className="text-slate-100 dark:text-slate-700"
-            />
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              stroke="currentColor"
-              strokeWidth="12"
-              fill="transparent"
-              strokeDasharray={351.86}
-              strokeDashoffset={351.86 - (351.86 * (fitScore || 0)) / 100}
-              className={`${textColor} transition-all duration-1000 ease-out`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute flex flex-col items-center">
-            <span className={`text-3xl font-bold ${textColor}`}>{fitScore}%</span>
-            <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500">
-              Match
-            </span>
-          </div>
-        </div>
-
-        {/* Summary & Recommendation */}
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              Application Fit Analysis
-            </h3>
-            <div
-              className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${isAIMode ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
-            >
-              {isAIMode ? <Bot className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
-              {isAIMode ? 'AI-Powered Analysis' : 'Standard Match (Beta)'}
-            </div>
-          </div>
-
-          <p className="text-slate-600 dark:text-slate-300">{fitAnalysis?.overallFeedback}</p>
-
-          <div className={`p-4 rounded-lg flex items-start gap-3 mt-4 ${bgColor}`}>
-            <Info className={`w-5 h-5 flex-shrink-0 ${textColor} mt-0.5`} />
-            <div>
-              <p className={`font-semibold text-sm ${textColor}`}>Our Recommendation</p>
-              <p className="text-slate-700 dark:text-slate-300 text-sm mt-1">
-                {fitAnalysis?.recommendation}
+            {hasLift && (
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                optimized to{' '}
+                <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {optimizedFitScore}%
+                </span>{' '}
+                ·{' '}
+                <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
+                  +{lift} pts
+                </span>
               </p>
+            )}
+
+            {/* Band rail — needs-work / almost / ready, with a marker pin */}
+            <div className="mt-5">
+              <div className="relative">
+                <div className="grid grid-cols-[45fr_30fr_25fr] gap-0.5 h-2 rounded-full overflow-hidden">
+                  <span className="bg-rose-500/50" />
+                  <span className="bg-amber-500/50" />
+                  <span className="bg-emerald-500/50" />
+                </div>
+                {typeof fitScore === 'number' && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-0.5 h-3 w-0.5 -translate-x-1/2 rounded bg-slate-900 dark:bg-slate-100"
+                    style={{ left: `${Math.max(0, Math.min(100, fitScore))}%` }}
+                  />
+                )}
+              </div>
+              <div className="mt-1.5 grid grid-cols-[45fr_30fr_25fr] gap-0.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                <span>Needs work</span>
+                <span className="text-center">Almost</span>
+                <span className="text-right">Ready 75+</span>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* What stood out — verbatim quotes pulled from the resume (Slice 2a). This
-          is what makes the analysis feel bespoke rather than generic. Only renders
+          {/* Right — the verdict */}
+          <div>
+            {fitAnalysis?.overallFeedback && (
+              <p className="font-heading text-lg leading-relaxed text-slate-900 dark:text-slate-100">
+                {fitAnalysis.overallFeedback}
+              </p>
+            )}
+            {fitAnalysis?.recommendation && (
+              <div className="mt-4 border-l-2 border-indigo-500 pl-4">
+                <p className={EYEBROW}>The bottom line</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  {fitAnalysis.recommendation}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. What stood out — verbatim quotes pulled from the resume. Only renders
           when the AI found real, validated quotes. */}
       {Array.isArray(fitAnalysis?.evidence) && fitAnalysis.evidence.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.04 }}
-          className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Quote className="w-5 h-5 text-indigo-500" />
-            <h4 className="font-semibold text-slate-800 dark:text-slate-200">
-              What stood out in your resume
-            </h4>
-          </div>
-          <ul className="space-y-4">
+        <section className={CARD}>
+          <p className={EYEBROW}>Read from your résumé</p>
+          <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+            What stood out
+          </h3>
+          <ul className="mt-5 divide-y divide-slate-100 dark:divide-slate-800">
             {fitAnalysis.evidence.map((e, idx) => (
-              <li key={idx} className="border-l-2 border-indigo-200 dark:border-indigo-500/40 pl-4">
-                <p className="text-sm italic text-slate-700 dark:text-slate-200">“{e.quote}”</p>
-                {e.issue && (
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{e.issue}</p>
-                )}
-                {e.fix && (
-                  <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1 flex items-start gap-1.5">
-                    <Wrench className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    <span>{e.fix}</span>
+              <li key={idx} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                <span className="shrink-0 pt-1 font-mono text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-heading italic text-slate-900 dark:text-slate-100">
+                    “{e.quote}”
                   </p>
-                )}
+                  {e.issue && (
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      {e.issue}
+                    </p>
+                  )}
+                  {e.fix && (
+                    <p className="mt-1.5 flex items-start gap-1.5 text-sm text-indigo-700 dark:text-indigo-300">
+                      <Wrench className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{e.fix}</span>
+                    </p>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
-        </motion.div>
+        </section>
       )}
 
-      {/* Score Breakdown — collapsible. Closed by default; the score itself is
-          the headline, this is "show me the math" for users who want to verify. */}
+      {/* 3. Where you're short — the skill gaps, severity-ordered. */}
+      <section className={CARD}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className={EYEBROW}>The gap</p>
+            <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+              Where you&apos;re short
+            </h3>
+          </div>
+          {totalSkills > 0 && (
+            <span className="shrink-0 font-mono text-xs tabular-nums text-slate-400 dark:text-slate-500">
+              {matchedSkills.length}/{totalSkills} matched
+            </span>
+          )}
+        </div>
+
+        {missingSkills.length === 0 && totalSkills > 0 ? (
+          <p className="mt-4 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+            <CheckCircle className="w-4 h-4" />
+            All required skills matched — strong fit on skills.
+          </p>
+        ) : missingSkills.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            No specific skill requirements were detected for this role.
+          </p>
+        ) : (
+          <div className="mt-5 space-y-5">
+            {/* Must-have gaps — rose left stripe */}
+            {mustHaves.length > 0 && (
+              <div className="border-l-2 border-rose-500 pl-4">
+                <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-rose-600 dark:text-rose-400">
+                  Critical — required by the role
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {mustHaves.map((skill, idx) => (
+                    <span
+                      key={`must-${idx}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-200"
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Nice-to-have gaps — muted */}
+            {niceToHaves.length > 0 && (
+              <div className="pl-4">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+                  Bonus — would strengthen the application
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {niceToHaves.map((skill, idx) => (
+                    <span
+                      key={`nice-${idx}`}
+                      className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300"
+                    >
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Matched skills — collapsible, lowest priority */}
+            {matchedSkills.length > 0 && (
+              <div className="pl-4">
+                <button
+                  type="button"
+                  onClick={() => setSkillsExpanded(!skillsExpanded)}
+                  className="inline-flex items-center gap-1.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  aria-expanded={skillsExpanded}
+                >
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                  {matchedSkills.length} skill{matchedSkills.length === 1 ? '' : 's'} matched
+                  {skillsExpanded ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                {skillsExpanded && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {matchedSkills.map((skill, idx) => (
+                      <span
+                        key={`match-${idx}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300"
+                      >
+                        <CheckCircle className="w-3 h-3 text-emerald-500" />
+                        {skill.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* 4. Score breakdown — collapsible, with the fixed-weights tooltip. */}
       {breakdown.skillsScore != null &&
         (() => {
           const dimensions = [
@@ -320,28 +384,18 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
             { label: 'Profile Strength', score: breakdown.overallScore, weight: '10%' },
           ].filter(({ score }) => score != null);
           return (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
-            >
+            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setBreakdownOpen((v) => !v)}
-                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left"
                 aria-expanded={breakdownOpen}
               >
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="font-semibold text-slate-800 dark:text-slate-200">
-                      Score Breakdown
-                    </h4>
+                    <p className={EYEBROW}>The math · fixed weights</p>
                     {/* Tooltip — explains the fixed weights so users understand why,
-                      not just what. Click target is the icon; hover/focus reveals. */}
+                        not just what. Click target is the icon; hover/focus reveals. */}
                     <div className="relative group">
                       <HelpCircle
                         className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-help"
@@ -362,23 +416,26 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                       </div>
                     </div>
                   </div>
+                  <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                    Score breakdown
+                  </h3>
                   {!breakdownOpen && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                    <p className="mt-1 font-mono text-[0.7rem] tabular-nums text-slate-400 dark:text-slate-500 truncate">
                       {dimensions.map((d) => `${d.label} ${d.score}`).join(' · ')}
                     </p>
                   )}
                 </div>
-                <motion.div
+                <Motion.div
                   animate={{ rotate: breakdownOpen ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                   className="text-slate-400 dark:text-slate-500 shrink-0"
                 >
                   <ChevronDown className="w-5 h-5" />
-                </motion.div>
+                </Motion.div>
               </button>
               <AnimatePresence initial={false}>
                 {breakdownOpen && (
-                  <motion.div
+                  <Motion.div
                     key="content"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -386,392 +443,156 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                     transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                      {dimensions.map(({ label, score, weight }) => (
-                        <div key={label}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-600 dark:text-slate-300">
-                              {label}{' '}
-                              <span className="text-slate-400 dark:text-slate-500">({weight})</span>
-                            </span>
-                            <span className={`font-semibold ${getScoreColor(score)}`}>
-                              {score}/100
-                            </span>
+                    <div className="px-6 pb-6 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                      {dimensions.map(({ label, score, weight }) => {
+                        const dBand = bandOf(score);
+                        return (
+                          <div key={label}>
+                            <div className="flex justify-between text-sm mb-1.5">
+                              <span className="text-slate-600 dark:text-slate-300">
+                                {label}{' '}
+                                <span className="font-mono text-xs text-slate-400 dark:text-slate-500">
+                                  ({weight})
+                                </span>
+                              </span>
+                              <span className={`font-semibold tabular-nums ${BAND_TEXT[dBand]}`}>
+                                {score}/100
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                              <Motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${score}%` }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                className={`h-1.5 rounded-full ${BAND_RULEBG[dBand]}`}
+                              />
+                            </div>
                           </div>
-                          <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${score}%` }}
-                              transition={{ duration: 0.6, ease: 'easeOut' }}
-                              className={`h-2 rounded-full ${getBarColor(score)}`}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </section>
           );
         })()}
 
-      {/* Top Gaps panel — prominent, severity-ordered. Replaces the cramped
-          Skills card so missing must-haves drive the user's attention to the
-          single most impactful action: generate an optimized CV. */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-indigo-500" />
-            <h4 className="font-semibold text-slate-800 dark:text-slate-200">Skill Gaps</h4>
-          </div>
-          {totalSkills > 0 && (
-            <span className="text-xs text-slate-400 dark:text-slate-500">
-              {matchedSkills.length}/{totalSkills} matched
-            </span>
-          )}
-        </div>
-
-        {missingSkills.length === 0 && totalSkills > 0 ? (
-          <div className="p-5 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300">
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">All required skills matched — strong fit on skills.</span>
-          </div>
-        ) : missingSkills.length === 0 ? (
-          <div className="p-5 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Info className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-            No specific skill requirements were detected for this role.
-          </div>
-        ) : (
-          <div>
-            {/* Must-have gaps — dominant, red severity */}
-            {missingSkills.filter((s) => s.importance === 'must_have').length > 0 && (
-              <div className="px-5 py-4 bg-red-50/50 dark:bg-red-500/15 border-b border-red-100 dark:border-red-500/30">
-                <p className="text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-300 mb-2">
-                  Critical — required by the role
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {missingSkills
-                    .filter((s) => s.importance === 'must_have')
-                    .map((skill, idx) => (
-                      <span
-                        key={`must-${idx}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-red-200 dark:border-red-500/30 text-sm font-medium text-slate-800 dark:text-slate-200"
-                      >
-                        <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-                        {skill.name}
-                      </span>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Nice-to-have gaps — secondary, amber */}
-            {missingSkills.filter((s) => s.importance !== 'must_have').length > 0 && (
-              <div className="px-5 py-3 bg-amber-50/40 dark:bg-amber-500/15">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2">
-                  Bonus — would strengthen the application
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {missingSkills
-                    .filter((s) => s.importance !== 'must_have')
-                    .map((skill, idx) => (
-                      <span
-                        key={`nice-${idx}`}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 text-xs text-slate-700 dark:text-slate-300"
-                      >
-                        {skill.name}
-                      </span>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Matched skills — collapsible, lowest priority */}
-            {matchedSkills.length > 0 && (
-              <button
-                onClick={() => setSkillsExpanded(!skillsExpanded)}
-                className="w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-t border-slate-100 dark:border-slate-800"
-              >
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                  {matchedSkills.length} skill{matchedSkills.length === 1 ? '' : 's'} matched
-                </span>
-                {skillsExpanded ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-            {skillsExpanded && matchedSkills.length > 0 && (
-              <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
-                {matchedSkills.map((skill, idx) => (
-                  <span
-                    key={`match-${idx}`}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 text-xs text-slate-700 dark:text-slate-300"
-                  >
-                    <CheckCircle className="w-3 h-3 text-emerald-500" />
-                    {skill.name}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </motion.div>
-
-      {/* Experience + Seniority — both collapsed by default. The teaser line
-          gives the headline answer (years, match) so the user gets the signal
-          without needing to expand. */}
+      {/* 5. Experience + Seniority — flat stat rows. Click a row to reveal the
+          feedback sentence. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Experience Match */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
-        >
+        {/* Experience */}
+        <div className={CARD}>
           <button
             type="button"
             onClick={() => setExperienceOpen((v) => !v)}
-            className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+            className="w-full flex items-start justify-between gap-3 text-left"
             aria-expanded={experienceOpen}
           >
-            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-500 dark:text-blue-300 flex items-center justify-center shrink-0">
-              <Briefcase className="w-4 h-4" />
+            <div className="min-w-0">
+              <p className={EYEBROW}>Experience</p>
+              <p className="mt-1.5 text-sm tabular-nums text-slate-700 dark:text-slate-300">
+                {hasYears
+                  ? `${expAnalysis.candidateYears ?? '?'} yrs · needs ${expAnalysis.requiredYears ?? '?'}`
+                  : expAnalysis.match
+                    ? 'Meets requirements'
+                    : 'Below preferred'}
+              </p>
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-slate-800 dark:text-slate-200">Experience</h4>
-              {!experienceOpen && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
-                  {expAnalysis.candidateYears != null && expAnalysis.requiredYears != null ? (
-                    <>
-                      {expAnalysis.candidateYears} yrs vs {expAnalysis.requiredYears} required
-                      <span className="text-slate-300 dark:text-slate-600">·</span>
-                    </>
-                  ) : null}
-                  {expAnalysis.match ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
-                      <CheckCircle className="w-3 h-3" /> Meets
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-300">
-                      <AlertTriangle className="w-3 h-3" /> Below preferred
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-            <motion.div
-              animate={{ rotate: experienceOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-slate-400 dark:text-slate-500 shrink-0"
-            >
-              <ChevronDown className="w-5 h-5" />
-            </motion.div>
-          </button>
-          <AnimatePresence initial={false}>
-            {experienceOpen && (
-              <motion.div
-                key="exp-content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="overflow-hidden"
+            <div className="flex shrink-0 items-center gap-2">
+              <StatPill ok={!!expAnalysis.match} meetLabel="Meets" missLabel="Below preferred" />
+              <Motion.div
+                animate={{ rotate: experienceOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-slate-400 dark:text-slate-500"
               >
-                <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  {(expAnalysis.candidateYears != null || expAnalysis.requiredYears != null) && (
-                    <div className="flex items-center gap-3 mb-3 mt-3">
-                      <div className="text-center flex-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900">
-                        <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                          {expAnalysis.candidateYears ?? '?'}
-                        </div>
-                        <div className="text-[10px] uppercase text-slate-400 dark:text-slate-500 font-semibold">
-                          Your Years
-                        </div>
-                      </div>
-                      <span className="text-slate-300 dark:text-slate-600 text-sm">vs</span>
-                      <div className="text-center flex-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900">
-                        <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                          {expAnalysis.requiredYears ?? '?'}
-                        </div>
-                        <div className="text-[10px] uppercase text-slate-400 dark:text-slate-500 font-semibold">
-                          Required
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    {expAnalysis.match ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    )}
-                    <span className="text-slate-600 dark:text-slate-300">
-                      {expAnalysis.feedback ||
-                        (expAnalysis.match ? 'Meets requirements' : 'Less than preferred')}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                <ChevronDown className="w-4 h-4" />
+              </Motion.div>
+            </div>
+          </button>
+          {experienceOpen && (
+            <p className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {expAnalysis.feedback ||
+                (expAnalysis.match ? 'Meets requirements' : 'Less than preferred')}
+            </p>
+          )}
+        </div>
 
-        {/* Seniority Match */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
-        >
+        {/* Seniority */}
+        <div className={CARD}>
           <button
             type="button"
             onClick={() => setSeniorityOpen((v) => !v)}
-            className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+            className="w-full flex items-start justify-between gap-3 text-left"
             aria-expanded={seniorityOpen}
           >
-            <div className="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-500/15 text-purple-500 dark:text-purple-300 flex items-center justify-center shrink-0">
-              <Award className="w-4 h-4" />
+            <div className="min-w-0">
+              <p className={EYEBROW}>Seniority</p>
+              <p className="mt-1.5 text-sm text-slate-700 dark:text-slate-300">
+                {senAnalysis.candidateLevel || senAnalysis.requiredLevel
+                  ? `${levelLabel(senAnalysis.candidateLevel)} · needs ${levelLabel(senAnalysis.requiredLevel)}`
+                  : senAnalysis.match
+                    ? 'Aligned with role'
+                    : 'Role may vary'}
+              </p>
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-slate-800 dark:text-slate-200">Seniority Level</h4>
-              {!seniorityOpen && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
-                  {(senAnalysis.candidateLevel || senAnalysis.requiredLevel) && (
-                    <>
-                      {levelLabel(senAnalysis.candidateLevel)} vs{' '}
-                      {levelLabel(senAnalysis.requiredLevel)}
-                      <span className="text-slate-300 dark:text-slate-600">·</span>
-                    </>
-                  )}
-                  {senAnalysis.match ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
-                      <CheckCircle className="w-3 h-3" /> Aligned
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                      <Info className="w-3 h-3" /> Mixed
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-            <motion.div
-              animate={{ rotate: seniorityOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-slate-400 dark:text-slate-500 shrink-0"
-            >
-              <ChevronDown className="w-5 h-5" />
-            </motion.div>
-          </button>
-          <AnimatePresence initial={false}>
-            {seniorityOpen && (
-              <motion.div
-                key="sen-content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="overflow-hidden"
+            <div className="flex shrink-0 items-center gap-2">
+              <StatPill ok={!!senAnalysis.match} meetLabel="Aligned" missLabel="Mixed" />
+              <Motion.div
+                animate={{ rotate: seniorityOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-slate-400 dark:text-slate-500"
               >
-                <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  {(senAnalysis.candidateLevel || senAnalysis.requiredLevel) && (
-                    <div className="flex items-center gap-3 mb-3 mt-3">
-                      <div className="text-center flex-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900">
-                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                          {levelLabel(senAnalysis.candidateLevel)}
-                        </div>
-                        <div className="text-[10px] uppercase text-slate-400 dark:text-slate-500 font-semibold">
-                          You
-                        </div>
-                      </div>
-                      <span className="text-slate-300 dark:text-slate-600 text-sm">vs</span>
-                      <div className="text-center flex-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900">
-                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                          {levelLabel(senAnalysis.requiredLevel)}
-                        </div>
-                        <div className="text-[10px] uppercase text-slate-400 dark:text-slate-500 font-semibold">
-                          Required
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    {senAnalysis.match ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <Info className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                    )}
-                    <span className="text-slate-600 dark:text-slate-300">
-                      {senAnalysis.feedback ||
-                        (senAnalysis.match ? 'Aligned with role' : 'Role may vary from level')}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                <ChevronDown className="w-4 h-4" />
+              </Motion.div>
+            </div>
+          </button>
+          {seniorityOpen && (
+            <p className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {senAnalysis.feedback ||
+                (senAnalysis.match ? 'Aligned with role' : 'Role may vary from level')}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Smart Action Plan */}
+      {/* 6. What to fix next — the internal action plan. */}
       {actionPlan && actionPlan.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-indigo-50 dark:bg-indigo-500/15 rounded-xl p-6 border border-indigo-100 dark:border-indigo-500/30"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Smart Action Plan
-            </h3>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-            Based on your gaps, here are specific steps to improve your fit:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <section className={CARD}>
+          <p className={EYEBROW}>Your move</p>
+          <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+            What to fix next
+          </h3>
+          <ol className="mt-5 space-y-5">
             {actionPlan.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-indigo-100 dark:border-indigo-500/30 shadow-sm flex items-start gap-3"
-              >
-                <div className="mt-1 w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                  {idx + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+              <li key={idx} className="flex gap-4">
+                <span className="w-9 shrink-0 font-heading text-3xl font-bold leading-none tabular-nums text-slate-200 dark:text-slate-700">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 pt-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
                     {(item.skill || item.category) && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold uppercase">
+                      <span className="rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                         {item.category || item.skill}
                       </span>
                     )}
                     {item.importance === 'must_have' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-300 font-semibold uppercase">
+                      <span className="rounded border border-rose-500/40 px-1.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rose-600 dark:text-rose-400">
                         Critical
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-800 dark:text-slate-200 font-medium mt-0.5">
+                  <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
                     {item.task || item.action}
                   </p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
-        </motion.div>
+          </ol>
+        </section>
       )}
 
-      {/* AI feedback — only renders when we have an applicationId to attach to */}
+      {/* 7. AI feedback — only renders when we have an applicationId to attach to */}
       {applicationId && (
         <div className="flex justify-end pt-1">
           <AIFeedbackWidget
