@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   Crown,
   ChevronDown,
+  FileText,
+  FileType,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -97,6 +99,8 @@ const ResumeReview = () => {
   const [isDraftMode, setIsDraftMode] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'resume'); // 'resume' or 'cover-letter'
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false); // PDF/Word split menu
   // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
   const screenshotObscured = useScreenshotGuard();
   // Keep the loader visible long enough for users to read a tip even when the
@@ -641,6 +645,66 @@ const ResumeReview = () => {
 
       toast.error('Download failed');
       setIsDownloading(false); // Close immediately on error
+    }
+  };
+
+  // Word (.docx) export — built from the CV DATA (no DOM clone needed). Same
+  // gates as the PDF: a locked template opens the unlock modal, and a
+  // NEED_DOWNLOAD 402 opens the same download paywall. One download unit covers
+  // either format (the backend consumes it once).
+  const handleDownloadDocx = async () => {
+    // Locked template → unlock modal first (same gate as the PDF click).
+    if (!isUnlocked(templateId)) {
+      const template = TEMPLATES.find((t) => t.id === templateId);
+      setTemplateToUnlock(template);
+      setUnlockModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsDownloadingDocx(true);
+
+      const blob = await CVService.generateDocx(
+        {
+          markdown: application.optimizedCV,
+          userProfile: mergedUserProfile || userProfile,
+        },
+        {
+          applicationId: application._id,
+          isDraft: isDraftMode,
+          templateId,
+        }
+      );
+
+      const filename = `${userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.docx`;
+      await downloadBlob(blob, filename);
+
+      setIsDownloadingDocx(false);
+      toast.success('Word document downloaded');
+      triggerInterstitial('docx_download_success');
+    } catch (e) {
+      console.error('DOCX Download Error Details:', e);
+
+      // CVService.generateDocx decodes the blob 402 into a typed error.
+      if (e.code === 'NEED_DOWNLOAD') {
+        setShowDownloadPaywall(true);
+        setIsDownloadingDocx(false);
+        return;
+      }
+
+      // Because the request uses responseType: 'blob', other errors arrive as blobs.
+      if (e.response && e.response.data instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          console.error('Server Error Response (decoded):', reader.result);
+        };
+        reader.readAsText(e.response.data);
+      } else if (e.response) {
+        console.error('Server Error Response:', e.response.data);
+      }
+
+      toast.error('Download failed');
+      setIsDownloadingDocx(false);
     }
   };
 
@@ -1253,19 +1317,73 @@ const ResumeReview = () => {
                 <PenTool className="w-4 h-4" />
                 <span>Edit</span>
               </button>
-              <button
-                type="button"
-                disabled={isDownloading}
-                onClick={handleDownloadClick}
-                className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
-              >
-                {isDownloading ? (
-                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
+              {/* Download → PDF or Word (.docx). Same paywall/unlock gating. */}
+              <div className="relative">
+                <button
+                  type="button"
+                  disabled={isDownloading || isDownloadingDocx}
+                  onClick={() => setDownloadMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={downloadMenuOpen}
+                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
+                >
+                  {isDownloading || isDownloadingDocx ? (
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  <span>{`Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+                {downloadMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setDownloadMenuOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full mt-2 z-50 w-56 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl py-1"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={isDownloading}
+                        onClick={() => {
+                          setDownloadMenuOpen(false);
+                          handleDownloadClick();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
+                      >
+                        {isDownloading ? (
+                          <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-rose-500 shrink-0" />
+                        )}
+                        <span>Download PDF</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={isDownloadingDocx}
+                        onClick={() => {
+                          setDownloadMenuOpen(false);
+                          handleDownloadDocx();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
+                      >
+                        {isDownloadingDocx ? (
+                          <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                        ) : (
+                          <FileType className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        )}
+                        <span>Download Word (.docx)</span>
+                      </button>
+                    </div>
+                  </>
                 )}
-                <span>{`Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1672,6 +1790,20 @@ const ResumeReview = () => {
                   ? 'Working…'
                   : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}
               </span>
+            </button>
+            <button
+              type="button"
+              disabled={isDownloadingDocx}
+              onClick={handleDownloadDocx}
+              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-wait px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
+              aria-label="Download Word"
+              title="Download Word (.docx)"
+            >
+              {isDownloadingDocx ? (
+                <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+              ) : (
+                <FileType className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              )}
             </button>
             <button
               type="button"

@@ -162,6 +162,43 @@ const CVService = {
       throw error;
     }
   },
+
+  // Generate a Word (.docx) from the CV data (server-side via the `docx` lib).
+  // Mirrors generatePdf: same download paywall, so a NEED_DOWNLOAD 402 (delivered
+  // as a Blob body because responseType is 'blob') is decoded back into a typed
+  // Error with `.code === 'NEED_DOWNLOAD'` for callers to show the paywall.
+  // data = { markdown, userProfile }; metadata = { applicationId, isDraft, templateId }.
+  generateDocx: async (data = {}, metadata = {}) => {
+    try {
+      const response = await api.post(
+        '/docx/generate',
+        {
+          ...data,
+          ...metadata,
+        },
+        {
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 402 && error.response.data) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          const e = new Error(json.message || 'Payment required to download');
+          e.code = json.code || 'NEED_DOWNLOAD';
+          throw e;
+        } catch (parseErr) {
+          if (parseErr.code) throw parseErr;
+          const e = new Error('Payment required to download');
+          e.code = 'NEED_DOWNLOAD';
+          throw e;
+        }
+      }
+      throw error;
+    }
+  },
 };
 
 export default CVService;
