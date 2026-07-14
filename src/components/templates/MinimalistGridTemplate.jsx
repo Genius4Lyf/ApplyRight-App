@@ -77,7 +77,10 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
       </div>
 
       {/* Main Content (Right 70%) */}
-      <div className="w-[70%] p-10 pt-8">
+      <div
+        className="w-[70%]"
+        style={{ padding: 'var(--cv-margin, 2.5rem)', paddingTop: 'var(--cv-margin, 2rem)' }}
+      >
         <div className="cv-body space-y-2">
           <ReactMarkdown
             components={{

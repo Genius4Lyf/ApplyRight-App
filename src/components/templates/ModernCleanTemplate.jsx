@@ -68,10 +68,11 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto p-10 text-slate-900"
+      className="bg-white mx-auto text-slate-900"
       style={{
         lineHeight: 'var(--cv-leading, 1.5)',
         fontFamily: "var(--cv-font, 'Inter', sans-serif)",
+        padding: 'var(--cv-margin, 2.5rem)',
       }}
     >
       {/* INJECT FONTS */}

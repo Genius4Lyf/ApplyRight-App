@@ -41,7 +41,7 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
             `}</style>
 
       {/* Header */}
-      <header className="px-12 py-6">
+      <header style={{ padding: 'var(--cv-margin, 1.5rem 3rem)' }}>
         <div className="flex justify-between items-start">
           <div>
             <h1
@@ -76,8 +76,10 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
 
       {/* Body */}
       <div
-        className="px-12 pt-6 pb-12"
-        style={{ fontFamily: "var(--cv-font, 'Inter', sans-serif)" }}
+        style={{
+          fontFamily: "var(--cv-font, 'Inter', sans-serif)",
+          padding: 'var(--cv-margin, 1.5rem 3rem 3rem)',
+        }}
       >
         <ReactMarkdown
           components={{

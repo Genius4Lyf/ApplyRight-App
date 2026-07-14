@@ -31,6 +31,7 @@ import MinimalistSerifTemplate from '../components/templates/MinimalistSerifTemp
 import MinimalistGridTemplate from '../components/templates/MinimalistGridTemplate';
 import MinimalistMonoTemplate from '../components/templates/MinimalistMonoTemplate';
 import TemplateThumbnail from '../components/TemplateThumbnail';
+import TemplatePreviewThumb from '../components/TemplatePreviewThumb';
 import CreativePortfolioTemplate from '../components/templates/CreativePortfolioTemplate';
 import ExecutiveLeadTemplate from '../components/templates/ExecutiveLeadTemplate';
 import TechStackTemplate from '../components/templates/TechStackTemplate';
@@ -157,6 +158,38 @@ const ResumeReview = () => {
       /* non-fatal */
     }
   }, [design, application?._id]);
+
+  // Editable DRAFT title in the toolbar (applications keep a static job title).
+  const [titleValue, setTitleValue] = useState('');
+  const savingTitleRef = useRef(false); // guard re-entrant saves (Enter + blur)
+  // Seed the editable value once the draft loads / changes. Intentionally keyed
+  // on the id only (not title) so in-progress typing isn't clobbered by re-seeds.
+  useEffect(() => {
+    setTitleValue(application?.title || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [application?._id]);
+  // Persist a rename on Enter/blur. Spread the full loaded draft so /cv/save
+  // (an upsert that merges via findByIdAndUpdate) never drops any field.
+  const commitDraftTitle = async () => {
+    const next = titleValue.trim();
+    if (!next) {
+      setTitleValue(application?.title || ''); // empty → revert
+      return;
+    }
+    if (next === (application?.title || '') || savingTitleRef.current) return;
+    savingTitleRef.current = true;
+    try {
+      await CVService.saveDraft({ ...application, title: next });
+      setApplication((a) => ({ ...a, title: next }));
+      toast.success('Renamed');
+    } catch (err) {
+      console.error('Rename draft failed:', err);
+      toast.error('Could not rename');
+      setTitleValue(application?.title || '');
+    } finally {
+      savingTitleRef.current = false;
+    }
+  };
 
   // Score → editorial band accent (>=75 emerald / >=50 amber / else rose).
   const bandText = (s) =>
@@ -498,6 +531,9 @@ const ResumeReview = () => {
                 <head>
                     <meta charset="UTF-8">
                     <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=Inter:wght@400;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
                     <style>
                         html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
                         
@@ -543,9 +579,10 @@ const ResumeReview = () => {
                 </html>
             `;
 
-      // 2. Call Backend with margin options — mirror the Design-tab margin choice.
-      const pdfMargin =
-        design.margins === 'narrow' ? '10px' : design.margins === 'wide' ? '40px' : '25px';
+      // 2. Call Backend with margin options. The visible margin is now the
+      // template's own padding (in the cloned DOM), so keep the Puppeteer page
+      // margin small + fixed — otherwise it would add a third layer of border.
+      const pdfMargin = '10px';
       const blob = await CVService.generatePdf(
         fullHtml,
         {
@@ -877,7 +914,7 @@ const ResumeReview = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col relative">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-slate-100 dark:bg-slate-900 flex flex-col relative">
       <DownloadPaywallModal
         open={showDownloadPaywall}
         onClose={() => setShowDownloadPaywall(false)}
@@ -1124,110 +1161,118 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 h-14 flex items-center gap-3 shrink-0">
+        <div className="relative h-14 flex items-center justify-between gap-3 px-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
+          {/* LEFT: back to edit */}
           <button
             type="button"
             onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
-            className="p-2 -ml-2 rounded-full transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shrink-0"
-            aria-label="Back"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shrink-0"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
+            <span className="hidden sm:inline">Back to edit</span>
           </button>
-          <div className="flex-1 min-w-0">
+
+          {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-26rem)]">
             {isDraftMode ? (
-              <>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Draft CV
-                </p>
-                <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                  {application?.title || 'Untitled draft'}
-                </h1>
-              </>
+              <input
+                type="text"
+                value={titleValue}
+                onChange={(e) => setTitleValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                }}
+                onBlur={commitDraftTitle}
+                aria-label="Draft title"
+                placeholder="Untitled draft"
+                size={Math.min(30, Math.max(10, titleValue.length + 1))}
+                className="font-heading text-base font-bold text-center text-slate-900 dark:text-slate-100 bg-transparent rounded px-1.5 py-0.5 border border-transparent outline-none transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
             ) : (
-              <>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Application
-                </p>
-                <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                  {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
-                  {(application?.jobId?.company || application?.jobCompany) && (
-                    <span className="text-slate-500 dark:text-slate-400 font-normal">
-                      {' '}
-                      at {application?.jobId?.company || application?.jobCompany}
-                    </span>
-                  )}
-                </h1>
-              </>
+              <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
+                {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
+                {(application?.jobId?.company || application?.jobCompany) && (
+                  <span className="text-slate-500 dark:text-slate-400 font-normal">
+                    {' '}
+                    at {application?.jobId?.company || application?.jobCompany}
+                  </span>
+                )}
+              </h1>
             )}
+            <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
+              PDF · A4
+            </span>
           </div>
-          {/* Resume / Cover Letter tab toggle — single source of truth in the
+
+          {/* RIGHT: tab toggle (non-draft) + desktop actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Resume / Cover Letter tab toggle — single source of truth in the
             header for all screen sizes. Labels collapse to "CV"/"Letter" on
             phones to keep the row compact alongside the back button + title.
             The dedicated 52px mobile tab strip we used to render below the
             header was eating into the CV preview height — gone now. */}
-          {!isDraftMode && (
-            <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shrink-0">
+            {!isDraftMode && (
+              <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('resume')}
+                  className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                    activeTab === 'resume'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  <span className="sm:hidden">CV</span>
+                  <span className="hidden sm:inline">Resume</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('cover-letter')}
+                  className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                    activeTab === 'cover-letter'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  <span className="sm:hidden">Letter</span>
+                  <span className="hidden sm:inline">Cover Letter</span>
+                </button>
+              </div>
+            )}
+            {/* Desktop primary actions — the mobile action bar is the phone equivalent. */}
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setActiveTab('resume')}
-                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  activeTab === 'resume'
-                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
+                onClick={
+                  isDraftMode
+                    ? () => navigate(`/cv-builder/${application._id}/finalize`)
+                    : handleEdit
+                }
+                className="inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-1.5 rounded-lg transition-colors"
               >
-                <span className="sm:hidden">CV</span>
-                <span className="hidden sm:inline">Resume</span>
+                <PenTool className="w-4 h-4" />
+                <span>Edit</span>
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('cover-letter')}
-                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  activeTab === 'cover-letter'
-                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
+                disabled={isDownloading}
+                onClick={handleDownloadClick}
+                className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
               >
-                <span className="sm:hidden">Letter</span>
-                <span className="hidden sm:inline">Cover Letter</span>
+                {isDownloading ? (
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>{`Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
               </button>
             </div>
-          )}
-          {/* Desktop primary actions — the mobile action bar is the phone equivalent. */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={
-                isDraftMode ? () => navigate(`/cv-builder/${application._id}/finalize`) : handleEdit
-              }
-              className="inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <PenTool className="w-4 h-4" />
-              <span>Edit</span>
-            </button>
-            <button
-              type="button"
-              disabled={isDownloading}
-              onClick={handleDownloadClick}
-              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
-            >
-              {isDownloading ? (
-                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              <span>{`Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}</span>
-            </button>
           </div>
-          {/* Static studio label — presentation only, no logic. */}
-          <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
-            PDF · A4
-          </span>
         </div>
       )}
 
       {!immersive && !advisoryDismissed && (
-        <div className="bg-amber-50 dark:bg-amber-500/15 border-b border-amber-200 dark:border-amber-500/30 px-4 md:px-6 py-2.5 flex items-start gap-2.5 text-amber-900 dark:text-amber-200">
+        <div className="bg-amber-50 dark:bg-amber-500/15 border-b border-amber-200 dark:border-amber-500/30 px-4 md:px-6 py-2.5 flex items-start gap-2.5 text-amber-900 dark:text-amber-200 shrink-0">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-300" />
           <p className="text-[12px] sm:text-[13px] leading-snug flex-1">
             AI can introduce inaccuracies. Review every claim against your real experience and edit
@@ -1247,14 +1292,14 @@ const ResumeReview = () => {
       {/* Mobile: no internal overflow — let the page document scroll naturally
           so users always reach the bottom regardless of zoom. Desktop keeps
           the fixed-viewport split with each pane scrolling independently. */}
-      <div className="flex-1 flex flex-col lg:flex-row lg:h-[calc(100vh-64px)] lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row-reverse lg:min-h-0 lg:overflow-hidden">
         {/* LEFT: Document Preview Area */}
         <div className="flex-1 overflow-x-auto custom-scrollbar p-4 pb-20 md:p-8 lg:pb-8 flex justify-center bg-slate-100 dark:bg-slate-950 relative min-h-[80vh] lg:min-h-0 lg:overflow-y-auto">
           {/* Zoom + view controls — collapses to a single icon on demand */}
           <motion.div
             layout
             transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
-            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[450px] lg:translate-x-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-full flex items-center overflow-hidden"
+            className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 lg:left-[calc(50%+12rem)] z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-full flex items-center overflow-hidden"
           >
             <AnimatePresence mode="wait" initial={false}>
               {controlsExpanded ? (
@@ -1363,8 +1408,15 @@ const ResumeReview = () => {
                 '--cv-font': design.font || undefined,
                 '--cv-leading':
                   design.density === 'compact' ? 1.35 : design.density === 'relaxed' ? 1.7 : 1.5,
-                padding:
-                  design.margins === 'narrow' ? '8mm' : design.margins === 'wide' ? '24mm' : '15mm',
+                // The template renders its own padded white page — drive that
+                // padding via --cv-margin so there's no second frame around it.
+                // undefined at Normal → each template keeps its own designed padding.
+                '--cv-margin':
+                  design.margins === 'narrow'
+                    ? '1.5rem'
+                    : design.margins === 'wide'
+                      ? '3.5rem'
+                      : undefined,
               }}
               onContextMenu={(e) => e.preventDefault()}
               onCopy={(e) => e.preventDefault()}
@@ -1681,7 +1733,7 @@ const ResumeReview = () => {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes). */}
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
               {!isDraftMode ? (
@@ -1817,7 +1869,7 @@ const ResumeReview = () => {
                   key={tab}
                   type="button"
                   onClick={() => setRailTab(tab)}
-                  className={`relative py-3 text-xs font-semibold capitalize transition-colors ${
+                  className={`relative py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
                     railTab === tab
                       ? 'text-indigo-600 dark:text-indigo-400'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -1839,29 +1891,41 @@ const ResumeReview = () => {
                 </p>
               ) : railTab === 'design' ? (
                 <div className="space-y-6">
-                  {/* Typeface — body-font override via --cv-font. System fonts, so
-                      no PDF font-loading; each template keeps its own as fallback. */}
+                  {/* Typeface — body-font override via --cv-font. Curated Google
+                      Fonts (loaded in index.html + injected into the PDF head); each
+                      template keeps its own font as the fallback when Default. */}
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
                       Typeface
                     </p>
-                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { label: 'Default', value: '' },
-                        { label: 'Sans', value: 'Arial, Helvetica, sans-serif' },
-                        { label: 'Serif', value: 'Georgia, "Times New Roman", serif' },
+                        { label: 'Inter', value: 'Inter, sans-serif' },
+                        { label: 'Source Sans', value: "'Source Sans 3', sans-serif" },
+                        { label: 'Georgia', value: "Georgia, 'Times New Roman', serif" },
+                        { label: 'Merriweather', value: 'Merriweather, serif' },
+                        { label: 'Lora', value: 'Lora, serif' },
                       ].map((f) => (
                         <button
                           key={f.label}
                           type="button"
                           onClick={() => setDesign((d) => ({ ...d, font: f.value }))}
-                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                          className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2.5 transition-all ${
                             design.font === f.value
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                              : 'text-slate-500 dark:text-slate-400'
+                              ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                           }`}
                         >
-                          {f.label}
+                          <span
+                            className="text-lg leading-none text-slate-900 dark:text-slate-100"
+                            style={{ fontFamily: f.value || undefined }}
+                          >
+                            Aa
+                          </span>
+                          <span className="max-w-full truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                            {f.label}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -1966,89 +2030,86 @@ const ResumeReview = () => {
                         <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                           {groupName}
                         </h4>
-                        {groupTemplates.map((t) => {
-                          const locked = !isUnlocked(t.id);
-                          return (
-                            <div
-                              key={t.id}
-                              onClick={() => {
-                                setTemplateId(t.id);
-                                setMobileSidebarOpen(false);
-                              }}
-                              className={`p-3 rounded-lg border flex items-center cursor-pointer transition-all ${
-                                templateId === t.id
-                                  ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10 ring-1 ring-indigo-600'
-                                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                              } ${locked ? 'bg-slate-50/50 dark:bg-slate-900/40' : ''}`}
-                            >
-                              <div className="w-10 h-14 mr-3 flex-shrink-0 relative">
-                                <TemplateThumbnail type={t.id} className="rounded-sm" />
-                                {/* Tier badge — always visible on the thumbnail so users
-                                    know the cost before clicking. Free templates show
-                                    a green "Free" pill; locked Pro templates show the
-                                    credit cost in slate; unlocked Pro shows "Pro". */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {groupTemplates.map((t) => {
+                            const locked = !isUnlocked(t.id);
+                            return (
+                              <div
+                                key={t.id}
+                                onClick={() => {
+                                  setTemplateId(t.id);
+                                  setMobileSidebarOpen(false);
+                                }}
+                                className={`cursor-pointer rounded-lg border overflow-hidden transition-all ${
+                                  templateId === t.id
+                                    ? 'border-indigo-600 ring-1 ring-indigo-600'
+                                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                }`}
+                              >
+                                {/* Live mini-render of the actual CV in this style. */}
+                                <div className="relative flex justify-center overflow-hidden bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
+                                  <TemplatePreviewThumb
+                                    templateId={t.id}
+                                    markdown={application.optimizedCV}
+                                    userProfile={mergedUserProfile || userProfile}
+                                  />
+                                  {/* Faint dim on locked styles. */}
+                                  {locked && (
+                                    <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
+                                  )}
+                                  {/* Recommended tag (kept from 1b). */}
+                                  {t.isRecommended && (
+                                    <span className="absolute top-1 left-1 font-mono text-[8px] uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-500/20 rounded px-1 py-0.5 leading-none">
+                                      Recommended
+                                    </span>
+                                  )}
+                                  {/* Lock icon on gated styles. */}
+                                  {locked && (
+                                    <div className="absolute top-1 right-1 p-0.5 bg-slate-800/90 rounded">
+                                      <Lock size={10} className="text-white" />
+                                    </div>
+                                  )}
+                                  {/* Tier badge — FREE / {cost} CR / PRO. */}
+                                  <div
+                                    className={`absolute bottom-1 right-1 px-1.5 py-0.5 text-[8px] font-bold rounded leading-none ${
+                                      t.cost === 0
+                                        ? 'bg-emerald-500 text-white'
+                                        : locked
+                                          ? 'bg-slate-800 text-white'
+                                          : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                    }`}
+                                  >
+                                    {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
+                                  </div>
+                                </div>
+                                {/* Caption. */}
                                 <div
-                                  className={`absolute bottom-0 right-0 px-1 py-0.5 text-[8px] font-bold rounded-tl-sm leading-none ${
-                                    t.cost === 0
-                                      ? 'bg-emerald-500 text-white'
-                                      : locked
-                                        ? 'bg-slate-800 text-white'
-                                        : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                  className={`flex items-center gap-1.5 px-2 py-1.5 ${
+                                    templateId === t.id
+                                      ? 'bg-indigo-50/50 dark:bg-indigo-500/10'
+                                      : ''
                                   }`}
                                 >
-                                  {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
+                                  <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                                    {t.name}
+                                  </span>
+                                  {templateId === t.id && (
+                                    <Check
+                                      size={13}
+                                      className="shrink-0 text-indigo-600 dark:text-indigo-400"
+                                    />
+                                  )}
                                 </div>
-                                {locked && (
-                                  <div className="absolute top-0 right-0 p-0.5 bg-slate-800/90 rounded-bl-sm">
-                                    <Lock size={7} className="text-white" />
-                                  </div>
-                                )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 block truncate">
-                                  {t.name}
-                                </span>
-                                {t.isRecommended && (
-                                  <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                                    Recommended
-                                  </span>
-                                )}
-                                {locked && (
-                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                    {t.cost} credits to unlock
-                                  </span>
-                                )}
-                              </div>
-                              {templateId === t.id && (
-                                <Check size={16} className="text-indigo-600 dark:text-indigo-400" />
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-            {isDraftMode ? (
-              <button
-                onClick={() => navigate(`/cv-builder/${application._id}/finalize`)}
-                className="w-full btn-secondary py-3 flex items-center justify-center gap-2"
-              >
-                <ChevronLeft size={16} /> Back to Edit
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/history')}
-                className="w-full btn-primary py-3 flex items-center justify-center gap-2"
-              >
-                Save & Return to History
-              </button>
-            )}
           </div>
         </div>
       </div>

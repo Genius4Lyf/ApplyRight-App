@@ -44,7 +44,10 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
             `}</style>
 
       {/* Header */}
-      <header className="px-10 py-8 bg-[#f8f9fa] border-b border-[#e9ecef]">
+      <header
+        className="bg-[#f8f9fa] border-b border-[#e9ecef]"
+        style={{ padding: 'var(--cv-margin, 2rem 2.5rem)' }}
+      >
         <div className="flex justify-between items-end">
           <div>
             <h1
@@ -84,7 +87,12 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
       </header>
 
       {/* Body */}
-      <div className="p-10" style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}>
+      <div
+        style={{
+          fontFamily: "var(--cv-font, 'Open Sans', sans-serif)",
+          padding: 'var(--cv-margin, 2.5rem)',
+        }}
+      >
         <ReactMarkdown
           components={{
             h1: () => null,

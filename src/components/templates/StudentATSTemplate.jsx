@@ -63,10 +63,11 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto p-10 text-black text-[11pt]"
+      className="bg-white mx-auto text-black text-[11pt]"
       style={{
         lineHeight: 'var(--cv-leading, 1.6)',
         fontFamily: 'var(--cv-font, Arial, sans-serif)',
+        padding: 'var(--cv-margin, 2.5rem)',
       }}
     >
       {/* HEADER - Matches HTML template exactly */}
