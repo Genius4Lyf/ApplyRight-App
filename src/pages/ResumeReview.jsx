@@ -136,6 +136,7 @@ const ResumeReview = () => {
     margins: 'normal',
     density: 'normal',
     font: '',
+    paper: 'a4', // 'a4' | 'letter'
   });
 
   // Persist the design choices per-CV in localStorage (keyed by CV id) so they
@@ -268,6 +269,15 @@ const ResumeReview = () => {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Paper geometry (A4 vs US Letter) + a live one-page-fit indicator derived from
+  // the ResizeObserver-measured content height. Approximate — an indicator, not
+  // an exact paginator.
+  const paperWidth = design.paper === 'letter' ? '8.5in' : '210mm';
+  const paperHeight = design.paper === 'letter' ? '11in' : '297mm';
+  const paperLabel = design.paper === 'letter' ? 'Letter' : 'A4';
+  const pageHeightPx = design.paper === 'letter' ? 1056 : 1122; // page height @96dpi
+  const pageCount = contentHeight ? Math.max(1, Math.ceil(contentHeight / pageHeightPx)) : 1;
 
   const [error, setError] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -517,9 +527,9 @@ const ResumeReview = () => {
       clone.style.filter = 'none';
       clone.style.transform = 'none';
       clone.style.transformOrigin = 'top left';
-      clone.style.width = '210mm';
-      clone.style.minWidth = '210mm';
-      clone.style.minHeight = '297mm';
+      clone.style.width = paperWidth;
+      clone.style.minWidth = paperWidth;
+      clone.style.minHeight = paperHeight;
       clone.style.margin = '0 auto';
 
       // 1. Serialization with Tailwind injection
@@ -539,8 +549,10 @@ const ResumeReview = () => {
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=Inter:wght@400;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
                     <style>
+                        /* Backend renders with preferCSSPageSize:true, so this sets the PDF page size. */
+                        @page { size: ${design.paper === 'letter' ? 'letter' : 'A4'}; }
                         html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
-                        
+
                         /* Table Layout Method for Print Margins */
                         .print-container {
                             width: 100%;
@@ -1263,9 +1275,38 @@ const ResumeReview = () => {
                 )}
               </h1>
             )}
-            <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
-              PDF · A4
-            </span>
+            {activeTab === 'resume' ? (
+              // Live one-page-fit badge — flips emerald → amber → rose as the CV
+              // overflows the selected paper size.
+              <span
+                className={`hidden sm:inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] rounded-full border px-2.5 py-1 shrink-0 ${
+                  pageCount === 1
+                    ? 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
+                    : pageCount === 2
+                      ? 'text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
+                      : 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    pageCount === 1
+                      ? 'bg-emerald-500'
+                      : pageCount === 2
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500'
+                  }`}
+                />
+                {pageCount === 1
+                  ? `${paperLabel} · Fits 1 page`
+                  : pageCount === 2
+                    ? `${paperLabel} · 2 pages`
+                    : `${paperLabel} · ${pageCount} pages`}
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
+                PDF · {paperLabel}
+              </span>
+            )}
           </div>
 
           {/* RIGHT: tab toggle (non-draft) + desktop actions */}
@@ -1507,15 +1548,20 @@ const ResumeReview = () => {
           <div
             className="shrink-0 transition-[width,height] duration-200 origin-top"
             style={{
-              width: `calc(210mm * ${scale})`,
-              height: contentHeight ? `${contentHeight * scale}px` : `calc(297mm * ${scale})`,
+              width: `calc(${paperWidth} * ${scale})`,
+              height: contentHeight
+                ? `${contentHeight * scale}px`
+                : `calc(${paperHeight} * ${scale})`,
             }}
           >
             <div
               ref={previewContentRef}
               id="resume-content"
-              className="cv-template-container w-[210mm] min-w-[210mm] min-h-[297mm] bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
+              className="cv-template-container bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
               style={{
+                width: paperWidth,
+                minWidth: paperWidth,
+                minHeight: paperHeight,
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
@@ -2124,6 +2170,32 @@ const ResumeReview = () => {
                           }`}
                         >
                           {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Paper size — sets the preview dimensions + the PDF @page size. */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                      Paper size
+                    </p>
+                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                      {[
+                        { value: 'a4', label: 'A4' },
+                        { value: 'letter', label: 'Letter' },
+                      ].map((p) => (
+                        <button
+                          key={p.value}
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, paper: p.value }))}
+                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                            design.paper === p.value
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {p.label}
                         </button>
                       ))}
                     </div>
