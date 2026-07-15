@@ -43,7 +43,8 @@ const PAID_CV_FEATURES = [
   'ApplyRight ATS — recruiter-grade CV-vs-job-description analysis on our premium AI',
   'ATS Coach — live CV health & keyword score',
   'Unlimited bullets + apply all AI suggestions',
-  'Every summary tone & all premium templates',
+  'Every summary tone',
+  'All premium CV templates unlocked',
   'Clean, watermark-free unlimited downloads',
 ];
 

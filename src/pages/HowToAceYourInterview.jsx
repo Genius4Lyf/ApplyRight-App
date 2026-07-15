@@ -551,9 +551,9 @@ const HowToAceYourInterview = () => {
             className="text-slate-600 mt-10 leading-relaxed"
           >
             That’s exactly why ApplyRight lets you{' '}
-            <span className="font-semibold text-slate-900">pick your interviewer</span> and clear
-            one round to unlock the next — it mirrors a real hiring loop, so you practise the whole
-            journey, not just one chat.
+            <span className="font-semibold text-slate-900">pick your interviewer</span> and run each
+            round in any order — it mirrors a real hiring loop, so you practise the whole journey,
+            not just one chat.
           </motion.p>
         </div>
       </section>
@@ -628,7 +628,7 @@ const HowToAceYourInterview = () => {
                 band: 'Almost',
                 range: '45 – 74',
                 color: 'amber',
-                body: 'Solid, evidenced answers. The 65% unlock bar sits right here.',
+                body: 'Solid, evidenced answers that are nearly there.',
               },
               {
                 band: 'Ready',
@@ -759,7 +759,7 @@ const HowToAceYourInterview = () => {
               {
                 icon: Trophy,
                 title: 'Complete the loop',
-                body: 'Clear each interviewer (65%+) to unlock the next — practise the whole journey.',
+                body: 'Practise every interviewer in any order — each round builds your combined readiness across the whole loop.',
               },
             ].map((f, idx) => {
               const Icon = f.icon;
@@ -848,7 +848,7 @@ const HowToAceYourInterview = () => {
             {[
               {
                 q: 'Is the score harsh?',
-                a: 'It’s honest, not cruel. It rewards specific, evidenced, role-relevant answers and is candid about vague or generic ones — so the feedback actually helps you improve. The 65% unlock bar sits in the “almost” band, which solid, well-evidenced answers clear.',
+                a: 'It’s honest, not cruel. It rewards specific, evidenced, role-relevant answers and is candid about vague or generic ones — so the feedback actually helps you improve. Solid, well-evidenced answers comfortably clear the “almost” band.',
               },
               {
                 q: 'Does my accent affect my score?',

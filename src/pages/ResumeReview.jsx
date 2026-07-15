@@ -66,6 +66,7 @@ import PreviewWatermark from '../components/PreviewWatermark';
 import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
+import LengthCoach from '../components/cv/LengthCoach';
 import {
   Lock,
   Zap,
@@ -263,12 +264,24 @@ const ResumeReview = () => {
   useLayoutEffect(() => {
     const el = previewContentRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const update = () => setContentHeight(el.offsetHeight);
+    let cancelled = false;
+    const update = () => {
+      if (!cancelled) setContentHeight(el.offsetHeight);
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    // Web fonts (Lora/Merriweather/…) may still be swapping from a fallback, which
+    // changes the measured height vs the final PDF — re-measure once fonts settle.
+    if (document.fonts?.ready) document.fonts.ready.then(update);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+    // Deps re-attach the observer once the preview mounts (after the loading screen
+    // clears) and when the document switches (resume/cover) — an empty [] would run
+    // only on the first commit, while previewContentRef is still null.
+  }, [showLoader, application, activeTab]);
 
   // Paper geometry (A4 vs US Letter) + a live one-page-fit indicator derived from
   // the ResizeObserver-measured content height. Approximate — an indicator, not
@@ -276,8 +289,21 @@ const ResumeReview = () => {
   const paperWidth = design.paper === 'letter' ? '8.5in' : '210mm';
   const paperHeight = design.paper === 'letter' ? '11in' : '297mm';
   const paperLabel = design.paper === 'letter' ? 'Letter' : 'A4';
-  const pageHeightPx = design.paper === 'letter' ? 1056 : 1122; // page height @96dpi
-  const pageCount = contentHeight ? Math.max(1, Math.ceil(contentHeight / pageHeightPx)) : 1;
+  const pageHeightPx = design.paper === 'letter' ? 1056 : 1122; // raw page height @96dpi
+  // The PDF reserves margin on EVERY page, so the badge must divide by the real
+  // per-page CONTENT height, not the raw page height — otherwise a CV that measures
+  // ~1120px reads as "1 page" but prints as 2. These constants MUST stay in sync
+  // with performDownload: PDF_MARGIN_PX ↔ pdfMargin ('10px'), and SPACER_MM ↔ the
+  // thead/tfoot .margin-spacer height (5mm), which repeats on every printed page.
+  const MM_TO_PX = 96 / 25.4; // ≈3.7795 px per mm @96dpi
+  const PDF_MARGIN_PX = 10; // matches pdfMargin in performDownload
+  const SPACER_MM = 5; // matches the thead/tfoot .margin-spacer height
+  // Every page loses: Puppeteer top+bottom margin + the repeating table spacers (top+bottom).
+  const reservedPerPagePx = 2 * PDF_MARGIN_PX + 2 * SPACER_MM * MM_TO_PX; // ≈57.8px
+  const effectivePageHeightPx = pageHeightPx - reservedPerPagePx; // A4≈1064, Letter≈998
+  const pageCount = contentHeight
+    ? Math.max(1, Math.ceil(contentHeight / effectivePageHeightPx))
+    : 1;
 
   const [error, setError] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -414,12 +440,22 @@ const ResumeReview = () => {
 
   // Listen for global user updates
 
+  // Active paid status (mirrors TemplateSelector.isPaidActive): an unexpired
+  // Flutterwave subscription, OR any non-free tier, OR the legacy manual `plan`
+  // grant. Any of these unlocks every premium template.
+  const isPaidActive = (u = {}) => {
+    const exp = u?.subscription?.expiresAt;
+    if (exp && new Date(exp).getTime() > Date.now()) return true; // active Flutterwave sub
+    if (u?.tier && u.tier !== 'free') return true; // any paid tier
+    return u?.plan === 'paid'; // legacy manual grant
+  };
+
   // Unlocking Logic
   const isUnlocked = (templateId) => {
     const template = TEMPLATES.find((t) => t.id === templateId);
     if (!template) return true;
     if (!template.isPro) return true;
-    if (userProfile?.plan === 'paid') return true;
+    if (isPaidActive(userProfile)) return true;
     if (userProfile?.unlockedTemplates && userProfile.unlockedTemplates.includes(templateId))
       return true;
     return false;
@@ -1275,38 +1311,15 @@ const ResumeReview = () => {
                 )}
               </h1>
             )}
-            {activeTab === 'resume' ? (
-              // Live one-page-fit badge — flips emerald → amber → rose as the CV
-              // overflows the selected paper size.
-              <span
-                className={`hidden sm:inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] rounded-full border px-2.5 py-1 shrink-0 ${
-                  pageCount === 1
-                    ? 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
-                    : pageCount === 2
-                      ? 'text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
-                      : 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    pageCount === 1
-                      ? 'bg-emerald-500'
-                      : pageCount === 2
-                        ? 'bg-amber-500'
-                        : 'bg-rose-500'
-                  }`}
-                />
-                {pageCount === 1
-                  ? `${paperLabel} · Fits 1 page`
-                  : pageCount === 2
-                    ? `${paperLabel} · 2 pages`
-                    : `${paperLabel} · ${pageCount} pages`}
-              </span>
-            ) : (
-              <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
-                PDF · {paperLabel}
-              </span>
-            )}
+            {/* Live page-length coach — tappable badge with layout trims (resume
+                only); a plain PDF·paper chip on the cover-letter tab. */}
+            <LengthCoach
+              pageCount={pageCount}
+              paperLabel={paperLabel}
+              design={design}
+              setDesign={setDesign}
+              activeTab={activeTab}
+            />
           </div>
 
           {/* RIGHT: tab toggle (non-draft) + desktop actions */}

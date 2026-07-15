@@ -80,15 +80,15 @@ const LoadingScreen = ({
   const currentMessage = messages[currentMessageIndex];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
       {/* App background matching App.jsx */}
-      <div className="absolute inset-0 pointer-events-none bg-slate-50 dark:bg-slate-950">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-50 dark:bg-slate-950">
         <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#475569_1px,transparent_1px)] [background-size:24px_24px] opacity-60 dark:opacity-35"></div>
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/60 rounded-full blur-3xl mix-blend-multiply translate-x-1/3 -translate-y-1/3 dark:hidden"></div>
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/50 rounded-full blur-3xl mix-blend-multiply -translate-x-1/4 translate-y-1/4 dark:hidden"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-3xl p-6 bg-white dark:bg-slate-900 rounded-3xl sm:p-8 sm:m-4 shadow-xl sm:shadow-2xl border border-slate-150 dark:border-slate-800/85">
+      <div className="relative z-10 w-full max-w-3xl max-h-full overflow-y-auto p-6 bg-white dark:bg-slate-900 rounded-3xl sm:p-8 sm:m-4 shadow-xl sm:shadow-2xl border border-slate-150 dark:border-slate-800/85">
         {/* Loading indicator */}
         <div className="flex flex-col items-center mb-8">
           <Loader className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mb-4" />

@@ -45,6 +45,7 @@ const TemplateSelector = ({
   const isPaidActive = (u = {}) => {
     const exp = u.subscription?.expiresAt;
     if (exp) return new Date(exp).getTime() > Date.now();
+    if (u.tier && u.tier !== 'free') return true; // any paid tier unlocks everything
     return u.plan === 'paid';
   };
 

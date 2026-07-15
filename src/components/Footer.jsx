@@ -22,6 +22,7 @@ const COLUMNS = [
     links: [
       { label: 'ATS Guide', to: '/ats-guide' },
       { label: 'CV Builder Guide', to: '/cv-builder-guide' },
+      { label: 'CV Health', to: '/cv-health' },
       { label: 'How ATS & Recruiters Work', to: '/how-ats-recruiters-work' },
       { label: 'How to Ace Your Interview', to: '/how-to-ace-your-interview' },
     ],

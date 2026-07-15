@@ -489,13 +489,14 @@ const InterviewPrepDetail = () => {
   // Completed interview-loop rounds (per-interviewer scores + assessments).
   const rounds = application?.interviewPrep?.rounds || [];
 
-  // Primary navigation: three groups. Results carries a running count of
-  // completed rounds + saved recordings.
-  const resultsCount = rounds.length + (recordingsCount || 0);
+  // Primary navigation: four groups. Results counts completed rounds; Recordings
+  // is its own tab with its device-local count.
+  const resultsCount = rounds.length;
   const primaryTabs = [
     { id: 'prepare', label: 'Prepare' },
     { id: 'gameday', label: 'Game day' },
     { id: 'results', label: 'Results', count: resultsCount },
+    { id: 'recordings', label: 'Recordings', count: recordingsCount || 0 },
   ];
   // Secondary switcher (only under Prepare): show ONE section at a time.
   const prepSections = [
@@ -817,10 +818,10 @@ const InterviewPrepDetail = () => {
 
           {/* Right column — the tab strip + tab panels (moved verbatim) */}
           <div className="min-w-0">
-            {/* Primary sub-nav — three groups. Hairline row with a 2px indigo
-                underline sliding under the active group. */}
+            {/* Primary sub-nav — four groups sharing the row evenly. Hairline row
+                with a 2px indigo underline sliding under the active group. */}
             <div className="mb-6">
-              <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto scrollbar-none">
+              <nav className="flex items-stretch border-b border-slate-200 dark:border-slate-700">
                 {primaryTabs.map((tab) => {
                   const active = primaryTab === tab.id;
                   return (
@@ -828,7 +829,7 @@ const InterviewPrepDetail = () => {
                       key={tab.id}
                       type="button"
                       onClick={() => setPrimaryTab(tab.id)}
-                      className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
+                      className={`relative flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-3 text-[13px] sm:text-sm font-semibold transition-colors whitespace-nowrap ${
                         active
                           ? 'text-indigo-700 dark:text-indigo-300'
                           : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -1062,27 +1063,37 @@ const InterviewPrepDetail = () => {
                     {/* Per-interviewer scores + feedback (loop rounds). */}
                     {rounds.length > 0 && <RoundReviews rounds={rounds} />}
 
-                    {/* Device-local recordings + empty state. */}
-                    <RecordingsPanel
-                      applicationId={applicationId}
-                      onItemsChange={(rows) => setRecordingsCount(rows.length)}
-                    />
-                    {recordingsCount === 0 && (
-                      <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
-                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                          No recordings yet
-                        </p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                          Your live interviews are saved here on this device so you can replay them.
-                        </p>
-                      </div>
-                    )}
-
                     {/* Re-readable AI assessment — fallback case (no interview-loop
                         rounds, e.g. a free/solo interview). For the loop, each
                         interviewer's full assessment lives on their Reviews card. */}
                     {rounds.length === 0 && <LastAssessmentCard application={application} />}
                   </div>
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'recordings' && (
+                <MotionDiv
+                  key="recordings"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {/* Device-local recordings + empty state. */}
+                  <RecordingsPanel
+                    applicationId={applicationId}
+                    onItemsChange={(rows) => setRecordingsCount(rows.length)}
+                  />
+                  {recordingsCount === 0 && (
+                    <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        No recordings yet
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        Your live interviews are saved here on this device so you can replay them.
+                      </p>
+                    </div>
+                  )}
                 </MotionDiv>
               )}
             </AnimatePresence>
