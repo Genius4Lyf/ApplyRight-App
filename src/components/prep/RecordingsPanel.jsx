@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Mic, Play, Trash2 } from 'lucide-react';
+import { Play, Trash2 } from 'lucide-react';
 import { listRecordings, getRecordingBlob, deleteRecording } from '../../lib/recordings';
 import AudioPlayer from '../AudioPlayer';
 
@@ -79,17 +79,17 @@ const RecordingsPanel = ({ applicationId, onItemsChange }) => {
   if (!loaded || items.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
-      <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
-          <Mic className="w-4.5 h-4.5" />
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Past interviews</h3>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">
-            Saved on this device — replay your live interviews
-          </p>
-        </div>
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+      <div className="mb-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          On this device
+        </p>
+        <h3 className="mt-1 font-heading text-base font-bold text-slate-900 dark:text-slate-100">
+          Past interviews
+        </h3>
+        <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+          Saved on this device — replay your live interviews
+        </p>
       </div>
 
       <div className="space-y-2.5">

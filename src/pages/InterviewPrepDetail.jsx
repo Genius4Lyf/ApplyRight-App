@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
+  ArrowRight,
   MessageSquare,
-  Sparkles,
   Eye,
   CheckCircle2,
   Circle,
@@ -19,11 +19,7 @@ import {
   EyeOff,
   Play,
   Lock,
-  BookOpen,
   ClipboardList,
-  Target,
-  Wind,
-  Award,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -35,17 +31,16 @@ import {
   getQuestionsToAsk,
   getSkillPrep,
   getStories,
-  getInterviewTrend,
+  computeReadiness,
   computeInterviewGate,
 } from '../utils/interviewPrep';
+import { initials } from '../utils/avatar';
 import NotesList from '../components/prep/NotesList';
 import StoryBank from '../components/prep/StoryBank';
-import ReadinessOverview from '../components/prep/ReadinessOverview';
 import RoleBrief from '../components/prep/RoleBrief';
 import CalmKit from '../components/prep/CalmKit';
 import BodyLanguage from '../components/prep/BodyLanguage';
 import NervesTrend from '../components/prep/NervesTrend';
-import LastInterviewCard from '../components/prep/LastInterviewCard';
 import RecordingsPanel from '../components/prep/RecordingsPanel';
 import LastAssessmentCard from '../components/prep/LastAssessmentCard';
 import RoundReviews from '../components/prep/RoundReviews';
@@ -77,13 +72,25 @@ const WEAKNESS_SEED = {
   body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
 };
 
+// Generic roster shown (blurred, behind a lock) to free users when we have no
+// real panel to preview — a teaser for the paid multi-interviewer loop.
+const PLACEHOLDER_SEATS = [
+  { name: 'HR Screen', role: 'Recruiter' },
+  { name: 'Hiring Manager', role: 'Your future boss' },
+  { name: 'Panel Member', role: 'Cross-functional' },
+];
+
 const InterviewPrepDetail = () => {
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(null);
+  // Navigation model: a primary group (Prepare / Game day / Results) and — while
+  // in Prepare — which one section is showing. `prepSection` starts null until
+  // the default-selection effect picks the most useful section.
+  const [primaryTab, setPrimaryTab] = useState('prepare');
+  const [prepSection, setPrepSection] = useState(null);
   const showLoader = useMinVisible(loading, 800);
 
   // Platform split for AI generation (more questions / story bank): the Android
@@ -132,12 +139,13 @@ const InterviewPrepDetail = () => {
     return () => window.removeEventListener('userDataUpdated', refresh);
   }, []);
 
-  // Lazily load the interview roster the first time the Role tab is opened.
+  // Lazily load the interview roster once on mount so the rail can show it.
+  // Fetches once, then short-circuits.
   // NOTE: panelLoading must NOT be in the deps — setting it would re-run the
   // effect, fire the cleanup, and cancel the in-flight request (leaving the
-  // skeleton stuck forever). Deps are only activeTab + applicationId.
+  // skeleton stuck forever). Dep is only applicationId.
   useEffect(() => {
-    if (activeTab !== 'role' || panel.length > 0 || panelLoading) return undefined;
+    if (panel.length > 0 || panelLoading) return undefined;
     let cancelled = false;
     setPanelLoading(true);
     InterviewPrepService.getPanel(applicationId)
@@ -154,7 +162,7 @@ const InterviewPrepDetail = () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, applicationId]);
+  }, [applicationId]);
 
   const reload = async () => {
     const { application: app } = await InterviewPrepService.getOne(applicationId);
@@ -389,8 +397,8 @@ const InterviewPrepDetail = () => {
       try {
         const app = await reload();
         if (cancelled) return;
-        // Default tab: Role brief for job-linked prep (orient first), else the
-        // most actionable populated tab.
+        // Default view: always start in Prepare. Role brief for job-linked prep
+        // (orient first), else the first populated prep section.
         const stories = getStories(app);
         const skills = getSkillPrep(app);
         const questions = getJobQuestions(app);
@@ -403,15 +411,16 @@ const InterviewPrepDetail = () => {
             !!fa.overallFeedback ||
             (fa.matchedSkills || []).length > 0 ||
             (fa.missingSkills || []).length > 0);
-        setActiveTab(
+        setPrimaryTab('prepare');
+        setPrepSection(
           hasRole
             ? 'role'
-            : stories.length
-              ? 'stories'
-              : skills.length
-                ? 'skills'
-                : questions.length
-                  ? 'questions'
+            : questions.length
+              ? 'questions'
+              : stories.length
+                ? 'stories'
+                : skills.length
+                  ? 'skills'
                   : 'notes'
         );
       } catch (e) {
@@ -459,6 +468,9 @@ const InterviewPrepDetail = () => {
   // Gamified readiness gate: starting an interview is locked until the prep
   // checklist is complete (see computeInterviewGate). Drives both entry points.
   const interviewGate = computeInterviewGate(application);
+  // Weak-question set powers the "Practice weak spots" shortcut in the readiness rail.
+  const { weakQuestionIndices } = computeReadiness(application);
+  const hasWeakQuestions = weakQuestionIndices.length > 0;
   const storyWarnings = application.interviewPrep?.storyFabricationWarnings || [];
   const notes = Array.isArray(application.interviewPrep?.userNotes)
     ? application.interviewPrep.userNotes
@@ -477,19 +489,21 @@ const InterviewPrepDetail = () => {
   // Completed interview-loop rounds (per-interviewer scores + assessments).
   const rounds = application?.interviewPrep?.rounds || [];
 
-  const tabs = [
-    ...(hasRoleBrief ? [{ id: 'role', label: 'Role', icon: Target, count: 0 }] : []),
-    { id: 'stories', label: 'Stories', icon: BookOpen, count: stories.length },
-    { id: 'skills', label: 'Skills', icon: Sparkles, count: skillsWithEvidence.length },
-    { id: 'questions', label: 'Questions', icon: MessageSquare, count: jobQuestions.length },
-    { id: 'gameday', label: 'Game day', icon: Wind, count: 0 },
-    { id: 'notes', label: 'My notes', icon: StickyNote, count: notes.length },
-    // Reviews (per-interviewer scores + feedback) — only once a round is done.
-    ...(rounds.length > 0
-      ? [{ id: 'reviews', label: 'Reviews', icon: Award, count: rounds.length }]
-      : []),
-    // Recordings (device-local) — after Reviews.
-    { id: 'recordings', label: 'Recordings', icon: PlayCircle, count: recordingsCount || 0 },
+  // Primary navigation: three groups. Results carries a running count of
+  // completed rounds + saved recordings.
+  const resultsCount = rounds.length + (recordingsCount || 0);
+  const primaryTabs = [
+    { id: 'prepare', label: 'Prepare' },
+    { id: 'gameday', label: 'Game day' },
+    { id: 'results', label: 'Results', count: resultsCount },
+  ];
+  // Secondary switcher (only under Prepare): show ONE section at a time.
+  const prepSections = [
+    ...(hasRoleBrief ? [{ id: 'role', label: 'Role' }] : []),
+    { id: 'questions', label: 'Questions', count: jobQuestions.length },
+    { id: 'stories', label: 'Stories', count: stories.length },
+    { id: 'skills', label: 'Skills', count: skillsWithEvidence.length },
+    { id: 'notes', label: 'Notes' },
   ];
 
   const startPracticeAllQuestions = () => {
@@ -514,10 +528,17 @@ const InterviewPrepDetail = () => {
     navigate(`/interview-prep/${applicationId}/mock`);
   };
 
+  // Jump to a Prepare section (used by the readiness checklist, essentials CTAs,
+  // and "draft your answer in notes" links).
+  const goToPrep = (section) => {
+    setPrimaryTab('prepare');
+    setPrepSection(section);
+  };
+
   // Seed + open the weakness note (completes the "draft your weakness" readiness task).
   const draftWeakness = () => {
     setNotesSeed(WEAKNESS_SEED);
-    setActiveTab('notes');
+    goToPrep('notes');
   };
 
   return (
@@ -618,290 +639,455 @@ const InterviewPrepDetail = () => {
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
-        {!isCvOnly ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
-            <LastInterviewCard
-              session={application.interviewPrep?.lastInterviewSession}
-              history={application.interviewPrep?.interviewHistory}
-              trend={getInterviewTrend(application)}
-              onStart={startMockInterview}
-              gate={interviewGate}
-            />
-            <ReadinessOverview
-              application={application}
-              gate={interviewGate}
-              onPracticeWeak={startPracticeWeak}
-              onGoToTab={setActiveTab}
-              onDraftWeakness={draftWeakness}
-            />
-          </div>
-        ) : (
-          <div className="mb-6">
-            <ReadinessOverview
-              application={application}
-              gate={interviewGate}
-              onPracticeWeak={startPracticeWeak}
-              onGoToTab={setActiveTab}
-              onDraftWeakness={draftWeakness}
-            />
-          </div>
-        )}
-
-        {/* Re-readable AI assessment — only the fallback case (no interview-loop
-            rounds, e.g. a free/solo interview). For the loop, each interviewer's
-            full assessment lives on their card in the Reviews tab, and recordings
-            moved to the Recordings tab. */}
-        {rounds.length === 0 && (
-          <div className="mb-6">
-            <LastAssessmentCard application={application} />
-          </div>
-        )}
-
-        {/* Tabs — horizontally scrollable on mobile; a right-edge fade signals
-            there are more tabs off-screen (the strip otherwise cuts off flush). */}
-        <div className="relative mb-6">
-          <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-px w-8 z-10 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent" />
-          <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto scrollbar-none">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
-                  active
-                    ? 'text-indigo-700 dark:text-indigo-300'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-                {tab.count > 0 && (
-                  <span
-                    className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold ${
-                      active
-                        ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
-                        : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-                {active && (
-                  <motion.span
-                    layoutId="prep-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
-                  />
-                )}
-              </button>
-            );
-          })}
-          </nav>
-        </div>
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'role' && (
-            <MotionDiv
-              key="role"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              {/* Paid: the interview LOOP — pick each interviewer for a focused 1:1
-                  round and build a combined readiness. Free: the locked teaser. */}
-              {!isFreeTier && panel.length >= 2 ? (
-                <div className="mb-4">
-                  {!interviewGate.unlocked && (
-                    <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-500/5 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                      <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                      Finish your interview readiness checklist to unlock these rounds.
-                    </div>
-                  )}
-                  <LoopBoard
-                    seats={panel}
-                    rounds={rounds}
-                    locked={!interviewGate.unlocked}
-                    unlockAll={!!application?.unlockAllInterviewers}
-                    onStart={(seatIndex) => {
-                      if (!interviewGate.unlocked) return;
-                      navigate(`/interview-prep/${applicationId}/mock?interviewer=${seatIndex}`);
-                    }}
-                  />
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
+          {/* Left rail — the prep desk: start the interview + track readiness.
+              Stacks above the content on mobile. */}
+          <aside className="lg:sticky lg:top-4 flex flex-col gap-4">
+            {/* Card A — Start + roster (the crown-jewel primary action) */}
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                Mock interview
+              </p>
+              {interviewGate.unlocked ? (
+                <button
+                  type="button"
+                  onClick={startMockInterview}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+                >
+                  <PlayCircle className="w-4 h-4" /> Start interview
+                </button>
               ) : (
-                (panelLoading || panel.length >= 2) && (
-                  <div className="mb-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 sm:p-5">
-                    <InterviewerPanel panel={panel} locked={isFreeTier} loading={panelLoading} />
-                    <p className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
-                      On a paid plan, you pick each of these interviewers for a focused 1:1 round —
-                      and complete your interview loop.
-                    </p>
-                  </div>
-                )
+                <button
+                  type="button"
+                  disabled
+                  title="Complete your interview readiness to unlock"
+                  className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-sm font-semibold px-4 py-2.5 cursor-not-allowed select-none"
+                >
+                  <Lock className="w-4 h-4" /> Complete prep to unlock
+                </button>
               )}
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                A live, spoken mock with an AI interviewer who knows your CV.
+              </p>
 
-              <RoleBrief application={application} />
-            </MotionDiv>
-          )}
+              {/* Roster — who's interviewing you */}
+              <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  Who’s interviewing you
+                </p>
+                {!isFreeTier && panel.length >= 2 ? (
+                  <ul className="mt-3 space-y-2.5">
+                    {panel
+                      .filter((p) => p && p.role)
+                      .map((p, i) => (
+                        <li key={p.seat ?? i} className="flex items-center gap-2.5">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {initials(p.name)}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              {p.name}
+                            </span>
+                            <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                              {p.role}
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <div className="relative mt-3">
+                    <ul className="space-y-2.5 select-none blur-[3px]" aria-hidden="true">
+                      {(panel.length >= 2
+                        ? panel.filter((p) => p && p.role)
+                        : PLACEHOLDER_SEATS
+                      ).map((p, i) => (
+                        <li key={p.seat ?? i} className="flex items-center gap-2.5">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {initials(p.name)}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              {p.name}
+                            </span>
+                            <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                              {p.role}
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <Lock className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                        Unlock your full interview panel
+                      </span>
+                      <Link
+                        to="/upgrade"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                      >
+                        Upgrade <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
 
-          {activeTab === 'stories' && (
-            <MotionDiv
-              key="stories"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <StoryBank
-                applicationId={applicationId}
-                initialStories={stories}
-                warnings={storyWarnings}
-                isCvOnly={isCvOnly}
-                generating={generatingStories}
-                adRewarded={adRewarded}
-                onGenerate={handleGenerateStories}
-                onChange={reload}
-                onPracticeStory={startPracticeForStory}
-              />
-            </MotionDiv>
-          )}
-
-          {activeTab === 'skills' && (
-            <MotionDiv
-              key="skills"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <SkillsTab
-                skills={skillsWithEvidence}
-                draftCVId={application.draftCVId}
-                onPracticeSkill={startPracticeForSkill}
-              />
-            </MotionDiv>
-          )}
-
-          {activeTab === 'questions' && (
-            <MotionDiv
-              key="questions"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <QuestionsTab
-                applicationId={applicationId}
-                jobQuestions={jobQuestions}
-                fabricationWarnings={application.interviewPrep?.fabricationWarnings || []}
-                questionsToAsk={questionsToAsk}
-                onStartPractice={startPracticeAllQuestions}
-                onStartMock={startMockInterview}
-                onGenerateMore={handleGenerateMoreQuestions}
-                onGenerateEssential={handleGenerateEssential}
-                generatingEssential={generatingEssential}
-                onGoToNotes={(seed) => {
-                  setNotesSeed(seed || null);
-                  setActiveTab('notes');
-                }}
-                adRewarded={adRewarded}
-                generatingMore={generatingMore}
-                newQuestionIndices={newQuestionIndices}
-                isCvOnly={isCvOnly}
-                onConfidenceChange={reload}
-                gate={interviewGate}
-              />
-            </MotionDiv>
-          )}
-
-          {activeTab === 'gameday' && (
-            <MotionDiv
-              key="gameday"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <div className="mb-4">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Game-day readiness
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  Walk in calm and ready — not just prepped on what to say.
+            {/* Card B — Readiness (repurposed ReadinessOverview / checklist) */}
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  Readiness
+                </p>
+                <p className="font-heading text-lg font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                  {interviewGate.doneCount}
+                  <span className="text-slate-400 dark:text-slate-500">
+                    /{interviewGate.requiredCount}
+                  </span>
                 </p>
               </div>
-              <div className="space-y-4">
-                <NervesTrend application={application} />
-                <DressGuide
-                  application={application}
-                  onGenerate={handleGenerateDressGuide}
-                  generating={generatingDress}
+
+              {/* Progress meter */}
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                  style={{ width: `${interviewGate.pct}%` }}
                 />
-                <CalmKit />
-                <BodyLanguage />
               </div>
-            </MotionDiv>
-          )}
+              <p className="mt-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
+                {interviewGate.unlocked
+                  ? "You're prepped — the interview is unlocked."
+                  : 'Finish these to unlock your interview.'}
+              </p>
 
-          {activeTab === 'notes' && (
-            <MotionDiv
-              key="notes"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
-                <NotesList
-                  applicationId={applicationId}
-                  initialNotes={notes}
-                  seed={notesSeed}
-                  onSeedConsumed={() => setNotesSeed(null)}
-                />
-              </section>
-            </MotionDiv>
-          )}
+              {/* Checklist rows */}
+              <ul className="mt-3 space-y-2">
+                {interviewGate.tasks.map((t) => (
+                  <li key={t.key} className="flex items-center gap-2.5">
+                    {t.done ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                    ) : (
+                      <Circle className="w-4 h-4 shrink-0 text-slate-300 dark:text-slate-600" />
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block text-xs font-semibold leading-tight ${
+                          t.done
+                            ? 'text-slate-400 dark:text-slate-500 line-through'
+                            : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        {t.label}
+                      </span>
+                      {!t.done && (
+                        <span className="block text-[11px] leading-tight text-slate-400 dark:text-slate-500">
+                          {t.hint}
+                        </span>
+                      )}
+                    </span>
+                    {!t.done && (
+                      <button
+                        type="button"
+                        onClick={() => (t.key === 'weakness' ? draftWeakness() : goToPrep(t.tab))}
+                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
+                      >
+                        Do it <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
 
-          {activeTab === 'reviews' && (
-            <MotionDiv
-              key="reviews"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <RoundReviews rounds={rounds} />
-            </MotionDiv>
-          )}
-
-          {activeTab === 'recordings' && (
-            <MotionDiv
-              key="recordings"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-            >
-              <RecordingsPanel
-                applicationId={applicationId}
-                onItemsChange={(rows) => setRecordingsCount(rows.length)}
-              />
-              {recordingsCount === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                    No recordings yet
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    Your live interviews are saved here on this device so you can replay them.
-                  </p>
+              {/* Practice weak spots — only once unlocked and weak questions exist */}
+              {interviewGate.unlocked && hasWeakQuestions && (
+                <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-3">
+                  <button
+                    type="button"
+                    onClick={startPracticeWeak}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                  >
+                    <PlayCircle className="w-3.5 h-3.5" /> Practice weak spots{' '}
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
                 </div>
               )}
-            </MotionDiv>
-          )}
-        </AnimatePresence>
+            </section>
+          </aside>
+
+          {/* Right column — the tab strip + tab panels (moved verbatim) */}
+          <div className="min-w-0">
+            {/* Primary sub-nav — three groups. Hairline row with a 2px indigo
+                underline sliding under the active group. */}
+            <div className="mb-6">
+              <nav className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto scrollbar-none">
+                {primaryTabs.map((tab) => {
+                  const active = primaryTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setPrimaryTab(tab.id)}
+                      className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
+                        active
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {tab.label}
+                      {tab.count > 0 && (
+                        <span className="font-mono text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
+                          {tab.count}
+                        </span>
+                      )}
+                      {active && (
+                        <motion.span
+                          layoutId="prep-tab-underline"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Secondary switcher — only under Prepare; one section at a time. */}
+              {primaryTab === 'prepare' && (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {prepSections.map((s) => {
+                    const active = prepSection === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setPrepSection(s.id)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          active
+                            ? 'border-transparent bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        {s.label}
+                        {typeof s.count === 'number' && s.count > 0 && (
+                          <span className="font-mono text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
+                            {s.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <AnimatePresence mode="wait">
+              {primaryTab === 'prepare' && prepSection === 'role' && (
+                <MotionDiv
+                  key="role"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {/* Paid: the interview LOOP — pick each interviewer for a focused 1:1
+                  round and build a combined readiness. Free: the locked teaser. */}
+                  {!isFreeTier && panel.length >= 2 ? (
+                    <div className="mb-4">
+                      {!interviewGate.unlocked && (
+                        <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-500/5 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                          <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          Finish your interview readiness checklist to unlock these rounds.
+                        </div>
+                      )}
+                      <LoopBoard
+                        seats={panel}
+                        rounds={rounds}
+                        locked={!interviewGate.unlocked}
+                        unlockAll={!!application?.unlockAllInterviewers}
+                        onStart={(seatIndex) => {
+                          if (!interviewGate.unlocked) return;
+                          navigate(
+                            `/interview-prep/${applicationId}/mock?interviewer=${seatIndex}`
+                          );
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    (panelLoading || panel.length >= 2) && (
+                      <div className="mb-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 sm:p-5">
+                        <InterviewerPanel
+                          panel={panel}
+                          locked={isFreeTier}
+                          loading={panelLoading}
+                        />
+                        <p className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                          On a paid plan, you pick each of these interviewers for a focused 1:1
+                          round — and complete your interview loop.
+                        </p>
+                      </div>
+                    )
+                  )}
+
+                  <RoleBrief application={application} />
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'prepare' && prepSection === 'stories' && (
+                <MotionDiv
+                  key="stories"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <StoryBank
+                    applicationId={applicationId}
+                    initialStories={stories}
+                    warnings={storyWarnings}
+                    isCvOnly={isCvOnly}
+                    generating={generatingStories}
+                    adRewarded={adRewarded}
+                    onGenerate={handleGenerateStories}
+                    onChange={reload}
+                    onPracticeStory={startPracticeForStory}
+                  />
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'prepare' && prepSection === 'skills' && (
+                <MotionDiv
+                  key="skills"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <SkillsTab
+                    skills={skillsWithEvidence}
+                    draftCVId={application.draftCVId}
+                    onPracticeSkill={startPracticeForSkill}
+                  />
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'prepare' && prepSection === 'questions' && (
+                <MotionDiv
+                  key="questions"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <QuestionsTab
+                    applicationId={applicationId}
+                    jobQuestions={jobQuestions}
+                    fabricationWarnings={application.interviewPrep?.fabricationWarnings || []}
+                    questionsToAsk={questionsToAsk}
+                    onStartPractice={startPracticeAllQuestions}
+                    onStartMock={startMockInterview}
+                    onGenerateMore={handleGenerateMoreQuestions}
+                    onGenerateEssential={handleGenerateEssential}
+                    generatingEssential={generatingEssential}
+                    onGoToNotes={(seed) => {
+                      setNotesSeed(seed || null);
+                      goToPrep('notes');
+                    }}
+                    adRewarded={adRewarded}
+                    generatingMore={generatingMore}
+                    newQuestionIndices={newQuestionIndices}
+                    isCvOnly={isCvOnly}
+                    onConfidenceChange={reload}
+                    gate={interviewGate}
+                  />
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'gameday' && (
+                <MotionDiv
+                  key="gameday"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <div className="mb-4">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+                      Game-day readiness
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                      Walk in calm and ready — not just prepped on what to say.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <NervesTrend application={application} />
+                    <DressGuide
+                      application={application}
+                      onGenerate={handleGenerateDressGuide}
+                      generating={generatingDress}
+                    />
+                    <CalmKit />
+                    <BodyLanguage />
+                  </div>
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'prepare' && prepSection === 'notes' && (
+                <MotionDiv
+                  key="notes"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+                    <NotesList
+                      applicationId={applicationId}
+                      initialNotes={notes}
+                      seed={notesSeed}
+                      onSeedConsumed={() => setNotesSeed(null)}
+                    />
+                  </section>
+                </MotionDiv>
+              )}
+
+              {primaryTab === 'results' && (
+                <MotionDiv
+                  key="results"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <div className="space-y-4">
+                    {/* Per-interviewer scores + feedback (loop rounds). */}
+                    {rounds.length > 0 && <RoundReviews rounds={rounds} />}
+
+                    {/* Device-local recordings + empty state. */}
+                    <RecordingsPanel
+                      applicationId={applicationId}
+                      onItemsChange={(rows) => setRecordingsCount(rows.length)}
+                    />
+                    {recordingsCount === 0 && (
+                      <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
+                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                          No recordings yet
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          Your live interviews are saved here on this device so you can replay them.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Re-readable AI assessment — fallback case (no interview-loop
+                        rounds, e.g. a free/solo interview). For the loop, each
+                        interviewer's full assessment lives on their Reviews card. */}
+                    {rounds.length === 0 && <LastAssessmentCard application={application} />}
+                  </div>
+                </MotionDiv>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </main>
 
       {adForMoreOpen && adRewarded && (
@@ -996,11 +1182,9 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
     return (
       <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
         <SectionHeader
-          icon={Sparkles}
+          eyebrow="Reference"
           title="Skill soundbites"
           subtitle="Quick, CV-grounded answers for skill-probe questions"
-          iconBg="bg-emerald-50 dark:bg-emerald-500/15"
-          iconColor="text-emerald-600 dark:text-emerald-300"
         />
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           When your CV has AI-generated skills with evidence, their rehearsable talking points
@@ -1021,7 +1205,6 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   return (
     <section className="space-y-3">
       <div className="flex items-start gap-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 px-3 py-2.5">
-        <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           <span className="font-semibold text-slate-700 dark:text-slate-300">Quick soundbites</span>{' '}
           for &ldquo;what&apos;s your experience with X?&rdquo; questions, pulled from your CV. For
@@ -1043,9 +1226,6 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 const SkillCard = ({ skill, onPractice }) => (
   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
-        <Sparkles className="w-5 h-5" />
-      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{skill.name}</p>
@@ -1370,11 +1550,9 @@ const EssentialsSection = ({
   return (
     <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
       <SectionHeader
-        icon={Sparkles}
+        eyebrow="Essentials"
         title="Interview essentials"
         subtitle="The questions almost every interview opens with"
-        iconBg="bg-amber-50 dark:bg-amber-500/15"
-        iconColor="text-amber-600 dark:text-amber-300"
       />
       <div className="mt-4 space-y-4">
         {visible.map((e) => (
@@ -1396,7 +1574,7 @@ const EssentialsSection = ({
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3.5 h-3.5" /> Generate from my CV
+                    <Plus className="w-3.5 h-3.5" /> Generate from my CV
                     <span className="ml-1 inline-flex items-center gap-1 pl-1.5 pr-1.5 py-0.5 rounded bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
                       {adRewarded ? (
                         <>
@@ -1472,11 +1650,9 @@ const QuestionsTab = ({
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
-              icon={MessageSquare}
+              eyebrow="Questions"
               title="Job-based prep"
               subtitle={`${jobQuestions.length} likely question${jobQuestions.length === 1 ? '' : 's'} with rehearsable answers`}
-              iconBg="bg-indigo-50 dark:bg-indigo-500/15"
-              iconColor="text-indigo-600 dark:text-indigo-300"
             />
             <div className="shrink-0 flex items-center gap-2">
               <button
@@ -1554,8 +1730,8 @@ const QuestionsTab = ({
                       key={i}
                       className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-emerald-300 dark:border-emerald-500/30"
                     >
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
-                        <Sparkles className="w-2.5 h-2.5" /> New
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
+                        New
                       </span>
                       <span>{text}</span>
                     </li>
@@ -1627,17 +1803,17 @@ const QuestionsTab = ({
   );
 };
 
-const SectionHeader = ({ icon, title, subtitle, iconBg, iconColor }) => (
-  <div className="flex items-start gap-3">
-    <div
-      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}
-    >
-      {React.createElement(icon, { className: 'w-5 h-5' })}
-    </div>
-    <div className="min-w-0">
-      <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
-      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
-    </div>
+const SectionHeader = ({ eyebrow, title, subtitle }) => (
+  <div className="min-w-0">
+    {eyebrow && (
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+        {eyebrow}
+      </p>
+    )}
+    <h2 className="mt-1 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+      {title}
+    </h2>
+    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
   </div>
 );
 

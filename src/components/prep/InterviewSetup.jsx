@@ -87,10 +87,10 @@ const Pill = ({ active, onClick, children }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
+    className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors select-none cursor-pointer ${
       active
-        ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+        ? 'bg-indigo-600 border-indigo-600 text-white'
+        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-200'
     }`}
   >
     {children}
@@ -113,14 +113,14 @@ export const VoiceStyleSelector = ({
     className={
       borderless
         ? `relative z-10 space-y-2.5 ${className}`
-        : `relative z-10 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2.5 ${className}`
+        : `relative z-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2.5 ${className}`
     }
   >
     {/* Voice picker only applies to the SOLO (free-taste) interview. Panel
         interviews give each interviewer their own voice, so it's hidden there. */}
     {showVoice && (
       <div>
-        <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
           Interviewer voice
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -136,7 +136,7 @@ export const VoiceStyleSelector = ({
         candidate picks a specific role, the role itself sets the interview type. */}
     {showStyle && (
       <div>
-        <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
           Interview style
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -176,7 +176,7 @@ export const VoiceStyleSelector = ({
     {/* Challenge level — how hard the panel pushes. Only shown when wired up. */}
     {onChallengeChange && (
       <div>
-        <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
           Challenge level
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -326,8 +326,8 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
         </button>
       ) : (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl relative animate-in fade-in zoom-in-95 duration-200 text-left">
-            <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
+          <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl relative animate-in fade-in zoom-in-95 duration-200 text-left">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
               Device check
             </p>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import AssessmentReport from './AssessmentReport';
 
 // Re-readable AI assessment from the last conversational interview. The full
@@ -12,7 +12,11 @@ const READINESS_LABEL = {
 };
 
 const scoreTone = (s) =>
-  s >= 75 ? 'text-emerald-600' : s >= 45 ? 'text-amber-600' : 'text-rose-600';
+  s >= 75
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : s >= 45
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-rose-600 dark:text-rose-400';
 
 const LastAssessmentCard = ({ application }) => {
   const [open, setOpen] = useState(false);
@@ -20,20 +24,26 @@ const LastAssessmentCard = ({ application }) => {
   if (!assessment || typeof assessment.overallScore !== 'number') return null;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-3.5 text-left cursor-pointer"
       >
-        <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center shrink-0">
-          <span className={`text-base font-bold ${scoreTone(assessment.overallScore)}`}>
-            {assessment.overallScore}%
-          </span>
+        <div className="shrink-0 text-center">
+          <div
+            className={`font-heading text-3xl font-bold leading-none tabular-nums ${scoreTone(assessment.overallScore)}`}
+          >
+            {assessment.overallScore}
+            <span className="text-lg">%</span>
+          </div>
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            Overall
+          </div>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Your last interview assessment
+          <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100">
+            Your last interview assessment
           </h3>
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
             {READINESS_LABEL[assessment.readiness] || 'Scored'} · tap to{' '}

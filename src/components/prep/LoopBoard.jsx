@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Play, RotateCcw, Trophy, Lock } from 'lucide-react';
 import { initials } from '../../utils/avatar';
-import { INTERVIEW_PASS_SCORE, roundsBySeat, seatUnlocked } from '../../utils/interviewLoop';
+import { roundsBySeat, seatUnlocked } from '../../utils/interviewLoop';
 
 // The interview LOOP board: the roster (HR + JD-derived roles) as rounds the user
 // completes one by one, each a focused 1:1 with that interviewer. Shows per-round
@@ -44,9 +44,7 @@ const LoopBoard = ({ seats = [], rounds = [], onStart, locked = false, unlockAll
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
             {allDone
               ? 'Loop complete — you faced the whole panel.'
-              : unlockAll
-                ? `${doneCount} of ${valid.length} rounds done — all interviewers unlocked. Interview with anyone, any order.`
-                : `${doneCount} of ${valid.length} rounds done — score ${INTERVIEW_PASS_SCORE}%+ in each interview to unlock the next one.`}
+              : `${doneCount} of ${valid.length} rounds done — practice any interviewer, in any order. Each round adds to your combined readiness.`}
           </p>
         </div>
         {combined != null && (
@@ -75,7 +73,6 @@ const LoopBoard = ({ seats = [], rounds = [], onStart, locked = false, unlockAll
           const done = r && typeof r.score === 'number';
           const band = done ? READINESS[r.readiness] : null;
           const unlocked = seatUnlocked(i, rounds, unlockAll);
-          const prev = valid[i - 1];
           return (
             <div
               key={seat.seat ?? i}
@@ -104,11 +101,6 @@ const LoopBoard = ({ seats = [], rounds = [], onStart, locked = false, unlockAll
                 {done ? (
                   <p className={`text-[11px] font-bold ${band?.text || 'text-slate-500'}`}>
                     {r.score}% · {band?.label || ''}
-                  </p>
-                ) : !unlocked ? (
-                  <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                    Reach {INTERVIEW_PASS_SCORE}% with {prev?.name || 'the previous interviewer'} to
-                    unlock
                   </p>
                 ) : null}
               </div>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Lock, CheckCircle2 } from 'lucide-react';
 import { initials } from '../../utils/avatar';
-import { INTERVIEW_PASS_SCORE } from '../../utils/interviewLoop';
 
 // "Who's likely to interview you" — the 3-person panel (HR + 2 JD-derived roles).
 // Used on the prep detail screen (preview, with an optional upsell lock) and on
@@ -190,15 +189,6 @@ const InterviewerPanel = ({
                       active={!locked && selectedIndex === i}
                     />
                   </div>
-                  {locked && (
-                    <div className="mt-1.5 flex items-center justify-center gap-1 rounded-lg bg-amber-100 dark:bg-amber-500/20 px-1.5 py-1 text-amber-800 dark:text-amber-300">
-                      <Lock className="w-3 h-3 shrink-0" />
-                      <span className="text-[10px] sm:text-[11px] font-bold leading-tight break-words">
-                        Reach {INTERVIEW_PASS_SCORE}% with{' '}
-                        {seats[i - 1]?.name || 'the previous one'}
-                      </span>
-                    </div>
-                  )}
                   {!locked && typeof score === 'number' && (
                     <span className="absolute top-1 right-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold shadow-sm">
                       <CheckCircle2 className="w-2.5 h-2.5" />

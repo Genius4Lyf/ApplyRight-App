@@ -1,9 +1,8 @@
-// Interview LOOP gating — mirrors the backend rule (interviewPrep.controller).
-// You unlock the next interviewer by reaching INTERVIEW_PASS_SCORE on the current
-// one (the "almost there" band). HR / seat 0 is always open; seat i needs seat
-// i-1 passed.
-
-export const INTERVIEW_PASS_SCORE = 65;
+// Interview LOOP access — mirrors the backend: Premium users pick any panel
+// interviewer in any order. There is no score-based sequential unlock. The
+// separate readiness gate (computeInterviewGate) still governs whether the loop
+// is startable at all. seatUnlocked is kept as an always-true helper (name +
+// signature preserved) so its callers keep working.
 
 export const roundsBySeat = (rounds = []) => {
   const m = {};
@@ -13,9 +12,5 @@ export const roundsBySeat = (rounds = []) => {
   return m;
 };
 
-export const seatUnlocked = (seatIndex, rounds = [], unlockAll = false) => {
-  if (unlockAll) return true; // support-granted override: all interviewers open
-  if (!Number.isInteger(seatIndex) || seatIndex <= 0) return true;
-  const prev = roundsBySeat(rounds)[seatIndex - 1];
-  return !!prev && typeof prev.score === 'number' && prev.score >= INTERVIEW_PASS_SCORE;
-};
+// eslint-disable-next-line no-unused-vars
+export const seatUnlocked = (seatIndex, rounds = [], unlockAll = false) => true;

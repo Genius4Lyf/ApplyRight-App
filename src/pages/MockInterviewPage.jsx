@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
-  HelpCircle,
   Sparkles,
   TrendingUp,
   Wind,
@@ -517,6 +516,22 @@ const MockInterviewPage = () => {
     const def = Math.max(lengthMinSec, Math.min(RECOMMENDED_SEC, lengthMaxSec));
     setLengthSec(def);
   }, [isPaidTier, lengthSec, lengthMaxSec, lengthMinSec]);
+
+  // Paid users skip the Conversational-vs-Guided chooser and land straight on the
+  // live-panel pre-flight (the panel picker already lives on the conversational
+  // intro). A ?interviewer= deep-link — a LoopBoard "Start with <name>" click —
+  // always implies a paid panel pick, so it skips too; because that runs before
+  // entitlement even resolves (and while the loader is still up), the chooser never
+  // flashes. Free users with no deep-link keep the chooser. The "no questions" case
+  // is left on 'choose' so its "generate prep first" intro still shows for everyone.
+  const hasInterviewerDeepLink = searchParams.get('interviewer') != null;
+  useEffect(() => {
+    if (phase !== 'choose' || mode !== null || simQuestions.length === 0) return;
+    if (isPaidTier || hasInterviewerDeepLink) {
+      setMode('conversational');
+      setPhase('intro');
+    }
+  }, [isPaidTier, hasInterviewerDeepLink, phase, mode, simQuestions.length]);
 
   // ── audio ──
   const stopAudio = () => {
@@ -1790,6 +1805,18 @@ const MockInterviewPage = () => {
                         onChallengeChange={chooseChallenge}
                       />
                     </div>
+
+                    {/* Paid users land here directly (chooser skipped) — keep the
+                        guided reader reachable with a quiet in-place link. */}
+                    {isPaidTier && (
+                      <button
+                        type="button"
+                        onClick={() => setMode('scripted')}
+                        className="self-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors cursor-pointer select-none"
+                      >
+                        Prefer the guided reader instead?
+                      </button>
+                    )}
                   </div>
 
                   {/* Right Column: Info & Actions */}
@@ -1825,22 +1852,36 @@ const MockInterviewPage = () => {
                   </div>
                 </div>
               ) : (
-                <IntroView
-                  firstName={firstName}
-                  title={title}
-                  count={simQuestions.length}
-                  plannedSec={plannedSec}
-                  lastSession={lastSession}
-                  trend={getInterviewTrend(application)}
-                  mode={mode}
-                  voice={voice}
-                  style={style}
-                  onVoiceChange={chooseVoice}
-                  onStyleChange={chooseStyle}
-                  onStart={handleStartClick}
-                  onCancel={() => setPhase('choose')}
-                  showSelectors={false}
-                />
+                <>
+                  <IntroView
+                    firstName={firstName}
+                    title={title}
+                    count={simQuestions.length}
+                    plannedSec={plannedSec}
+                    lastSession={lastSession}
+                    trend={getInterviewTrend(application)}
+                    mode={mode}
+                    voice={voice}
+                    style={style}
+                    onVoiceChange={chooseVoice}
+                    onStyleChange={chooseStyle}
+                    onStart={handleStartClick}
+                    onCancel={() => setPhase('choose')}
+                    showSelectors={false}
+                  />
+                  {/* Paid users can jump back to the live panel from the guided reader. */}
+                  {isPaidTier && (
+                    <div className="mt-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setMode('conversational')}
+                        className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors cursor-pointer select-none"
+                      >
+                        Use the live panel instead
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -2449,7 +2490,7 @@ const IntroView = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3.5 sm:p-4 shadow-sm flex flex-col ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-sm flex flex-col ${className}`}
     >
       <AnimatePresence mode="wait">
         {activeSubView === 'main' && (
@@ -2463,8 +2504,8 @@ const IntroView = ({
           >
             <div className="flex-grow flex flex-col justify-center">
               <div className="relative z-10 text-center mb-2.5">
-                <h1 className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-300 flex items-center justify-center gap-2">
-                  <Briefcase className="w-4.5 h-4.5 shrink-0" />
+                <h1 className="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
+                  <Briefcase className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" />
                   <span>
                     {title.toLowerCase().endsWith('interview') ? title : `${title} Interview`}
                   </span>
@@ -2517,8 +2558,8 @@ const IntroView = ({
                     </p>
                   )}
                   {mode === 'conversational' && (
-                    <div className="relative z-10 mt-2 rounded-xl border border-amber-150/40 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/10 p-2 flex items-start gap-2">
-                      <Mic className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+                    <div className="relative z-10 mt-2 border-l-2 border-amber-400 pl-3 flex items-start gap-2">
+                      <Mic className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           Find a quiet spot first.
@@ -2536,8 +2577,8 @@ const IntroView = ({
                     />
                   )}
                   {trend && trend.count >= 1 && (
-                    <div className="relative z-10 mt-2 rounded-xl border border-emerald-150/40 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/10 p-2 flex items-start gap-2">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+                    <div className="relative z-10 mt-2 border-l-2 border-emerald-500 pl-3 flex items-start gap-2">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           You’ve done {trend.count} {trend.count === 1 ? 'interview' : 'interviews'}
@@ -2550,53 +2591,43 @@ const IntroView = ({
                       </p>
                     </div>
                   )}
-                  <div className="relative z-10 mt-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-sm grid grid-cols-2 gap-2 divide-x divide-slate-100 dark:divide-slate-800">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                        <HelpCircle className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-                          Questions
-                        </p>
-                        <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-                          {count}
-                        </p>
-                      </div>
+                  <div className="relative z-10 mt-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-2 gap-2 divide-x divide-slate-100 dark:divide-slate-800">
+                    <div className="flex flex-col items-center justify-center text-center px-1">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 leading-none">
+                        Questions
+                      </p>
+                      <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
+                        {count}
+                      </p>
                     </div>
 
                     <div
                       onClick={
                         mode === 'conversational' ? () => setActiveSubView('length') : undefined
                       }
-                      className={`flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left pl-2.5 ${
+                      className={`flex flex-col items-center justify-center text-center px-1 ${
                         mode === 'conversational'
                           ? 'cursor-pointer hover:bg-slate-55/60 dark:hover:bg-slate-800/40 rounded-xl p-1 -m-1 transition-colors'
                           : ''
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50/80 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 leading-none">
-                          <p className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Duration
-                          </p>
-                          {mode === 'conversational' && (
-                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold underline decoration-dotted">
-                              Edit
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-                          ~{Math.round(plannedSec / 60)} min
+                      <div className="flex items-center gap-1.5 leading-none">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                          Duration
                         </p>
+                        {mode === 'conversational' && (
+                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold underline decoration-dotted">
+                            Edit
+                          </span>
+                        )}
                       </div>
+                      <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
+                        ~{Math.round(plannedSec / 60)} min
+                      </p>
                     </div>
                   </div>
                   {lastSession && (
-                    <div className="relative z-10 mt-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-indigo-50/40 dark:bg-indigo-500/10 p-2 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-2">
+                    <div className="relative z-10 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
                       <div>
                         <span className="font-semibold text-slate-705 dark:text-slate-295">
@@ -3542,30 +3573,22 @@ const ModeCard = ({
   const owned = TIER_RANK[userTier] >= TIER_RANK[tierKey];
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col ${accent.border} ${accent.topLine ? 'pt-7' : ''}`}
+      className={`relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm flex flex-col ${
+        accent.recommended ? 'border-t-2 border-t-indigo-600 dark:border-t-indigo-500' : ''
+      }`}
     >
-      {accent.topLine && (
-        <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
-      )}
-
       <div className="relative z-10 flex items-center gap-3">
-        <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${accent.iconBg}`}
-        >
-          {icon}
-        </div>
+        <div className="text-slate-400 dark:text-slate-500 shrink-0">{icon}</div>
         <div className="min-w-0">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+          <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
             {name}
           </h3>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${accent.pill}`}
-            >
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
+            <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
               {owned ? null : <Lock className="w-2.5 h-2.5" />} {tierLabel}
             </span>
             {badge && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/35 text-[9px] font-bold uppercase tracking-wider select-none">
+              <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400 select-none">
                 {badge}
               </span>
             )}
@@ -3580,24 +3603,22 @@ const ModeCard = ({
       <ul className="relative z-10 mt-3 space-y-1.5">
         {(bullets || []).map((b, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${accent.dot}`} />
+            <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400 dark:text-slate-500" />
             <span className="leading-relaxed">{b}</span>
           </li>
         ))}
       </ul>
 
-      <div
-        className={`relative z-10 mt-4 flex items-start gap-2 rounded-xl border p-2.5 ${accent.netBox}`}
-      >
+      <div className="relative z-10 mt-4 flex items-start gap-2 border-t border-slate-100 dark:border-slate-800 pt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
         {networkIcon}
-        <p className="text-xs leading-relaxed">{network}</p>
+        <p>{network}</p>
       </div>
 
       <div className="relative z-10 mt-auto pt-4">
         <button
           type="button"
           onClick={onPick}
-          className={`w-full px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all cursor-pointer shadow-md hover:-translate-y-0.5 active:translate-y-0 select-none ${accent.btn}`}
+          className={`w-full px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer select-none ${accent.btn}`}
         >
           {name.startsWith('Conversational') ? 'Start conversational' : 'Start guided'}
         </button>
@@ -3609,7 +3630,7 @@ const ModeCard = ({
 const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
   <div className="relative">
     <div className="text-center mb-5">
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
         Choose your interview
       </h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -3636,17 +3657,8 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         badge="Recommended"
         accent={{
-          topLine: true,
-          border:
-            'border-indigo-300/60 dark:border-indigo-500/40 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 transition-all duration-300',
-          glow: '',
-          iconBg:
-            'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30',
-          pill: 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30',
-          dot: 'bg-indigo-500',
-          netBox:
-            'border border-indigo-100/50 dark:border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/5 text-indigo-700 dark:text-indigo-300',
-          btn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-600 text-white shadow-md shadow-indigo-500/10 active:scale-[0.98] transition-all',
+          recommended: true,
+          btn: 'bg-indigo-600 hover:bg-indigo-700 text-white',
         }}
         onPick={() => onPick('conversational')}
       />
@@ -3666,17 +3678,8 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         network="Needs only a normal, good internet connection — questions are prepared up front, so brief dips are fine."
         networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
         accent={{
-          topLine: false,
-          border:
-            'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 transition-all duration-300',
-          glow: '',
-          iconBg:
-            'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
-          pill: 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800',
-          dot: 'bg-slate-400',
-          netBox:
-            'border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-350',
-          btn: 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-sm active:scale-[0.98] transition-all',
+          recommended: false,
+          btn: 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800',
         }}
         onPick={() => onPick('scripted')}
       />
