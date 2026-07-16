@@ -1152,7 +1152,7 @@ const Dashboard = () => {
                     triggerInterstitial('upload_edit_in_builder');
                     navigate(`/cv-builder/${scanSuccessDraftId}`);
                   }}
-                  className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                  className="w-full btn-primary py-3.5 rounded-xl gap-2"
                 >
                   <PenTool className="w-5 h-5" /> Review & Edit in Builder
                 </button>
@@ -1486,62 +1486,39 @@ const Dashboard = () => {
             compact step-checklist + cost summary in that bar; desktop keeps
             the hero treatment. */}
         {workflowMode === 'upload' && !fitResult && !analyzing && (
-          <div className="relative pt-8 hidden md:flex flex-col items-center">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200 dark:bg-slate-700"></div>
-
-            <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS} className="w-full max-w-xl">
-              <div className="relative group flex justify-center">
-                {(!cvChosen || !job) && (
-                  <div className="absolute -inset-1 bg-white/40 backdrop-blur-[1px] rounded-full z-10 pointer-events-none" />
-                )}
-
-                <button
-                  onClick={handleAnalyze}
-                  disabled={!cvChosen || !job || analyzing}
-                  className={`
-                    relative z-20 flex items-center justify-center h-16 px-12 rounded-full font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300
-                    ${
-                      !cvChosen || !job || analyzing
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                        : 'btn-primary hover:scale-105 active:scale-95'
-                    }
-                  `}
-                >
-                  {analyzing ? (
-                    <>
-                      <div className="w-6 h-6 border-4 border-indigo-200 border-t-white rounded-full animate-spin mr-3"></div>
-                      Analyzing Match...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-3" />
-                      <span className="flex flex-col items-start leading-tight">
-                        <span>Analyze Fit</span>
-                        <span className="text-xs font-normal opacity-80">Cost: 10 A.I Credits</span>
-                      </span>
-                      <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </CreditGate>
-
-            {!cvChosen || !job ? (
-              <div className="mt-8 flex items-center gap-3 text-slate-400 dark:text-slate-500 font-medium bg-slate-50 dark:bg-slate-900 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700">
-                <div className="w-5 h-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px]">
-                  !
-                </div>
-                Please complete both steps to proceed
-              </div>
-            ) : (
-              <p className="mt-8 text-indigo-600 dark:text-indigo-300 font-medium animate-pulse flex items-center gap-2">
-                {!analyzing && (
+          <div className="hidden md:flex md:items-center md:justify-between gap-4 mt-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {!cvChosen
+                ? 'Choose a CV to continue.'
+                : !job
+                  ? 'Add the job to continue.'
+                  : "You're ready — let's analyze."}
+            </p>
+            <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS}>
+              <button
+                onClick={handleAnalyze}
+                disabled={!cvChosen || !job || analyzing}
+                className={`inline-flex items-center justify-center gap-2 h-12 px-8 rounded-lg font-semibold transition-all ${
+                  !cvChosen || !job || analyzing
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'btn-primary'
+                }`}
+              >
+                {analyzing ? (
                   <>
-                    <CheckCircle className="w-4 h-4" /> Ready for analysis
+                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    Analyze fit{' '}
+                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
+                      {CREDIT_COSTS.FIT_ANALYSIS} cr
+                    </span>
                   </>
                 )}
-              </p>
-            )}
+              </button>
+            </CreditGate>
           </div>
         )}
 
@@ -1589,14 +1566,22 @@ const Dashboard = () => {
               <button
                 onClick={handleAnalyze}
                 disabled={!cvChosen || !job || analyzing}
-                className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
+                className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm transition-all ${
                   !cvChosen || !job || analyzing
-                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                    : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-semibold cursor-not-allowed'
+                    : 'btn-primary'
                 }`}
               >
-                <Sparkles className="w-4 h-4" />
-                {!cvChosen || !job ? 'Complete both steps to continue' : 'Analyze Fit'}
+                {!cvChosen || !job ? (
+                  'Complete both steps to continue'
+                ) : (
+                  <>
+                    Analyze fit
+                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
+                      {CREDIT_COSTS.FIT_ANALYSIS} cr
+                    </span>
+                  </>
+                )}
               </button>
             </CreditGate>
           </div>
@@ -1621,7 +1606,7 @@ const Dashboard = () => {
                   className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
                     generatingCV
                       ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                      : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                      : 'btn-primary'
                   }`}
                 >
                   {generatingCV ? (
@@ -1642,7 +1627,7 @@ const Dashboard = () => {
                 onClick={() =>
                   navigate(`/resume/${application?.draftId || application?.applicationId}`)
                 }
-                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary"
               >
                 View your CV
                 <ArrowRight className="w-4 h-4" />
@@ -1680,7 +1665,7 @@ const Dashboard = () => {
                 </button>
                 <button
                   onClick={enableAutoAnalysis}
-                  className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                  className="w-full sm:w-auto btn-primary px-5 py-2.5 text-xs rounded-xl gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   Enable auto-analysis
@@ -1764,7 +1749,7 @@ const Dashboard = () => {
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/credits')}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full btn-primary py-3 rounded-xl text-sm gap-2"
               >
                 <Zap className="w-4 h-4" /> Get More A.I Credits
               </button>

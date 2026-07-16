@@ -194,7 +194,7 @@
   }
 
   .btn-primary {
-    @apply bg-primary hover:opacity-90 text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center;
+    @apply bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-all active:scale-[0.98] flex items-center justify-center;
   }
 
   .btn-secondary {

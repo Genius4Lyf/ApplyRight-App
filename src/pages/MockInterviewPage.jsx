@@ -1619,7 +1619,7 @@ const MockInterviewPage = () => {
           <button
             type="button"
             onClick={() => navigate(`/interview-prep/${applicationId}`)}
-            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+            className="mt-4 w-full btn-primary gap-1.5 px-4 py-2.5 rounded-lg text-sm"
           >
             Go to prep
           </button>
@@ -2080,7 +2080,7 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
         <button
           type="button"
           onClick={onStay}
-          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
+          className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
         >
           Stay in the interview
         </button>
@@ -2157,7 +2157,7 @@ const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, 
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
+            className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
           >
             Keep going
           </button>
@@ -2261,7 +2261,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
         <button
           type="button"
           onClick={onPrepare}
-          className="flex-1 order-1 sm:order-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer text-center"
+          className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
         >
           Prepare these first
         </button>
@@ -2522,7 +2522,7 @@ const IntroView = ({
                     <button
                       type="button"
                       onClick={onCancel}
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors cursor-pointer shadow-sm select-none"
+                      className="btn-primary px-5 py-2.5 rounded-xl text-sm cursor-pointer select-none"
                     >
                       Back to prep
                     </button>
@@ -2682,7 +2682,7 @@ const IntroView = ({
                   <button
                     type="button"
                     onClick={onStart}
-                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors shadow-sm select-none cursor-pointer"
+                    className="btn-primary px-6 py-2.5 rounded-xl text-sm select-none cursor-pointer"
                   >
                     Start interview
                   </button>
@@ -2734,7 +2734,7 @@ const IntroView = ({
                 <button
                   type="button"
                   onClick={() => setActiveSubView('main')}
-                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  className="btn-primary px-4 py-1.5 rounded-lg text-xs cursor-pointer"
                 >
                   Done
                 </button>
@@ -2830,7 +2830,7 @@ const IntroView = ({
               <button
                 type="button"
                 onClick={() => setActiveSubView('main')}
-                className="px-4.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+                className="btn-primary px-4.5 py-2 rounded-xl text-xs cursor-pointer"
               >
                 Back to setup
               </button>
@@ -2867,7 +2867,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
         <button
           type="button"
           onClick={() => onUpgrade?.()}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors"
+          className="btn-primary gap-1.5 px-3 py-2 rounded-lg text-xs"
         >
           <Sparkles className="w-3.5 h-3.5" /> Upgrade to unlock
         </button>
@@ -2923,7 +2923,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
           type="button"
           disabled={loading || !answer.trim()}
           onClick={() => onFollowUp(answer.trim())}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="btn-primary gap-1.5 px-3 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
             <Loader className="w-3.5 h-3.5 animate-spin" />
@@ -3094,7 +3094,7 @@ const RunningView = ({
                 <button
                   type="button"
                   onClick={onReveal}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+                  className="btn-primary gap-2 px-6 py-3.5 rounded-xl text-sm select-none cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-indigo-200" />
                   Reveal model answer
@@ -3207,7 +3207,7 @@ const RunningView = ({
           <button
             type="button"
             onClick={onNext}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
+            className="btn-primary gap-1.5 px-5 py-2.5 rounded-xl text-xs cursor-pointer select-none"
           >
             {isLast ? 'Finish interview' : 'Next question'} <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -3338,7 +3338,7 @@ const ReviewView = ({
                 type="button"
                 onClick={onBuyPracticePass}
                 disabled={buyingPass}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors cursor-pointer"
+                className="btn-primary gap-2 px-5 py-2.5 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed text-sm cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 {buyingPass ? 'Starting checkout…' : 'Interview & Score Review — ₦1,000'}
@@ -3368,7 +3368,7 @@ const ReviewView = ({
             <button
               type="button"
               onClick={onRetryAssessment}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors cursor-pointer"
+              className="mt-3 btn-primary gap-1.5 px-4 py-2 rounded-xl text-sm cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" /> Re-run assessment
             </button>
@@ -3403,7 +3403,7 @@ const ReviewView = ({
                 type="button"
                 onClick={onSave}
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="btn-primary gap-1.5 px-4.5 py-2.5 rounded-xl text-sm select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
                 {saved ? 'Update my review' : 'Save my review'}
@@ -3523,7 +3523,7 @@ const ReviewView = ({
           <button
             type="button"
             onClick={onPracticeWeak}
-            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+            className="btn-primary gap-1.5 px-4.5 py-2.5 rounded-xl text-sm select-none cursor-pointer"
           >
             <PlayCircle className="w-4 h-4" /> Practice weak spots
           </button>
@@ -3658,7 +3658,7 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
         badge="Recommended"
         accent={{
           recommended: true,
-          btn: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+          btn: 'btn-primary',
         }}
         onPick={() => onPick('conversational')}
       />
@@ -3818,7 +3818,7 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
           type="button"
           disabled={loading || !answer.trim()}
           onClick={send}
-          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold disabled:opacity-50 transition-all"
+          className="ml-auto btn-primary gap-1.5 px-4 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
             <Loader className="w-3.5 h-3.5 animate-spin" />
@@ -3981,7 +3981,9 @@ const RealtimeView = ({
       {/* Big live status — desktop only; on mobile it's consolidated into the
           control dock below so the bottom of the screen reads as one unit. */}
       <div className="hidden sm:block shrink-0 mt-5 text-center">
-        <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{statusPrimary}</p>
+        <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+          {statusPrimary}
+        </p>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {handingOff
             ? 'Handing you over to the next person on the panel — one moment.'
@@ -3997,7 +3999,9 @@ const RealtimeView = ({
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
             Interviewer (captions)
           </p>
-          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{caption || '…'}</p>
+          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+            {caption || '…'}
+          </p>
         </div>
       )}
 
@@ -4018,13 +4022,17 @@ const RealtimeView = ({
                 : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
             }`}
           >
-            {muted ? <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
+            {muted ? (
+              <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            ) : (
+              <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            )}
             {muted ? 'Unmute' : 'Mute'}
           </button>
           <button
             type="button"
             onClick={onEnd}
-            className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm sm:text-xs font-bold transition-all cursor-pointer shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 select-none"
+            className="btn-primary flex-1 sm:flex-none gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl text-sm sm:text-xs cursor-pointer select-none"
           >
             End &amp; review
           </button>

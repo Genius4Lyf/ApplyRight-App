@@ -370,7 +370,7 @@ const InterviewStart = () => {
             disabled={!canStart}
             className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
               canStart
-                ? 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                ? 'btn-primary'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
             }`}
           >

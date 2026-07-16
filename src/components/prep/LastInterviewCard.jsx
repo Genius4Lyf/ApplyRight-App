@@ -29,7 +29,7 @@ const StartCTA = ({ gate, onStart, label }) => {
     <button
       type="button"
       onClick={onStart}
-      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer select-none"
+      className="btn-primary gap-1.5 px-4 py-2.5 rounded-lg text-xs cursor-pointer select-none"
     >
       {label} <ArrowRight className="w-3.5 h-3.5" />
     </button>
