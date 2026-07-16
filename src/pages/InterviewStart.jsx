@@ -23,8 +23,18 @@ import { isMobile } from '../utils/platform';
 const InterviewStart = () => {
   const navigate = useNavigate();
 
+  // Decide the paywall-vs-setup view synchronously from the stored user's tier
+  // so the page renders instantly (no full-page spinner), then reconcile with
+  // the server entitlement in the background.
+  const storedTier = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}').tier || 'free';
+    } catch {
+      return 'free';
+    }
+  })();
+
   const [entitlement, setEntitlement] = useState(null);
-  const [entLoading, setEntLoading] = useState(true);
 
   const [cvMode, setCvMode] = useState('saved'); // 'saved' | 'upload'
   const [drafts, setDrafts] = useState([]);
@@ -45,8 +55,6 @@ const InterviewStart = () => {
         if (!cancelled) setEntitlement(ent);
       } catch {
         /* server stays the source of truth — let the gate fall to the API */
-      } finally {
-        if (!cancelled) setEntLoading(false);
       }
       try {
         const list = await CVService.getMyDrafts();
@@ -67,7 +75,8 @@ const InterviewStart = () => {
     };
   }, []);
 
-  const isFreeTier = !!entitlement && entitlement.tier === 'free';
+  const effectiveTier = entitlement?.tier ?? storedTier;
+  const isFreeTier = effectiveTier === 'free';
   const resumeId = cvMode === 'upload' ? uploadedResume?._id : null;
   const draftCVId = cvMode === 'saved' ? selectedDraftId : null;
   const cvChosen = !!resumeId || !!draftCVId;
@@ -99,23 +108,6 @@ const InterviewStart = () => {
       setStarting(false);
     }
   };
-
-  // While the entitlement is still loading, render a neutral loading state
-  // instead of the full (paid) flow. Otherwise a free user briefly sees the
-  // interview setup before it's replaced by the upgrade gate — a jarring flash.
-  if (entLoading) {
-    return (
-      <div className="min-h-screen bg-transparent flex flex-col">
-        <Navbar />
-        <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-16">
-          <BackLink navigate={navigate} />
-          <div className="flex items-center justify-center py-32">
-            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   // ── Paid-only gate ──
   if (isFreeTier) {
