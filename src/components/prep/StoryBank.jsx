@@ -167,7 +167,7 @@ const StoryCard = ({
   const skills = Array.isArray(story.skillsProven) ? story.skillsProven : [];
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-card overflow-hidden">
       {/* Header */}
       <button
         type="button"

@@ -1602,7 +1602,7 @@ const MockInterviewPage = () => {
   if (!gate.unlocked) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm text-center">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-card text-center">
           <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
             <Lock className="w-5 h-5" />
           </div>
@@ -1756,7 +1756,7 @@ const MockInterviewPage = () => {
                     {/* Who's interviewing you today — the panel, shown before you
                         start. Paid → tailored panel; free → generic teaser (locked). */}
                     {/* Unified Interviewer Panel & Style Selector Card */}
-                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-sm space-y-3">
+                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-card space-y-3">
                       {(panelLoading || setupPanel.length >= 2) && (
                         <div>
                           <InterviewerPanel
@@ -2490,7 +2490,7 @@ const IntroView = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-sm flex flex-col ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-card flex flex-col ${className}`}
     >
       <AnimatePresence mode="wait">
         {activeSubView === 'main' && (
@@ -2989,7 +2989,7 @@ const RunningView = ({
       </div>
 
       {/* Interviewer "video tile" — the AI is present and talking to you */}
-      <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 shadow-sm">
+      <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 shadow-card">
         <div className="relative z-10 flex items-center gap-4">
           {/* Interviewer avatar */}
           <div className="relative shrink-0">
@@ -3128,7 +3128,7 @@ const RunningView = ({
                 </div>
 
                 {/* Rating deck */}
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-center sm:text-left">
                     How did your answer feel?
                   </p>
@@ -3277,7 +3277,7 @@ const ReviewView = ({
         : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-8 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-8 shadow-card">
       <div className="relative z-10">
         <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
@@ -3573,7 +3573,7 @@ const ModeCard = ({
   const owned = TIER_RANK[userTier] >= TIER_RANK[tierKey];
   return (
     <div
-      className={`relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm flex flex-col ${
+      className={`relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-card flex flex-col ${
         accent.recommended ? 'border-t-2 border-t-indigo-600 dark:border-t-indigo-500' : ''
       }`}
     >
@@ -3703,7 +3703,7 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
   const speaking = voiceState === 'speaking';
   const loading = voiceState === 'loading';
   return (
-    <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-sm">
+    <div className="shrink-0 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-md p-4 sm:p-5 shadow-card">
       <div className="relative z-10 flex items-center gap-4">
         <div className="relative shrink-0">
           <div

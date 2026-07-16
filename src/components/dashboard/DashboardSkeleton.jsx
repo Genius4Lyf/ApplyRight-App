@@ -1,6 +1,7 @@
-// Shape-matched skeleton for Dashboard.jsx's landing layout (welcome heading,
-// three workflow cards, drafts grid). Rendered while the first drafts fetch is
-// in flight so the page never paints empty between splash-hide and data load.
+// Shape-matched skeleton for Dashboard.jsx's redesigned landing (left-aligned
+// hero + two intent pillars, each a two-card row). Rendered while the first
+// drafts fetch is in flight so the page never paints empty between splash-hide
+// and data load.
 
 const Shimmer = ({ className = '' }) => (
   <div className={`bg-slate-200/70 dark:bg-slate-700/70 rounded animate-pulse ${className}`} />
@@ -8,51 +9,40 @@ const Shimmer = ({ className = '' }) => (
 
 const DashboardSkeleton = () => (
   <div className="animate-in fade-in duration-200">
-    <div className="max-w-3xl mx-auto text-center mb-12 space-y-4 flex flex-col items-center">
-      <Shimmer className="h-6 w-44 rounded-full" />
-      <Shimmer className="h-10 w-3/4" />
-      <Shimmer className="h-5 w-2/3" />
-      <Shimmer className="h-5 w-1/2" />
+    {/* Hero — left-aligned: eyebrow → serif title → subtitle */}
+    <div className="max-w-3xl mb-12">
+      <Shimmer className="h-3 w-28" />
+      <Shimmer className="h-9 w-2/3 mt-3" />
+      <Shimmer className="h-4 w-1/2 mt-3" />
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col"
-        >
-          <Shimmer className="w-14 h-14 rounded-xl mb-6" />
-          <Shimmer className="h-7 w-1/2 mb-3" />
-          <Shimmer className="h-4 w-full mb-2" />
-          <Shimmer className="h-4 w-5/6 mb-2" />
-          <Shimmer className="h-4 w-2/3 mb-6" />
-          <Shimmer className="h-5 w-32 mt-auto" />
-        </div>
-      ))}
-    </div>
-
-    <div className="mb-16">
-      <div className="flex items-center gap-2 mb-6">
-        <Shimmer className="w-5 h-5 rounded" />
-        <Shimmer className="h-5 w-32" />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col"
-          >
-            <div className="flex justify-between items-start mb-3">
-              <Shimmer className="w-10 h-10 rounded-lg" />
-              <Shimmer className="h-4 w-16 rounded-full" />
-            </div>
-            <Shimmer className="h-5 w-3/4 mb-2" />
-            <Shimmer className="h-3 w-full mb-1" />
-            <Shimmer className="h-3 w-5/6 mb-4" />
-            <Shimmer className="h-4 w-24 mt-auto" />
+    {/* Two intent pillars */}
+    <div className="space-y-10 mb-16">
+      {[0, 1].map((p) => (
+        <section key={p}>
+          {/* Pillar eyebrow + hairline rule */}
+          <div className="flex items-center gap-3 mb-4">
+            <Shimmer className="h-3 w-24 shrink-0" />
+            <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
           </div>
-        ))}
-      </div>
+
+          {/* Card row */}
+          <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-4">
+            {[0, 1].map((c) => (
+              <div
+                key={c}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 flex flex-col"
+              >
+                <Shimmer className="w-5 h-5 mb-4" />
+                <Shimmer className="h-6 w-1/2 mb-3" />
+                <Shimmer className="h-4 w-full mb-2" />
+                <Shimmer className="h-4 w-5/6 mb-6" />
+                <Shimmer className="h-4 w-28 mt-auto" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   </div>
 );

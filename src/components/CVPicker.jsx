@@ -27,23 +27,21 @@ const CVPicker = ({
     // Chrome-less: the host wrapper supplies the card (border/background/
     // padding), matching how the "Interview Me" page frames its steps.
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-          <FileText className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
-        </div>
+      <div className="mb-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          {title}
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
 
-      <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg mb-5">
+      {/* Editorial segmented toggle — hairline track, filled active tab. */}
+      <div className="flex gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-1 mb-5">
         <button
           type="button"
           onClick={() => onCvModeChange('saved')}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
             cvMode === 'saved'
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
         >
@@ -52,9 +50,9 @@ const CVPicker = ({
         <button
           type="button"
           onClick={() => onCvModeChange('upload')}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
             cvMode === 'upload'
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
         >

@@ -35,7 +35,7 @@ const LoopBoard = ({ seats = [], rounds = [], onStart, locked = false, unlockAll
   const pct = Math.round((doneCount / valid.length) * 100);
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">

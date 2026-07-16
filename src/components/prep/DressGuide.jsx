@@ -21,7 +21,7 @@ const DressGuide = ({ application, onGenerate, generating }) => {
   const company = job.company || application?.jobCompany || '';
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-5">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
         <Shirt className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">

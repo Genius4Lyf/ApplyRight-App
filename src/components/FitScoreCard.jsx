@@ -18,7 +18,7 @@ import { BAND_TEXT, BAND_RULEBG } from '../lib/noteStyles';
 const EYEBROW =
   'font-mono uppercase text-[0.7rem] tracking-[0.18em] text-indigo-800 dark:text-indigo-300';
 const CARD =
-  'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6';
+  'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-card p-6';
 
 /**
  * Tiny inline widget to capture 👍/👎 on an AI-generated artifact.
@@ -123,8 +123,6 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
   // Curiosity-driven sections collapsed by default — they're "show me the math"
   // rather than "what should I do." Skill Gaps stays open because it IS the action.
   const [breakdownOpen, setBreakdownOpen] = useState(false);
-  const [experienceOpen, setExperienceOpen] = useState(false);
-  const [seniorityOpen, setSeniorityOpen] = useState(false);
 
   const matchedSkills = fitAnalysis?.matchedSkills || [];
   const missingSkills = fitAnalysis?.missingSkills || [];
@@ -170,7 +168,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
     <div className="w-full space-y-6">
       {/* 1. Verdict masthead */}
       <div className={CARD}>
-        <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        <div className="grid gap-6 md:grid-cols-[2fr_3fr] md:gap-10 md:items-center">
           {/* Left — the score + band rail */}
           <div>
             <p className={EYEBROW}>Fit analysis</p>
@@ -214,6 +212,105 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
                 <span className="text-right">Ready 75+</span>
               </div>
             </div>
+
+            {/* Quick-capture summary — fills the space beside a long verdict so
+                standing reads at a glance. Reuses existing derivations; each row
+                is guarded on its own data and complements the detail cards below. */}
+            <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-col gap-3">
+              {totalSkills > 0 && (
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={EYEBROW}>Skills matched</span>
+                    <span className="font-mono text-sm tabular-nums text-slate-900 dark:text-slate-100">
+                      {matchedSkills.length}
+                      <span className="text-slate-400 dark:text-slate-500">/{totalSkills}</span>
+                    </span>
+                  </div>
+
+                  {/* Segmented bar (≤10 skills) or a continuous fill (>10). */}
+                  <div className="mt-2">
+                    {totalSkills <= 10 ? (
+                      <div
+                        className="grid gap-0.5 h-2"
+                        style={{ gridTemplateColumns: `repeat(${totalSkills}, 1fr)` }}
+                      >
+                        {Array.from({ length: totalSkills }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`rounded ${
+                              i < matchedSkills.length
+                                ? 'bg-emerald-500'
+                                : 'bg-slate-200 dark:bg-slate-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-2 w-full rounded bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        <div
+                          className="h-2 rounded bg-emerald-500"
+                          style={{ width: `${(matchedSkills.length / totalSkills) * 100}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* "You have" — the matched skills, capped. */}
+                  {matchedSkills.length > 0 && (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">
+                        ✓ You have
+                      </span>
+                      {matchedSkills.slice(0, 3).map((skill, idx) => (
+                        <span
+                          key={`have-${idx}`}
+                          className="inline-flex items-center rounded-full border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-300"
+                        >
+                          {skill.name}
+                        </span>
+                      ))}
+                      {matchedSkills.length > 3 && (
+                        <span className="font-mono text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                          +{matchedSkills.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {(hasYears || expAnalysis.match != null) && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className={EYEBROW}>Experience</span>
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm tabular-nums text-slate-600 dark:text-slate-300 truncate">
+                      {hasYears
+                        ? `${expAnalysis.candidateYears ?? '?'} yrs · needs ${expAnalysis.requiredYears ?? '?'}`
+                        : expAnalysis.match
+                          ? 'Meets'
+                          : 'Below preferred'}
+                    </span>
+                    <StatPill
+                      ok={!!expAnalysis.match}
+                      meetLabel="Meets"
+                      missLabel="Below preferred"
+                    />
+                  </span>
+                </div>
+              )}
+              {(senAnalysis.candidateLevel ||
+                senAnalysis.requiredLevel ||
+                senAnalysis.match != null) && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className={EYEBROW}>Seniority</span>
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-slate-600 dark:text-slate-300 truncate">
+                      {levelLabel(senAnalysis.candidateLevel) || 'Level varies'}
+                    </span>
+                    <StatPill ok={!!senAnalysis.match} meetLabel="Aligned" missLabel="Mixed" />
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right — the verdict */}
@@ -234,42 +331,6 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
           </div>
         </div>
       </div>
-
-      {/* 2. What stood out — verbatim quotes pulled from the resume. Only renders
-          when the AI found real, validated quotes. */}
-      {Array.isArray(fitAnalysis?.evidence) && fitAnalysis.evidence.length > 0 && (
-        <section className={CARD}>
-          <p className={EYEBROW}>Read from your résumé</p>
-          <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-            What stood out
-          </h3>
-          <ul className="mt-5 divide-y divide-slate-100 dark:divide-slate-800">
-            {fitAnalysis.evidence.map((e, idx) => (
-              <li key={idx} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                <span className="shrink-0 pt-1 font-mono text-xs tabular-nums text-slate-400 dark:text-slate-500">
-                  {String(idx + 1).padStart(2, '0')}
-                </span>
-                <div className="min-w-0">
-                  <p className="font-heading italic text-slate-900 dark:text-slate-100">
-                    “{e.quote}”
-                  </p>
-                  {e.issue && (
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                      {e.issue}
-                    </p>
-                  )}
-                  {e.fix && (
-                    <p className="mt-1.5 flex items-start gap-1.5 text-sm text-indigo-700 dark:text-indigo-300">
-                      <Wrench className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                      <span>{e.fix}</span>
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* 3. Where you're short — the skill gaps, severity-ordered. */}
       <section className={CARD}>
@@ -373,6 +434,42 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
         )}
       </section>
 
+      {/* 2. What stood out — verbatim quotes pulled from the resume. Only renders
+          when the AI found real, validated quotes. */}
+      {Array.isArray(fitAnalysis?.evidence) && fitAnalysis.evidence.length > 0 && (
+        <section className={CARD}>
+          <p className={EYEBROW}>Read from your résumé</p>
+          <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+            What stood out
+          </h3>
+          <ul className="mt-5 divide-y divide-slate-100 dark:divide-slate-800">
+            {fitAnalysis.evidence.map((e, idx) => (
+              <li key={idx} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                <span className="shrink-0 pt-1 font-mono text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-heading italic text-slate-900 dark:text-slate-100">
+                    “{e.quote}”
+                  </p>
+                  {e.issue && (
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      {e.issue}
+                    </p>
+                  )}
+                  {e.fix && (
+                    <p className="mt-1.5 flex items-start gap-1.5 text-sm text-indigo-700 dark:text-indigo-300">
+                      <Wrench className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{e.fix}</span>
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* 4. Score breakdown — collapsible, with the fixed-weights tooltip. */}
       {breakdown.skillsScore != null &&
         (() => {
@@ -384,7 +481,7 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
             { label: 'Profile Strength', score: breakdown.overallScore, weight: '10%' },
           ].filter(({ score }) => score != null);
           return (
-            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-card overflow-hidden">
               <button
                 type="button"
                 onClick={() => setBreakdownOpen((v) => !v)}
@@ -477,84 +574,6 @@ const FitScoreCard = ({ fitScore, fitAnalysis, actionPlan, optimizedFitScore, ap
             </section>
           );
         })()}
-
-      {/* 5. Experience + Seniority — flat stat rows. Click a row to reveal the
-          feedback sentence. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Experience */}
-        <div className={CARD}>
-          <button
-            type="button"
-            onClick={() => setExperienceOpen((v) => !v)}
-            className="w-full flex items-start justify-between gap-3 text-left"
-            aria-expanded={experienceOpen}
-          >
-            <div className="min-w-0">
-              <p className={EYEBROW}>Experience</p>
-              <p className="mt-1.5 text-sm tabular-nums text-slate-700 dark:text-slate-300">
-                {hasYears
-                  ? `${expAnalysis.candidateYears ?? '?'} yrs · needs ${expAnalysis.requiredYears ?? '?'}`
-                  : expAnalysis.match
-                    ? 'Meets requirements'
-                    : 'Below preferred'}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <StatPill ok={!!expAnalysis.match} meetLabel="Meets" missLabel="Below preferred" />
-              <Motion.div
-                animate={{ rotate: experienceOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-slate-400 dark:text-slate-500"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </Motion.div>
-            </div>
-          </button>
-          {experienceOpen && (
-            <p className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              {expAnalysis.feedback ||
-                (expAnalysis.match ? 'Meets requirements' : 'Less than preferred')}
-            </p>
-          )}
-        </div>
-
-        {/* Seniority */}
-        <div className={CARD}>
-          <button
-            type="button"
-            onClick={() => setSeniorityOpen((v) => !v)}
-            className="w-full flex items-start justify-between gap-3 text-left"
-            aria-expanded={seniorityOpen}
-          >
-            <div className="min-w-0">
-              <p className={EYEBROW}>Seniority</p>
-              <p className="mt-1.5 text-sm text-slate-700 dark:text-slate-300">
-                {senAnalysis.candidateLevel || senAnalysis.requiredLevel
-                  ? `${levelLabel(senAnalysis.candidateLevel)} · needs ${levelLabel(senAnalysis.requiredLevel)}`
-                  : senAnalysis.match
-                    ? 'Aligned with role'
-                    : 'Role may vary'}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <StatPill ok={!!senAnalysis.match} meetLabel="Aligned" missLabel="Mixed" />
-              <Motion.div
-                animate={{ rotate: seniorityOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-slate-400 dark:text-slate-500"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </Motion.div>
-            </div>
-          </button>
-          {seniorityOpen && (
-            <p className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              {senAnalysis.feedback ||
-                (senAnalysis.match ? 'Aligned with role' : 'Role may vary from level')}
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* 6. What to fix next — the internal action plan. */}
       {actionPlan && actionPlan.length > 0 && (

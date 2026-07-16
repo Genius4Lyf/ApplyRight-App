@@ -104,7 +104,7 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
 
   if (rows.length === 0) {
     return (
-      <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
+      <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
         {/* Top-accent gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
 
@@ -150,7 +150,7 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
   const nervesEasing = trend?.trend === 'up' && count >= 2;
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
+    <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
       {/* Top-accent gradient line */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
 

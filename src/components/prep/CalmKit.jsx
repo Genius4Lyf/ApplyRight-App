@@ -116,7 +116,7 @@ const CalmKit = () => {
   return (
     <div className="space-y-4">
       {/* Breathing */}
-      <section className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <Wind className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
@@ -164,7 +164,7 @@ const CalmKit = () => {
       </div>
 
       {/* Night-before checklist */}
-      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card p-5">
         <div className="flex items-center gap-2 mb-1">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">The night before</h3>

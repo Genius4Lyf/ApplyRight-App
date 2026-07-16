@@ -22,9 +22,12 @@
     'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-heading: Merriweather, Georgia, 'Times New Roman', serif;
 
-  /* Softer, hairline-style shadows so cards read as paper, not panels. */
+  /* Softer, hairline-style shadows so cards read as paper, not panels.
+     shadow-card is a single light-tuned neutral drop shadow: it lifts cards off
+     the warm light ground and is effectively invisible on the dark ground (where
+     the lighter card surface + hairline handle separation) — no dark: variant. */
   --shadow-clean: 0 1px 2px 0 rgb(15 23 42 / 0.04);
-  --shadow-card: 0 4px 12px -4px rgb(15 23 42 / 0.08), 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-card: 0 1px 2px rgba(20, 24, 40, 0.04), 0 2px 6px rgba(20, 24, 40, 0.06);
 
   --animate-fade-in-up: fadeInUp 0.5s ease-out;
   --animate-marquee: marquee 30s linear infinite;
@@ -98,18 +101,6 @@
   --color-slate-950: #070c17;  /* deepest wells */
   --color-slate-900: #0a101e;  /* app canvas / page ground */
   --color-slate-800: #0f1a2e;  /* raised surfaces: cards, panels, bars */
-}
-
-/* App background texture — faint 45° hairlines (replaces the dot matrix). */
-.app-texture {
-  background-image: repeating-linear-gradient(
-    45deg, transparent, transparent 9px,
-    rgba(100, 116, 139, 0.03) 9px, rgba(100, 116, 139, 0.03) 10px);
-}
-.dark .app-texture {
-  background-image: repeating-linear-gradient(
-    45deg, transparent, transparent 9px,
-    rgba(148, 163, 184, 0.03) 9px, rgba(148, 163, 184, 0.03) 10px);
 }
 
 /* Base Variable Definitions */

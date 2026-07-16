@@ -28,10 +28,9 @@ import {
   Mail,
   MessageSquare,
   Mic,
-  Crown,
   RefreshCw,
-  Link2,
   Layers,
+  ArrowRight,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
@@ -42,8 +41,8 @@ import { CREDIT_COSTS } from '../lib/credits';
 import { isMobile } from '../utils/platform';
 import { signalReady } from '../utils/splash';
 import FitScoreCard from '../components/FitScoreCard';
+import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import NextBestAction from '../components/NextBestAction';
-import JobRequirementsCard from '../components/JobRequirementsCard';
 import DashboardTour from '../components/dashboard/DashboardTour';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import {
@@ -636,41 +635,37 @@ const Dashboard = () => {
             user picks a workflow we hide it so the upload/job inputs aren't
             pushed below the fold by ~180px of intro copy. */}
         {!workflowMode && !initialLoading && (
-          <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
-              Tailored for your career
-            </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          <div className="max-w-3xl mx-auto mb-12">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              Your workspace
+            </p>
+            <h1 className="mt-2 font-heading text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {getStatusMessage()}
-            </h2>
-            <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            </h1>
+            <p className="mt-3 text-lg text-slate-500 dark:text-slate-400 leading-relaxed">
               {getRecommendedAction()}
             </p>
           </div>
         )}
 
-        {/* Workflow Selection Cards
-            "ApplyRight" is always surfaced as the recommended path so the badge
-            is consistent across web and the Android/Capacitor build (it no longer
-            shifts based on draft count, which made the two platforms look out of
-            sync). The non-recommended card stays equally accessible; we're
-            removing paralysis, not removing choice. */}
-        {!workflowMode &&
-          !initialLoading &&
-          (() => {
-            const recommendedWorkflow = 'apply';
-            const RecommendedBadge = () => (
-              <span className="absolute top-4 right-4 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                <Sparkles className="w-3 h-3" />
-                Recommended
-              </span>
-            );
-            const applyIsRecommended = recommendedWorkflow === 'apply';
-            const createIsRecommended = recommendedWorkflow === 'create';
+        {/* Two intent pillars — "Your application" (tailor / build) and
+            "Interview practice" (live mock). Flat editorial cards; the flagship
+            Tailor card carries a single indigo top-accent + "Recommended" chip.
+            Consistent across web and the Android/Capacitor build — we're removing
+            paralysis, not removing choice. */}
+        {!workflowMode && !initialLoading && (
+          <div className="space-y-10 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Pillar A — Your application */}
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
+                  Your application
+                </p>
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              </div>
 
-            return (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Option 1: ApplyRight */}
+              <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-4">
+                {/* Tailor my CV — the flagship */}
                 <div
                   onClick={() => {
                     setResume(null);
@@ -693,31 +688,33 @@ const Dashboard = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Start ApplyRight workflow"
-                  className={`bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
-                    applyIsRecommended
-                      ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
-                      : 'border border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-500/30'
-                  }`}
+                  aria-label="Tailor my CV to a job"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 border-t-2 border-t-indigo-600 dark:border-t-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
-                  {applyIsRecommended && <RecommendedBadge />}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 dark:bg-emerald-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                    <UploadIcon className="w-7 h-7" />
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                    <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
+                      Recommended
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
-                    ApplyRight
+                  <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                    Tailor my CV to a job
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
-                    Run a check on your target job to see if you are qualified. We will analyze the
-                    requirements and tailor your CV to perfectly match the role.
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
+                    Check whether you&rsquo;re qualified for a role, then auto-tailor your CV to
+                    match what it asks for.
                   </p>
-                  <div className="flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
-                    Check your CV <ChevronRight className="w-5 h-5 ml-1" />
+                  <div className="mt-auto flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
+                      Check your CV <ArrowRight className="w-4 h-4" />
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      Powered by ApplyRight
+                    </span>
                   </div>
                 </div>
 
-                {/* Option 2: Create New */}
+                {/* Build a new CV */}
                 <div
                   onClick={() => setShowCreateOptions(true)}
                   onKeyDown={(e) => {
@@ -728,32 +725,35 @@ const Dashboard = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Create a new CV"
-                  className={`bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
-                    createIsRecommended
-                      ? 'border-2 border-indigo-300 dark:border-indigo-500/30 ring-2 ring-indigo-100 dark:ring-indigo-500/20 hover:border-indigo-400 dark:hover:border-indigo-500/50'
-                      : 'border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30'
-                  }`}
+                  aria-label="Build a new CV"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
-                  {createIsRecommended && <RecommendedBadge />}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                  <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                    <PenTool className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
-                    Create a new CV
+                  <PenTool className="w-5 h-5 text-slate-400 dark:text-slate-500 mb-4" />
+                  <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                    Build a new CV
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
-                    Build a professional resume. Start from scratch or upload an existing CV to let
-                    our AI do the heavy lifting.
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
+                    Start from scratch with a guided wizard, or upload an existing CV and let AI do
+                    the heavy lifting.
                   </p>
-                  <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
-                    Start Builder <ChevronRight className="w-5 h-5 ml-1" />
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    Start builder <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
+              </div>
+            </section>
 
-                {/* Option 3: Interview Me — standalone, paid-only direct
-                    interview that skips the full ApplyRight analysis. */}
+            {/* Pillar B — Interview practice */}
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
+                  Interview practice
+                </p>
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-4">
+                {/* Interview me — standalone live mock */}
                 <div
                   onClick={() => navigate('/interview/start')}
                   onKeyDown={(e) => {
@@ -765,30 +765,37 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label="Start a direct interview"
-                  className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 border border-slate-200 dark:border-slate-700 hover:border-amber-200 dark:hover:border-amber-500/30"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
-                  <span className="absolute top-4 right-4 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                    <Crown className="w-3 h-3" />
-                    Pro
-                  </span>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-500/15 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform"></div>
-                  <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/15 text-amber-600 rounded-xl flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-300">
-                    <Mic className="w-7 h-7" />
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <Mic className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                    <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
+                      Pro
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 relative z-10">
-                    Interview Me
+                  <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                    Interview me
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 relative z-10 flex-1">
-                    Just want to practice? Skip the analysis and jump straight into a live mock
-                    interview against any job description.
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
+                    Skip the analysis and jump straight into a live, spoken mock interview against
+                    any job description.
                   </p>
-                  <div className="flex items-center text-amber-600 font-semibold group-hover:translate-x-2 transition-transform mt-auto">
-                    Start interview <ChevronRight className="w-5 h-5 ml-1" />
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    Start interview <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
+
+                {/* Quiet companion note — not a button */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-6 flex flex-col justify-center">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Or prep first — every tailored application comes with a full interview-prep
+                    desk: questions, stories, and the live mock.
+                  </p>
+                </div>
               </div>
-            );
-          })()}
+            </section>
+          </div>
+        )}
 
         {/* Create Options Modal */}
         {showCreateOptions && (
@@ -898,30 +905,25 @@ const Dashboard = () => {
             </button>
             {!fitResult && (
               <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      ApplyRight
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400">
-                      Check your CV against a job — we'll score the fit and tailor it to match.
-                    </p>
-                  </div>
-                </div>
-                <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-                  <Zap className="w-3.5 h-3.5" />
-                  {user.credits || 0} AI credits remaining
-                </div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  Powered by ApplyRight
+                </p>
+                <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  Tailor my CV to a job
+                </h1>
+                <p className="mt-1 text-slate-500 dark:text-slate-400">
+                  Check your CV against a job — we'll score the fit and tailor it to match.
+                </p>
+                <span className="inline-flex items-center mt-3 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                  {user.credits || 0} credits
+                </span>
               </div>
             )}
             {!fitResult ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 {/* Step 1 — choose CV. Card chrome lives on the section
                     (matching the Interview Me page); CVPicker is chrome-less. */}
-                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
+                <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
                   <CVPicker
                     cvMode={cvMode}
                     onCvModeChange={setCvMode}
@@ -936,19 +938,14 @@ const Dashboard = () => {
 
                 {/* Step 2 — job listing. Header supplied here so JobLinkInput
                     runs embedded (no duplicate chrome), same as Interview Me. */}
-                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                      <Link2 className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                        Step 2 · Job listing
-                      </h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Provide the job details for analysis
-                      </p>
-                    </div>
+                <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
+                  <div className="mb-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      Step 2 · Job listing
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Provide the job details for analysis
+                    </p>
                   </div>
                   <div className="flex-1 min-h-0">
                     <JobLinkInput key={jobInputKey} embedded onJobExtracted={setJob} />
@@ -958,7 +955,7 @@ const Dashboard = () => {
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                 {(resume || selectedDraft) && (
-                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
@@ -986,7 +983,7 @@ const Dashboard = () => {
                   </div>
                 )}
                 {job && (
-                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex items-center gap-3">
+                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0">
                       <Briefcase className="w-5 h-5" />
                     </div>
@@ -1200,7 +1197,7 @@ const Dashboard = () => {
             </div>
 
             {analyzing ? (
-              <div className="w-full h-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center p-8">
+              <div className="w-full h-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card flex flex-col items-center justify-center p-8">
                 <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">
                   Analyzing your profile against role requirements...
@@ -1208,6 +1205,16 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Understanding before action: the verdict leads, requirement
+                    detail supports, then the generation/next-step card sits just
+                    above the toolkit. */}
+                <FitScoreCard
+                  fitScore={fitResult.fitScore}
+                  fitAnalysis={fitResult.fitAnalysis}
+                  actionPlan={fitResult.actionPlan}
+                  optimizedFitScore={application?.fitScoreAfter ?? application?.optimizedFitScore}
+                  applicationId={application?.applicationId}
+                />
                 <NextBestAction
                   fitScore={fitResult.fitScore}
                   fitAnalysis={fitResult.fitAnalysis}
@@ -1242,18 +1249,6 @@ const Dashboard = () => {
                   }}
                   showDefaultCta={false}
                 />
-                <JobRequirementsCard
-                  fitAnalysis={fitResult.fitAnalysis}
-                  jobTitle={job?.title}
-                  jobCompany={job?.company}
-                />
-                <FitScoreCard
-                  fitScore={fitResult.fitScore}
-                  fitAnalysis={fitResult.fitAnalysis}
-                  actionPlan={fitResult.actionPlan}
-                  optimizedFitScore={application?.fitScoreAfter ?? application?.optimizedFitScore}
-                  applicationId={application?.applicationId}
-                />
               </div>
             )}
           </div>
@@ -1261,199 +1256,183 @@ const Dashboard = () => {
 
         {/* Asset Generation Section */}
         {fitResult && application?.applicationId && (
-          <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            <div className="mb-5">
-              <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
-                Ready to use · now that you&apos;ve read the analysis
-              </p>
-              <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                My CV toolkit
-              </h2>
-            </div>
-
-            {/* Discounted bundle — a subtle one-tap shortcut, only offered before
-                anything has been generated. */}
-            {!application.optimizedCV &&
-              !application.coverLetter &&
-              !hasInterviewPrep(application) && (
-                <div className="mb-4">
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE}>
-                    <button
-                      type="button"
-                      onClick={handleGenerateBundle}
-                      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors text-left"
-                    >
-                      <span className="flex items-center gap-3 min-w-0">
-                        <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
-                            Generate the full kit
-                          </span>
-                          <span className="block text-xs text-slate-500 dark:text-slate-400">
-                            CV, cover letter &amp; interview prep in one go
-                          </span>
+          <div className="mb-16 pb-24 md:pb-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
+              {/* Header — eyebrow + title, with the bundle as a right action. */}
+              <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+                <div className="min-w-0">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                    Ready to use · now that you&apos;ve read the analysis
+                  </p>
+                  <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                    My CV toolkit
+                  </h2>
+                </div>
+                {!application.optimizedCV &&
+                  !application.coverLetter &&
+                  !hasInterviewPrep(application) && (
+                    <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE} className="shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleGenerateBundle}
+                        className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                      >
+                        <Layers className="w-4 h-4 text-slate-400" /> Full kit
+                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                          {CREDIT_COSTS.GENERATE_BUNDLE} cr · save 2
                         </span>
-                      </span>
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
-                        18 cr{' '}
-                        <span className="text-emerald-600 dark:text-emerald-400">(save 2)</span>
-                      </span>
-                    </button>
-                  </CreditGate>
-                </div>
-              )}
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Optimized CV — flat hairline card */}
-              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Optimized CV
-                  </h4>
-                  {application.optimizedCV && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                    </span>
+                      </button>
+                    </CreditGate>
                   )}
+              </div>
+
+              {/* Optimized CV */}
+              <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                  <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Optimized CV
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Tailored to this role
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {application.optimizedCV ? (
+                      <>
+                        <ReadyChip />
+                        <GhostButton
+                          onClick={() =>
+                            navigate(
+                              `/resume/${application.draftId || application.applicationId}?tab=resume`
+                            )
+                          }
+                        >
+                          View &amp; download
+                        </GhostButton>
+                      </>
+                    ) : (
+                      <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                        <InkButton
+                          onClick={handleGenerateCV}
+                          generating={generatingCV}
+                          disabled={generatingCV}
+                          cost={CREDIT_COSTS.GENERATE_CV}
+                        />
+                      </CreditGate>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
-                  AI rewrites your resume with role-specific keywords, achievement-oriented bullets,
-                  and clean formatting.
-                </p>
-                {application.optimizedCV ? (
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/resume/${application.draftId || application.applicationId}?tab=resume`
-                      )
-                    }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                  >
-                    <Eye className="w-4 h-4" /> View CV
-                  </button>
-                ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_CV} layout="card">
-                    <button
-                      onClick={handleGenerateCV}
-                      disabled={generatingCV}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
-                        generatingCV
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                      }`}
-                    >
-                      {generatingCV ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Generating…
-                        </>
-                      ) : (
-                        'Generate · 10 credits'
+                {/* Live pipeline progress — kept under the row. */}
+                {generatingCV && cvGenStatus && (
+                  <div className="mt-2.5">
+                    <div className="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.1em] tabular-nums text-slate-500 dark:text-slate-400">
+                      <span className="truncate">
+                        {cvGenStatus.stageMessage || cvGenStatus.stage}
+                      </span>
+                      {typeof cvGenStatus.progress === 'number' && (
+                        <span>{cvGenStatus.progress}%</span>
                       )}
-                    </button>
-                  </CreditGate>
+                    </div>
+                    <div className="mt-1 h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-1 rounded-full bg-indigo-500 transition-all"
+                        style={{ width: `${cvGenStatus.progress || 0}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Cover Letter — flat hairline card */}
-              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Cover Letter
-                  </h4>
-                  {application.coverLetter && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                    </span>
-                  )}
+              {/* Cover letter */}
+              <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Cover letter
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Matched to the job description
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {application.coverLetter ? (
+                      <>
+                        <ReadyChip />
+                        <GhostButton
+                          onClick={() =>
+                            navigate(`/resume/${application.applicationId}?tab=cover-letter`)
+                          }
+                        >
+                          View &amp; download
+                        </GhostButton>
+                      </>
+                    ) : (
+                      <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER}>
+                        <InkButton
+                          onClick={handleGenerateCoverLetter}
+                          generating={generatingCL}
+                          disabled={generatingCL}
+                          cost={CREDIT_COSTS.GENERATE_COVER_LETTER}
+                        />
+                      </CreditGate>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
-                  A personalized cover letter connecting your experience to the job requirements.
-                </p>
-                {application.coverLetter ? (
-                  <button
-                    onClick={() =>
-                      navigate(`/resume/${application.applicationId}?tab=cover-letter`)
-                    }
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                  >
-                    <Eye className="w-4 h-4" /> View Cover Letter
-                  </button>
-                ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER} layout="card">
-                    <button
-                      onClick={handleGenerateCoverLetter}
-                      disabled={generatingCL}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
-                        generatingCL
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                      }`}
-                    >
-                      {generatingCL ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Generating…
-                        </>
-                      ) : (
-                        'Generate · 5 credits'
-                      )}
-                    </button>
-                  </CreditGate>
+                {/* Fact-check warnings — flat amber-accented note. */}
+                {application.coverLetter && application.coverLetterWarnings?.length > 0 && (
+                  <div className="mt-3 border-l-2 border-amber-500 pl-3">
+                    <div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400 mb-1">
+                      Verify before sending
+                    </div>
+                    <ul className="space-y-0.5 list-disc pl-3 text-[11px] text-slate-600 dark:text-slate-300">
+                      {application.coverLetterWarnings.slice(0, 5).map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
 
-              {/* Interview Prep — flat hairline card */}
-              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Interview Prep
-                  </h4>
-                  {hasInterviewPrep(application) && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                    </span>
-                  )}
+              {/* Interview prep */}
+              <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                  <MessageSquare className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Interview prep
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Likely questions + suggested answers
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasInterviewPrep(application) ? (
+                      <>
+                        <ReadyChip />
+                        <GhostButton
+                          onClick={() => {
+                            const prepId = getPrepId(application);
+                            if (prepId) navigate(`/interview-prep/${prepId}`);
+                          }}
+                        >
+                          View
+                        </GhostButton>
+                      </>
+                    ) : (
+                      <CreditGate cost={CREDIT_COSTS.GENERATE_INTERVIEW}>
+                        <InkButton
+                          onClick={handleGenerateInterview}
+                          generating={generatingInterview}
+                          disabled={generatingInterview}
+                          cost={CREDIT_COSTS.GENERATE_INTERVIEW}
+                        />
+                      </CreditGate>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex-1 leading-relaxed">
-                  Role-specific interview questions to practice, plus smart questions to ask the
-                  interviewer.
-                </p>
-                {hasInterviewPrep(application) ? (
-                  <button
-                    onClick={() => {
-                      const prepId = getPrepId(application);
-                      if (prepId) navigate(`/interview-prep/${prepId}`);
-                    }}
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                  >
-                    <Eye className="w-4 h-4" /> View Interview Prep
-                  </button>
-                ) : (
-                  <CreditGate cost={CREDIT_COSTS.GENERATE_INTERVIEW} layout="card">
-                    <button
-                      onClick={handleGenerateInterview}
-                      disabled={generatingInterview}
-                      className={`w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
-                        generatingInterview
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                      }`}
-                    >
-                      {generatingInterview ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Generating…
-                        </>
-                      ) : (
-                        'Generate · 10 credits'
-                      )}
-                    </button>
-                  </CreditGate>
-                )}
               </div>
             </div>
           </div>
@@ -1620,6 +1599,55 @@ const Dashboard = () => {
                 {!cvChosen || !job ? 'Complete both steps to continue' : 'Analyze Fit'}
               </button>
             </CreditGate>
+          </div>
+        )}
+
+        {/* Mobile sticky next-step CTA — surfaces the single primary action for
+            the results state so users don't have to scroll to the toolkit. Same
+            fixed/Capacitor-offset pattern as the setup analyze bar above. Desktop
+            keeps the toolkit buttons as the action. */}
+        {fitResult && !analyzing && application?.applicationId && (
+          <div
+            className="md:hidden fixed left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            style={
+              isMobile() ? { bottom: 'calc(4rem + env(safe-area-inset-bottom))' } : { bottom: 0 }
+            }
+          >
+            {!application.optimizedCV ? (
+              <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                <button
+                  onClick={handleGenerateCV}
+                  disabled={generatingCV}
+                  className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
+                    generatingCV
+                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                      : 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                  }`}
+                >
+                  {generatingCV ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Generate tailored CV · {CREDIT_COSTS.GENERATE_CV} credits
+                    </>
+                  )}
+                </button>
+              </CreditGate>
+            ) : (
+              <button
+                onClick={() =>
+                  navigate(`/resume/${application?.draftId || application?.applicationId}`)
+                }
+                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]"
+              >
+                View your CV
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
 

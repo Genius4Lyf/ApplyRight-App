@@ -72,15 +72,6 @@ const ForgotPassword = () => {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden"
     >
-      {/* Subtle Geometric Pattern */}
-      <div
-        className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(#4F46E5 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      ></div>
-
       <div className="relative z-10 w-full max-w-md">
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">

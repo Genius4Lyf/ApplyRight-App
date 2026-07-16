@@ -70,7 +70,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
   })();
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 sm:p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 sm:p-5 shadow-card">
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"

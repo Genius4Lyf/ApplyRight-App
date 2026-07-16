@@ -41,7 +41,7 @@ const ReviewCard = ({ round }) => {
   const when = round.completedAt ? new Date(round.completedAt).toLocaleDateString() : '';
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

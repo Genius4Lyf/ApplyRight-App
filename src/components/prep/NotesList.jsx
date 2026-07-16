@@ -28,7 +28,7 @@ const formatTimestamp = (value) => {
 // Read-only view of a saved note — what you land on when reopening one, with an
 // Edit button to drop into the editor.
 const NoteView = ({ note, onEdit, onClose, onDelete }) => (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-sm">
+  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-card">
     <div className="flex items-start justify-between gap-3">
       <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 min-w-0">
         {deriveTitle(note)}

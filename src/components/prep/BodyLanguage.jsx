@@ -37,7 +37,7 @@ const TIPS = [
 ];
 
 const BodyLanguage = () => (
-  <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+  <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card p-5">
     <div className="flex items-center gap-2 mb-1">
       <Smile className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">

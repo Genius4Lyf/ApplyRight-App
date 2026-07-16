@@ -645,7 +645,7 @@ const InterviewPrepDetail = () => {
               Stacks above the content on mobile. */}
           <aside className="lg:sticky lg:top-4 flex flex-col gap-4">
             {/* Card A — Start + roster (the crown-jewel primary action) */}
-            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 Mock interview
               </p>
@@ -736,7 +736,7 @@ const InterviewPrepDetail = () => {
             </section>
 
             {/* Card B — Readiness (repurposed ReadinessOverview / checklist) */}
-            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                   Readiness
@@ -1040,7 +1040,7 @@ const InterviewPrepDetail = () => {
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+                  <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
                     <NotesList
                       applicationId={applicationId}
                       initialNotes={notes}
@@ -1235,7 +1235,7 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 };
 
 const SkillCard = ({ skill, onPractice }) => (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-4">
     <div className="flex items-start gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -1331,7 +1331,7 @@ const QuestionListItem = ({
         : 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30';
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-card overflow-hidden">
       {/* Header Row */}
       <button
         type="button"
@@ -1559,7 +1559,7 @@ const EssentialsSection = ({
   if (visible.length === 0) return null;
 
   return (
-    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
       <SectionHeader
         eyebrow="Essentials"
         title="Interview essentials"
@@ -1658,7 +1658,7 @@ const QuestionsTab = ({
       )}
 
       {jobQuestions.length > 0 && (
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
               eyebrow="Questions"
@@ -1793,7 +1793,7 @@ const QuestionsTab = ({
       )}
 
       {questionsToAsk.length > 0 && (
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
           <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
             <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
             Questions to ask the interviewer

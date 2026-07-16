@@ -203,11 +203,8 @@ const RootLayout = () => {
     <SessionManager>
       <TopProgressBar />
 
-      {/* Global Educative / AI-themed Background */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none bg-slate-50 dark:bg-slate-950">
-        {/* Faint 45° hairline texture */}
-        <div className="absolute inset-0 app-texture"></div>
-      </div>
+      {/* Global solid ground — warm off-white in light, deep navy in dark. */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-[#f6f6f3] dark:bg-slate-950"></div>
 
       <div
         className={`relative z-0 ${showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}`}

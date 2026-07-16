@@ -57,17 +57,13 @@ const SORT_OPTIONS = [
 ];
 
 import FitScoreCard from '../components/FitScoreCard';
-import JobRequirementsCard from '../components/JobRequirementsCard';
+import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import JobPostingDrawer from '../components/JobPostingDrawer';
-import {
-  getPrepSummary,
-  hasInterviewPrep,
-  mergeInterviewPrepResponse,
-} from '../utils/interviewPrep';
+import { hasInterviewPrep, mergeInterviewPrepResponse } from '../utils/interviewPrep';
 import { toast } from 'sonner';
 import CardDeck from '../components/ui/CardDeck';
 import ViewToggle from '../components/ui/ViewToggle';
@@ -1032,11 +1028,6 @@ const JobHistory = () => {
               <div className="space-y-8 sm:space-y-10">
                 {selectedApp.fitAnalysis && (
                   <section className="space-y-5 sm:space-y-6">
-                    <JobRequirementsCard
-                      fitAnalysis={selectedApp.fitAnalysis}
-                      jobTitle={selectedApp.jobTitle}
-                      jobCompany={selectedApp.jobCompany}
-                    />
                     <div id="analysis" className="scroll-mt-24">
                       <FitScoreCard
                         fitScore={selectedApp.fitScore}
@@ -1049,95 +1040,75 @@ const JobHistory = () => {
                   </section>
                 )}
 
-                {/* My CV toolkit — the ready-to-use assets. */}
-                <section id="toolkit" className="scroll-mt-24 space-y-4 sm:space-y-5">
-                  <div>
-                    <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
-                      Ready to use · now that you&apos;ve read the analysis
-                    </p>
-                    <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                      My CV toolkit
-                    </h2>
-                  </div>
-
-                  {/* Discounted bundle — a subtle one-tap shortcut, only offered
-                          before anything has been generated. */}
-                  {!selectedApp.optimizedCV &&
-                    !selectedApp.draftCVId &&
-                    !selectedApp.coverLetter &&
-                    !hasInterviewPrep(selectedApp) && (
-                      <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE}>
-                        <button
-                          type="button"
-                          onClick={handleGenerateBundle}
-                          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors text-left"
-                        >
-                          <span className="flex items-center gap-3 min-w-0">
-                            <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                            <span className="min-w-0">
-                              <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Generate the full kit
-                              </span>
-                              <span className="block text-xs text-slate-500 dark:text-slate-400">
-                                CV, cover letter &amp; interview prep in one go
-                              </span>
-                            </span>
-                          </span>
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
-                            18 cr{' '}
-                            <span className="text-emerald-600 dark:text-emerald-400">(save 2)</span>
-                          </span>
-                        </button>
-                      </CreditGate>
-                    )}
-
-                  {/* CV + Cover Letter — flat hairline cards. */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* CV Card */}
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                      <div className="flex items-center gap-2 mb-3">
-                        <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                          Optimized CV
-                        </span>
-                        {(selectedApp.optimizedCV || selectedApp.draftCVId) && (
-                          <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                          </span>
-                        )}
+                {/* My CV toolkit — the ready-to-use assets, one card of rows. */}
+                <section id="toolkit" className="scroll-mt-24">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
+                    {/* Header — eyebrow + title, with the bundle as a right action. */}
+                    <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+                      <div className="min-w-0">
+                        <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                          Ready to use · now that you&apos;ve read the analysis
+                        </p>
+                        <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
+                          My CV toolkit
+                        </h2>
                       </div>
-                      {selectedApp.optimizedCV || selectedApp.draftCVId ? (
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
-                            )
-                          }
-                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> View &amp; Download
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleGenerateCV}
-                          disabled={generatingCV}
-                          className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                            generatingCV
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          }`}
-                        >
-                          {generatingCV ? (
+                      {!selectedApp.optimizedCV &&
+                        !selectedApp.draftCVId &&
+                        !selectedApp.coverLetter &&
+                        !hasInterviewPrep(selectedApp) && (
+                          <CreditGate cost={CREDIT_COSTS.GENERATE_BUNDLE} className="shrink-0">
+                            <button
+                              type="button"
+                              onClick={handleGenerateBundle}
+                              className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                            >
+                              <Layers className="w-4 h-4 text-slate-400" /> Full kit
+                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                                {CREDIT_COSTS.GENERATE_BUNDLE} cr · save 2
+                              </span>
+                            </button>
+                          </CreditGate>
+                        )}
+                    </div>
+
+                    {/* Optimized CV */}
+                    <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                        <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            Optimized CV
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Tailored to this role
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {selectedApp.optimizedCV || selectedApp.draftCVId ? (
                             <>
-                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
-                              Generating…
+                              <ReadyChip />
+                              <GhostButton
+                                onClick={() =>
+                                  navigate(
+                                    `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=resume`
+                                  )
+                                }
+                              >
+                                View &amp; download
+                              </GhostButton>
                             </>
                           ) : (
-                            'Generate · 10 credits'
+                            <InkButton
+                              onClick={handleGenerateCV}
+                              generating={generatingCV}
+                              disabled={generatingCV}
+                              cost={CREDIT_COSTS.GENERATE_CV}
+                            />
                           )}
-                        </button>
-                      )}
-                      {/* Optional live progress — keeps the rich pipeline feedback. */}
+                        </div>
+                      </div>
+                      {/* Live pipeline progress — kept under the row. */}
                       {generatingCV && cvGenStatus && (
                         <div className="mt-2.5">
                           <div className="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.1em] tabular-nums text-slate-500 dark:text-slate-400">
@@ -1158,51 +1129,43 @@ const JobHistory = () => {
                       )}
                     </div>
 
-                    {/* Cover Letter Card */}
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Mail className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                          Cover Letter
-                        </span>
-                        {selectedApp.coverLetter && (
-                          <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                          </span>
-                        )}
-                      </div>
-                      {selectedApp.coverLetter ? (
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
-                            )
-                          }
-                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> View &amp; Download
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleGenerateCoverLetter}
-                          disabled={generatingCL}
-                          className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                            generatingCL
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          }`}
-                        >
-                          {generatingCL ? (
+                    {/* Cover letter */}
+                    <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                        <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            Cover letter
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Matched to the job description
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {selectedApp.coverLetter ? (
                             <>
-                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
-                              Generating…
+                              <ReadyChip />
+                              <GhostButton
+                                onClick={() =>
+                                  navigate(
+                                    `/resume/${selectedApp.draftCVId || selectedApp._id}?tab=cover-letter`
+                                  )
+                                }
+                              >
+                                View &amp; download
+                              </GhostButton>
                             </>
                           ) : (
-                            'Generate · 5 credits'
+                            <InkButton
+                              onClick={handleGenerateCoverLetter}
+                              generating={generatingCL}
+                              disabled={generatingCL}
+                              cost={CREDIT_COSTS.GENERATE_COVER_LETTER}
+                            />
                           )}
-                        </button>
-                      )}
-                      {/* Fact-check warnings — flat amber-accented note, not a filled box. */}
+                        </div>
+                      </div>
+                      {/* Fact-check warnings — flat amber-accented note. */}
                       {selectedApp.coverLetter && selectedApp.coverLetterWarnings?.length > 0 && (
                         <div className="mt-3 border-l-2 border-amber-500 pl-3">
                           <div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400 mb-1">
@@ -1216,65 +1179,41 @@ const JobHistory = () => {
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Interview Prep entry point — links to the dedicated
-                          /interview-prep/:applicationId page where users can
-                          drill into questions + answers + skill talking points
-                          and add personal notes. */}
-                  {hasInterviewPrep(selectedApp) ? (
-                    <Link
-                      to={`/interview-prep/${selectedApp._id}`}
-                      className="group flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
-                    >
-                      <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {/* Interview prep */}
+                    <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                        <MessageSquare className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                             Interview prep
-                          </h4>
-                          <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                          </span>
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Likely questions + suggested answers
+                          </p>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                          {getPrepSummary(selectedApp)}
-                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {hasInterviewPrep(selectedApp) ? (
+                            <>
+                              <ReadyChip />
+                              <GhostButton
+                                onClick={() => navigate(`/interview-prep/${selectedApp._id}`)}
+                              >
+                                View
+                              </GhostButton>
+                            </>
+                          ) : (
+                            <InkButton
+                              onClick={handleGenerateInterview}
+                              generating={generatingInterview}
+                              disabled={generatingInterview}
+                              cost={CREDIT_COSTS.GENERATE_INTERVIEW}
+                            />
+                          )}
+                        </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                      <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                          Interview prep
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Generate likely questions + suggested answers tailored to your CV and this
-                          role.
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleGenerateInterview}
-                        disabled={generatingInterview}
-                        className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                          generatingInterview
-                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        }`}
-                      >
-                        {generatingInterview ? (
-                          <>
-                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
-                            Generating…
-                          </>
-                        ) : (
-                          'Generate · 5 cr'
-                        )}
-                      </button>
                     </div>
-                  )}
+                  </div>
                 </section>
               </div>
             </div>

@@ -85,14 +85,6 @@ const AuthShell = ({
           className={`absolute -bottom-32 -left-24 w-80 h-80 ${a.glow2} blur-3xl rounded-full pointer-events-none`}
           aria-hidden="true"
         />
-        {/* Very faint dot pattern for texture, on top of the glows */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(white 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        />
         {/* Hairline accent on the right edge */}
         <div
           className={`absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent ${a.hairline} to-transparent pointer-events-none`}

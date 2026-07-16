@@ -81,7 +81,7 @@ const RoleBrief = ({ application }) => {
   }
 
   return (
-    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6 space-y-6">
+    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-start gap-3 min-w-0">

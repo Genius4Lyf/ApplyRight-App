@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import {
-  ChevronLeft,
-  FileText,
-  Briefcase,
-  Mic,
-  Crown,
-  CheckCircle,
-  Clock,
-  Sparkles,
-} from 'lucide-react';
+import { ChevronLeft, FileText, Mic, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import CVUploader from '../components/CVUploader';
 import JobLinkInput from '../components/JobLinkInput';
@@ -18,6 +9,7 @@ import UpgradeModal from '../components/UpgradeModal';
 import CVService from '../services/cv.service';
 import InterviewPrepService from '../services/interviewPrep.service';
 import billingService from '../services/billing.service';
+import { isMobile } from '../utils/platform';
 
 /**
  * Standalone "Interview Me" flow.
@@ -132,22 +124,15 @@ const InterviewStart = () => {
         <Navbar />
         <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-8 pb-16">
           <BackLink navigate={navigate} />
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/30">
-            {/* Soft warm glow behind the badge for a premium feel */}
-            <div className="pointer-events-none absolute inset-x-0 -top-20 h-44 bg-gradient-to-b from-amber-200/50 dark:from-amber-500/10 to-transparent blur-2xl" />
-
-            <div className="relative px-7 py-9 sm:px-10 sm:py-10">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
+            <div className="px-7 py-9 sm:px-10 sm:py-10">
               <div className="flex justify-center mb-6">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200/70 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider">
-                  <Crown className="w-3.5 h-3.5" /> Pro
+                <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
+                  Pro feature
                 </span>
               </div>
 
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30 ring-1 ring-white/20">
-                <Mic className="w-8 h-8" />
-              </div>
-
-              <h1 className="text-2xl font-bold text-center text-slate-900 dark:text-slate-100 mb-2.5">
+              <h1 className="font-heading text-2xl font-bold text-center text-slate-900 dark:text-slate-100 mb-2.5">
                 Direct interviews are a Pro feature
               </h1>
               <p className="text-center text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-7">
@@ -165,7 +150,7 @@ const InterviewStart = () => {
                     key={feature}
                     className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
                   >
-                    <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <span className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">–</span>
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -175,7 +160,7 @@ const InterviewStart = () => {
                 onClick={() => navigate('/upgrade')}
                 className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl btn-primary font-semibold"
               >
-                <Sparkles className="w-5 h-5" /> Upgrade to Pro
+                See plans
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
@@ -197,51 +182,42 @@ const InterviewStart = () => {
         <BackLink navigate={navigate} />
 
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-              <Mic className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Interview Me
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400">
-                Skip the analysis — go straight to a live interview against a job.
-              </p>
-            </div>
-          </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            Interview practice
+          </p>
+          <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Interview me
+          </h1>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
+            Skip the analysis — go straight to a live interview against a job.
+          </p>
           {entitlement && entitlement.tier !== 'free' && (
-            <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-              <Clock className="w-3.5 h-3.5" />
+            <span className="inline-flex items-center mt-3 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
               {Math.round((entitlement.secondsRemaining || 0) / 60)} interview minutes remaining
-            </div>
+            </span>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Step 1 — choose CV */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                  Step 1 · Your CV
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Pick a saved CV or upload one
-                </p>
-              </div>
+          <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
+            <div className="mb-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                Step 1 · Your CV
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Pick a saved CV or upload one
+              </p>
             </div>
 
-            <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg mb-5">
+            {/* Editorial segmented toggle — hairline track, filled active tab. */}
+            <div className="flex gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-1 mb-5">
               <button
                 type="button"
                 onClick={() => setCvMode('saved')}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                   cvMode === 'saved'
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
@@ -250,9 +226,9 @@ const InterviewStart = () => {
               <button
                 type="button"
                 onClick={() => setCvMode('upload')}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                   cvMode === 'upload'
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
@@ -328,21 +304,16 @@ const InterviewStart = () => {
           </section>
 
           {/* Step 2 — job description (required) */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 flex flex-col md:min-h-[480px]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-                <Briefcase className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                  Step 2 · Target job
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {job
-                    ? "We'll tailor the interview to this role"
-                    : 'Provide the job details for analysis'}
-                </p>
-              </div>
+          <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
+            <div className="mb-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                Step 2 · Target job
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {job
+                  ? "We'll tailor the interview to this role"
+                  : 'Provide the job details for analysis'}
+              </p>
             </div>
 
             <div className="flex-1 min-h-0">
@@ -355,8 +326,8 @@ const InterviewStart = () => {
           </section>
         </div>
 
-        {/* Start bar */}
-        <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Start bar — inline on desktop; a mobile sticky bar mirrors it below. */}
+        <div className="hidden md:flex md:items-center md:justify-between gap-4 mt-8">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {!cvChosen
               ? 'Choose a CV to continue.'
@@ -381,6 +352,41 @@ const InterviewStart = () => {
             ) : (
               <>
                 <Mic className="w-5 h-5" /> Start interview
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile sticky start bar — same fixed/Capacitor-offset pattern as the
+            Dashboard setup analyze bar. Enabled only once a CV + job are chosen. */}
+        <div
+          className="md:hidden fixed left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+          style={
+            isMobile() ? { bottom: 'calc(4rem + env(safe-area-inset-bottom))' } : { bottom: 0 }
+          }
+        >
+          <button
+            onClick={handleStart}
+            disabled={!canStart}
+            className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
+              canStart
+                ? 'btn-primary shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+            }`}
+          >
+            {starting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Preparing your interview…
+              </>
+            ) : (
+              <>
+                <Mic className="w-4 h-4" />
+                {!cvChosen
+                  ? 'Choose a CV to continue'
+                  : !job
+                    ? 'Add the job to continue'
+                    : 'Start interview'}
               </>
             )}
           </button>

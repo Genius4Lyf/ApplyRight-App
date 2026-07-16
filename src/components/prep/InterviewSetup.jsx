@@ -113,7 +113,7 @@ export const VoiceStyleSelector = ({
     className={
       borderless
         ? `relative z-10 space-y-2.5 ${className}`
-        : `relative z-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2.5 ${className}`
+        : `relative z-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 space-y-2.5 ${className}`
     }
   >
     {/* Voice picker only applies to the SOLO (free-taste) interview. Panel
