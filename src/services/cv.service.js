@@ -59,6 +59,14 @@ const CVService = {
     return response.data;
   },
 
+  // Rewrite a professional summary into a tighter, shorter version. Charges 1
+  // credit (paid tiers draw from their allowance); AI outage 503s with no charge.
+  // Returns { tightened, remainingCredits }.
+  tightenSummary: async (text) => {
+    const response = await api.post('/ai/tighten-summary', { text });
+    return response.data;
+  },
+
   // CV Coach "Deep Scan": Job Match + Career Match + recruiter red-flags for a
   // draft. Paid users run it freely; free users get one lifetime taste (spent
   // server-side, atomic). Returns { isPaid, locked?, taste?, tasteAvailable,

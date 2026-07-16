@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import { useOutletContext, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
@@ -10,6 +10,7 @@ import {
   RefreshCcw,
   Lock,
   Crown,
+  X,
 } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
@@ -75,6 +76,12 @@ const History = () => {
   } = context || {};
   const { id: draftId } = useParams();
   const navigate = useNavigate();
+
+  // Length-context hand-off from the CV Studio length coach (?trim=1): show a
+  // dismissible "trimming to fit" banner with a "back to preview" return.
+  const [searchParams] = useSearchParams();
+  const trimming = searchParams.get('trim') === '1';
+  const [trimBannerDismissed, setTrimBannerDismissed] = useState(false);
 
   // Paid users get unlimited bullets per role. Toggled from the admin panel.
   const isPaid = user?.plan === 'paid';
@@ -483,6 +490,40 @@ const History = () => {
       onSubmit={onSubmit}
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
+      {/* Length-context banner — arrived here from the CV Studio length coach. */}
+      {trimming && !trimBannerDismissed && (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
+                Trimming to fit
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Your CV runs long. Shortening bullets or removing older, less-relevant roles is the
+                fastest way to 1&ndash;2 pages.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTrimBannerDismissed(true)}
+              aria-label="Dismiss"
+              className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to preview
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">

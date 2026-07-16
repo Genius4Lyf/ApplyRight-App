@@ -29,6 +29,8 @@ export const CREDIT_COSTS = {
   INTERVIEW_MODE: 5,
   // "What to wear" — tailored interview-attire guide. Web charges; Android ad-rewarded.
   GENERATE_DRESS_GUIDE: 2,
+  // Rewrite a professional summary into a tighter, shorter version (CV Studio).
+  TIGHTEN_SUMMARY: 1,
 };
 
 // The backend uses the canonical key ANALYSIS for what the frontend calls

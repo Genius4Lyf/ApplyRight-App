@@ -77,7 +77,17 @@ const FixButton = ({ active, onClick, label }) => (
   </button>
 );
 
-const LengthCoach = ({ pageCount, paperLabel, design, setDesign, activeTab }) => {
+const LengthCoach = ({
+  pageCount,
+  paperLabel,
+  design,
+  setDesign,
+  activeTab,
+  onShortenSummary,
+  canTrimSummary = false,
+  onTrimRoles,
+  canTrimRoles = false,
+}) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0, width: POPOVER_WIDTH });
   const wrapRef = useRef(null);
@@ -158,6 +168,40 @@ const LengthCoach = ({ pageCount, paperLabel, design, setDesign, activeTab }) =>
     </div>
   );
 
+  // Jump-link into the summary-trim modal — the fastest single-edit way to lose a
+  // page. Only shown when the CV actually has a summary to trim.
+  const shortenLink = canTrimSummary ? (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => {
+          onShortenSummary?.();
+          setOpen(false);
+        }}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
+      >
+        Shorten your summary <ArrowRight className="w-3 h-3" />
+      </button>
+    </div>
+  ) : null;
+
+  // Hand-off to the CV Builder's Work-history step (with length context) — trim
+  // bullets or drop old roles. Only shown when a linked draft exists to edit.
+  const trimRolesLink = canTrimRoles ? (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => {
+          onTrimRoles?.();
+          setOpen(false);
+        }}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
+      >
+        Trim your oldest roles <ArrowRight className="w-3 h-3" />
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div ref={wrapRef} className="relative inline-flex shrink-0">
       <button
@@ -207,6 +251,8 @@ const LengthCoach = ({ pageCount, paperLabel, design, setDesign, activeTab }) =>
                   Standard for roles with 5+ years&rsquo; experience. Want one page? Optional trims:
                 </p>
                 {fixes}
+                {shortenLink}
+                {trimRolesLink}
                 <div className="mt-3">
                   <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>Why 1&ndash;2 pages?</GuideLink>
                 </div>
@@ -224,6 +270,8 @@ const LengthCoach = ({ pageCount, paperLabel, design, setDesign, activeTab }) =>
                   <Eyebrow>Trim a page</Eyebrow>
                 </div>
                 {fixes}
+                {shortenLink}
+                {trimRolesLink}
                 <div className="mt-3">
                   <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>Why 1&ndash;2 pages?</GuideLink>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -67,6 +67,8 @@ import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import LengthCoach from '../components/cv/LengthCoach';
+import SummaryTrim from '../components/cv/SummaryTrim';
+import { extractSummary, replaceSummaryInMarkdown } from '../lib/summaryMarkdown';
 import {
   Lock,
   Zap,
@@ -197,6 +199,23 @@ const ResumeReview = () => {
     }
   };
 
+  // Splice a new professional summary into the CV markdown: updates the live
+  // preview (which re-flows → the page-count badge re-counts) and persists via the
+  // same saveDraft path the title uses.
+  const applySummary = async (newText) => {
+    if (!application) return;
+    const md = replaceSummaryInMarkdown(application.optimizedCV || '', newText);
+    setApplication((a) => ({ ...a, optimizedCV: md, professionalSummary: newText }));
+    setShowSummaryTrim(false);
+    try {
+      await CVService.saveDraft({ ...application, optimizedCV: md, professionalSummary: newText });
+      toast.success('Summary updated');
+    } catch (err) {
+      console.error('Save summary failed:', err);
+      toast.error('Summary changed here, but saving failed — try again.');
+    }
+  };
+
   // Score → editorial band accent (>=75 emerald / >=50 amber / else rose).
   const bandText = (s) =>
     s >= 75
@@ -307,6 +326,18 @@ const ResumeReview = () => {
 
   const [error, setError] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Inline summary-trim modal (length-coach entry point).
+  const [showSummaryTrim, setShowSummaryTrim] = useState(false);
+  // The professional-summary section of the current CV markdown (drives the modal
+  // + whether the coach offers the "Shorten your summary" jump-link).
+  const currentSummary = useMemo(
+    () => extractSummary(application?.optimizedCV || ''),
+    [application?.optimizedCV]
+  );
+  // The draft to edit roles in. In draft mode the URL `id` IS the draft; for a job
+  // Application the linked draft is `application.draftCVId`.
+  const builderId = isDraftMode ? id : application?.draftCVId;
 
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
@@ -1032,6 +1063,13 @@ const ResumeReview = () => {
         onClose={() => setShowDownloadPaywall(false)}
       />
 
+      <SummaryTrim
+        open={showSummaryTrim}
+        currentSummary={currentSummary}
+        onApply={applySummary}
+        onClose={() => setShowSummaryTrim(false)}
+      />
+
       {downloadAdOpen && isAndroidNative() && (
         <AdPlayer
           userId={userProfile?._id || userProfile?.id}
@@ -1319,6 +1357,10 @@ const ResumeReview = () => {
               design={design}
               setDesign={setDesign}
               activeTab={activeTab}
+              onShortenSummary={() => setShowSummaryTrim(true)}
+              canTrimSummary={!!currentSummary}
+              onTrimRoles={() => navigate(`/cv-builder/${builderId}/history?trim=1`)}
+              canTrimRoles={!!builderId}
             />
           </div>
 
