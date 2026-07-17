@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCVBuilder } from '../../context/CVContext';
-import { User, ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 
 const Heading = () => {
   // Use the custom hook for context
@@ -116,21 +117,11 @@ const Heading = () => {
       onSubmit={onSubmit}
       className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-            <User className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-              Contact Information
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Your professional header. Keep it accurate and simple.
-            </p>
-          </div>
-        </div>
-      </div>
+      <StepHeader
+        eyebrow="Contact"
+        title="Contact information"
+        subtitle="Your professional header. Keep it accurate and simple."
+      />
 
       <SectionTips
         sectionKey="cvbuilder_heading"

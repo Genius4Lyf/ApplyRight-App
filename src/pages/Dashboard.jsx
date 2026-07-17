@@ -814,7 +814,7 @@ const Dashboard = () => {
               </button>
 
               <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
-                <h3 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
+                <h3 className="font-heading text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
                   How would you like to start?
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-center">
@@ -827,13 +827,11 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/cv-builder/new')}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 sm:border-2 sm:border-slate-100 dark:sm:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 rounded-xl transition-all group"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
                 >
-                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-indigo-50 dark:bg-indigo-500/15 sm:bg-white dark:sm:bg-slate-800 sm:border sm:border-slate-200 dark:sm:border-slate-700 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-indigo-600 shrink-0 sm:shadow-sm">
-                    <Plus className="w-5 h-5 sm:w-8 sm:h-8" />
-                  </div>
+                  <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
+                    <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
                       Start from scratch
                     </h4>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug">
@@ -854,17 +852,15 @@ const Dashboard = () => {
                     setWorkflowMode('create-upload');
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                   }}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 sm:border-2 sm:border-slate-100 dark:sm:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/15 rounded-xl transition-all group"
+                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
                 >
-                  <div className="w-11 h-11 sm:w-16 sm:h-16 bg-emerald-50 dark:bg-emerald-500/15 sm:bg-white dark:sm:bg-slate-800 sm:border sm:border-slate-200 dark:sm:border-slate-700 rounded-full flex items-center justify-center sm:mb-4 group-hover:scale-105 transition-transform text-emerald-600 shrink-0 sm:shadow-sm">
-                    <UploadIcon className="w-5 h-5 sm:w-8 sm:h-8" />
-                  </div>
+                  <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
-                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
+                      <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
                         Upload existing CV
                       </h4>
-                      <span className="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] sm:text-xs font-bold rounded-full shrink-0">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] uppercase tracking-[0.1em] rounded shrink-0">
                         15 cr
                       </span>
                     </div>
@@ -1025,9 +1021,9 @@ const Dashboard = () => {
               <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
             </button>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-card border border-slate-200 dark:border-slate-700 p-8">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                <h3 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   Upload your Resume
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400">
@@ -1048,8 +1044,8 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-4">
                   <div className="text-center pb-4">
-                    <span className="inline-block px-4 py-2 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold rounded-full border border-amber-200 dark:border-amber-500/30">
-                      <Zap className="w-4 h-4 inline mr-1" /> Cost: 15 A.I Credits
+                    <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] uppercase tracking-[0.1em] rounded border border-amber-200 dark:border-amber-500/30">
+                      15 cr
                     </span>
                   </div>
                   <CreditGate cost={CREDIT_COSTS.CREATE_FROM_UPLOAD}>
@@ -1082,69 +1078,109 @@ const Dashboard = () => {
         {/* Scan Success Modal */}
         {scanSuccessDraftId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200 text-center">
-              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                CV Scanned Successfully!
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+              {/* Header — editorial: mono eyebrow → serif title → muted subcopy */}
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+                ✓ CV scanned
+              </p>
+              <h3 className="mt-1 font-heading text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Your CV is in.
               </h3>
-              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mb-4">
-                We've extracted and optimized your details with AI-powered formatting.
+              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+                We've extracted and structured your details — here's how healthy it looks.
               </p>
 
-              {/* ATS Readiness Score */}
+              {/* CV Health Score */}
               {scanATSReadiness && (
-                <div className="mb-6 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                  <div className="flex flex-col sm:flex-row items-center sm:justify-center gap-3 mb-3">
-                    <div
-                      className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-extrabold border-4 ${
-                        scanATSReadiness.score >= 75
-                          ? 'border-emerald-400 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15'
+                <div className="mt-5 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                        CV Health Score
+                      </p>
+                      <p
+                        className={`mt-1 font-heading text-lg font-bold ${
+                          scanATSReadiness.score >= 75
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : scanATSReadiness.score >= 50
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        {scanATSReadiness.score >= 75
+                          ? 'Well-structured.'
                           : scanATSReadiness.score >= 50
-                            ? 'border-amber-400 dark:border-amber-500/50 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15'
-                            : 'border-red-400 dark:border-red-500/50 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15'
+                            ? 'Getting there.'
+                            : 'Needs work.'}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 font-heading text-4xl font-bold leading-none tabular-nums ${
+                        scanATSReadiness.score >= 75
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : scanATSReadiness.score >= 50
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
                       {scanATSReadiness.score}
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                        ATS Readiness Score
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {scanATSReadiness.score >= 75
-                          ? 'Your resume is well-structured for ATS systems'
-                          : scanATSReadiness.score >= 50
-                            ? 'Good start — a few improvements will boost your score'
-                            : 'Needs work — edit in the builder to improve'}
-                      </p>
-                    </div>
+                    </span>
                   </div>
-                  {/* Quick check summary */}
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {scanATSReadiness.checks?.slice(0, 5).map((check, i) => (
+
+                  {/* Band rail — needs-work / getting-there / strong, with a marker pin */}
+                  <div className="mt-4">
+                    <div className="relative">
+                      <div className="grid grid-cols-[50fr_25fr_25fr] gap-0.5 h-2 rounded-full overflow-hidden">
+                        <span className="bg-rose-500/45" />
+                        <span className="bg-amber-500/45" />
+                        <span className="bg-emerald-500/45" />
+                      </div>
                       <span
-                        key={i}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          check.passed
-                            ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-300'
-                        }`}
-                      >
-                        {check.passed ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : (
-                          <X className="w-3 h-3" />
-                        )}
-                        {check.label}
-                      </span>
-                    ))}
+                        aria-hidden="true"
+                        className="absolute -top-0.5 h-3 w-0.5 -translate-x-1/2 rounded bg-slate-900 dark:bg-slate-100"
+                        style={{
+                          left: `${Math.max(0, Math.min(100, scanATSReadiness.score))}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1.5 grid grid-cols-[50fr_25fr_25fr] gap-0.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                      <span>Needs work</span>
+                      <span className="text-center">Getting there</span>
+                      <span className="text-right">Strong 75+</span>
+                    </div>
                   </div>
+
+                  {/* Checks — clean two-column grid, failed ones emphasized */}
+                  {scanATSReadiness.checks?.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {scanATSReadiness.checks.slice(0, 6).map((check, i) => (
+                        <div key={i} className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              check.passed
+                                ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                            }`}
+                          >
+                            {check.passed ? '✓' : '✕'}
+                          </span>
+                          <span
+                            className={`text-xs truncate ${
+                              check.passed
+                                ? 'text-slate-500 dark:text-slate-400'
+                                : 'text-slate-900 dark:text-slate-100 font-semibold'
+                            }`}
+                          >
+                            {check.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="mt-6 space-y-2">
                 <button
                   onClick={() => {
                     // Completion moment after CV upload+convert. Fire-and-forget
@@ -1154,7 +1190,7 @@ const Dashboard = () => {
                   }}
                   className="w-full btn-primary py-3.5 rounded-xl gap-2"
                 >
-                  <PenTool className="w-5 h-5" /> Review & Edit in Builder
+                  <PenTool className="w-5 h-5" /> Review & edit in builder
                 </button>
                 <button
                   onClick={() => {
@@ -1165,7 +1201,7 @@ const Dashboard = () => {
                   }}
                   className="w-full text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-1.5 py-2"
                 >
-                  <Eye className="w-4 h-4" /> Skip to ATS Preview
+                  <Eye className="w-4 h-4" /> Skip to preview
                 </button>
               </div>
             </div>

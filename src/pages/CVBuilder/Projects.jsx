@@ -6,7 +6,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
-  Sparkles,
+  Wand2,
   RefreshCcw,
   Link as LinkIcon,
   Lock,
@@ -15,6 +15,7 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import ProjectsTutorial from './ProjectsTutorial';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
 import {
   DndContext,
@@ -295,27 +296,20 @@ const Projects = () => {
       onSubmit={onSubmit}
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-            <PenTool className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Projects</h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Showcase your practical work and initiatives.
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowTutorial(true)}
-          className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span className="hidden md:inline">How ApplyRight AI Works</span>
-        </button>
-      </div>
+      <StepHeader
+        eyebrow="Projects"
+        title="Projects"
+        subtitle="Showcase your practical work and initiatives."
+        action={
+          <button
+            type="button"
+            onClick={() => setShowTutorial(true)}
+            className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <span className="hidden md:inline">How ApplyRight AI Works</span>
+          </button>
+        }
+      />
 
       <SectionTips
         sectionKey="cvbuilder_projects"
@@ -458,12 +452,12 @@ const Projects = () => {
                                   type="button"
                                   onClick={() => handleGenerateBullets(index)}
                                   disabled={generatingIndex === index || !proj.title}
-                                  className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
+                                  className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
                                 >
                                   {generatingIndex === index ? (
                                     <RefreshCcw className="w-3 h-3 animate-spin" />
                                   ) : (
-                                    <Sparkles className="w-3 h-3" />
+                                    <Wand2 className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
                                   )}
                                   {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
                                 </button>
@@ -554,13 +548,13 @@ const Projects = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
                 <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-0.5">
+                    Suggestions
+                  </p>
+                  <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                     AI Rewrite
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -568,7 +562,7 @@ const Projects = () => {
                   </p>
                 </div>
               </div>
-              <div className="text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full shrink-0">
+              <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-md shrink-0">
                 {selectedSuggestions.length} / {selectMax}
               </div>
             </div>
@@ -581,17 +575,17 @@ const Projects = () => {
                   <div
                     key={idx}
                     onClick={() => toggleSuggestionSelection(suggestion)}
-                    className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 cursor-pointer ${
+                    className={`relative p-3 rounded-xl border transition-all flex gap-3 cursor-pointer ${
                       isSelected
-                        ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+                        ? 'border-slate-900 dark:border-white bg-slate-900/[0.04] dark:bg-white/[0.06] shadow-sm'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
                     }`}
                   >
                     <div className="mt-0.5 flex-shrink-0">
                       <div
                         className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
                           isSelected
-                            ? 'bg-indigo-500 border-indigo-500 text-white'
+                            ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900'
                             : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
                         }`}
                       >
@@ -615,7 +609,7 @@ const Projects = () => {
                     <p
                       className={`text-sm leading-relaxed ${
                         isSelected
-                          ? 'text-indigo-900 dark:text-indigo-200 font-medium'
+                          ? 'text-slate-900 dark:text-slate-100 font-medium'
                           : 'text-slate-700 dark:text-slate-300'
                       }`}
                     >
@@ -628,8 +622,7 @@ const Projects = () => {
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
-              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2 mb-3 p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg">
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                   <strong>Note:</strong> AI can make mistakes. Review and edit these to ensure they
                   reflect your real work.
@@ -663,7 +656,7 @@ const Projects = () => {
                   type="button"
                   onClick={applySelectedSuggestions}
                   disabled={selectedSuggestions.length === 0}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Apply Selected
                 </button>

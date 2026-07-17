@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Crown,
   ChevronDown,
+  ChevronUp,
   FileText,
   FileType,
 } from 'lucide-react';
@@ -104,6 +105,7 @@ const ResumeReview = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false); // PDF/Word split menu
+  const [downloadSheetOpen, setDownloadSheetOpen] = useState(false); // mobile PDF/Word bottom sheet
   // Blur the CV when the page loses focus (snip-tool / alt-tab capture deterrent).
   const screenshotObscured = useScreenshotGuard();
   // Keep the loader visible long enough for users to read a tip even when the
@@ -244,7 +246,7 @@ const ResumeReview = () => {
   };
 
   const [scale, setScale] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth < 768 ? computeFitScale() : 1
+    typeof window !== 'undefined' && window.innerWidth < 1024 ? computeFitScale() : 1
   );
 
   // Re-fit when the viewport changes — only update if the user hasn't manually
@@ -252,7 +254,7 @@ const ResumeReview = () => {
   const userZoomedRef = React.useRef(false);
   useEffect(() => {
     const handleResize = () => {
-      if (!userZoomedRef.current && typeof window !== 'undefined' && window.innerWidth < 768) {
+      if (!userZoomedRef.current && typeof window !== 'undefined' && window.innerWidth < 1024) {
         setScale(computeFitScale());
       }
     };
@@ -1877,33 +1879,25 @@ const ResumeReview = () => {
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-3 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex items-center gap-2">
             <button
               type="button"
-              disabled={isDownloading}
-              onClick={handleDownloadClick}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+              onClick={() => setDownloadSheetOpen(true)}
+              aria-haspopup="menu"
+              aria-expanded={downloadSheetOpen}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
             >
-              {isDownloading ? (
+              {isDownloading || isDownloadingDocx ? (
                 <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
               )}
               <span>
-                {isDownloading
+                {isDownloading || isDownloadingDocx
                   ? 'Working…'
                   : `Download ${activeTab === 'resume' ? 'CV' : 'Letter'}`}
               </span>
-            </button>
-            <button
-              type="button"
-              disabled={isDownloadingDocx}
-              onClick={handleDownloadDocx}
-              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-wait px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
-              aria-label="Download Word"
-              title="Download Word (.docx)"
-            >
-              {isDownloadingDocx ? (
-                <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+              {downloadSheetOpen ? (
+                <ChevronUp className="w-3.5 h-3.5" />
               ) : (
-                <FileType className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <ChevronDown className="w-3.5 h-3.5" />
               )}
             </button>
             <button
@@ -1928,6 +1922,58 @@ const ResumeReview = () => {
               <MoreHorizontal className="w-4 h-4" />
             </button>
           </div>
+        )}
+
+        {/* Mobile download chooser bottom sheet — mirrors the desktop PDF/Word
+            split menu. Gating lives inside the handlers, not here. */}
+        {downloadSheetOpen && (
+          <>
+            <div
+              className="lg:hidden fixed inset-0 bg-black/40 z-50"
+              onClick={() => setDownloadSheetOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              role="menu"
+              className="lg:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            >
+              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <button
+                type="button"
+                role="menuitem"
+                disabled={isDownloading}
+                onClick={() => {
+                  setDownloadSheetOpen(false);
+                  handleDownloadClick();
+                }}
+                className="flex w-full items-center gap-3 px-5 py-3.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
+              >
+                {isDownloading ? (
+                  <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                ) : (
+                  <FileText className="w-5 h-5 text-rose-500 shrink-0" />
+                )}
+                <span>Download PDF</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                disabled={isDownloadingDocx}
+                onClick={() => {
+                  setDownloadSheetOpen(false);
+                  handleDownloadDocx();
+                }}
+                className="flex w-full items-center gap-3 px-5 py-3.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
+              >
+                {isDownloadingDocx ? (
+                  <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                ) : (
+                  <FileType className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                )}
+                <span>Download Word (.docx)</span>
+              </button>
+            </div>
+          </>
         )}
 
         {/* Mobile Sidebar Overlay */}

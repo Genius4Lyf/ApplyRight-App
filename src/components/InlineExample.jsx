@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 /**
  * Detect a coarse role family from the user's target job title (or any
@@ -157,9 +157,8 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 font-medium transition-colors"
+        className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-colors"
       >
-        <Sparkles className="w-3 h-3" />
         {label || (open ? 'Hide example' : 'Show me an example')}
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
@@ -183,7 +182,7 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
               {candidates.slice(0, 2).map((ex, i) => (
                 <p
                   key={i}
-                  className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed border-l-2 border-indigo-300 dark:border-indigo-500/30 pl-2"
+                  className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2"
                 >
                   "{ex}"
                 </p>

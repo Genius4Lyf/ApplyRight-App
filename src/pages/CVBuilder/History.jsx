@@ -6,7 +6,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
-  Sparkles,
+  Wand2,
   RefreshCcw,
   Lock,
   Crown,
@@ -16,6 +16,7 @@ import CVService from '../../services/cv.service';
 import { toast } from 'sonner';
 import HistoryTutorial from './HistoryTutorial';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
 import {
   DndContext,
@@ -369,19 +370,19 @@ const History = () => {
       <div
         key={idx}
         onClick={() => toggleSuggestionSelection(suggestion, source)}
-        className={`relative p-3 rounded-xl border-2 transition-all flex gap-3 ${
+        className={`relative p-3 rounded-xl border transition-all flex gap-3 ${
           disabled
             ? 'cursor-not-allowed opacity-40 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
             : isSelected
-              ? 'cursor-pointer border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/15 shadow-sm'
-              : 'cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm'
+              ? 'cursor-pointer border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white bg-white dark:bg-slate-900 shadow-sm'
+              : 'cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
         }`}
       >
         <div className="mt-0.5 flex-shrink-0">
           <div
             className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
               isSelected
-                ? 'bg-indigo-500 border-indigo-500 text-white'
+                ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900'
                 : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
             }`}
           >
@@ -414,9 +415,9 @@ const History = () => {
   const renderLockedCard = (suggestion, idx) => (
     <div
       key={idx}
-      className="relative p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden"
+      className="relative p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden"
     >
-      <p className="text-sm leading-relaxed blur-sm select-none text-slate-700 dark:text-slate-300">
+      <p className="text-sm leading-relaxed blur-[2px] select-none text-slate-700 dark:text-slate-300">
         {suggestion}
       </p>
     </div>
@@ -524,27 +525,20 @@ const History = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-            <Briefcase className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Work History</h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Your experience tells your professional story.
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowTutorial(true)}
-          className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span className="hidden md:inline">How ApplyRight AI Works</span>
-        </button>
-      </div>
+      <StepHeader
+        eyebrow="Experience"
+        title="Work history"
+        subtitle="Your experience tells your professional story."
+        action={
+          <button
+            type="button"
+            onClick={() => setShowTutorial(true)}
+            className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <span className="hidden md:inline">How ApplyRight AI Works</span>
+          </button>
+        }
+      />
 
       <SectionTips
         sectionKey="cvbuilder_history"
@@ -741,12 +735,12 @@ const History = () => {
                                       ? 'Please write at least 2 bullet points to use AI Suggestions'
                                       : 'Get AI Suggestions'
                                   }
-                                  className="text-xs font-bold text-indigo-600 dark:text-indigo-300 flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-200 disabled:opacity-50"
+                                  className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
                                 >
                                   {generatingIndex === index ? (
                                     <RefreshCcw className="w-3 h-3 animate-spin" />
                                   ) : (
-                                    <Sparkles className="w-3 h-3" />
+                                    <Wand2 className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
                                   )}
                                   {generatingIndex === index ? 'Generating...' : 'AI Suggestions'}
                                 </button>
@@ -825,7 +819,7 @@ const History = () => {
         <button
           type="button"
           onClick={addRole}
-          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Another Position
         </button>
@@ -857,39 +851,33 @@ const History = () => {
       {showSuggestionsModal && suggestionData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div
-            className={`bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${
+            className={`bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${
               paidSuggestions ? 'max-w-2xl' : 'max-w-4xl'
             }`}
           >
-            {/* Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 bg-indigo-50/50 dark:bg-indigo-500/10 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-                  {paidSuggestions ? (
-                    <Crown className="w-4 h-4" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
+            {/* Header — editorial: mono eyebrow → serif title, clean surface */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start gap-2 shrink-0">
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  {paidSuggestions ? 'ApplyRight ATS' : 'Suggestions'}
+                </p>
+                <h3 className="mt-0.5 font-heading text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+                  {paidSuggestions ? 'ApplyRight ATS suggestions' : 'Bullet suggestions'}
+                  {(tasteAvailable || atsRevealed) && (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.1em] bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded">
+                      Free ATS preview
+                    </span>
                   )}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
-                    {paidSuggestions ? 'ApplyRight ATS Suggestions' : 'Bullet Suggestions'}
-                    {(tasteAvailable || atsRevealed) && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                        Free ATS preview
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {atsRevealed
-                      ? `Compare both, then pick a side — select up to ${selectMax}.`
-                      : tasteAvailable
-                        ? 'Reveal ApplyRight ATS to compare — your 1 free preview.'
-                        : `Select up to ${selectMax} to add to your experience.`}
-                  </p>
-                </div>
+                </h3>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {atsRevealed
+                    ? `Compare both, then pick a side — select up to ${selectMax}.`
+                    : tasteAvailable
+                      ? 'Reveal ApplyRight ATS to compare — your 1 free preview.'
+                      : `Select up to ${selectMax} to add to your experience.`}
+                </p>
               </div>
-              <div className="text-xs font-semibold bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full shrink-0">
+              <div className="font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded shrink-0">
                 {selectedSuggestions.length} / {selectMax}
               </div>
             </div>
@@ -953,12 +941,12 @@ const History = () => {
                     className={`p-4 ${activeTab === 'ats' ? 'flex' : 'hidden'} lg:flex flex-col min-h-0 relative`}
                   >
                     <div className="flex items-center gap-2 mb-3 shrink-0">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                        <Crown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                        <Crown className="w-3.5 h-3.5" />
                         ApplyRight ATS
                       </span>
                       {(tasteAvailable || atsRevealed) && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.1em] bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded">
                           Best choice
                         </span>
                       )}
@@ -973,13 +961,13 @@ const History = () => {
                     {/* Over the blurred teaser: a Reveal button while the free
                         trial is available, otherwise the upgrade CTA. */}
                     {!atsSelectable && (
-                      <div className="absolute bottom-0 left-0 right-0 p-4 pt-10 bg-gradient-to-t from-slate-50 via-slate-50 dark:from-slate-900 dark:via-slate-900 to-transparent z-10 shrink-0">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 pt-10 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent z-10 shrink-0">
                         {tasteAvailable ? (
                           <button
                             type="button"
                             onClick={handleRevealAts}
                             disabled={revealing}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md transition-colors disabled:opacity-70"
+                            className="btn-primary w-full py-2.5 rounded-xl gap-2 disabled:opacity-70"
                           >
                             {revealing ? (
                               <RefreshCcw className="w-4 h-4 animate-spin" />
@@ -992,7 +980,7 @@ const History = () => {
                           <button
                             type="button"
                             onClick={goUpgrade}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md transition-colors"
+                            className="btn-primary w-full py-2.5 rounded-xl gap-2"
                           >
                             <Lock className="w-4 h-4" /> Unlock ApplyRight ATS
                           </button>
@@ -1006,8 +994,7 @@ const History = () => {
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
-              <div className="flex items-start gap-2 mb-3 p-2.5 bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/30 rounded-lg">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
+              <div className="mb-3 border-l-2 border-amber-400 dark:border-amber-500/60 pl-3">
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                   <strong>Note:</strong> AI can make mistakes or generate generic content. Review
                   and edit these to ensure they reflect your actual, verifiable experience.
@@ -1074,7 +1061,7 @@ const History = () => {
                   type="button"
                   onClick={applySelectedSuggestions}
                   disabled={selectedSuggestions.length === 0}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Apply Selected
                 </button>

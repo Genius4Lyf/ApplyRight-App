@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Check, Lock, X, Info, Target, Crown } from 'lucide-react';
+import { Check, Lock, X, Info, Target } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Free users can ADD up to this many generated skills. The full set is generated
@@ -153,23 +153,21 @@ const GeneratedSkillsModal = ({
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+          className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl flex flex-col max-h-[90dvh] overflow-hidden"
         >
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 shrink-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    {selectableCount} skills found
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                    Pick the ones that are genuinely true for you.
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  Auto-fill skills
+                </p>
+                <h3 className="mt-0.5 font-heading text-base font-bold text-slate-900 dark:text-slate-100">
+                  {selectableCount} skills found
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
+                  Pick the ones that are genuinely true for you.
+                </p>
               </div>
               <button
                 type="button"
@@ -182,14 +180,14 @@ const GeneratedSkillsModal = ({
             </div>
 
             {/* Segmented control: All skills | Best for this role */}
-            <div className="mt-4 inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-full sm:w-auto">
+            <div className="mt-4 inline-flex gap-1 p-1 rounded-xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setMode('all')}
                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                   mode === 'all'
-                    ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 All skills
@@ -201,11 +199,10 @@ const GeneratedSkillsModal = ({
                 title={!hasJD ? 'Add a target job to see which skills win this role' : undefined}
                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                   mode === 'best'
-                    ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                <Sparkles className="w-3 h-3" />
                 Best for this role
                 {!isPaid && <Lock className="w-3 h-3" />}
               </button>
@@ -238,9 +235,9 @@ const GeneratedSkillsModal = ({
                 <button
                   type="button"
                   onClick={onUpgrade}
-                  className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                  className="mt-4 btn-primary px-5 py-2.5 rounded-xl text-sm"
                 >
-                  <Crown className="w-4 h-4" /> Upgrade to unlock
+                  Upgrade to unlock
                 </button>
                 <button
                   type="button"
@@ -259,7 +256,9 @@ const GeneratedSkillsModal = ({
                 ).map(([category, items]) => (
                   <div key={category}>
                     <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                      {mode === 'best' && <Sparkles className="w-3 h-3 text-indigo-500" />}
+                      {mode === 'best' && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                      )}
                       {category}
                     </h4>
                     <div className="flex flex-wrap gap-2">
@@ -272,8 +271,8 @@ const GeneratedSkillsModal = ({
                               row.isAdded
                                 ? 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                                 : isSel
-                                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-200'
-                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/40'
+                                  ? 'border-transparent bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
                             } ${atCap && !isSel && !row.isAdded ? 'opacity-50' : ''}`}
                           >
                             <button
@@ -294,29 +293,21 @@ const GeneratedSkillsModal = ({
                               {row.name}
                             </button>
 
-                            {/* Best-for-role marker. Live for paid; blurred teaser for free. */}
-                            {row.isBest &&
-                              (isPaid ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setOpenDetail(openDetail === row.name ? null : row.name)
-                                  }
-                                  title="Why this skill wins this job"
-                                  className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
-                                >
-                                  <Info className="w-3.5 h-3.5" />
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  title="Best for this job — upgrade to see why"
-                                  onClick={onUpgrade}
-                                  className="inline-flex items-center cursor-pointer"
-                                >
-                                  <Sparkles className="w-3.5 h-3.5 text-indigo-400 blur-[1.5px]" />
-                                </button>
-                              ))}
+                            {/* Best-for-role marker — the "why this wins" evidence,
+                                paid only. Free users see no per-chip marker (the
+                                locked Best-for-role mode already signals the gate). */}
+                            {row.isBest && isPaid && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenDetail(openDetail === row.name ? null : row.name)
+                                }
+                                title="Why this skill wins this job"
+                                className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
+                              >
+                                <Info className="w-3.5 h-3.5" />
+                              </button>
+                            )}
 
                             {row.isAdded && (
                               <span className="text-[10px] uppercase tracking-wide font-bold text-slate-400 dark:text-slate-500">
@@ -388,7 +379,7 @@ const GeneratedSkillsModal = ({
                 type="button"
                 onClick={handleAdd}
                 disabled={selected.length === 0}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="btn-primary px-5 py-2 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add {selected.length > 0 ? selected.length : ''} to CV
               </button>

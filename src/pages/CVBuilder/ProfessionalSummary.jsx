@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import {
-  FileText,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  RefreshCcw,
-  Wand2,
-  Lock,
-  Crown,
-} from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sparkles, RefreshCcw, Wand2, Lock, Crown } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import Modal from '../../components/Modal';
 import { toast } from 'sonner';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
 
 const ProfessionalSummary = () => {
@@ -159,19 +151,11 @@ const ProfessionalSummary = () => {
         onSubmit={onSubmit}
         className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-              Professional Summary
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Your 30-second elevator pitch. Make it count.
-            </p>
-          </div>
-        </div>
+        <StepHeader
+          eyebrow="Summary"
+          title="Professional summary"
+          subtitle="Your 30-second elevator pitch. Make it count."
+        />
 
         <SectionTips
           sectionKey="cvbuilder_summary"

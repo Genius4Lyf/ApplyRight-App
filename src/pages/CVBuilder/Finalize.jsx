@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import TailorDiffView from '../../components/cv/TailorDiffView';
+import StepHeader from '../../components/cv/StepHeader';
 import useInterstitial from '../../hooks/useInterstitial';
 
 // --- Score-based guidance ---
@@ -312,21 +313,15 @@ const Finalize = () => {
         tailoredForJob={tailoredForJob}
       />
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-300">
-          <CheckCircle className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-            {tailoredFrom ? 'Tailored CV Review' : 'Final Review'}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400">
-            {tailoredFrom
-              ? 'Review the changes made to your CV before previewing.'
-              : "You've added all the essentials. Ready to visualize?"}
-          </p>
-        </div>
-      </div>
+      <StepHeader
+        eyebrow="Review"
+        title={tailoredFrom ? 'Tailored CV review' : 'Final review'}
+        subtitle={
+          tailoredFrom
+            ? 'Review the changes made to your CV before previewing.'
+            : "You've added all the essentials. Ready to visualize?"
+        }
+      />
 
       {/* Inline Score Guidance — replaces the auto-opening modal. The
           detailed diff + advice still lives in the modal; users open it

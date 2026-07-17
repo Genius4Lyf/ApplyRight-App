@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import {
-  Cpu,
   ArrowRight,
   ArrowLeft,
   Plus,
   X,
-  Sparkles,
   BrainCircuit,
   GripVertical,
   ChevronDown,
@@ -23,6 +21,7 @@ import InterviewPrepService from '../../services/interviewPrep.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 import JobKeywordPanel from '../../components/cv/JobKeywordPanel';
 import GeneratedSkillsModal from '../../components/cv/GeneratedSkillsModal';
 import CreditGate from '../../components/CreditGate';
@@ -355,16 +354,7 @@ const Skills = () => {
       onSubmit={onSubmit}
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-          <Cpu className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Skills</h2>
-          <p className="text-slate-500 dark:text-slate-400">Highlight your expertise.</p>
-        </div>
-      </div>
+      <StepHeader eyebrow="Skills" title="Skills" subtitle="Highlight your expertise." />
 
       <SectionTips
         sectionKey="cvbuilder_skills"
@@ -394,36 +384,30 @@ const Skills = () => {
                 Desktop keeps the single-row layout.
                 X dismiss is absolute-positioned so it never competes with
                 title/subtitle/CTA for horizontal space on phones. */}
-            <div className="bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-3 sm:px-4 sm:py-3 relative">
+            <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:px-4 sm:py-3 relative">
               <button
                 type="button"
                 onClick={() => handleDismissBanner(true)}
                 title="Don't show this again"
                 aria-label="Don't show this again"
-                className="absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 hover:bg-white/70 dark:hover:bg-white/10 p-1.5 rounded-md transition-colors"
+                className="absolute top-2 right-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-md transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 pr-8 sm:pr-10">
                 <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
-                    {isPro ? (
-                      <Sparkles className="w-4 h-4 text-indigo-500" />
-                    ) : (
-                      <BrainCircuit className="w-4 h-4" />
-                    )}
-                  </div>
+                  <BrainCircuit className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5 sm:mt-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                    <p className="font-heading text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       <span>{isPro ? 'Premium Auto-fill' : 'Auto-fill from your profile'}</span>
                       {isPro && (
-                        <span className="text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.1em] bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                           Pro
                         </span>
                       )}
                     </p>
-                    <p className="text-xs text-indigo-700/80 dark:text-indigo-300/80 leading-snug">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
                       {isPro
                         ? 'Pulls skills targeted to your job description with citations & interview talking points.'
                         : 'Pulls skills from your profile context. Upgrade to Pro to unlock STAR talking points.'}
@@ -435,15 +419,13 @@ const Skills = () => {
                     type="button"
                     onClick={handleGenerateSkills}
                     disabled={loadingAi}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0 transition-colors w-full sm:w-auto"
+                    className="btn-primary text-xs px-4 py-2 rounded-lg gap-1.5 shrink-0 disabled:opacity-50 w-full sm:w-auto"
                   >
-                    {loadingAi ? (
-                      <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-3.5 h-3.5" />
+                    {loadingAi && (
+                      <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     )}
                     <span>{loadingAi ? 'Generating…' : 'Auto-fill'}</span>
-                    <span className="text-indigo-200 font-normal">·</span>
+                    <span className="opacity-60 font-normal">·</span>
                     <span className="font-normal">Premium</span>
                   </button>
                 ) : (
@@ -452,15 +434,13 @@ const Skills = () => {
                       type="button"
                       onClick={handleGenerateSkills}
                       disabled={loadingAi}
-                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0 transition-colors w-full sm:w-auto"
+                      className="btn-primary text-xs px-4 py-2 rounded-lg gap-1.5 shrink-0 disabled:opacity-50 w-full sm:w-auto"
                     >
-                      {loadingAi ? (
-                        <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-3.5 h-3.5" />
+                      {loadingAi && (
+                        <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       )}
                       <span>{loadingAi ? 'Generating…' : 'Auto-fill'}</span>
-                      <span className="text-indigo-200 font-normal">·</span>
+                      <span className="opacity-60 font-normal">·</span>
                       <span className="font-normal">10 cr</span>
                     </button>
                   </CreditGate>
@@ -517,7 +497,7 @@ const Skills = () => {
                 aria-expanded={categoryDropdownOpen}
                 className={`w-full p-2.5 pr-8 border rounded-lg outline-none text-sm bg-white dark:bg-slate-900 text-left transition-colors flex items-center ${
                   categoryDropdownOpen
-                    ? 'border-indigo-500 ring-1 ring-indigo-500'
+                    ? 'border-slate-400 dark:border-slate-500 ring-1 ring-slate-300 dark:ring-slate-600'
                     : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                 }`}
               >
@@ -555,12 +535,14 @@ const Skills = () => {
                           }}
                           className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
                             selected
-                              ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-medium'
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium'
                               : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                           }`}
                         >
                           <span className="flex-1 truncate">{cat}</span>
-                          {selected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                          {selected && (
+                            <Check className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                          )}
                         </button>
                       );
                     })}
@@ -571,7 +553,7 @@ const Skills = () => {
                         setCategoryDropdownOpen(false);
                         setCreatingNewCategory(true);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 border-t border-slate-100 dark:border-slate-700 font-medium"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-t border-slate-100 dark:border-slate-700 font-medium"
                     >
                       <FolderPlus className="w-3.5 h-3.5 shrink-0" />
                       <span>New category…</span>
@@ -601,7 +583,7 @@ const Skills = () => {
             type="button"
             onClick={addSkill}
             disabled={!newSkillName.trim()}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5 shrink-0"
+            className="btn-primary px-4 py-2.5 gap-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
             Add
@@ -625,8 +607,8 @@ const Skills = () => {
         ) : (
           Object.entries(groupedSkills).map(([category, skills]) => (
             <div key={category} className="animate-in fade-in slide-in-from-bottom-2">
-              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+              <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                 {category}
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -638,11 +620,7 @@ const Skills = () => {
                   return (
                     <div
                       key={index}
-                      className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-                        skill.isAutoGenerated
-                          ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 hover:border-indigo-300 dark:hover:border-indigo-500/50'
-                          : 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 hover:border-emerald-300 dark:hover:border-emerald-500/50'
-                      }`}
+                      className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
                     >
                       <span className="cursor-default">{skill.name}</span>
                       {(hasEvidence || showLock) && (
@@ -663,10 +641,10 @@ const Skills = () => {
                           title={
                             showLock ? 'Unlock STAR talking points' : 'Where this skill comes from'
                           }
-                          className="p-1.5 -m-1 inline-flex items-center justify-center text-indigo-400 hover:text-indigo-700 transition-colors"
+                          className="p-1.5 -m-1 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                         >
                           {showLock ? (
-                            <Lock className="w-3 h-3 text-indigo-400 dark:text-indigo-300" />
+                            <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                           ) : (
                             <Info className="w-3.5 h-3.5" />
                           )}
@@ -676,11 +654,7 @@ const Skills = () => {
                         type="button"
                         onClick={() => removeSkill(globalIndex)}
                         aria-label={`Remove ${skill.name}`}
-                        className={`p-1.5 -m-1 inline-flex items-center justify-center transition-colors shrink-0 ${
-                          skill.isAutoGenerated
-                            ? 'text-indigo-400 dark:text-indigo-500 hover:text-rose-600 dark:hover:text-rose-400'
-                            : 'text-emerald-500 hover:text-rose-600 dark:hover:text-rose-400'
-                        }`}
+                        className="p-1.5 -m-1 inline-flex items-center justify-center transition-colors shrink-0 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -704,17 +678,19 @@ const Skills = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.25 }}
-            className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-indigo-500/15 dark:via-slate-800 dark:to-purple-500/15 p-4 sm:p-5"
+            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4 sm:p-5"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 shadow-sm">
-                {isPro ? <BookOpen className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-              </div>
+              {isPro ? (
+                <BookOpen className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-1" />
+              ) : (
+                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-1" />
+              )}
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h4 className="font-heading text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Save to Interview Prep</span>
                   {!isPro && (
-                    <span className="text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.1em] bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                       Pro
                     </span>
                   )}
@@ -730,11 +706,11 @@ const Skills = () => {
                       type="button"
                       onClick={handleSaveToInterviewPrep}
                       disabled={savingPrep || prepSaved}
-                      className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                      className={
                         prepSaved
-                          ? 'bg-emerald-600 text-white cursor-default'
-                          : 'bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white'
-                      }`}
+                          ? 'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-emerald-600 text-white cursor-default'
+                          : 'btn-primary gap-2 px-4 py-2.5 rounded-lg text-sm disabled:bg-slate-300 disabled:cursor-not-allowed'
+                      }
                     >
                       {savingPrep ? (
                         <>
@@ -754,10 +730,9 @@ const Skills = () => {
                   ) : (
                     <a
                       href="/pricing"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm w-full sm:w-auto"
+                      className="btn-primary gap-2 px-4 py-2.5 rounded-lg text-sm w-full sm:w-auto"
                     >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Upgrade to unlock Save to Prep</span>
+                      Upgrade to unlock Save to Prep
                     </a>
                   )}
                 </div>
@@ -880,21 +855,21 @@ const Skills = () => {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.2 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-slate-900 w-full sm:max-w-md sm:m-4 rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+                className="bg-white dark:bg-slate-900 w-full sm:max-w-md sm:m-4 rounded-t-2xl sm:rounded-xl p-6 max-h-[85vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
               >
                 {/* Drag-handle affordance on mobile */}
                 <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-4 sm:hidden" />
 
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 shrink-0">
+                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
                       <Lock className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider mb-0.5">
                         ApplyRight Pro Feature
                       </p>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                      <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100">
                         Interview Talking Points
                       </h3>
                     </div>
@@ -919,9 +894,9 @@ const Skills = () => {
                   </p>
 
                   <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 dark:to-slate-800/90 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-slate-900 pointer-events-none" />
                     <div className="flex items-center gap-1.5 mb-2 shrink-0">
-                      <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                      <BookOpen className="w-3.5 h-3.5 text-slate-400" />
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         STAR Interview Answer (Preview)
                       </p>
@@ -940,9 +915,8 @@ const Skills = () => {
                   <div className="pt-2 flex flex-col gap-2">
                     <a
                       href="/upgrade"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm text-center"
+                      className="btn-primary text-sm py-3 px-4 rounded-xl gap-2 text-center"
                     >
-                      <Sparkles className="w-4 h-4" />
                       <span>Upgrade to Pro</span>
                     </a>
                     <button

@@ -527,15 +527,20 @@ const CVBuilderInner = () => {
       <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
         {/* Main Content Area / Editor Panel */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Slim full-width progress strip — visible on every screen size,
-              replacing the desktop-only step dots that were hidden on mobile. */}
-          <div className="bg-slate-100 dark:bg-slate-900 h-1 w-full overflow-hidden shrink-0">
-            <div
-              className="h-full bg-indigo-600 transition-all duration-500 ease-out"
-              style={{
-                width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
-              }}
-            />
+          {/* Segmented step rail — one tick per step. Filled up to the current
+              step, muted ahead. Replaces the old percentage strip (which implied
+              smooth position between discrete steps). */}
+          <div className="flex gap-1 px-3 md:px-4 pt-2 w-full shrink-0" aria-hidden="true">
+            {steps.map((step, i) => (
+              <span
+                key={step.id}
+                className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                  i <= currentStepIndex
+                    ? 'bg-slate-900 dark:bg-white'
+                    : 'bg-slate-200 dark:bg-slate-800'
+                }`}
+              />
+            ))}
           </div>
 
           {/* Single compact header row: CV title (subtle, desktop only), the
@@ -544,6 +549,9 @@ const CVBuilderInner = () => {
               "Step X of N" text — clicking a step jumps straight to it, and
               goToStep auto-saves the section you're leaving first. */}
           <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-2 md:px-4 py-2 flex items-center gap-2 md:gap-3 shrink-0">
+            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0 tabular-nums">
+              {currentStepIndex + 1} / {steps.length}
+            </span>
             {editingTitle ? (
               <input
                 ref={titleInputRef}
@@ -592,20 +600,20 @@ const CVBuilderInner = () => {
                 else status = 'todo';
 
                 const pillClass = {
-                  current: 'bg-indigo-600 text-white',
+                  current: 'bg-slate-900 text-white dark:bg-white dark:text-slate-900',
                   complete:
-                    'text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50',
+                    'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50',
                   warning:
                     'text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/15 disabled:opacity-50',
-                  todo: 'text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50',
+                  todo: 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50',
                 }[status];
 
                 const badgeClass = {
-                  current: 'bg-white/20 text-white',
+                  current: 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900',
                   complete:
-                    'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:bg-emerald-300',
+                    'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
                   warning: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300',
-                  todo: 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/15 group-hover:text-indigo-700 dark:group-hover:text-indigo-300',
+                  todo: 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-700 dark:group-hover:text-slate-200',
                 }[status];
 
                 const title = {

@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, ArrowRight, ArrowLeft, Plus, Award, X } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 import {
   DndContext,
   closestCenter,
@@ -142,17 +143,11 @@ const Education = () => {
       onSubmit={onSubmit}
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-          <GraduationCap className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Education</h2>
-          <p className="text-slate-500 dark:text-slate-400">
-            Your academic background and qualifications.
-          </p>
-        </div>
-      </div>
+      <StepHeader
+        eyebrow="Education"
+        title="Education"
+        subtitle="Your academic background and qualifications."
+      />
 
       <SectionTips
         sectionKey="cvbuilder_education"
@@ -207,11 +202,11 @@ const Education = () => {
                       className="p-4 md:p-5 pr-28 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors select-none"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
                           <GraduationCap className="w-4.5 h-4.5" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">
+                          <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm truncate">
                             {edu.degree || 'Untitled Qualification'}
                             {edu.school && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
@@ -334,7 +329,7 @@ const Education = () => {
         <button
           type="button"
           onClick={addEducation}
-          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Another
         </button>
@@ -344,11 +339,11 @@ const Education = () => {
           into the CV after Education. High value for licence-gated roles. */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 md:p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
             <Award className="w-4.5 h-4.5" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
+            <h3 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm">
               Certifications &amp; Training{' '}
               <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
             </h3>
@@ -400,7 +395,7 @@ const Education = () => {
         <button
           type="button"
           onClick={addCertification}
-          className="text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 inline-flex items-center gap-1.5 transition-colors"
+          className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 inline-flex items-center gap-1.5 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add certification
         </button>

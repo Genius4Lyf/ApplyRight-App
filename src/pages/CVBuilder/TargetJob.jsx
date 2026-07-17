@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Target, ArrowRight, ArrowLeft, AlertCircle, X, Check } from 'lucide-react';
+import { Target, ArrowRight, ArrowLeft, X, Check } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
+import StepHeader from '../../components/cv/StepHeader';
 
 const TargetJob = () => {
   // Safely destructure context — fallback ensures hooks below see stable
@@ -68,19 +69,11 @@ const TargetJob = () => {
         onSubmit={onSubmit}
         className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
-            <Target className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-              Target Job Analysis
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Tell us what you're applying for so our AI can tailor your resume.
-            </p>
-          </div>
-        </div>
+        <StepHeader
+          eyebrow="Target role"
+          title="Target job analysis"
+          subtitle="Tell us what you're applying for so our AI can tailor your resume."
+        />
 
         <SectionTips
           sectionKey="cvbuilder_target"
@@ -169,13 +162,8 @@ const TargetJob = () => {
             </button>
 
             <div className="px-5 pt-7 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
-              {/* Hero icon */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center mb-4">
-                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600 dark:text-amber-300" />
-              </div>
-
               {/* Title + body */}
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight">
                 Add a target job title?
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -218,7 +206,7 @@ const TargetJob = () => {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors text-sm shadow-sm"
+                className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm"
               >
                 Add target job
               </button>

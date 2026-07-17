@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -76,18 +76,13 @@ const CVUploader = ({
       }`}
     >
       {!embedded && (
-        <div className="flex items-center gap-3 mb-4 lg:mb-6">
-          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-            <FileText className="w-5 h-5 lg:w-6 lg:h-6" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-base lg:text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Step 1 · Resume
-            </h3>
-            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
-              Upload your latest CV or portfolio
-            </p>
-          </div>
+        <div className="mb-4 lg:mb-6">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            Step 1 · Resume
+          </p>
+          <p className="mt-1 text-xs lg:text-sm text-slate-500 dark:text-slate-400">
+            Upload your latest CV or portfolio
+          </p>
         </div>
       )}
 
