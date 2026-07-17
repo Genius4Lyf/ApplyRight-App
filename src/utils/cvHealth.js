@@ -38,6 +38,10 @@ export function computeCvHealth(cvData = {}) {
   ];
   const contactMet = contactReqs.filter((r) => r.met).length;
   const contactEarned = Math.round((15 * contactMet) / 4);
+  const contactUnmet = contactReqs.filter((r) => !r.met).length || 1;
+  contactReqs.forEach((r) => {
+    r.gain = r.met ? 0 : Math.max(0, Math.round((15 - contactEarned) / contactUnmet));
+  });
   const contact = {
     id: 'contact',
     title: 'Contact Information',
@@ -70,12 +74,17 @@ export function computeCvHealth(cvData = {}) {
       ? `${exp.length} role${exp.length > 1 ? 's' : ''} · ${allBullets.length} bullet${allBullets.length === 1 ? '' : 's'}, ${quantified} with numbers`
       : 'Not started',
     requirements: [
-      { label: 'Add at least 2 roles', met: exp.length >= 2 },
+      { label: 'Add at least 2 roles', met: exp.length >= 2, gain: Math.max(0, 12 - rolesEarned) },
       {
         label: '2–3 bullet points per role',
         met: exp.length > 0 && rolesEnoughBullets === exp.length,
+        gain: Math.max(0, 8 - bulletsEarned),
       },
-      { label: 'Quantify achievements with numbers', met: ratio >= 0.3 },
+      {
+        label: 'Quantify achievements with numbers',
+        met: ratio >= 0.3,
+        gain: Math.max(0, 10 - quantEarned),
+      },
     ],
   };
 
@@ -86,7 +95,9 @@ export function computeCvHealth(cvData = {}) {
     recommended: true,
     status: projects.length >= 1 ? 'complete' : 'missing',
     detail: projects.length ? `${projects.length} added` : 'None yet',
-    requirements: [{ label: 'Add a project to showcase hands-on work', met: projects.length >= 1 }],
+    requirements: [
+      { label: 'Add a project to showcase hands-on work', met: projects.length >= 1, gain: 0 },
+    ],
   };
 
   // Certifications — recommended, NOT scored (like Projects). High value for
@@ -101,7 +112,7 @@ export function computeCvHealth(cvData = {}) {
     status: certs.length >= 1 ? 'complete' : 'missing',
     detail: certs.length ? `${certs.length} added` : 'None yet',
     requirements: [
-      { label: 'Add any licences, certificates, or training', met: certs.length >= 1 },
+      { label: 'Add any licences, certificates, or training', met: certs.length >= 1, gain: 0 },
     ],
   };
 
@@ -114,7 +125,9 @@ export function computeCvHealth(cvData = {}) {
     earned: eduEarned,
     status: statusFor(eduEarned, 15),
     detail: edu.length ? `${edu.length} ${edu.length > 1 ? 'entries' : 'entry'}` : 'Not started',
-    requirements: [{ label: 'Add at least one qualification', met: edu.length >= 1 }],
+    requirements: [
+      { label: 'Add at least one qualification', met: edu.length >= 1, gain: Math.max(0, 15 - eduEarned) },
+    ],
   };
 
   // Skills (25)
@@ -127,7 +140,9 @@ export function computeCvHealth(cvData = {}) {
     earned: skillsEarned,
     status: statusFor(skillsEarned, 25),
     detail: skills.length ? `${skills.length} listed` : 'Not started',
-    requirements: [{ label: 'List at least 8 relevant skills', met: skills.length >= 8 }],
+    requirements: [
+      { label: 'List at least 8 relevant skills', met: skills.length >= 8, gain: Math.max(0, 25 - skillsEarned) },
+    ],
   };
 
   // Professional Summary (15)
@@ -140,7 +155,9 @@ export function computeCvHealth(cvData = {}) {
     earned: summaryEarned,
     status: statusFor(summaryEarned, 15),
     detail: summaryText.length ? `${summaryText.length} characters` : 'Not started',
-    requirements: [{ label: 'A 3–4 sentence summary (100+ characters)', met: summaryMet }],
+    requirements: [
+      { label: 'A 3–4 sentence summary (100+ characters)', met: summaryMet, gain: Math.max(0, 15 - summaryEarned) },
+    ],
   };
 
   // Listed in the SAME order as the CV Builder steps so the coach can nudge the

@@ -1325,21 +1325,11 @@ const ResumeReview = () => {
           </button>
 
           {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-26rem)]">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-9rem)] lg:max-w-[calc(100%-26rem)]">
             {isDraftMode ? (
-              <input
-                type="text"
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                onBlur={commitDraftTitle}
-                aria-label="Draft title"
-                placeholder="Untitled draft"
-                size={Math.min(30, Math.max(10, titleValue.length + 1))}
-                className="font-heading text-base font-bold text-center text-slate-900 dark:text-slate-100 bg-transparent rounded px-1.5 py-0.5 border border-transparent outline-none transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              />
+              <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
+                {titleValue || 'Untitled draft'}
+              </h1>
             ) : (
               <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                 {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
@@ -1992,7 +1982,7 @@ const ResumeReview = () => {
           lg:h-full
           transition-transform duration-300 ease-in-out
           ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
-          max-h-[85vh] lg:max-h-none
+          h-[85vh] lg:max-h-none
           rounded-t-2xl lg:rounded-none
         `}
         >
@@ -2013,6 +2003,26 @@ const ResumeReview = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* Draft CV name — moved here from the toolbar so editing it on mobile
+                doesn't shift/overlap the toolbar row. Reuses the same handlers. */}
+            {isDraftMode && (
+              <div className="px-5 pt-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 block mb-1.5">
+                  CV name
+                </label>
+                <input
+                  type="text"
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  onBlur={commitDraftTitle}
+                  placeholder="Untitled draft"
+                  className="w-full text-sm font-semibold text-slate-900 dark:text-slate-100 bg-transparent rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                />
+              </div>
+            )}
             {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes). */}
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
               {!isDraftMode ? (

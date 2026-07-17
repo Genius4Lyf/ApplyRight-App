@@ -111,7 +111,12 @@ const LengthCoach = ({
       const w = vw < 640 ? vw - 16 : POPOVER_WIDTH;
       const left =
         vw < 640 ? 8 : Math.max(8, Math.min(btnRect.left + btnRect.width / 2 - w / 2, vw - w - 8));
-      setPos({ top: btnRect.bottom + 8, left, width: w });
+      setPos({
+        top: btnRect.bottom + 8,
+        left,
+        width: w,
+        maxHeight: Math.max(160, window.innerHeight - (btnRect.bottom + 8) - 16),
+      });
     };
     place();
     window.addEventListener('resize', place);
@@ -225,7 +230,14 @@ const LengthCoach = ({
             ref={popRef}
             role="dialog"
             aria-label="Page length coach"
-            style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width }}
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              width: pos.width,
+              maxHeight: pos.maxHeight,
+              overflowY: 'auto',
+            }}
             className="z-[200] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-lg text-left normal-case"
           >
             {pageCount === 1 ? (

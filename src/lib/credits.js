@@ -31,6 +31,8 @@ export const CREDIT_COSTS = {
   GENERATE_DRESS_GUIDE: 2,
   // Rewrite a professional summary into a tighter, shorter version (CV Studio).
   TIGHTEN_SUMMARY: 1,
+  // Coach: AI-rewrite one role's weak bullets (paid unlimited).
+  REWRITE_ROLE: 1,
 };
 
 // The backend uses the canonical key ANALYSIS for what the frontend calls
