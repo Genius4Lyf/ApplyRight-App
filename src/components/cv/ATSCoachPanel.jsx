@@ -20,27 +20,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
-import {
-  computeCvHealth,
-  healthColor,
-  computeRoleMatch,
-  roleMatchColor,
-} from '../../utils/cvHealth';
+import { computeCvHealth, healthColor } from '../../utils/cvHealth';
 import { getStepCoaching, getQuickReplies } from '../../utils/cvCoach';
 import { useCVBuilder } from '../../context/CVContext';
-import { CREDIT_COSTS } from '../../lib/credits';
-
-// Maps a CV Health section id → the builder step that fixes it. Drives the
-// "Go fix" navigation on the Top fixes list (certifications live on the education step).
-const SECTION_STEP = {
-  contact: 'heading',
-  history: 'history',
-  projects: 'projects',
-  education: 'education',
-  certifications: 'education',
-  skills: 'skills',
-  summary: 'summary',
-};
 
 // Small fade/rise wrapper for staggering result cards in.
 const Reveal = ({ children, delay = 0 }) => (
@@ -91,203 +73,6 @@ const ScoreRing = ({ score, size = 88 }) => {
         <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">/ 100</span>
       </div>
     </div>
-  );
-};
-
-// ─── CV Health Scoreboard (free, live) — the hero score at the top of the coach
-// panel. Promotes CV Health from a corner chip to a ring + plain-English band +
-// "to Strong" target, with an emerald delta that floats up when the score rises.
-// Deterministic, no AI/network. Shown to BOTH free and paid.
-const Scoreboard = ({ score, healthMeta }) => {
-  const prevRef = React.useRef(score);
-  const [delta, setDelta] = useState(null);
-  useEffect(() => {
-    const d = score - prevRef.current;
-    prevRef.current = score;
-    if (d > 0) {
-      setDelta(d);
-      const t = setTimeout(() => setDelta(null), 1100);
-      return () => clearTimeout(t);
-    }
-  }, [score]);
-
-  return (
-    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
-      <div className="flex items-center gap-3">
-        <div className="relative shrink-0">
-          <ScoreRing score={score} size={64} />
-          <AnimatePresence>
-            {delta != null && (
-              <motion.span
-                key={`d-${delta}-${score}`}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: -22 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="absolute left-1/2 -top-1 -translate-x-1/2 text-sm font-extrabold text-emerald-600 dark:text-emerald-400 pointer-events-none"
-              >
-                +{delta}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            CV Health · live
-          </div>
-          <div className={`font-heading text-base font-bold leading-tight mt-0.5 ${healthMeta.text}`}>
-            {healthMeta.label}
-          </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-            {score >= 100 ? (
-              'Recruiter-ready — perfect 100 ✓'
-            ) : score >= 80 ? (
-              <>Recruiter-ready — <span className="font-bold">{100 - score}</span> to a perfect 100</>
-            ) : (
-              <><span className="font-bold">+{80 - score}</span> to Strong</>
-            )}
-          </div>
-          <div className="relative mt-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700">
-            <motion.div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ background: healthMeta.ring }}
-              animate={{ width: `${score}%` }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            />
-            <div className="absolute -top-1 -bottom-1 w-0.5 rounded bg-slate-400/60 dark:bg-slate-500/60" style={{ left: '80%' }} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Top fixes — the ranked, tappable gap list under the Scoreboard. Handles two
-// kinds: deterministic point-fixes ("Go fix" → jump to the step, +N/PTS badge and
-// a "Next" chip on the top row) and AI phrasing rewrites ("Sharpen" → opens the
-// rewrite preview, priced in credits for free users). Shows an "all clear" state
-// when nothing's left. Shown to free AND paid.
-const TopFixes = ({ items, ptsToStrong, isPaid, rewriteCost, onGo, onRewrite }) => {
-  const [expanded, setExpanded] = useState(false);
-  if (!items.length)
-    return (
-      <section className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4 text-center">
-        <p className="font-heading text-base font-bold text-emerald-700 dark:text-emerald-300">
-          All clear — recruiter-ready ✓
-        </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Every required section is complete.
-        </p>
-      </section>
-    );
-  const shown = expanded ? items : items.slice(0, 3);
-  return (
-    <section className="space-y-2">
-      <div className="flex items-baseline justify-between px-1">
-        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Top fixes
-        </h3>
-        {ptsToStrong > 0 && (
-          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-            {ptsToStrong} pts to Strong
-          </span>
-        )}
-      </div>
-      {shown.map((f, i) => {
-        const isNext = i === 0 && f.kind === 'go';
-        return (
-          <div
-            key={f.id}
-            className={`flex items-center gap-3 rounded-xl border p-2.5 bg-white dark:bg-slate-900 ${
-              isNext
-                ? 'border-slate-300 dark:border-slate-600'
-                : 'border-slate-200 dark:border-slate-700'
-            }`}
-          >
-            {f.kind === 'go' ? (
-              <div className="shrink-0 w-8 flex flex-col items-center leading-none">
-                <span className="text-[13px] font-extrabold text-emerald-600 dark:text-emerald-400">
-                  +{f.gain}
-                </span>
-                <span className="text-[7px] font-bold tracking-widest text-slate-400 dark:text-slate-500 mt-0.5">
-                  PTS
-                </span>
-              </div>
-            ) : (
-              <div className="shrink-0 w-8 flex items-center justify-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded px-1 py-0.5">
-                  AI
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-snug">
-                {f.kind === 'go' ? f.label : `Sharpen “${f.title}”`}
-              </p>
-              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                {isNext && (
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-white dark:text-slate-900 bg-slate-900 dark:bg-white rounded px-1 py-px">
-                    Next
-                  </span>
-                )}
-                <span className="inline-block text-[8px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded px-1 py-px">
-                  {f.kind === 'go' ? f.sectionTitle : f.reason}
-                </span>
-              </div>
-            </div>
-            {f.kind === 'go' ? (
-              <button
-                onClick={() => onGo(f.stepId)}
-                className="shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 inline-flex items-center gap-1 transition-colors"
-              >
-                Go fix <ChevronRight className="w-3 h-3" />
-              </button>
-            ) : (
-              <button
-                onClick={() => onRewrite(f.section, f.sortId, f.title)}
-                className="shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-1 whitespace-nowrap transition-colors"
-              >
-                Rewrite
-                {!isPaid && (
-                  <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">
-                    · {rewriteCost}cr
-                  </span>
-                )}
-              </button>
-            )}
-          </div>
-        );
-      })}
-      {items.length > 3 && (
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="w-full text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-        >
-          {expanded ? 'Show fewer' : `${items.length - 3} more fix${items.length - 3 > 1 ? 'es' : ''}`}
-        </button>
-      )}
-    </section>
-  );
-};
-
-// ─── CV Health section card (grouped by section, with its requirements) ───
-const SectionStatusIcon = ({ status }) => {
-  if (status === 'complete')
-    return (
-      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center justify-center shrink-0">
-        <Check className="w-2.5 h-2.5" />
-      </span>
-    );
-  if (status === 'partial')
-    return (
-      <span className="w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-      </span>
-    );
-  return (
-    <span className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
   );
 };
 
@@ -463,47 +248,6 @@ const RedFlagsCard = ({ flags }) => (
 
 // A placeholder is any [bracketed] fill-in left by the ATS rewrite (e.g. "[X]%").
 const PLACEHOLDER_RE = /\[[^\]]+\]/;
-
-// Bullet openers / filler that read weak — mirrors the backend detectRedFlags lists
-// so the coach's live, per-role hints match what a Deep Scan would flag.
-const WEAK_OPENERS = [
-  'responsible for',
-  'worked on',
-  'helped',
-  'assisted',
-  'duties included',
-  'tasked with',
-  'in charge of',
-  'involved in',
-];
-const BUZZWORDS = [
-  'team player',
-  'hard worker',
-  'go-getter',
-  'synergy',
-  'detail-oriented',
-  'self-starter',
-  'results-driven',
-  'fast learner',
-];
-
-// Deterministic, instant per-role issues for the coach card (no AI / network) — the
-// same checks the Deep Scan runs, so "rewrite this role" can show WHY it's worth it.
-const roleIssues = (description) => {
-  const bullets = (description || '')
-    .split('\n')
-    .map((b) => b.trim())
-    .filter(Boolean);
-  const issues = [];
-  if (bullets.length < 2) issues.push('Add 2+ bullets');
-  if (bullets.length > 0 && !bullets.some((b) => /\d/.test(b))) issues.push('No numbers');
-  const stripped = (b) => b.replace(/^[•\-*\s]+/, '').toLowerCase();
-  if (bullets.some((b) => WEAK_OPENERS.some((w) => stripped(b).startsWith(w))))
-    issues.push('Passive opener');
-  if (BUZZWORDS.some((w) => bullets.join('\n').toLowerCase().includes(w))) issues.push('Buzzwords');
-  if (bullets.some((b) => PLACEHOLDER_RE.test(b))) issues.push('Fill in numbers');
-  return issues;
-};
 
 // One role/project row in a fix list — shared by the coach card and the Deep-Scan
 // TailorCard so the states read identically. Three states, animated:
@@ -1085,35 +829,6 @@ const CoachAnalyzing = ({ sectionLabel }) => {
 // The hero card: a live, conversational coach. When it flags something it can
 // help with, it ASKS — tapping the offer opens the focused island helper. The
 // scripted fallback shows tips instead of an offer.
-// What free users see in place of the coach: the live CV-strength score stays
-// visible (the Journey below is fully free), with a slim nudge to unlock the
-// conversational, role-aware AI coach + section reviews.
-const FreeCoachTeaser = ({ score, healthMeta, onUpgrade }) => (
-  <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-    <div className="flex items-center justify-between mb-2">
-      <div className="flex items-center gap-1.5">
-        <span className="w-6 h-6 rounded-full bg-white/70 dark:bg-slate-900/40 flex items-center justify-center text-slate-400">
-          <Lock className="w-3.5 h-3.5" />
-        </span>
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          AI Coach
-        </span>
-      </div>
-    </div>
-    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-      Your CV Health above is <strong>free</strong> — track it as you build. Unlock the{' '}
-      <strong>AI Coach</strong> for live, role-aware guidance and a review of each section against
-      the job you’re targeting.
-    </p>
-    <button
-      onClick={onUpgrade}
-      className="mt-3 text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 inline-flex items-center gap-1.5 transition-colors"
-    >
-      <Compass className="w-3.5 h-3.5" /> Unlock the AI Coach
-    </button>
-  </section>
-);
-
 const CoachCard = ({
   coaching,
   loading,
@@ -1329,200 +1044,6 @@ const CoachCard = ({
   );
 };
 
-// One row of the coach's "journey" — a section in builder order. Requirements
-// stay hidden behind the journey's "what each needs" toggle so the strip reads
-// as progress, not a checklist competing with the conversation.
-const JourneyRow = ({ section, showDetail }) => (
-  <div className="py-1.5">
-    <div className="flex items-center gap-2">
-      <SectionStatusIcon status={section.status} />
-      <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-        {section.title}
-      </span>
-      {section.recommended && (
-        <span className="text-[8px] uppercase font-bold tracking-wide text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 rounded px-1 py-px">
-          Recommended
-        </span>
-      )}
-      <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 truncate">
-        {section.detail}
-      </span>
-    </div>
-    {showDetail && section.status !== 'complete' && (
-      <ul className="mt-1.5 ml-6 space-y-1">
-        {section.requirements.map((r, i) => (
-          <li key={i} className="flex items-center gap-1.5 text-[11px]">
-            {r.met ? (
-              <Check className="w-3 h-3 text-emerald-500 shrink-0" />
-            ) : (
-              <span className="w-3 h-3 rounded-full border border-slate-300 dark:border-slate-600 shrink-0" />
-            )}
-            <span
-              className={
-                r.met
-                  ? 'text-slate-400 line-through dark:text-slate-500'
-                  : 'text-slate-600 dark:text-slate-300'
-              }
-            >
-              {r.label}
-            </span>
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-);
-
-// The coach's view of where you are — the builder sections in order, with the
-// Deep-Scan finale woven into the bottom. Subordinate to the conversation: this
-// is "your journey", not a separate scorecard.
-const Journey = ({ health, cvComplete, scanReady, isPaidHint, onEnterScan }) => {
-  const [showDetail, setShowDetail] = useState(false);
-  return (
-    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">Your CV journey</h3>
-        <button
-          onClick={() => setShowDetail((v) => !v)}
-          className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 hover:underline"
-        >
-          {showDetail ? 'Hide details' : 'What each needs'}
-        </button>
-      </div>
-
-      <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-        {health.sections.map((s) => (
-          <JourneyRow key={s.id} section={s} showDetail={showDetail} />
-        ))}
-      </div>
-
-      {/* Deep-Scan finale — woven into the journey, not a separate card. */}
-      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
-        {scanReady ? (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3"
-          >
-            <p className="text-xs font-extrabold mb-1 text-emerald-800 dark:text-emerald-200">
-              {cvComplete ? 'Your CV’s ready! 🎉' : 'Ready to scan'}
-            </p>
-            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mb-2">
-              {cvComplete
-                ? 'Every section’s done. See how it matches a real role.'
-                : 'See how your CV matches a real role — the more complete it is, the sharper the read.'}
-            </p>
-            <button
-              onClick={onEnterScan}
-              className="w-full text-sm font-bold px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors inline-flex items-center justify-center gap-2"
-            >
-              <ScanLine className="w-4 h-4" />
-              {isPaidHint ? 'Run ATS Deep Scan' : 'Run free Deep Scan'}
-            </button>
-          </motion.div>
-        ) : (
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-            <Lock className="w-3 h-3 shrink-0" />
-            Add a role, a few skills, or a short summary to unlock your Deep Scan.
-          </p>
-        )}
-      </div>
-    </section>
-  );
-};
-
-// ─── Role Match band (free honesty signal) ───
-// Sits above the coach so a COMPLETE CV can't read as a GREAT one for the target
-// job: completeness (the 0-100 health score) and relevance are shown separately.
-// The clash copy fires when the CV is finished but barely matches the role — the
-// exact "falsely-reassuring green 100%" case this band exists to prevent.
-const RoleMatchBand = ({ roleMatch, completeness, missing = [], onGoSkills }) => {
-  const [showAll, setShowAll] = useState(false);
-  const c = roleMatchColor(roleMatch.level);
-  const clash = completeness >= 80 && roleMatch.level === 'low';
-  let msg;
-  if (clash) {
-    msg = `Your CV is complete, but it covers only ${roleMatch.pct}% of what this job asks for. A finished CV isn't the same as a matched one — weave in the keywords that are genuinely true for you.`;
-  } else if (roleMatch.level === 'low') {
-    msg = `Your CV covers little of this role's keywords so far (${roleMatch.covered}/${roleMatch.total}). Add the ones that are genuinely true for you.`;
-  } else if (roleMatch.level === 'medium') {
-    msg = `Partial match — ${roleMatch.covered}/${roleMatch.total} of this role's key terms are covered. Close the gaps to climb higher.`;
-  } else {
-    msg = `Strong alignment — ${roleMatch.covered}/${roleMatch.total} of this role's key terms are covered. Nice work.`;
-  }
-  return (
-    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <Target className={`w-4 h-4 ${c.text}`} />
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">Role match</h3>
-        </div>
-        <span className={`text-xs font-extrabold ${c.text}`}>{roleMatch.pct}%</span>
-      </div>
-      <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
-        <div
-          className={`h-full ${c.bar} transition-all duration-500`}
-          style={{ width: `${roleMatch.pct}%` }}
-        />
-      </div>
-      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{msg}</p>
-      {roleMatch.mustHaveTotal > 0 && (
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-          must-haves {roleMatch.mustHaveCovered}/{roleMatch.mustHaveTotal}
-        </p>
-      )}
-      {missing.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Add the ones genuinely yours
-            </span>
-            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
-              {roleMatch.covered}/{roleMatch.total} covered
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {(showAll ? missing : missing.slice(0, 8)).map((k, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
-              >
-                {k.importance === 'must_have' && (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"
-                    title="Must-have"
-                  />
-                )}
-                {k.name}
-              </span>
-            ))}
-          </div>
-          <div className="mt-2.5 flex items-center justify-between">
-            {missing.length > 8 ? (
-              <button
-                onClick={() => setShowAll((v) => !v)}
-                className="text-[9.5px] font-mono uppercase tracking-wide text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showAll ? 'show fewer' : `+${missing.length - 8} more`}
-              </button>
-            ) : (
-              <span />
-            )}
-            {onGoSkills && (
-              <button
-                onClick={onGoSkills}
-                className="text-[11px] font-bold text-slate-800 dark:text-slate-100 hover:opacity-70 inline-flex items-center gap-1 transition-opacity"
-              >
-                Add in Skills <ChevronRight className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-    </section>
-  );
-};
-
 // Steps the coach verifies LIVE and deterministically (no AI round-trip), so they
 // re-verify the instant they're complete. Contact is pure fill-in fields, so its
 // scripted verdict (computed from liveCvData) is exact and updates as you type.
@@ -1556,167 +1077,11 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
   const scripted = useMemo(() => getStepCoaching(currentStepId, cvData), [currentStepId, cvData]);
   const healthMeta = healthColor(health.score);
 
-  // Coach conversation (per-step replies + interaction) AND the role-match coverage
-  // result are cached in the builder context, so leaving the panel — e.g. closing
-  // the mobile coach bubble or flipping to the Preview tab — and returning restores
-  // them instead of re-fetching. See `_roleCoverage` in the coverage effect below.
-  const {
-    coachState: aiByStep,
-    setCoachState: setAiByStep,
-    applyRoleEdit,
-    steps,
-    goToStep,
-  } = useCVBuilder();
+  // Coach conversation (per-step replies + interaction) is cached in the builder
+  // context, so leaving the panel — e.g. closing the mobile coach bubble or flipping
+  // to the Preview tab — and returning restores it instead of re-fetching.
+  const { coachState: aiByStep, setCoachState: setAiByStep, applyRoleEdit } = useCVBuilder();
 
-  // ── Top fixes (free, deterministic) ──
-  // Flatten every unmet, point-bearing requirement of an incomplete (non-recommended)
-  // section into a single list ranked by projected point gain, each linking to the
-  // builder step that fixes it. Re-derives on every score change — completing a
-  // requirement drops its row and the Scoreboard climbs.
-  const fixes = useMemo(() => {
-    const out = [];
-    for (const s of health.sections) {
-      if (s.recommended || s.status === 'complete') continue;
-      for (const r of s.requirements || []) {
-        if (r.met || !r.gain) continue;
-        out.push({
-          id: `${s.id}:${r.label}`,
-          sectionTitle: s.title,
-          label: r.label,
-          gain: r.gain,
-          stepId: SECTION_STEP[s.id],
-        });
-      }
-    }
-    return out.sort((a, b) => b.gain - a.gain);
-  }, [health]);
-  const goToFix = (stepId) => {
-    const idx = steps.findIndex((s) => s.id === stepId);
-    if (idx >= 0) goToStep(idx);
-  };
-
-  // ── Sharpen fixes (AI rewrite, priced in credits) ──
-  // Scans ALL roles/projects (not just the current step) for phrasing the AI
-  // rewrite can fix — passive openers and buzzwords. Each becomes a "Sharpen"
-  // row that opens the existing rewrite preview.
-  const sharpenFixes = useMemo(() => {
-    const out = [];
-    const scan = (list, section) =>
-      (list || []).forEach((e) => {
-        const phrasing = roleIssues(e.description || '').filter(
-          (x) => x === 'Passive opener' || x === 'Buzzwords'
-        );
-        if (phrasing.length)
-          out.push({
-            id: `${section}:${e._sortId}`,
-            kind: 'rewrite',
-            section,
-            sortId: e._sortId,
-            title: e.title || (section === 'experience' ? 'Untitled role' : 'Untitled project'),
-            reason: phrasing.join(' · '),
-          });
-      });
-    scan(cvData.experience, 'experience');
-    scan(cvData.projects, 'project');
-    return out;
-  }, [cvData.experience, cvData.projects]);
-  const allFixes = useMemo(
-    () => [...fixes.map((f) => ({ ...f, kind: 'go' })), ...sharpenFixes],
-    [fixes, sharpenFixes]
-  );
-
-  // ── Role Match (free JD-relevance honesty band) ──
-  // Pre-check with no coverage to read eligibility: only fetch the (free, no-AI)
-  // backend coverage once there's a JD AND enough content — so we never show a
-  // red "low match" on a barely-started CV, and never fetch needlessly.
-  const roleMatchPre = useMemo(() => computeRoleMatch(cvData, null), [cvData]);
-  const shouldFetchCoverage = roleMatchPre.reason === 'pending';
-  const [coverage, setCoverage] = useState(null);
-  const skillNames = useMemo(
-    () => (cvData.skills || []).map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean),
-    [cvData.skills]
-  );
-  const bulletsText = useMemo(
-    () => (cvData.experience || []).map((e) => e.description || '').join('\n'),
-    [cvData.experience]
-  );
-  const coverageSig = `${(cvData.targetJob?.description || '').trim()}::${skillNames.join('|')}::${bulletsText}`;
-
-  useEffect(() => {
-    if (!shouldFetchCoverage) {
-      setCoverage(null);
-      return undefined;
-    }
-    // Reuse the coverage already computed for these exact inputs. This survives the
-    // panel unmounting (mobile: closing the coach bubble / switching to Preview), so
-    // reopening does NOT re-hit /ai/job-keywords + /ai/keyword-coverage every time.
-    const cachedCov = aiByStep._roleCoverage;
-    if (cachedCov?.sig === coverageSig) {
-      setCoverage(cachedCov.coverage);
-      return undefined;
-    }
-    let cancelled = false;
-    const t = setTimeout(async () => {
-      try {
-        // Prefer the paid AI keyword set cached on the draft; else the free
-        // deterministic baseline. Same two endpoints the JobKeywordPanel uses.
-        const cached = cvData.targetJob?.aiKeywords;
-        let keywords = Array.isArray(cached) && cached.length ? cached : null;
-        if (!keywords) {
-          const kw = await CVService.getJobKeywords({
-            title: cvData.targetJob?.title || '',
-            description: cvData.targetJob?.description || '',
-          });
-          keywords = Array.isArray(kw?.keywords) ? kw.keywords : [];
-        }
-        if (keywords.length === 0) {
-          if (!cancelled) setCoverage(null);
-          return;
-        }
-        const cov = await CVService.getKeywordCoverage(keywords, {
-          text: bulletsText,
-          skills: skillNames,
-        });
-        if (!cancelled) {
-          setCoverage(cov);
-          // Cache against the inputs so a remount reuses it instead of re-fetching.
-          setAiByStep((m) => ({ ...m, _roleCoverage: { sig: coverageSig, coverage: cov } }));
-        }
-      } catch {
-        if (!cancelled) setCoverage(null); // degrade silently — it's a guidance band
-      }
-    }, 600);
-    return () => {
-      cancelled = true;
-      clearTimeout(t);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldFetchCoverage, coverageSig]);
-
-  const roleMatch = useMemo(() => computeRoleMatch(cvData, coverage), [cvData, coverage]);
-  // The uncovered JD keywords (must-haves first) — honest "add these if genuinely
-  // yours" guidance surfaced in the free Role Match band. No network: the coverage
-  // payload already flags each keyword's `covered`.
-  const missingKeywords = useMemo(() => {
-    const results = coverage?.results || [];
-    return results
-      .filter((r) => !r.covered)
-      .sort(
-        (a, b) =>
-          (b.importance === 'must_have' ? 1 : 0) - (a.importance === 'must_have' ? 1 : 0)
-      );
-  }, [coverage]);
-  const cvComplete = health.sections.every((s) => s.recommended || s.status === 'complete');
-  // Mirrors the backend enoughCv guard (deepScan): unlock the Deep Scan CTA as soon
-  // as there's something real to scan, not at 100% — the backend refuses (and spends
-  // no taste on) a too-empty CV, so this can safely open early.
-  const scanReady = useMemo(() => {
-    const exp = cvData.experience || [];
-    const skills = (cvData.skills || []).filter(Boolean);
-    const projects = cvData.projects || [];
-    const summary = (cvData.professionalSummary || '').trim();
-    return exp.length >= 1 || skills.length >= 3 || projects.length >= 1 || summary.length >= 40;
-  }, [cvData.experience, cvData.skills, cvData.projects, cvData.professionalSummary]);
   const isPaidHint = user?.plan === 'paid';
   // Roles the user has sharpened this session (persisted in coachState/sessionStorage),
   // so their rows render the green "Sharpened ✓" state. See applyRewrite.
@@ -2073,91 +1438,55 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           transition={{ duration: 0.2 }}
           className="space-y-4"
         >
-          {/* The conversational coach is paid-only (the hero). Free users get the
-              deterministic Journey below + a slim unlock teaser here. */}
-          {isPaidHint ? (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStepId || 'intro'}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <CoachCard
-                  coaching={coaching}
-                  loading={aiLoading}
-                  analyzing={analyzing}
-                  sectionLabel={STEP_NOUNS[currentStepId] || 'CV'}
-                  limited={aiLimited}
-                  score={health.score}
-                  healthMeta={healthMeta}
-                  quickReplies={quickReplies}
-                  interaction={aiEntry}
-                  onInteraction={(p) => setStepInteraction(currentStepId, p)}
-                  onQuickReply={(signal) => fetchGuide(currentStepId, signal)}
-                  onRefresh={
-                    isLiveStep || isManualStep ? undefined : () => fetchGuide(currentStepId)
-                  }
-                  onUpgrade={() => navigate('/upgrade')}
-                  // The coach only "types" a message the first time it's shown. Once
-                  // seen, reopening the panel on the same step renders it in full — no
-                  // re-writing. Tracked in the persisted context so it survives remount.
-                  messageSeen={!!aiByStep._typedMsgs?.[coaching.message]}
-                  onMessageDone={() =>
-                    setAiByStep((m) =>
-                      m._typedMsgs?.[coaching.message]
-                        ? m
-                        : {
-                            ...m,
-                            _typedMsgs: { ...(m._typedMsgs || {}), [coaching.message]: true },
-                          }
-                    )
-                  }
-                />
-              </motion.div>
-            </AnimatePresence>
-          ) : (
-            <FreeCoachTeaser
-              score={health.score}
-              healthMeta={healthMeta}
-              onUpgrade={() => navigate('/upgrade')}
-            />
-          )}
-
-          {/* CV Health hero — the live, free score. Above the isPaidHint split so
-              it surfaces for free and paid alike. */}
-          <Scoreboard score={health.score} healthMeta={healthMeta} />
-
-          {/* Ranked, tappable gap list — the closed fix loop. Free and paid. */}
-          <TopFixes
-            items={allFixes}
-            ptsToStrong={Math.max(0, 80 - health.score)}
-            isPaid={isPaidHint}
-            rewriteCost={CREDIT_COSTS.REWRITE_ROLE ?? 1}
-            onGo={goToFix}
-            onRewrite={openRewrite}
-          />
-
-          {/* Role Match honesty band — keeps a complete CV from reading as a great
-              fit for the wrong job. Free, shown to everyone once applicable. */}
-          {roleMatch.applicable && (
-            <RoleMatchBand
-              roleMatch={roleMatch}
-              completeness={health.score}
-              missing={missingKeywords}
-              onGoSkills={() => goToFix('skills')}
-            />
-          )}
-
-          {/* The coach's view of where you are — journey + Deep-Scan finale. */}
-          <Journey
-            health={health}
-            cvComplete={cvComplete}
-            scanReady={scanReady}
-            isPaidHint={isPaidHint}
-            onEnterScan={enterScan}
-          />
+          {/* The per-step conversational coach — shown to EVERYONE. Paid users get
+              the AI coach (quick replies, refresh); free users get the deterministic
+              scripted message (`coaching` falls back to it), with the AI-only
+              affordances suppressed so nothing ever hits the paid backend. */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStepId || 'intro'}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <CoachCard
+                coaching={coaching}
+                loading={aiLoading}
+                analyzing={analyzing}
+                sectionLabel={STEP_NOUNS[currentStepId] || 'CV'}
+                limited={aiLimited}
+                score={health.score}
+                healthMeta={healthMeta}
+                quickReplies={isPaidHint ? quickReplies : []}
+                interaction={aiEntry}
+                onInteraction={(p) => setStepInteraction(currentStepId, p)}
+                onQuickReply={
+                  isPaidHint ? (signal) => fetchGuide(currentStepId, signal) : undefined
+                }
+                onRefresh={
+                  isPaidHint && !isLiveStep && !isManualStep
+                    ? () => fetchGuide(currentStepId)
+                    : undefined
+                }
+                onUpgrade={() => navigate('/upgrade')}
+                // The coach only "types" a message the first time it's shown. Once
+                // seen, reopening the panel on the same step renders it in full — no
+                // re-writing. Tracked in the persisted context so it survives remount.
+                messageSeen={!!aiByStep._typedMsgs?.[coaching.message]}
+                onMessageDone={() =>
+                  setAiByStep((m) =>
+                    m._typedMsgs?.[coaching.message]
+                      ? m
+                      : {
+                          ...m,
+                          _typedMsgs: { ...(m._typedMsgs || {}), [coaching.message]: true },
+                        }
+                  )
+                }
+              />
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       ) : (
         <motion.div

@@ -11,7 +11,6 @@ import {
   Eye,
   EyeOff,
   X,
-  Sparkles,
   FileText,
   Target,
   Lock,
@@ -725,8 +724,7 @@ const CVBuilderInner = () => {
                           : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                       }`}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      ATS Coach
+                      Coach
                     </button>
                     <button
                       type="button"
@@ -831,8 +829,7 @@ const CVBuilderInner = () => {
                       : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  ATS Coach
+                  Coach
                 </button>
                 <button
                   type="button"
