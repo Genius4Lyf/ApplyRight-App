@@ -5,8 +5,7 @@ import {
   useOutlet,
   Navigate,
 } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Sun, Moon } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { cloneElement, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
@@ -168,7 +167,7 @@ const AgentRoute = ({ children }) => {
 const RootLayout = () => {
   const location = useLocation();
   const element = useOutlet();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
 
   // Dark mode is scoped to the authenticated user UI only. Toggle `.dark` on
   // <html> (so React portals rendered to document.body inherit it) whenever the
@@ -207,69 +206,24 @@ const RootLayout = () => {
       <div className="fixed inset-0 z-[-1] pointer-events-none bg-[#f6f6f3] dark:bg-slate-950"></div>
 
       <div
-        className={`relative z-0 ${showNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''}`}
+        className={`relative z-0 ${
+          showNav
+            ? // The bottom bar clears the content: on native it's always visible;
+              // on web it's mobile-only (md:hidden), so drop the padding at md+.
+              `pb-[calc(4rem+env(safe-area-inset-bottom))]${isMobile() ? '' : ' md:pb-0'}`
+            : ''
+        }`}
       >
         <AnimatePresence mode="wait">
           {element && cloneElement(element, { key: getPageKey(location.pathname) })}
         </AnimatePresence>
-        {/* Inside the wrapper so modals (z-50) can stack above the nav (z-40);
-            otherwise the wrapper's z-0 traps modal z-index in its own stacking
-            context and the nav punches through the backdrop on Android. */}
-        <MobileBottomNav />
-
-        {/* Floating Theme Toggle */}
-        <AnimatePresence>
-          {isDarkEligibleRoute(location.pathname) && (
-            <motion.div
-              className={`fixed right-4 md:right-6 z-40 flex items-center justify-center ${
-                showNav
-                  ? 'bottom-[calc(7.5rem+env(safe-area-inset-bottom))] md:bottom-6'
-                  : 'bottom-24 md:bottom-6'
-              }`}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            >
-              <motion.button
-                type="button"
-                onClick={toggleTheme}
-                className={`relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center backdrop-blur-md border shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  theme === 'light'
-                    ? 'bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-950 border-slate-800/80 text-slate-100 focus:ring-slate-500'
-                    : 'bg-white/90 border-slate-200/60 text-slate-700 focus:ring-amber-400'
-                }`}
-                aria-label="Toggle dark mode"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {/* Twinkling stars background inside circle (active when theme is light, representing the night mode toggle) */}
-                {theme === 'light' && (
-                  <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-                    <div className="absolute top-1.5 left-2.5 w-[2px] h-[2px] bg-white rounded-full opacity-70 animate-[pulse_1.5s_infinite]" />
-                    <div className="absolute top-3 right-2.5 w-[3px] h-[3px] bg-yellow-100 rounded-full opacity-50 animate-[pulse_2s_infinite]" />
-                    <div className="absolute bottom-2 left-3.5 w-[2px] h-[2px] bg-white rounded-full opacity-85 animate-[pulse_1.2s_infinite]" />
-                    <div className="absolute bottom-2.5 right-2 w-[2px] h-[2px] bg-white rounded-full opacity-60 animate-[pulse_1.8s_infinite]" />
-                  </div>
-                )}
-
-                {/* Inner glowing radial effect */}
-                {theme === 'light' ? (
-                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.2)_0%,transparent_70%)] animate-[pulse_3s_ease-in-out_infinite] pointer-events-none" />
-                ) : (
-                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.35)_0%,transparent_70%)] animate-[pulse_2.5s_ease-in-out_infinite] pointer-events-none" />
-                )}
-
-                {theme === 'light' ? (
-                  <Moon className="w-5 h-5 text-indigo-300 relative z-10" />
-                ) : (
-                  <Sun className="w-5 h-5 text-amber-500 relative z-10 animate-[spin_40s_linear_infinite]" />
-                )}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Sibling of the z-0 page-content wrapper (not inside it) so page content
+          can never paint over the tabs — content scrolls cleanly underneath.
+          Modals are portaled to document.body at z-50, so they still stack above
+          this z-40 nav. */}
+      <MobileBottomNav />
     </SessionManager>
   );
 };

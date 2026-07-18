@@ -10,20 +10,14 @@ import {
   Pencil,
   Eye,
   EyeOff,
-  X,
-  FileText,
+  ChevronLeft,
   Target,
   Lock,
   Crown,
-  Bot,
-  MessageCircle,
 } from 'lucide-react';
 import { CVBuilderProvider, useCVBuilder } from '../../context/CVContext';
-import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import ATSCoachPanel from '../../components/cv/ATSCoachPanel';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
-import { getBotNudge } from '../../utils/cvCoach';
-import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
 
 const ScaledCVPreview = ({ cvData }) => {
@@ -208,149 +202,6 @@ const ScaledCVPreview = ({ cvData }) => {
   );
 };
 
-// ─── Draggable floating Coach bot (mobile) ───
-// A friendly AI-bot button the user can fling to either side of the screen and
-// slide up/down. Replaces the old fixed "Coach & Preview" FAB that collided with
-// the global dark-mode toggle. When the coach has something new to say (the user
-// moved to a new builder step while the sheet was closed), the bot pulses and
-// pops a little chat bubble so it reads like an incoming message.
-const FAB_SIZE = 56; // px — keep in sync with the w-14 h-14 below
-const FAB_MARGIN = 16;
-
-const CoachBotFab = ({ hasNew, message, onOpen, hidden }) => {
-  const initial = () => {
-    const w = typeof window !== 'undefined' ? window.innerWidth : 375;
-    // Default to the RIGHT edge, at the "Tips for this section" row — where the user
-    // expects the coach to live — clear of the bottom-right dark-mode toggle.
-    return { x: w - FAB_SIZE - FAB_MARGIN, y: 200 };
-  };
-  const start = initial();
-  const x = useMotionValue(start.x);
-  const y = useMotionValue(start.y);
-  const draggedRef = useRef(false);
-  // Which edge the bot is parked on — drives which way the speech bubble opens.
-  const [side, setSide] = useState(
-    start.x + FAB_SIZE / 2 < (typeof window !== 'undefined' ? window.innerWidth : 375) / 2
-      ? 'left'
-      : 'right'
-  );
-  const [dragging, setDragging] = useState(false);
-
-  // Snap to the nearest vertical edge and keep the bot fully on-screen.
-  const snapToEdge = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const onLeft = x.get() + FAB_SIZE / 2 < w / 2;
-    const targetX = onLeft ? FAB_MARGIN : w - FAB_SIZE - FAB_MARGIN;
-    const targetY = Math.min(Math.max(y.get(), FAB_MARGIN + 64), h - FAB_SIZE - FAB_MARGIN);
-    const spring = { type: 'spring', stiffness: 500, damping: 32 };
-    animate(x, targetX, spring);
-    animate(y, targetY, spring);
-    setSide(onLeft ? 'left' : 'right');
-  };
-
-  // Keep it on-screen if the viewport changes (rotation / keyboard).
-  useEffect(() => {
-    const onResize = () => snapToEdge();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleOpen = () => {
-    // Pass the bot's current CENTRE so the coach window can grow out of exactly
-    // where the bot sits (wherever the user has dragged it), not a fixed corner.
-    if (!draggedRef.current) onOpen({ cx: x.get() + FAB_SIZE / 2, cy: y.get() + FAB_SIZE / 2 });
-  };
-
-  return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      dragElastic={0.06}
-      whileDrag={{ scale: 1.06 }}
-      style={{ x, y }}
-      onDragStart={() => {
-        draggedRef.current = true;
-        setDragging(true);
-      }}
-      onDragEnd={() => {
-        snapToEdge();
-        setDragging(false);
-        // Let the click handler that fires right after pointer-up see the drag.
-        setTimeout(() => {
-          draggedRef.current = false;
-        }, 60);
-      }}
-      className={`lg:hidden fixed top-0 left-0 z-40 touch-none select-none transition-opacity duration-200 ${
-        hidden ? 'pointer-events-none opacity-0' : 'opacity-100'
-      }`}
-    >
-      <div className="relative">
-        {/* Proactive speech bubble — pops beside the bot, opening away from the edge */}
-        <AnimatePresence>
-          {message && !dragging && (
-            <motion.div
-              key={message}
-              initial={{ opacity: 0, scale: 0.8, x: side === 'right' ? 8 : -8 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpen();
-              }}
-              style={{ transformOrigin: side === 'right' ? 'right center' : 'left center' }}
-              className={`absolute top-1/2 -translate-y-1/2 w-max max-w-[200px] cursor-pointer rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100 text-[11px] leading-snug font-medium px-3 py-2 shadow-xl shadow-indigo-900/20 border border-slate-200 dark:border-slate-700 ${
-                side === 'right' ? 'right-full mr-3' : 'left-full ml-3'
-              }`}
-            >
-              {message}
-              {/* Little tail pointing at the bot */}
-              <span
-                className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${
-                  side === 'right' ? '-right-1 border-t border-r' : '-left-1 border-b border-l'
-                }`}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* The bot button */}
-        <motion.button
-          type="button"
-          aria-label="Open ATS Coach & Preview"
-          whileTap={{ scale: 0.92 }}
-          onClick={handleOpen}
-          className="relative w-14 h-14 rounded-full shadow-xl shadow-indigo-900/30 bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 text-white flex items-center justify-center cursor-grab active:cursor-grabbing border border-white/20"
-        >
-          {/* Pulsing halo while a new message waits */}
-          {hasNew && (
-            <span className="absolute inset-0 rounded-full bg-indigo-400/60 animate-ping" />
-          )}
-
-          <Bot className="w-7 h-7 relative z-10" />
-
-          {/* Incoming-message badge */}
-          <AnimatePresence>
-            {hasNew && (
-              <motion.span
-                initial={{ scale: 0, opacity: 0, y: 4 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-                className="absolute -top-1.5 -right-1.5 z-20 w-6 h-6 rounded-full bg-amber-400 text-indigo-950 flex items-center justify-center shadow-md border-2 border-white"
-              >
-                <MessageCircle className="w-3 h-3" fill="currentColor" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-};
-
 const CVBuilderInner = () => {
   const {
     cvData,
@@ -374,72 +225,32 @@ const CVBuilderInner = () => {
   } = useCVBuilder();
 
   const [showPreview, setShowPreview] = useState(true);
-  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('coach'); // 'coach' | 'preview'
-
-  // Pin the page behind the coach/preview sheet so it can't scroll or jump while open.
-  useBodyScrollLock(mobilePreviewOpen);
-  // Drives the bot's "new message" pulse: the coach has fresh guidance for the
-  // step the user just landed on, but they haven't opened the sheet to read it.
-  const [coachHasNew, setCoachHasNew] = useState(true);
-  // The short proactive line the bot "speaks" a few seconds after the user lands
-  // on a step (null = no bubble showing).
-  const [botMessage, setBotMessage] = useState(null);
-  // Viewport-centre of the bot at the moment the coach was opened, so the window
-  // animates OUT of the bot's position (wherever it is) instead of a fixed corner.
-  const [bubbleOrigin, setBubbleOrigin] = useState(null);
 
   // The step the user is on now — drives the dynamic coaching and the tab
   // auto-switch below.
   const currentStepId = steps[currentStepIndex]?.id;
 
-  // Each time the user moves to a new step while the mobile sheet is closed, the
-  // coach has something new to say — light up the bot. Opening the sheet clears it.
-  // Adjusted DURING RENDER (React's recommended alternative to a setState-in-effect),
-  // mirroring the tab auto-switch below.
-  const [coachStepSeen, setCoachStepSeen] = useState(currentStepId);
-  if (currentStepId !== coachStepSeen) {
-    setCoachStepSeen(currentStepId);
-    if (!mobilePreviewOpen) setCoachHasNew(true);
-  }
-
-  const openMobileCoach = (origin) => {
-    if (origin) setBubbleOrigin(origin);
-    setMobilePreviewOpen(true);
-    setCoachHasNew(false);
-    setBotMessage(null); // opening the coach consumes the nudge
+  // ── Draggable mobile coach drawer ────────────────────────────────────────────
+  // The coach lives in an always-present bottom drawer the student drags up (to
+  // read/chat, up to ~85vh) or down to a small peek — so they balance the CV form
+  // against the conversation. Height is a plain px value driven by the drag handle.
+  const DRAWER_MIN = 140;
+  const drawerMax = () => Math.round(window.innerHeight * 0.85);
+  const [drawerH, setDrawerH] = useState(260); // resting "peek"
+  const dragRef = useRef(null);
+  const onDragStart = (e) => {
+    dragRef.current = { y: e.clientY, h: drawerH };
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
-
-  // ── Proactive bot nudge ──────────────────────────────────────────────────
-  // A few seconds after the user lands on a NEW step (and only while the coach
-  // sheet is closed), the bot pops a short, step-aware speech bubble — an invite
-  // to review, a "looks done" celebration, or a quick motivation tip. Once per
-  // step entry; auto-dismisses after a few seconds.
-  const previewOpenRef = useRef(mobilePreviewOpen); // latest value for the timers
-  previewOpenRef.current = mobilePreviewOpen;
-  const hasGreetedRef = useRef(false); // first nudge of the session greets
-
-  useEffect(() => {
-    // Re-runs on genuine step change only (not on sheet open/close or re-renders).
-    const showTimer = setTimeout(() => {
-      if (previewOpenRef.current) return; // sheet open — say nothing
-      setBotMessage(
-        getBotNudge(currentStepId, liveCvData, {
-          isComplete: isStepComplete(currentStepId),
-          firstTime: !hasGreetedRef.current,
-        })
-      );
-      hasGreetedRef.current = true;
-    }, 3500);
-    return () => clearTimeout(showTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepId]);
-
-  useEffect(() => {
-    if (!botMessage) return undefined;
-    const hideTimer = setTimeout(() => setBotMessage(null), 7000);
-    return () => clearTimeout(hideTimer);
-  }, [botMessage]);
+  const onDragMove = (e) => {
+    if (!dragRef.current) return;
+    const h = dragRef.current.h + (dragRef.current.y - e.clientY);
+    setDrawerH(Math.max(DRAWER_MIN, Math.min(drawerMax(), h)));
+  };
+  const onDragEnd = () => {
+    dragRef.current = null;
+  };
 
   // Coach the user through every building step, then hand them the live preview
   // the moment they reach Review (finalize) for a "here's your finished CV" moment.
@@ -520,12 +331,12 @@ const CVBuilderInner = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="h-dvh overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
       <Navbar />
 
-      <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Main Content Area / Editor Panel */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex-1 flex flex-col overflow-hidden relative min-h-0">
           {/* Segmented step rail — one tick per step. Filled up to the current
               step, muted ahead. Replaces the old percentage strip (which implied
               smooth position between discrete steps). */}
@@ -672,10 +483,10 @@ const CVBuilderInner = () => {
               type="button"
               onClick={() => setShowPreview(!showPreview)}
               className="hidden lg:flex text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 px-2 py-1 rounded-md items-center gap-1.5 shrink-0 transition-colors"
-              title={showPreview ? 'Hide ATS Coach' : 'Show ATS Coach'}
+              title={showPreview ? 'Hide Aria' : 'Show Aria'}
             >
               {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showPreview ? 'Hide Coach' : 'Show Coach'}</span>
+              <span>{showPreview ? 'Hide Aria' : 'Show Aria'}</span>
             </button>
             <button
               type="button"
@@ -688,11 +499,12 @@ const CVBuilderInner = () => {
             </button>
           </div>
 
-          {/* Step Content */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 lg:p-8 custom-scrollbar">
-            <div className="max-w-6xl xl:max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 items-start justify-center">
-              {/* Form Card */}
-              <div className="w-full lg:max-w-3xl bg-white dark:bg-slate-900 min-h-[500px] p-4 sm:p-6 lg:p-8 lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200 dark:lg:border-slate-800 flex-1">
+          {/* Step Content — full-height split: clean workspace + flush coach rail */}
+          <div className="flex-1 flex min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950">
+            {/* Workspace — scrollable, no card. Bottom padding on mobile so the
+                form clears the resting coach drawer (≈ its peek height). */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar pb-[280px] lg:pb-0">
+              <div className="max-w-3xl mx-auto w-full p-4 sm:p-6 lg:p-10">
                 <Outlet
                   context={{
                     cvData,
@@ -709,161 +521,106 @@ const CVBuilderInner = () => {
                   }}
                 />
               </div>
+            </div>
 
-              {/* Desktop Side Panel (ATS Coach & Live Preview) styled as a card next to it */}
-              {showPreview && (
-                <div className="hidden lg:flex lg:w-[380px] xl:w-[420px] shrink-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex-col lg:sticky lg:top-8 h-[calc(100vh-130px)] animate-in fade-in slide-in-from-right-4 duration-300">
-                  {/* Tabs Header */}
-                  <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+            {/* Coach — flush full-height right rail, divider only */}
+            {showPreview && (
+              <div className="hidden lg:flex w-[400px] xl:w-[440px] shrink-0 flex-col min-h-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                {/* Back bar — only in preview mode; the coach-mode entry to preview
+                    is now the book icon in the coach header. */}
+                {activeTab === 'preview' && (
+                  <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
                     <button
                       type="button"
                       onClick={() => setActiveTab('coach')}
-                      className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 outline-none ${
-                        activeTab === 'coach'
-                          ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-white dark:bg-slate-900'
-                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                      }`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
                     >
-                      Coach
+                      <ChevronLeft className="w-3.5 h-3.5" /> Aria
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('preview')}
-                      className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 outline-none ${
-                        activeTab === 'preview'
-                          ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-white dark:bg-slate-900'
-                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                      }`}
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      Live Preview
-                    </button>
+                    <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      Live preview
+                    </span>
                   </div>
+                )}
 
-                  {/* Card Content */}
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    {activeTab === 'coach' ? (
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                        <ATSCoachPanel
-                          cvData={liveCvData}
-                          user={user}
-                          currentStepId={currentStepId}
-                          updateCvData={updateCvData}
-                        />
-                      </div>
-                    ) : (
+                {/* Card Content */}
+                <div className="flex-1 min-h-0 flex flex-col">
+                  {activeTab === 'coach' ? (
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <ATSCoachPanel
+                        cvData={liveCvData}
+                        user={user}
+                        currentStepId={currentStepId}
+                        updateCvData={updateCvData}
+                        onShowPreview={() => setActiveTab('preview')}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                       <ScaledCVPreview cvData={cvData} />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile floating Coach bot — draggable, snaps to either side */}
-      {/* Kept mounted (just hidden) while the coach is open so it remembers wherever
-          the user dragged it, instead of snapping back to the default on reopen. */}
-      <CoachBotFab
-        hasNew={coachHasNew}
-        message={botMessage}
-        onOpen={openMobileCoach}
-        hidden={mobilePreviewOpen}
-      />
+      {/* Always-present mobile coach drawer — drag the handle up to read/chat (up to
+          ~85vh) or down to a small peek, so the student balances the CV form against
+          the conversation. The form scrolls behind it. Mobile only (lg:hidden); the
+          desktop side rail is unchanged. */}
+      <div
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex flex-col"
+        style={{ height: drawerH, paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {/* Drag handle */}
+        <div
+          className="py-2.5 flex justify-center cursor-ns-resize touch-none shrink-0"
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={onDragEnd}
+        >
+          <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+        </div>
 
-      {/* Mobile Coach & Preview — floating bubble window (Android-bubble style) */}
-      <AnimatePresence>
-        {mobilePreviewOpen && (
-          <>
-            {/* Soft scrim — dims the page but keeps the floating feel */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobilePreviewOpen(false)}
-              className="lg:hidden fixed inset-0 bg-black/40 z-50 backdrop-blur-xs"
-            />
-            {/* Floating bubble window — grows OUT of the bot, doesn't fill the screen.
-                The window sits at inset-x-3 (12px) / top-16 (64px), so we convert the
-                bot's viewport centre into the window's local coordinates for the origin. */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.4 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.4 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-              style={{
-                transformOrigin: bubbleOrigin
-                  ? `${bubbleOrigin.cx - 12}px ${bubbleOrigin.cy - 64}px`
-                  : 'top right',
-              }}
-              className="lg:hidden fixed inset-x-3 top-16 bottom-[max(6rem,env(safe-area-inset-bottom))] z-50 bg-slate-50 dark:bg-slate-950 rounded-3xl shadow-2xl shadow-indigo-950/40 flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 ring-1 ring-black/5"
-            >
-              {/* Sheet Header */}
-              <div className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 flex items-center justify-between shrink-0">
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    ATS Coach & Preview
-                  </span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    Updates in real-time
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMobilePreviewOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {/* Slim preview toggle — Coach ↔ Live preview. Coach→preview is the book
+              icon inside the coach header; preview→coach is this back bar. */}
+          {activeTab === 'preview' && (
+            <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab('coach')}
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" /> Aria
+              </button>
+              <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                Live preview
+              </span>
+            </div>
+          )}
 
-              {/* Mobile Tabs Header */}
-              <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('coach')}
-                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 outline-none ${
-                    activeTab === 'coach'
-                      ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-white dark:bg-slate-900'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  Coach
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('preview')}
-                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 outline-none ${
-                    activeTab === 'preview'
-                      ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-white dark:bg-slate-900'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  Live Preview
-                </button>
-              </div>
-
-              {/* Sheet Content */}
-              <div className="flex-1 min-h-0 flex flex-col">
-                {activeTab === 'coach' ? (
-                  <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                    <ATSCoachPanel
-                      cvData={liveCvData}
-                      user={user}
-                      currentStepId={currentStepId}
-                      updateCvData={updateCvData}
-                    />
-                  </div>
-                ) : (
-                  <ScaledCVPreview cvData={cvData} />
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          {activeTab === 'coach' ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <ATSCoachPanel
+                cvData={liveCvData}
+                user={user}
+                currentStepId={currentStepId}
+                updateCvData={updateCvData}
+                onShowPreview={() => setActiveTab('preview')}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <ScaledCVPreview cvData={cvData} />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

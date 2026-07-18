@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Target,
   Briefcase,
@@ -17,6 +17,7 @@ import {
   ScanLine,
   Bot,
   Sparkles,
+  BookOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
@@ -688,22 +689,6 @@ const LockedTeaser = ({ onUpgrade }) => (
   </div>
 );
 
-// ─── Dynamic, step-aware coaching (the hero of the coach view) ───
-const TONE_STYLES = {
-  start: {
-    wrap: 'from-indigo-50 to-white dark:from-indigo-900/30 dark:to-slate-800 border-indigo-200 dark:border-indigo-800',
-    icon: 'text-indigo-500',
-  },
-  progress: {
-    wrap: 'from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800 border-amber-200 dark:border-amber-800',
-    icon: 'text-amber-500',
-  },
-  win: {
-    wrap: 'from-emerald-50 to-white dark:from-emerald-900/20 dark:to-slate-800 border-emerald-200 dark:border-emerald-800',
-    icon: 'text-emerald-500',
-  },
-};
-
 // Typewriter — reveals the coach's words one character at a time so it feels like
 // a real coach typing to you, right now. Re-types whenever the message changes.
 // The reset is done DURING RENDER (React's recommended alternative to a
@@ -826,6 +811,323 @@ const CoachAnalyzing = ({ sectionLabel }) => {
   );
 };
 
+// The coach's acknowledgement after the student sends the JD — reused for the live
+// TargetChat bubble AND the persisted conversation thread so they read identically.
+const TARGET_ACK = "Got it — I'll aim everything at that. ✓";
+
+// A single bubble in the accumulated conversation thread (history above the live
+// coach). Coach = left neutral bubble; student = right indigo bubble — same styling
+// as the live chat bubbles so the whole panel reads as one conversation.
+const ThreadBubble = ({ who, text }) =>
+  who === 'user' ? (
+    <div className="self-end max-w-[92%] bg-indigo-600 text-white rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap">
+      {text}
+    </div>
+  ) : (
+    <div className="self-start max-w-[92%] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+      {text}
+    </div>
+  );
+
+// Lands with a whisper of overshoot — a "physical" chat feel, not a timed fade.
+const BUBBLE_SPRING = { type: 'spring', stiffness: 500, damping: 30, mass: 0.85 };
+
+// Entrance for a chat bubble. `side` anchors the scale to the tail corner so the
+// bubble sprouts from where it belongs. Falls back to a plain fade if the user
+// prefers reduced motion.
+const bubbleAnim = (side, reduce) =>
+  reduce
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.18 } }
+    : {
+        initial: { opacity: 0, y: 14, scale: 0.9 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        transition: BUBBLE_SPRING,
+        style: { originX: side === 'user' ? 1 : 0, originY: 1 },
+      };
+
+// Target-step chat — a one-time JD capture that reads like a coach conversation.
+// The student pastes the job (or skips); once a description exists it's shown as
+// their sent message + a coach ack and the input disappears. The sent JD lives in
+// cvData.targetJob; the "skipped" choice persists in coachState so both survive
+// leaving/returning to the panel. The exchange is rendered live only (not copied
+// into the shared thread), so it never appears twice.
+const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onShowPreview, ack, setAck }) => {
+  const [intensity, setIntensity] = useState('coach');
+  const [jd, setJd] = useState('');
+  const [thinking, setThinking] = useState(false); // "Aria is reading" indicator
+  const [descExpanded, setDescExpanded] = useState(false); // read-more on the sent JD
+  const desc = (cvData.targetJob?.description || '').trim();
+  const sent = !!desc;
+  const descIsLong = desc.length > 160 || desc.split('\n').length > 3;
+
+  const reduce = useReducedMotion();
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
+  }, [sent, thinking, ack, reduce]);
+
+  const avatar = (
+    <span className="w-8 h-8 rounded-full border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center shrink-0">
+      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+    </span>
+  );
+
+  // Collapsed state — mirrors CoachCard so the "off" dial reads identically.
+  if (intensity === 'off') {
+    return (
+      <section className="flex items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2.5">
+        {avatar}
+        <span className="flex-1 text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+          Aria is off
+        </span>
+        <button
+          onClick={() => setIntensity('coach')}
+          className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors"
+        >
+          Turn on
+        </button>
+      </section>
+    );
+  }
+
+  const DIAL = [
+    { key: 'gentle', label: 'Gentle' },
+    { key: 'coach', label: 'Coach me' },
+    { key: 'off', label: 'Off' },
+  ];
+
+  // A real job description, not a greeting like "Hey" — gate Send on it. Tunable.
+  const jdText = jd.trim();
+  const jdValid = jdText.length >= 25 && jdText.split(/\s+/).filter(Boolean).length >= 4;
+
+  const send = async () => {
+    if (!jdValid) return;
+    const text = jdText;
+    // Save the JD (restored on reload) and render it live below. Not copied into
+    // the shared thread — that caused the exchange to appear twice.
+    updateCvData?.({ targetJob: { ...(cvData.targetJob || {}), description: text } });
+    setJd('');
+
+    // "Aria is reading" — analyze the JD with the FREE deterministic keyword path
+    // (no AI flag → no credit charge) and reply with a few real things she noticed.
+    // The keyword lookup is fast; hold the "reading…" dots for a beat (min ~1.3s)
+    // so the indicator actually registers, like a real chat.
+    setThinking(true);
+    let kws = [];
+    await Promise.all([
+      (async () => {
+        try {
+          const data = await CVService.getJobKeywords({ description: text });
+          // Stay free: if the backend ever flags a charge, ignore the keywords and
+          // fall back to the warm generic reply (never imply a cost here).
+          if (!data?.charged && Array.isArray(data?.keywords)) {
+            kws = data.keywords
+              .slice()
+              .sort(
+                (a, b) =>
+                  (b.importance === 'must_have' ? 1 : 0) - (a.importance === 'must_have' ? 1 : 0)
+              )
+              .map((k) => k.name)
+              .filter(Boolean)
+              .slice(0, 3);
+          }
+        } catch {
+          kws = [];
+        }
+      })(),
+      new Promise((r) => setTimeout(r, 1300)),
+    ]);
+    // Persist the composed reply (its keyword parts) so it survives reload — and save
+    // the keywords onto the CV draft so Aria can "remember" them on later steps
+    // (the scripted coach reads cvData.targetJob.keywords).
+    setAck?.({ kws });
+    if (kws.length) {
+      updateCvData?.({
+        targetJob: { ...(cvData.targetJob || {}), description: text, keywords: kws },
+      });
+    }
+    setThinking(false);
+  };
+
+  return (
+    <section className="flex flex-col flex-1 min-h-0 p-4">
+      {/* Header — mirrors CoachCard: avatar + Coach + dial. */}
+      <div className="flex items-center justify-between gap-2 mb-3 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {avatar}
+          <div className="min-w-0">
+            <b className="font-heading text-sm text-slate-900 dark:text-slate-100">Aria</b>
+            <div className="text-[9px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
+              here to help, never nags
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-0.5">
+            {DIAL.map((d) => (
+              <button
+                key={d.key}
+                onClick={() => setIntensity(d.key)}
+                className={`text-[10px] font-bold px-2 py-1 rounded-full transition-colors ${
+                  intensity === d.key
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          {onShowPreview && (
+            <button
+              type="button"
+              onClick={onShowPreview}
+              title="Preview your CV"
+              className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Conversation — bottom-anchored bubbles. The scroll layer is absolute so
+          expanding a bubble can only scroll, never stretch the fixed frame. */}
+      <div className="flex-1 min-h-0 relative">
+        <div
+          ref={scrollRef}
+          className="absolute inset-0 overflow-y-auto custom-scrollbar flex flex-col gap-2.5"
+        >
+          <motion.div
+            className="mt-auto bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100 max-w-[92%]"
+            {...bubbleAnim('aria', reduce)}
+          >
+            Nice to meet you — I'm Aria, your CV coach. Paste the job you're aiming for and I'll
+            shape everything around it, or skip, and we'll build a strong all-rounder.
+          </motion.div>
+
+          {/* Skip suggestion — sits under Aria's greeting (the input stays docked below). */}
+          {!sent && !skipped && (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="self-start text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Skip for now
+            </button>
+          )}
+
+          {sent && (
+            <>
+              <motion.div className="self-end max-w-[92%]" {...bubbleAnim('user', reduce)}>
+                <div className="text-[9px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 text-right mb-1">
+                  Job description · sent
+                </div>
+                {/* WhatsApp-style clamp — ~3 lines collapsed, expand with Read more. */}
+                <div
+                  className={`bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap ${
+                    descExpanded ? '' : 'line-clamp-3'
+                  }`}
+                >
+                  {desc}
+                </div>
+                {descIsLong && (
+                  <button
+                    type="button"
+                    onClick={() => setDescExpanded((v) => !v)}
+                    className="mt-1 ml-auto block text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  >
+                    {descExpanded ? 'Show less' : 'Read more'}
+                  </button>
+                )}
+              </motion.div>
+
+              <AnimatePresence mode="wait" initial={false}>
+                {thinking ? (
+                  // "Aria is reading" typing indicator — reuses CoachCard's 3 dots.
+                  <motion.div
+                    key="dots"
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.15 }}
+                    className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 max-w-[92%] flex items-center gap-2"
+                  >
+                    <span className="flex items-center gap-0.5">
+                      <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" />
+                    </span>
+                    <span className="text-[12px] text-slate-500 dark:text-slate-400">
+                      Reading your job…
+                    </span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="ack"
+                    className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100 max-w-[92%]"
+                    {...bubbleAnim('aria', reduce)}
+                  >
+                    {ack && ack.kws && ack.kws.length ? (
+                      <>
+                        Got it 👀 I can see this role leans on{' '}
+                        <span className="font-semibold">{ack.kws.join(', ')}</span>. I'll make sure
+                        your CV speaks to those, section by section — let's start with your
+                        experience.
+                      </>
+                    ) : ack ? (
+                      "Got it — I'll aim your whole CV at this role. Let's start with your experience."
+                    ) : (
+                      TARGET_ACK
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* One-time JD input — gone once the JD is sent or the student skips. */}
+      {!sent && !skipped && (
+        <div className="mt-auto pt-3 shrink-0">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              onInput={(e) => {
+                e.currentTarget.style.height = 'auto';
+                e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
+              }}
+              rows={1}
+              placeholder="Paste the job description…"
+              className="flex-1 resize-none rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-slate-200 px-4 py-3 text-[13px] leading-relaxed outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors custom-scrollbar max-h-[140px]"
+            />
+            <button
+              type="button"
+              onClick={send}
+              disabled={!jdValid}
+              aria-label="Send"
+              className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm transition-colors ${
+                jdValid
+                  ? 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              ➤
+            </button>
+          </div>
+          {!jdValid && jdText.length > 0 && (
+            <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+              Paste the full job description to send.
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+};
+
 // The hero card: a live, conversational coach. When it flags something it can
 // help with, it ASKS — tapping the offer opens the focused island helper. The
 // scripted fallback shows tips instead of an offer.
@@ -843,10 +1145,13 @@ const CoachCard = ({
   onQuickReply,
   onRefresh,
   onUpgrade,
+  onShowPreview,
   messageSeen = false,
   onMessageDone,
 }) => {
-  const tone = TONE_STYLES[coaching.tone] || TONE_STYLES.start;
+  // Coach intensity dial (visual + collapse): 'gentle' | 'coach' | 'off'. 'off'
+  // collapses the whole card to a slim "turn on" bar.
+  const [intensity, setIntensity] = useState('coach');
   // Interaction state is owned + persisted by the panel so it survives leaving and
   // returning to the coach (the label picked, recheck availability, ignore choice).
   const answered = interaction?.answered ?? null;
@@ -907,7 +1212,7 @@ const CoachCard = ({
               disabled={loading}
               onClick={() => onQuickReply?.(quickReplies.recheckSignal)}
               title="Edited the job description? Have the coach take another look."
-              className="mt-2 text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+              className="mt-2 text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
             >
               <RefreshCw className="w-3 h-3" /> Recheck
             </button>
@@ -923,7 +1228,7 @@ const CoachCard = ({
           <button
             disabled={loading}
             onClick={() => onQuickReply?.(quickReplies.recheckSignal)}
-            className="text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+            className="text-[11px] font-bold px-3 py-1.5 min-h-[36px] rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
           >
             <RefreshCw className="w-3 h-3" /> Recheck
           </button>
@@ -944,33 +1249,81 @@ const CoachCard = ({
     }
   }
 
+  // Avatar — a ringed indigo dot, reused by the collapsed "off" bar and the header.
+  const avatar = (
+    <span className="w-8 h-8 rounded-full border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center shrink-0">
+      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+    </span>
+  );
+
+  // Collapsed state — the coach is off; show a slim bar with a "turn on" affordance.
+  if (intensity === 'off') {
+    return (
+      <section className="flex items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2.5">
+        {avatar}
+        <span className="flex-1 text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+          Aria is off
+        </span>
+        <button
+          onClick={() => setIntensity('coach')}
+          className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors"
+        >
+          Turn on
+        </button>
+      </section>
+    );
+  }
+
+  // The intensity dial — a 3-way segmented control.
+  const DIAL = [
+    { key: 'gentle', label: 'Gentle' },
+    { key: 'coach', label: 'Coach me' },
+    { key: 'off', label: 'Off' },
+  ];
+
   return (
-    <section className={`rounded-2xl border bg-gradient-to-br p-4 ${tone.wrap}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`w-6 h-6 rounded-full bg-white/70 dark:bg-slate-900/40 flex items-center justify-center ${tone.icon}`}
-          >
-            <Compass className="w-3.5 h-3.5" />
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Your Coach
-          </span>
-          {loading && !analyzing && (
-            <span className="flex items-center gap-0.5" title="Thinking…">
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" />
-            </span>
-          )}
+    <section className="flex flex-col flex-1 min-h-0 p-4">
+      <div className="flex items-center justify-between gap-2 mb-3 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {avatar}
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <b className="font-heading text-sm text-slate-900 dark:text-slate-100">Aria</b>
+              {loading && !analyzing && (
+                <span className="flex items-center gap-0.5" title="Thinking…">
+                  <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" />
+                </span>
+              )}
+            </div>
+            <div className="text-[9px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
+              here to help, never nags
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-0.5">
+            {DIAL.map((d) => (
+              <button
+                key={d.key}
+                onClick={() => setIntensity(d.key)}
+                className={`text-[10px] font-bold px-2 py-1 rounded-full transition-colors ${
+                  intensity === d.key
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
           {onRefresh && (
             <button
               onClick={onRefresh}
               disabled={loading}
               title="Fresh tip"
-              className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-700/50 disabled:opacity-40 transition-colors"
+              className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
             >
               {loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -979,67 +1332,97 @@ const CoachCard = ({
               )}
             </button>
           )}
+          {onShowPreview && (
+            <button
+              type="button"
+              onClick={onShowPreview}
+              title="Preview your CV"
+              className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
-        {analyzing ? (
-          <motion.div
-            key="analyzing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <CoachAnalyzing sectionLabel={sectionLabel} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="message"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-              <Typewriter
-                text={coaching.message}
-                instant={messageSeen}
-                onDone={() => {
-                  onMessageDone?.();
-                }}
-              />
-            </p>
+      {/* Message area — the single scroll boundary. The scroll layer is absolute so
+          expanding content can only scroll, never stretch the fixed frame. */}
+      <div className="flex-1 min-h-0 relative">
+        <div className="absolute inset-0 overflow-y-auto custom-scrollbar flex flex-col">
+          <AnimatePresence mode="wait" initial={false}>
+            {analyzing ? (
+              <motion.div
+                key="analyzing"
+                className="mt-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <CoachAnalyzing sectionLabel={sectionLabel} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="message"
+                className="mt-auto"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100 max-w-[92%]">
+                  <Typewriter
+                    text={coaching.message}
+                    instant={messageSeen}
+                    onDone={() => {
+                      onMessageDone?.();
+                    }}
+                  />
+                </div>
 
-            {coaching.tips?.length > 0 && (
-              <ul className="mt-2.5 space-y-1.5">
-                {coaching.tips.map((t, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-300"
-                  >
-                    <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
+                {coaching.tips?.length > 0 && (
+                  <ul className="mt-2.5 space-y-1.5">
+                    {coaching.tips.map((t, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-300"
+                      >
+                        <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
             )}
+          </AnimatePresence>
+        </div>
+      </div>
 
-            {quickNode}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {limited && (
-        <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">
-          You’ve used today’s live coaching.{' '}
+      {/* Footer — quick replies / review / ask, pinned to the bottom of the panel. */}
+      <div className="mt-auto pt-3 shrink-0">
+        {quickNode}
+        {onRefresh && !quickNode && !analyzing && (
           <button
-            onClick={onUpgrade}
-            className="font-bold text-indigo-600 dark:text-indigo-300 hover:underline"
+            onClick={onRefresh}
+            disabled={loading}
+            className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 inline-flex items-center gap-1 disabled:opacity-40 transition-colors"
           >
-            Upgrade for unlimited
+            ＋ Ask the coach
           </button>
-        </p>
-      )}
+        )}
+
+        {limited && (
+          <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">
+            You’ve used today’s live coaching.{' '}
+            <button
+              onClick={onUpgrade}
+              className="font-bold text-indigo-600 dark:text-indigo-300 hover:underline"
+            >
+              Upgrade for unlimited
+            </button>
+          </p>
+        )}
+      </div>
     </section>
   );
 };
@@ -1070,7 +1453,7 @@ const MANUAL_PROMPT = {
   },
 };
 
-const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
+const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData, onShowPreview }) => {
   const { id: draftId } = useParams();
   const navigate = useNavigate();
   const health = useMemo(() => computeCvHealth(cvData), [cvData]);
@@ -1329,6 +1712,49 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
     tips: aiEntry?.message ? [] : fallback.tips || [],
   };
 
+  // ── Conversation thread ─────────────────────────────────────────────────────
+  // One continuous, persisted chat: as the student moves through steps, each step
+  // they LEAVE drops its coach message into `_thread` (in coachState → survives
+  // remount + reload, per-CV). The Target step's JD send appends its own entries
+  // (user message + ack) via appendThread, so the whole thing reads as one convo.
+  const thread = aiByStep._thread || [];
+  const appendThread = React.useCallback(
+    (entries) => {
+      setAiByStep((m) => {
+        const cur = m._thread || [];
+        const next = [...cur];
+        let changed = false;
+        for (const e of entries) {
+          const last = next[next.length - 1];
+          // Dedup: skip if the last entry is already this same who+step+text.
+          if (last && last.who === e.who && last.step === e.step && last.text === e.text) continue;
+          next.push(e);
+          changed = true;
+        }
+        return changed ? { ...m, _thread: next } : m;
+      });
+    },
+    [setAiByStep]
+  );
+
+  // Snapshot the message of the step being LEFT. Runs after every render: while on a
+  // step it keeps the ref's message current (so we capture the latest AI reply, not
+  // the initial scripted one); when currentStepId changes it pushes the prior step's
+  // message as a coach bubble. target_job is skipped — TargetChat appends its own
+  // entries so the JD exchange keeps the right order.
+  const threadPrevRef = React.useRef({ step: currentStepId, message: coaching.message });
+  React.useEffect(() => {
+    const prev = threadPrevRef.current;
+    if (prev.step === currentStepId) {
+      threadPrevRef.current.message = coaching.message;
+      return;
+    }
+    if (prev.step && prev.step !== 'target_job' && prev.message) {
+      appendThread([{ who: 'coach', step: prev.step, text: prev.message }]);
+    }
+    threadPrevRef.current = { step: currentStepId, message: coaching.message };
+  });
+
   // Quick replies the user can hand to the coach on this step (explicit only).
   const quickReplies = useMemo(() => getQuickReplies(currentStepId), [currentStepId]);
 
@@ -1436,12 +1862,23 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -12 }}
           transition={{ duration: 0.2 }}
-          className="space-y-4"
+          className="flex-1 min-h-0 flex flex-col"
         >
-          {/* The per-step conversational coach — shown to EVERYONE. Paid users get
-              the AI coach (quick replies, refresh); free users get the deterministic
-              scripted message (`coaching` falls back to it), with the AI-only
-              affordances suppressed so nothing ever hits the paid backend. */}
+          {/* Accumulated conversation history — one coach bubble per step the student
+              has left, plus the Target JD exchange. Bottom-anchored + scrollable, and
+              capped so the live coach below always has room. Renders as one chat. */}
+          {thread.length > 0 && (
+            <div className="shrink-0 max-h-[45%] overflow-y-auto custom-scrollbar flex flex-col justify-end gap-2 px-4 pt-4 pb-1">
+              {thread.map((b, i) => (
+                <ThreadBubble key={i} who={b.who} text={b.text} />
+              ))}
+            </div>
+          )}
+
+          {/* The per-step conversational coach — the latest entry in the chat, shown
+              to EVERYONE. Paid users get the AI coach (quick replies, refresh); free
+              users get the deterministic scripted message (`coaching` falls back to
+              it), with the AI-only affordances suppressed so nothing hits the backend. */}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStepId || 'intro'}
@@ -1449,42 +1886,58 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
+              className="flex-1 min-h-0 flex flex-col"
             >
-              <CoachCard
-                coaching={coaching}
-                loading={aiLoading}
-                analyzing={analyzing}
-                sectionLabel={STEP_NOUNS[currentStepId] || 'CV'}
-                limited={aiLimited}
-                score={health.score}
-                healthMeta={healthMeta}
-                quickReplies={isPaidHint ? quickReplies : []}
-                interaction={aiEntry}
-                onInteraction={(p) => setStepInteraction(currentStepId, p)}
-                onQuickReply={
-                  isPaidHint ? (signal) => fetchGuide(currentStepId, signal) : undefined
-                }
-                onRefresh={
-                  isPaidHint && !isLiveStep && !isManualStep
-                    ? () => fetchGuide(currentStepId)
-                    : undefined
-                }
-                onUpgrade={() => navigate('/upgrade')}
-                // The coach only "types" a message the first time it's shown. Once
-                // seen, reopening the panel on the same step renders it in full — no
-                // re-writing. Tracked in the persisted context so it survives remount.
-                messageSeen={!!aiByStep._typedMsgs?.[coaching.message]}
-                onMessageDone={() =>
-                  setAiByStep((m) =>
-                    m._typedMsgs?.[coaching.message]
-                      ? m
-                      : {
-                          ...m,
-                          _typedMsgs: { ...(m._typedMsgs || {}), [coaching.message]: true },
-                        }
-                  )
-                }
-              />
+              {currentStepId === 'target_job' ? (
+                // The Target step captures the JD through a one-time coach chat send
+                // (the workspace is greeting-only). Skip choice persists in coachState.
+                <TargetChat
+                  cvData={cvData}
+                  updateCvData={updateCvData}
+                  skipped={!!aiByStep._targetSkipped}
+                  onSkip={() => setAiByStep((m) => ({ ...m, _targetSkipped: true }))}
+                  onShowPreview={onShowPreview}
+                  ack={aiByStep._targetAck}
+                  setAck={(v) => setAiByStep((m) => ({ ...m, _targetAck: v }))}
+                />
+              ) : (
+                <CoachCard
+                  coaching={coaching}
+                  loading={aiLoading}
+                  analyzing={analyzing}
+                  sectionLabel={STEP_NOUNS[currentStepId] || 'CV'}
+                  limited={aiLimited}
+                  score={health.score}
+                  healthMeta={healthMeta}
+                  quickReplies={isPaidHint ? quickReplies : []}
+                  interaction={aiEntry}
+                  onInteraction={(p) => setStepInteraction(currentStepId, p)}
+                  onQuickReply={
+                    isPaidHint ? (signal) => fetchGuide(currentStepId, signal) : undefined
+                  }
+                  onRefresh={
+                    isPaidHint && !isLiveStep && !isManualStep
+                      ? () => fetchGuide(currentStepId)
+                      : undefined
+                  }
+                  onUpgrade={() => navigate('/upgrade')}
+                  onShowPreview={onShowPreview}
+                  // The coach only "types" a message the first time it's shown. Once
+                  // seen, reopening the panel on the same step renders it in full — no
+                  // re-writing. Tracked in the persisted context so it survives remount.
+                  messageSeen={!!aiByStep._typedMsgs?.[coaching.message]}
+                  onMessageDone={() =>
+                    setAiByStep((m) =>
+                      m._typedMsgs?.[coaching.message]
+                        ? m
+                        : {
+                            ...m,
+                            _typedMsgs: { ...(m._typedMsgs || {}), [coaching.message]: true },
+                          }
+                    )
+                  }
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </motion.div>
@@ -1495,7 +1948,7 @@ const ATSCoachPanel = ({ cvData, user, currentStepId, updateCvData }) => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 12 }}
           transition={{ duration: 0.2 }}
-          className="space-y-4"
+          className="h-full overflow-y-auto custom-scrollbar space-y-4"
         >
           {/* Scan header with a way back to coaching */}
           <div className="flex items-center gap-2">

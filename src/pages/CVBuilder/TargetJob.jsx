@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Target, ArrowRight, ArrowLeft, X, Check } from 'lucide-react';
-import SectionTips from '../../components/SectionTips';
-import StepHeader from '../../components/cv/StepHeader';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 const TargetJob = () => {
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
+  const { cvData, user, handleNext, handleBack, saving, setStepDirty, registerStepData } =
+    context || {};
 
+  const firstName = (user?.firstName || '').trim() || 'there';
+
+  // The JD is now captured through the coach chat (see ATSCoachPanel's target-step
+  // chat) — this step just mirrors whatever targetJob the coach has stored, so
+  // proceeding carries it forward.
   const [formData, setFormData] = useState(cvData?.targetJob || { title: '', description: '' });
-  const [showModal, setShowModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const hasUserEdited = useRef(false);
 
-  // Sync prefilled data from CVContext (e.g. when navigating from job search)
+  // Sync prefilled data from CVContext (e.g. when navigating from job search, or
+  // when the coach chat saves a job description).
   useEffect(() => {
     if (!hasUserEdited.current && cvData?.targetJob) {
       const { title, description } = cvData.targetJob;
@@ -37,184 +42,85 @@ const TargetJob = () => {
     return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
   }
 
-  const handleChange = (e) => {
-    hasUserEdited.current = true;
-    setStepDirty?.(true);
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    // Check if target job title is empty
-    if (!formData.title.trim()) {
-      setShowModal(true);
-      return;
-    }
-
+  const proceed = () => {
     setStepDirty?.(false);
     handleNext({ targetJob: formData });
   };
 
-  const handleSkipAndContinue = () => {
-    setShowModal(false);
-    setStepDirty?.(false);
-    handleNext({ targetJob: formData });
-  };
+  // A JD sent to Aria lives in cvData.targetJob. Continuing with none skips the
+  // tailoring, so ask for confirmation first (proceed directly if one exists).
+  const hasJd = !!(cvData?.targetJob?.description || '').trim();
+  const onContinue = () => (hasJd ? proceed() : setShowConfirm(true));
 
   return (
-    <>
-      <form
-        onSubmit={onSubmit}
-        className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
-      >
-        <StepHeader
-          eyebrow="Target role"
-          title="Target job analysis"
-          subtitle="Tell us what you're applying for so our AI can tailor your resume."
-        />
+    <div className="flex flex-col items-center justify-center text-center py-16 sm:py-20 px-4 animate-in fade-in slide-in-from-right-8 duration-500">
+      {/* Centered greeting with the coach avatar on top — the "is there a job?"
+          question is answered in the coach chat on the right. */}
+      <span className="w-14 h-14 rounded-full border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center mb-4 shrink-0">
+        <span className="w-5 h-5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+      </span>
+      <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
+        Hey {firstName} 👋
+      </h1>
+      <p className="mt-3 max-w-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        Let's build a CV that gets you noticed.
+        <br />
+        <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+          First — is there a job you're aiming for?
+        </span>
+      </p>
+      <div className="mt-8 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={onContinue}
+          className="btn-primary px-5 py-2.5 text-sm flex items-center gap-2"
+        >
+          {saving ? 'Saving…' : 'Continue'} <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
 
-        <SectionTips
-          sectionKey="cvbuilder_target"
-          title="The clearer the target, the better the CV"
-          intro="Everything we build from here gets tailored to this role."
-          tips={[
-            "Use the exact job title from a posting you're considering — even if you don't apply yet.",
-            'Paste the full job description (not just the company name) so our AI can pick up the keywords that matter.',
-            "If you're open to multiple roles, build separate CVs. One CV per target.",
-            'You can change this later — pick your best guess and move on.',
-          ]}
-        />
-
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="target-job-title"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              Target Job Title
-            </label>
-            <input
-              id="target-job-title"
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="e.g. Senior Frontend Engineer"
-              className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="target-job-description"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              Job Description (Optional)
-            </label>
-            <textarea
-              id="target-job-description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Paste the job description here. Our AI will use this to suggest relevant skills and keywords for your summary and experience."
-              className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-48 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none"
-            />
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
-          >
-            {saving ? 'Saving...' : 'Next Step'} <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </form>
-
-      {/* Target-job confirmation modal — restructured for mobile.
-          Old layout crammed icon + title + close-button into one flex row,
-          which on phones forced the title to wrap awkwardly and pushed the
-          body content to the right of the icon. New layout: icon at the top,
-          close in the absolute corner, title and body stacked underneath. */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            {/* Close button — absolute top-right, doesn't compete with the
-                title for horizontal space on mobile. */}
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              aria-label="Close"
-              className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="px-5 pt-7 pb-5 sm:px-6 sm:pt-8 sm:pb-6">
-              {/* Title + body */}
-              <h3 className="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight">
-                Add a target job title?
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Telling us the role you're targeting lets our AI tailor your CV with the right
-                keywords. Without it you'll get a generic CV.
-              </p>
-
-              {/* Benefits list */}
-              <ul className="mt-4 space-y-2.5">
-                {[
-                  ['Keyword optimization', 'matching the job description'],
-                  ['AI-generated content', 'tailored to your target role'],
-                  ['Higher ATS score', 'for better recruiter visibility'],
-                ].map(([title, body]) => (
-                  <li key={title} className="flex items-start gap-2.5">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mt-0.5">
-                      <Check className="w-3 h-3" strokeWidth={3} />
-                    </span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                      <strong className="font-semibold text-slate-900 dark:text-slate-100">
-                        {title}
-                      </strong>{' '}
-                      {body}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Actions — primary on top on mobile (thumb reach), side-by-side on
-                desktop with primary on the right. */}
-            <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+      {/* Confirm continuing with no target job — Aria can't tailor without one. */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-5 text-left animate-in zoom-in-95 duration-150">
+            <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100">
+              Continue without a target job?
+            </h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              Aria tailors your CV to a specific role — you can still add one later.
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-2.5">
               <button
                 type="button"
-                onClick={handleSkipAndContinue}
-                className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm"
+                onClick={() => setShowConfirm(false)}
+                className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-colors"
               >
-                Continue without it
+                Cancel
               </button>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
-                className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm"
+                disabled={saving}
+                onClick={() => {
+                  setShowConfirm(false);
+                  proceed();
+                }}
+                className="btn-primary px-5 py-2 text-sm"
               >
-                Add target job
+                Continue anyway
               </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

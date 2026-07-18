@@ -54,6 +54,17 @@ export function getStepCoaching(stepId, cvData = {}) {
 
 function baseStepCoaching(stepId, cvData = {}) {
   const cv = cvData;
+  // What Aria "remembers" from the Target step — lets later steps reference the
+  // specific role/keywords the student shared, so the coach reads as one
+  // conversation. Guarded: if they skipped the JD these are empty and copy stays generic.
+  const hasTarget = !!(cv.targetJob?.description || '').trim();
+  const targetKws = (cv.targetJob?.keywords || []).filter(Boolean).slice(0, 3);
+  const kwList =
+    targetKws.length === 0
+      ? ''
+      : targetKws.length === 1
+        ? targetKws[0]
+        : `${targetKws.slice(0, -1).join(', ')} and ${targetKws[targetKws.length - 1]}`;
   switch (stepId) {
     case 'target_job': {
       const hasTitle = !!cv.targetJob?.title?.trim();
@@ -131,8 +142,9 @@ function baseStepCoaching(stepId, cvData = {}) {
       if (exp.length === 0) {
         return {
           title: 'This is the heart of your CV ❤️',
-          message:
-            'Your work experience carries the most weight. Add a role and let’s make each bullet earn its place — you’ve got real wins to show.',
+          message: hasTarget
+            ? "Your work experience carries the most weight — it's your best shot at proving you fit the role you shared. Add a role and let's make every bullet map to what that job's really after."
+            : 'Your work experience carries the most weight. Add a role and let’s make each bullet earn its place — you’ve got real wins to show.',
           tips: [
             'Lead every bullet with a strong action verb: Led, Built, Grew, Shipped.',
             'Avoid "Responsible for…" — show the result, not the duty.',
@@ -208,8 +220,11 @@ function baseStepCoaching(stepId, cvData = {}) {
       if (skills.length < 4) {
         return {
           title: 'Skills are the ATS’s matching ground 🧩',
-          message:
-            'This section is where keyword matching happens. List the tools and technologies from the job description that you genuinely have — aim for 8 or more.',
+          message: kwList
+            ? `This is where keyword matching happens — and I remember the job you shared leaned on ${kwList}. List the ones you genuinely have here, then add the rest of your real tools (aim for 8+).`
+            : hasTarget
+              ? 'This is where keyword matching happens. Pull the tools and skills straight from the job you shared — the ones you genuinely have — and aim for 8 or more.'
+              : 'This section is where keyword matching happens. List the tools and technologies from the job description that you genuinely have — aim for 8 or more.',
           tips: [
             'Mirror the wording in the job post (e.g. "JavaScript" if that’s what they wrote).',
             'Only list skills you can speak to in an interview.',
@@ -220,7 +235,9 @@ function baseStepCoaching(stepId, cvData = {}) {
       if (skills.length < 8) {
         return {
           title: 'Good list — push for a few more 💪',
-          message: `You've listed ${skills.length}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.`,
+          message: kwList
+            ? `You've listed ${skills.length}. Scan the job you shared once more for any you missed — I spotted ${kwList} in there. More real matches means more of its keywords ticked.`
+            : `You've listed ${skills.length}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.`,
           tips: ['Aim for 8-12 genuine, relevant skills.'],
           tone: 'progress',
         };
@@ -239,8 +256,9 @@ function baseStepCoaching(stepId, cvData = {}) {
       if (summary.length === 0) {
         return {
           title: 'Your headline pitch 🎤',
-          message:
-            'Three or four punchy sentences: who you are, your strongest proof, and what you’re aiming for. I’ll tell you the moment it’s strong enough.',
+          message: hasTarget
+            ? "Three or four punchy sentences: who you are, your strongest proof, and — since you're aiming for a specific role — a clear nod to that job so the fit lands in the very first line."
+            : 'Three or four punchy sentences: who you are, your strongest proof, and what you’re aiming for. I’ll tell you the moment it’s strong enough.',
           tips: [
             'Open with your role and years of experience.',
             'Drop in one standout achievement.',

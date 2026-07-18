@@ -13,25 +13,19 @@ export const markOnboardingComplete = () => {
   localStorage.setItem(ONBOARDING_KEY, 'true');
 };
 
-// Bar visibility allowlist. Includes routes the user reaches via secondary
-// navigation (Credits/Upgrade now live behind the Profile tab) so the bar
-// stays consistent during those flows.
-const BOTTOM_NAV_PATHS = [
-  '/dashboard',
-  '/my-cvs',
-  '/history',
-  '/profile',
-  '/credits',
-  '/upgrade',
-  '/interview-prep',
-];
+// Bar visibility allowlist — the four bottom-tab destinations. Account routes
+// (/profile, /credits, /upgrade) live behind the avatar dropdown now, so they're
+// not tabs and don't keep the bar up.
+const BOTTOM_NAV_PATHS = ['/dashboard', '/my-cvs', '/history', '/interview-prep'];
 
 // Full-screen, immersive sub-routes (live voice interview + flash-card
 // practice) pin their own control bar to the bottom of the screen. The fixed
 // bottom nav would sit on top of those controls, so it's suppressed here.
 const IMMERSIVE_PATH_RE = /\/(mock|practice)$/;
 
+// Shown on BOTH web-mobile and native (MobileBottomNav applies md:hidden on web
+// so it's mobile-only there). Platform is no longer a gate — the allowlist +
+// immersive check decide visibility.
 export const shouldShowBottomNav = (pathname) =>
-  isMobile() &&
   !IMMERSIVE_PATH_RE.test(pathname) &&
   BOTTOM_NAV_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
