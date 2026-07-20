@@ -215,6 +215,7 @@ const CVBuilderInner = () => {
     handleBack,
     goToStep,
     registerStepData,
+    flushDraft,
     renameCv,
     updateCvData,
     exitWizard,
@@ -222,6 +223,8 @@ const CVBuilderInner = () => {
     setStepDirty,
     loading,
     isStepComplete,
+    externalEditNonce,
+    lastAiWriteSortId,
   } = useCVBuilder();
 
   const [showPreview, setShowPreview] = useState(true);
@@ -250,6 +253,27 @@ const CVBuilderInner = () => {
   };
   const onDragEnd = () => {
     dragRef.current = null;
+  };
+
+  // The role/project Aria is focused on (bound via "Ask Aria" from Work History /
+  // Projects). Drives the coach's focus bar; the build-with flow reads it in Chunk 5.
+  const [focusedEntry, setFocusedEntry] = useState(null);
+
+  // "Ask Aria" from a role/project: bind her focus + bring the coach forward. Flush
+  // the draft to the DB first (fire-and-forget) so the role's _sortId exists server-
+  // side — the build-with chat resolves the focused role by _sortId, and without this
+  // a role edited on the current step (not yet persisted) would 404 "role not found".
+  const askAria = (section, entry) => {
+    flushDraft?.();
+    setFocusedEntry({
+      section,
+      sortId: entry._sortId,
+      title: entry.title || '',
+      company: entry.company || '',
+    });
+    setActiveTab('coach');
+    setShowPreview(true); // ensure desktop rail open
+    setDrawerH((h) => Math.max(h, Math.round(window.innerHeight * 0.6))); // raise mobile drawer
   };
 
   // Coach the user through every building step, then hand them the live preview
@@ -503,7 +527,7 @@ const CVBuilderInner = () => {
           <div className="flex-1 flex min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950">
             {/* Workspace — scrollable, no card. Bottom padding on mobile so the
                 form clears the resting coach drawer (≈ its peek height). */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar pb-[280px] lg:pb-0">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-none pb-[280px] lg:pb-0">
               <div className="max-w-3xl mx-auto w-full p-4 sm:p-6 lg:p-10">
                 <Outlet
                   context={{
@@ -518,6 +542,10 @@ const CVBuilderInner = () => {
                     isStepComplete,
                     tailoredFrom: cvData.tailoredFrom,
                     tailoredForJob: cvData.tailoredForJob,
+                    focusedEntry,
+                    onAskAria: askAria,
+                    externalEditNonce,
+                    lastAiWriteSortId,
                   }}
                 />
               </div>
@@ -553,6 +581,8 @@ const CVBuilderInner = () => {
                         currentStepId={currentStepId}
                         updateCvData={updateCvData}
                         onShowPreview={() => setActiveTab('preview')}
+                        focusedEntry={focusedEntry}
+                        onClearFocus={() => setFocusedEntry(null)}
                       />
                     </div>
                   ) : (
@@ -612,6 +642,8 @@ const CVBuilderInner = () => {
                 currentStepId={currentStepId}
                 updateCvData={updateCvData}
                 onShowPreview={() => setActiveTab('preview')}
+                focusedEntry={focusedEntry}
+                onClearFocus={() => setFocusedEntry(null)}
               />
             </div>
           ) : (

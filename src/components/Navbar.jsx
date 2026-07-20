@@ -54,6 +54,7 @@ const AccountMenu = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
+  const initials = ((user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')).toUpperCase();
   const btnRef = React.useRef(null);
   const panelRef = React.useRef(null);
   const closeTimer = React.useRef(null);
@@ -125,12 +126,8 @@ const AccountMenu = ({
         aria-expanded={open}
         className="flex items-center gap-1.5 p-1 pl-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
       >
-        <div className="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm">
-          {user && user.firstName && user.firstName.length > 0 ? (
-            user.firstName[0].toUpperCase()
-          ) : (
-            <User className="w-4 h-4" />
-          )}
+        <div className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center font-heading text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+          {initials || <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
         </div>
         <ChevronDown
           className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${
@@ -162,12 +159,8 @@ const AccountMenu = ({
             >
               {/* Header (identity) */}
               <div className="flex items-center gap-3 px-2.5 pt-2.5 pb-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                  {user && user.firstName && user.firstName.length > 0 ? (
-                    user.firstName[0].toUpperCase()
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
+                <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 font-heading text-[14px] font-semibold text-slate-700 dark:text-slate-200">
+                  {initials || <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
                 </div>
                 <div className="min-w-0">
                   <p className="font-heading text-[15px] font-bold text-slate-900 dark:text-slate-100 truncate">
@@ -175,9 +168,15 @@ const AccountMenu = ({
                       ? `${user.firstName} ${user.lastName || ''}`.trim()
                       : user?.email?.split('@')[0] || 'User'}
                   </p>
-                  <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-indigo-600 dark:text-indigo-400">
-                    {isPaid ? `${planLabelFor(entitlement)} plan` : 'Free'}
-                  </p>
+                  {isPaid ? (
+                    <span className="inline-flex items-center gap-1 mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-700 dark:text-amber-400">
+                      <Crown className="w-3 h-3" /> {planLabelFor(entitlement)}
+                    </span>
+                  ) : (
+                    <span className="block mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                      Free plan
+                    </span>
+                  )}
                 </div>
               </div>
 

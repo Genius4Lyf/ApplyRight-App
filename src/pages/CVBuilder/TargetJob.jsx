@@ -6,10 +6,7 @@ const TargetJob = () => {
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
-  const { cvData, user, handleNext, handleBack, saving, setStepDirty, registerStepData } =
-    context || {};
-
-  const firstName = (user?.firstName || '').trim() || 'there';
+  const { cvData, handleNext, handleBack, saving, setStepDirty, registerStepData } = context || {};
 
   // The JD is now captured through the coach chat (see ATSCoachPanel's target-step
   // chat) — this step just mirrors whatever targetJob the coach has stored, so
@@ -59,11 +56,15 @@ const TargetJob = () => {
       <span className="w-14 h-14 rounded-full border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center mb-4 shrink-0">
         <span className="w-5 h-5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
       </span>
-      <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
-        Hey {firstName} 👋
-      </h1>
-      <p className="mt-3 max-w-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-        Let's build a CV that gets you noticed.
+      {/* Aria's identity — name + what ARIA stands for (first impression on opening the builder) */}
+      <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">Aria</h1>
+      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
+        ApplyRight Intelligent Assistant
+      </p>
+
+      {/* Warm personal greeting */}
+      <p className="mt-5 max-w-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        I'm your CV coach — let's build a CV that gets you noticed.
         <br />
         <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
           First — is there a job you're aiming for?

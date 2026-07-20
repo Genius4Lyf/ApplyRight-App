@@ -33,6 +33,11 @@ export const CREDIT_COSTS = {
   TIGHTEN_SUMMARY: 1,
   // Coach: AI-rewrite one role's weak bullets (paid unlimited).
   REWRITE_ROLE: 1,
+  // Coach: AI-generate bullets from a described role/project (Aria build-with).
+  // The count picker charges count × this.
+  GENERATE_BULLET: 1,
+  // Coach: AI-generate one career-stage-aware, JD-tailored summary (each re-roll charges).
+  GENERATE_SUMMARY: 3,
 };
 
 // The backend uses the canonical key ANALYSIS for what the frontend calls

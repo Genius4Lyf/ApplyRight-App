@@ -1,0 +1,83 @@
+import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { bubbleAnim } from '../../lib/ariaMotion';
+import { SECTION_RESEARCH } from '../../lib/sectionResearch';
+import AriaOrbit from './AriaOrbit';
+
+// A chip-triggered "what research says" lecture — rendered as a NORMAL Aria message
+// (orbit + slate bubble), not a dropdown. Given a `section` id, it reads the curated
+// entry from SECTION_RESEARCH and lays out the structured content inside the bubble:
+// eyebrow → thesis → research-backed rule bullets → a before→after (or example) pull
+// block → a source micro-line. Content is trusted static markup, so `points` render
+// via dangerouslySetInnerHTML to show their <b> emphasis.
+const ResearchCard = ({ section }) => {
+  const reduce = useReducedMotion();
+  const r = SECTION_RESEARCH[section];
+  if (!r) return null;
+
+  return (
+    <motion.div
+      className="self-start max-w-[92%] flex items-start gap-2"
+      {...bubbleAnim('aria', reduce)}
+    >
+      <AriaOrbit size={16} className="mt-2" />
+      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-3 flex flex-col gap-2.5">
+        {/* Eyebrow. */}
+        <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+          {r.icon} What research says · {r.eyebrow}
+        </span>
+
+        {/* Thesis — the one-line takeaway, in the editorial serif. */}
+        <p className="font-serif text-[14px] leading-snug text-slate-800 dark:text-slate-100">
+          {r.thesis}
+        </p>
+
+        {/* The research-backed rules. */}
+        <ul className="flex flex-col gap-1.5">
+          {r.points.map((pt, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="mt-[7px] shrink-0 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-500" />
+              <span
+                className="text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300 [&_b]:font-semibold [&_b]:text-slate-800 dark:[&_b]:text-slate-100"
+                // Trusted static content from SECTION_RESEARCH — enables <b>.
+                dangerouslySetInnerHTML={{ __html: pt }}
+              />
+            </li>
+          ))}
+        </ul>
+
+        {/* Pull block — a before→after contrast, else a single positive example. */}
+        {r.before || r.after ? (
+          <div className="rounded-xl bg-white/60 dark:bg-slate-900/40 px-3 py-2.5 flex flex-col gap-1.5">
+            {r.before && (
+              <p className="flex items-start gap-2 text-[12px] leading-relaxed text-rose-600/90 dark:text-rose-400/90">
+                <span className="mt-px shrink-0 font-semibold">✗</span>
+                <span className="line-through decoration-rose-400/50">{r.before}</span>
+              </p>
+            )}
+            {r.after && (
+              <p className="flex items-start gap-2 text-[12px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+                <span className="mt-px shrink-0 font-semibold">✓</span>
+                <span>{r.after}</span>
+              </p>
+            )}
+          </div>
+        ) : r.example ? (
+          <div className="rounded-xl bg-white/60 dark:bg-slate-900/40 px-3 py-2.5">
+            <p className="flex items-start gap-2 text-[12px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+              <span className="mt-px shrink-0 font-semibold">✓</span>
+              <span>{r.example}</span>
+            </p>
+          </div>
+        ) : null}
+
+        {/* Source micro-line. */}
+        <p className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {r.source}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+export default ResearchCard;

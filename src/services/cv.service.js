@@ -67,31 +67,6 @@ const CVService = {
     return response.data;
   },
 
-  // CV Coach "Deep Scan": Job Match + Career Match + recruiter red-flags for a
-  // draft. Paid users run it freely; free users get one lifetime taste (spent
-  // server-side, atomic). Returns { isPaid, locked?, taste?, tasteAvailable,
-  // jobMatch, careerMatch, redFlags }. A 402/403/502 surfaces as a thrown error.
-  coachDeepScan: async (draftId, jobDescription) => {
-    const response = await api.post('/coach/deep-scan', { draftId, jobDescription });
-    return response.data;
-  },
-
-  // Turn a Deep-Scan red-flag into a fix: generate role-targeted ATS bullet
-  // rewrites for ONE work-history role or project. Paid only — a 402 ({ locked })
-  // surfaces as a thrown error. Returns { section, sortId, title, suggestions[] }.
-  coachRewriteRole: async (draftId, section, sortId) => {
-    const response = await api.post('/coach/rewrite-role', { draftId, section, sortId });
-    return response.data;
-  },
-
-  // Re-verify the CV after applying fixes — recompute red-flags + fit score so
-  // resolved items flip green. Paid, repeatable (no Career Match AI). The draft
-  // must already be saved with the applied edits. Returns { jobMatch, redFlags }.
-  coachRecheck: async (draftId) => {
-    const response = await api.post('/coach/recheck', { draftId });
-    return response.data;
-  },
-
   // Live conversational AI coach message for the current builder step. Returns
   // { message, guide, tone, limited, remaining } — or { limited:true } when the
   // free daily quota is spent, or { fallback:true } when AI is unavailable. The
@@ -119,6 +94,73 @@ const CVService = {
   getJobKeywords: async (targetJob, opts = {}) => {
     const response = await api.post('/ai/job-keywords', { targetJob, ...opts });
     return response.data; // { keywords, source, charged?, remainingCredits?, aiKeywordsHash? }
+  },
+
+  // Aria "build-with" bullet generation (Chunk 2 endpoint). Turns a described
+  // role/project into `count` Role-Brief-grounded bullets. Charges count ×
+  // GENERATE_BULLET; the first re-roll of an identical request is free.
+  // Distinct from the legacy two-tier generateBullets above.
+  coachGenerateBullets: async ({
+    draftId,
+    section,
+    sortId,
+    description,
+    count,
+    reroll = false,
+  }) => {
+    const response = await api.post('/coach/generate-bullets', {
+      draftId,
+      section,
+      sortId,
+      description,
+      count,
+      reroll,
+    });
+    return response.data; // { bullets, wasFree, cost, remainingCredits }
+  },
+
+  // Fetch (or build+cache) Aria's Role Brief for a draft — powers the "Aria's
+  // read" strip. Cheap on repeat (same-JD cache hit); no target JD → { brief: null }.
+  getBrief: async (draftId) => {
+    const response = await api.post('/coach/brief', { draftId });
+    return response.data; // { brief }
+  },
+
+  // Aria's free-form coach chat. Shares one daily free pool with build-with, then
+  // 1 credit each. A 402 { code:'CHAT_LIMIT_REACHED' } means out of free chats +
+  // credits for today.
+  askAria: async (draftId, currentStepId, question) => {
+    const response = await api.post('/coach/ask', { draftId, currentStepId, question });
+    return response.data; // { answer, freeRemaining, charged }
+  },
+
+  // Aria's UNIFIED turn — general Q&A + build-with in one thread. focus optional.
+  // Smart per-message charging happens server-side (focused building = free, a
+  // general question spends the daily allowance).
+  coachChat: async ({ draftId, currentStepId, messages, focus, buildTurns }) => {
+    const response = await api.post('/coach/chat', {
+      draftId,
+      currentStepId,
+      messages,
+      focus,
+      buildTurns,
+    });
+    return response.data; // { reply, intent, readyToDraft, description, freeRemaining, charged }
+  },
+
+  // Aria's career-stage-aware, JD-tailored professional summary. Charges
+  // GENERATE_SUMMARY per draft (each re-roll charges again). stage is
+  // 'grad'|'experienced'|'changer'. Returns { summary, cost, remainingCredits }.
+  coachSummary: async ({ draftId, stage }) => {
+    const { data } = await api.post('/coach/summary', { draftId, stage });
+    return data; // { summary, cost, remainingCredits }
+  },
+
+  // Confirm/correct the inferred company type on Aria's Role Brief (infer+confirm
+  // chip). Persists the choice so a same-JD brief rebuild keeps it.
+  setCompanyType: async (draftId, companyType) => {
+    const response = await api.post('/coach/company-type', { draftId, companyType });
+    return response.data; // { brief }
   },
 
   // Live keyword-coverage tracker (free, no AI). Matches the user's skills/

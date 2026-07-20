@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PenTool,
   ArrowRight,
   ArrowLeft,
   Plus,
-  Wand2,
-  RefreshCcw,
+  MessageCircle,
   Link as LinkIcon,
-  Lock,
 } from 'lucide-react';
-import CVService from '../../services/cv.service';
-import { toast } from 'sonner';
 import ProjectsTutorial from './ProjectsTutorial';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
@@ -42,10 +38,6 @@ const newSortId = () =>
 const ensureIds = (items) =>
   (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
-// Free users can apply up to this many of the AI rewrite options at once; paid
-// users can apply all. Both see all 10 options (no blur, no paywall on viewing).
-const FREE_SELECT_LIMIT = 3;
-
 const Projects = () => {
   // Safely destructure context
   const context = useOutletContext();
@@ -59,11 +51,9 @@ const Projects = () => {
     setStepDirty,
     registerStepData,
     externalEditNonce,
+    lastAiWriteSortId,
+    onAskAria,
   } = context || {};
-
-  const navigate = useNavigate();
-  // Paid users can apply all AI rewrite options; free users are capped.
-  const isPaid = user?.plan === 'paid';
 
   const [projects, setProjects] = useState(() => ensureIds(cvData?.projects));
   const [expandedId, setExpandedId] = useState(() => {
@@ -73,15 +63,7 @@ const Projects = () => {
     }
     return null;
   });
-  const [generatingIndex, setGeneratingIndex] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
-
-  // AI Rewrite suggestions modal — single column, all 10 options visible &
-  // selectable; free users apply up to FREE_SELECT_LIMIT, paid apply all.
-  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
-  const [suggestionsList, setSuggestionsList] = useState([]);
-  const [selectedSuggestions, setSelectedSuggestions] = useState([]);
-  const [suggestionTargetIndex, setSuggestionTargetIndex] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -176,6 +158,20 @@ const Projects = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalEditNonce]);
 
+  // "Aria wrote here" reveal — when Aria appends bullets to a project, auto-expand +
+  // scroll to it and flag it so the card glows, the field flashes, and a pill fades.
+  const [ariaWroteId, setAriaWroteId] = useState(null);
+  useEffect(() => {
+    if (!lastAiWriteSortId) return;
+    setExpandedId(lastAiWriteSortId); // auto-expand so the bullets are visible
+    setAriaWroteId(lastAiWriteSortId); // triggers the glow/ring
+    const el = document.getElementById(`proj-${lastAiWriteSortId}`);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+    const t = setTimeout(() => setAriaWroteId(null), 3500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalEditNonce]); // fires each write (nonce bumps every time)
+
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
@@ -183,85 +179,6 @@ const Projects = () => {
       <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading projects...</div>
     );
   }
-
-  const handleGenerateBullets = async (index) => {
-    const proj = projects[index];
-    if (!proj.title) {
-      toast.error('Please enter a project title first.');
-      return;
-    }
-
-    const textToRewrite = proj.description;
-    const lineCount = textToRewrite
-      ? textToRewrite.split('\n').filter((line) => line.trim().length > 5).length
-      : 0;
-
-    if (lineCount < 3) {
-      toast.error('Please write at least 3 bullet points before rewriting.');
-      return;
-    }
-
-    setGeneratingIndex(index);
-    try {
-      const context = `Rewrite/Improve these bullet points: "${textToRewrite}". Project Link: ${proj.link}`;
-
-      const { suggestions = [] } = await CVService.generateBullets(
-        proj.title,
-        context,
-        'project',
-        cvData.targetJob?.description
-      );
-
-      if (suggestions && suggestions.length > 0) {
-        setSuggestionsList(suggestions);
-        setSelectedSuggestions([]);
-        setSuggestionTargetIndex(index);
-        setShowSuggestionsModal(true);
-      } else {
-        toast.warning('No suggestions generated. Please try again.');
-      }
-    } catch (error) {
-      console.error('Failed to gen bullets', error);
-      toast.error('Failed to generate project details');
-    } finally {
-      setGeneratingIndex(null);
-    }
-  };
-
-  // Free users apply up to FREE_SELECT_LIMIT; paid users apply all options.
-  const selectMax = isPaid ? suggestionsList.length : FREE_SELECT_LIMIT;
-
-  const goUpgrade = () => {
-    setShowSuggestionsModal(false);
-    navigate('/upgrade');
-  };
-
-  const toggleSuggestionSelection = (suggestion) => {
-    if (selectedSuggestions.includes(suggestion)) {
-      setSelectedSuggestions(selectedSuggestions.filter((s) => s !== suggestion));
-      return;
-    }
-    if (selectedSuggestions.length >= selectMax) {
-      toast.warning(
-        isPaid
-          ? `You can select up to ${selectMax}.`
-          : `Free plan: pick up to ${selectMax}. Upgrade to apply all.`
-      );
-      return;
-    }
-    setSelectedSuggestions([...selectedSuggestions, suggestion]);
-  };
-
-  const applySelectedSuggestions = () => {
-    if (selectedSuggestions.length === 0 || suggestionTargetIndex === null) return;
-    const formattedBullets = selectedSuggestions.map((s) => `• ${s}`).join('\n');
-    handleChange(suggestionTargetIndex, 'description', formattedBullets);
-    toast.success('Bullets applied!');
-    setShowSuggestionsModal(false);
-    setSuggestionsList([]);
-    setSelectedSuggestions([]);
-    setSuggestionTargetIndex(null);
-  };
 
   const handleKeyDown = (e, index) => {
     if (e.key === 'Enter') {
@@ -366,7 +283,14 @@ const Projects = () => {
                   isExpanded={isExpanded}
                   onToggleExpand={() => setExpandedId(isExpanded ? null : proj._sortId)}
                 >
-                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative group overflow-hidden">
+                  <div
+                    id={`proj-${proj._sortId}`}
+                    className={`bg-white dark:bg-slate-900 rounded-xl border shadow-sm relative group overflow-hidden ${
+                      ariaWroteId === proj._sortId
+                        ? 'aria-wrote border-indigo-400 dark:border-indigo-500'
+                        : 'border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
                     {/* Collapsed Header / Summary View */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? null : proj._sortId)}
@@ -441,26 +365,18 @@ const Projects = () => {
                             </div>
 
                             <div>
-                              <div className="flex justify-between items-center mb-1">
+                              <div className="mb-1 flex items-center gap-2">
                                 <label
                                   htmlFor={`project-description-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
                                 >
                                   Description / Bullets
                                 </label>
-                                <button
-                                  type="button"
-                                  onClick={() => handleGenerateBullets(index)}
-                                  disabled={generatingIndex === index || !proj.title}
-                                  className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
-                                >
-                                  {generatingIndex === index ? (
-                                    <RefreshCcw className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <Wand2 className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
-                                  )}
-                                  {generatingIndex === index ? 'Rewriting...' : 'AI Rewrite'}
-                                </button>
+                                {ariaWroteId === proj._sortId && (
+                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-in fade-in">
+                                    ◉ Aria filled this in
+                                  </span>
+                                )}
                               </div>
                               <textarea
                                 id={`project-description-${index}`}
@@ -480,7 +396,9 @@ const Projects = () => {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
                                 placeholder="• Developed a full-stack app using..."
-                                className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm"
+                                className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm ${
+                                  ariaWroteId === proj._sortId ? 'aria-wrote-field' : ''
+                                }`}
                               />
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -494,11 +412,34 @@ const Projects = () => {
                               </div>
                             </div>
 
-                            <div className="flex justify-end pt-2">
+                            {/* Ask Aria — a prominent bottom block with a state-aware gate hint. */}
+                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => onAskAria?.('project', proj)}
+                                disabled={!proj.title}
+                                title={
+                                  proj.title
+                                    ? 'Ask Aria to help with this project'
+                                    : 'Add the project title first'
+                                }
+                                className={`shrink-0 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+                                  proj.title
+                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
+                                    : 'border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                                }`}
+                              >
+                                <MessageCircle className="w-4 h-4" /> Ask Aria
+                              </button>
+                              <p className="flex-1 min-w-0 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
+                                {!proj.title
+                                  ? "Add the project title first — Aria won't guess it."
+                                  : 'Sends this project to Aria & focuses her here.'}
+                              </p>
                               <button
                                 type="button"
                                 onClick={() => setExpandedId(null)}
-                                className="text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                className="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                               >
                                 Done
                               </button>
@@ -541,130 +482,6 @@ const Projects = () => {
           {saving ? 'Saving...' : 'Next: Education'} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-
-      {/* AI Rewrite Suggestions Modal — all 10 options visible & selectable;
-          free users apply up to 3, paid users apply all. */}
-      {showSuggestionsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="min-w-0">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-0.5">
-                    Suggestions
-                  </p>
-                  <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                    AI Rewrite
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Pick the best {selectMax} to add to your project.
-                  </p>
-                </div>
-              </div>
-              <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-md shrink-0">
-                {selectedSuggestions.length} / {selectMax}
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-4 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 space-y-2">
-              {suggestionsList.map((suggestion, idx) => {
-                const isSelected = selectedSuggestions.includes(suggestion);
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => toggleSuggestionSelection(suggestion)}
-                    className={`relative p-3 rounded-xl border transition-all flex gap-3 cursor-pointer ${
-                      isSelected
-                        ? 'border-slate-900 dark:border-white bg-slate-900/[0.04] dark:bg-white/[0.06] shadow-sm'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
-                    }`}
-                  >
-                    <div className="mt-0.5 flex-shrink-0">
-                      <div
-                        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900'
-                            : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900'
-                        }`}
-                      >
-                        {isSelected && (
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={3}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    <p
-                      className={`text-sm leading-relaxed ${
-                        isSelected
-                          ? 'text-slate-900 dark:text-slate-100 font-medium'
-                          : 'text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {suggestion}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
-              <div className="flex items-start gap-2 mb-3 p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg">
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                  <strong>Note:</strong> AI can make mistakes. Review and edit these to ensure they
-                  reflect your real work.
-                </p>
-              </div>
-              {!isPaid && (
-                <div className="flex items-start gap-2 mb-3 p-2.5 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg">
-                  <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 mt-0.5 flex-shrink-0" />
-                  <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
-                    <strong>Free plan:</strong> apply up to {FREE_SELECT_LIMIT} options.{' '}
-                    <button
-                      type="button"
-                      onClick={goUpgrade}
-                      className="font-bold underline hover:no-underline"
-                    >
-                      Upgrade
-                    </button>{' '}
-                    to apply all {suggestionsList.length}.
-                  </p>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={() => setShowSuggestionsModal(false)}
-                  className="px-5 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={applySelectedSuggestions}
-                  disabled={selectedSuggestions.length === 0}
-                  className="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Apply Selected
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tutorial Modal */}
       <ProjectsTutorial isOpen={showTutorial} onClose={() => setShowTutorial(false)} user={user} />

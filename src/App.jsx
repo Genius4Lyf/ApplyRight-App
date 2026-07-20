@@ -180,15 +180,12 @@ const RootLayout = () => {
 
   // Custom key function to prevent CVBuilderLayout from remounting on step changes
   const getPageKey = (pathname) => {
-    if (pathname.startsWith('/cv-builder')) {
-      const parts = pathname.split('/');
-      // parts: ['', 'cv-builder', 'id', 'step']
-      // Return /cv-builder/id so switching steps doesn't trigger AnimatePresence remount
-      if (parts.length >= 3) {
-        return `/${parts[1]}/${parts[2]}`;
-      }
-    }
-    return pathname;
+    // Keep ONE stable key for the whole builder so neither switching steps NOR the
+    // 'new'→realId swap (create-on-entry) remounts CVBuilderLayout — the swap would
+    // otherwise flash a refetch/remount. (A direct /cv-builder/A→/cv-builder/B jump
+    // without leaving the builder would no longer remount, but CV switches go via the
+    // dashboard, so that flow doesn't occur.)
+    return pathname.startsWith('/cv-builder') ? '/cv-builder' : pathname;
   };
 
   // Scroll to top on route change
