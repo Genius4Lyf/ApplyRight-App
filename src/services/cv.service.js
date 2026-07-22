@@ -119,6 +119,67 @@ const CVService = {
     return response.data; // { bullets, wasFree, cost, remainingCredits }
   },
 
+  // Aria Studio — detach a CV from the Studio without deleting it. Clearing studioKind
+  // drops it from the session rail; the DraftCV itself (and everything on it) survives
+  // in My CVs. The escape hatch for a master CV someone no longer wants in the sidebar.
+  studioRemoveSession: async (draftId) => {
+    const response = await api.post('/cv/save', { _id: draftId, studioKind: null });
+    return response.data;
+  },
+
+  // Aria Studio — start a BUILD session: an empty CV prefilled with the user's contact
+  // details, optionally aimed at a job. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
+  studioBuildStart: async ({ jobTitle, jobDescription } = {}) => {
+    const response = await api.post('/studio/build-start', { jobTitle, jobDescription });
+    return response.data; // { draftId, personalInfo, brief, draft }
+  },
+
+  // Aria Studio — the user's sessions for the rail. A LEAN projection (title, job,
+  // score, timestamp), never whole drafts: a session IS a DraftCV, and shipping those
+  // in full would send every transcript and CV body just to draw a list.
+  studioSessions: async () => {
+    const response = await api.get('/studio/sessions');
+    return response.data; // { sessions: [{ _id, kind, title, jobTitle, company, sourceTitle, fitScore, updatedAt }] }
+  },
+
+  // Aria Studio — read a job with NO draft attached, so the user can confirm or correct
+  // Aria's read before anything is created. Free (same policy as /coach/brief), and
+  // nothing is persisted. Returns { brief: null } if the AI is unavailable.
+  studioBriefPreview: async ({ jobTitle, jobDescription }) => {
+    const response = await api.post('/studio/brief-preview', { jobTitle, jobDescription });
+    return response.data; // { brief }
+  },
+
+  // Aria Studio — start a tailor run. Clones the source CV's CONTENT into a new draft
+  // bound to the target job. Pass the `brief` the user already confirmed at the preview
+  // step and it's persisted as-is (no second AI extraction); omit it and one is built.
+  // The source draft is never mutated. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
+  studioTailorStart: async ({ sourceDraftId, jobTitle, jobDescription, brief }) => {
+    const response = await api.post('/studio/tailor-start', {
+      sourceDraftId,
+      jobTitle,
+      jobDescription,
+      brief,
+    });
+    return response.data; // { draftId, title, brief, tailoredFrom, draft }
+  },
+
+  // Aria Studio — full scan: AI fit analysis of the tailored copy against its target
+  // job, plus free deterministic per-section verdicts. CHARGES ANALYSIS (10cr), and
+  // only after the AI succeeds. 403 { code:'INSUFFICIENT_CREDITS' } if the balance is short.
+  studioScan: async (draftId) => {
+    const response = await api.post('/studio/scan', { draftId });
+    return response.data; // { studioScan, remainingCredits }
+  },
+
+  // Aria Studio — FREE deterministic re-score after an edit. No AI, no charge: refreshes
+  // fitScore/scoreBreakdown/sections while keeping the last scan's narrative (flagged
+  // fromLastFullScan) rather than inventing new commentary.
+  studioRecompute: async (draftId) => {
+    const response = await api.post('/studio/recompute', { draftId });
+    return response.data; // { studioScan }
+  },
+
   // Fetch (or build+cache) Aria's Role Brief for a draft — powers the "Aria's
   // read" strip. Cheap on repeat (same-JD cache hit); no target JD → { brief: null }.
   getBrief: async (draftId) => {
@@ -137,13 +198,17 @@ const CVService = {
   // Aria's UNIFIED turn — general Q&A + build-with in one thread. focus optional.
   // Smart per-message charging happens server-side (focused building = free, a
   // general question spends the daily allowance).
-  coachChat: async ({ draftId, currentStepId, messages, focus, buildTurns }) => {
+  coachChat: async ({ draftId, currentStepId, messages, focus, buildTurns, stage }) => {
     const response = await api.post('/coach/chat', {
       draftId,
       currentStepId,
       messages,
       focus,
       buildTurns,
+      // Career stage ('grad'|'experienced'|'changer') forks the experience coaching:
+      // entry-level is eased in (no metric pressure). Optional — the backend infers
+      // from the draft when it's absent.
+      stage,
     });
     return response.data; // { reply, intent, readyToDraft, description, freeRemaining, charged }
   },
@@ -161,6 +226,13 @@ const CVService = {
   setCompanyType: async (draftId, companyType) => {
     const response = await api.post('/coach/company-type', { draftId, companyType });
     return response.data; // { brief }
+  },
+
+  // Set the Aria model for this session (persists on the draft), and optionally the
+  // user's default. Server-gated: an un-exposed model is rejected (400 MODEL_NOT_ALLOWED).
+  setModel: async (draftId, model, { setDefault = false } = {}) => {
+    const response = await api.post('/coach/model', { draftId, model, setDefault });
+    return response.data; // { model, tier }
   },
 
   // Live keyword-coverage tracker (free, no AI). Matches the user's skills/

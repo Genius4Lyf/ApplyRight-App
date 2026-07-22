@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
 import {
   Save,
   LogOut,
@@ -259,6 +258,19 @@ const CVBuilderInner = () => {
   // Projects). Drives the coach's focus bar; the build-with flow reads it in Chunk 5.
   const [focusedEntry, setFocusedEntry] = useState(null);
 
+  // Reactive desktop flag (1024px = Tailwind `lg`). We mount only ONE ATSCoachPanel —
+  // the desktop rail OR the mobile drawer, never both — so a hidden duplicate can't
+  // fire its focus effect + persist a stale [opener] thread over the visible chat.
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onChange = (e) => setIsDesktop(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   // "Ask Aria" from a role/project: bind her focus + bring the coach forward. Flush
   // the draft to the DB first (fire-and-forget) so the role's _sortId exists server-
   // side — the build-with chat resolves the focused role by _sortId, and without this
@@ -356,8 +368,6 @@ const CVBuilderInner = () => {
 
   return (
     <div className="h-dvh overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
-      <Navbar />
-
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Main Content Area / Editor Panel */}
         <div className="flex-1 flex flex-col overflow-hidden relative min-h-0">
@@ -403,7 +413,7 @@ const CVBuilderInner = () => {
                   }
                 }}
                 aria-label="CV name"
-                className="hidden sm:block text-sm text-slate-800 dark:text-slate-200 font-medium shrink-0 w-36 sm:w-44 border-b border-indigo-400 bg-transparent outline-none pr-3 mr-1"
+                className="hidden sm:block text-sm text-slate-800 dark:text-slate-200 font-medium shrink-0 w-36 sm:w-44 bg-transparent border-0 outline-none p-0 mr-1"
               />
             ) : (
               <button
@@ -551,8 +561,9 @@ const CVBuilderInner = () => {
               </div>
             </div>
 
-            {/* Coach — flush full-height right rail, divider only */}
-            {showPreview && (
+            {/* Coach — flush full-height right rail, divider only. Desktop-only mount
+                so the mobile drawer's panel isn't live in parallel. */}
+            {isDesktop && showPreview && (
               <div className="hidden lg:flex w-[400px] xl:w-[440px] shrink-0 flex-col min-h-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 {/* Back bar — only in preview mode; the coach-mode entry to preview
                     is now the book icon in the coach header. */}
@@ -597,14 +608,16 @@ const CVBuilderInner = () => {
         </div>
       </div>
 
-      {/* Always-present mobile coach drawer — drag the handle up to read/chat (up to
-          ~85vh) or down to a small peek, so the student balances the CV form against
-          the conversation. The form scrolls behind it. Mobile only (lg:hidden); the
-          desktop side rail is unchanged. */}
-      <div
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex flex-col"
-        style={{ height: drawerH, paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
+      {/* Mobile coach drawer — drag the handle up to read/chat (up to ~85vh) or down to
+          a small peek, so the student balances the CV form against the conversation.
+          The form scrolls behind it. Mounted only on mobile (!isDesktop) so it isn't
+          live in parallel with the desktop rail — a hidden duplicate would clobber
+          coachChats on focus. */}
+      {!isDesktop && (
+        <div
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex flex-col"
+          style={{ height: drawerH, paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
         {/* Drag handle */}
         <div
           className="py-2.5 flex justify-center cursor-ns-resize touch-none shrink-0"
@@ -652,7 +665,8 @@ const CVBuilderInner = () => {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

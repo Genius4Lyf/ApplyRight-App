@@ -11,6 +11,12 @@ export default defineConfig({
     pure: ['console.log', 'console.info', 'console.debug'],
     drop: ['debugger'],
   },
+  test: {
+    // Node environment by default — the suite covers pure logic modules (src/lib),
+    // not components. Add jsdom + @testing-library if component tests are ever needed.
+    environment: 'node',
+    include: ['src/**/*.test.{js,jsx}'],
+  },
   optimizeDeps: {
     // Force Vite to pre-bundle Capacitor plugins. Filesystem and Share import
     // from @capacitor/synapse which Vite's auto-detection misses, leaving

@@ -8,8 +8,8 @@ import { useReducedMotion } from 'framer-motion';
 // of the next 1–2 cards so nothing bleeds off a 360px screen.
 const PRESETS = {
   //          BX (front x-offset)  SX (per-card x)  SY (per-card y)  depth
-  desktop: { BX: -36, SX: 34, SY: 15, depth: 3 },
-  mobile: { BX: 0, SX: 14, SY: 8, depth: 2 },
+  desktop: { BX: -36, SX: 34, SY: 18, depth: 3 },
+  mobile: { BX: 0, SX: 14, SY: 11, depth: 2 },
 };
 
 const EASE = 'cubic-bezier(.2,.7,.2,1)';
@@ -199,7 +199,7 @@ export default function CardDeck({
       pointerEvents = 'auto';
     } else if (rel <= depth) {
       transform = `translate(${BX + rel * SX}px, ${rel * -SY}px) scale(${1 - rel * 0.055})`;
-      opacity = rel === depth ? 0.5 : 1;
+      opacity = Math.max(0, 1 - rel * 0.4); // front=1, first behind ≈.6, second ≈.2, deepest → gone
       zIndex = 60 - rel;
     } else {
       // Beyond the visible depth — kept mounted but hidden.
@@ -288,6 +288,9 @@ export default function CardDeck({
                   maxWidth: 'calc(100% - 8px)',
                   touchAction: 'pan-y',
                   willChange: 'transform',
+                  // Scale from the top edge so shrinking back cards step UP (top peek)
+                  // instead of collapsing toward center and cancelling the upward offset.
+                  transformOrigin: 'top center',
                   ...cardStyle(index),
                 }}
                 onPointerDown={isFront ? onPointerDown : undefined}

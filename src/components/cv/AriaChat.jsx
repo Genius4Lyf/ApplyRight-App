@@ -4,6 +4,7 @@ import { ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
+import { CAREER_STAGES } from '../../lib/careerStages';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
@@ -14,13 +15,9 @@ import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
 
-// Career-stage chips for the in-chat summary flow. `k` maps 1:1 to the backend
-// stage enum ('grad'|'experienced'|'changer').
-const SUMMARY_STAGES = [
-  { k: 'grad', label: 'Student / recent grad' },
-  { k: 'experienced', label: 'Experienced' },
-  { k: 'changer', label: 'Changing careers' },
-];
+// Career-stage chips for the in-chat summary flow — the shared vocabulary (same
+// chips the work-history build-with uses). `k` maps 1:1 to the backend stage enum.
+const SUMMARY_STAGES = CAREER_STAGES;
 
 // The persistent Aria chat — replaces the old scripted CoachCard on every non-target
 // step. Opens with the step's coaching line, offers ready-made suggestion chips, and

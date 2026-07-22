@@ -32,10 +32,12 @@ import { isMobile, shouldShowBottomNav } from './utils/platform';
 import { waitForReady } from './utils/splash';
 import api from './services/api';
 import { hydrateCreditCosts } from './lib/credits';
+import { hydrateModels } from './lib/models';
 import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
 import MyCVs from './pages/MyCVs';
+import AriaStudio from './pages/AriaStudio/AriaStudio';
 import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
 import TargetJob from './pages/CVBuilder/TargetJob';
 import Heading from './pages/CVBuilder/Heading';
@@ -366,6 +368,18 @@ const router = createBrowserRouter([
         ),
       },
       {
+        // Aria Studio — standalone agentic tailor chat. Deliberately NOT nested under
+        // /cv-builder: it owns its own document via AriaStudioProvider.
+        path: '/aria-studio',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <AriaStudio />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      {
         path: '/onboarding',
         element: (
           <MaintenanceGuard>
@@ -668,7 +682,10 @@ function App() {
   useEffect(() => {
     api
       .get('/auth/config')
-      .then((res) => hydrateCreditCosts(res?.data?.creditCosts))
+      .then((res) => {
+        hydrateCreditCosts(res?.data?.creditCosts);
+        hydrateModels(res?.data?.aiModels);
+      })
       .catch(() => {});
   }, []);
 

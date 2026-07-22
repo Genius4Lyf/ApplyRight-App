@@ -440,7 +440,7 @@ const Navbar = () => {
 
   // Desktop masthead tab: full-height, underline active state (no filled pill).
   const deskTab = (active) =>
-    `relative flex items-center gap-2 h-16 px-3 text-sm transition-colors ${
+    `relative flex items-center gap-2 h-14 px-3 text-sm transition-colors ${
       active
         ? 'font-semibold text-slate-900 dark:text-slate-100'
         : 'font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
@@ -452,17 +452,22 @@ const Navbar = () => {
 
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to={isAuthenticated ? homePath : '/'} className="flex items-center gap-2.5 z-50">
+      <div className="w-full px-4 sm:px-6 h-14 flex items-center gap-4">
+        {/* LEFT — logo pinned to the left edge; flex-1 pushes the nav to true center */}
+        <div className="flex-1 flex items-center min-w-0">
+        <Link
+          to={isAuthenticated ? homePath : '/'}
+          className="flex items-center gap-2.5 z-50 shrink-0"
+        >
           <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
-          <span className="font-heading text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Apply<span className="text-indigo-600 dark:text-indigo-400">Right</span>
+          <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
+            ApplyRight
           </span>
         </Link>
+        </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          <nav className="flex items-center gap-1">
+        {/* CENTER — desktop nav tabs */}
+        <nav className="hidden md:flex items-center gap-1 shrink-0">
             {isAuthenticated && (
               <>
                 <Link to={homePath} className={deskTab(isActive(homePath))}>
@@ -504,9 +509,13 @@ const Navbar = () => {
                 )}
               </>
             )}
-          </nav>
+        </nav>
 
-          {!isAuthenticated && (
+        {/* RIGHT — desktop cluster + mobile chrome (flex-1 + justify-end mirrors LEFT) */}
+        <div className="flex-1 flex items-center justify-end gap-3">
+          {/* desktop right cluster */}
+          <div className="hidden md:flex items-center gap-4">
+            {!isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link
                 to="/pricing"
@@ -527,9 +536,7 @@ const Navbar = () => {
                 Sign Up
               </Link>
             </div>
-          )}
-
-          {isAuthenticated && (
+            ) : (
             <div className="flex items-center gap-4">
               {/* Agents have no interview minutes. With a plan, the scarce
                   resource is CV credits (for tailoring) — show the balance and
@@ -579,13 +586,13 @@ const Navbar = () => {
                 onSignOut={() => setShowLogoutConfirm(true)}
               />
             </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Mobile chrome — the account avatar (authenticated) or auth CTAs
-            (guests). Primary nav is the shared bottom tab bar (both platforms);
-            the hamburger/drawer is retired. */}
-        <div className="md:hidden flex items-center gap-2">
+          {/* Mobile chrome — the account avatar (authenticated) or auth CTAs
+              (guests). Primary nav is the shared bottom tab bar (both platforms);
+              the hamburger/drawer is retired. */}
+          <div className="md:hidden flex items-center gap-2">
           {/* Primary nav is the bottom tab bar; account lives in the avatar
               dropdown (both platforms). Guests get compact auth CTAs. */}
           {isAuthenticated ? (
@@ -632,6 +639,7 @@ const Navbar = () => {
               </Link>
             </>
           )}
+          </div>
         </div>
       </div>
 

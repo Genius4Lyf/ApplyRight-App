@@ -58,7 +58,7 @@ import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburton
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import { TEMPLATES } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
-import { downloadBlob } from '../utils/download';
+import { downloadPdf, downloadDocx } from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
@@ -583,111 +583,31 @@ const ResumeReview = () => {
       // delay. Just generate and hand over the file.
       setIsDownloading(true);
 
-      const elementId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
-      const element = document.getElementById(elementId);
-      if (!element)
-        throw new Error(`${activeTab === 'resume' ? 'Resume' : 'Cover letter'} content not found`);
+      // Serialization + backend render + file handover all live in lib/cvDownload,
+      // shared with Aria Studio. It returns a typed result instead of throwing, so the
+      // paywall branch below is the same on every surface.
+      const result = await downloadPdf({
+        elementId: activeTab === 'resume' ? 'resume-content' : 'cover-letter-content',
+        paperWidth,
+        paperHeight,
+        paper: design.paper,
+        templateId,
+        applicationId: application._id,
+        isDraft: isDraftMode,
+        userProfile,
+        kind: activeTab === 'resume' ? 'resume' : 'cover-letter',
+      });
 
-      // Clone and reset transform to ensure PDF is generated at 100% scale
-      const clone = element.cloneNode(true);
-      // Strip the on-screen preview watermark + any screenshot-guard blur so the
-      // paid PDF is always clean.
-      clone.querySelectorAll('[data-preview-watermark]').forEach((el) => el.remove());
-      clone.style.filter = 'none';
-      clone.style.transform = 'none';
-      clone.style.transformOrigin = 'top left';
-      clone.style.width = paperWidth;
-      clone.style.minWidth = paperWidth;
-      clone.style.minHeight = paperHeight;
-      clone.style.margin = '0 auto';
-
-      // 1. Serialization with Tailwind injection
-      const contentHtml = clone.outerHTML;
-
-      // Apply dark background only for Royal Elegance template
-      const isDarkTemplate = templateId === 'luxury-royal';
-      const bgColor = isDarkTemplate ? '#0f172a' : 'transparent';
-
-      const fullHtml = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <link rel="preconnect" href="https://fonts.googleapis.com">
-                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=Inter:wght@400;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
-                    <style>
-                        /* Backend renders with preferCSSPageSize:true, so this sets the PDF page size. */
-                        @page { size: ${design.paper === 'letter' ? 'letter' : 'A4'}; }
-                        html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; background: ${bgColor}; height: 100%; }
-
-                        /* Table Layout Method for Print Margins */
-                        .print-container {
-                            width: 100%;
-                            border-collapse: collapse;
-                            border: 0 none;
-                            margin-top: -5mm; /* Pull up to hide first page header */
-                        }
-                        .print-container td, .print-container th {
-                            border: 0 none;
-                            padding: 0;
-                            margin: 0;
-                        }
-                        thead, tfoot { 
-                            height: 5mm; 
-                            display: table-header-group; /* Ensure repeat on break */
-                        }
-                        tfoot { display: table-footer-group; }  
-                        
-                        /* Spacer divs - transparent to show background */
-                        .margin-spacer { height: 5mm; background: transparent; }
-                        
-                        #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
-                    </style>
-                </head>
-                <body>
-                    <table class="print-container">
-                        <thead>
-                            <tr><td><div class="margin-spacer"></div></td></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>
-                                ${contentHtml}
-                            </td></tr>
-                        </tbody>
-                        <tfoot>
-                            <tr><td><div class="margin-spacer"></div></td></tr>
-                        </tfoot>
-                    </table>
-                </body>
-                </html>
-            `;
-
-      // 2. Call Backend with margin options. The visible margin is now the
-      // template's own padding (in the cloned DOM), so keep the Puppeteer page
-      // margin small + fixed — otherwise it would add a third layer of border.
-      const pdfMargin = '10px';
-      const blob = await CVService.generatePdf(
-        fullHtml,
-        {
-          margin: {
-            top: pdfMargin,
-            right: pdfMargin,
-            bottom: pdfMargin,
-            left: pdfMargin,
-          },
-        },
-        {
-          templateId,
-          applicationId: application._id,
-          isDraft: isDraftMode,
-        }
-      );
-
-      // 3. Download — works on both web (anchor click) and Capacitor (Filesystem + Share sheet)
-      const filename = `${userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.pdf`;
-      await downloadBlob(blob, filename);
+      if (result.needsPaywall) {
+        setShowDownloadPaywall(true);
+        setIsDownloading(false);
+        return;
+      }
+      if (!result.ok) {
+        toast.error('Download failed');
+        setIsDownloading(false);
+        return;
+      }
 
       setIsDownloading(false);
       toast.success('PDF Downloaded');
@@ -704,26 +624,9 @@ const ResumeReview = () => {
         }, 800);
       }
     } catch (e) {
+      // downloadPdf swallows its own network/serialization failures into a typed
+      // result; anything reaching here is unexpected (e.g. a missing DOM node).
       console.error('PDF Download Error Details:', e);
-
-      // CVService.generatePdf already decodes the blob 402 into a typed error.
-      if (e.code === 'NEED_DOWNLOAD') {
-        setShowDownloadPaywall(true);
-        setIsDownloading(false);
-        return;
-      }
-
-      // Because the request uses responseType: 'blob', other server errors arrive as blobs
-      if (e.response && e.response.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.error('Server Error Response (decoded):', reader.result);
-        };
-        reader.readAsText(e.response.data);
-      } else if (e.response) {
-        console.error('Server Error Response:', e.response.data);
-      }
-
       toast.error('Download failed');
       setIsDownloading(false); // Close immediately on error
     }
@@ -745,45 +648,34 @@ const ResumeReview = () => {
     try {
       setIsDownloadingDocx(true);
 
-      const blob = await CVService.generateDocx(
-        {
-          markdown: application.optimizedCV,
-          userProfile: mergedUserProfile || userProfile,
-        },
-        {
-          applicationId: application._id,
-          isDraft: isDraftMode,
-          templateId,
-        }
-      );
+      // The document body uses the MERGED profile while the filename uses the raw one —
+      // preserved exactly as it was, so filenames don't silently change.
+      const result = await downloadDocx({
+        markdown: application.optimizedCV,
+        userProfile: mergedUserProfile || userProfile,
+        filenameProfile: userProfile,
+        applicationId: application._id,
+        isDraft: isDraftMode,
+        templateId,
+        kind: activeTab === 'resume' ? 'resume' : 'cover-letter',
+      });
 
-      const filename = `${userProfile?.firstName ? [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(Boolean).join(' ') : 'Document'}_${activeTab === 'resume' ? 'CV' : 'CoverLetter'}.docx`;
-      await downloadBlob(blob, filename);
+      if (result.needsPaywall) {
+        setShowDownloadPaywall(true);
+        setIsDownloadingDocx(false);
+        return;
+      }
+      if (!result.ok) {
+        toast.error('Download failed');
+        setIsDownloadingDocx(false);
+        return;
+      }
 
       setIsDownloadingDocx(false);
       toast.success('Word document downloaded');
       triggerInterstitial('docx_download_success');
     } catch (e) {
       console.error('DOCX Download Error Details:', e);
-
-      // CVService.generateDocx decodes the blob 402 into a typed error.
-      if (e.code === 'NEED_DOWNLOAD') {
-        setShowDownloadPaywall(true);
-        setIsDownloadingDocx(false);
-        return;
-      }
-
-      // Because the request uses responseType: 'blob', other errors arrive as blobs.
-      if (e.response && e.response.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.error('Server Error Response (decoded):', reader.result);
-        };
-        reader.readAsText(e.response.data);
-      } else if (e.response) {
-        console.error('Server Error Response:', e.response.data);
-      }
-
       toast.error('Download failed');
       setIsDownloadingDocx(false);
     }

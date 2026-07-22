@@ -36,4 +36,28 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Aria Studio — TDZ guard, scoped.
+    //
+    // A hook dependency array is evaluated DURING RENDER, so naming a `const` that is
+    // declared lower in the file throws "Cannot access 'x' before initialization" and
+    // takes the whole provider down. That shipped once (loadSession depending on
+    // flushChats, declared ~90 lines below) past a green build, green lint and 179
+    // green tests, because nothing mounted the provider.
+    //
+    // Enabled here rather than repo-wide: there are ~46 pre-existing hits elsewhere,
+    // and a noisy rule gets disabled. Scoped, it is zero-noise and blocks the class
+    // where it actually caused an outage. Complements the provider smoke test —
+    // static catch first, runtime catch as backstop.
+    files: [
+      'src/context/AriaStudioContext.jsx',
+      'src/components/ariaStudio/**/*.{js,jsx}',
+      'src/pages/AriaStudio/**/*.{js,jsx}',
+      'src/hooks/useStudioLayout.js',
+      'src/lib/studioFlow.js',
+    ],
+    rules: {
+      'no-use-before-define': ['error', { variables: true, functions: false, classes: false }],
+    },
+  },
 ]);

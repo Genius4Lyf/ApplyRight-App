@@ -21,6 +21,8 @@
   --font-sans:
     'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-heading: Gelasio, 'Palatino Linotype', Palatino, Georgia, serif;
+  /* Brand wordmark only ("ApplyRight"). Fraunces display face; serif fallbacks. */
+  --font-brand: Fraunces, Gelasio, Georgia, serif;
 
   /* Softer, hairline-style shadows so cards read as paper, not panels.
      shadow-card is a single light-tuned neutral drop shadow: it lifts cards off
@@ -324,6 +326,17 @@
     .aria-orbit-work .aria-orbit-ring {
       animation: none;
     }
+  }
+
+  /* Idle "standing by" — Aria Studio's artifact panel when there's nothing to show.
+     Reuses the SAME ariaOrbit/ariaRingPulse keyframes as the working state and only
+     slows them down, so there is one orbit animation in the codebase, not two.
+     Reduced-motion is already honoured by the .aria-orbit rules above. */
+  .aria-orbit-slow .aria-orbit-work .aria-orbit {
+    animation-duration: 4.5s;
+  }
+  .aria-orbit-slow .aria-orbit-work .aria-orbit-ring {
+    animation-duration: 3.6s;
   }
 
   /* Word-swap fade for Aria's cycling status phrases (draft indicator). */
@@ -655,4 +668,58 @@
 .min-h-screen.bg-slate-50,
 .min-h-screen.bg-background {
   background-color: transparent !important;
+}
+
+/* ── Aria Studio · adaptive Live Preview workspace ──
+   The chat and right-panel columns are flex siblings whose GROW ratio is driven by
+   data-attrs on the main row (mirroring the approved mock's data-mode × data-sessions).
+   Only flex-grow animates, so entering the wide preview or toggling the rail reflows
+   smoothly without reshaping the flex model. The narrow 'insights' panel is fixed-width
+   (its own container), so these rules only bite in 'preview'. */
+.studio-col-chat,
+.studio-col-panel {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+  transition: flex-grow 0.35s ease;
+}
+/* Wide preview, rail collapsed → the preview takes the freed space (larger than chat). */
+.studio-main[data-panel='preview'][data-rail='closed'] .studio-col-chat {
+  flex-grow: 2;
+}
+.studio-main[data-panel='preview'][data-rail='closed'] .studio-col-panel {
+  flex-grow: 3;
+}
+/* Wide preview, rail re-opened by the user → split the room equally (both usable). */
+.studio-main[data-panel='preview'][data-rail='open'] .studio-col-chat {
+  flex-grow: 1;
+}
+.studio-main[data-panel='preview'][data-rail='open'] .studio-col-panel {
+  flex-grow: 1;
+}
+
+/* A just-improved section briefly glows green in the Live Preview — the honest
+   "see it change" cue when a fix re-bands a section (P4). */
+.aria-just-fixed {
+  animation: ariaJustFixed 1.1s ease-out;
+}
+@keyframes ariaJustFixed {
+  0% {
+    background-color: rgba(16, 185, 129, 0);
+  }
+  30% {
+    background-color: rgba(16, 185, 129, 0.16);
+  }
+  100% {
+    background-color: rgba(16, 185, 129, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-col-chat,
+  .studio-col-panel {
+    transition: none;
+  }
+  .aria-just-fixed {
+    animation: none;
+  }
 }

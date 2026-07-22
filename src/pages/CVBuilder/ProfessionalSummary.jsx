@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, MessageCircle } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
@@ -91,11 +91,11 @@ const ProfessionalSummary = () => {
         />
       </div>
 
-      <div className="bg-indigo-50 dark:bg-indigo-500/15 p-4 rounded-lg flex items-start gap-3">
+      <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 rounded-lg flex items-start gap-3">
         <div className="p-1 bg-indigo-100 dark:bg-indigo-500/20 rounded text-indigo-600 dark:text-indigo-300 mt-0.5">
-          <Sparkles className="w-3 h-3" />
+          <MessageCircle className="w-3 h-3" />
         </div>
-        <div className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed">
+        <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           <strong>Tip:</strong> Aria writes this from your Work History &amp; Skills — and tailors it
           to your target job when you've set one. Open Aria and tap "Draft my summary".
         </div>

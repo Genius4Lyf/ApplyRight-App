@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, RULED_PAPER } from '../../lib/noteStyles';
 
 // Small colored tag styles keyed by tone, for the optional title chip.
@@ -43,6 +43,8 @@ export default function NoteCard({
   nextMove,
   openLabel = 'Open',
   onOpen,
+  emptyHint,
+  onDelete,
 }) {
   const pressRef = useRef({ x: 0, y: 0 });
   const handlePointerDown = (e) => {
@@ -138,14 +140,26 @@ export default function NoteCard({
           </div>
         </div>
 
-        {/* Verdict on ruled paper */}
-        {verdict && (
+        {/* Verdict on ruled paper — always a fixed-height slot so cards with and
+            without a summary line up. Empty → faint ruled placeholder + a hint. */}
+        {verdict ? (
           <p
-            className="mt-4 font-heading text-[16px] leading-[28px] text-slate-800 dark:text-slate-200 line-clamp-3"
+            className="mt-4 min-h-[84px] font-heading text-[16px] leading-[28px] text-slate-800 dark:text-slate-200 line-clamp-3"
             style={RULED_PAPER}
           >
             {verdict}
           </p>
+        ) : (
+          <div className="relative mt-4 min-h-[84px]" style={RULED_PAPER} aria-hidden="true">
+            <span className="block h-[11px] w-full rounded-[3px] bg-slate-200/70 dark:bg-slate-700/60 mt-[11px]" />
+            <span className="block h-[11px] w-[90%] rounded-[3px] bg-slate-200/70 dark:bg-slate-700/60 mt-[17px]" />
+            <span className="block h-[11px] w-[52%] rounded-[3px] bg-slate-200/70 dark:bg-slate-700/60 mt-[17px]" />
+            {emptyHint && (
+              <span className="absolute right-0 -bottom-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                {emptyHint}
+              </span>
+            )}
+          </div>
         )}
 
         {/* Band rail */}
@@ -163,10 +177,25 @@ export default function NoteCard({
             {NextIcon && <NextIcon className="h-4 w-4 shrink-0" />}
             <span className="truncate">{nextMove?.label}</span>
           </span>
-          <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 dark:text-slate-400 shrink-0">
-            {openLabel}
-            <ChevronRight className="h-4 w-4" />
-          </span>
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              title="Delete CV"
+              aria-label="Delete CV"
+              className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              {openLabel}
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          )}
         </div>
       </div>
     </div>

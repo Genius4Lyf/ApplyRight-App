@@ -20,14 +20,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import SortableItem from '../../components/SortableItem';
-
-const newSortId = () =>
-  typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-const ensureIds = (items) =>
-  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
+import { newSortId, ensureIds } from '../../lib/sortId';
 
 const Education = () => {
   // Safely destructure context — fallback ensures hooks below see stable

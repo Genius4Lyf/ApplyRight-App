@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import GlobalBanner from '../components/GlobalBanner';
 import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 import CreditGate from '../components/CreditGate';
@@ -645,6 +646,40 @@ const Dashboard = () => {
             <p className="mt-3 text-lg text-slate-500 dark:text-slate-400 leading-relaxed">
               {getRecommendedAction()}
             </p>
+          </div>
+        )}
+
+        {/* Aria Studio — the hero launcher. Sits above the two pillars because it's the
+            one place where Aria does the work FOR you rather than alongside you. Flat
+            hairline card, indigo = Aria/action. */}
+        {!workflowMode && !initialLoading && (
+          <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-600 dark:border-l-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <AriaOrbit size={18} />
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
+                    Aria Studio
+                  </p>
+                </div>
+                <h2 className="mt-2.5 font-heading text-2xl md:text-[26px] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  Tailor your CV to a job in minutes
+                </h2>
+                <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
+                  Bring Aria a job description. She reworks a copy of your CV against it, section by
+                  section, and shows you exactly what she changed — your original stays untouched.
+                </p>
+              </div>
+              <div className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => navigate('/aria-studio')}
+                  className="btn-primary gap-2 px-5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+                >
+                  Open Aria Studio <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

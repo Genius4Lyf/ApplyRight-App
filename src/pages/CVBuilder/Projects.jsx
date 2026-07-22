@@ -9,7 +9,6 @@ import {
   MessageCircle,
   Link as LinkIcon,
 } from 'lucide-react';
-import ProjectsTutorial from './ProjectsTutorial';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
@@ -29,14 +28,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import SortableItem from '../../components/SortableItem';
-
-const newSortId = () =>
-  typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-const ensureIds = (items) =>
-  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
+import { newSortId, ensureIds } from '../../lib/sortId';
 
 const Projects = () => {
   // Safely destructure context
@@ -63,7 +55,6 @@ const Projects = () => {
     }
     return null;
   });
-  const [showTutorial, setShowTutorial] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -217,15 +208,6 @@ const Projects = () => {
         eyebrow="Projects"
         title="Projects"
         subtitle="Showcase your practical work and initiatives."
-        action={
-          <button
-            type="button"
-            onClick={() => setShowTutorial(true)}
-            className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <span className="hidden md:inline">How ApplyRight AI Works</span>
-          </button>
-        }
       />
 
       <SectionTips
@@ -297,7 +279,7 @@ const Projects = () => {
                       className="p-4 md:p-5 pr-28 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors select-none"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
                           <PenTool className="w-4.5 h-4.5" />
                         </div>
                         <div className="min-w-0">
@@ -482,9 +464,6 @@ const Projects = () => {
           {saving ? 'Saving...' : 'Next: Education'} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-
-      {/* Tutorial Modal */}
-      <ProjectsTutorial isOpen={showTutorial} onClose={() => setShowTutorial(false)} user={user} />
     </form>
   );
 };

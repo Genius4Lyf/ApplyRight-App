@@ -20,6 +20,7 @@ const DARK_ELIGIBLE_PREFIXES = [
   '/resume',
   '/my-cvs',
   '/cv-builder',
+  '/aria-studio', // Aria Studio — the agentic tailor chat
   '/feedback/dashboard',
   '/jobs',
   '/agent', // CV-agent workspace (dashboard, clients)

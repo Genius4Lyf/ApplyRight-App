@@ -3,7 +3,6 @@ import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, ArrowRight, ArrowLeft, Plus, MessageCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
-import HistoryTutorial from './HistoryTutorial';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
 import InlineExample from '../../components/InlineExample';
@@ -23,6 +22,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import SortableItem from '../../components/SortableItem';
+import { newSortId, ensureIds } from '../../lib/sortId';
 
 // Free users are capped at this many bullet points per role; paid users get
 // unlimited. The "paid" flag is set manually from the admin panel for now
@@ -42,13 +42,6 @@ const countBullets = (text) =>
 
 // Stable per-item ID for drag-and-drop. Persists with the data so order is
 // stable across renders even after the auto-save round-trip.
-const newSortId = () =>
-  typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-const ensureIds = (items) =>
-  (items || []).map((item) => (item && item._sortId ? item : { ...item, _sortId: newSortId() }));
 
 const History = () => {
   // Safely destructure context
@@ -110,13 +103,6 @@ const History = () => {
     if (target < 0 || target >= history.length) return;
     setHistory((items) => arrayMove(items, index, target));
   };
-  const [showTutorial, setShowTutorial] = useState(false);
-
-  // The auto-show tutorial modal was removed in favor of the inline SectionTips
-  // card rendered at the top of the form below. Modal still mounts and can be
-  // opened manually via the "How AI Works" button for users who want a fuller
-  // walkthrough.
-
   const addRole = () => {
     setStepDirty?.(true);
     const newId = newSortId();
@@ -294,15 +280,6 @@ const History = () => {
         eyebrow="Experience"
         title="Work history"
         subtitle="Your experience tells your professional story."
-        action={
-          <button
-            type="button"
-            onClick={() => setShowTutorial(true)}
-            className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <span className="hidden md:inline">How ApplyRight AI Works</span>
-          </button>
-        }
       />
 
       <SectionTips
@@ -314,7 +291,7 @@ const History = () => {
           'Start each bullet with a strong action verb (Built, Led, Reduced, Launched).',
           'Use the format <strong>Action + Context + Result</strong> — what you did, where, what changed.',
           'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
-          'Use the AI rewrite button after writing 2+ bullets — it sharpens what you already have.',
+          "Click 'Ask Aria' on any role and she'll build or sharpen its bullets with you — drafted from what you actually did.",
         ]}
       />
 
@@ -366,7 +343,7 @@ const History = () => {
                       className="p-4 md:p-5 pr-28 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors select-none"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
                           <Briefcase className="w-4.5 h-4.5" />
                         </div>
                         <div className="min-w-0">
@@ -624,9 +601,6 @@ const History = () => {
           {saving ? 'Saving...' : 'Next: Projects'} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-
-      {/* Tutorial Modal */}
-      <HistoryTutorial isOpen={showTutorial} onClose={() => setShowTutorial(false)} user={user} />
     </form>
   );
 };

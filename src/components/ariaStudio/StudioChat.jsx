@@ -1,0 +1,2060 @@
+import React, { useState, useRef, useEffect } from 'react';
+// `motion` is used only via <motion.div> in JSX; this eslint config lacks
+// jsx-uses-vars so it reads as unused — suppress the false positive.
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { ArrowUp } from 'lucide-react';
+import { bubbleAnim } from '../../lib/ariaMotion';
+import { CREDIT_COSTS } from '../../lib/credits';
+import { costForActionTier, tierOf } from '../../lib/models';
+import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
+import {
+  derivePhase,
+  phaseForNewSession,
+  openFix,
+  buildProgress,
+  resolvePinnedEntry,
+  pinnedSortId,
+  pinnedSection,
+  projectTypeFor,
+  SECTION_LIST,
+  PROJECT_TYPES,
+  roleStage,
+  entryProgress,
+  bulletCount,
+  FIX_MODE,
+  ENTRY_SOURCE,
+} from '../../lib/studioFlow';
+import { useStickToBottom } from '../../hooks/useStickToBottom';
+import { useChatTheme } from '../../hooks/useChatTheme';
+import { useAriaStudio } from '../../context/AriaStudioContext';
+import { toast } from 'sonner';
+import CVService from '../../services/cv.service';
+import ChatThemePicker from '../cv/ChatThemePicker';
+import AriaOrbit from '../cv/AriaOrbit';
+import AriaThinking from '../cv/AriaThinking';
+import ModeChooser from './ModeChooser';
+import JobCaptureCard from './JobCaptureCard';
+import RoleBriefCard from './RoleBriefCard';
+import CvPickerCard from './CvPickerCard';
+import AriaCard from './AriaCard';
+import ScoreCard from './ScoreCard';
+import SectionBreakdownCard from './SectionBreakdownCard';
+import FinishCard from './FinishCard';
+import StudioPrintSurface from './StudioPrintSurface';
+import DownloadPaywallModal from '../DownloadPaywallModal';
+import { downloadPdf, downloadDocx, DEFAULT_TEMPLATE_ID } from '../../lib/cvDownload';
+import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
+import EntryPickerCard from './EntryPickerCard';
+import SectionCoach from './SectionCoach';
+import SummaryFixCard from './SummaryFixCard';
+import SkillsFixCard from './SkillsFixCard';
+import SectionGuidanceCard from './SectionGuidanceCard';
+import BuildRoadmapCard from './BuildRoadmapCard';
+import TargetJobAskCard from './TargetJobAskCard';
+import ContactConfirmCard from './ContactConfirmCard';
+import PinnedEntryCard from './PinnedEntryCard';
+import RoleCaptureCard from './RoleCaptureCard';
+import ProjectTypeCard from './ProjectTypeCard';
+import CertificationsCard from './CertificationsCard';
+import SkillsBuildCard from './SkillsBuildCard';
+
+// Aria's opening line in the Studio. Flagged `_opening` so it's regenerated on every
+// mount and never persisted — same contract as the coach panel's step openers.
+const OPENER =
+  "Hey — I'm Aria. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.";
+
+// Phase-0 transcript home. Retired the moment a draft exists: the array migrates into
+// `cvData.coachChats.studio` (identical shape) and the context autosave takes over.
+const LS_KEY = 'ariaStudio:session';
+
+const loadSession = () => {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+// The intake state machine. Each step's card renders as the LAST item in the stream;
+// completing it lands a persisted MARKER message in `messages` and advances `phase`.
+// On reload the markers re-render from history and `phase` is rebuilt from them
+// (see derivePhase), so a refresh mid-flow resumes exactly where it left off.
+//
+//   greeting → mode → job form → (brief-preview) → brief confirm → cv
+//     → (tailor-start) → scan offer → (scan, −10cr) → results → done
+//
+// NOTE ON ORDER: the brief comes BEFORE the CV pick. Aria's read is the thing most
+// likely to be wrong — a mis-pasted or truncated JD produces a bad brief — so the user
+// checks and corrects it while correcting is still free. /studio/brief-preview builds a
+// brief from raw JD text with NO draft attached, so nothing is created until the read is
+// confirmed; an Edit at that point just re-previews. The confirmed brief is then handed
+// to tailor-start, which persists it as-is rather than re-extracting.
+//
+// The brief rides on the `jobcard` marker, so a refresh at the brief step re-renders
+// Aria's read from history instead of re-fetching it.
+
+// The scan snapshot lives on the DRAFT (studioScan), not in the transcript — a scan
+// marker only records that one happened, so the cards always render the current
+// snapshot (including after a free recompute) rather than a stale copy of it.
+
+const StudioChat = ({ onPaywall }) => {
+  const reduce = useReducedMotion();
+  const [chatTheme] = useChatTheme();
+  const {
+    draftId,
+    cvData,
+    setCvData,
+    updateCvData,
+    loading,
+    applyRoleBulletDiff,
+    applySummary,
+    applySkills,
+    startBuild,
+    newSession,
+    addRole,
+    addProject,
+    addEducation,
+    pendingKind,
+    setPendingKind,
+    pendingSource,
+    setPendingSource,
+  } = useAriaStudio();
+
+  // The scan cost, priced at the SESSION's selected model tier (flagship scan costs more).
+  const scanCost = costForActionTier('FIT_ANALYSIS', tierOf(cvData?.studioModelId)) ?? 10;
+
+  // A session started from the rail already declared its kind, so it opens on that
+  // kind's FIRST STEP — the mode chooser would be asking a question already answered.
+  // Both openers below are `_opening`, so neither is ever persisted.
+  const kindOpener =
+    pendingKind === 'build'
+      ? "Let's build your CV together. I'll ask, you answer, and I'll write it up as we go — here's how it'll run."
+      : pendingKind === 'tailor'
+        ? "New tailoring. Paste the job you're going for and I'll read it properly."
+        : OPENER;
+
+  const [messages, setMessages] = useState(() => [
+    { who: 'aria', text: kindOpener, _opening: true },
+    ...(pendingKind ? [] : loadSession()),
+  ]);
+  const [phase, setPhase] = useState(() => phaseForNewSession(pendingKind, loadSession()));
+
+  // A source handed over from a finished build ("now tailor it"). Kept in a ref because
+  // the provider's copy is cleared immediately below — this session owns it from here.
+  const preSourceRef = useRef(pendingSource);
+
+  // The kind + source are consumed once — a refresh after this point re-derives from
+  // markers, and a pre-selected source that was never used simply lapses.
+  useEffect(() => {
+    if (pendingKind) setPendingKind(null);
+    if (pendingSource) setPendingSource(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [input, setInput] = useState('');
+  const [thinking, setThinking] = useState(false);
+  const [working, setWorking] = useState(false); // tailor-start in flight
+  const [reading, setReading] = useState(false); // keyword + brief-preview in flight
+  const [scanning, setScanning] = useState(false); // scan or recompute in flight
+  const [pickBusyId, setPickBusyId] = useState(null);
+  // Set while re-opening the job form to Edit an already-captured job.
+  const [editingJob, setEditingJob] = useState(false);
+  // Fix-loop transients. The CONVERSATION lives in `messages` (persisted); these are
+  // in-flight flags only, so a refresh restores the thread and the phase, not a
+  // half-finished network call.
+  const [applyingFix, setApplyingFix] = useState(false);
+  const [summaryBusy, setSummaryBusy] = useState(false);
+  const [summaryDraft, setSummaryDraft] = useState('');
+  const [summaryWasReroll, setSummaryWasReroll] = useState(false);
+  // Download state. `downloadBusy` is 'pdf' | 'docx' | null so the right button spins.
+  const [downloadBusy, setDownloadBusy] = useState(null);
+  const [showDownloadPaywall, setShowDownloadPaywall] = useState(false);
+  // Whether the build's job question has opened the capture form. Transient by design:
+  // the ANSWER is a marker, so a refresh mid-typing returns to the question rather than
+  // an empty form pretending to hold something.
+  const [buildJobOpen, setBuildJobOpen] = useState(false);
+  // 'next' | 'field' | 'done' | null — which pinned-card action is in flight.
+  const [roleBusy, setRoleBusy] = useState(null);
+  // Generated skill suggestions awaiting a pick, or null. Transient: the ANSWER (what
+  // was added) lives on the CV, so a refresh returns to the consent card rather than
+  // showing suggestions the user never paid attention to.
+  const [skillsData, setSkillsData] = useState(null);
+
+  const chatRef = useRef(null);
+  const inputRef = useRef(null);
+  // The docked slot the ACTIVE coach's composer portals into, so a focused-section input
+  // stays pinned below the scroll instead of scrolling away with the messages. A callback
+  // ref into state (not a plain ref) so SectionCoach re-renders and portals the moment the
+  // slot is attached. See the dock in the render + SectionCoach's `dockNode`.
+  const [coachDock, setCoachDock] = useState(null);
+  // One-shot guard for the localStorage → coachChats migration.
+  const migratedRef = useRef(false);
+
+  useStickToBottom(chatRef, [messages, thinking, working, reading, phase, editingJob], reduce);
+
+  // Rehydrate the flow from the draft's saved thread once one is loaded from the
+  // backend (a returning session). Only runs when we have a draft AND nothing local.
+  useEffect(() => {
+    if (!draftId) return;
+    const saved = cvData?.coachChats?.studio;
+    if (!Array.isArray(saved) || !saved.length) return;
+    setMessages((prev) => {
+      const localPersisted = prev.filter((m) => !m._opening);
+      if (localPersisted.length) return prev; // local thread wins; nothing to restore
+      migratedRef.current = true; // came FROM the backend — don't migrate back over it
+      setPhase(derivePhase(saved));
+      return [{ who: 'aria', text: OPENER, _opening: true }, ...saved];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftId]);
+
+  // Persistence. Before a draft exists the transcript lives in localStorage; the moment
+  // `draftId` goes live it migrates ONCE into coachChats.studio and the context's
+  // debounced autosave becomes the sole writer (localStorage is cleared and never
+  // written again). The Phase-0 TODO is retired here.
+  useEffect(() => {
+    // While the remembered draft is still being fetched we don't yet know the real
+    // thread — writing now would clobber localStorage with an empty transcript.
+    if (loading) return;
+    const persisted = messages.filter((m) => !m._opening);
+
+    if (!draftId) {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(persisted));
+      } catch (err) {
+        console.error('Failed to persist Aria Studio session:', err);
+      }
+      return;
+    }
+
+    if (!migratedRef.current) {
+      migratedRef.current = true;
+      try {
+        localStorage.removeItem(LS_KEY);
+      } catch {
+        /* storage unavailable — nothing to clean up */
+      }
+    }
+
+    // Echo guard: only write when the thread actually differs from what's on the draft,
+    // so this effect can't ping-pong with the context autosave.
+    if (JSON.stringify(cvData?.coachChats?.studio || []) !== JSON.stringify(persisted)) {
+      updateCvData({ coachChats: { studio: persisted } });
+    }
+    // cvData is read only to skip echo writes; depending on it would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, draftId, loading]);
+
+  const push = (...msgs) => setMessages((m) => [...m, ...msgs]);
+
+  // The pinned role, resolved from the marker against the LIVE draft. Null when the
+  // entry has been deleted elsewhere — the effect below then clears the stale pin, so
+  // the card can never sit there collecting input that lands nowhere.
+  const pinnedEntry = resolvePinnedEntry(messages, cvData);
+  const pinnedSectionKey = pinnedSection(messages) || 'experience';
+  // The project type lives in the transcript (that's where the backend's project prompt
+  // reads it from), so it resolves the same way the pin does.
+  const pinnedType = pinnedEntry ? projectTypeFor(messages, pinnedEntry._sortId) : null;
+  const pinnedStage = roleStage(pinnedEntry, pinnedSectionKey, { typePicked: !!pinnedType });
+
+  // Self-clear a pin whose entry has gone — deleted in the CV builder, or in another tab.
+  // Without this the card would keep accepting answers for a role that no longer exists.
+  useEffect(() => {
+    if (loading || !cvData) return;
+    const sortId = pinnedSortId(messages);
+    if (!sortId) return;
+    const exists = (cvData.experience || []).some((e) => e._sortId === sortId);
+    if (exists) return;
+    push(
+      { who: 'unpinrole' },
+      {
+        who: 'aria',
+        text: "That role isn't on your CV any more, so I've let it go. Want to add another?",
+      }
+    );
+    setPhase('build:sections');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cvData?.experience, loading]);
+
+  // Aria says something, after a short beat, so her turns feel spoken rather than dumped.
+  const ariaSays = (text, delay = 600) => {
+    setThinking(true);
+    setTimeout(() => {
+      setThinking(false);
+      push({ who: 'aria', text });
+    }, delay);
+  };
+
+  // ─── Step 1: mode ───
+  const pickMode = (mode) => {
+    push({ who: 'modepick', mode });
+    // Build goes to the SAME roadmap the rail's "New CV" opens — one build entry point,
+    // reached two ways.
+    if (mode === 'build') {
+      setPhase('build:roadmap');
+      ariaSays("Let's build it together. Here's how it'll run.");
+      return;
+    }
+    setPhase('job');
+    ariaSays("Good — paste the job below and I'll read it properly.");
+  };
+
+  // ─── Step 2: the job → read it (keywords + Role Brief) with NOTHING created yet ───
+  // Both reads run in parallel under one indicator: the free deterministic keyword pass
+  // and the AI brief. Either can fail independently without blocking the other — the
+  // keywords still give Aria something to say if the brief comes back null.
+  const captureJob = async ({ jobTitle, jobDescription }) => {
+    setEditingJob(false);
+    setReading(true);
+
+    const [keywords, brief] = await Promise.all([
+      (async () => {
+        try {
+          const data = await CVService.getJobKeywords({ description: jobDescription });
+          // Stay free: if the backend ever flags a charge, ignore the keywords.
+          if (data?.charged || !Array.isArray(data?.keywords)) return [];
+          return data.keywords
+            .slice()
+            .sort(
+              (a, b) =>
+                (b.importance === 'must_have' ? 1 : 0) - (a.importance === 'must_have' ? 1 : 0)
+            )
+            .map((x) => x.name)
+            .filter(Boolean)
+            .slice(0, 3);
+        } catch {
+          return [];
+        }
+      })(),
+      (async () => {
+        try {
+          const res = await CVService.studioBriefPreview({ jobTitle, jobDescription });
+          return res?.brief || null;
+        } catch (err) {
+          console.error('brief-preview failed', err);
+          return null;
+        }
+      })(),
+    ]);
+
+    setReading(false);
+    push({ who: 'jobcard', jobTitle, jobDescription, keywords, brief });
+    setPhase('brief');
+    ariaSays(
+      brief
+        ? "Here's how I read it — check I've got this right before I touch your CV."
+        : "I couldn't fully read that one, but I've got the job saved. Have a look and carry on."
+    );
+  };
+
+  // ─── Step 4: pick a CV → clone, carrying the CONFIRMED brief ───
+  const pickCv = async (draft) => {
+    if (working) return;
+    setPickBusyId(draft._id);
+    setWorking(true);
+
+    const job = [...messages].reverse().find((m) => m.who === 'jobcard');
+    if (!job) {
+      setWorking(false);
+      setPickBusyId(null);
+      return;
+    }
+
+    try {
+      const res = await CVService.studioTailorStart({
+        sourceDraftId: draft._id,
+        jobTitle: job.jobTitle,
+        jobDescription: job.jobDescription,
+        // The read the user already confirmed — persisted as-is, so the backend
+        // doesn't re-extract and any correction they made survives.
+        brief: job.brief || undefined,
+      });
+
+      // Bind the provider to the new copy — this is what makes `draftId` go live and
+      // hands persistence over to the context autosave.
+      if (res?.draft) setCvData(res.draft);
+
+      push(
+        { who: 'cvpick', sourceTitle: draft.title || 'Untitled CV', sourceId: draft._id },
+        {
+          who: 'tailored',
+          draftId: res?.draftId,
+          title: res?.title,
+          brief: res?.brief || null,
+          jobTitle: job.jobTitle,
+        }
+      );
+      setPhase('scanoffer');
+      ariaSays(
+        'Your tailored copy is saved — your original is untouched. Now let me read it against the job properly and show you what to change.'
+      );
+    } catch (err) {
+      if (err?.response?.status === 402 && err?.response?.data?.code === 'NEED_AGENT_SUB') {
+        onPaywall?.();
+        return;
+      }
+      console.error('tailor-start failed', err);
+      push({
+        who: 'aria',
+        text: "I couldn't set up the tailored copy just now — pick a CV again and I'll retry.",
+      });
+    } finally {
+      setWorking(false);
+      setPickBusyId(null);
+    }
+  };
+
+  // ─── Step 3: confirm Aria's read ───
+  const confirmBrief = () => {
+    push({ who: 'briefcard', confirmed: true });
+    setPhase('cv');
+    // Handed over from a finished build — the source is already decided, so skip the
+    // picker and say which CV is being used rather than asking a question with one
+    // obvious answer. The user can still pick another from the card if it's wrong.
+    const pre = preSourceRef.current;
+    if (pre?.id) {
+      ariaSays(`Good. I'll tailor a copy of ${pre.title} — one moment.`);
+      setTimeout(() => pickCv({ _id: pre.id, title: pre.title }), 700);
+      return;
+    }
+    ariaSays('Good. Which CV should I work from?');
+  };
+
+  // Edit re-opens the job form so the JD can be corrected and re-previewed. Nothing has
+  // been created at this point, so correcting costs nothing and leaves no orphan copy.
+  const editBrief = () => {
+    setEditingJob(true);
+    setPhase('job');
+  };
+
+  // ─── Step 5: the scan — the one charged action in the flow ───
+  const runScan = async () => {
+    if (scanning || !draftId) return;
+    setScanning(true);
+    try {
+      const res = await CVService.studioScan(draftId);
+      // The snapshot lives on the draft; mirror it into context so every card and the
+      // artifact panel read one source of truth.
+      updateCvData({ studioScan: res.studioScan });
+      if (res.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      push({ who: 'scan', at: res.studioScan?.scannedAt });
+      setPhase('results');
+      ariaSays("Here's where you stand. The red and amber sections are where the work is.");
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        push({
+          who: 'aria',
+          text: `You need ${err.response.data.required} credits for a full scan and you have ${err.response.data.current}. Top up and I'll run it.`,
+        });
+      } else {
+        console.error('studio scan failed', err);
+        push({ who: 'aria', text: "I couldn't finish the scan just now — try again in a moment." });
+      }
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Free deterministic re-score. No AI, no charge — so it can run after every edit.
+  // Returns the new snapshot so callers can report a delta.
+  const runRecompute = async () => {
+    if (!draftId) return null;
+    setScanning(true);
+    try {
+      const res = await CVService.studioRecompute(draftId);
+      updateCvData({ studioScan: res.studioScan });
+      return res.studioScan;
+    } catch (err) {
+      console.error('studio recompute failed', err);
+      toast.error("Couldn't re-score just now.");
+      return null;
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // ─── The fix loop ───
+
+  // Tap a weak section → route it to the right kind of fix. The section's own
+  // missingKeywords ride on the marker so the coach can aim at them.
+  const handleFix = (section) => {
+    const mode = FIX_MODE[section.key];
+    if (!mode) return;
+    push({
+      who: 'fixstart',
+      mode,
+      sectionKey: section.key,
+      sectionLabel: section.label,
+      missingKeywords: section.missingKeywords || [],
+    });
+    setPhase(`fix:${mode}`);
+
+    if (mode === 'pick') {
+      ariaSays(
+        section.missingKeywords?.length
+          ? `Let's fix ${section.label.toLowerCase()}. This job leans on ${section.missingKeywords.slice(0, 3).join(', ')} — which one should we sharpen?`
+          : `Let's fix ${section.label.toLowerCase()}. Which one should we sharpen?`
+      );
+    } else if (mode === 'skills') {
+      ariaSays("Here's what the job asks for that your CV doesn't claim yet.");
+    } else if (mode === 'summary') {
+      ariaSays("I'll rewrite your summary around this job. First — where are you in your career?");
+    }
+  };
+
+  // An entry was chosen → open the focused build-with on it. The opener names the
+  // gaps so Aria's first question is already targeted; the Role Brief on the tailored
+  // copy grounds the rest server-side, so the JD is never re-sent.
+  const pickEntry = (entry) => {
+    const fix = openFix(messages);
+    const src = ENTRY_SOURCE[fix?.sectionKey] || ENTRY_SOURCE.experience;
+    const gaps = fix?.missingKeywords || [];
+    push(
+      {
+        who: 'fixstart',
+        mode: 'coach',
+        sectionKey: fix?.sectionKey,
+        sectionLabel: fix?.sectionLabel,
+        missingKeywords: gaps,
+        entry: {
+          section: src.focusSection,
+          sortId: entry.sortId,
+          title: entry.title,
+          company: entry.company,
+        },
+      },
+      {
+        who: 'aria',
+        text: gaps.length
+          ? `Right — ${entry.title}. The job leans on ${gaps.slice(0, 2).join(' and ')}. Did you do either of those here? Tell me what you actually did.`
+          : `Right — ${entry.title}. Tell me one thing you actually did there.`,
+      }
+    );
+    setPhase('fix:coach');
+  };
+
+  // Close a fix: land the applied record, re-band for free, and report the movement.
+  // The record REFERENCES the entry and what was applied — never the score, which
+  // would go stale the moment the next recompute runs.
+  const finishFix = async (result) => {
+    const fix = openFix(messages);
+    push({ who: 'fixend' });
+
+    if (!result) {
+      // Backed out without applying anything — nothing to re-score.
+      setPhase('results');
+      return;
+    }
+
+    const before = cvData?.studioScan?.sections?.find((s) => s.key === fix?.sectionKey);
+    push({
+      who: 'applied',
+      sectionKey: fix?.sectionKey,
+      sectionLabel: fix?.sectionLabel,
+      entry: result.entry || null,
+      applied: result.applied || [],
+      what: result.what || '',
+    });
+
+    const snap = await runRecompute();
+    const after = snap?.sections?.find((s) => s.key === fix?.sectionKey);
+
+    if (after && before) {
+      const moved = after.score - before.score;
+      const bandChanged = after.band !== before.band;
+      push({
+        who: 'aria',
+        text:
+          moved > 0
+            ? `${fix.sectionLabel} moved ${before.score} → ${after.score}${bandChanged ? ` — that's ${before.band === 'bad' ? 'out of the red' : 'into the green'}.` : '.'} Re-scoring is free, so keep going.`
+            : `${fix.sectionLabel} is saved. The score didn't move much yet — it usually takes a couple of entries.`,
+      });
+    }
+    setPhase('results');
+  };
+
+  // Skills come straight off the scan — no generation, no charge.
+  const applyScanSkills = async (names) => {
+    if (!names?.length) return;
+    setApplyingFix(true);
+    try {
+      const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
+      await finishFix({ what: `${res?.added ?? names.length} skills`, applied: names });
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  // Summary: one credited generation per attempt (each re-roll charges again — the
+  // server owns that), then apply through the provider writer.
+  const generateSummary = async (stage, isReroll) => {
+    if (!stage || !draftId) return;
+    setSummaryBusy(true);
+    try {
+      const res = await CVService.coachSummary({ draftId, stage });
+      setSummaryDraft(res.summary || '');
+      setSummaryWasReroll(!!isReroll);
+      if (res.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+    } catch (e) {
+      toast.error(
+        e?.response?.data?.code === 'INSUFFICIENT_CREDITS'
+          ? 'Not enough credits for a summary — top up and try again.'
+          : "Couldn't write it just now. Try again."
+      );
+    } finally {
+      setSummaryBusy(false);
+    }
+  };
+
+  const applySummaryDraft = async (text) => {
+    setApplyingFix(true);
+    try {
+      await applySummary(text);
+      setSummaryDraft('');
+      await finishFix({ what: 'a tailored summary' });
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  // ─── Build track ───
+
+  // Roadmap accepted → create the real draft NOW. Phase 2 resolves entries server-side
+  // by _sortId, so the document has to exist before any of that can be written into.
+  const beginBuild = async () => {
+    if (working) return;
+    setWorking(true);
+    try {
+      const res = await startBuild({});
+      if (res?.paywall) {
+        onPaywall?.();
+        return;
+      }
+      if (!res) return; // startBuild already surfaced the failure
+      push({ who: 'buildintro' }, { who: 'buildstart', draftId: res.draftId });
+      setPhase('build:job');
+      ariaSays('Good. Are you going for a particular job right now?');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  // The build's job question reuses the SAME JobCaptureCard as the tailor track, then
+  // reads the JD through the same free keyword + brief-preview pass.
+  const buildCaptureJob = async ({ jobTitle, jobDescription }) => {
+    setReading(true);
+    let brief = null;
+    try {
+      const res = await CVService.studioBriefPreview({ jobTitle, jobDescription });
+      brief = res?.brief || null;
+    } catch (err) {
+      console.error('brief-preview failed', err);
+    }
+    // Auto-name the build from its job — mirroring the tailor path's job-derived title.
+    // Only while the CV is still unnamed, so a title the user typed is never overwritten.
+    const autoTitle = isUnnamedCv(cvData?.title) ? `CV for ${jobTitle}` : null;
+    // Persist the job onto the draft so every later section is JD-grounded.
+    updateCvData({
+      targetJob: { ...(cvData?.targetJob || {}), title: jobTitle, description: jobDescription },
+      ...(autoTitle ? { title: autoTitle } : {}),
+    });
+    if (draftId) {
+      try {
+        await CVService.saveDraft({
+          _id: draftId,
+          targetJob: { title: jobTitle, description: jobDescription },
+          ...(autoTitle ? { title: autoTitle } : {}),
+        });
+      } catch (err) {
+        console.error('Failed to save the build target job', err);
+      }
+    }
+    setReading(false);
+    push(
+      { who: 'jobcard', jobTitle, jobDescription, keywords: [], brief },
+      { who: 'buildjobdone' }
+    );
+    setPhase('build:contact');
+    ariaSays(
+      brief
+        ? `Got it — ${brief.role || jobTitle}. Now let's make sure they can reach you.`
+        : "Got it. Now let's make sure they can reach you."
+    );
+  };
+
+  const buildSkipJob = () => {
+    push({ who: 'buildjobdone', skipped: true });
+    setPhase('build:contact');
+    ariaSays("No problem — we'll build a strong all-rounder. First, your contact details.");
+  };
+
+  const confirmContact = async (info) => {
+    setApplyingFix(true);
+    try {
+      // A build that SKIPPED the job has no job-derived name — fall back to the user's
+      // first name (`${first}'s CV`). Only when still unnamed AND no job named it already
+      // (buildCaptureJob's guard), and never fabricated: no name available → leave it, the
+      // header rename covers it.
+      const first =
+        isUnnamedCv(cvData?.title) && !(cvData?.targetJob?.title || '').trim()
+          ? firstNameFrom(info)
+          : '';
+      const autoTitle = first ? `${first}'s CV` : null;
+      if (info) updateCvData({ personalInfo: info, ...(autoTitle ? { title: autoTitle } : {}) });
+      if (draftId && info) {
+        try {
+          await CVService.saveDraft({
+            _id: draftId,
+            personalInfo: info,
+            ...(autoTitle ? { title: autoTitle } : {}),
+          });
+        } catch (err) {
+          console.error('Failed to save contact details', err);
+        }
+      }
+      push({ who: 'contactdone' });
+      setPhase('build:sections');
+      ariaSays(
+        "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you."
+      );
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  // ─── Entry sections (work history · projects · education) ───
+  //
+  // ONE loop, parameterised by section. Work history, projects and education differ only
+  // in which fields they ask for and which list they persist to — forking the loop per
+  // section would triple the places a pin/prune/persist bug could hide.
+
+  // Create a REAL entry, then pin it. The entry has to exist on the saved draft before
+  // any /coach call, because generate-bullets resolves its target by _sortId server-side —
+  // a locally-invented placeholder would have nothing to write into.
+  const startEntry = async (section) => {
+    if (roleBusy) return null;
+    setRoleBusy('next');
+    try {
+      const sortId =
+        section === 'project'
+          ? await addProject()
+          : section === 'education'
+            ? await addEducation()
+            : await addRole();
+      if (!sortId) return null;
+      push({ who: 'pinrole', sortId, section });
+      setPhase(`build:${section}`);
+      return sortId;
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  const SECTION_OPENER = {
+    experience: "Let's start with your most recent job. What was the role called?",
+    project: "Let's add a project. First — what kind is it?",
+    education: "Let's add your education. What did you study?",
+  };
+
+  const enterSection = async (section) => {
+    const sortId = await startEntry(section);
+    if (sortId) ariaSays(SECTION_OPENER[section]);
+  };
+
+  // Projects are genuinely optional — plenty of experienced people have none worth
+  // listing, and pressing them would produce filler. Skipping leaves NO entry behind.
+  const skipSection = (section, marker) => {
+    push({ who: marker, skipped: true });
+    setPhase('build:sections');
+    ariaSays(
+      section === 'project'
+        ? 'Fine — plenty of strong CVs have none. Your work history is doing that job.'
+        : "No problem, we'll leave that out."
+    );
+  };
+
+  // Each capture writes THROUGH to the draft, so the pinned card — which renders from the
+  // entry, not from here — updates as a consequence rather than being told separately.
+  const captureRoleField = async (patch) => {
+    if (!pinnedEntry) return;
+    const list = SECTION_LIST[pinnedSection(messages)] || 'experience';
+    setRoleBusy('field');
+    try {
+      const next = (cvData[list] || []).map((e) =>
+        e._sortId === pinnedEntry._sortId ? { ...e, ...patch } : e
+      );
+      updateCvData({ [list]: next });
+      if (draftId) {
+        try {
+          await CVService.saveDraft({ _id: draftId, [list]: next });
+        } catch (err) {
+          console.error('Failed to save entry field', err);
+          toast.error("Couldn't save that — try again.");
+        }
+      }
+      // Aria acknowledges and asks for the next missing thing. Reading the stage off the
+      // UPDATED entry keeps the question in step with the document.
+      const updated = { ...pinnedEntry, ...patch };
+      const stage = roleStage(updated, pinnedSectionKey, { typePicked: !!pinnedType });
+      const NEXT_LINE = {
+        company: 'Got it. Where was this?',
+        dates: 'And when were you there?',
+        school: 'Where did you study it?',
+        graduationDate: 'And when did you finish?',
+        achievements:
+          pinnedSectionKey === 'project'
+            ? `Now the interesting part — what does ${updated.title || 'it'} actually do, and what was your role in it?`
+            : `Now the part that matters — what did you actually do at ${updated.company || 'this job'}? Tell me one thing and I'll shape it.`,
+      };
+      if (NEXT_LINE[stage]) ariaSays(NEXT_LINE[stage]);
+      else if (stage === 'complete' && pinnedSectionKey === 'education')
+        ariaSays("That's it for that one — education doesn't need bullets.");
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  // File the finished entry into the stream as a record, then open a fresh one.
+  const nextEntry = async () => {
+    if (!pinnedEntry || roleBusy) return;
+    push(
+      {
+        who: 'rolerecord',
+        sortId: pinnedEntry._sortId,
+        section: pinnedSectionKey,
+      },
+      { who: 'unpinrole' }
+    );
+    const sortId = await startEntry(pinnedSectionKey);
+    if (sortId) {
+      ariaSays(
+        pinnedSectionKey === 'project'
+          ? 'Next one — what kind of project is it?'
+          : pinnedSectionKey === 'education'
+            ? 'What else did you study?'
+            : 'Next one — what was that role called?'
+      );
+    }
+  };
+
+  const DONE_MARKER = {
+    experience: 'experiencedone',
+    project: 'projectsdone',
+    education: 'educationdone',
+  };
+
+  const finishSection = () => {
+    if (roleBusy) return;
+    const section = pinnedSectionKey;
+    const list = SECTION_LIST[section] || 'experience';
+    // An untouched entry would otherwise sit in the CV as an empty row forever — and,
+    // worse, tick its section in the completeness view.
+    const isBlank = pinnedEntry && entryProgress(pinnedEntry, section).done === 0;
+    if (isBlank && draftId) {
+      const pruned = (cvData[list] || []).filter((e) => e._sortId !== pinnedEntry._sortId);
+      updateCvData({ [list]: pruned });
+      CVService.saveDraft({ _id: draftId, [list]: pruned }).catch((err) =>
+        console.error('Failed to prune the empty entry', err)
+      );
+    } else if (pinnedEntry) {
+      push({ who: 'rolerecord', sortId: pinnedEntry._sortId, section });
+    }
+    push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
+    setPhase('build:sections');
+    ariaSays(
+      section === 'experience'
+        ? "Work history's done. Projects are next whenever you're ready — they're optional, so skip if you'd rather."
+        : section === 'project'
+          ? 'Projects done. Education next.'
+          : "Education's in. Any certifications or training to add?"
+    );
+  };
+
+  // The project type — sent as an ordinary user turn, because that's where the backend's
+  // project prompt reads it from, plus a marker so the chips don't re-ask on refresh.
+  const pickProjectType = (type) => {
+    if (!pinnedEntry) return;
+    push(
+      { who: 'user', text: type.message },
+      { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, label: type.label }
+    );
+    ariaSays("Good. What's the project called?");
+  };
+
+  // ─── Skills ───
+  // The SAME call the CV builder's AriaChat makes, including passing the target-job
+  // description so the JD informs the suggestions — the draft already carries it, so
+  // nothing is re-extracted.
+  const generateBuildSkills = async () => {
+    if (!draftId) return;
+    setRoleBusy('skills');
+    try {
+      const r = await CVService.generateSkills(
+        cvData.education,
+        cvData.experience,
+        cvData.projects,
+        cvData.targetJob?.description,
+        draftId
+      );
+      setSkillsData({ suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] });
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+    } catch (e) {
+      if ([402, 403].includes(e?.response?.status)) {
+        push({
+          who: 'aria',
+          text: `Finding your skills costs ${CREDIT_COSTS.GENERATE_SKILLS ?? 10} credits and you're short right now. You can type them in yourself for free instead.`,
+        });
+      } else {
+        toast.error("Couldn't pull your skills — try again.");
+      }
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  const addPickedSkills = async (picked) => {
+    const res = await applySkills(picked);
+    setSkillsData(null);
+    push({ who: 'skillsdone', n: res?.added ?? picked.length });
+    setPhase('build:sections');
+    ariaSays(
+      `${res?.added ?? picked.length} skills in. Last one — the summary at the top of your CV.`
+    );
+  };
+
+  // Free manual entry — comma-separated, straight through applySkills. Nobody should
+  // have to spend credits to list skills they already know they have.
+  const addManualSkills = async (text) => {
+    const names = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!names.length) return;
+    setRoleBusy('skills');
+    try {
+      const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
+      if (res?.added) ariaSays(`Added ${res.added}. Any more, or shall we move on?`);
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  // ─── Summary ───
+  // Runs LAST so it can draw on the whole document. Same /coach/summary + stage chips
+  // the V1 fix loop uses; same SummaryFixCard.
+  const generateBuildSummary = async (stage, isReroll) => {
+    if (!stage || !draftId) return;
+    setSummaryBusy(true);
+    try {
+      const res = await CVService.coachSummary({ draftId, stage });
+      setSummaryDraft(res.summary || '');
+      setSummaryWasReroll(!!isReroll);
+      if (res.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+    } catch (e) {
+      toast.error(
+        e?.response?.data?.code === 'INSUFFICIENT_CREDITS'
+          ? 'Not enough credits for a summary — top up and try again.'
+          : "Couldn't write it just now. Try again."
+      );
+    } finally {
+      setSummaryBusy(false);
+    }
+  };
+
+  const applyBuildSummary = async (text) => {
+    setApplyingFix(true);
+    try {
+      await applySummary(text);
+      setSummaryDraft('');
+      push({ who: 'summarydone' });
+      setPhase('build:done');
+      ariaSays("That's your CV built. Here's where it stands.");
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  // ─── Build finish ───
+  // Hand the finished MASTER off to a NEW tailoring session. A tailoring clones and owns
+  // its own transcript, so this must not continue the build session — newSession unbinds
+  // first and the clone happens through the normal tailor-start path.
+  const tailorThisCv = async () => {
+    if (!draftId) return;
+    await newSession('tailor', { id: draftId, title: cvData?.title || 'Untitled CV' });
+  };
+
+  // Certifications — a plain sub-list of education, no AI, no credits.
+  const addCertification = async (cert) => {
+    const next = [...(cvData?.certifications || []), cert];
+    updateCvData({ certifications: next });
+    if (draftId) {
+      try {
+        await CVService.saveDraft({ _id: draftId, certifications: next });
+      } catch (err) {
+        console.error('Failed to save certification', err);
+        toast.error("Couldn't save that — try again.");
+      }
+    }
+  };
+
+  const removeCertification = async (index) => {
+    const next = (cvData?.certifications || []).filter((_, i) => i !== index);
+    updateCvData({ certifications: next });
+    if (draftId) {
+      try {
+        await CVService.saveDraft({ _id: draftId, certifications: next });
+      } catch (err) {
+        console.error('Failed to remove certification', err);
+      }
+    }
+  };
+
+  // ─── Finish: get the file out ───
+
+  // The tailored copy rendered as the pseudo-application the templates expect. Exactly
+  // the conversion ResumeReview does for a draft (generateMarkdownFromDraft), so the
+  // Studio's PDF and the editor's PDF are the same document.
+  const printApplication = cvData
+    ? {
+        _id: cvData._id,
+        optimizedCV: generateMarkdownFromDraft(cvData).optimizedCV,
+        templateId: cvData.templateId || DEFAULT_TEMPLATE_ID,
+        personalInfo: cvData.personalInfo,
+        isDraft: true,
+      }
+    : null;
+
+  const runDownload = async (format) => {
+    if (downloadBusy || !draftId) return;
+    setDownloadBusy(format);
+    try {
+      const shared = {
+        applicationId: draftId,
+        isDraft: true, // a Studio session IS a DraftCV
+        templateId: printApplication?.templateId,
+        userProfile: cvData?.personalInfo,
+        kind: 'resume',
+      };
+
+      const result =
+        format === 'pdf'
+          ? await downloadPdf({
+              elementId: 'resume-content',
+              paperWidth: '210mm',
+              paperHeight: '297mm',
+              paper: 'a4',
+              ...shared,
+            })
+          : await downloadDocx({ markdown: printApplication?.optimizedCV, ...shared });
+
+      if (result.needsPaywall) {
+        // Whatever the shared module reports — the entitlement rules themselves live
+        // server-side and are not second-guessed here.
+        setShowDownloadPaywall(true);
+        return;
+      }
+      if (!result.ok) {
+        toast.error('Download failed');
+        return;
+      }
+      toast.success(format === 'pdf' ? 'PDF downloaded' : 'Word document downloaded');
+    } finally {
+      setDownloadBusy(null);
+    }
+  };
+
+  // Back out of a fix without applying anything. Closes the session so derivePhase
+  // returns to the breakdown on a refresh too.
+  const cancelFix = () => {
+    setSummaryDraft('');
+    setSummaryWasReroll(false);
+    push({ who: 'fixend' });
+    setPhase('results');
+  };
+
+  const send = async (raw) => {
+    const text = (raw ?? input).trim();
+    if (text.length < 2 || thinking) return;
+    const next = [...messages, { who: 'user', text }];
+    push({ who: 'user', text });
+    setInput('');
+    if (inputRef.current) inputRef.current.style.height = 'auto';
+
+    // In a build session the docked input is for REAL questions — "should I include a
+    // job I was only in for 3 months?" — so route it to the existing unfocused coach
+    // rather than nudging the user back at a card. Crucially it's UNFOCUSED: no
+    // `focus` means no build-with turn, so the pinned role is not touched by asking.
+    if (draftId && phase.startsWith('build:')) {
+      setThinking(true);
+      try {
+        const r = await CVService.coachChat({
+          draftId,
+          currentStepId: 'history',
+          messages: next
+            .filter((m) => m.who === 'aria' || m.who === 'user')
+            .map((m) => ({ who: m.who, text: m.text })),
+          // no focus → a general answer, metered by the shared daily allowance
+        });
+        push({ who: 'aria', text: r.reply });
+      } catch (e) {
+        push({
+          who: 'aria',
+          text:
+            e?.response?.data?.code === 'CHAT_LIMIT_REACHED'
+              ? "You've used today's free chats — top up credits or come back tomorrow."
+              : "Couldn't reach me just now — try again.",
+        });
+      } finally {
+        setThinking(false);
+      }
+      return;
+    }
+
+    // Tailor intake stays card-driven; free typing gets a nudge back to the card in play.
+    ariaSays(
+      phase === 'results'
+        ? "Your scan's above. Walking you through each fix is what I'm learning next."
+        : "Use the card above and I'll take it from there."
+    );
+  };
+
+  // The brief rides on the jobcard marker, so the confirm card re-renders from history
+  // after a refresh without re-previewing.
+  const latestJob = [...messages].reverse().find((m) => m.who === 'jobcard');
+  // The live snapshot off the draft — NOT off a marker, so a free recompute updates
+  // every card without rewriting history.
+  const scan = cvData?.studioScan;
+  // Progress is DERIVED from the live document on every render — never stored — so the
+  // roadmap and the panel can't claim a section is done when it's actually empty.
+  const progress = buildProgress(cvData);
+  // The fix session in play, read from the markers — so it survives a refresh exactly
+  // the way the phase does.
+  const activeFix = openFix(messages);
+  const fixEntries = (cvData?.[ENTRY_SOURCE[activeFix?.sectionKey]?.list] || []).map((e) => ({
+    sortId: e._sortId,
+    title: e.title,
+    company: e.company,
+    description: e.description,
+  }));
+  // The coach brings its own input while a build-with is open, so the docked one hides
+  // entirely rather than sitting there disabled and competing for attention.
+  // SectionCoach brings its own input whenever it's driving — the fix loop, or the
+  // achievements stage of a pinned role.
+  const coachOwnsInput = phase === 'fix:coach' || (!!pinnedEntry && pinnedStage === 'achievements');
+  // Free chat is live throughout a build (asking a question must never be blocked by a
+  // card), and after a scan. The tailor intake stays card-driven.
+  const freeChatAllowed = phase === 'results' || phase.startsWith('build:');
+  const inputDisabled =
+    working || reading || scanning || applyingFix || !!roleBusy || !freeChatAllowed;
+  // What the section menu offers next. Driven by which DONE markers exist rather than by
+  // buildProgress, because "I have no projects" is a legitimate finished state that
+  // completeness can't represent — the section is closed, but it will never tick.
+  const closed = (marker) => messages.some((m) => m.who === marker);
+  const nextSection = !closed('experiencedone')
+    ? {
+        key: 'experience',
+        eyebrow: progress.status.experience ? 'Work history' : 'Next up',
+        blurb: progress.status.experience
+          ? 'Add another role, or move on whenever you like.'
+          : "Work history carries the most weight on a CV, so let's do that next. I'll ask about one job at a time.",
+        cta: progress.status.experience ? 'Add another role' : 'Start work history',
+        start: () => enterSection('experience'),
+        // Only offer to close work history once something is actually in it.
+        skip: progress.status.experience ? () => skipSection('experience', 'experiencedone') : null,
+        skipLabel: "That's all my roles",
+      }
+    : !closed('projectsdone')
+      ? {
+          key: 'project',
+          eyebrow: 'Projects · optional',
+          blurb:
+            "Projects are worth a lot when your work history is short, and worth little when it isn't. Add one if you've built something you'd talk about in an interview.",
+          cta: 'Add a project',
+          start: () => enterSection('project'),
+          skip: () => skipSection('project', 'projectsdone'),
+          skipLabel: 'Skip projects — my work history covers it',
+        }
+      : !closed('educationdone')
+        ? {
+            key: 'education',
+            eyebrow: 'Education',
+            blurb:
+              'Most ATS filters check for a qualification before a human sees your CV. Add what you studied — an in-progress degree counts.',
+            cta: 'Add education',
+            start: () => enterSection('education'),
+            skip: () => skipSection('education', 'educationdone'),
+            skipLabel: 'Skip for now',
+          }
+        : !closed('certsdone')
+          ? {
+              key: 'certs',
+              eyebrow: 'Certifications · optional',
+              blurb:
+                'Any licences or training worth listing? These get filtered on in trades, healthcare and operations roles.',
+              cta: 'Add certifications',
+              start: () => setPhase('build:certs'),
+              skip: () => {
+                push({ who: 'certsdone', skipped: true });
+                ariaSays('No problem.');
+              },
+              skipLabel: 'I have none',
+            }
+          : !closed('skillsdone')
+            ? {
+                key: 'skills',
+                eyebrow: 'Skills',
+                blurb:
+                  "Now I've got your roles and projects, I can pull out the hard skills you can actually back up — or you can type them in yourself for free.",
+                cta: 'Do skills',
+                start: () => setPhase('build:skills'),
+                skip: () => {
+                  push({ who: 'skillsdone', skipped: true });
+                  ariaSays('No problem — you can add them any time.');
+                },
+                skipLabel: 'Skip skills',
+              }
+            : !closed('summarydone')
+              ? {
+                  key: 'summary',
+                  eyebrow: 'Summary · last one',
+                  blurb:
+                    "Now I've got the full picture, I can write the summary at the top — it's the first thing anyone reads, and it works best written last.",
+                  cta: 'Write my summary',
+                  start: () => setPhase('build:summary'),
+                  skip: () => {
+                    push({ who: 'summarydone', skipped: true });
+                    setPhase('build:done');
+                    ariaSays("Fine — you can write it later. Here's your CV.");
+                  },
+                  skipLabel: 'Skip the summary',
+                }
+              : null;
+
+  // A card may own the stream only once nothing else does — no restore in flight, no
+  // Aria turn mid-beat, no tailor-start or scan running.
+  const ready = !loading && !thinking && !working && !reading && !scanning;
+
+  return (
+    <div className={`flex-1 min-h-0 flex flex-col p-4 aria-theme-${chatTheme}`}>
+      <div className="flex-1 min-h-0 relative">
+        <div
+          ref={chatRef}
+          className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
+        >
+          {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
+              position as the conversation grows beneath it. Rendered from the draft
+              entry, so free chat, an Aria turn, or a refresh all leave it untouched.
+              Collapsed by default under sm: expanded it would take most of a 360px
+              viewport before the chat gets any. */}
+          {pinnedEntry && (
+            <div className="sticky top-0 z-20 -mx-1 px-1 pb-1.5 pt-0.5">
+              <PinnedEntryCard
+                entry={pinnedEntry}
+                section={pinnedSectionKey}
+                typePicked={!!pinnedType}
+                typeLabel={PROJECT_TYPES.find((t) => t.key === pinnedType)?.label || ''}
+                busy={roleBusy}
+                defaultExpanded={typeof window !== 'undefined' ? window.innerWidth >= 640 : true}
+                onNextRole={nextEntry}
+                onDone={finishSection}
+              />
+            </div>
+          )}
+
+          {messages.map((m, i) => {
+            // User turn — right-aligned ink bubble.
+            if (m.who === 'user') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
+                  {...bubbleAnim('user', reduce)}
+                >
+                  {m.text}
+                </motion.div>
+              );
+            }
+
+            // ── Persisted markers — each one re-renders a completed step from history ──
+
+            // Mode pick — a compact user-side echo of the fork taken.
+            if (m.who === 'modepick') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
+                  {...bubbleAnim('user', reduce)}
+                >
+                  {m.mode === 'build' ? 'Create a new CV' : 'Tailor my CV to a job'}
+                </motion.div>
+              );
+            }
+
+            // The captured job — role + clamped JD + the keywords Aria noticed.
+            if (m.who === 'jobcard') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-start max-w-[92%] flex items-start gap-2"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <AriaOrbit size={16} className="mt-2" />
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      The job
+                    </p>
+                    <p className="mt-1.5 font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {m.jobTitle}
+                    </p>
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-wrap line-clamp-3">
+                      {m.jobDescription}
+                    </p>
+                    {m.keywords?.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-1.5">
+                        {m.keywords.map((k) => (
+                          <span
+                            key={k}
+                            // Neutral, same as RoleBriefCard and the artifact panel —
+                            // extracted job keywords are facts, not actions or state.
+                            className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          >
+                            {k}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            }
+
+            // The CV that was picked as the source.
+            if (m.who === 'cvpick') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] font-semibold"
+                  {...bubbleAnim('user', reduce)}
+                >
+                  {m.sourceTitle}
+                </motion.div>
+              );
+            }
+
+            // The tailored copy landed — a durable emerald record of the clone.
+            if (m.who === 'tailored') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-start max-w-[92%] flex items-start gap-2"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <AriaOrbit size={16} className="mt-2" />
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
+                      ✓
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                        Tailored copy created
+                      </span>
+                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {m.title}
+                      </span>
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            }
+
+            // Brief confirmed — a centered emerald chip, same vocabulary as "Added".
+            if (m.who === 'briefcard') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  ✓ Read confirmed
+                </motion.div>
+              );
+            }
+
+            // A scan happened — a centered chip. The RESULT itself isn't stored in the
+            // transcript: the cards below render the live studioScan snapshot, so a
+            // free recompute updates them without rewriting history.
+            if (m.who === 'scan') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-center rounded-full border border-indigo-500/35 bg-indigo-500/[0.12] text-indigo-600 dark:text-indigo-400 px-3 py-1 text-[12px] font-semibold"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  ✓ Scanned against the job
+                </motion.div>
+              );
+            }
+
+            // Fix session boundaries — a thin hairline so scrolling the history shows
+            // where a section's fix began and ended.
+            if (m.who === 'fixstart' || m.who === 'fixend') {
+              const ended = m.who === 'fixend';
+              return (
+                <motion.div
+                  key={i}
+                  className="self-stretch my-1 flex items-center gap-2 px-1"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                  <span className="shrink-0 flex items-center gap-1.5">
+                    <span
+                      className={`w-1 h-1 rounded-full ${ended ? 'bg-amber-400' : 'bg-indigo-400'}`}
+                    />
+                    <span
+                      className={`text-[9px] font-semibold ${
+                        ended
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-indigo-600/80 dark:text-indigo-400/80'
+                      }`}
+                    >
+                      {ended
+                        ? 'Fix closed'
+                        : `Fixing · ${m.entry?.title || m.sectionLabel || 'section'}`}
+                    </span>
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                </motion.div>
+              );
+            }
+
+            // Applied record — durable, and deliberately score-free. It REFERENCES the
+            // entry and what landed; the score lives on the snapshot, which moves on
+            // every recompute. Re-reading this costs nothing: it's a receipt, not a call.
+            if (m.who === 'applied') {
+              const n = m.applied?.length ?? 0;
+              return (
+                <motion.div
+                  key={i}
+                  className="self-start max-w-[92%] flex items-start gap-2"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <AriaOrbit size={16} className="mt-2" />
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
+                      ✓
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                        {m.what ? `Added ${m.what}` : `Added ${n} bullet${n === 1 ? '' : 's'}`}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {m.entry?.title || m.sectionLabel}
+                      </span>
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            }
+
+            // Build-track markers. `buildintro` / `buildstart` are bookkeeping — they
+            // record that the roadmap was accepted and the draft created — so they render
+            // nothing; the conversation around them already tells that story.
+            if (m.who === 'buildintro' || m.who === 'buildstart') return null;
+
+            // The job answer, including "not yet" — worth showing, because a CV built
+            // without a target is a deliberate choice the user should see recorded.
+            if (m.who === 'buildjobdone') {
+              if (!m.skipped) return null; // the jobcard above already shows the job
+              return (
+                <motion.div
+                  key={i}
+                  className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
+                  {...bubbleAnim('user', reduce)}
+                >
+                  No specific job yet
+                </motion.div>
+              );
+            }
+
+            // A finished role, filed into the stream. References the entry by _sortId
+            // rather than snapshotting its contents, so it always reflects the CV.
+            if (m.who === 'rolerecord') {
+              const live = (cvData?.experience || []).find((e) => e._sortId === m.sortId);
+              if (!live) return null; // deleted since — don't show a ghost
+              const n = bulletCount(live);
+              return (
+                <motion.div
+                  key={i}
+                  className="self-start max-w-[92%] flex items-start gap-2"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <AriaOrbit size={16} className="mt-2" />
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 bg-slate-50 dark:bg-slate-800/40 p-3 flex items-center gap-2.5">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
+                      ✓
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+                        {live.title || 'Untitled role'}
+                        {live.company ? ` · ${live.company}` : ''}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                        {n} bullet{n === 1 ? '' : 's'} on your CV
+                      </span>
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            }
+
+            if (m.who === 'contactdone') {
+              return (
+                <motion.div
+                  key={i}
+                  className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  ✓ Contact details confirmed
+                </motion.div>
+              );
+            }
+
+            // Aria turn — orbit + slate bubble.
+            return (
+              <motion.div
+                key={i}
+                className="self-start max-w-[92%] flex items-start gap-2"
+                {...bubbleAnim('aria', reduce)}
+              >
+                <AriaOrbit size={16} className="mt-2" />
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+                  {m.text}
+                </span>
+              </motion.div>
+            );
+          })}
+
+          {loading && <AriaThinking variant="chat" label="Picking up where we left off…" />}
+          {thinking && <AriaThinking variant="chat" />}
+          {working && <AriaThinking variant="draft" label="Setting up your tailored copy…" />}
+          {reading && <AriaThinking variant="chat" label="Reading the job…" />}
+          {scanning && <AriaThinking variant="draft" label="Reading your CV against the job…" />}
+
+          {/* The live card — always the LAST item in the stream, blooming from Aria's
+              orbit and collapsing back into it. Never a phase-swap. */}
+          <AnimatePresence>
+            {ready && phase === 'mode' && <ModeChooser key="mode" onPick={pickMode} />}
+
+            {/* ── Build track ── */}
+
+            {ready && phase === 'build:roadmap' && (
+              <BuildRoadmapCard
+                key="roadmap"
+                status={progress.status}
+                onStart={beginBuild}
+                starting={working}
+              />
+            )}
+
+            {ready && phase === 'build:job' && !buildJobOpen && (
+              <TargetJobAskCard
+                key="jobask"
+                onYes={() => setBuildJobOpen(true)}
+                onNo={buildSkipJob}
+              />
+            )}
+
+            {/* Yes → the SAME capture form the tailor track uses. */}
+            {ready && phase === 'build:job' && buildJobOpen && (
+              <JobCaptureCard
+                key="buildjob"
+                onSubmit={(job) => {
+                  setBuildJobOpen(false);
+                  buildCaptureJob(job);
+                }}
+                onCancel={() => setBuildJobOpen(false)}
+              />
+            )}
+
+            {/* The section menu — whatever is still unfinished, in builder order. */}
+            {ready && phase === 'build:sections' && !pinnedEntry && nextSection && (
+              <AriaCard cardKey={`sections-${nextSection.key}`} key={`sections-${nextSection.key}`}>
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    {nextSection.eyebrow}
+                  </p>
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    {nextSection.blurb}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={nextSection.start}
+                    disabled={roleBusy}
+                    className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
+                  >
+                    {roleBusy ? 'Setting up…' : nextSection.cta}
+                  </button>
+                  {/* Optional sections get a guilt-free out, stated plainly. */}
+                  {nextSection.skip && (
+                    <button
+                      type="button"
+                      onClick={nextSection.skip}
+                      disabled={roleBusy}
+                      className="w-full mt-2 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {nextSection.skipLabel}
+                    </button>
+                  )}
+                </div>
+              </AriaCard>
+            )}
+
+            {/* Projects ask their TYPE first — it changes what makes the project worth
+                reading, so asking afterwards would mean re-framing answers already given. */}
+            {ready && pinnedEntry && pinnedSectionKey === 'project' && pinnedStage === 'type' && (
+              <ProjectTypeCard
+                key={`ptype-${pinnedEntry._sortId}`}
+                busy={roleBusy}
+                onPick={pickProjectType}
+              />
+            )}
+
+            {/* Skills — the same consent → generate → SkillsCard → applySkills flow the
+                CV builder runs, grounded on the roles and projects just captured. */}
+            {ready && phase === 'build:skills' && (
+              <SkillsBuildCard
+                key="skills"
+                phase={skillsData ? 'card' : 'consent'}
+                data={skillsData}
+                hasJob={!!cvData?.targetJob?.description}
+                existingSkills={(cvData?.skills || []).map((s) =>
+                  typeof s === 'string' ? s : s.name
+                )}
+                busy={roleBusy === 'skills'}
+                onGenerate={generateBuildSkills}
+                onAdd={addPickedSkills}
+                onManual={addManualSkills}
+                onSkip={() => {
+                  push({ who: 'skillsdone', skipped: true });
+                  setPhase('build:sections');
+                  ariaSays('No problem — you can add skills any time.');
+                }}
+              />
+            )}
+
+            {/* Summary — LAST, so it can draw on everything above it. */}
+            {ready && phase === 'build:summary' && (
+              <SummaryFixCard
+                key="buildsummary"
+                draft={summaryDraft}
+                generating={summaryBusy}
+                applying={applyingFix}
+                wasReroll={summaryWasReroll}
+                onGenerate={generateBuildSummary}
+                onApply={applyBuildSummary}
+                onCancel={() => {
+                  setSummaryDraft('');
+                  push({ who: 'summarydone', skipped: true });
+                  setPhase('build:done');
+                  ariaSays("Fine — you can write it later. Here's your CV.");
+                }}
+              />
+            )}
+
+            {/* Build finish — CV health and contents, never a fabricated match score. */}
+            {ready && phase === 'build:done' && (
+              <FinishCard
+                key="buildfinish"
+                mode="build"
+                scan={{ title: cvData?.title }}
+                progress={progress}
+                contents={{
+                  roles: (cvData?.experience || []).length,
+                  projects: (cvData?.projects || []).length,
+                  skills: (cvData?.skills || []).length,
+                }}
+                draftId={draftId}
+                templateId={printApplication?.templateId}
+                busy={downloadBusy}
+                onDownloadPdf={() => runDownload('pdf')}
+                onDownloadDocx={() => runDownload('docx')}
+                onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+                onTailor={tailorThisCv}
+                // Only offered when a job was actually supplied at build-start —
+                // otherwise there is nothing to match against.
+                onScan={cvData?.targetJob?.description ? runScan : null}
+                scanCost={scanCost}
+              />
+            )}
+
+            {/* Certifications — a light sub-list of education. No AI, no credits. */}
+            {ready && phase === 'build:certs' && (
+              <CertificationsCard
+                key="certs"
+                certifications={cvData?.certifications || []}
+                busy={roleBusy}
+                onAdd={addCertification}
+                onRemove={removeCertification}
+                onDone={() => {
+                  push({ who: 'certsdone' });
+                  setPhase('build:sections');
+                  ariaSays("That's your education section complete.");
+                }}
+              />
+            )}
+
+            {/* Capture — one field at a time, driven by what's still missing on the entry. */}
+            {ready &&
+              pinnedEntry &&
+              pinnedStage &&
+              pinnedStage !== 'achievements' &&
+              pinnedStage !== 'complete' && (
+                <RoleCaptureCard
+                  key={`capture-${pinnedEntry._sortId}-${pinnedStage}`}
+                  stage={pinnedStage}
+                  entry={pinnedEntry}
+                  busy={roleBusy === 'field'}
+                  onSubmit={captureRoleField}
+                />
+              )}
+
+            {ready && phase === 'build:contact' && (
+              <ContactConfirmCard
+                key="contact"
+                personalInfo={cvData?.personalInfo || {}}
+                saving={applyingFix}
+                onChange={(info) => updateCvData({ personalInfo: info })}
+                onConfirm={confirmContact}
+              />
+            )}
+
+            {/* "New CV" — V1 hands off to the CV builder rather than pretending to
+                build in chat. The copy says so outright: an honest handoff beats a
+                half-working in-chat build, and the round trip back here is the point. */}
+            {ready && phase === 'build' && (
+              <AriaCard cardKey="build" key="build">
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Build a new CV
+                  </p>
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    Building one with you in chat is what I&rsquo;m learning next. For now the
+                    builder is the fastest route — make your CV there, then come back and I&rsquo;ll
+                    tailor it to any job you like.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPhase('mode')}
+                      className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+                    >
+                      Back
+                    </button>
+                    <a
+                      href="/cv-builder/new/target-job"
+                      className="btn-primary px-5 py-2 text-sm no-underline"
+                    >
+                      Open the builder →
+                    </a>
+                  </div>
+                </div>
+              </AriaCard>
+            )}
+
+            {ready && phase === 'job' && (
+              <JobCaptureCard
+                key="job"
+                initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
+                initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
+                onSubmit={captureJob}
+                onCancel={() => {
+                  if (editingJob) {
+                    setEditingJob(false);
+                    setPhase('brief');
+                  } else {
+                    setPhase('mode');
+                  }
+                }}
+              />
+            )}
+
+            {ready && phase === 'brief' && (
+              <RoleBriefCard
+                key="brief"
+                brief={latestJob?.brief}
+                jobTitle={latestJob?.jobTitle}
+                onConfirm={confirmBrief}
+                onEdit={editBrief}
+              />
+            )}
+
+            {ready && phase === 'cv' && (
+              <CvPickerCard
+                key="cv"
+                busyId={pickBusyId}
+                onPick={pickCv}
+                onCancel={() => setPhase('brief')}
+              />
+            )}
+
+            {/* The scan offer — the one charged action, priced before it's taken. */}
+            {ready && phase === 'scanoffer' && (
+              <AriaCard cardKey="scanoffer" key="scanoffer">
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      Read it against the job
+                    </p>
+                    <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      −{scanCost} cr
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    I&rsquo;ll score your fit for this role and mark every section red, amber or
+                    green so you know exactly where to start.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={runScan}
+                    className="btn-primary w-full mt-3 py-2 text-sm"
+                  >
+                    Scan my CV
+                  </button>
+                </div>
+              </AriaCard>
+            )}
+
+            {/* Results — the verdict, then the section-by-section breakdown. Both read
+                the live snapshot, so a recompute refreshes them in place. */}
+            {ready && phase === 'results' && scan && <ScoreCard key="score" scan={scan} />}
+            {ready && phase === 'results' && scan?.sections?.length > 0 && (
+              <SectionBreakdownCard
+                key="sections"
+                sections={scan.sections}
+                onFix={handleFix}
+                onRecompute={runRecompute}
+                recomputing={scanning}
+                onRescan={runScan}
+                rescanning={scanning}
+                rescanCost={scanCost}
+              />
+            )}
+
+            {/* Finish — offered whenever there's a scan, and re-rendered after every
+                re-score so the before → after stays current. */}
+            {ready && phase === 'results' && scan && (
+              <FinishCard
+                key="finish"
+                scan={{ ...scan, title: cvData?.title }}
+                draftId={draftId}
+                templateId={printApplication?.templateId}
+                busy={downloadBusy}
+                onDownloadPdf={() => runDownload('pdf')}
+                onDownloadDocx={() => runDownload('docx')}
+                onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+              />
+            )}
+
+            {/* ── The fix loop ── */}
+
+            {/* experience / projects → pick the entry to sharpen */}
+            {ready && phase === 'fix:pick' && (
+              <EntryPickerCard
+                key="fixpick"
+                entries={fixEntries}
+                missingKeywords={activeFix?.missingKeywords || []}
+                onPick={pickEntry}
+                onCancel={cancelFix}
+              />
+            )}
+
+            {/* skills → free checklist straight off the scan */}
+            {ready && phase === 'fix:skills' && (
+              <SkillsFixCard
+                key="fixskills"
+                missingSkills={scan?.missingSkills || []}
+                onApply={applyScanSkills}
+                onCancel={cancelFix}
+                applying={applyingFix}
+              />
+            )}
+
+            {/* summary → stage chips, then the draft */}
+            {ready && phase === 'fix:summary' && (
+              <SummaryFixCard
+                key="fixsummary"
+                draft={summaryDraft}
+                generating={summaryBusy}
+                applying={applyingFix}
+                wasReroll={summaryWasReroll}
+                onGenerate={generateSummary}
+                onApply={applySummaryDraft}
+                onCancel={cancelFix}
+              />
+            )}
+
+            {/* education / contact → guidance only, no AI, no charge */}
+            {ready && phase === 'fix:guide' && (
+              <SectionGuidanceCard
+                key="fixguide"
+                section={activeFix?.sectionKey}
+                draftId={draftId}
+                note={scan?.sections?.find((s) => s.key === activeFix?.sectionKey)?.note}
+                onBack={cancelFix}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Achievements for the pinned role — the SAME SectionCoach protocol the fix
+              loop uses, pointed at this entry. One coaching path, not two: the free
+              interview, the count picker, the credited generation and applyRoleBulletDiff
+              all behave identically here. */}
+          {pinnedEntry && pinnedStage === 'achievements' && !thinking && !roleBusy && (
+            <SectionCoach
+              key={`rolecoach-${pinnedEntry._sortId}`}
+              draftId={draftId}
+              dockNode={coachDock}
+              entry={{
+                // 'project' routes coachChatTurn to its project framing (type-aware,
+                // problem → role → tech → outcome → link) instead of the job one.
+                section: pinnedSectionKey === 'project' ? 'project' : 'experience',
+                sortId: pinnedEntry._sortId,
+                title: pinnedEntry.title,
+                company: pinnedEntry.company,
+              }}
+              missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
+                .map((k) => (typeof k === 'string' ? k : k?.name))
+                .filter(Boolean)
+                .slice(0, 4)}
+              messages={messages}
+              onPush={push}
+              onApply={(add, remove) =>
+                applyRoleBulletDiff(
+                  pinnedSectionKey === 'project' ? 'project' : 'experience',
+                  pinnedEntry._sortId,
+                  add,
+                  remove
+                )
+              }
+              onDone={(result) => {
+                if (result?.applied?.length) {
+                  push({ who: 'added', n: result.applied.length });
+                  ariaSays(
+                    "That's landed on the role above. Add another job, or call work history done."
+                  );
+                }
+              }}
+            />
+          )}
+
+          {/* The focused build-with. Renders INTO this stream (its turns are ordinary
+              aria/user messages, so they persist with everything else) and brings its
+              own input, because here typing IS the interaction. */}
+          {phase === 'fix:coach' && activeFix?.entry && !thinking && !scanning && (
+            <SectionCoach
+              key={`coach-${activeFix.entry.sortId}`}
+              draftId={draftId}
+              dockNode={coachDock}
+              entry={activeFix.entry}
+              missingKeywords={activeFix.missingKeywords || []}
+              messages={messages}
+              onPush={push}
+              onApply={(add, remove) =>
+                applyRoleBulletDiff(activeFix.entry.section, activeFix.entry.sortId, add, remove)
+              }
+              onDone={(result) =>
+                finishFix(
+                  result && {
+                    entry: activeFix.entry,
+                    applied: result.applied,
+                    what: `${result.applied?.length || 0} bullet${
+                      result.applied?.length === 1 ? '' : 's'
+                    }`,
+                  }
+                )
+              }
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Docked input — disabled while a card owns the stream, so the card is the focus,
+          and hidden outright while the coach has its own (which docks below). */}
+      {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
+          indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
+      <div
+        className={`shrink-0 pt-3 pb-[env(safe-area-inset-bottom)] ${
+          coachOwnsInput ? 'hidden' : ''
+        }`}
+      >
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={inputRef}
+            value={input}
+            disabled={inputDisabled}
+            onChange={(e) => setInput(e.target.value)}
+            onInput={(e) => {
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            rows={1}
+            placeholder={inputDisabled ? 'Use the card above ↑' : 'Ask Aria anything…'}
+            className={`flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none max-h-[140px] ${
+              inputDisabled ? 'opacity-50' : ''
+            }`}
+          />
+          <ChatThemePicker />
+          <button
+            type="button"
+            onClick={() => send()}
+            disabled={inputDisabled || thinking || input.trim().length < 2}
+            aria-label="Send"
+            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-indigo-500/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Active-coach composer dock — a PINNED shrink-0 sibling below the scroll, mounted
+          only while a coach drives (the default composer is hidden then). SectionCoach
+          portals its own composer (free-note + textarea + Back/turns row) in here, so a
+          focused-section input stays put and ONLY the messages scroll. Empty (zero-height)
+          during the coach's picker/results phases, which have no input of their own. */}
+      {coachOwnsInput && <div ref={setCoachDock} className="shrink-0" />}
+
+      {/* Off-screen CV — the PDF path serialises a real DOM node, and a chat has none.
+          Mounted only once there's something to print. */}
+      {phase === 'results' && scan && (
+        <StudioPrintSurface application={printApplication} userProfile={cvData?.personalInfo} />
+      )}
+
+      {/* The SAME paywall the editor uses. Web: one free lifetime download, then a pass
+          or a subscription. Native is exempt via the X-Client-Platform header in
+          api.js — none of that logic is re-implemented here. */}
+      <DownloadPaywallModal
+        open={showDownloadPaywall}
+        onClose={() => setShowDownloadPaywall(false)}
+      />
+    </div>
+  );
+};
+
+export default StudioChat;

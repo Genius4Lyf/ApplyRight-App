@@ -30,7 +30,7 @@ export const NEXT_TONE = {
 // Paper-note chrome for CardDeck's front/receding cards. CardDeck owns only
 // transform/opacity/position; this supplies the page look.
 export const PAPER_CARD =
-  'rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_16px_34px_-14px_rgba(15,23,42,.16)] dark:shadow-[0_20px_46px_-16px_rgba(0,0,0,.55)] overflow-hidden';
+  'rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_6px_16px_-8px_rgba(15,23,42,0.14)] dark:shadow-[0_16px_36px_-22px_rgba(0,0,0,.5)] overflow-hidden';
 
 // Ruled-paper backdrop for the verdict text — faint horizontal lines like a
 // legal pad, offset so the baselines sit on the rules.

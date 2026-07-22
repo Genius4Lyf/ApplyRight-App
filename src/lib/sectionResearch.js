@@ -45,7 +45,8 @@ export const SECTION_RESEARCH = {
   projects: {
     icon: '🛠️',
     eyebrow: 'Projects',
-    thesis: 'A project says "I chose to build this" — so the why, your role & the tech matter most.',
+    thesis:
+      'A project says "I chose to build this" — so the why, your role & the tech matter most.',
     points: [
       'Say what it <b>does</b> and the problem it solves.',
       'Make <b>your part</b> clear — what you built vs. the team.',

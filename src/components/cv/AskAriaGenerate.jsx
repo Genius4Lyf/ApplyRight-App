@@ -4,6 +4,7 @@ import { ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
+import { CAREER_STAGES, CAREER_STAGE_PROMPT } from '../../lib/careerStages';
 import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
@@ -153,6 +154,14 @@ const AskAriaGenerate = ({
   // who picked "Always allow" once isn't re-prompted on this CV.
   const alwaysAllow = !!aiByStep?._ariaAlwaysAllow;
 
+  // Career stage — ONE lightweight "Where are you in your career?" question at the
+  // start of work-history build-with, so entry-level users are eased in (the backend
+  // stops pushing for metrics). Persisted per-CV in coachState so it's never re-asked;
+  // if skipped, the backend infers it from the draft. `stageDismissed` hides the chips
+  // for this focus once they type past them (chips aren't a gate).
+  const careerStage = aiByStep?._careerStage;
+  const [stageDismissed, setStageDismissed] = useState(false);
+
   // "Aria's read" — the Role Brief. Seeded from cvData if present, else fetched
   // once on mount (only when a target JD exists). Grounds every generation.
   const [brief, setBrief] = useState(cvData.targetJob?.brief || null);
@@ -223,6 +232,7 @@ const AskAriaGenerate = ({
     // leaves bullets/phase/appliedSet/description intact so the record marker survives.
     if (cur) {
       setProjectTypePicked(false); // a newly-focused project asks its type again
+      setStageDismissed(false); // a newly-focused role may offer the stage chip again (until picked)
       setPhase('chat');
       setBullets([]);
       setAppliedSet(new Set());
@@ -266,6 +276,7 @@ const AskAriaGenerate = ({
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setShowChips(false);
     setProjectTypePicked(true); // any send (chip or typed) dismisses the project-type chips
+    setStageDismissed(true); // typing past the career-stage chips hides them (not a gate)
     setSuggestions([]);
     setExampleAnswer('');
     setExampleOpen(false);
@@ -296,6 +307,8 @@ const AskAriaGenerate = ({
           .map((m) => ({ who: m.who, text: m.text })),
         focus: focused ? { section: focusedEntry.section, sortId: focusedEntry.sortId } : undefined,
         buildTurns: buildTurnsRef.current,
+        // Ride the picked stage along (undefined → backend infers from the draft).
+        stage: careerStage,
       });
       setMessages((m) => [...m, { who: 'aria', text: r.reply }]);
       setFreeLeft(r.freeRemaining);
@@ -462,7 +475,9 @@ const AskAriaGenerate = ({
       setOpened(true);
       landInStream(add.length);
     } else if (!res.found) {
-      toast.error("Couldn't find this role — refresh and try again.");
+      toast.error(
+        `Couldn't find this ${target?.section === 'project' ? 'project' : 'role'} — refresh and try again.`
+      );
     } else {
       toast.error('Saved changes, but syncing failed — try again.');
     }
@@ -657,7 +672,7 @@ const AskAriaGenerate = ({
                           onClick={() => onClearFocus?.()}
                           className="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                         >
-                          Done with this role
+                          Done with this {isProject ? 'project' : 'role'}
                         </button>
                       </div>
                     )}
@@ -706,6 +721,37 @@ const AskAriaGenerate = ({
               </button>
             </div>
           )}
+
+          {/* Career-stage chip — ONE lightweight question at the start of a focused
+              ROLE's build-with, so entry-level users are eased in (backend eases off
+              metrics). Silent context selector, not a gate: picking persists the stage
+              per-CV; typing past it (or skipping) lets the backend infer. Hidden once
+              picked or dismissed, and never shown for a project. */}
+          {focused &&
+            !isProject &&
+            focusedEntry?.section === 'experience' &&
+            !careerStage &&
+            !stageDismissed &&
+            phase === 'chat' &&
+            !thinking && (
+              <div className="self-start pl-6 flex flex-col gap-1.5">
+                <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  {CAREER_STAGE_PROMPT}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {CAREER_STAGES.map((s) => (
+                    <button
+                      key={s.k}
+                      type="button"
+                      onClick={() => setAiByStep?.((m) => ({ ...m, _careerStage: s.k }))}
+                      className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           {/* Project-type chips — a focused PROJECT's first turn asks its type. The
               pick is sent as a normal user message, so the thread stays type-aware. */}

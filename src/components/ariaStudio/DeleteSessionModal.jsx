@@ -1,0 +1,125 @@
+import React, { useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
+
+// Deleting a Studio session deletes a real DraftCV — the session IS the CV. What that
+// costs the user depends entirely on which kind it is, so the confirm does too:
+//
+//   TAILORING → a disposable copy, regenerable in two minutes from its source. Plain
+//               delete, named so they know which one.
+//   BUILD     → the master CV they may have spent twenty minutes writing. Deleting it
+//               from a hover trash icon would be a trap, so the SAFE option
+//               ("Remove from Studio" — keeps the CV, drops it from the rail) is the
+//               default, with the real delete demoted to a secondary destructive action.
+//
+// The asymmetry is deliberate: the two objects genuinely differ in value, and a single
+// uniform confirm would either over-warn on copies or under-warn on masters.
+const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => {
+  // Escape closes it. On DOCUMENT, not the scrim: an onKeyDown on an unfocused div
+  // never fires, so the handler would have looked right and done nothing.
+  useEffect(() => {
+    if (!session) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') onCancel?.();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [session, onCancel]);
+
+  if (!session) return null;
+
+  const isBuild = session.kind === 'build';
+  const name = session.jobTitle || session.title || 'Untitled session';
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 dark:bg-black/60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="studio-delete-title"
+    >
+      {/* Scrim — a real button so dismissing by clicking outside is keyboard- and
+          screen-reader-coherent rather than a click handler on a plain div. */}
+      <button
+        type="button"
+        aria-label="Cancel"
+        onClick={onCancel}
+        className="absolute inset-0 cursor-default"
+      />
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl">
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center">
+            <Trash2 className="w-6 h-6 text-rose-600 dark:text-rose-300" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3
+              id="studio-delete-title"
+              className="text-xl font-bold text-slate-900 dark:text-slate-100"
+            >
+              {isBuild ? 'Remove this CV?' : 'Delete this tailoring?'}
+            </h3>
+
+            {isBuild ? (
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                &ldquo;{name}&rdquo; is a CV you built here, and it lives in{' '}
+                <span className="font-semibold text-slate-800 dark:text-slate-100">My CVs</span>.
+                You can take it out of the Studio sidebar and keep the CV, or delete it everywhere.
+              </p>
+            ) : (
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                This deletes the tailored copy &ldquo;{name}&rdquo; and its conversation. It will
+                also disappear from{' '}
+                <span className="font-semibold text-slate-800 dark:text-slate-100">My CVs</span>.
+                {session.sourceTitle ? (
+                  <>
+                    {' '}
+                    Your original{' '}
+                    <span className="font-semibold text-slate-800 dark:text-slate-100">
+                      {session.sourceTitle}
+                    </span>{' '}
+                    is not affected.
+                  </>
+                ) : null}{' '}
+                This can&rsquo;t be undone.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-2">
+          {/* Build: the SAFE action leads. */}
+          {isBuild && (
+            <button
+              type="button"
+              onClick={() => onRemove?.(session)}
+              disabled={busy}
+              className="btn-primary w-full py-2.5 text-sm disabled:opacity-50"
+            >
+              {busy === 'remove' ? 'Removing…' : 'Remove from Studio · keep the CV'}
+            </button>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={busy}
+              className="btn-secondary flex-1 py-2.5 text-sm disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete?.(session)}
+              disabled={busy}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            >
+              {busy === 'delete' ? 'Deleting…' : isBuild ? 'Delete CV entirely' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DeleteSessionModal;

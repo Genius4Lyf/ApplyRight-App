@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, Search, X, Trash2, Eye, PenLine, ArrowRight } from 'lucide-react';
+import { Plus, Search, X, Trash2, Eye, PenLine } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SortSelect from '../components/ui/SortSelect';
 import CVService from '../services/cv.service';
@@ -224,9 +224,11 @@ const MyCVs = () => {
         eyebrow={`${name} · edited ${relative}`}
         title={title}
         verdict={d.professionalSummary || undefined}
+        emptyHint="no summary yet"
         nextMove={moveFor(info)}
         openLabel={isComplete ? 'Review' : 'Edit'}
         onOpen={() => navigate(isComplete ? `/resume/${d._id}` : `/cv-builder/${d._id}`)}
+        onDelete={() => handleDelete(d)}
       />
     );
   };
@@ -251,7 +253,7 @@ const MyCVs = () => {
             open();
           }
         }}
-        className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 pl-5 sm:p-5 sm:pl-6 cursor-pointer transition-colors hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:focus-visible:ring-indigo-500/50"
+        className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 pl-5 sm:p-5 sm:pl-6 cursor-pointer transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:focus-visible:ring-indigo-500/50"
       >
         {/* Band left edge */}
         <span
@@ -295,23 +297,19 @@ const MyCVs = () => {
               e.stopPropagation();
               handleDelete(d);
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all sm:opacity-0 sm:group-hover:opacity-100"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all"
             title="Delete CV"
             aria-label="Delete CV"
           >
             <Trash2 className="h-4 w-4" />
           </button>
-          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 whitespace-nowrap group-hover:gap-2 transition-all">
-            {isComplete ? 'Review' : 'Edit'}
-            <ArrowRight className="h-4 w-4" />
-          </span>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pt-8 pb-8">
@@ -419,7 +417,7 @@ const MyCVs = () => {
               ) : (
                 <div className="space-y-4 lg:flex lg:flex-col lg:h-full lg:min-h-0">
                   {/* Search + status tabs + sort */}
-                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 lg:shrink-0">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 lg:shrink-0">
                     <div className="relative flex-1 min-w-0">
                       <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -497,7 +495,7 @@ const MyCVs = () => {
       </main>
 
       {draftToDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div
             className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200"
             role="dialog"
@@ -545,7 +543,7 @@ const MyCVs = () => {
 };
 
 const EmptyState = () => (
-  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-14 text-center">
+  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
     <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
       Nothing built yet
     </p>

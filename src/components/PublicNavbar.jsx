@@ -60,8 +60,8 @@ const PublicNavbar = () => {
       >
         <Link to="/" className="flex items-center gap-2 group">
           <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
-          <span className="font-heading text-xl font-bold tracking-tight text-slate-900">
-            Apply<span className="text-indigo-600">Right</span>
+          <span className="font-brand text-xl font-semibold tracking-tight text-black dark:text-white">
+            ApplyRight
           </span>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
