@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { useNavigate } from 'react-router-dom';
 import { TEMPLATES } from '../data/templates';
 import {
@@ -8,7 +9,6 @@ import {
   ArrowRight,
   Lock,
   PlayCircle,
-  Loader,
   Zap,
   X,
   Sparkles,
@@ -177,7 +177,7 @@ const TemplateSelector = ({
                 }`}
               >
                 {unlocking ? (
-                  <Loader className="w-5 h-5 animate-spin" />
+                  <AriaLoader inline tone="mono" size={16} label="Unlocking…" />
                 ) : (
                   <>
                     <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />

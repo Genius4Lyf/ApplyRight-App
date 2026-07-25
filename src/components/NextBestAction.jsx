@@ -1,4 +1,5 @@
 import React from 'react';
+import AriaLoader from './ui/AriaLoader';
 import {
   Sparkles,
   FileText,
@@ -76,7 +77,7 @@ const NextBestAction = ({
       >
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-            <div className="w-5 h-5 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+            <AriaLoader inline tone="mono" size={20} label="Generating your optimized CV…" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-700 dark:text-indigo-300 opacity-80">
@@ -294,7 +295,7 @@ const NextBestAction = ({
           }`}
         >
           {action.loading ? (
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            <AriaLoader inline tone="mono" size={16} label="Working…" />
           ) : (
             action.icon
           )}

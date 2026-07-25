@@ -1,4 +1,6 @@
 import { Check, X, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import AriaLoader from '../ui/AriaLoader';
 import { formatNgn, formatUsd } from '../../lib/plans';
 
 /**
@@ -13,7 +15,7 @@ import { formatNgn, formatUsd } from '../../lib/plans';
  * stretch every card to equal height.
  */
 const TierCard = ({
-  tier: t,
+  tier,
   currency,
   current = false,
   loading = false,
@@ -21,16 +23,22 @@ const TierCard = ({
   ctaLabel,
   onCta,
 }) => {
-  const priceLabel = currency === 'NGN' ? formatNgn(t.priceNgn) : formatUsd(t.priceUsd);
-  const isFree = !t.priceNgn;
-  const tagline = t.tagline || t.subtitle || '';
-  const paySubline = isFree ? 'No card required' : 'pay with card, transfer or USSD';
+  const { t } = useTranslation();
+  const priceLabel = currency === 'NGN' ? formatNgn(tier.priceNgn) : formatUsd(tier.priceUsd);
+  const isFree = !tier.priceNgn;
+  const label = t(tier.labelKey);
+  const taglineKey = tier.taglineKey || tier.subtitleKey;
+  const tagline = taglineKey ? t(taglineKey) : '';
+  const paySubline = isFree
+    ? t('billing.tierCard.paySublineFree')
+    : t('billing.tierCard.paySublinePaid');
   // The featured plan can depend on currency: NGN spotlights the cheap 2-week
   // plan ("Best for Nigeria"), USD spotlights the better-value monthly plan
   // ("Best worldwide"). `featuredFor` makes a tier currency-conditional; tiers
   // with a plain `highlight`/`badge` (e.g. agent plans) stay the same either way.
-  const highlight = t.featuredFor ? t.featuredFor === currency : !!t.highlight;
-  const badge = t.featuredFor ? (highlight ? t.badge : null) : t.badge;
+  const highlight = tier.featuredFor ? tier.featuredFor === currency : !!tier.highlight;
+  const badgeKey = tier.featuredFor ? (highlight ? tier.badgeKey : null) : tier.badgeKey;
+  const badge = badgeKey ? t(badgeKey) : null;
 
   return (
     <div
@@ -49,10 +57,10 @@ const TierCard = ({
       {/* Header: plan name + "PLAN" label */}
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t.label}
+          {label}
         </h3>
         <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 pt-1">
-          Plan
+          {t('billing.tierCard.plan')}
         </span>
       </div>
 
@@ -67,11 +75,15 @@ const TierCard = ({
           {priceLabel}
         </span>
         {!isFree && (
-          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">/ {t.period}</span>
+          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">/ {tier.period}</span>
         )}
       </div>
       <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500 min-h-[16px]">
-        {!isFree && <span className="capitalize">per {t.period} · </span>}
+        {!isFree && (
+          <span className="capitalize">
+            {t('billing.tierCard.perPeriod', { period: tier.period })}{' '}
+          </span>
+        )}
         {paySubline}
       </p>
 
@@ -86,14 +98,15 @@ const TierCard = ({
         }`}
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+          <AriaLoader inline tone="mono" size={16} label={t('billing.tierCard.startingCheckout')} />
         ) : current ? (
           <>
-            <Check className="w-5 h-5" /> Current plan
+            <Check className="w-5 h-5" /> {t('billing.tierCard.currentPlan')}
           </>
         ) : (
           <>
-            {ctaLabel || `Choose ${t.label}`} <ArrowRight className="w-4 h-4" />
+            {ctaLabel || t('billing.common.choosePlan', { plan: label })}{' '}
+            <ArrowRight className="w-4 h-4" />
           </>
         )}
       </button>
@@ -103,25 +116,25 @@ const TierCard = ({
 
       {/* Features — included (✓) then excluded (✗) */}
       <ul className="space-y-3 flex-1">
-        {t.features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5">
+        {tier.featureKeys.map((k) => (
+          <li key={k} className="flex items-start gap-2.5">
             <Check
               className="w-4 h-4 shrink-0 mt-0.5 text-green-600 dark:text-green-400"
               strokeWidth={3}
             />
             <span className="text-[13px] sm:text-sm leading-snug text-slate-700 dark:text-slate-300">
-              {f}
+              {t(k)}
             </span>
           </li>
         ))}
-        {(t.excluded || []).map((f) => (
-          <li key={f} className="flex items-start gap-2.5">
+        {(tier.excludedKeys || []).map((k) => (
+          <li key={k} className="flex items-start gap-2.5">
             <X
               className="w-4 h-4 shrink-0 mt-0.5 text-slate-300 dark:text-slate-600"
               strokeWidth={3}
             />
             <span className="text-[13px] sm:text-sm leading-snug text-slate-400 dark:text-slate-500">
-              {f}
+              {t(k)}
             </span>
           </li>
         ))}

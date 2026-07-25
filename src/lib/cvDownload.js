@@ -238,10 +238,14 @@ export async function downloadDocx({
   templateId,
   kind = 'resume',
   filenameProfile,
+  outputLang,
 }) {
   try {
+    // outputLang drives the section LABELS in the .docx. The markdown sent up is
+    // the untouched English-headed source — the backend translates at render time,
+    // exactly as the on-screen templates do.
     const blob = await CVService.generateDocx(
-      { markdown, userProfile },
+      { markdown, userProfile, outputLang },
       { applicationId, isDraft, templateId }
     );
     // The filename uses the RAW profile while the document body uses the merged one —

@@ -133,39 +133,28 @@ const Onboarding = () => {
             {['Basic Info', 'Education'].map((label, index) => (
               <span
                 key={label}
-                className={`text-sm font-medium ${step > index ? 'text-primary' : step === index + 1 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-sm font-medium ${step > index ? 'text-slate-900 dark:text-slate-100' : step === index + 1 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 {label}
               </span>
             ))}
           </div>
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary transition-all duration-500 ease-in-out"
+              className="h-full bg-slate-900 dark:bg-white transition-all duration-500 ease-in-out"
               style={{ width: `${(step / 2) * 100}%` }}
             ></div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden">
-          <div className="relative bg-primary/5 border-b border-primary/10 overflow-hidden">
-            {/* Educational Background Pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.15] z-0 pointer-events-none"
-              style={{
-                backgroundImage: `url('/educational-bg.png')`,
-                backgroundSize: '400px', // Adjust size for better visibility of vector elements
-                backgroundRepeat: 'repeat',
-                backgroundPosition: 'center',
-              }}
-            />
-
-            <div className="relative z-10 p-5 sm:p-8 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-slate-900 mb-4 shadow-sm text-primary">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-card overflow-hidden">
+          <div className="border-b border-slate-200 dark:border-slate-800">
+            <div className="p-5 sm:p-8 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mb-4 text-slate-900 dark:text-slate-100">
                 {step === 1 && <User className="w-6 h-6" />}
                 {step === 2 && <GraduationCap className="w-6 h-6" />}
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-2xl font-heading font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {step === 1 && "Let's get to know you"}
                 {step === 2 && 'Your Academic Journey'}
               </h2>

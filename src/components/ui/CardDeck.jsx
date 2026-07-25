@@ -10,6 +10,9 @@ const PRESETS = {
   //          BX (front x-offset)  SX (per-card x)  SY (per-card y)  depth
   desktop: { BX: -36, SX: 34, SY: 18, depth: 3 },
   mobile: { BX: 0, SX: 14, SY: 11, depth: 2 },
+  // `sequence` decks are steps, not a pile of peers — no fan, no receding
+  // stack, nothing behind the front card. Only the current step is on screen.
+  sequence: { BX: 0, SX: 0, SY: 0, depth: 0 },
 };
 
 const EASE = 'cubic-bezier(.2,.7,.2,1)';
@@ -30,7 +33,15 @@ const SWIPE_THRESHOLD = 85;
  *   onIndexChange?: (index: number) => void,
  *   cardClassName?: string,
  *   label?: string,
+ *   sequence?: boolean,
+ *   activeIndex?: number,
  * }} props
+ *
+ * `sequence` (opt-in, default false) turns the deck into a step flow: a LEFT
+ * drag advances (you push the sequence forward) instead of the browsing
+ * gesture where a rightward throw discards the top card, and the deck renders
+ * flat — front pane only. Existing decks must keep the browsing behaviour, so
+ * this is never on by default.
  */
 export default function CardDeck({
   items = [],
@@ -40,13 +51,20 @@ export default function CardDeck({
   onIndexChange,
   cardClassName = '',
   label,
+  sequence = false,
+  activeIndex,
+  ariaLabel = 'Application deck',
 }) {
   const reduceMotion = useReducedMotion();
   const count = items.length;
 
-  const [currentRaw, setCurrent] = useState(() =>
+  // Optionally controlled: pass `activeIndex` when something outside the deck (a
+  // step rail, a footer button) also drives it. Uncontrolled otherwise, as before.
+  const controlled = typeof activeIndex === 'number';
+  const [internal, setCurrent] = useState(() =>
     Math.min(Math.max(initialIndex, 0), Math.max(count - 1, 0))
   );
+  const currentRaw = controlled ? activeIndex : internal;
   // Clamp during render so a shrinking `items` list can never leave us pointing
   // past the end — no set-state-in-effect needed; `commit` re-clamps on write.
   const current = Math.min(Math.max(currentRaw, 0), Math.max(count - 1, 0));
@@ -54,7 +72,7 @@ export default function CardDeck({
   const [drag, setDrag] = useState({ active: false, dx: 0 });
   const [stageMinH, setStageMinH] = useState(0);
 
-  const preset = isDesktop ? PRESETS.desktop : PRESETS.mobile;
+  const preset = sequence ? PRESETS.sequence : isDesktop ? PRESETS.desktop : PRESETS.mobile;
 
   // Keep the latest index in a ref so pointer/keyboard handlers read it without
   // becoming stale, and so we can fire onIndexChange outside a state updater.
@@ -67,11 +85,11 @@ export default function CardDeck({
     (target) => {
       const clamped = Math.min(Math.max(target, 0), Math.max(count - 1, 0));
       if (clamped !== currentRef.current) {
-        setCurrent(clamped);
+        if (!controlled) setCurrent(clamped);
         onIndexChange?.(clamped);
       }
     },
-    [count, onIndexChange]
+    [count, controlled, onIndexChange]
   );
 
   const next = useCallback(() => commit(currentRef.current + 1), [commit]);
@@ -97,8 +115,10 @@ export default function CardDeck({
   const frontNodeRef = useRef(null);
   const measureFront = useCallback(() => {
     const node = frontNodeRef.current;
-    if (node && node.offsetHeight) setStageMinH(node.offsetHeight + 68);
-  }, []);
+    // The +68 is headroom for the fan's upward peek; a flat sequence deck has
+    // nothing behind the front pane, so it sizes to the pane exactly.
+    if (node && node.offsetHeight) setStageMinH(node.offsetHeight + (sequence ? 0 : 68));
+  }, [sequence]);
 
   useEffect(() => {
     measureFront();
@@ -136,8 +156,10 @@ export default function CardDeck({
     dragState.current = { active: false, startX: 0, captured: false };
     if (captured) e.currentTarget.releasePointerCapture?.(e.pointerId);
     setDrag({ active: false, dx: 0 });
-    if (dx > SWIPE_THRESHOLD) next();
-    else if (dx < -SWIPE_THRESHOLD) prev();
+    // Browsing a stack: a rightward throw sends the top card away, revealing the
+    // next one. A sequence reads the other way — dragging LEFT pushes it forward.
+    if (dx > SWIPE_THRESHOLD) (sequence ? prev : next)();
+    else if (dx < -SWIPE_THRESHOLD) (sequence ? next : prev)();
     // A tap (never captured, dx≈0) falls through: the native click reaches the
     // card and NoteCard's onOpen fires.
   };
@@ -167,8 +189,8 @@ export default function CardDeck({
   const { BX, SX, SY, depth } = preset;
   const transition = reduceMotion ? 'none' : `transform .42s ${EASE}, opacity .42s`;
 
-  const cardStyle = (index) => {
-    const isFront = index === current;
+  const cardStyle = (cardIndex) => {
+    const isFront = cardIndex === current;
 
     // Live drag on the front card — follow the finger, no transition.
     if (isFront && drag.active) {
@@ -181,11 +203,32 @@ export default function CardDeck({
       };
     }
 
-    const rel = index - current;
+    const rel = cardIndex - current;
     let transform;
     let opacity;
     let zIndex;
     let pointerEvents = 'none';
+
+    // Flat sequence: only the current pane exists visually. Past panes leave to
+    // the left (the direction they were pushed), future ones wait to the right.
+    if (sequence) {
+      if (rel === 0) {
+        return {
+          transform: 'translate(0, 0)',
+          opacity: 1,
+          zIndex: 60,
+          pointerEvents: 'auto',
+          transition,
+        };
+      }
+      return {
+        transform: `translate(${rel < 0 ? -560 : 560}px, 0)`,
+        opacity: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition,
+      };
+    }
 
     if (rel < 0) {
       // Passed cards fly off to the right and fade out.
@@ -221,46 +264,50 @@ export default function CardDeck({
       className="flex h-full w-full flex-col outline-none"
       role="group"
       aria-roledescription="carousel"
-      aria-label="Application deck"
+      aria-label={ariaLabel}
       // Focusable custom widget: arrows drive the deck when it holds focus.
       // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
     >
-      {/* Controls row — optional label on the left, counter + arrows on the right */}
-      <div className="mb-2 flex items-center justify-between gap-3">
-        {label ? (
-          <span className="min-w-0 truncate font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {label}
-          </span>
-        ) : (
-          <span />
-        )}
-        <div className="flex shrink-0 items-center gap-3">
-          <span className="font-mono text-xs font-medium tabular-nums tracking-[0.08em] text-slate-400 dark:text-slate-500">
-            {counter}
-          </span>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={prev}
-              disabled={atStart}
-              aria-label="Previous card"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              disabled={atEnd}
-              aria-label="Next card"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </button>
+      {/* Controls row — optional label on the left, counter + arrows on the right.
+          A sequence deck hides it: its host owns Back/Continue in a footer, and
+          a second pair of arrows up here would just be a rival control. */}
+      {!sequence && (
+        <div className="mb-2 flex items-center justify-between gap-3">
+          {label ? (
+            <span className="min-w-0 truncate font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              {label}
+            </span>
+          ) : (
+            <span />
+          )}
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="font-mono text-xs font-medium tabular-nums tracking-[0.08em] text-slate-400 dark:text-slate-500">
+              {counter}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={prev}
+                disabled={atStart}
+                aria-label="Previous card"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                disabled={atEnd}
+                aria-label="Next card"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Stage wrapper — grows to fill the parent's height and centers the deck
           vertically. The stage itself sizes to the measured card height. */}
@@ -269,7 +316,7 @@ export default function CardDeck({
             scrollbar (a lone overflow-x promotes overflow-y to auto). */}
         <div
           className="relative w-full overflow-hidden"
-          style={{ minHeight: Math.max(240, stageMinH) }}
+          style={{ minHeight: Math.max(sequence ? 0 : 240, stageMinH) }}
         >
           {items.map((item, index) => {
             const isFront = index === current;
@@ -280,12 +327,14 @@ export default function CardDeck({
                 className={cardClassName}
                 style={{
                   position: 'absolute',
-                  top: 48,
+                  // The 48px gap makes room for the fan's upward peek; a flat
+                  // sequence pane sits at the top of its stage and fills it.
+                  top: sequence ? 0 : 48,
                   left: 0,
                   right: 0,
                   margin: '0 auto',
-                  width: 430,
-                  maxWidth: 'calc(100% - 8px)',
+                  width: sequence ? '100%' : 430,
+                  maxWidth: sequence ? '100%' : 'calc(100% - 8px)',
                   touchAction: 'pan-y',
                   willChange: 'transform',
                   // Scale from the top edge so shrinking back cards step UP (top peek)
@@ -315,13 +364,13 @@ export default function CardDeck({
               key={getKey ? getKey(item, index) : index}
               type="button"
               onClick={() => commit(index)}
-              aria-label={`Go to card ${index + 1}`}
+              aria-label={sequence ? `Go to step ${index + 1}` : `Go to card ${index + 1}`}
               aria-current={active ? 'true' : undefined}
               className="flex items-center justify-center px-1 py-2"
             >
               <span
                 className={`block h-1.5 rounded-full transition-all duration-300 ${
-                  active ? 'w-6 bg-indigo-500' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
+                  active ? 'w-6 bg-slate-900 dark:bg-white' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
                 }`}
               />
             </button>
@@ -333,7 +382,7 @@ export default function CardDeck({
       <div className="mt-1 flex items-center justify-center gap-1.5 text-slate-400 dark:text-slate-500">
         <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="font-mono text-[10px] uppercase tracking-[0.12em]">
-          Swipe or use the arrows
+          {sequence ? 'Swipe or tap a dot' : 'Swipe or use the arrows'}
         </span>
       </div>
     </div>

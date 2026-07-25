@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const BAR_COUNT = 4;
 
@@ -86,7 +87,7 @@ const MiniVoiceIndicator = ({ active, stream }) => {
             ref={(el) => {
               barRefs.current[i] = el;
             }}
-            className={`w-[3px] h-full bg-indigo-400 dark:bg-indigo-300 rounded-full origin-bottom will-change-transform ${
+            className={`w-[3px] h-full bg-slate-400 dark:bg-slate-500 rounded-full origin-bottom will-change-transform ${
               stream ? 'scale-y-[0.25] transition-transform duration-75' : 'animate-mini-bounce'
             }`}
             style={{ animationDelay: stream ? undefined : delay }}
@@ -107,28 +108,29 @@ const initials = (name = '') =>
     .toUpperCase() || '?';
 
 const InterviewerTile = ({ person, active, speaking, joining = false }) => {
+  const { t } = useTranslation();
   return (
     <div
       className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
         active
-          ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/20'
+          ? 'ring-2 ring-slate-900 dark:ring-white'
           : 'ring-1 ring-slate-200 dark:ring-white/10'
       } ${joining ? 'opacity-80' : ''}`}
     >
       <div className="relative">
         {active && speaking && !joining ? (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
             <MiniVoiceIndicator active={true} />
           </div>
         ) : (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-100 flex items-center justify-center text-lg font-extrabold">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-center text-lg font-extrabold">
             {initials(person.name)}
           </div>
         )}
         {/* pulse ring — emphatic while speaking, gentle while joining */}
         {active && (speaking || joining) && (
           <span
-            className={`absolute -inset-1.5 rounded-full ring-2 ring-indigo-400/70 ${
+            className={`absolute -inset-1.5 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 ${
               joining ? 'animate-pulse' : 'animate-ping'
             }`}
             aria-hidden
@@ -145,8 +147,12 @@ const InterviewerTile = ({ person, active, speaking, joining = false }) => {
 
       <div className="absolute top-2.5 right-2.5">
         {active && (
-          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 dark:text-indigo-200 dark:bg-black/40 px-1.5 py-0.5 rounded">
-            {joining ? 'Joining…' : speaking ? 'Speaking' : 'On the call'}
+          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 dark:text-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+            {joining
+              ? t('interviewPrep.meetingStage.joining')
+              : speaking
+                ? t('interviewPrep.meetingStage.speaking')
+                : t('interviewPrep.meetingStage.onCall')}
           </span>
         )}
       </div>
@@ -154,17 +160,19 @@ const InterviewerTile = ({ person, active, speaking, joining = false }) => {
   );
 };
 
-const CandidateTile = ({ name, muted, listening, stream }) => (
+const CandidateTile = ({ name, muted, listening, stream }) => {
+  const { t } = useTranslation();
+  return (
   <div
     className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
       listening && !muted
-        ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/20'
+        ? 'ring-2 ring-slate-900 dark:ring-white'
         : 'ring-1 ring-slate-200 dark:ring-white/10'
     }`}
   >
     <div className="relative">
       {listening && !muted ? (
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
           <MiniVoiceIndicator active={true} stream={stream} />
         </div>
       ) : (
@@ -175,7 +183,7 @@ const CandidateTile = ({ name, muted, listening, stream }) => (
       {/* speaking pulse ring around the avatar */}
       {listening && !muted && (
         <span
-          className="absolute -inset-1.5 rounded-full ring-2 ring-indigo-400/70 animate-ping"
+          className="absolute -inset-1.5 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 animate-ping"
           aria-hidden
         />
       )}
@@ -183,18 +191,21 @@ const CandidateTile = ({ name, muted, listening, stream }) => (
 
     <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
       <p className="text-xs font-bold text-slate-900 dark:text-white truncate drop-shadow-sm dark:drop-shadow">
-        You
+        {t('interviewPrep.meetingStage.you')}
       </p>
       <span
         className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-          muted ? 'bg-rose-500/80 text-white' : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
+          muted
+            ? 'bg-rose-500/80 text-white'
+            : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
         }`}
       >
         {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
       </span>
     </div>
   </div>
-);
+  );
+};
 
 // ── Mobile call layout (< sm) ──────────────────────────────────────────────
 // A purpose-built phone-call surface instead of the shrunken desktop grid: the
@@ -210,6 +221,7 @@ const MobileCallStage = ({
   micStream,
   handingOff,
 }) => {
+  const { t } = useTranslation();
   // Spotlight the speaker; fall back to the first seat when nobody is active
   // (e.g. while the candidate is talking) so the hero never goes blank.
   const heroSeat = seats.find((s) => s.name === activeName) || seats[0];
@@ -228,14 +240,14 @@ const MobileCallStage = ({
                 key={p.seat ?? i}
                 className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 border transition-colors ${
                   on
-                    ? 'border-indigo-300 bg-indigo-100 dark:border-indigo-400/60 dark:bg-indigo-500/20'
+                    ? 'border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800'
                     : 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/5'
                 }`}
               >
                 <span
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
                     on
-                      ? 'bg-indigo-500 text-white dark:bg-indigo-500/50'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                       : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'
                   }`}
                 >
@@ -254,29 +266,33 @@ const MobileCallStage = ({
       <div
         className={`relative flex-grow min-h-0 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 flex flex-col items-center justify-center px-4 text-center transition-all duration-300 ${
           heroActive
-            ? 'ring-4 ring-indigo-500 dark:ring-indigo-400 shadow-xl shadow-indigo-500/25'
+            ? 'ring-2 ring-slate-900 dark:ring-white'
             : 'ring-1 ring-slate-200 dark:ring-white/10'
         } ${handingOff ? 'opacity-90' : ''}`}
       >
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 dark:text-indigo-100 dark:bg-black/40 px-2 py-1 rounded-full">
-          {handingOff ? 'Joining…' : heroActive ? 'Speaking' : 'On the call'}
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 dark:text-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">
+          {handingOff
+            ? t('interviewPrep.meetingStage.joining')
+            : heroActive
+              ? t('interviewPrep.meetingStage.speaking')
+              : t('interviewPrep.meetingStage.onCall')}
         </span>
 
         <div className="relative">
           {heroActive && !handingOff ? (
-            <div className="w-28 h-28 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
+            <div className="w-28 h-28 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
               <div className="scale-[1.9]">
                 <MiniVoiceIndicator active={true} />
               </div>
             </div>
           ) : (
-            <div className="w-28 h-28 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-100 flex items-center justify-center text-3xl font-extrabold">
+            <div className="w-28 h-28 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-center text-3xl font-extrabold">
               {initials(heroSeat?.name)}
             </div>
           )}
           {heroActive && (
             <span
-              className={`absolute -inset-2 rounded-full ring-2 ring-indigo-400/70 ${
+              className={`absolute -inset-2 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 ${
                 handingOff ? 'animate-pulse' : 'animate-ping'
               }`}
               aria-hidden
@@ -299,13 +315,13 @@ const MobileCallStage = ({
         <div
           className={`absolute bottom-3 right-3 w-[92px] h-28 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center transition-all duration-300 ${
             youListening
-              ? 'ring-2 ring-indigo-500 dark:ring-indigo-300 shadow-lg shadow-indigo-500/25'
+              ? 'ring-2 ring-slate-900 dark:ring-white'
               : 'ring-1 ring-slate-200 dark:ring-white/15'
           }`}
         >
           <div className="relative">
             {youListening ? (
-              <div className="w-11 h-11 rounded-full bg-indigo-100 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
                 <MiniVoiceIndicator active={true} stream={micStream} />
               </div>
             ) : (
@@ -316,11 +332,13 @@ const MobileCallStage = ({
           </div>
           <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
             <span className="text-[10px] font-bold text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">
-              You
+              {t('interviewPrep.meetingStage.you')}
             </span>
             <span
               className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                muted ? 'bg-rose-500/80 text-white' : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
+                muted
+                  ? 'bg-rose-500/80 text-white'
+                  : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
               }`}
             >
               {muted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * LiveInterviewCard — the hero's right-hand product panel.
@@ -30,11 +31,12 @@ const WAVE_BARS = [
 ];
 
 const LiveInterviewCard = () => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
 
   return (
     <div
-      aria-label="Live AI mock interview in progress"
+      aria-label={t('landing.interviewCard.aria')}
       className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_12px_34px_-18px_rgba(15,23,42,0.28)]"
     >
       {/* Thin indigo top rule */}
@@ -50,10 +52,10 @@ const LiveInterviewCard = () => {
               )}
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
             </span>
-            Live mock interview
+            {t('landing.interviewCard.live')}
           </span>
           <span className="font-mono text-[0.64rem] tracking-[0.06em] text-slate-400">
-            HR PANEL · SEAT 1/3
+            {t('landing.interviewCard.seat')}
           </span>
         </div>
 
@@ -67,11 +69,10 @@ const LiveInterviewCard = () => {
           </span>
           <div>
             <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.15em] text-slate-400">
-              Interviewer · ApplyRight AI
+              {t('landing.interviewCard.interviewer')}
             </p>
             <p className="text-[1.05rem] leading-snug text-slate-900">
-              &ldquo;Tell me about a time you led a project under real pressure — and what the
-              outcome was.&rdquo;
+              {t('landing.interviewCard.question')}
             </p>
           </div>
         </div>
@@ -102,7 +103,7 @@ const LiveInterviewCard = () => {
         {/* Readiness meter */}
         <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
           <span className="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-slate-400">
-            Readiness
+            {t('landing.interviewCard.readiness')}
           </span>
           <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
             <motion.i

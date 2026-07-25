@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Circle, EyeOff, Volume2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { speak, stopSpeaking, isTTSSupported } from '../../lib/speech';
 
 // Shared readiness chips (also used by StoryBank + the prep detail page).
+// `labelKey` is resolved via t() at each render site.
 // eslint-disable-next-line react-refresh/only-export-components
 export const CONFIDENCE_OPTIONS = [
   {
     id: 'needs_work',
-    label: 'Needs work',
+    labelKey: 'interviewPrep.practiceRunner.confidence.needs_work',
     classes:
       'border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15',
     activeClasses:
@@ -15,7 +17,7 @@ export const CONFIDENCE_OPTIONS = [
   },
   {
     id: 'almost',
-    label: 'Almost there',
+    labelKey: 'interviewPrep.practiceRunner.confidence.almost',
     classes:
       'border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/15',
     activeClasses:
@@ -23,7 +25,7 @@ export const CONFIDENCE_OPTIONS = [
   },
   {
     id: 'ready',
-    label: 'Ready',
+    labelKey: 'interviewPrep.practiceRunner.confidence.ready',
     classes:
       'border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/15',
     activeClasses:
@@ -35,6 +37,7 @@ export const CONFIDENCE_OPTIONS = [
 // answer, and self-rate readiness. The graded "AI mock" lives in Interview Mode
 // now; Practice is purely for rehearsal.
 const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialIndex = 0 }) => {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(initialIndex);
   const [showAnswer, setShowAnswer] = useState(false);
 
@@ -51,7 +54,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
   if (!Array.isArray(cards) || cards.length === 0) {
     return (
       <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-        <p className="text-sm">No practice cards available.</p>
+        <p className="text-sm">{t('interviewPrep.practiceRunner.noCards')}</p>
       </div>
     );
   }
@@ -64,26 +67,26 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
 
   const label =
     card.kind === 'skill'
-      ? 'Skill talking point'
+      ? t('interviewPrep.practiceRunner.labelSkill')
       : card.kind === 'story'
-        ? 'Your STAR story'
-        : card.type || 'Question';
+        ? t('interviewPrep.practiceRunner.yourStarStory')
+        : card.type || t('interviewPrep.practiceRunner.labelQuestion');
   const answerLabel =
     card.kind === 'skill'
-      ? 'Suggested talking point'
+      ? t('interviewPrep.practiceRunner.answerSkill')
       : card.kind === 'story'
-        ? 'Your STAR story'
-        : 'Suggested answer';
+        ? t('interviewPrep.practiceRunner.yourStarStory')
+        : t('interviewPrep.practiceRunner.answerQuestion');
 
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col h-full">
       {/* Mini header */}
       <div className="shrink-0 flex items-center justify-between gap-3 mb-3">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
           {label}
         </span>
         <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-          Card {safeIndex + 1} of {total}
+          {t('interviewPrep.practiceRunner.cardOf', { n: safeIndex + 1, total })}
         </p>
       </div>
 
@@ -94,9 +97,9 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             key={c.id}
             className={`h-1.5 rounded-full transition-all ${
               i === safeIndex
-                ? 'flex-1 bg-gradient-to-r from-indigo-500 to-violet-500'
+                ? 'flex-1 bg-slate-900 dark:bg-white'
                 : i < safeIndex
-                  ? 'w-6 bg-indigo-400'
+                  ? 'w-6 bg-slate-400 dark:bg-slate-500'
                   : 'w-6 bg-slate-200 dark:bg-slate-700'
             }`}
           />
@@ -104,10 +107,10 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
       </div>
 
       {/* Prompt — premium frosted tile */}
-      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-indigo-500/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(79,70,229,0.4)]">
+      <div className="shrink-0 relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 sm:p-6 shadow-[0_10px_40px_-16px_rgba(15,23,42,0.15)]">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-indigo-200/50 to-violet-200/40 blur-3xl"
+          className="pointer-events-none absolute -top-20 -right-16 w-56 h-56 rounded-full bg-transparent"
         />
         <div className="relative z-10 flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -123,10 +126,11 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
               type="button"
               onClick={() => speak(card.prompt)}
               className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
-              title="Hear the question"
-              aria-label="Hear the question"
+              title={t('interviewPrep.practiceRunner.hearQuestion')}
+              aria-label={t('interviewPrep.practiceRunner.hearQuestion')}
             >
-              <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear</span>
+              <Volume2 className="w-3.5 h-3.5" />{' '}
+              <span className="hidden sm:inline">{t('interviewPrep.practiceRunner.hear')}</span>
             </button>
           )}
         </div>
@@ -135,26 +139,26 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
       {/* Your turn — reveal scrolls internally so the controls stay pinned */}
       <div className="flex-1 min-h-0 flex flex-col mt-4">
         <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2 px-1">
-          Your turn
+          {t('interviewPrep.practiceRunner.yourTurn')}
         </p>
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {showAnswer ? (
-            <div className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-5">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-2">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-5">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
                 {answerLabel}
               </p>
               <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                {card.suggestedAnswer || 'No suggested answer available.'}
+                {card.suggestedAnswer || t('interviewPrep.practiceRunner.noSuggestedAnswer')}
               </p>
             </div>
           ) : (
             <div className="h-full min-h-40 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-900/60 p-6">
               <EyeOff className="w-8 h-8 mb-3 text-slate-300 dark:text-slate-600" />
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                Answer out loud
+                {t('interviewPrep.practiceRunner.answerOutLoud')}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                Say your answer before revealing the model answer — that&apos;s how it sticks.
+                {t('interviewPrep.practiceRunner.outLoudDesc')}
               </p>
             </div>
           )}
@@ -170,7 +174,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             disabled={safeIndex === 0}
             className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
-            Previous
+            {t('interviewPrep.practiceRunner.previous')}
           </button>
           <button
             type="button"
@@ -178,21 +182,23 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
             disabled={safeIndex === total - 1}
             className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
           >
-            Next
+            {t('interviewPrep.practiceRunner.next')}
           </button>
           <button
             type="button"
             onClick={() => setShowAnswer((v) => !v)}
-            className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-500/20"
+            className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs sm:text-sm font-semibold transition-all shadow-md"
           >
-            {showAnswer ? 'Hide answer' : 'Reveal answer'}
+            {showAnswer
+              ? t('interviewPrep.practiceRunner.hideAnswer')
+              : t('interviewPrep.practiceRunner.revealAnswer')}
           </button>
         </div>
 
         {canRate && (
           <div className="lg:ml-auto flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold mr-1.5">
-              Rate readiness:
+              {t('interviewPrep.practiceRunner.rateReadiness')}
             </span>
             {CONFIDENCE_OPTIONS.map((option) => {
               const active = activeConfidence === option.id;
@@ -210,7 +216,7 @@ const PracticeRunner = ({ cards, confidenceById = {}, onMarkConfidence, initialI
                   ) : (
                     <Circle className="w-3.5 h-3.5" />
                   )}
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               );
             })}

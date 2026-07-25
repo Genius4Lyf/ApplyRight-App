@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { toast } from 'sonner';
 import { ChevronLeft, FileText, Mic, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -21,6 +23,7 @@ import { isMobile } from '../utils/platform';
  * Application behind the scenes via POST /analysis/direct-interview.
  */
 const InterviewStart = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Decide the paywall-vs-setup view synchronously from the stored user's tier
@@ -99,11 +102,9 @@ const InterviewStart = () => {
       if (err.response?.status === 403 && code === 'TIER_REQUIRED') {
         setShowUpgrade(true);
       } else if (code === 'NO_CV_GROUNDING') {
-        toast.error(
-          'This CV needs at least one work experience entry (role and company) before we can interview you.'
-        );
+        toast.error(t('interviewPrep.start.noCvGrounding'));
       } else {
-        toast.error(err.response?.data?.message || 'Could not start the interview. Try again.');
+        toast.error(err.response?.data?.message || t('interviewPrep.start.startError'));
       }
       setStarting(false);
     }
@@ -120,23 +121,22 @@ const InterviewStart = () => {
             <div className="px-7 py-9 sm:px-10 sm:py-10">
               <div className="flex justify-center mb-6">
                 <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
-                  Pro feature
+                  {t('interviewPrep.start.proFeature')}
                 </span>
               </div>
 
               <h1 className="font-heading text-2xl font-bold text-center text-slate-900 dark:text-slate-100 mb-2.5">
-                Direct interviews are a Pro feature
+                {t('interviewPrep.start.proTitle')}
               </h1>
               <p className="text-center text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-7">
-                Skip the analysis and go straight into a live, voice-based mock interview against
-                any job description.
+                {t('interviewPrep.start.proBody')}
               </p>
 
               <ul className="space-y-3 mb-8 max-w-xs mx-auto">
                 {[
-                  'Live, voice-based mock interviews',
-                  'Tailored to any job you paste',
-                  'Instant feedback — no full analysis needed',
+                  t('interviewPrep.start.proFeat1'),
+                  t('interviewPrep.start.proFeat2'),
+                  t('interviewPrep.start.proFeat3'),
                 ].map((feature) => (
                   <li
                     key={feature}
@@ -152,13 +152,13 @@ const InterviewStart = () => {
                 onClick={() => navigate('/upgrade')}
                 className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl btn-primary font-semibold"
               >
-                See plans
+                {t('interviewPrep.start.seePlans')}
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
                 className="w-full mt-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
               >
-                Not now
+                {t('interviewPrep.start.notNow')}
               </button>
             </div>
           </div>
@@ -175,17 +175,19 @@ const InterviewStart = () => {
 
         <div className="mb-8">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Interview practice
+            {t('interviewPrep.start.eyebrow')}
           </p>
           <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Interview me
+            {t('interviewPrep.start.title')}
           </h1>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
-            Skip the analysis — go straight to a live interview against a job.
+            {t('interviewPrep.start.subtitle')}
           </p>
           {entitlement && entitlement.tier !== 'free' && (
             <span className="inline-flex items-center mt-3 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-              {Math.round((entitlement.secondsRemaining || 0) / 60)} interview minutes remaining
+              {t('interviewPrep.start.minutesRemaining', {
+                n: Math.round((entitlement.secondsRemaining || 0) / 60),
+              })}
             </span>
           )}
         </div>
@@ -195,10 +197,10 @@ const InterviewStart = () => {
           <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
             <div className="mb-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                Step 1 · Your CV
+                {t('interviewPrep.start.step1')}
               </p>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Pick a saved CV or upload one
+                {t('interviewPrep.start.step1Sub')}
               </p>
             </div>
 
@@ -213,7 +215,7 @@ const InterviewStart = () => {
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                Saved CV
+                {t('interviewPrep.start.savedCv')}
               </button>
               <button
                 type="button"
@@ -224,7 +226,7 @@ const InterviewStart = () => {
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                Upload
+                {t('interviewPrep.start.upload')}
               </button>
             </div>
 
@@ -241,13 +243,13 @@ const InterviewStart = () => {
                   </div>
                 ) : drafts.length === 0 ? (
                   <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
-                    No saved CVs yet — switch to <strong>Upload</strong> to use a PDF.
+                    <Trans i18nKey="interviewPrep.start.noSavedCvs" components={{ b: <strong /> }} />
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-none pr-1">
                     {drafts.map((d) => {
                       const selected = selectedDraftId === d._id;
-                      const label = d.title || d.personalInfo?.fullName || 'Untitled CV';
+                      const label = d.title || d.personalInfo?.fullName || t('dashboard.untitledCv');
                       return (
                         <button
                           key={d._id}
@@ -276,17 +278,18 @@ const InterviewStart = () => {
                   <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-300 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-                      Resume uploaded
+                      {t('dashboard.resumeUploaded')}
                     </p>
                     <p className="text-xs text-emerald-700 dark:text-emerald-300 truncate">
-                      {uploadedResume.parsedData?.experience?.[0]?.role || 'Ready to interview'}
+                      {uploadedResume.parsedData?.experience?.[0]?.role ||
+                        t('interviewPrep.start.readyToInterview')}
                     </p>
                   </div>
                   <button
                     onClick={() => setUploadedResume(null)}
                     className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:underline shrink-0"
                   >
-                    Change
+                    {t('interviewPrep.common.change')}
                   </button>
                 </div>
               ) : (
@@ -299,12 +302,10 @@ const InterviewStart = () => {
           <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
             <div className="mb-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                Step 2 · Target job
+                {t('interviewPrep.start.step2')}
               </p>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {job
-                  ? "We'll tailor the interview to this role"
-                  : 'Provide the job details for analysis'}
+                {job ? t('interviewPrep.start.step2Tailor') : t('dashboard.setup.step2Body')}
               </p>
             </div>
 
@@ -322,10 +323,10 @@ const InterviewStart = () => {
         <div className="hidden md:flex md:items-center md:justify-between gap-4 mt-8">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {!cvChosen
-              ? 'Choose a CV to continue.'
+              ? t('interviewPrep.start.statusChooseCv')
               : !job
-                ? 'Add the job description to continue.'
-                : "You're ready — let's begin."}
+                ? t('interviewPrep.start.statusAddJob')
+                : t('interviewPrep.start.statusReady')}
           </p>
           <button
             onClick={handleStart}
@@ -338,12 +339,12 @@ const InterviewStart = () => {
           >
             {starting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Preparing your interview…
+                <AriaLoader inline tone="mono" size={16} label="" />
+                {t('interviewPrep.start.preparing')}
               </>
             ) : (
               <>
-                <Mic className="w-5 h-5" /> Start interview
+                <Mic className="w-5 h-5" /> {t('interviewPrep.common.startInterview')}
               </>
             )}
           </button>
@@ -368,17 +369,17 @@ const InterviewStart = () => {
           >
             {starting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Preparing your interview…
+                <AriaLoader inline tone="mono" size={16} label="" />
+                {t('interviewPrep.start.preparing')}
               </>
             ) : (
               <>
                 <Mic className="w-4 h-4" />
                 {!cvChosen
-                  ? 'Choose a CV to continue'
+                  ? t('interviewPrep.start.barChooseCv')
                   : !job
-                    ? 'Add the job to continue'
-                    : 'Start interview'}
+                    ? t('interviewPrep.start.barAddJob')
+                    : t('interviewPrep.common.startInterview')}
               </>
             )}
           </button>
@@ -399,6 +400,7 @@ const InterviewStart = () => {
 // interview is tailored. Pulls the AI-extracted analysis off the job (skills by
 // importance, seniority, min experience), falling back to raw keywords.
 const JobAcknowledgement = ({ job, onChange }) => {
+  const { t } = useTranslation();
   const analysis = job.analysis || {};
   const skills = (Array.isArray(analysis.skills) ? analysis.skills : [])
     .filter((s) => s && s.name)
@@ -419,18 +421,18 @@ const JobAcknowledgement = ({ job, onChange }) => {
         <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-            {job.title || 'Job added'}
+            {job.title || t('interviewPrep.start.jobAdded')}
             {job.company ? ` · ${job.company}` : ''}
           </p>
           <p className="text-xs text-emerald-700 dark:text-emerald-300">
-            Here's what we picked up from this role
+            {t('interviewPrep.start.pickedUp')}
           </p>
         </div>
         <button
           onClick={onChange}
           className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:underline shrink-0"
         >
-          Change
+          {t('interviewPrep.common.change')}
         </button>
       </div>
 
@@ -438,12 +440,12 @@ const JobAcknowledgement = ({ job, onChange }) => {
         <div className="flex flex-wrap gap-2">
           {seniority && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
-              {seniority} level
+              {t('interviewPrep.start.seniorityLevel', { seniority })}
             </span>
           )}
           {minYears > 0 && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
-              {minYears}+ yrs experience
+              {t('interviewPrep.start.yrsExperience', { n: minYears })}
             </span>
           )}
         </div>
@@ -452,7 +454,7 @@ const JobAcknowledgement = ({ job, onChange }) => {
       {topSkills.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-            Key skills they'll probe
+            {t('interviewPrep.start.keySkills')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {topSkills.map((name) => (
@@ -468,19 +470,22 @@ const JobAcknowledgement = ({ job, onChange }) => {
       )}
 
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        We'll tailor your interview questions around these.
+        {t('interviewPrep.start.tailorHint')}
       </p>
     </div>
   );
 };
 
-const BackLink = ({ navigate }) => (
-  <button
-    onClick={() => navigate('/dashboard')}
-    className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
-  >
-    <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
-  </button>
-);
+const BackLink = ({ navigate }) => {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={() => navigate('/dashboard')}
+      className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
+    >
+      <ChevronLeft className="w-4 h-4 mr-1" /> {t('dashboard.backToDashboard')}
+    </button>
+  );
+};
 
 export default InterviewStart;

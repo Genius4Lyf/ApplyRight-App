@@ -648,7 +648,7 @@ const HowToAceYourInterview = () => {
                 }`}
               >
                 <div
-                  className={`text-2xl font-bold mb-1 ${
+                  className={`font-heading text-2xl font-bold mb-1 ${
                     b.color === 'rose'
                       ? 'text-rose-300'
                       : b.color === 'amber'

@@ -119,7 +119,7 @@ const ReferralCard = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mt-4">
         <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-3 text-center">
-          <div className="flex items-center justify-center gap-1 text-lg font-extrabold text-slate-900 dark:text-slate-100">
+          <div className="flex items-center justify-center gap-1 font-heading text-lg font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
             <Users className="w-4 h-4 text-slate-400" />
             {referralCount}
           </div>
@@ -128,7 +128,7 @@ const ReferralCard = () => {
           </div>
         </div>
         <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-3 text-center">
-          <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
+          <div className="font-heading text-lg font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">
             {creditsEarned}
           </div>
           <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">

@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
@@ -10,6 +12,7 @@ import { toast } from 'sonner';
 // new entitlement, then send the user back to the dashboard.
 const BillingReturn = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const [state, setState] = useState('verifying'); // verifying | success | failed
   const [entitlement, setEntitlement] = useState(null);
@@ -80,8 +83,8 @@ const BillingReturn = () => {
         setState('success');
         toast.success(
           isDownloadReturn
-            ? 'Payment confirmed — your download is ready!'
-            : 'Payment confirmed — your plan is active!'
+            ? t('billing.return.toastDownload')
+            : t('billing.return.toastPlan')
         );
         setTimeout(goToSuccess, isDownloadReturn ? 1400 : 2200);
       } else {
@@ -92,19 +95,24 @@ const BillingReturn = () => {
     return () => {
       cancelled = true;
     };
-  }, [params, goToSuccess, isDownloadReturn]);
+  }, [params, goToSuccess, isDownloadReturn, t]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6 sm:p-10 text-center">
         {state === 'verifying' && (
           <>
-            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mx-auto mb-4" />
+            <AriaLoader
+              inline
+              size={48}
+              label={t('billing.return.verifyingTitle')}
+              className="mb-4"
+            />
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              Confirming your payment…
+              {t('billing.return.verifyingTitle')}
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              This takes a few seconds. Please don’t close this page.
+              {t('billing.return.verifyingBody')}
             </p>
           </>
         )}
@@ -113,26 +121,28 @@ const BillingReturn = () => {
           <>
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              You’re all set!
+              {t('billing.return.successTitle')}
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {isDownloadReturn
-                ? 'Your CV download is ready — taking you back to save your PDF…'
+                ? t('billing.return.successDownload')
                 : isInterviewReturn
-                  ? `Your ${entitlement?.minutesRemaining ?? ''} interview minutes are ready — taking you back to start your interview…`
+                  ? t('billing.return.successInterview', {
+                      n: entitlement?.minutesRemaining ?? '',
+                    })
                   : entitlement?.minutesRemaining
-                    ? `${entitlement.minutesRemaining} live interview minutes are ready.`
-                    : 'Your plan is now active.'}
+                    ? t('billing.return.successMinutes', { n: entitlement.minutesRemaining })
+                    : t('billing.return.successPlan')}
             </p>
             <button
               onClick={goToSuccess}
               className="mt-6 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
             >
               {isDownloadReturn
-                ? 'Download my CV'
+                ? t('billing.return.ctaDownload')
                 : isInterviewReturn
-                  ? 'Start my interview'
-                  : 'Go to dashboard'}
+                  ? t('billing.return.ctaInterview')
+                  : t('billing.return.ctaDashboard')}
             </button>
           </>
         )}
@@ -141,17 +151,16 @@ const BillingReturn = () => {
           <>
             <XCircle className="w-14 h-14 text-rose-500 mx-auto mb-4" />
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              Payment not confirmed
+              {t('billing.return.failedTitle')}
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              If you were charged, it will reflect shortly — check your plan on the pricing page.
-              You were not charged for a cancelled payment.
+              {t('billing.return.failedBody')}
             </p>
             <button
               onClick={() => navigate('/upgrade')}
               className="mt-6 w-full py-3 rounded-xl font-bold bg-slate-900 dark:bg-indigo-600 text-white hover:opacity-90 transition-colors"
             >
-              Back to plans
+              {t('billing.return.backToPlans')}
             </button>
           </>
         )}

@@ -114,26 +114,14 @@ export default function useInterstitial() {
     async (placement = 'unknown') => {
       const blocked = blockReason();
       if (blocked) {
-        // Eligible-but-capped visibility: see how often each cap fires per
-        // placement in logcat. `session_cap` / `min_gap` here = potential
-        // revenue we're deliberately leaving on the table for retention.
-        console.log(
-          `[AdFlow] interstitial skipped placement=${placement} reason=${blocked} ` +
-            `shownThisSession=${sessionShownCount}/${MAX_PER_SESSION}`
-        );
         return { shown: false, reason: blocked, placement };
       }
       const ok = await showInterstitial();
       if (ok) {
         sessionShownCount += 1;
         setLastAt(Date.now());
-        console.log(
-          `[AdFlow] interstitial shown placement=${placement} ` +
-            `shownThisSession=${sessionShownCount}/${MAX_PER_SESSION}`
-        );
         return { shown: true, placement };
       }
-      console.log(`[AdFlow] interstitial show_failed placement=${placement}`);
       return { shown: false, reason: 'show_failed', placement };
     },
     [blockReason]

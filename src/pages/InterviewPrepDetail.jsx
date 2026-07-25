@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -12,7 +13,6 @@ import {
   PlayCircle,
   StickyNote,
   Plus,
-  Loader,
   ChevronDown,
   ChevronUp,
   AlertTriangle,
@@ -22,6 +22,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation, Trans } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
@@ -67,20 +68,33 @@ const readStoredUser = () => {
 // Seed for the "draft your weakness" note — the title keyword ("weakness") is
 // what the readiness checks key off, so seeding it makes the task completable in
 // one click. Shared by ReadinessOverview, the gate checklist, and gap coaching.
-const WEAKNESS_SEED = {
-  title: 'My weakness / growth area',
-  body: 'Weakness or growth area I’ll talk about:\n- \n\nWhat I’m actively doing about it:\n- \n\n(Tip: pick a real growth area — not a humblebrag — and show the action you’re taking. Mirror a gap flagged in the Role tab.)',
+// Module-level → i18n KEYS resolved via t() at the two use sites.
+const WEAKNESS_SEED_KEYS = {
+  titleKey: 'interviewPrep.detail.weaknessSeed.title',
+  bodyKey: 'interviewPrep.detail.weaknessSeed.body',
 };
 
 // Generic roster shown (blurred, behind a lock) to free users when we have no
 // real panel to preview — a teaser for the paid multi-interviewer loop.
+// Placeholder rows carry i18n KEYS; real panel rows (from the API) carry plain
+// name/role data — the render picks `*Key` when present.
 const PLACEHOLDER_SEATS = [
-  { name: 'HR Screen', role: 'Recruiter' },
-  { name: 'Hiring Manager', role: 'Your future boss' },
-  { name: 'Panel Member', role: 'Cross-functional' },
+  {
+    nameKey: 'interviewPrep.detail.placeholderSeats.hrName',
+    roleKey: 'interviewPrep.detail.placeholderSeats.hrRole',
+  },
+  {
+    nameKey: 'interviewPrep.detail.placeholderSeats.hmName',
+    roleKey: 'interviewPrep.detail.placeholderSeats.hmRole',
+  },
+  {
+    nameKey: 'interviewPrep.detail.placeholderSeats.panelName',
+    roleKey: 'interviewPrep.detail.placeholderSeats.panelRole',
+  },
 ];
 
 const InterviewPrepDetail = () => {
+  const { t } = useTranslation();
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const [application, setApplication] = useState(null);
@@ -181,18 +195,18 @@ const InterviewPrepDetail = () => {
       }
       await reload();
       if (addedCount > 0) {
-        toast.success(`${addedCount} new question${addedCount === 1 ? '' : 's'} added`);
+        toast.success(t('interviewPrep.detail.toasts.questionsAdded', { count: addedCount }));
       } else {
-        toast.message('No new questions this round — try again for a different angle.');
+        toast.message(t('interviewPrep.detail.toasts.noNewQuestions'));
       }
     } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to generate more questions';
+      const msg = e.response?.data?.message || t('interviewPrep.detail.toasts.failedMore');
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
         toast.error(
           adRewarded
-            ? 'Not enough credits. Watch an ad to earn more.'
-            : 'Not enough credits to generate more questions.'
+            ? t('interviewPrep.common.notEnoughCreditsAd')
+            : t('interviewPrep.detail.toasts.notEnoughMore')
         );
       } else {
         toast.error(msg);
@@ -249,7 +263,7 @@ const InterviewPrepDetail = () => {
     }
 
     if (credits < 5) {
-      toast.error("Reward didn't land in time — try again in a moment.", { id: toastId });
+      toast.error(t('interviewPrep.detail.toasts.rewardNotLand'), { id: toastId });
       return -1;
     }
     return credits;
@@ -260,7 +274,7 @@ const InterviewPrepDetail = () => {
     setAdForMoreOpen(false);
     setAdForStoriesOpen(false);
     setAdEssentialKind(null);
-    const toastId = toast.loading('Crediting your account…');
+    const toastId = toast.loading(t('interviewPrep.detail.toasts.crediting'));
     try {
       const credits = await claimAdReward(toastId);
       if (credits < 0) return;
@@ -272,17 +286,17 @@ const InterviewPrepDetail = () => {
       const code = e.response?.data?.code;
       const msg = e.response?.data?.message;
       if (code === 'COOLDOWN') {
-        toast.error(msg || 'Please wait a moment before watching another ad.', { id: toastId });
+        toast.error(msg || t('interviewPrep.detail.toasts.cooldown'), { id: toastId });
       } else if (code === 'DAILY_CAP') {
-        toast.error('Daily ad limit reached. Come back tomorrow.', { id: toastId });
+        toast.error(t('interviewPrep.detail.toasts.dailyCap'), { id: toastId });
       } else {
-        toast.error('Failed to claim ad reward.', { id: toastId });
+        toast.error(t('interviewPrep.detail.toasts.failedAdReward'), { id: toastId });
       }
     }
   };
 
   const handleAdForMoreComplete = () =>
-    handleAdReward(runGenerateMore, 'Generating new questions…');
+    handleAdReward(runGenerateMore, t('interviewPrep.detail.toasts.genQuestions'));
 
   // ── Story Bank generation (ad-rewarded, same contract as more questions) ──
   const runGenerateStories = async () => {
@@ -294,15 +308,19 @@ const InterviewPrepDetail = () => {
       }
       await reload();
       const count = res.stories?.length || 0;
-      toast.success(count ? `${count} stories ready` : 'Story bank generated');
+      toast.success(
+        count
+          ? t('interviewPrep.detail.toasts.storiesReady', { n: count })
+          : t('interviewPrep.detail.toasts.storyBankGenerated')
+      );
     } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to generate stories';
+      const msg = e.response?.data?.message || t('interviewPrep.detail.toasts.failedStories');
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
         toast.error(
           adRewarded
-            ? 'Not enough credits. Watch an ad to earn more.'
-            : 'Not enough credits to generate your story bank.'
+            ? t('interviewPrep.common.notEnoughCreditsAd')
+            : t('interviewPrep.detail.toasts.notEnoughStories')
         );
       } else {
         toast.error(msg);
@@ -329,21 +347,21 @@ const InterviewPrepDetail = () => {
       await reload();
       toast.success(
         kind === 'intro'
-          ? 'Your "about you" answer is ready'
-          : 'Your "why this role" answer is ready'
+          ? t('interviewPrep.detail.toasts.introReady')
+          : t('interviewPrep.detail.toasts.motivationReady')
       );
     } catch (e) {
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
         toast.error(
           adRewarded
-            ? 'Not enough credits. Watch an ad to earn more.'
-            : 'Not enough credits (2 needed).'
+            ? t('interviewPrep.common.notEnoughCreditsAd')
+            : t('interviewPrep.detail.toasts.notEnoughEssential')
         );
       } else if (code === 'NO_CV_GROUNDING') {
         toast.error(e.response?.data?.message);
       } else {
-        toast.error(e.response?.data?.message || 'Failed to generate answer');
+        toast.error(e.response?.data?.message || t('interviewPrep.detail.toasts.failedAnswer'));
       }
     } finally {
       setGeneratingEssential(null);
@@ -363,17 +381,17 @@ const InterviewPrepDetail = () => {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
       }
       await reload();
-      toast.success('Your dress guide is ready');
+      toast.success(t('interviewPrep.detail.toasts.dressReady'));
     } catch (e) {
       const code = e.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
         toast.error(
           adRewarded
-            ? 'Not enough credits. Watch an ad to earn more.'
-            : 'Not enough credits (2 needed).'
+            ? t('interviewPrep.common.notEnoughCreditsAd')
+            : t('interviewPrep.detail.toasts.notEnoughEssential')
         );
       } else {
-        toast.error(e.response?.data?.message || 'Failed to generate dress guide');
+        toast.error(e.response?.data?.message || t('interviewPrep.detail.toasts.failedDress'));
       }
     } finally {
       setGeneratingDress(false);
@@ -385,11 +403,14 @@ const InterviewPrepDetail = () => {
     else runGenerateDressGuide();
   };
   const handleAdForDressComplete = () =>
-    handleAdReward(runGenerateDressGuide, 'Styling your look…');
+    handleAdReward(runGenerateDressGuide, t('interviewPrep.detail.toasts.stylingLook'));
   const handleAdForEssentialComplete = () =>
-    handleAdReward(() => runGenerateEssential(adEssentialKind), 'Writing your answer…');
+    handleAdReward(
+      () => runGenerateEssential(adEssentialKind),
+      t('interviewPrep.detail.toasts.writingAnswer')
+    );
   const handleAdForStoriesComplete = () =>
-    handleAdReward(runGenerateStories, 'Building your stories…');
+    handleAdReward(runGenerateStories, t('interviewPrep.detail.toasts.buildingStories'));
 
   useEffect(() => {
     let cancelled = false;
@@ -424,7 +445,7 @@ const InterviewPrepDetail = () => {
                   : 'notes'
         );
       } catch (e) {
-        if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
+        if (!cancelled) setError(e.response?.data?.message || t('interviewPrep.common.loadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -439,9 +460,7 @@ const InterviewPrepDetail = () => {
     return (
       <div className="min-h-screen bg-transparent">
         <Navbar />
-        <div className="flex items-center justify-center py-20">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-        </div>
+        <AriaLoader fullscreen size={40} label={t('interviewPrep.detail.loading')} />
       </div>
     );
   }
@@ -459,7 +478,10 @@ const InterviewPrepDetail = () => {
 
   const job = application.jobId || {};
   const isCvOnly = application.source === 'draft' || (!application.jobId && !application.jobTitle);
-  const title = job.title || application.jobTitle || (isCvOnly ? 'CV draft' : 'Untitled role');
+  const title =
+    job.title ||
+    application.jobTitle ||
+    (isCvOnly ? t('interviewPrep.list.cvDraft') : t('interviewPrep.list.untitledRole'));
   const company = job.company || application.jobCompany || '';
   const jobQuestions = getJobQuestions(application);
   const skillsWithEvidence = getSkillPrep(application);
@@ -493,18 +515,18 @@ const InterviewPrepDetail = () => {
   // is its own tab with its device-local count.
   const resultsCount = rounds.length;
   const primaryTabs = [
-    { id: 'prepare', label: 'Prepare' },
-    { id: 'gameday', label: 'Game day' },
-    { id: 'results', label: 'Results', count: resultsCount },
-    { id: 'recordings', label: 'Recordings', count: recordingsCount || 0 },
+    { id: 'prepare', label: t('interviewPrep.detail.tabs.prepare') },
+    { id: 'gameday', label: t('interviewPrep.detail.tabs.gameday') },
+    { id: 'results', label: t('interviewPrep.detail.tabs.results'), count: resultsCount },
+    { id: 'recordings', label: t('interviewPrep.detail.tabs.recordings'), count: recordingsCount || 0 },
   ];
   // Secondary switcher (only under Prepare): show ONE section at a time.
   const prepSections = [
-    ...(hasRoleBrief ? [{ id: 'role', label: 'Role' }] : []),
-    { id: 'questions', label: 'Questions', count: jobQuestions.length },
-    { id: 'stories', label: 'Stories', count: stories.length },
-    { id: 'skills', label: 'Skills', count: skillsWithEvidence.length },
-    { id: 'notes', label: 'Notes' },
+    ...(hasRoleBrief ? [{ id: 'role', label: t('interviewPrep.detail.tabs.role') }] : []),
+    { id: 'questions', label: t('interviewPrep.detail.tabs.questions'), count: jobQuestions.length },
+    { id: 'stories', label: t('interviewPrep.detail.tabs.stories'), count: stories.length },
+    { id: 'skills', label: t('interviewPrep.detail.tabs.skills'), count: skillsWithEvidence.length },
+    { id: 'notes', label: t('interviewPrep.detail.tabs.notes') },
   ];
 
   const startPracticeAllQuestions = () => {
@@ -538,7 +560,10 @@ const InterviewPrepDetail = () => {
 
   // Seed + open the weakness note (completes the "draft your weakness" readiness task).
   const draftWeakness = () => {
-    setNotesSeed(WEAKNESS_SEED);
+    setNotesSeed({
+      title: t(WEAKNESS_SEED_KEYS.titleKey),
+      body: t(WEAKNESS_SEED_KEYS.bodyKey),
+    });
     goToPrep('notes');
   };
 
@@ -553,7 +578,7 @@ const InterviewPrepDetail = () => {
               type="button"
               onClick={() => navigate('/interview-prep')}
               className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
-              aria-label="Back to list"
+              aria-label={t('interviewPrep.detail.header.backToList')}
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -576,11 +601,11 @@ const InterviewPrepDetail = () => {
                 <span
                   className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
                     isCvOnly
-                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                      : 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                   }`}
                 >
-                  {isCvOnly ? 'From CV' : 'Job role'}
+                  {isCvOnly ? t('interviewPrep.common.fromCv') : t('interviewPrep.detail.header.jobRole')}
                 </span>
               </div>
               {company && (
@@ -590,18 +615,18 @@ const InterviewPrepDetail = () => {
               )}
               {isCvOnly && (
                 <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Not attached to a job yet
+                  {t('interviewPrep.detail.header.notAttached')}
                 </p>
               )}
             </div>
 
             <Link
               to={`/interview-prep/${applicationId}/brief`}
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-md transition-colors"
-              aria-label="Pre-call brief"
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
+              aria-label={t('interviewPrep.detail.header.briefAria')}
             >
               <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">Brief</span>
+              <span className="hidden sm:inline">{t('interviewPrep.detail.header.brief')}</span>
             </Link>
 
             <Link
@@ -609,30 +634,30 @@ const InterviewPrepDetail = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-              aria-label="How scoring works"
+              aria-label={t('interviewPrep.detail.header.howScoring')}
             >
               <HelpCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">How scoring works</span>
+              <span className="hidden sm:inline">{t('interviewPrep.detail.header.howScoring')}</span>
             </Link>
 
             {isCvOnly ? (
               <Link
                 to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
                 className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-                aria-label="Open CV"
+                aria-label={t('interviewPrep.detail.header.openCv')}
               >
                 <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">Open CV</span>
+                <span className="hidden sm:inline">{t('interviewPrep.detail.header.openCv')}</span>
               </Link>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowCv(true)}
                 className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-                aria-label="View CV"
+                aria-label={t('interviewPrep.detail.header.viewCv')}
               >
                 <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">View CV</span>
+                <span className="hidden sm:inline">{t('interviewPrep.detail.header.viewCv')}</span>
               </button>
             )}
           </div>
@@ -647,34 +672,34 @@ const InterviewPrepDetail = () => {
             {/* Card A — Start + roster (the crown-jewel primary action) */}
             <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                Mock interview
+                {t('interviewPrep.common.mockInterview')}
               </p>
               {interviewGate.unlocked ? (
                 <button
                   type="button"
                   onClick={startMockInterview}
-                  className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+                  className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold px-4 py-2.5 transition-colors"
                 >
-                  <PlayCircle className="w-4 h-4" /> Start interview
+                  <PlayCircle className="w-4 h-4" /> {t('interviewPrep.common.startInterview')}
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled
-                  title="Complete your interview readiness to unlock"
+                  title={t('interviewPrep.detail.rail.completeToUnlockTitle')}
                   className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-sm font-semibold px-4 py-2.5 cursor-not-allowed select-none"
                 >
-                  <Lock className="w-4 h-4" /> Complete prep to unlock
+                  <Lock className="w-4 h-4" /> {t('interviewPrep.detail.rail.completeToUnlock')}
                 </button>
               )}
               <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                A live, spoken mock with an AI interviewer who knows your CV.
+                {t('interviewPrep.detail.rail.mockDesc')}
               </p>
 
               {/* Roster — who's interviewing you */}
               <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Who’s interviewing you
+                  {t('interviewPrep.detail.rail.whoInterviews')}
                 </p>
                 {!isFreeTier && panel.length >= 2 ? (
                   <ul className="mt-3 space-y-2.5">
@@ -702,32 +727,37 @@ const InterviewPrepDetail = () => {
                       {(panel.length >= 2
                         ? panel.filter((p) => p && p.role)
                         : PLACEHOLDER_SEATS
-                      ).map((p, i) => (
-                        <li key={p.seat ?? i} className="flex items-center gap-2.5">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            {initials(p.name)}
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              {p.name}
+                      ).map((p, i) => {
+                        // Placeholder rows carry i18n keys; real panel rows carry data.
+                        const nm = p.nameKey ? t(p.nameKey) : p.name;
+                        const rl = p.roleKey ? t(p.roleKey) : p.role;
+                        return (
+                          <li key={p.seat ?? i} className="flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                              {initials(nm)}
                             </span>
-                            <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
-                              {p.role}
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {nm}
+                              </span>
+                              <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                                {rl}
+                              </span>
                             </span>
-                          </span>
-                        </li>
-                      ))}
+                          </li>
+                        );
+                      })}
                     </ul>
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                        <Lock className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                        Unlock your full interview panel
+                        <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                        {t('interviewPrep.detail.rail.unlockPanel')}
                       </span>
                       <Link
                         to="/upgrade"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
                       >
-                        Upgrade <ArrowRight className="w-3 h-3" />
+                        {t('interviewPrep.detail.rail.upgrade')} <ArrowRight className="w-3 h-3" />
                       </Link>
                     </div>
                   </div>
@@ -739,7 +769,7 @@ const InterviewPrepDetail = () => {
             <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Readiness
+                  {t('interviewPrep.detail.rail.readiness')}
                 </p>
                 <p className="font-heading text-lg font-bold tabular-nums text-slate-900 dark:text-slate-100">
                   {interviewGate.doneCount}
@@ -752,48 +782,50 @@ const InterviewPrepDetail = () => {
               {/* Progress meter */}
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                  className="h-full rounded-full bg-slate-900 dark:bg-white transition-all duration-500"
                   style={{ width: `${interviewGate.pct}%` }}
                 />
               </div>
               <p className="mt-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
                 {interviewGate.unlocked
-                  ? "You're prepped — the interview is unlocked."
-                  : 'Finish these to unlock your interview.'}
+                  ? t('interviewPrep.detail.rail.prepped')
+                  : t('interviewPrep.detail.rail.finishToUnlock')}
               </p>
 
               {/* Checklist rows */}
               <ul className="mt-3 space-y-2">
-                {interviewGate.tasks.map((t) => (
-                  <li key={t.key} className="flex items-center gap-2.5">
-                    {t.done ? (
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                {interviewGate.tasks.map((task) => (
+                  <li key={task.key} className="flex items-center gap-2.5">
+                    {task.done ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-900 dark:text-white" />
                     ) : (
                       <Circle className="w-4 h-4 shrink-0 text-slate-300 dark:text-slate-600" />
                     )}
                     <span className="min-w-0 flex-1">
                       <span
                         className={`block text-xs font-semibold leading-tight ${
-                          t.done
+                          task.done
                             ? 'text-slate-400 dark:text-slate-500 line-through'
                             : 'text-slate-700 dark:text-slate-200'
                         }`}
                       >
-                        {t.label}
+                        {task.label}
                       </span>
-                      {!t.done && (
+                      {!task.done && (
                         <span className="block text-[11px] leading-tight text-slate-400 dark:text-slate-500">
-                          {t.hint}
+                          {task.hint}
                         </span>
                       )}
                     </span>
-                    {!t.done && (
+                    {!task.done && (
                       <button
                         type="button"
-                        onClick={() => (t.key === 'weakness' ? draftWeakness() : goToPrep(t.tab))}
-                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
+                        onClick={() =>
+                          task.key === 'weakness' ? draftWeakness() : goToPrep(task.tab)
+                        }
+                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                       >
-                        Do it <ArrowRight className="w-3 h-3" />
+                        {t('interviewPrep.detail.rail.doIt')} <ArrowRight className="w-3 h-3" />
                       </button>
                     )}
                   </li>
@@ -806,9 +838,9 @@ const InterviewPrepDetail = () => {
                   <button
                     type="button"
                     onClick={startPracticeWeak}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
                   >
-                    <PlayCircle className="w-3.5 h-3.5" /> Practice weak spots{' '}
+                    <PlayCircle className="w-3.5 h-3.5" /> {t('interviewPrep.detail.rail.practiceWeak')}{' '}
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -819,7 +851,7 @@ const InterviewPrepDetail = () => {
           {/* Right column — the tab strip + tab panels (moved verbatim) */}
           <div className="min-w-0">
             {/* Primary sub-nav — four groups sharing the row evenly. Hairline row
-                with a 2px indigo underline sliding under the active group. */}
+                with a 2px ink underline sliding under the active group. */}
             <div className="mb-6">
               <nav className="flex items-stretch border-b border-slate-200 dark:border-slate-700">
                 {primaryTabs.map((tab) => {
@@ -831,7 +863,7 @@ const InterviewPrepDetail = () => {
                       onClick={() => setPrimaryTab(tab.id)}
                       className={`relative flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-3 text-[13px] sm:text-sm font-semibold transition-colors whitespace-nowrap ${
                         active
-                          ? 'text-indigo-700 dark:text-indigo-300'
+                          ? 'text-slate-900 dark:text-white'
                           : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                       }`}
                     >
@@ -844,7 +876,7 @@ const InterviewPrepDetail = () => {
                       {active && (
                         <motion.span
                           layoutId="prep-tab-underline"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 dark:bg-white"
                         />
                       )}
                     </button>
@@ -864,7 +896,7 @@ const InterviewPrepDetail = () => {
                         onClick={() => setPrepSection(s.id)}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                           active
-                            ? 'border-transparent bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                            ? 'border-transparent bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                             : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
@@ -895,9 +927,9 @@ const InterviewPrepDetail = () => {
                   {!isFreeTier && panel.length >= 2 ? (
                     <div className="mb-4">
                       {!interviewGate.unlocked && (
-                        <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-500/5 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                          <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          Finish your interview readiness checklist to unlock these rounds.
+                        <div className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                          <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                          {t('interviewPrep.detail.panel.finishRounds')}
                         </div>
                       )}
                       <LoopBoard
@@ -922,8 +954,7 @@ const InterviewPrepDetail = () => {
                           loading={panelLoading}
                         />
                         <p className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
-                          On a paid plan, you pick each of these interviewers for a focused 1:1
-                          round — and complete your interview loop.
+                          {t('interviewPrep.detail.panel.paidNote')}
                         </p>
                       </div>
                     )
@@ -1013,10 +1044,10 @@ const InterviewPrepDetail = () => {
                 >
                   <div className="mb-4">
                     <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-                      Game-day readiness
+                      {t('interviewPrep.detail.gameday.title')}
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                      Walk in calm and ready — not just prepped on what to say.
+                      {t('interviewPrep.detail.gameday.subtitle')}
                     </p>
                   </div>
                   <div className="space-y-4">
@@ -1087,10 +1118,10 @@ const InterviewPrepDetail = () => {
                   {recordingsCount === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
                       <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                        No recordings yet
+                        {t('interviewPrep.detail.recordings.emptyTitle')}
                       </p>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        Your live interviews are saved here on this device so you can replay them.
+                        {t('interviewPrep.detail.recordings.emptyBody')}
                       </p>
                     </div>
                   )}
@@ -1106,16 +1137,16 @@ const InterviewPrepDetail = () => {
           userId={userId}
           onComplete={handleAdForMoreComplete}
           onClose={() => setAdForMoreOpen(false)}
-          title="Unlock More Questions"
-          subtitle="Watch a short ad to earn credits and generate fresh interview questions for this role."
-          buttonText="Watch & Unlock"
-          successTitle="Credits Earned!"
-          successMessage="Generating more questions for you…"
-          androidTitle="Unlock More Questions"
-          androidSubtitle="Watch a quick video to earn credits, then we'll generate fresh questions."
-          androidButtonText="Watch Video"
-          androidSuccessTitle="Credits Earned!"
-          androidSuccessMessage="Generating more questions for you…"
+          title={t('interviewPrep.detail.adPlayer.moreTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.moreSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.moreButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.moreTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.moreAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
         />
       )}
 
@@ -1124,16 +1155,16 @@ const InterviewPrepDetail = () => {
           userId={userId}
           onComplete={handleAdForStoriesComplete}
           onClose={() => setAdForStoriesOpen(false)}
-          title="Build Your Story Bank"
-          subtitle="Watch a short ad to earn credits and generate STAR stories from your CV for this role."
-          buttonText="Watch & Build"
-          successTitle="Credits Earned!"
-          successMessage="Building your stories…"
-          androidTitle="Build Your Story Bank"
-          androidSubtitle="Watch a quick video to earn credits, then we'll build your STAR stories."
-          androidButtonText="Watch Video"
-          androidSuccessTitle="Credits Earned!"
-          androidSuccessMessage="Building your stories…"
+          title={t('interviewPrep.detail.adPlayer.storiesTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.storiesSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.storiesButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.storiesTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.storiesAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
         />
       )}
 
@@ -1142,16 +1173,16 @@ const InterviewPrepDetail = () => {
           userId={userId}
           onComplete={handleAdForEssentialComplete}
           onClose={() => setAdEssentialKind(null)}
-          title="Generate Your Answer"
-          subtitle="Watch a short ad to earn credits and write a personalized answer from your CV."
-          buttonText="Watch & Generate"
-          successTitle="Credits Earned!"
-          successMessage="Writing your answer…"
-          androidTitle="Generate Your Answer"
-          androidSubtitle="Watch a quick video to earn credits, then we'll write your answer."
-          androidButtonText="Watch Video"
-          androidSuccessTitle="Credits Earned!"
-          androidSuccessMessage="Writing your answer…"
+          title={t('interviewPrep.detail.adPlayer.essentialTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.essentialSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.essentialButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.essentialTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.essentialAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
         />
       )}
 
@@ -1160,16 +1191,16 @@ const InterviewPrepDetail = () => {
           userId={userId}
           onComplete={handleAdForDressComplete}
           onClose={() => setAdForDressOpen(false)}
-          title="Get Your Dress Guide"
-          subtitle="Watch a short ad to earn credits and get a tailored what-to-wear guide for this role."
-          buttonText="Watch & Generate"
-          successTitle="Credits Earned!"
-          successMessage="Styling your look…"
-          androidTitle="Get Your Dress Guide"
-          androidSubtitle="Watch a quick video to earn credits, then we'll tailor your interview outfit."
-          androidButtonText="Watch Video"
-          androidSuccessTitle="Credits Earned!"
-          androidSuccessMessage="Styling your look…"
+          title={t('interviewPrep.detail.adPlayer.dressTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.dressSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.dressButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.dressTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.dressAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
         />
       )}
 
@@ -1189,24 +1220,24 @@ const InterviewPrepDetail = () => {
 // auto-surface from the linked CV (the backend reads them through), so there's
 // no manual "pull" and no per-skill rating — full narratives live in Stories.
 const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
+  const { t } = useTranslation();
   if (skills.length === 0) {
     return (
       <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
         <SectionHeader
-          eyebrow="Reference"
-          title="Skill soundbites"
-          subtitle="Quick, CV-grounded answers for skill-probe questions"
+          eyebrow={t('interviewPrep.detail.skillsTab.eyebrow')}
+          title={t('interviewPrep.detail.skillsTab.title')}
+          subtitle={t('interviewPrep.detail.skillsTab.subtitle')}
         />
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          When your CV has AI-generated skills with evidence, their rehearsable talking points
-          appear here automatically. Generate skills in the CV builder to populate them.
+          {t('interviewPrep.detail.skillsTab.emptyBody')}
         </p>
         {draftCVId && (
           <Link
             to={`/cv-builder/${draftCVId}/skills`}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold transition-colors"
           >
-            <Eye className="w-4 h-4" /> Open CV builder
+            <Eye className="w-4 h-4" /> {t('interviewPrep.detail.skillsTab.openBuilder')}
           </Link>
         )}
       </section>
@@ -1215,12 +1246,15 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 
   return (
     <section className="space-y-3">
-      <div className="flex items-start gap-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 px-3 py-2.5">
+      <div className="flex items-start gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 px-3 py-2.5">
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <span className="font-semibold text-slate-700 dark:text-slate-300">Quick soundbites</span>{' '}
-          for &ldquo;what&apos;s your experience with X?&rdquo; questions, pulled from your CV. For
-          full STAR narratives, use the{' '}
-          <span className="font-semibold text-indigo-700 dark:text-indigo-300">Stories</span> tab.
+          <Trans
+            i18nKey="interviewPrep.detail.skillsTab.soundbitesIntro"
+            components={{
+              b: <span className="font-semibold text-slate-700 dark:text-slate-300" />,
+              s: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+            }}
+          />
         </p>
       </div>
       {skills.map((skill, i) => (
@@ -1234,7 +1268,9 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   );
 };
 
-const SkillCard = ({ skill, onPractice }) => (
+const SkillCard = ({ skill, onPractice }) => {
+  const { t } = useTranslation();
+  return (
   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-4">
     <div className="flex items-start gap-3">
       <div className="flex-1 min-w-0">
@@ -1254,14 +1290,14 @@ const SkillCard = ({ skill, onPractice }) => (
         {Array.isArray(skill.evidence) && skill.evidence.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap mt-2">
             <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-              From:
+              {t('interviewPrep.detail.skillsTab.from')}
             </span>
             {skill.evidence.map((ev, idx) => (
               <span
                 key={idx}
                 className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
               >
-                {ev.type === 'experience' ? 'Work history' : ev.type}
+                {ev.type === 'experience' ? t('interviewPrep.detail.skillsTab.workHistory') : ev.type}
               </span>
             ))}
           </div>
@@ -1276,11 +1312,12 @@ const SkillCard = ({ skill, onPractice }) => (
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors"
       >
         <PlayCircle className="w-4 h-4" />
-        Rehearse this
+        {t('interviewPrep.detail.skillsTab.rehearseThis')}
       </button>
     </div>
   </div>
-);
+  );
+};
 
 const QuestionListItem = ({
   applicationId,
@@ -1291,6 +1328,7 @@ const QuestionListItem = ({
   onConfidenceChange,
   warnings,
 }) => {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
@@ -1307,10 +1345,10 @@ const QuestionListItem = ({
         index,
         nextLevel
       );
-      toast.success('Confidence updated');
+      toast.success(t('interviewPrep.detail.toasts.confidenceUpdated'));
       onConfidenceChange?.();
     } catch {
-      toast.error('Failed to update confidence');
+      toast.error(t('interviewPrep.detail.toasts.failedConfidence'));
     } finally {
       setSaving(false);
     }
@@ -1320,9 +1358,12 @@ const QuestionListItem = ({
     navigate(`/interview-prep/${applicationId}/practice?questionIndex=${index}`);
   };
 
-  const typeLabel = question.type
-    ? question.type.charAt(0).toUpperCase() + question.type.slice(1)
-    : 'Technical';
+  const rawType = (question.type || '').toLowerCase();
+  const typeLabel = rawType
+    ? t(`interviewPrep.detail.typeBadge.${rawType}`, {
+        defaultValue: question.type.charAt(0).toUpperCase() + question.type.slice(1),
+      })
+    : t('interviewPrep.detail.typeBadge.technical');
   const typeBadgeColor =
     question.type === 'behavioral'
       ? 'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30'
@@ -1346,26 +1387,33 @@ const QuestionListItem = ({
               {typeLabel}
             </span>
             {question.confidence && (
-              <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                  question.confidence === 'ready'
-                    ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
-                    : question.confidence === 'almost'
-                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
-                      : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30'
-                }`}
-              >
-                {question.confidence.replace('_', ' ')}
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    question.confidence === 'ready'
+                      ? 'bg-emerald-500'
+                      : question.confidence === 'almost'
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500'
+                  }`}
+                />
+                {t(`interviewPrep.detail.conf.${question.confidence}`, {
+                  defaultValue: question.confidence.replace('_', ' '),
+                })}
               </span>
             )}
             {bestScore !== null && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
-                Best {bestScore}% · {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
+                {t('interviewPrep.detail.questions.best', {
+                  score: bestScore,
+                  count: attempts.length,
+                })}
               </span>
             )}
             {warnings && warnings.unsupportedClaims?.length > 0 && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold">
-                <AlertTriangle className="w-3 h-3 text-amber-500" /> Verify claims
+                <AlertTriangle className="w-3 h-3 text-amber-500" />{' '}
+                {t('interviewPrep.detail.questions.verifyClaims')}
               </span>
             )}
           </div>
@@ -1393,14 +1441,16 @@ const QuestionListItem = ({
               {question.sourcedFrom && question.sourcedFrom.length > 0 && (
                 <div className="flex items-center gap-1.5 mb-3 flex-wrap pt-1.5">
                   <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-                    Grounded in:
+                    {t('interviewPrep.detail.questions.grounded')}
                   </span>
                   {question.sourcedFrom.map((src, i) => (
                     <span
                       key={i}
                       className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
                     >
-                      {src.type === 'experience' ? 'Work history' : src.type}
+                      {src.type === 'experience'
+                        ? t('interviewPrep.detail.skillsTab.workHistory')
+                        : src.type}
                     </span>
                   ))}
                 </div>
@@ -1408,13 +1458,14 @@ const QuestionListItem = ({
 
               {/* Warnings Panel */}
               {warnings && warnings.unsupportedClaims?.length > 0 && (
-                <div className="mb-3.5 p-3.5 bg-amber-50/60 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+                <div className="mb-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-700 dark:text-slate-200 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Verify these facts before you rehearse:</span> the
-                    model answer (shown in Practice / Interview mode) includes details not found in
-                    your CV profile:
-                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800 dark:text-amber-200">
+                    <Trans
+                      i18nKey="interviewPrep.detail.questions.verifyFactsBody"
+                      components={{ b: <span className="font-bold" /> }}
+                    />
+                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-slate-700 dark:text-slate-200">
                       {warnings.unsupportedClaims.map((claim, idx) => (
                         <li key={idx}>{claim}</li>
                       ))}
@@ -1426,22 +1477,19 @@ const QuestionListItem = ({
               {/* Model answer is intentionally hidden here — it's revealed in
                   Practice mode ("Reveal answer") or read aloud in Interview
                   mode, so the user rehearses before peeking. */}
-              <div className="bg-indigo-50/50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
-                <EyeOff className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
+                <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    Model answer hidden on purpose
+                    {t('interviewPrep.detail.questions.modelHidden')}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    Rehearse out loud first, then reveal the model answer in{' '}
-                    <span className="font-semibold text-indigo-600 dark:text-indigo-300">
-                      Practice mode
-                    </span>{' '}
-                    or hear it read to you in{' '}
-                    <span className="font-semibold text-indigo-600 dark:text-indigo-300">
-                      Interview mode
-                    </span>
-                    .
+                    <Trans
+                      i18nKey="interviewPrep.detail.questions.modelHiddenBody"
+                      components={{
+                        b: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+                      }}
+                    />
                   </p>
                 </div>
               </div>
@@ -1451,14 +1499,15 @@ const QuestionListItem = ({
                 <button
                   type="button"
                   onClick={startPracticeThis}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
                 >
-                  <Play className="w-3.5 h-3.5" /> Practice this question
+                  <Play className="w-3.5 h-3.5" />{' '}
+                  {t('interviewPrep.detail.questions.practiceThisQuestion')}
                 </button>
 
                 <div className="sm:ml-auto flex flex-wrap items-center gap-1.5 justify-center sm:justify-start">
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mr-1">
-                    Readiness:
+                    {t('interviewPrep.detail.questions.readinessLabel')}
                   </span>
                   {CONFIDENCE_OPTIONS.map((opt) => {
                     const active = question.confidence === opt.id;
@@ -1477,7 +1526,7 @@ const QuestionListItem = ({
                         ) : (
                           <Circle className="w-3 h-3" />
                         )}
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </button>
                     );
                   })}
@@ -1494,13 +1543,13 @@ const QuestionListItem = ({
 // Question categories, in display order. The generated `type` maps onto these;
 // anything unrecognized falls into "Other".
 const QUESTION_CATEGORIES = [
-  { key: 'intro', label: 'Tell me about yourself' },
-  { key: 'behavioral', label: 'Behavioral' },
-  { key: 'technical', label: 'Technical' },
-  { key: 'situational', label: 'Situational' },
-  { key: 'motivation', label: 'Why this role / company' },
-  { key: 'gap', label: 'Gaps & weaknesses' },
-  { key: 'other', label: 'Other' },
+  { key: 'intro', labelKey: 'interviewPrep.detail.categories.intro' },
+  { key: 'behavioral', labelKey: 'interviewPrep.detail.categories.behavioral' },
+  { key: 'technical', labelKey: 'interviewPrep.detail.categories.technical' },
+  { key: 'situational', labelKey: 'interviewPrep.detail.categories.situational' },
+  { key: 'motivation', labelKey: 'interviewPrep.detail.categories.motivation' },
+  { key: 'gap', labelKey: 'interviewPrep.detail.categories.gap' },
+  { key: 'other', labelKey: 'interviewPrep.detail.categories.other' },
 ];
 
 // Group questions by category while preserving each one's original index (used
@@ -1514,7 +1563,7 @@ const groupQuestionsByCategory = (questions) => {
   });
   return QUESTION_CATEGORIES.filter((c) => byKey[c.key]?.length).map((c) => ({
     key: c.key,
-    label: c.label,
+    labelKey: c.labelKey,
     items: byKey[c.key],
   }));
 };
@@ -1526,22 +1575,22 @@ const groupQuestionsByCategory = (questions) => {
 const ESSENTIALS = [
   {
     kind: 'intro',
-    q: 'Tell me about yourself.',
-    tip: 'A 60–90s pitch: current role → 1–2 relevant wins → why this role excites you. Lead with a Story Bank highlight; don’t recite your CV top-to-bottom.',
+    qKey: 'interviewPrep.detail.essentials.introQ',
+    tipKey: 'interviewPrep.detail.essentials.introTip',
     generatable: true,
   },
   {
     kind: 'motivation',
-    q: 'Why do you want this role / this company?',
-    tip: 'Connect your goals to the role and name something specific about the company or product. Tie it to a strength from the Role tab.',
+    qKey: 'interviewPrep.detail.essentials.motivationQ',
+    tipKey: 'interviewPrep.detail.essentials.motivationTip',
     generatable: true,
   },
   {
     kind: 'gap',
-    q: 'What’s your biggest weakness / a gap in your experience?',
-    tip: 'Pick a real growth area (not a humblebrag), then show what you’re actively doing about it — mirror the gaps flagged in the Role tab.',
+    qKey: 'interviewPrep.detail.essentials.gapQ',
+    tipKey: 'interviewPrep.detail.essentials.gapTip',
     generatable: false,
-    noteSeed: WEAKNESS_SEED,
+    noteSeedKeys: WEAKNESS_SEED_KEYS,
   },
 ];
 
@@ -1552,7 +1601,8 @@ const EssentialsSection = ({
   onGenerateEssential,
   onGoToNotes,
 }) => {
-  const hasType = (t) => (jobQuestions || []).some((q) => (q.type || '').toLowerCase() === t);
+  const { t } = useTranslation();
+  const hasType = (kind) => (jobQuestions || []).some((q) => (q.type || '').toLowerCase() === kind);
   // Once intro/motivation has a personalized answer, it lives in the grouped
   // question list — hide its coaching card here to avoid duplication.
   const visible = ESSENTIALS.filter((e) => !(e.generatable && hasType(e.kind)));
@@ -1561,16 +1611,16 @@ const EssentialsSection = ({
   return (
     <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
       <SectionHeader
-        eyebrow="Essentials"
-        title="Interview essentials"
-        subtitle="The questions almost every interview opens with"
+        eyebrow={t('interviewPrep.detail.essentialsSection.eyebrow')}
+        title={t('interviewPrep.detail.essentialsSection.title')}
+        subtitle={t('interviewPrep.detail.essentialsSection.subtitle')}
       />
       <div className="mt-4 space-y-4">
         {visible.map((e) => (
-          <div key={e.kind} className="border-l-2 border-amber-200 dark:border-amber-500/30 pl-3">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{e.q}</p>
+          <div key={e.kind} className="border-l-2 border-slate-200 dark:border-slate-700 pl-3">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(e.qKey)}</p>
             <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
-              {e.tip}
+              {t(e.tipKey)}
             </p>
             {e.generatable && onGenerateEssential && (
               <button
@@ -1581,18 +1631,21 @@ const EssentialsSection = ({
               >
                 {generatingEssential === e.kind ? (
                   <>
-                    <Loader className="w-3.5 h-3.5 animate-spin" /> Writing…
+                    <AriaLoader inline tone="mono" size={14} label="" />{' '}
+                    {t('interviewPrep.detail.essentialsSection.writing')}
                   </>
                 ) : (
                   <>
-                    <Plus className="w-3.5 h-3.5" /> Generate from my CV
+                    <Plus className="w-3.5 h-3.5" />{' '}
+                    {t('interviewPrep.detail.essentialsSection.generateFromCv')}
                     <span className="ml-1 inline-flex items-center gap-1 pl-1.5 pr-1.5 py-0.5 rounded bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
                       {adRewarded ? (
                         <>
-                          <PlayCircle className="w-3 h-3" /> Ad
+                          <PlayCircle className="w-3 h-3" />{' '}
+                          {t('interviewPrep.detail.essentialsSection.ad')}
                         </>
                       ) : (
-                        '2 cr'
+                        t('interviewPrep.detail.essentialsSection.twoCr')
                       )}
                     </span>
                   </>
@@ -1602,10 +1655,13 @@ const EssentialsSection = ({
             {!e.generatable && onGoToNotes && (
               <button
                 type="button"
-                onClick={() => onGoToNotes(e.noteSeed)}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-xs font-semibold transition-colors"
+                onClick={() =>
+                  onGoToNotes({ title: t(e.noteSeedKeys.titleKey), body: t(e.noteSeedKeys.bodyKey) })
+                }
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
               >
-                <StickyNote className="w-3.5 h-3.5" /> Draft your answer in My notes
+                <StickyNote className="w-3.5 h-3.5" />{' '}
+                {t('interviewPrep.detail.essentialsSection.draftInNotes')}
               </button>
             )}
           </div>
@@ -1633,6 +1689,7 @@ const QuestionsTab = ({
   onConfidenceChange,
   gate,
 }) => {
+  const { t } = useTranslation();
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   const canGenerateMore = !isCvOnly && jobQuestions.length > 0;
@@ -1652,7 +1709,7 @@ const QuestionsTab = ({
         <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 text-center">
           <MessageSquare className="w-7 h-7 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            No job-specific questions yet. Generate interview prep from the dashboard.
+            {t('interviewPrep.detail.questionsTab.noJobQuestions')}
           </p>
         </section>
       )}
@@ -1661,9 +1718,11 @@ const QuestionsTab = ({
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <SectionHeader
-              eyebrow="Questions"
-              title="Job-based prep"
-              subtitle={`${jobQuestions.length} likely question${jobQuestions.length === 1 ? '' : 's'} with rehearsable answers`}
+              eyebrow={t('interviewPrep.detail.questionsTab.eyebrow')}
+              title={t('interviewPrep.detail.questionsTab.title')}
+              subtitle={t('interviewPrep.detail.questionsTab.subtitle', {
+                count: jobQuestions.length,
+              })}
             />
             <div className="shrink-0 flex items-center gap-2">
               <button
@@ -1672,26 +1731,26 @@ const QuestionsTab = ({
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
-                Practice all
+                {t('interviewPrep.detail.questionsTab.practiceAll')}
               </button>
               {interviewLocked ? (
                 <button
                   type="button"
                   disabled
-                  title="Complete your interview readiness to unlock"
+                  title={t('interviewPrep.detail.rail.completeToUnlockTitle')}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-semibold cursor-not-allowed"
                 >
                   <Lock className="w-3.5 h-3.5" />
-                  Complete prep to unlock
+                  {t('interviewPrep.detail.rail.completeToUnlock')}
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={onStartMock}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
                 >
                   <Play className="w-3.5 h-3.5" />
-                  Interview Mode
+                  {t('interviewPrep.detail.questionsTab.interviewMode')}
                 </button>
               )}
             </div>
@@ -1702,7 +1761,7 @@ const QuestionsTab = ({
             {groupQuestionsByCategory(jobQuestions).map((group) => (
               <div key={group.key}>
                 <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
-                  {group.label}{' '}
+                  {t(group.labelKey)}{' '}
                   <span className="text-slate-300 dark:text-slate-600">· {group.items.length}</span>
                 </p>
                 <div className="space-y-3">
@@ -1728,8 +1787,8 @@ const QuestionsTab = ({
 
           {newQuestionIndices && newQuestionIndices.size > 0 && (
             <div className="mt-4 space-y-2 mb-6">
-              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
-                Just added
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                {t('interviewPrep.detail.questionsTab.justAdded')}
               </p>
               <ul className="space-y-1.5">
                 {jobQuestions.map((q, i) => {
@@ -1739,10 +1798,10 @@ const QuestionsTab = ({
                   return (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-emerald-300 dark:border-emerald-500/30"
+                      className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-slate-200 dark:border-slate-700"
                     >
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
-                        New
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
+                        {t('interviewPrep.detail.questionsTab.new')}
                       </span>
                       <span>{text}</span>
                     </li>
@@ -1762,21 +1821,21 @@ const QuestionsTab = ({
               >
                 {generatingMore ? (
                   <>
-                    <Loader className="w-4 h-4 animate-spin" />
-                    Generating…
+                    <AriaLoader inline tone="mono" size={16} label="" />
+                    {t('interviewPrep.detail.questionsTab.generating')}
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4" />
-                    Get more questions
+                    {t('interviewPrep.detail.questionsTab.getMore')}
                     {adRewarded ? (
                       <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
                         <PlayCircle className="w-3 h-3" />
-                        Ad video
+                        {t('interviewPrep.detail.questionsTab.adVideo')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
-                        5 credits
+                        {t('interviewPrep.detail.questionsTab.fiveCredits')}
                       </span>
                     )}
                   </>
@@ -1784,8 +1843,8 @@ const QuestionsTab = ({
               </button>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                 {adRewarded
-                  ? 'Watch a short ad to unlock fresh questions — free, no credits used.'
-                  : 'Uses 5 credits to generate fresh questions.'}
+                  ? t('interviewPrep.detail.questionsTab.getMoreHelpAd')
+                  : t('interviewPrep.detail.questionsTab.getMoreHelpCredits')}
               </p>
             </div>
           )}
@@ -1795,14 +1854,14 @@ const QuestionsTab = ({
       {questionsToAsk.length > 0 && (
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-5 sm:p-6">
           <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-            <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
-            Questions to ask the interviewer
+            <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            {t('interviewPrep.detail.questionsTab.questionsToAsk')}
           </h4>
           <ul className="space-y-2">
             {questionsToAsk.map((q, i) => (
               <li
                 key={i}
-                className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-emerald-200 dark:border-emerald-500/30"
+                className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-slate-200 dark:border-slate-700"
               >
                 {q}
               </li>

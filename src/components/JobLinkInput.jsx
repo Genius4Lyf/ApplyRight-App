@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { Link2, Search, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 
@@ -197,9 +198,7 @@ const JobLinkInput = ({ onJobExtracted, embedded = false }) => {
                     : 'btn-primary'
               }`}
             >
-              {loading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
+              {loading && <AriaLoader inline tone="mono" size={16} label="" />}
               {loading
                 ? 'Analyzing Listing...'
                 : success

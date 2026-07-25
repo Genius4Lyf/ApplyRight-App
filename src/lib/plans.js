@@ -1,6 +1,13 @@
 // Display mirror of the backend catalog (applyright-backend/src/config/catalog.js).
 // The server is always the source of truth for price/grant; this is only for
 // rendering the pricing page. Keep prices/minutes in sync with the backend.
+//
+// i18n note: these are MODULE-LEVEL CONSTANTS, evaluated once at import time, so
+// they must NOT hold translated (or literal English) copy — that would freeze at
+// import-time language and never update on toggle. Every user-facing string is an
+// i18n KEY (`*Key` fields); the components that render a tier (TierCard, and the
+// inline reads in CreditStore/Upgrade/Pricing) call `t(key)` at render time.
+// See src/i18n/locales/en.json → `billing.*`.
 
 export const FREE_TASTE_MIN = 5;
 
@@ -9,50 +16,50 @@ export const FREE_TASTE_MIN = 5;
 // the pricing pages render its CTA as sign-up / "current plan".
 export const FREE_TIER = {
   id: 'free',
-  label: 'Free',
-  tagline: 'Build, share and prep — free forever.',
+  labelKey: 'billing.plans.free.label',
+  taglineKey: 'billing.plans.free.tagline',
   priceNgn: 0,
   priceUsd: 0,
   period: 'forever',
   minutes: 5,
   model: 'free taste',
-  features: [
-    '5 live interview minutes (free taste)',
-    'Free AI credits to start (earn more via referrals)',
-    'Standard AI model (GPT-4o-mini) for CV writing',
-    'Professional summary — 1 tone',
-    'Up to 3 bullets per role',
-    'Apply up to 3 AI suggestions',
-    'Standard CV-vs-job-description analysis (AI suggestions)',
-    'Basic templates only',
-    'Clean CV downloads at ₦750 each',
+  featureKeys: [
+    'billing.plans.free.features.0',
+    'billing.plans.free.features.1',
+    'billing.plans.free.features.2',
+    'billing.plans.free.features.3',
+    'billing.plans.free.features.4',
+    'billing.plans.free.features.5',
+    'billing.plans.free.features.6',
+    'billing.plans.free.features.7',
+    'billing.plans.free.features.8',
   ],
   // What the free plan does NOT include — rendered as greyed-out ✗ rows so
   // visitors can see exactly what upgrading unlocks.
-  excluded: [
-    'Premium AI model (GPT-4o) for sharper writing',
-    'ApplyRight ATS — recruiter-grade CV-vs-JD analysis',
-    'Unlimited downloads & all premium templates',
+  excludedKeys: [
+    'billing.plans.free.excluded.0',
+    'billing.plans.free.excluded.1',
+    'billing.plans.free.excluded.2',
   ],
 };
 
 // Paid CV feature set shared by every paid tier (job seeker + agent). These all
 // gate on isPaidActive in the backend, so they're identical across paid plans.
-const PAID_CV_FEATURES = [
-  'Premium AI model (GPT-4o) — sharper CVs, bullets, summaries & cover letters',
-  'ApplyRight ATS — recruiter-grade CV-vs-job-description analysis on our premium AI',
-  'ATS Coach — live CV health & keyword score',
-  'Unlimited bullets + apply all AI suggestions',
-  'Every summary tone',
-  'All premium CV templates unlocked',
-  'Clean, watermark-free unlimited downloads',
+const PAID_CV_FEATURE_KEYS = [
+  'billing.plans.paidCvFeatures.0',
+  'billing.plans.paidCvFeatures.1',
+  'billing.plans.paidCvFeatures.2',
+  'billing.plans.paidCvFeatures.3',
+  'billing.plans.paidCvFeatures.4',
+  'billing.plans.paidCvFeatures.5',
+  'billing.plans.paidCvFeatures.6',
 ];
 
 export const TIERS = [
   {
     id: 'weekly_pro',
-    label: 'Starter Pack',
-    tagline: 'Pay only the 2 weeks you’re interviewing.',
+    labelKey: 'billing.plans.weeklyPro.label',
+    taglineKey: 'billing.plans.weeklyPro.tagline',
     priceNgn: 3500,
     priceUsd: 4,
     period: '14 days',
@@ -61,18 +68,18 @@ export const TIERS = [
     model: 'Standard interviewer',
     // Spotlighted only in NGN — the cheap 2-week plan is the local sweet spot.
     featuredFor: 'NGN',
-    badge: 'Best for Nigeria',
-    features: [
-      '15 live interview minutes over 2 weeks',
-      '150 AI credits for CVs, cover letters & prep',
-      ...PAID_CV_FEATURES,
-      'Pay only the 2 weeks you’re interviewing',
+    badgeKey: 'billing.plans.weeklyPro.badge',
+    featureKeys: [
+      'billing.plans.weeklyPro.features.0',
+      'billing.plans.weeklyPro.features.1',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.weeklyPro.features.2',
     ],
   },
   {
     id: 'monthly_pro',
-    label: 'Level Up',
-    tagline: 'More minutes and credits, every month.',
+    labelKey: 'billing.plans.monthlyPro.label',
+    taglineKey: 'billing.plans.monthlyPro.tagline',
     priceNgn: 9500,
     priceUsd: 12,
     period: 'month',
@@ -81,30 +88,30 @@ export const TIERS = [
     model: 'Standard interviewer',
     // Spotlighted only in USD — monthly is the better value for global users.
     featuredFor: 'USD',
-    badge: 'Best worldwide',
-    features: [
-      '50 live interview minutes / month',
-      '500 AI credits for CVs, cover letters & prep',
-      ...PAID_CV_FEATURES,
-      'Fresh minutes & credits every month',
+    badgeKey: 'billing.plans.monthlyPro.badge',
+    featureKeys: [
+      'billing.plans.monthlyPro.features.0',
+      'billing.plans.monthlyPro.features.1',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.monthlyPro.features.2',
     ],
   },
   {
     id: 'monthly_premium',
-    label: 'Boss Tier',
-    tagline: 'Our sharpest AI, plus the full kit.',
+    labelKey: 'billing.plans.monthlyPremium.label',
+    taglineKey: 'billing.plans.monthlyPremium.tagline',
     priceNgn: 15000,
     priceUsd: 20,
     period: 'month',
     minutes: 45,
     credits: 1000,
     model: 'Sharpest interviewer (premium AI)',
-    features: [
-      '45 live minutes with our sharpest interviewer AI',
-      '1,000 AI credits / month',
-      ...PAID_CV_FEATURES,
-      'Full interview recordings & AI reports',
-      'Priority support',
+    featureKeys: [
+      'billing.plans.monthlyPremium.features.0',
+      'billing.plans.monthlyPremium.features.1',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.monthlyPremium.features.2',
+      'billing.plans.monthlyPremium.features.3',
     ],
   },
 ];
@@ -115,49 +122,53 @@ export const TIERS = [
 export const AGENT_TIERS = [
   {
     id: 'agent_weekly',
-    label: 'Small Wins',
-    tagline: 'Build for clients, pay by the week.',
+    labelKey: 'billing.plans.agentWeekly.label',
+    taglineKey: 'billing.plans.agentWeekly.tagline',
     priceNgn: 3500,
     priceUsd: 5,
     period: 'week',
     noMinutes: true,
     credits: 250,
-    subtitle: '250 CV credits · build for clients',
-    features: [
-      '250 AI credits for CV tailoring & cover letters',
-      ...PAID_CV_FEATURES,
-      'Pay only the week you’re busy',
+    subtitleKey: 'billing.plans.agentWeekly.subtitle',
+    featureKeys: [
+      'billing.plans.agentWeekly.features.0',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.agentWeekly.features.1',
     ],
   },
   {
     id: 'agent_monthly',
-    label: 'Big Taker',
-    tagline: 'Steady client work, all month long.',
+    labelKey: 'billing.plans.agentMonthly.label',
+    taglineKey: 'billing.plans.agentMonthly.tagline',
     priceNgn: 10000,
     priceUsd: 14,
     period: 'month',
     noMinutes: true,
     highlight: true,
-    badge: 'Most popular',
+    badgeKey: 'billing.plans.agentMonthly.badge',
     credits: 1200,
-    subtitle: '1,200 CV credits · build for clients',
-    features: ['1,200 AI credits all month', ...PAID_CV_FEATURES, 'Best for steady client work'],
+    subtitleKey: 'billing.plans.agentMonthly.subtitle',
+    featureKeys: [
+      'billing.plans.agentMonthly.features.0',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.agentMonthly.features.1',
+    ],
   },
   {
     id: 'agent_yearly',
-    label: 'Odogwu',
-    tagline: 'For full-time CV businesses.',
+    labelKey: 'billing.plans.agentYearly.label',
+    taglineKey: 'billing.plans.agentYearly.tagline',
     priceNgn: 100000,
     priceUsd: 140,
     period: 'year',
     noMinutes: true,
-    badge: 'Save ~17%',
+    badgeKey: 'billing.plans.agentYearly.badge',
     credits: 18000,
-    subtitle: '18,000 CV credits · build for clients',
-    features: [
-      '18,000 AI credits / year (~17% off monthly)',
-      ...PAID_CV_FEATURES,
-      'For full-time CV businesses',
+    subtitleKey: 'billing.plans.agentYearly.subtitle',
+    featureKeys: [
+      'billing.plans.agentYearly.features.0',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.agentYearly.features.1',
     ],
   },
 ];

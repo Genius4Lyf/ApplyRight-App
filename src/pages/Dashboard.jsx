@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import CVPicker from '../components/CVPicker';
@@ -41,6 +42,7 @@ import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
 import { isMobile } from '../utils/platform';
 import { signalReady } from '../utils/splash';
+import { useTranslation } from 'react-i18next';
 import FitScoreCard from '../components/FitScoreCard';
 import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import NextBestAction from '../components/NextBestAction';
@@ -55,6 +57,7 @@ import {
 import { toast } from 'sonner';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { triggerInterstitial } = useInterstitial();
@@ -157,23 +160,20 @@ const Dashboard = () => {
   const confirmDelete = async () => {
     try {
       await CVService.deleteDraft(draftToDelete._id);
-      toast.success('CV deleted successfully');
+      toast.success(t('dashboard.toasts.cvDeleted'));
       setDeleteModalOpen(false);
       setDraftToDelete(null);
       loadDrafts(); // Reload the list
     } catch (error) {
       console.error('Failed to delete draft', error);
-      toast.error('Failed to delete CV');
+      toast.error(t('dashboard.toasts.cvDeleteFailed'));
     }
   };
 
   // Helper to update credits globally (Navbar + Local State)
   const updateCredits = (newBalance) => {
-    // console.log('🔄 Dashboard: Updating credits to:', newBalance);
-
     // 1. Dispatch event for Navbar
     window.dispatchEvent(new CustomEvent('credit_updated', { detail: newBalance }));
-    // console.log('📡 Dashboard: Dispatched credit_updated event with:', newBalance);
 
     // 2. Update local state
     setUser((prev) => ({ ...prev, credits: newBalance }));
@@ -244,11 +244,11 @@ const Dashboard = () => {
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
-      toast.success('Auto-analysis enabled for future jobs!');
+      toast.success(t('dashboard.toasts.autoAnalysisEnabled'));
       setShowAutoAnalyzeModal(false);
     } catch (error) {
       console.error('Failed to update settings', error);
-      toast.error('Failed to save setting');
+      toast.error(t('dashboard.toasts.settingSaveFailed'));
     }
   };
 
@@ -257,7 +257,7 @@ const Dashboard = () => {
     try {
       const result = await performAnalysis();
       if (result) {
-        toast.success('Analysis complete!');
+        toast.success(t('dashboard.toasts.analysisComplete'));
         setTimeout(() => {
           document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
@@ -280,13 +280,11 @@ const Dashboard = () => {
       return;
     }
     if (error.response?.status === 503 && code === 'AI_UNAVAILABLE') {
-      toast.error(
-        'AI is temporarily unavailable. You have not been charged. Please try again in a moment.'
-      );
+      toast.error(t('dashboard.toasts.aiUnavailable'));
       return;
     }
     if (error.response?.status === 409 && code === 'GENERATION_IN_PROGRESS') {
-      toast.error('A CV generation is already running for this application.');
+      toast.error(t('dashboard.toasts.generationInProgress'));
       return;
     }
     if (error.response?.status === 422 && code === 'NO_CV_GROUNDING') {
@@ -334,9 +332,9 @@ const Dashboard = () => {
           const before = fresh.fitScore;
           const after = fresh.optimizedFitScore;
           if (typeof before === 'number' && typeof after === 'number' && after > before) {
-            toast.success(`Match lifted ${before}% → ${after}%`);
+            toast.success(t('dashboard.toasts.matchLifted', { before, after }));
           } else {
-            toast.success('Optimized CV generated!');
+            toast.success(t('dashboard.toasts.cvGenerated'));
           }
           setGeneratingCV(false);
           setCvGenStatus(null);
@@ -344,7 +342,7 @@ const Dashboard = () => {
         } else if (status?.stage === 'failed') {
           clearInterval(cvPollRef.current);
           cvPollRef.current = null;
-          toast.error(status.error || 'CV generation failed. You have not been charged.');
+          toast.error(status.error || t('dashboard.toasts.cvGenerationFailed'));
           setGeneratingCV(false);
           setCvGenStatus(null);
         }
@@ -361,7 +359,11 @@ const Dashboard = () => {
   const startCVGeneration = async (providedMetrics) => {
     if (!application?.applicationId) return;
     setGeneratingCV(true);
-    setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: 'Starting…' });
+    setCvGenStatus({
+      stage: 'extracting',
+      progress: 5,
+      stageMessage: t('dashboard.genStage.starting'),
+    });
     try {
       const res = await api.post(`/analysis/${application.applicationId}/generate-cv`, {
         templateId: selectedTemplate,
@@ -372,14 +374,18 @@ const Dashboard = () => {
     } catch (error) {
       setGeneratingCV(false);
       setCvGenStatus(null);
-      handleAssetGenError(error, 'Failed to start CV generation. Please try again.');
+      handleAssetGenError(error, t('dashboard.toasts.cvStartFailed'));
     }
   };
 
   const startBundleGeneration = async (providedMetrics) => {
     if (!application?.applicationId) return;
     setGeneratingCV(true);
-    setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: 'Starting bundle…' });
+    setCvGenStatus({
+      stage: 'extracting',
+      progress: 5,
+      stageMessage: t('dashboard.genStage.startingBundle'),
+    });
     try {
       const res = await api.post(`/analysis/${application.applicationId}/generate-bundle`, {
         templateId: selectedTemplate,
@@ -390,7 +396,7 @@ const Dashboard = () => {
     } catch (error) {
       setGeneratingCV(false);
       setCvGenStatus(null);
-      handleAssetGenError(error, 'Failed to start bundle generation. Please try again.');
+      handleAssetGenError(error, t('dashboard.toasts.bundleStartFailed'));
     }
   };
 
@@ -457,19 +463,18 @@ const Dashboard = () => {
       if (warnings.length > 0) {
         // Surface fact-check warnings immediately so the user verifies before
         // sending. Non-blocking — the letter is still generated and saved.
-        toast.warning(
-          `Cover letter generated, but ${warnings.length} claim${warnings.length === 1 ? '' : 's'} may not be supported by your resume — verify before sending.`,
-          { duration: 8000 }
-        );
+        toast.warning(t('dashboard.toasts.coverLetterWarning', { count: warnings.length }), {
+          duration: 8000,
+        });
       } else {
-        toast.success('Cover letter generated!');
+        toast.success(t('dashboard.toasts.coverLetterGenerated'));
       }
       // Fire interstitial at this completion moment. No-op on web / paid /
       // non-eligible users; frequency caps enforced inside the hook.
       triggerInterstitial('cover_letter_generated');
       setJustCompleted('coverLetter');
     } catch (error) {
-      handleAssetGenError(error, 'Failed to generate cover letter. Please try again.');
+      handleAssetGenError(error, t('dashboard.toasts.coverLetterFailed'));
     } finally {
       setGeneratingCL(false);
     }
@@ -484,10 +489,10 @@ const Dashboard = () => {
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
       }
-      toast.success('Interview prep generated!');
+      toast.success(t('dashboard.toasts.interviewPrepGenerated'));
       setJustCompleted('interview');
     } catch (error) {
-      handleAssetGenError(error, 'Failed to generate interview prep. Please try again.');
+      handleAssetGenError(error, t('dashboard.toasts.interviewPrepFailed'));
     } finally {
       setGeneratingInterview(false);
     }
@@ -532,22 +537,21 @@ const Dashboard = () => {
     }, 100);
   };
 
-  const getStatusMessage = () => {
-    if (!user.firstName) return 'Optimize Your Professional Presence';
-    return `Welcome back, ${user.firstName}. Let's get you hired.`;
-  };
+  const getStatusMessage = () =>
+    user.firstName
+      ? t('dashboard.greeting', { name: user.firstName })
+      : t('dashboard.greetingNoName');
 
   const getRecommendedAction = () => {
-    if (!user.currentStatus)
-      return 'Precision engineering for your job applications. Upload your credentials and the target role to begin the optimization process.';
-
-    const statusMap = {
-      student: `As a student in ${user.education?.discipline || 'your field'}, focusing on internships and entry-level roles is key.`,
-      graduate: `Congratulations on graduating! Now let's translate that ${user.education?.discipline} degree into a career.`,
-      professional: `Ready for the next step in your career? Let's highlight your experience.`,
-      other: "Let's align your unique background with your target role.",
+    if (!user.currentStatus) return t('dashboard.recommendedDefault');
+    const field = user.education?.discipline || t('dashboard.yourField');
+    const byStatus = {
+      student: t('dashboard.recommendedStudent', { field }),
+      graduate: t('dashboard.recommendedGraduate', { field }),
+      professional: t('dashboard.recommendedProfessional'),
+      other: t('dashboard.recommendedOther'),
     };
-    return statusMap[user.currentStatus] || statusMap['other'];
+    return byStatus[user.currentStatus] || byStatus.other;
   };
 
   return (
@@ -561,7 +565,7 @@ const Dashboard = () => {
         }`}
       >
         {showProfileBanner && (
-          <div className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
+          <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
             <div
               onClick={() => navigate('/profile')}
               onKeyDown={(e) => {
@@ -572,18 +576,18 @@ const Dashboard = () => {
               }}
               role="button"
               tabIndex={0}
-              aria-label="Enhance your profile"
+              aria-label={t('dashboard.banner.enhanceAria')}
               className="flex items-center gap-3 cursor-pointer flex-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg"
             >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm group-hover:scale-110 transition-transform">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-indigo-900 dark:text-indigo-300">
-                  Enhance Your Profile
+                <h3 className="font-heading font-bold text-slate-900 dark:text-slate-100">
+                  {t('dashboard.banner.enhanceTitle')}
                 </h3>
-                <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                  Complete setting up your profile to improve CV optimization.
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {t('dashboard.banner.enhanceBody')}
                 </p>
               </div>
             </div>
@@ -592,7 +596,7 @@ const Dashboard = () => {
                 e.stopPropagation();
                 setShowProfileBanner(false);
               }}
-              className="p-2 text-indigo-400 dark:text-indigo-300 hover:text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-full transition-colors"
+              className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -610,23 +614,23 @@ const Dashboard = () => {
             }}
             role="button"
             tabIndex={0}
-            aria-label="Complete your profile"
-            className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            aria-label={t('dashboard.banner.completeAria')}
+            className="mb-8 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-indigo-900 dark:text-indigo-300">
-                  Complete your profile
+                <h3 className="font-heading font-bold text-slate-900 dark:text-slate-100">
+                  {t('dashboard.banner.completeTitle')}
                 </h3>
-                <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                  Tell us about your goals to get personalized recommendations.
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {t('dashboard.banner.completeBody')}
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-indigo-400 dark:text-indigo-300 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform" />
           </div>
         )}
 
@@ -638,7 +642,7 @@ const Dashboard = () => {
         {!workflowMode && !initialLoading && (
           <div className="max-w-3xl mx-auto mb-12">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-              Your workspace
+              {t('dashboard.workspace')}
             </p>
             <h1 className="mt-2 font-heading text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {getStatusMessage()}
@@ -658,16 +662,15 @@ const Dashboard = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <AriaOrbit size={18} />
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
-                    Aria Studio
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    {t('dashboard.studio.kicker')}
                   </p>
                 </div>
                 <h2 className="mt-2.5 font-heading text-2xl md:text-[26px] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Tailor your CV to a job in minutes
+                  {t('dashboard.studio.title')}
                 </h2>
                 <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
-                  Bring Aria a job description. She reworks a copy of your CV against it, section by
-                  section, and shows you exactly what she changed — your original stays untouched.
+                  {t('dashboard.studio.body')}
                 </p>
               </div>
               <div className="shrink-0">
@@ -676,7 +679,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/aria-studio')}
                   className="btn-primary gap-2 px-5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
-                  Open Aria Studio <ArrowRight className="w-4 h-4" />
+                  {t('dashboard.studio.cta')} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -694,7 +697,7 @@ const Dashboard = () => {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
-                  Your application
+                  {t('dashboard.pillarApplication')}
                 </p>
                 <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               </div>
@@ -723,28 +726,27 @@ const Dashboard = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Tailor my CV to a job"
+                  aria-label={t('dashboard.tailorCard.aria')}
                   className="rounded-xl border border-slate-200 dark:border-slate-800 border-t-2 border-t-indigo-600 dark:border-t-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                    <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      Recommended
+                    <span className="inline-flex items-center rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
+                      {t('dashboard.tailorCard.chip')}
                     </span>
                   </div>
                   <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                    Tailor my CV to a job
+                    {t('dashboard.tailorCard.title')}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
-                    Check whether you&rsquo;re qualified for a role, then auto-tailor your CV to
-                    match what it asks for.
+                    {t('dashboard.tailorCard.body')}
                   </p>
                   <div className="mt-auto flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
-                      Check your CV <ArrowRight className="w-4 h-4" />
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {t('dashboard.tailorCard.cta')} <ArrowRight className="w-4 h-4" />
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      Powered by ApplyRight
+                      {t('dashboard.tailorCard.poweredBy')}
                     </span>
                   </div>
                 </div>
@@ -760,19 +762,18 @@ const Dashboard = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Build a new CV"
+                  aria-label={t('dashboard.buildCard.aria')}
                   className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <PenTool className="w-5 h-5 text-slate-400 dark:text-slate-500 mb-4" />
                   <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                    Build a new CV
+                    {t('dashboard.buildCard.title')}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
-                    Start from scratch with a guided wizard, or upload an existing CV and let AI do
-                    the heavy lifting.
+                    {t('dashboard.buildCard.body')}
                   </p>
                   <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Start builder <ArrowRight className="w-4 h-4" />
+                    {t('dashboard.buildCard.cta')} <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </div>
@@ -782,7 +783,7 @@ const Dashboard = () => {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
-                  Interview practice
+                  {t('dashboard.pillarInterview')}
                 </p>
                 <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               </div>
@@ -799,32 +800,30 @@ const Dashboard = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Start a direct interview"
+                  aria-label={t('dashboard.interviewCard.aria')}
                   className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <Mic className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      Pro
+                      {t('dashboard.interviewCard.chip')}
                     </span>
                   </div>
                   <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                    Interview me
+                    {t('dashboard.interviewCard.title')}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
-                    Skip the analysis and jump straight into a live, spoken mock interview against
-                    any job description.
+                    {t('dashboard.interviewCard.body')}
                   </p>
                   <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
-                    Start interview <ArrowRight className="w-4 h-4" />
+                    {t('dashboard.interviewCard.cta')} <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* Quiet companion note — not a button */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-6 flex flex-col justify-center">
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Or prep first — every tailored application comes with a full interview-prep
-                    desk: questions, stories, and the live mock.
+                    {t('dashboard.interviewCard.companion')}
                   </p>
                 </div>
               </div>
@@ -842,7 +841,7 @@ const Dashboard = () => {
               <button
                 type="button"
                 onClick={() => setShowCreateOptions(false)}
-                aria-label="Close"
+                aria-label={t('common.close')}
                 className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-10"
               >
                 <X className="w-4 h-4" />
@@ -850,10 +849,10 @@ const Dashboard = () => {
 
               <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
                 <h3 className="font-heading text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
-                  How would you like to start?
+                  {t('dashboard.createModal.title')}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-center">
-                  Pick the path that fits where you are now.
+                  {t('dashboard.createModal.subtitle')}
                 </p>
               </div>
 
@@ -867,10 +866,10 @@ const Dashboard = () => {
                   <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
-                      Start from scratch
+                      {t('dashboard.createModal.scratchTitle')}
                     </h4>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug">
-                      Step-by-step wizard, build a resume from the ground up.
+                      {t('dashboard.createModal.scratchBody')}
                     </p>
                   </div>
                 </button>
@@ -893,14 +892,14 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
                       <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
-                        Upload existing CV
+                        {t('dashboard.createModal.uploadTitle')}
                       </h4>
                       <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] uppercase tracking-[0.1em] rounded shrink-0">
                         15 cr
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug sm:mt-1">
-                      We'll scan your PDF and auto-fill the builder with your details.
+                      {t('dashboard.createModal.uploadBody')}
                     </p>
                   </div>
                 </button>
@@ -932,21 +931,21 @@ const Dashboard = () => {
               }}
               className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
+              <ChevronLeft className="w-4 h-4 mr-1" /> {t('dashboard.backToDashboard')}
             </button>
             {!fitResult && (
               <div className="mb-8">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Powered by ApplyRight
+                  {t('dashboard.tailorCard.poweredBy')}
                 </p>
                 <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  Tailor my CV to a job
+                  {t('dashboard.tailorCard.title')}
                 </h1>
                 <p className="mt-1 text-slate-500 dark:text-slate-400">
-                  Check your CV against a job — we'll score the fit and tailor it to match.
+                  {t('dashboard.setup.checkCv')}
                 </p>
                 <span className="inline-flex items-center mt-3 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                  {user.credits || 0} credits
+                  {t('dashboard.creditsCount', { count: user.credits || 0 })}
                 </span>
               </div>
             )}
@@ -972,10 +971,10 @@ const Dashboard = () => {
                 <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-5 sm:p-6 flex flex-col">
                   <div className="mb-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      Step 2 · Job listing
+                      {t('dashboard.setup.step2')}
                     </p>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      Provide the job details for analysis
+                      {t('dashboard.setup.step2Body')}
                     </p>
                   </div>
                   <div className="flex-1 min-h-0">
@@ -993,7 +992,7 @@ const Dashboard = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                         <CheckCircle className="w-3 h-3 text-emerald-500" />{' '}
-                        {selectedDraft ? 'Saved CV' : 'Resume uploaded'}
+                        {selectedDraft ? t('dashboard.savedCv') : t('dashboard.resumeUploaded')}
                       </div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {selectedDraft
@@ -1007,7 +1006,7 @@ const Dashboard = () => {
                     </div>
                     <button
                       onClick={handleChangeResume}
-                      className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                      className="text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Change
                     </button>
@@ -1015,7 +1014,7 @@ const Dashboard = () => {
                 )}
                 {job && (
                   <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1029,7 +1028,7 @@ const Dashboard = () => {
                     </div>
                     <button
                       onClick={handleGenerateNew}
-                      className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                      className="text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Change
                     </button>
@@ -1053,27 +1052,27 @@ const Dashboard = () => {
               }}
               className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center mb-6 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Dashboard
+              <ChevronLeft className="w-4 h-4 mr-1" /> {t('dashboard.backToDashboard')}
             </button>
 
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-card border border-slate-200 dark:border-slate-700 p-8">
               <div className="text-center mb-8">
                 <h3 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Upload your Resume
+                  {t('dashboard.setup.uploadTitle')}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400">
-                  Upload your existing CV (PDF) and we'll convert it into our editable format.
+                  {t('dashboard.setup.uploadBody')}
                 </p>
               </div>
 
               {scanning ? (
                 <div className="py-12 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+                  <AriaLoader inline size={56} label="Scanning your CV…" className="mb-6" />
                   <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200 animate-pulse">
-                    Scanning Document...
+                    {t('dashboard.setup.scanning')}
                   </h4>
                   <p className="text-slate-500 dark:text-slate-400 mt-2">
-                    Extracting your experience and skills
+                    {t('dashboard.setup.scanningBody')}
                   </p>
                 </div>
               ) : (
@@ -1094,7 +1093,7 @@ const Dashboard = () => {
                             updateCredits(data.remainingCredits);
                           }
                         } else {
-                          toast.error('Failed to parse resume.');
+                          toast.error(t('dashboard.toasts.resumeParseFailed'));
                         }
                       }}
                       onError={(errorData) => {
@@ -1119,10 +1118,10 @@ const Dashboard = () => {
                 ✓ CV scanned
               </p>
               <h3 className="mt-1 font-heading text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Your CV is in.
+                {t('dashboard.health.title')}
               </h3>
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                We've extracted and structured your details — here's how healthy it looks.
+                {t('dashboard.health.body')}
               </p>
 
               {/* CV Health Score */}
@@ -1131,7 +1130,7 @@ const Dashboard = () => {
                   <div className="flex items-end justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                        CV Health Score
+                        {t('dashboard.health.scoreLabel')}
                       </p>
                       <p
                         className={`mt-1 font-heading text-lg font-bold ${
@@ -1143,10 +1142,10 @@ const Dashboard = () => {
                         }`}
                       >
                         {scanATSReadiness.score >= 75
-                          ? 'Well-structured.'
+                          ? t('dashboard.verdict.wellStructured')
                           : scanATSReadiness.score >= 50
-                            ? 'Getting there.'
-                            : 'Needs work.'}
+                            ? t('dashboard.verdict.gettingThere')
+                            : t('dashboard.verdict.needsWork')}
                       </p>
                     </div>
                     <span
@@ -1179,9 +1178,9 @@ const Dashboard = () => {
                       />
                     </div>
                     <div className="mt-1.5 grid grid-cols-[50fr_25fr_25fr] gap-0.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
-                      <span>Needs work</span>
-                      <span className="text-center">Getting there</span>
-                      <span className="text-right">Strong 75+</span>
+                      <span>{t('dashboard.health.needsWork')}</span>
+                      <span className="text-center">{t('dashboard.health.gettingThere')}</span>
+                      <span className="text-right">{t('dashboard.health.strong')}</span>
                     </div>
                   </div>
 
@@ -1254,8 +1253,8 @@ const Dashboard = () => {
             className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700"
           >
             <div className="mb-6">
-              <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
-                Your fit
+              <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                {t('dashboard.fit.title')}
               </p>
               <h3 className="mt-1 font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
                 {job?.title || 'Analysis'}
@@ -1269,9 +1268,9 @@ const Dashboard = () => {
 
             {analyzing ? (
               <div className="w-full h-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card flex flex-col items-center justify-center p-8">
-                <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                <AriaLoader inline size={32} label="Analyzing…" className="mb-4" />
                 <p className="text-slate-500 dark:text-slate-400 font-medium">
-                  Analyzing your profile against role requirements...
+                  {t('dashboard.fit.analyzing')}
                 </p>
               </div>
             ) : (
@@ -1332,11 +1331,11 @@ const Dashboard = () => {
               {/* Header — eyebrow + title, with the bundle as a right action. */}
               <div className="flex flex-wrap items-start justify-between gap-3 p-5">
                 <div className="min-w-0">
-                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     Ready to use · now that you&apos;ve read the analysis
                   </p>
                   <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                    My CV toolkit
+                    {t('dashboard.toolkit.title')}
                   </h2>
                 </div>
                 {!application.optimizedCV &&
@@ -1363,10 +1362,10 @@ const Dashboard = () => {
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Optimized CV
+                      {t('dashboard.toolkit.optimizedCv')}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Tailored to this role
+                      {t('dashboard.toolkit.optimizedCvBody')}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1408,7 +1407,7 @@ const Dashboard = () => {
                     </div>
                     <div className="mt-1 h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                       <div
-                        className="h-1 rounded-full bg-indigo-500 transition-all"
+                        className="h-1 rounded-full bg-slate-900 dark:bg-white transition-all"
                         style={{ width: `${cvGenStatus.progress || 0}%` }}
                       />
                     </div>
@@ -1422,10 +1421,10 @@ const Dashboard = () => {
                   <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Cover letter
+                      {t('dashboard.toolkit.coverLetter')}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Matched to the job description
+                      {t('dashboard.toolkit.coverLetterBody')}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1456,7 +1455,7 @@ const Dashboard = () => {
                 {application.coverLetter && application.coverLetterWarnings?.length > 0 && (
                   <div className="mt-3 border-l-2 border-amber-500 pl-3">
                     <div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400 mb-1">
-                      Verify before sending
+                      {t('dashboard.toolkit.verifyBeforeSending')}
                     </div>
                     <ul className="space-y-0.5 list-disc pl-3 text-[11px] text-slate-600 dark:text-slate-300">
                       {application.coverLetterWarnings.slice(0, 5).map((w, i) => (
@@ -1473,10 +1472,10 @@ const Dashboard = () => {
                   <MessageSquare className="w-4 h-4 text-slate-400 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Interview prep
+                      {t('dashboard.toolkit.interviewPrep')}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Likely questions + suggested answers
+                      {t('dashboard.toolkit.interviewPrepBody')}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1514,13 +1513,13 @@ const Dashboard = () => {
           <div className="mb-12 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <button
               onClick={handleGenerateNew}
-              className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all hover:scale-[1.02] shadow-sm"
+              className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm"
             >
               <RefreshCw className="w-5 h-5" />
               <span className="flex flex-col items-start leading-tight">
-                <span>Generate New Analysis</span>
+                <span>{t('dashboard.toolkit.newAnalysis')}</span>
                 <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
-                  Same resume, different job
+                  {t('dashboard.toolkit.newAnalysisBody')}
                 </span>
               </span>
             </button>
@@ -1534,20 +1533,20 @@ const Dashboard = () => {
           <Link
             to={`/interview-prep/${getPrepId(application)}`}
             id="preview-section"
-            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors group"
+            className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 flex items-center gap-3 p-4 sm:p-5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors group"
           >
-            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100">
-                Interview prep ready
+                {t('dashboard.toolkit.prepReady')}
               </h4>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
                 {getPrepSummary(application)} - tap to review answers and talking points
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors shrink-0" />
+            <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors shrink-0" />
           </Link>
         )}
 
@@ -1560,10 +1559,10 @@ const Dashboard = () => {
           <div className="hidden md:flex md:items-center md:justify-between gap-4 mt-8">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {!cvChosen
-                ? 'Choose a CV to continue.'
+                ? t('dashboard.ready.chooseCv')
                 : !job
-                  ? 'Add the job to continue.'
-                  : "You're ready — let's analyze."}
+                  ? t('dashboard.ready.addJob')
+                  : t('dashboard.ready.ready')}
             </p>
             <CreditGate cost={CREDIT_COSTS.FIT_ANALYSIS}>
               <button
@@ -1577,8 +1576,7 @@ const Dashboard = () => {
               >
                 {analyzing ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />{' '}
-                    Analyzing…
+                    <AriaLoader inline tone="mono" size={16} label="" /> Analyzing…
                   </>
                 ) : (
                   <>
@@ -1647,7 +1645,7 @@ const Dashboard = () => {
                   'Complete both steps to continue'
                 ) : (
                   <>
-                    Analyze fit
+                    {t('dashboard.setup.analyzeCta')}
                     <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
                       {CREDIT_COSTS.FIT_ANALYSIS} cr
                     </span>
@@ -1682,7 +1680,7 @@ const Dashboard = () => {
                 >
                   {generatingCV ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <AriaLoader inline tone="mono" size={16} label="" />
                       Generating…
                     </>
                   ) : (
@@ -1700,7 +1698,7 @@ const Dashboard = () => {
                 }
                 className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary"
               >
-                View your CV
+                {t('dashboard.toolkit.viewCv')}
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
@@ -1713,16 +1711,15 @@ const Dashboard = () => {
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
               {/* Mobile: stacked + centered. Desktop (sm+): icon left, copy right. */}
               <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left sm:gap-4 mb-5 sm:mb-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mb-3 sm:mb-0">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 mb-3 sm:mb-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2 font-heading">
-                    Enable Auto-Analysis?
+                    {t('dashboard.autoAnalysis.title')}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Automatically analyze your resume against any job you upload — no extra taps
-                    needed.
+                    {t('dashboard.autoAnalysis.body')}
                   </p>
                 </div>
               </div>
@@ -1732,14 +1729,14 @@ const Dashboard = () => {
                   onClick={() => setShowAutoAnalyzeModal(false)}
                   className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-xl transition-all active:scale-[0.98]"
                 >
-                  Keep it manual
+                  {t('dashboard.autoAnalysis.keepManual')}
                 </button>
                 <button
                   onClick={enableAutoAnalysis}
                   className="w-full sm:w-auto btn-primary px-5 py-2.5 text-xs rounded-xl gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  Enable auto-analysis
+                  {t('dashboard.autoAnalysis.enable')}
                 </button>
               </div>
             </div>
@@ -1756,11 +1753,12 @@ const Dashboard = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2 font-heading">
-                    Delete CV?
+                    {t('dashboard.deleteCv.title')}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Are you sure you want to delete "{draftToDelete?.title || 'Untitled CV'}"? This
-                    action cannot be undone.
+                    {t('dashboard.deleteCv.body', {
+                      title: draftToDelete?.title || t('dashboard.untitledCv'),
+                    })}
                   </p>
                 </div>
               </div>
@@ -1779,7 +1777,7 @@ const Dashboard = () => {
                   onClick={confirmDelete}
                   className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md shadow-rose-500/10 hover:shadow-rose-500/20 transition-all active:scale-[0.98]"
                 >
-                  Delete CV
+                  {t('dashboard.deleteCv.confirm')}
                 </button>
               </div>
             </div>
@@ -1803,7 +1801,7 @@ const Dashboard = () => {
             </div>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 font-heading">
-              Insufficient A.I Credits
+              {t('dashboard.insufficientCredits')}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
               You need{' '}
@@ -1850,7 +1848,11 @@ const Dashboard = () => {
       <MetricCaptureModal
         isOpen={metricCapture.isOpen}
         vagueBullets={metricCapture.vagueBullets}
-        primaryLabel={metricCapture.mode === 'bundle' ? 'Generate full kit' : 'Generate CV'}
+        primaryLabel={t(
+          metricCapture.mode === 'bundle'
+            ? 'dashboard.metricCapture.generateBundle'
+            : 'dashboard.metricCapture.generateCv'
+        )}
         onSubmit={handleMetricCaptureSubmit}
         onCancel={handleMetricCaptureCancel}
       />

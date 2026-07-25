@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const AUTOSAVE_DELAY_MS = 3000;
 
@@ -7,6 +8,7 @@ const AUTOSAVE_DELAY_MS = 3000;
 // draft payload, and `onSave` when the user explicitly hits Save. `onDelete`
 // is omitted for the brand-new-note case (caller controls).
 const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(note?.title || '');
   const [body, setBody] = useState(note?.body || '');
   const [status, setStatus] = useState(note?.status || 'draft');
@@ -62,21 +64,21 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
   };
 
   const savedHint = (() => {
-    if (saving) return 'Saving…';
-    if (status === 'saved' && savedAt) return 'Saved · just now';
-    if (status === 'draft' && savedAt) return 'Draft saved · just now';
-    if (status === 'draft' && (title || body)) return 'Editing — auto-saves in 3s';
+    if (saving) return t('interviewPrep.noteEditor.saving');
+    if (status === 'saved' && savedAt) return t('interviewPrep.noteEditor.savedNow');
+    if (status === 'draft' && savedAt) return t('interviewPrep.noteEditor.draftSavedNow');
+    if (status === 'draft' && (title || body)) return t('interviewPrep.noteEditor.editingAutoSaves');
     return null;
   })();
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 sm:p-5 shadow-card">
+    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-card">
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Note title (optional)"
+          placeholder={t('interviewPrep.noteEditor.titlePlaceholder')}
           className="flex-1 text-[16px] sm:text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none bg-transparent"
         />
         {savedHint && (
@@ -93,7 +95,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
         onChange={(e) => setBody(e.target.value)}
         rows={6}
         ref={(el) => el && note?.id === '__new__' && el.focus()}
-        placeholder="Jot down anything you want to remember — STAR stories, follow-ups, things to research…"
+        placeholder={t('interviewPrep.noteEditor.bodyPlaceholder')}
         className="w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 resize-y"
       />
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -101,9 +103,9 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
           type="button"
           onClick={handleSave}
           disabled={saving || (!title.trim() && !body.trim())}
-          className="px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+          className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold disabled:bg-slate-300 disabled:cursor-not-allowed"
         >
-          Save
+          {t('interviewPrep.noteEditor.save')}
         </button>
         {onCancel && (
           <button
@@ -113,7 +115,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
           >
             <span className="inline-flex items-center gap-1">
               <X className="w-3.5 h-3.5" />
-              Close
+              {t('interviewPrep.noteEditor.close')}
             </span>
           </button>
         )}
@@ -124,7 +126,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
             className="ml-auto px-3 py-2 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 text-sm font-medium inline-flex items-center gap-1"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Delete
+            {t('interviewPrep.noteEditor.delete')}
           </button>
         )}
       </div>

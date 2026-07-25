@@ -3,6 +3,7 @@ import { X, Loader, CheckCircle, ArrowRight, PlayCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import billingService from '../services/billing.service';
 import useAdMobReward from '../hooks/useAdMobReward';
+import AriaLoader from './ui/AriaLoader';
 
 // AdMob Rewarded Video → SSV → credits. NATIVE ANDROID ONLY: web has no ads, so
 // every render site mounts this component only on native. The former web
@@ -34,7 +35,6 @@ const AdPlayer = (props) => {
   // SSV callback. The client just polls /balance to detect when SSV lands.
 
   const handleStartAd = async () => {
-    console.log(`[AdFlow] handleStartAd: AD CLICKED. userId=${userId}`);
     completedRef.current = false;
     setAdState('verifying');
     setVerifyMessage('Loading ad…');
@@ -43,14 +43,12 @@ const AdPlayer = (props) => {
     try {
       const bal = await billingService.getBalance();
       baseline = bal?.credits ?? 0;
-      console.log(`[AdFlow] baseline balance = ${baseline}`);
     } catch (e) {
       console.warn('[AdFlow] getBalance (baseline) failed', e?.message);
       /* continue with baseline=0; we'll still complete on credit arrival */
     }
 
     const result = await showRewardedAd();
-    console.log(`[AdFlow] showRewardedAd resolved: ${JSON.stringify(result)}`);
     if (!result.rewarded) {
       if (result.reason === 'dismissed') {
         setAdState('tab-closed');
@@ -62,13 +60,11 @@ const AdPlayer = (props) => {
 
     // Video finished — now wait for the server-side SSV reward to land. Show a
     // dedicated "allocating credits" loading modal during this verification.
-    console.log('[AdFlow] reward earned client-side; polling balance for SSV grant…');
     setAdState('allocating');
     const poll = await billingService.pollBalanceUntilIncrease(baseline, {
       intervalMs: 1500,
       timeoutMs: 12000,
     });
-    console.log(`[AdFlow] poll result: ${JSON.stringify(poll)} (baseline was ${baseline})`);
 
     completedRef.current = true;
     if (poll.increased) {
@@ -124,7 +120,7 @@ const AdPlayer = (props) => {
             )}
             {adState === 'allocating' && (
               <div className="w-full h-full bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
-                <Loader className="w-10 h-10 animate-spin" />
+                <AriaLoader inline tone="mono" size={40} label="Verifying your reward…" />
               </div>
             )}
             {adState === 'completed' && (
@@ -187,7 +183,7 @@ const AdPlayer = (props) => {
               disabled
               className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-bold text-lg cursor-wait flex items-center justify-center gap-2"
             >
-              <Loader className="w-5 h-5 animate-spin" />
+              <AriaLoader inline tone="mono" size={16} label="" />
               Verifying…
             </button>
           )}

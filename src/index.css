@@ -100,9 +100,9 @@
    Only the surface shades are retargeted under .dark; slate-700 stays the
    visible hairline. Light mode keeps Tailwind's default slate. */
 .dark {
-  --color-slate-950: #070c17;  /* deepest wells */
-  --color-slate-900: #0a101e;  /* app canvas / page ground */
-  --color-slate-800: #0f1a2e;  /* raised surfaces: cards, panels, bars */
+  --color-slate-950: #070c17; /* deepest wells */
+  --color-slate-900: #0a101e; /* app canvas / page ground */
+  --color-slate-800: #0f1a2e; /* raised surfaces: cards, panels, bars */
 }
 
 /* Base Variable Definitions */
@@ -115,8 +115,8 @@
     --color-accent: #f59e0b;
     /* Amber 500 */
 
-    --color-background: #f8fafc;
-    /* Slate 50 */
+    --color-background: #f6f6f3;
+    /* App.jsx:206 light ground */
     --color-surface: #ffffff;
     --color-border: #e2e8f0;
     /* Slate 200 */
@@ -126,8 +126,8 @@
      `.clean-card` and anything using bg-surface/bg-background/border-border
      flips automatically via these tokens. */
   .dark {
-    --color-background: #020617;
-    /* Slate 955 */
+    --color-background: #070c17;
+    /* == retuned --color-slate-950 (index.css:103); kept equal by intent, not coupling */
     --color-surface: #0f172a;
     /* Slate 900 */
     --color-border: #1e293b;
@@ -207,6 +207,22 @@
     background-size: 300% 300%;
   }
 
+  /* Firefox has no ::-webkit-scrollbar, so it would fall back to the chunky
+     native bar (arrow buttons and all). Give it the same thin ink bar through
+     the standard properties — but ONLY there: Blink ignores the ::-webkit rules
+     below the moment `scrollbar-color` is set, which would silently restyle
+     every other .custom-scrollbar in the app. */
+  @supports not selector(::-webkit-scrollbar) {
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-slate-200) transparent;
+    }
+
+    .dark .custom-scrollbar {
+      scrollbar-color: var(--color-slate-600) transparent;
+    }
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -217,7 +233,18 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-500;
+    @apply bg-slate-200 rounded-full hover:bg-slate-300;
+  }
+
+  /* The `dark:` variant expands to `&:where(.dark, .dark *)`, which lands ON the
+     pseudo-element and can never match — so the dark thumb has to be written as
+     an explicit descendant rule, or it stays light-grey on the navy ground. */
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-600;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
   }
 
   .scrollbar-none::-webkit-scrollbar {
@@ -328,6 +355,24 @@
     }
   }
 
+  /* AriaLoader only. Reduced motion freezes the satellite (rule above), and a frozen
+     mark on a loader reads as "stuck" rather than "working" — so give it a slow
+     breath instead. Full-motion users see the orbit and never this. */
+  @media (prefers-reduced-motion: reduce) {
+    .aria-loader-mark {
+      animation: ariaLoaderBreath 2.4s ease-in-out infinite;
+    }
+  }
+  @keyframes ariaLoaderBreath {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
   /* Idle "standing by" — Aria Studio's artifact panel when there's nothing to show.
      Reuses the SAME ariaOrbit/ariaRingPulse keyframes as the working state and only
      slows them down, so there is one orbit animation in the codebase, not two.
@@ -375,12 +420,14 @@
     background-color: #0c1320;
   }
   .aria-theme-grid {
-    background-image: linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px),
+    background-image:
+      linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px),
       linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px);
     background-size: 22px 22px;
   }
   .dark .aria-theme-grid {
-    background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
       linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   }
   .aria-theme-ledger {
@@ -425,7 +472,8 @@
   }
   .aria-swatch-grid {
     background: #f6f6f3;
-    background-image: linear-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px),
+    background-image:
+      linear-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px),
       linear-gradient(90deg, rgba(100, 116, 139, 0.25) 1px, transparent 1px);
     background-size: 8px 8px;
   }

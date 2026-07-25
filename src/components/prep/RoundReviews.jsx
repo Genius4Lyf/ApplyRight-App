@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { initials } from '../../utils/avatar';
 import AssessmentReport from './AssessmentReport';
 
@@ -10,31 +11,21 @@ import AssessmentReport from './AssessmentReport';
 // replaces the standalone "last interview assessment" card). Reads
 // application.interviewPrep.rounds.
 
+// Ink score + one 6px semantic dot on the band label (see LoopBoard).
 const READINESS = {
-  needs_work: {
-    label: 'Needs work',
-    text: 'text-rose-600 dark:text-rose-400',
-    ring: 'ring-rose-200 dark:ring-rose-500/30',
-  },
-  almost: {
-    label: 'Almost there',
-    text: 'text-amber-600 dark:text-amber-400',
-    ring: 'ring-amber-200 dark:ring-amber-500/30',
-  },
-  ready: {
-    label: 'Interview-ready',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    ring: 'ring-emerald-200 dark:ring-emerald-500/30',
-  },
+  needs_work: { labelKey: 'interviewPrep.roundReviews.readiness.needs_work', dot: 'bg-rose-500' },
+  almost: { labelKey: 'interviewPrep.roundReviews.readiness.almost', dot: 'bg-amber-500' },
+  ready: { labelKey: 'interviewPrep.roundReviews.readiness.ready', dot: 'bg-emerald-500' },
 };
 
 const Avatar = ({ name }) => (
-  <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-extrabold shrink-0 ring-2 ring-slate-200 dark:ring-slate-700">
+  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-extrabold shrink-0 ring-2 ring-slate-200 dark:ring-slate-700">
     {initials(name)}
   </div>
 );
 
 const ReviewCard = ({ round }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const a = round.assessment || {};
   const band = READINESS[round.readiness] || READINESS.almost;
@@ -54,8 +45,13 @@ const ReviewCard = ({ round }) => {
           {when && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{when}</p>}
         </div>
         <div className="text-right shrink-0">
-          <div className={`text-lg font-extrabold leading-none ${band.text}`}>{round.score}%</div>
-          <div className={`text-[10px] font-bold ${band.text}`}>{band.label}</div>
+          <div className="font-heading text-lg font-extrabold leading-none tabular-nums text-slate-900 dark:text-slate-100">
+            {round.score}%
+          </div>
+          <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${band.dot}`} />
+            {t(band.labelKey)}
+          </div>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
@@ -73,6 +69,7 @@ const ReviewCard = ({ round }) => {
 };
 
 const RoundReviews = ({ rounds = [] }) => {
+  const { t } = useTranslation();
   const list = (Array.isArray(rounds) ? rounds : [])
     .filter((r) => r && typeof r.score === 'number')
     .sort((a, b) => (a.seatIndex ?? 0) - (b.seatIndex ?? 0));
@@ -80,9 +77,11 @@ const RoundReviews = ({ rounds = [] }) => {
   if (list.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center">
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">No reviews yet</p>
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+          {t('interviewPrep.roundReviews.emptyTitle')}
+        </p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          Complete a round of your interview loop and the interviewer's feedback will show up here.
+          {t('interviewPrep.roundReviews.emptyBody')}
         </p>
       </div>
     );
@@ -91,7 +90,7 @@ const RoundReviews = ({ rounds = [] }) => {
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-        What each interviewer scored you and said — tap a card to see their full feedback.
+        {t('interviewPrep.roundReviews.desc')}
       </p>
       {list.map((r) => (
         <ReviewCard key={r.seatIndex} round={r} />

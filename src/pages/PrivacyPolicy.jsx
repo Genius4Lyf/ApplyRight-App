@@ -21,7 +21,9 @@ const PrivacyPolicy = () => {
           </Link>
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
-            <span className="text-base sm:text-lg font-semibold text-slate-900">ApplyRight</span>
+            <span className="font-brand text-base sm:text-lg font-semibold text-slate-900">
+              ApplyRight
+            </span>
           </Link>
         </div>
       </nav>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -70,6 +71,8 @@ import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import LengthCoach from '../components/cv/LengthCoach';
 import SummaryTrim from '../components/cv/SummaryTrim';
 import { extractSummary, replaceSummaryInMarkdown } from '../lib/summaryMarkdown';
+import { localizeCvMarkdown } from '../lib/cvLabels';
+import CvLanguageToggle from '../components/cv/CvLanguageToggle';
 import {
   Lock,
   Zap,
@@ -354,7 +357,6 @@ const ResumeReview = () => {
   // Listen for global user updates
   useEffect(() => {
     const handleUserUpdate = (e) => {
-      // console.log('ResumeReview received user update', e.detail);
       setUserProfile((prev) => ({ ...prev, ...e.detail }));
     };
     window.addEventListener('userDataUpdated', handleUserUpdate);
@@ -381,6 +383,7 @@ const ResumeReview = () => {
                   const { optimizedCV } = generateMarkdownFromDraft(draft);
                   app.optimizedCV = optimizedCV;
                   app.personalInfo = draft.personalInfo;
+                  app.outputLang = draft.outputLang;
                 }
               } catch (e) {
                 console.error('Failed to load draft CV for bundle:', e);
@@ -421,6 +424,7 @@ const ResumeReview = () => {
               isDraft: true,
               personalInfo: draft.personalInfo, // Include personal info for contact details merging
               isDraftComplete,
+              outputLang: draft.outputLang,
               rawDraft: draft,
             });
             return;
@@ -462,7 +466,6 @@ const ResumeReview = () => {
       try {
         // Only save if it's different (optional optimization, but backend check is fine)
         await api.patch(`/applications/${application._id}/template`, { templateId });
-        // console.log('Template preference saved:', templateId);
       } catch (error) {
         console.error('Failed to save template preference', error);
       }
@@ -543,7 +546,6 @@ const ResumeReview = () => {
     setAdForCreditsOpen(false);
     try {
       const res = await api.get('/auth/me');
-      // console.log('User profile refreshed:', res.data);
       setUserProfile(res.data);
 
       // Dispatch global event to update navbar and other components
@@ -658,6 +660,7 @@ const ResumeReview = () => {
         isDraft: isDraftMode,
         templateId,
         kind: activeTab === 'resume' ? 'resume' : 'cover-letter',
+        outputLang: application?.outputLang,
       });
 
       if (result.needsPaywall) {
@@ -682,10 +685,8 @@ const ResumeReview = () => {
   };
 
   const handleDownloadClick = () => {
-    // console.log('Download clicked. Template:', templateId);
     // 1. Check if unlocked
     if (!isUnlocked(templateId)) {
-      // console.log('Template locked. Opening modal.');
       const template = TEMPLATES.find((t) => t.id === templateId);
       setTemplateToUnlock(template);
       setUnlockModalOpen(true);
@@ -757,6 +758,19 @@ const ResumeReview = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, application, searchParams]);
 
+  // The CV's DOCUMENT language. null/absent (every CV predating this feature)
+  // means English, so existing CVs render exactly as they always did.
+  const cvLang = application?.outputLang || 'en';
+
+  // Section LABELS are translated here, at the render boundary — the stored
+  // markdown keeps its canonical English headings so markdownParser can still
+  // read the CV back. The PDF is a serialization of this rendered DOM, so it
+  // picks the translation up for free. English returns the input untouched.
+  const localizedCV = React.useMemo(
+    () => localizeCvMarkdown(application?.optimizedCV, cvLang),
+    [application?.optimizedCV, cvLang]
+  );
+
   // MERGE PROFILE DATA: Prioritize draft personal info (CV Builder) over user profile
   const mergedUserProfile = React.useMemo(() => {
     if (!userProfile) return null;
@@ -764,7 +778,6 @@ const ResumeReview = () => {
     // If we have draft data, merge it in
     if (isDraftMode && application?.personalInfo) {
       const draftInfo = application.personalInfo;
-      // console.log("Merging draft info:", draftInfo);
 
       return {
         ...userProfile,
@@ -1003,7 +1016,7 @@ const ResumeReview = () => {
               <span className="text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold block mb-1">
                 New Balance
               </span>
-              <div className="flex items-center justify-center gap-2 text-3xl font-extrabold text-indigo-600 dark:text-indigo-300">
+              <div className="flex items-center justify-center gap-2 font-heading text-3xl font-extrabold tabular-nums text-indigo-600 dark:text-indigo-300">
                 <Zap className="w-6 h-6 fill-indigo-600" />
                 {userProfile?.credits || 0}
               </div>
@@ -1087,7 +1100,7 @@ const ResumeReview = () => {
                 }`}
               >
                 {unlocking ? (
-                  <Loader className="w-5 h-5 animate-spin" />
+                  <AriaLoader inline tone="mono" size={16} label="Unlocking…" />
                 ) : (
                   <>
                     <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
@@ -1246,6 +1259,17 @@ const ResumeReview = () => {
               onTrimRoles={() => navigate(`/cv-builder/${builderId}/history?trim=1`)}
               canTrimRoles={!!builderId}
             />
+            {/* The language this CV is written in. Only editable on a draft — an
+                Application inherits the language of the CV it came from. */}
+            {isDraftMode && activeTab === 'resume' && (
+              <CvLanguageToggle
+                compact
+                draftId={id}
+                value={application?.outputLang}
+                onChange={(next) => setApplication((a) => ({ ...a, outputLang: next }))}
+                className="hidden sm:flex"
+              />
+            )}
           </div>
 
           {/* RIGHT: tab toggle (non-draft) + desktop actions */}
@@ -1308,7 +1332,7 @@ const ResumeReview = () => {
                   className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
                 >
                   {isDownloading || isDownloadingDocx ? (
-                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    <AriaLoader inline tone="mono" size={16} label="" />
                   ) : (
                     <Download className="w-4 h-4" />
                   )}
@@ -1337,7 +1361,12 @@ const ResumeReview = () => {
                         className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
                       >
                         {isDownloading ? (
-                          <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                          <AriaLoader
+                            inline
+                            tone="mono"
+                            size={16}
+                            label="Preparing your download…"
+                          />
                         ) : (
                           <FileText className="w-4 h-4 text-rose-500 shrink-0" />
                         )}
@@ -1354,7 +1383,12 @@ const ResumeReview = () => {
                         className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
                       >
                         {isDownloadingDocx ? (
-                          <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                          <AriaLoader
+                            inline
+                            tone="mono"
+                            size={16}
+                            label="Preparing your download…"
+                          />
                         ) : (
                           <FileType className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                         )}
@@ -1540,154 +1574,154 @@ const ResumeReview = () => {
                 /* RESUME TEMPLATE RENDER */
                 templateId === 'modern' ? (
                   <ModernCleanTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'modern-professional' ? (
                   <ModernProfessionalTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'ats-clean' ? (
                   <ATSCleanTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'student-ats' ? (
                   <StudentATSTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'minimal' ? (
                   <MinimalistTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'minimal-serif' ? (
                   <MinimalistSerifTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'minimal-grid' ? (
                   <MinimalistGridTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'minimal-mono' ? (
                   <MinimalistMonoTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'creative' ? (
                   <CreativePortfolioTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'executive' ? (
                   <ExecutiveLeadTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'tech' ? (
                   <TechStackTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'swiss' ? (
                   <SwissModernTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'luxury' ? (
                   <ElegantLuxuryTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'luxury-royal' ? (
                   <LuxuryRoyalTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'luxury-chic' ? (
                   <LuxuryChicTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'luxury-classic' ? (
                   <LuxuryClassicTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'luxury-gold' ? (
                   <LuxuryGoldTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'executive-board' ? (
                   <ExecutiveBoardTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'executive-strategy' ? (
                   <ExecutiveStrategyTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'executive-corporate' ? (
                   <ExecutiveCorporateTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'tech-devops' ? (
                   <TechDevOpsTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'tech-silicon' ? (
                   <TechSiliconTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'tech-google' ? (
                   <TechGoogleTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'executive-energy' ? (
                   <ExecutiveEnergyTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'energy-slb' ? (
                   <EnergySLBTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'energy-total' ? (
                   <EnergyTotalTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'energy-seplat' ? (
                   <EnergySeplatTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'energy-halliburton' ? (
                   <EnergyHalliburtonTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : templateId === 'energy-nlng' ? (
                   <EnergyNLNGTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 ) : (
                   /* Unknown/legacy templateId → safe ATS-clean default so saved
                      CVs referencing a no-longer-offered template still render. */
                   <ATSCleanTemplate
-                    markdown={application.optimizedCV}
+                    markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
                 )
@@ -1767,7 +1801,7 @@ const ResumeReview = () => {
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
             >
               {isDownloading || isDownloadingDocx ? (
-                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <AriaLoader inline tone="mono" size={16} label="" />
               ) : (
                 <Download className="w-4 h-4" />
               )}
@@ -1831,7 +1865,7 @@ const ResumeReview = () => {
                 className="flex w-full items-center gap-3 px-5 py-3.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
               >
                 {isDownloading ? (
-                  <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                  <AriaLoader inline tone="mono" size={16} label="Preparing your download…" />
                 ) : (
                   <FileText className="w-5 h-5 text-rose-500 shrink-0" />
                 )}
@@ -1848,7 +1882,7 @@ const ResumeReview = () => {
                 className="flex w-full items-center gap-3 px-5 py-3.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
               >
                 {isDownloadingDocx ? (
-                  <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                  <AriaLoader inline tone="mono" size={16} label="Preparing your download…" />
                 ) : (
                   <FileType className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
                 )}
@@ -2257,7 +2291,7 @@ const ResumeReview = () => {
                                 <div className="relative flex justify-center overflow-hidden bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                                   <TemplatePreviewThumb
                                     templateId={t.id}
-                                    markdown={application.optimizedCV}
+                                    markdown={localizedCV}
                                     userProfile={mergedUserProfile || userProfile}
                                   />
                                   {/* Faint dim on locked styles. */}

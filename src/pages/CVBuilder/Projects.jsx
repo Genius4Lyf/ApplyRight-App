@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   PenTool,
   ArrowRight,
@@ -31,6 +32,7 @@ import SortableItem from '../../components/SortableItem';
 import { newSortId, ensureIds } from '../../lib/sortId';
 
 const Projects = () => {
+  const { t } = useTranslation();
   // Safely destructure context
   const context = useOutletContext();
   const {
@@ -167,7 +169,9 @@ const Projects = () => {
   // across renders (rules-of-hooks).
   if (!cvData) {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading projects...</div>
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        {t('cvBuilder.projects.loading')}
+      </div>
     );
   }
 
@@ -205,40 +209,42 @@ const Projects = () => {
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
       <StepHeader
-        eyebrow="Projects"
-        title="Projects"
-        subtitle="Showcase your practical work and initiatives."
+        eyebrow={t('cvBuilder.projects.eyebrow')}
+        title={t('cvBuilder.projects.title')}
+        subtitle={t('cvBuilder.projects.subtitle')}
       />
 
       <SectionTips
         sectionKey="cvbuilder_projects"
-        title="Projects show what you do when nobody's asking"
-        intro="Even small side projects matter — they show initiative."
+        title={t('cvBuilder.projects.tips.title')}
+        intro={t('cvBuilder.projects.tips.intro')}
         tips={[
-          "Pick projects relevant to the role you're targeting; cut the rest.",
-          'Each description: what it is, who used it, the most concrete outcome (users, downloads, impact).',
-          'If it was a team project, name your specific contribution — what <em>you</em> built or led.',
-          'Add a link if you have one — GitHub, live demo, write-up, anything.',
-          "Don't list languages here — your Skills section already covers that.",
+          t('cvBuilder.projects.tips.list.0'),
+          t('cvBuilder.projects.tips.list.1'),
+          t('cvBuilder.projects.tips.list.2'),
+          t('cvBuilder.projects.tips.list.3'),
+          t('cvBuilder.projects.tips.list.4'),
         ]}
       />
 
       {projects.length === 0 && (
         <div className="text-center p-8 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
-          <p className="text-slate-500 dark:text-slate-400 mb-4">No projects added yet.</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
+            {t('cvBuilder.projects.empty')}
+          </p>
           <button
             type="button"
             onClick={addProject}
             className="btn-secondary flex items-center gap-2 mx-auto"
           >
-            <Plus className="w-4 h-4" /> Add First Project
+            <Plus className="w-4 h-4" /> {t('cvBuilder.projects.addFirst')}
           </button>
           <div className="mt-4">
             <button
               type="submit"
               className="text-sm text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 underline underline-offset-4"
             >
-              Skip this section
+              {t('cvBuilder.projects.skip')}
             </button>
           </div>
         </div>
@@ -284,7 +290,7 @@ const Projects = () => {
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">
-                            {proj.title || 'Untitled Project'}
+                            {proj.title || t('cvBuilder.projects.untitledProject')}
                             {proj.link && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
                                 {' '}
@@ -313,14 +319,14 @@ const Projects = () => {
                                   htmlFor={`project-title-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  Project Title
+                                  {t('cvBuilder.projects.projectTitle')}
                                 </label>
                                 <input
                                   id={`project-title-${index}`}
                                   type="text"
                                   value={proj.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
-                                  placeholder="e.g. Portfolio Website"
+                                  placeholder={t('cvBuilder.projects.phTitle')}
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
@@ -329,7 +335,7 @@ const Projects = () => {
                                   htmlFor={`project-link-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  Link (Optional)
+                                  {t('cvBuilder.projects.linkOptional')}
                                 </label>
                                 <div className="relative">
                                   <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -339,7 +345,7 @@ const Projects = () => {
                                     value={proj.link}
                                     onChange={(e) => handleChange(index, 'link', e.target.value)}
                                     onBlur={() => handleLinkBlur(index)}
-                                    placeholder="github.com/your-project"
+                                    placeholder={t('cvBuilder.projects.phLink')}
                                     className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                   />
                                 </div>
@@ -352,11 +358,11 @@ const Projects = () => {
                                   htmlFor={`project-description-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
                                 >
-                                  Description / Bullets
+                                  {t('cvBuilder.common.descriptionBullets')}
                                 </label>
                                 {ariaWroteId === proj._sortId && (
                                   <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-in fade-in">
-                                    ◉ Aria filled this in
+                                    {t('cvBuilder.common.ariaFilledIn')}
                                   </span>
                                 )}
                               </div>
@@ -377,15 +383,14 @@ const Projects = () => {
                                 }}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
-                                placeholder="• Developed a full-stack app using..."
+                                placeholder={t('cvBuilder.projects.phDescription')}
                                 className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm ${
                                   ariaWroteId === proj._sortId ? 'aria-wrote-field' : ''
                                 }`}
                               />
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                  Tip: 1-3 short bullets is enough. Lead with what it does, not how
-                                  you built it.
+                                  {t('cvBuilder.projects.tip')}
                                 </p>
                                 <InlineExample
                                   kind="project"
@@ -402,8 +407,8 @@ const Projects = () => {
                                 disabled={!proj.title}
                                 title={
                                   proj.title
-                                    ? 'Ask Aria to help with this project'
-                                    : 'Add the project title first'
+                                    ? t('cvBuilder.projects.askAriaTitle')
+                                    : t('cvBuilder.projects.addTitleFirst')
                                 }
                                 className={`shrink-0 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
                                   proj.title
@@ -411,19 +416,19 @@ const Projects = () => {
                                     : 'border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                 }`}
                               >
-                                <MessageCircle className="w-4 h-4" /> Ask Aria
+                                <MessageCircle className="w-4 h-4" /> {t('cvBuilder.common.askAria')}
                               </button>
                               <p className="flex-1 min-w-0 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
                                 {!proj.title
-                                  ? "Add the project title first — Aria won't guess it."
-                                  : 'Sends this project to Aria & focuses her here.'}
+                                  ? t('cvBuilder.projects.hintNoTitle')
+                                  : t('cvBuilder.projects.hintReady')}
                               </p>
                               <button
                                 type="button"
                                 onClick={() => setExpandedId(null)}
                                 className="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                               >
-                                Done
+                                {t('cvBuilder.common.done')}
                               </button>
                             </div>
                           </div>
@@ -444,7 +449,7 @@ const Projects = () => {
           onClick={addProject}
           className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
         >
-          <Plus className="w-4 h-4" /> Add Another Project
+          <Plus className="w-4 h-4" /> {t('cvBuilder.projects.addAnother')}
         </button>
       )}
 
@@ -454,14 +459,15 @@ const Projects = () => {
           onClick={handleBack}
           className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t('common.back')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
         >
-          {saving ? 'Saving...' : 'Next: Education'} <ArrowRight className="w-4 h-4" />
+          {saving ? t('cvBuilder.common.saving') : t('cvBuilder.projects.nextEducation')}{' '}
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </form>

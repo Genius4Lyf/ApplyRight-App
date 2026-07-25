@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCVBuilder } from '../../context/CVContext';
 import { ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
 
 const Heading = () => {
+  const { t } = useTranslation();
   // Use the custom hook for context
   const { cvData, handleNext, handleBack, saving, user, setStepDirty, registerStepData } =
     useCVBuilder();
@@ -106,7 +108,9 @@ const Heading = () => {
     e.preventDefault();
     // Also update title if not set
     const titleUpdate =
-      !cvData.title || cvData.title === 'Untitled CV' ? { title: `${formData.fullName}'s CV` } : {};
+      !cvData.title || cvData.title === 'Untitled CV'
+        ? { title: t('cvBuilder.heading.defaultCvTitle', { name: formData.fullName }) }
+        : {};
 
     setStepDirty?.(false);
     handleNext({ personalInfo: formData, ...titleUpdate });
@@ -118,21 +122,21 @@ const Heading = () => {
       className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500"
     >
       <StepHeader
-        eyebrow="Contact"
-        title="Contact information"
-        subtitle="Your professional header. Keep it accurate and simple."
+        eyebrow={t('cvBuilder.heading.eyebrow')}
+        title={t('cvBuilder.heading.title')}
+        subtitle={t('cvBuilder.heading.subtitle')}
       />
 
       <SectionTips
         sectionKey="cvbuilder_heading"
-        title="Keep the header clean and recruiter-ready"
-        intro="Your header is the first thing they see. A few small choices make a big difference."
+        title={t('cvBuilder.heading.tips.title')}
+        intro={t('cvBuilder.heading.tips.intro')}
         tips={[
-          'Use a professional email — <code class="text-[11px] bg-white/60 px-1 rounded">firstname.lastname@email.com</code> beats a nickname.',
-          'City and country is enough — no need for a full street address.',
-          'Include your LinkedIn URL if you have one; recruiters click it.',
-          "Skip the photo unless you're applying in a region where it's standard.",
-          'Example: <em>Jane Doe · London, UK · jane.doe@email.com · +44 7123 456 789 · linkedin.com/in/janedoe</em>',
+          t('cvBuilder.heading.tips.list.0'),
+          t('cvBuilder.heading.tips.list.1'),
+          t('cvBuilder.heading.tips.list.2'),
+          t('cvBuilder.heading.tips.list.3'),
+          t('cvBuilder.heading.tips.list.4'),
         ]}
       />
 
@@ -142,7 +146,7 @@ const Heading = () => {
             htmlFor="heading-fullName"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Full Name
+            {t('cvBuilder.heading.fullName')}
           </label>
           <input
             id="heading-fullName"
@@ -151,14 +155,14 @@ const Heading = () => {
             value={formData.fullName || ''}
             onChange={handleChange}
             required
-            placeholder="e.g. Alexander James"
+            placeholder={t('cvBuilder.heading.phFullName')}
             className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
 
         <div>
           <label htmlFor="heading-email" className="block text-sm font-medium text-slate-700 mb-1">
-            Email (Professional)
+            {t('cvBuilder.heading.emailPro')}
           </label>
           <input
             id="heading-email"
@@ -167,14 +171,14 @@ const Heading = () => {
             value={formData.email || ''}
             onChange={handleChange}
             required
-            placeholder="e.g. alex.james@gmail.com"
+            placeholder={t('cvBuilder.heading.phEmail')}
             className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
 
         <div>
           <label htmlFor="heading-phone" className="block text-sm font-medium text-slate-700 mb-1">
-            Phone Number
+            {t('cvBuilder.heading.phone')}
           </label>
           <input
             id="heading-phone"
@@ -182,7 +186,7 @@ const Heading = () => {
             name="phone"
             value={formData.phone || ''}
             onChange={handleChange}
-            placeholder="e.g. +1 (555) 123-4567"
+            placeholder={t('cvBuilder.heading.phPhone')}
             className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
           />
         </div>
@@ -192,14 +196,14 @@ const Heading = () => {
       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
-            Add additional information to your CV (optional)
+            {t('cvBuilder.heading.addMore')}
           </h3>
           <div className="relative group cursor-help">
             <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] font-bold">
               i
             </div>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-              Add these only if relevant to the job application.
+              {t('cvBuilder.heading.addMoreTooltip')}
             </div>
           </div>
         </div>
@@ -207,23 +211,23 @@ const Heading = () => {
         <div className="flex flex-wrap gap-2 mb-6">
           {!visibleFields.address && (
             <button type="button" onClick={() => toggleField('address')} className="btn-chip">
-              Location <Plus className="w-3 h-3 ml-1" />
+              {t('cvBuilder.heading.chipLocation')} <Plus className="w-3 h-3 ml-1" />
             </button>
           )}
           {!visibleFields.linkedin && (
             <button type="button" onClick={() => toggleField('linkedin')} className="btn-chip">
-              LinkedIn <Plus className="w-3 h-3 ml-1" />
+              {t('cvBuilder.heading.chipLinkedin')} <Plus className="w-3 h-3 ml-1" />
             </button>
           )}
           {!visibleFields.website && (
             <button type="button" onClick={() => toggleField('website')} className="btn-chip">
-              Website <Plus className="w-3 h-3 ml-1" />
+              {t('cvBuilder.heading.chipWebsite')} <Plus className="w-3 h-3 ml-1" />
             </button>
           )}
 
           {!visibleFields.nationality && (
             <button type="button" onClick={() => toggleField('nationality')} className="btn-chip">
-              Nationality <Plus className="w-3 h-3 ml-1" />
+              {t('cvBuilder.heading.nationality')} <Plus className="w-3 h-3 ml-1" />
             </button>
           )}
         </div>
@@ -236,7 +240,7 @@ const Heading = () => {
                   htmlFor="heading-address"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
-                  Location (City, Country)
+                  {t('cvBuilder.heading.locationLabel')}
                 </label>
                 <button
                   type="button"
@@ -254,7 +258,7 @@ const Heading = () => {
                   name="address"
                   value={formData.address || ''}
                   onChange={handleChange}
-                  placeholder="e.g. London, UK"
+                  placeholder={t('cvBuilder.heading.phLocation')}
                   className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
@@ -268,7 +272,7 @@ const Heading = () => {
                   htmlFor="heading-linkedin"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
-                  LinkedIn URL
+                  {t('cvBuilder.heading.linkedinLabel')}
                 </label>
                 <button
                   type="button"
@@ -287,7 +291,7 @@ const Heading = () => {
                   value={formData.linkedin || ''}
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
-                  placeholder="linkedin.com/in/profile"
+                  placeholder={t('cvBuilder.heading.phLinkedin')}
                   className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
@@ -301,7 +305,7 @@ const Heading = () => {
                   htmlFor="heading-website"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
-                  Website / Portfolio
+                  {t('cvBuilder.heading.websiteLabel')}
                 </label>
                 <button
                   type="button"
@@ -320,7 +324,7 @@ const Heading = () => {
                   value={formData.website || ''}
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
-                  placeholder="your-portfolio.com"
+                  placeholder={t('cvBuilder.heading.phWebsite')}
                   className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
@@ -334,7 +338,7 @@ const Heading = () => {
                   htmlFor="heading-nationality"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
-                  Nationality
+                  {t('cvBuilder.heading.nationality')}
                 </label>
                 <button
                   type="button"
@@ -352,7 +356,7 @@ const Heading = () => {
                   name="nationality"
                   value={formData.nationality || ''}
                   onChange={handleChange}
-                  placeholder="e.g. British"
+                  placeholder={t('cvBuilder.heading.phNationality')}
                   className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
@@ -367,14 +371,15 @@ const Heading = () => {
           onClick={handleBack}
           className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t('common.back')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
         >
-          {saving ? 'Saving...' : 'Next: Work History'} <ArrowRight className="w-4 h-4" />
+          {saving ? t('cvBuilder.common.saving') : t('cvBuilder.heading.nextWorkHistory')}{' '}
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 

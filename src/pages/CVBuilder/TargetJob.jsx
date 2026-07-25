@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 const TargetJob = () => {
+  const { t } = useTranslation();
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
@@ -36,7 +38,11 @@ const TargetJob = () => {
   // Render guard lives below the hooks so the hook call order is stable
   // across renders (rules-of-hooks).
   if (!cvData) {
-    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        {t('cvBuilder.targetJob.loading')}
+      </div>
+    );
   }
 
   const proceed = () => {
@@ -64,10 +70,10 @@ const TargetJob = () => {
 
       {/* Warm personal greeting */}
       <p className="mt-5 max-w-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-        I'm your CV coach — let's build a CV that gets you noticed.
+        {t('cvBuilder.targetJob.greetingLine1')}
         <br />
         <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
-          First — is there a job you're aiming for?
+          {t('cvBuilder.targetJob.greetingLine2')}
         </span>
       </p>
       <div className="mt-8 flex items-center gap-3">
@@ -76,7 +82,7 @@ const TargetJob = () => {
           onClick={handleBack}
           className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t('common.back')}
         </button>
         <button
           type="button"
@@ -84,7 +90,8 @@ const TargetJob = () => {
           onClick={onContinue}
           className="btn-primary px-5 py-2.5 text-sm flex items-center gap-2"
         >
-          {saving ? 'Saving…' : 'Continue'} <ArrowRight className="w-4 h-4" />
+          {saving ? t('cvBuilder.common.saving') : t('cvBuilder.targetJob.continue')}{' '}
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -93,10 +100,10 @@ const TargetJob = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-5 text-left animate-in zoom-in-95 duration-150">
             <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100">
-              Continue without a target job?
+              {t('cvBuilder.targetJob.confirmTitle')}
             </h2>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Aria tailors your CV to a specific role — you can still add one later.
+              {t('cvBuilder.targetJob.confirmBody')}
             </p>
             <div className="mt-5 flex items-center justify-end gap-2.5">
               <button
@@ -104,7 +111,7 @@ const TargetJob = () => {
                 onClick={() => setShowConfirm(false)}
                 className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -115,7 +122,7 @@ const TargetJob = () => {
                 }}
                 className="btn-primary px-5 py-2 text-sm"
               >
-                Continue anyway
+                {t('cvBuilder.targetJob.continueAnyway')}
               </button>
             </div>
           </div>

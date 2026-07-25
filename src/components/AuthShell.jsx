@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, ShieldCheck, Zap, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Gauge, ShieldCheck, Zap, Check } from 'lucide-react';
 import logo from '../assets/logo/applyright-icon.png';
 
 /**
@@ -23,29 +24,29 @@ import logo from '../assets/logo/applyright-icon.png';
  *                  panel bullet list (desktop only)
  *   trustSignals - array of strings rendered as small comma-separated
  *                  bullets under the form ("Free to start", etc.)
- *   accent       - brand accent for the page: 'indigo' (default) or 'amber'
- *                  (used to give the CV-agent signup a distinct feel)
+ *   accent       - brand accent for the page: 'ink' (default, neutral) or
+ *                  'indigo' (the brand accent, for the CV-agent signup)
  *   badge        - optional { icon, label } pill shown above the headings to
  *                  signal a special signup context (e.g. "CV Agent sign-up")
  *   children     - the actual form
  */
 // Full, static class strings per accent so Tailwind keeps them at build time.
+// The seeker path is INK/neutral. The CV-agent path uses the brand INDIGO as
+// its distinct accent (app-wide amber stays the paid-tier accent, untouched).
+// On the dark left panel the touches are a right-edge hairline + a value-prop
+// icon tint; never a glow.
 const ACCENTS = {
+  ink: {
+    hairline: 'via-white/15',
+    icon: 'text-white/80',
+    badgeDark: 'bg-white/10 border border-white/20 text-white',
+    badgeLight: 'bg-transparent border border-slate-300 text-slate-900',
+  },
   indigo: {
-    glow1: 'bg-indigo-600/20',
-    glow2: 'bg-violet-700/10',
-    hairline: 'via-indigo-500/30',
-    chip: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300',
+    hairline: 'via-indigo-400/40',
+    icon: 'text-indigo-300',
     badgeDark: 'bg-indigo-500/15 border border-indigo-400/30 text-indigo-200',
     badgeLight: 'bg-indigo-50 border border-indigo-200 text-indigo-700',
-  },
-  amber: {
-    glow1: 'bg-amber-500/25',
-    glow2: 'bg-orange-600/10',
-    hairline: 'via-amber-500/40',
-    chip: 'bg-amber-500/10 border-amber-500/20 text-amber-300',
-    badgeDark: 'bg-amber-500/15 border border-amber-400/30 text-amber-200',
-    badgeLight: 'bg-amber-100 border border-amber-300 text-amber-700',
   },
 };
 
@@ -56,11 +57,12 @@ const AuthShell = ({
   leftSubcopy,
   valueProps = [],
   trustSignals = [],
-  accent = 'indigo',
+  accent = 'ink',
   badge = null,
   children,
 }) => {
-  const a = ACCENTS[accent] || ACCENTS.indigo;
+  const { t } = useTranslation();
+  const a = ACCENTS[accent] || ACCENTS.ink;
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,22 +72,21 @@ const AuthShell = ({
       className="min-h-screen bg-slate-50 flex flex-col lg:flex-row"
     >
       {/* Left brand panel — sticky on desktop so it stays put while the form
-          column scrolls. Deep slate-950 base with a single soft indigo glow
-          breaking up the flatness — Linear / Vercel "dark void with brand
-          light" pattern, kept understated. */}
+          column scrolls. Deep slate-950 base with the app's editorial
+          diagonal-hairline texture for depth — no gradient hero light, no
+          brand glow. */}
       <aside className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:w-1/2 xl:w-2/5 bg-slate-950 text-white relative overflow-hidden">
-        {/* Soft indigo glow in the top-right — gives the panel depth without
-            the marketing-y gradient we had before. Heavy blur + low opacity. */}
+        {/* Diagonal hairline field — flat, faint slate rules on the dark
+            ground. The same understated device the app frame uses. */}
         <div
-          className={`absolute -top-40 -right-32 w-[28rem] h-[28rem] ${a.glow1} blur-3xl rounded-full pointer-events-none`}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(135deg, rgba(148,163,184,0.05) 0px, rgba(148,163,184,0.05) 1px, transparent 1px, transparent 22px)',
+          }}
           aria-hidden="true"
         />
-        {/* Smaller secondary glow in the bottom-left for asymmetric balance */}
-        <div
-          className={`absolute -bottom-32 -left-24 w-80 h-80 ${a.glow2} blur-3xl rounded-full pointer-events-none`}
-          aria-hidden="true"
-        />
-        {/* Hairline accent on the right edge */}
+        {/* Hairline accent on the right edge — the panel's single accent touch */}
         <div
           className={`absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent ${a.hairline} to-transparent pointer-events-none`}
         />
@@ -101,7 +102,7 @@ const AuthShell = ({
             className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity"
           >
             <img src={logo} alt="ApplyRight" className="h-8 w-auto" />
-            <span className="text-lg font-semibold">ApplyRight</span>
+            <span className="text-lg font-brand font-semibold tracking-tight">ApplyRight</span>
           </Link>
 
           {/* Headline + value props — vertically centered in remaining space */}
@@ -129,14 +130,14 @@ const AuthShell = ({
                 <ul className="space-y-4 pt-2">
                   {valueProps.map((vp, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <div
-                        className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${a.chip}`}
-                      >
-                        {vp.icon}
-                      </div>
+                      <span className={`mt-0.5 shrink-0 ${a.icon}`}>{vp.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-slate-50">{vp.title}</p>
-                        <p className="text-xs text-slate-400 leading-relaxed mt-0.5">{vp.body}</p>
+                        <p className="font-semibold text-sm text-slate-50">
+                          {vp.titleKey ? t(vp.titleKey) : vp.title}
+                        </p>
+                        <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
+                          {vp.bodyKey ? t(vp.bodyKey) : vp.body}
+                        </p>
                       </div>
                     </li>
                   ))}
@@ -147,7 +148,7 @@ const AuthShell = ({
 
           {/* Footer copyright */}
           <p className="text-xs text-slate-500 text-center">
-            &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
+            {t('common.copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </aside>
@@ -161,10 +162,12 @@ const AuthShell = ({
             className="lg:hidden flex items-center justify-center gap-2.5 mb-6 hover:opacity-80 transition-opacity"
           >
             <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
-            <span className="text-lg font-semibold text-slate-900">ApplyRight</span>
+            <span className="text-lg font-brand font-semibold tracking-tight text-slate-900">
+              ApplyRight
+            </span>
           </Link>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
             <div className="mb-6">
               {badge && (
                 <span
@@ -185,14 +188,16 @@ const AuthShell = ({
               {trustSignals.map((signal, i) => (
                 <li key={i} className="flex items-center gap-1.5">
                   <Check className="w-3 h-3 text-emerald-500" />
-                  {signal}
+                  {/* Callers pass translation keys. t() returns unknown input
+                      unchanged, so a plain literal still renders as-is. */}
+                  {t(signal)}
                 </li>
               ))}
             </ul>
           )}
 
           <p className="lg:hidden text-center mt-6 text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
+            {t('common.copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </main>
@@ -201,21 +206,23 @@ const AuthShell = ({
 };
 
 // Default value-prop set used by both pages (Register can override).
+// Carries translation KEYS rather than literals: this is a module constant, so
+// literals would be frozen in whatever language was active at import time.
 export const DEFAULT_VALUE_PROPS = [
   {
     icon: <Zap className="w-4 h-4" />,
-    title: 'AI tailors every CV to a specific job',
-    body: 'Optimized bullets and keywords in 30-60 seconds, not hours.',
+    titleKey: 'auth.shell.valueProps.tailor.title',
+    bodyKey: 'auth.shell.valueProps.tailor.body',
   },
   {
-    icon: <Sparkles className="w-4 h-4" />,
-    title: 'Score your fit before you apply',
-    body: "Get a clear match score and the gaps you'd want to address.",
+    icon: <Gauge className="w-4 h-4" />,
+    titleKey: 'auth.shell.valueProps.score.title',
+    bodyKey: 'auth.shell.valueProps.score.body',
   },
   {
     icon: <ShieldCheck className="w-4 h-4" />,
-    title: 'You own your data',
-    body: 'Your resume stays yours — encrypted, never sold.',
+    titleKey: 'auth.shell.valueProps.ownData.title',
+    bodyKey: 'auth.shell.valueProps.ownData.body',
   },
 ];
 

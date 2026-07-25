@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader } from 'lucide-react';
+import AriaLoader from './ui/AriaLoader';
 
 /**
  * LoadingScreen - Full-screen loading overlay with a rotating "ApplyRight Pro
@@ -84,10 +84,10 @@ const LoadingScreen = ({
       {/* Solid ground matching App.jsx — warm off-white / deep navy. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[#f6f6f3] dark:bg-slate-950"></div>
 
-      <div className="relative z-10 w-full max-w-3xl max-h-full overflow-y-auto p-6 bg-white dark:bg-slate-900 rounded-3xl sm:p-8 sm:m-4 shadow-xl sm:shadow-2xl border border-slate-150 dark:border-slate-800/85">
+      <div className="relative z-10 w-full max-w-3xl max-h-full overflow-y-auto p-6 bg-white dark:bg-slate-900 rounded-xl sm:p-8 sm:m-4 shadow-xl sm:shadow-2xl border border-slate-150 dark:border-slate-800/85">
         {/* Loading indicator */}
         <div className="flex flex-col items-center mb-8">
-          <Loader className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mb-4" />
+          <AriaLoader inline size={48} label="Working…" className="mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center">
             {currentMessage}
           </h2>
@@ -96,15 +96,11 @@ const LoadingScreen = ({
 
         {/* ApplyRight Pro Tip card */}
         <div className="my-6">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 p-6 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
-            {/* Decorative Background */}
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-100 dark:bg-indigo-900/40 rounded-full blur-2xl opacity-50"></div>
-            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-purple-100 dark:bg-purple-900/40 rounded-full blur-2xl opacity-50"></div>
-
+          <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col md:flex-row items-center gap-6">
             {/* Icon */}
-            <div className="relative z-10 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
               <svg
-                className="w-8 h-8 text-indigo-600 dark:text-indigo-400"
+                className="w-8 h-8 text-slate-500 dark:text-slate-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -119,8 +115,8 @@ const LoadingScreen = ({
             </div>
 
             {/* Text */}
-            <div className="relative z-10 flex-1 text-center md:text-left">
-              <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 mb-1">
                 ApplyRight Pro Tip
               </h3>
               <p className="text-slate-700 dark:text-slate-300 font-medium text-lg leading-relaxed">
@@ -139,7 +135,7 @@ const LoadingScreen = ({
         {showProgress && (
           <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-slate-900 dark:bg-white h-2 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>

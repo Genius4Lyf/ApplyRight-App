@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Lightbulb, ChevronDown, X } from 'lucide-react';
 
 /**
@@ -22,6 +23,7 @@ import { Lightbulb, ChevronDown, X } from 'lucide-react';
  *   defaultOpen - whether the card opens expanded the first time (default: true)
  */
 const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }) => {
+  const { t } = useTranslation();
   const storageKey = `tip_dismissed_${sectionKey}`;
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(defaultOpen);
@@ -72,7 +74,7 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
         className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 py-1.5 rounded-md transition-colors"
       >
         <Lightbulb className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-        Tips for this section
+        {t('cvBuilder.sectionTips.tipsForSection')}
       </button>
     );
   }
@@ -137,7 +139,7 @@ const SectionTips = ({ sectionKey, title, intro, tips = [], defaultOpen = true }
                   className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
                 >
                   <X className="w-3 h-3" />
-                  Got it, hide
+                  {t('cvBuilder.sectionTips.gotItHide')}
                 </button>
               </div>
             </div>

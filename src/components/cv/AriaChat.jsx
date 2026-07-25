@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
@@ -8,8 +8,9 @@ import { CAREER_STAGES } from '../../lib/careerStages';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
+import { useAriaModel } from '../../hooks/useAriaModel';
 import CVService from '../../services/cv.service';
-import ChatThemePicker from './ChatThemePicker';
+import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
@@ -34,6 +35,7 @@ const AriaChat = ({
   applySummary,
   applySkills,
 }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
   // The opening is ALWAYS regenerated (never stored), so state-aware coaching stays
   // current; only the Q&A after it is persisted per step — ON the draft
@@ -72,6 +74,9 @@ const AriaChat = ({
   const [skData, setSkData] = useState(null); // { suggestions, bestForRole }
   const [skSel, setSkSel] = useState([]); // initialSelected for a re-opened record
 
+  // The Aria model for this CV — same per-draft choice the Studio shows.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   useStickToBottom(scrollRef, [messages, thinking, sPhase, skPhase], reduce);
@@ -97,7 +102,9 @@ const AriaChat = ({
     setThinking(true);
     setTimeout(() => {
       setMessages((m) =>
-        m.some((x) => x.who === 'research') ? m : [...m, { who: 'research', section: currentStepId }]
+        m.some((x) => x.who === 'research')
+          ? m
+          : [...m, { who: 'research', section: currentStepId }]
       );
       setThinking(false);
     }, 900);
@@ -113,10 +120,7 @@ const AriaChat = ({
       const id = draftId && draftId !== 'new' ? draftId : await ensureDraft();
       if (!id) {
         setSPhase('idle');
-        setMessages((m) => [
-          ...m,
-          { who: 'aria', text: "Hmm — I couldn't get your CV set up. Refresh and try again." },
-        ]);
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
         return;
       }
       const r = await CVService.coachSummary({ draftId: id, stage });
@@ -128,13 +132,10 @@ const AriaChat = ({
       if (e?.response?.status === 403 || e?.response?.status === 402) {
         setMessages((m) => [
           ...m,
-          {
-            who: 'aria',
-            text: `You're out of credits for this — a summary draft is ${sCost} credits. Earn more or upgrade, then try again.`,
-          },
+          { who: 'aria', text: t('cvBuilder.ariaChat.outOfSummaryCredits', { n: sCost }) },
         ]);
       } else {
-        toast.error("Couldn't draft that — try again.");
+        toast.error(t('cvBuilder.ariaChat.couldntDraft'));
       }
     }
   };
@@ -148,10 +149,7 @@ const AriaChat = ({
       const id = draftId === 'new' ? await ensureDraft() : draftId;
       if (!id) {
         setSkPhase('idle');
-        setMessages((m) => [
-          ...m,
-          { who: 'aria', text: "Hmm — I couldn't get your CV set up. Refresh and try again." },
-        ]);
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
         return;
       }
       const r = await CVService.generateSkills(
@@ -169,13 +167,10 @@ const AriaChat = ({
       if ([402, 403].includes(e?.response?.status)) {
         setMessages((m) => [
           ...m,
-          {
-            who: 'aria',
-            text: `Finding your skills costs ${skillsCost} credits and you're short right now. Earn more or upgrade, then try again.`,
-          },
+          { who: 'aria', text: t('cvBuilder.ariaChat.skillsShort', { n: skillsCost }) },
         ]);
       } else {
-        toast.error("Couldn't pull your skills — try again.");
+        toast.error(t('cvBuilder.ariaChat.couldntPullSkills'));
       }
     }
   };
@@ -212,10 +207,7 @@ const AriaChat = ({
     const id = await ensureDraft();
     setCreatingDraft(false);
     if (!id) {
-      setMessages((m) => [
-        ...m,
-        { who: 'aria', text: "Hmm — I couldn't get your CV set up. Refresh and try again." },
-      ]);
+      setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
       setThinking(false);
       return;
     }
@@ -226,25 +218,13 @@ const AriaChat = ({
       if (r.freeRemaining === 0 && !capNoted) {
         // One-time "offer to continue on credits" note.
         setCapNoted(true);
-        setMessages((m) => [
-          ...m,
-          {
-            who: 'aria',
-            text: "That's your 10 free chats for today 🙂 We can keep going — 1 credit each — or come back tomorrow, it resets.",
-          },
-        ]);
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.ariaChat.tenFreeChats') }]);
       }
     } catch (e) {
       if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
-        setMessages((m) => [
-          ...m,
-          {
-            who: 'aria',
-            text: "You're out of free chats and credits for today — earn a few (watch an ad / refer a friend) or come back tomorrow. I'll still help you write bullets on a role anytime.",
-          },
-        ]);
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.ariaChat.outOfChats') }]);
       } else {
-        toast.error("Couldn't reach me just now — try again.");
+        toast.error(t('cvBuilder.common.couldntReach'));
       }
     } finally {
       setThinking(false);
@@ -255,8 +235,8 @@ const AriaChat = ({
     freeLeft == null
       ? ''
       : freeLeft > 0
-        ? `${freeLeft} free chats left today`
-        : 'Free chats done today · 1 credit each';
+        ? t('cvBuilder.common.freeChatsLeft', { n: freeLeft })
+        : t('cvBuilder.common.freeChatsDone');
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-3 p-4">
@@ -293,10 +273,10 @@ const AriaChat = ({
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        Added {m.n} skill{m.n === 1 ? '' : 's'} to your CV
+                        {t('cvBuilder.ariaChat.addedSkills', { count: m.n })}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        Tap to review
+                        {t('cvBuilder.ariaChat.tapToReview')}
                       </span>
                     </span>
                     <span className="shrink-0 text-slate-400 dark:text-slate-500 text-lg leading-none">
@@ -346,7 +326,7 @@ const AriaChat = ({
                 onClick={injectResearch}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                📖 What research says
+                📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>
               {/* Summary step: kick off Aria's in-chat, credited summary draft. */}
               {isSummary && sPhase === 'idle' && (
@@ -355,7 +335,7 @@ const AriaChat = ({
                   onClick={() => setSPhase('stage')}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
                 >
-                  ✍️ Draft my summary · {sCost} cr
+                  {t('cvBuilder.ariaChat.draftSummaryChip', { n: sCost })}
                 </button>
               )}
               {/* Skills step: kick off Aria's in-chat skills search — only with content
@@ -366,7 +346,7 @@ const AriaChat = ({
                   onClick={() => setSkPhase('consent')}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
                 >
-                  🧰 Find my skills · {skillsCost} cr
+                  {t('cvBuilder.ariaChat.findSkillsChip', { n: skillsCost })}
                 </button>
               )}
             </div>
@@ -378,7 +358,7 @@ const AriaChat = ({
             <div className="self-start max-w-[92%] flex items-start gap-2">
               <AriaOrbit size={16} className="mt-2" />
               <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
-                Add a role or project first — then I'll find skills you can actually back up.
+                {t('cvBuilder.ariaChat.skillsEmpty')}
               </span>
             </div>
           )}
@@ -395,7 +375,7 @@ const AriaChat = ({
                 <AriaOrbit size={16} className="mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
-                    Quick one — where are you in your career? I'll write it the way that fits.
+                    {t('cvBuilder.ariaChat.stagePrompt')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {SUMMARY_STAGES.map((s) => (
@@ -428,7 +408,7 @@ const AriaChat = ({
                 <AriaOrbit size={16} className="mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-                    Your summary
+                    {t('cvBuilder.ariaChat.yourSummary')}
                   </span>
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {sText}
@@ -441,29 +421,26 @@ const AriaChat = ({
                         setSPhase('idle');
                         setMessages((m) => [
                           ...m,
-                          {
-                            who: 'aria',
-                            text: 'Added it to your summary ✓ — edit any word to make it yours.',
-                          },
+                          { who: 'aria', text: t('cvBuilder.ariaChat.summaryApplied') },
                         ]);
                       }}
                       className="text-xs font-semibold px-4 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                     >
-                      Use it
+                      {t('cvBuilder.ariaChat.useIt')}
                     </button>
                     <button
                       type="button"
                       onClick={() => generateSummary(sStage)}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      ↻ Re-roll · {sCost} cr
+                      {t('cvBuilder.ariaChat.reroll', { n: sCost })}
                     </button>
                     <button
                       type="button"
                       onClick={() => setSPhase('stage')}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      Different stage
+                      {t('cvBuilder.ariaChat.differentStage')}
                     </button>
                   </div>
                 </div>
@@ -483,8 +460,7 @@ const AriaChat = ({
                 <AriaOrbit size={16} className="mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
-                    I'll read your work history + projects and pull hard skills you can back up. This
-                    uses {skillsCost} credits.
+                    {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     <button
@@ -492,14 +468,14 @@ const AriaChat = ({
                       onClick={generateSkills}
                       className="text-xs font-semibold px-4 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                     >
-                      Find them · {skillsCost} cr
+                      {t('cvBuilder.ariaChat.findThem', { n: skillsCost })}
                     </button>
                     <button
                       type="button"
                       onClick={() => setSkPhase('idle')}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      Not now
+                      {t('cvBuilder.ariaChat.notNow')}
                     </button>
                   </div>
                 </div>
@@ -537,50 +513,30 @@ const AriaChat = ({
           {thinking && (
             <AriaThinking
               variant="chat"
-              label={creatingDraft ? 'Setting up your CV draft…' : undefined}
+              label={creatingDraft ? t('cvBuilder.common.settingUp') : undefined}
             />
           )}
         </div>
       </div>
 
-      {/* Docked input row. */}
-      <div className="shrink-0">
-        {freeLine && (
-          <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {freeLine}
-          </p>
-        )}
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onInput={(e) => {
-              e.currentTarget.style.height = 'auto';
-              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            rows={1}
-            placeholder="Ask Aria anything…"
-            className="flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none max-h-[140px]"
-          />
-          <ChatThemePicker />
-          <button
-            type="button"
-            onClick={() => send()}
-            disabled={thinking || input.trim().length < 2}
-            aria-label="Send"
-            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-indigo-500/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
-          >
-            <ArrowUp className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      {/* Docked composer — shared with every other Aria surface. */}
+      <AriaComposer
+        className="shrink-0"
+        inputRef={inputRef}
+        value={input}
+        onChange={setInput}
+        onSend={send}
+        busy={thinking}
+        modelId={modelId}
+        onSelectModel={selectModel}
+        note={
+          freeLine ? (
+            <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {freeLine}
+            </p>
+          ) : null
+        }
+      />
     </div>
   );
 };

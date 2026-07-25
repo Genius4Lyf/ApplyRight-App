@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Briefcase, FileText, FileDown, Wallet, Sparkles, Plus, Lock, ArrowRight } from 'lucide-react';
+import {
+  Briefcase,
+  FileText,
+  FileDown,
+  Wallet,
+  Sparkles,
+  Plus,
+  Lock,
+  ArrowRight,
+} from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import CVCard from '../../components/CVCard';
 import StatCard from '../../components/Agent/StatCard';

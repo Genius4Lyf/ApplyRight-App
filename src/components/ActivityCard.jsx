@@ -51,7 +51,9 @@ const StatTile = ({ icon, value, label, accent }) => {
     <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-3">
       <div className={`flex items-center gap-1.5 ${accent || 'text-slate-400'}`}>
         <Icon className="w-4 h-4" />
-        <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">{value}</span>
+        <span className="font-heading text-xl font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
+          {value}
+        </span>
       </div>
       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{label}</div>
     </div>

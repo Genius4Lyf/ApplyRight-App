@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, FileText, ArrowUpRight, Loader, Lock } from 'lucide-react';
+import { X, FileText, ArrowUpRight, Lock } from 'lucide-react';
 import ApplicationService from '../services/application.service';
 import api from '../services/api';
 import CVTemplateRenderer from './CVTemplateRenderer';
@@ -156,10 +157,15 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
       </div>
 
       {/* Body */}
-      <div ref={wrapRef} className="flex-1 min-h-0 overflow-auto p-2 sm:p-4">
+      <div
+        ref={wrapRef}
+        className={`flex-1 min-h-0 overflow-auto p-2 sm:p-4 ${
+          loading || (!hasCV && resumeText === null) ? 'bg-[#f6f6f3] dark:bg-slate-950' : ''
+        }`}
+      >
         {loading ? (
-          <div className="h-full flex flex-col items-center justify-center text-white/90">
-            <Loader className="w-8 h-8 animate-spin" />
+          <div className="h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+            <AriaLoader inline tone="mono" size={32} label="Loading your CV…" />
             <p className="text-xs mt-2">Loading your CV…</p>
           </div>
         ) : error ? (
@@ -181,8 +187,8 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           </div>
         ) : !hasCV && resumeText === null ? (
           // Still checking for an uploaded resume.
-          <div className="h-full flex flex-col items-center justify-center text-white/90">
-            <Loader className="w-8 h-8 animate-spin" />
+          <div className="h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+            <AriaLoader inline tone="mono" size={32} label="Loading your CV…" />
             <p className="text-xs mt-2">Loading your CV…</p>
           </div>
         ) : !hasCV ? (

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import AriaLoader from '../ui/AriaLoader';
 import { createPortal } from 'react-dom';
-import { Target, Check, Plus, Loader2, Sparkles, Wand2, X } from 'lucide-react';
+import { Target, Check, Plus, Sparkles, Wand2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import CreditGate from '../CreditGate';
@@ -45,6 +47,7 @@ const JobKeywordPanel = ({
   onAddKeyword,
   onEnhanced,
 }) => {
+  const { t } = useTranslation();
   const [baseKeywords, setBaseKeywords] = useState([]);
   const [source, setSource] = useState('none');
   const [loading, setLoading] = useState(false);
@@ -143,7 +146,7 @@ const JobKeywordPanel = ({
       );
       const kws = Array.isArray(data?.keywords) ? data.keywords : [];
       if (kws.length === 0) {
-        toast.error('Could not pull keywords from this job. Please try again.');
+        toast.error(t('cvBuilder.jobKeywords.couldntPull'));
         return;
       }
       setEnhancedKeywords(kws);
@@ -154,18 +157,22 @@ const JobKeywordPanel = ({
             new CustomEvent('credit_updated', { detail: data.remainingCredits })
           );
         }
-        toast.success('Keywords tailored to this job ✨');
+        toast.success(t('cvBuilder.jobKeywords.tailored'));
       } else {
-        toast.success('Loaded keywords for this job');
+        toast.success(t('cvBuilder.jobKeywords.loaded'));
       }
     } catch (error) {
       const code = error.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
-        toast.error(`Insufficient A.I credits (Requires ${CREDIT_COSTS.GENERATE_JD_KEYWORDS})`);
+        toast.error(
+          t('cvBuilder.jobKeywords.insufficientCredits', {
+            n: CREDIT_COSTS.GENERATE_JD_KEYWORDS,
+          })
+        );
       } else if (code === 'SAVE_REQUIRED') {
-        toast.error('Save your CV first to tailor keywords.');
+        toast.error(t('cvBuilder.jobKeywords.saveCvFirst'));
       } else {
-        toast.error('Could not tailor keywords. Please try again.');
+        toast.error(t('cvBuilder.jobKeywords.couldntTailor'));
       }
     } finally {
       setEnhancing(false);
@@ -191,10 +198,10 @@ const JobKeywordPanel = ({
   if (!loading && displayed.length === 0 && !description) return null;
 
   const subtitle = isEnhanced
-    ? 'AI-tailored to this job description.'
+    ? t('cvBuilder.jobKeywords.subtitleEnhanced')
     : source === 'title'
-      ? 'No job description provided — these are typical keywords for this role.'
-      : 'Pulled from the target job. Include the ones that are genuinely true for you.';
+      ? t('cvBuilder.jobKeywords.subtitleTitle')
+      : t('cvBuilder.jobKeywords.subtitleJd');
 
   const pct = coverage?.total ? Math.round((coverage.covered / coverage.total) * 100) : 0;
   const barColor = pct >= 67 ? 'bg-emerald-500' : pct >= 34 ? 'bg-amber-500' : 'bg-rose-400';
@@ -209,10 +216,10 @@ const JobKeywordPanel = ({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            Keywords for this job
+            {t('cvBuilder.jobKeywords.keywordsForJob')}
             {isEnhanced && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-full px-1.5 py-0.5">
-                <Sparkles className="w-2.5 h-2.5" /> AI
+                <Sparkles className="w-2.5 h-2.5" /> {t('cvBuilder.jobKeywords.aiBadge')}
               </span>
             )}
           </p>
@@ -225,11 +232,17 @@ const JobKeywordPanel = ({
         <div className="mt-3">
           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1">
             <span className="font-medium text-slate-700 dark:text-slate-300">
-              {coverage.covered} of {coverage.total} key terms covered
+              {t('cvBuilder.jobKeywords.coverage', {
+                covered: coverage.covered,
+                total: coverage.total,
+              })}
             </span>
             {coverage.mustHaveTotal > 0 && (
               <span>
-                must-haves {coverage.mustHaveCovered}/{coverage.mustHaveTotal}
+                {t('cvBuilder.jobKeywords.mustHaves', {
+                  covered: coverage.mustHaveCovered,
+                  total: coverage.mustHaveTotal,
+                })}
               </span>
             )}
           </div>
@@ -244,12 +257,12 @@ const JobKeywordPanel = ({
 
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-3">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          <span>Finding keywords…</span>
+          <AriaLoader inline tone="mono" size={14} label="" />
+          <span>{t('cvBuilder.jobKeywords.finding')}</span>
         </div>
       ) : displayed.length === 0 ? (
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
-          No common keywords detected — try AI tailoring below.
+          {t('cvBuilder.jobKeywords.noneDetected')}
         </p>
       ) : (
         <div className="flex flex-wrap gap-2.5 mt-3">
@@ -273,7 +286,7 @@ const JobKeywordPanel = ({
                   key={kw.name}
                   type="button"
                   onClick={() => onAddKeyword(kw.name)}
-                  title="Add this as a skill"
+                  title={t('cvBuilder.jobKeywords.addAsSkill')}
                   className={`${baseClass} hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors`}
                 >
                   <Plus className="w-3 h-3" />
@@ -300,17 +313,23 @@ const JobKeywordPanel = ({
               type="button"
               onClick={handleEnhance}
               disabled={enhancing || !draftId}
-              title={!draftId ? 'Save your CV first to tailor keywords' : undefined}
+              title={!draftId ? t('cvBuilder.jobKeywords.saveCvFirst') : undefined}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {enhancing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <AriaLoader inline tone="mono" size={14} label="" />
               ) : (
                 <Wand2 className="w-3.5 h-3.5" />
               )}
-              <span>{enhancing ? 'Finding more…' : 'Find more keywords'}</span>
+              <span>
+                {enhancing
+                  ? t('cvBuilder.jobKeywords.findingMore')
+                  : t('cvBuilder.jobKeywords.findMore')}
+              </span>
               <span className="text-indigo-300 font-normal">·</span>
-              <span className="font-normal">{CREDIT_COSTS.GENERATE_JD_KEYWORDS} cr</span>
+              <span className="font-normal">
+                {t('cvBuilder.common.creditChip', { n: CREDIT_COSTS.GENERATE_JD_KEYWORDS })}
+              </span>
             </button>
           </CreditGate>
         </div>
@@ -318,8 +337,8 @@ const JobKeywordPanel = ({
 
       <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-3">
         {onAddKeyword
-          ? 'Green = already in your skills. Click a grey keyword to add it — only if it’s genuinely true for you.'
-          : 'Green = already in your CV. Weave grey keywords into your bullets where they’re genuinely true.'}
+          ? t('cvBuilder.jobKeywords.helperAdd')
+          : t('cvBuilder.jobKeywords.helperCovered')}
       </p>
     </>
   );
@@ -334,7 +353,7 @@ const JobKeywordPanel = ({
           type="button"
           onClick={() => setOpen(true)}
           className="fixed right-3 bottom-6 z-40 inline-flex items-center gap-1.5 pl-2.5 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/30 transition-all"
-          title="Show keyword coverage"
+          title={t('cvBuilder.jobKeywords.showCoverage')}
         >
           <span className="relative flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">
             <Target className="w-3 h-3" />
@@ -345,13 +364,12 @@ const JobKeywordPanel = ({
             )}
           </span>
           <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            {coverage && coverage.total > 0 ? (
-              <>
-                {coverage.covered}/{coverage.total} keywords
-              </>
-            ) : (
-              'Keywords'
-            )}
+            {coverage && coverage.total > 0
+              ? t('cvBuilder.jobKeywords.keywordsCount', {
+                  covered: coverage.covered,
+                  total: coverage.total,
+                })
+              : t('cvBuilder.jobKeywords.keywords')}
           </span>
         </button>,
         document.body
@@ -363,8 +381,8 @@ const JobKeywordPanel = ({
           type="button"
           onClick={() => setOpen(false)}
           className="absolute top-1.5 right-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 p-1 rounded-md transition-colors"
-          title="Minimize"
-          aria-label="Minimize keyword helper"
+          title={t('cvBuilder.jobKeywords.minimize')}
+          aria-label={t('cvBuilder.jobKeywords.minimizeAria')}
         >
           <X className="w-4 h-4" />
         </button>

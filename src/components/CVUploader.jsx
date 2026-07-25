@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { Upload, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
@@ -145,7 +146,7 @@ const CVUploader = ({
         {uploading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-20">
             <div className="flex flex-col items-center">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <AriaLoader inline size={32} label="Processing your document…" />
               <p className="mt-2 text-sm font-medium text-indigo-600">Processing Document...</p>
             </div>
           </div>

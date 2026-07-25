@@ -57,14 +57,10 @@ export const initAdMob = async () => {
 
 export const prepareRewarded = async (userId) => {
   if (!isAndroidNative()) return false;
-  console.log(`[AdFlow] prepareRewarded called userId=${userId} adId=${REWARDED_AD_ID}`);
   try {
     const plugin = await loadPlugin();
     if (!plugin) return false;
     if (!initialized) await initAdMob();
-    console.log(
-      `[AdFlow] prepareRewarded -> requesting ad with ssv.userId=${String(userId || '')}`
-    );
     await plugin.AdMob.prepareRewardVideoAd({
       adId: REWARDED_AD_ID,
       // ssv: Google forwards userId verbatim as `user_id` in the SSV
@@ -75,7 +71,6 @@ export const prepareRewarded = async (userId) => {
       ssv: { userId: String(userId || ''), customData: String(userId || '') },
     });
     rewardedPrepared = true;
-    console.log('[AdFlow] prepareRewarded -> ad loaded OK (ready to show)');
     return true;
   } catch (err) {
     // code: 0=internal, 1=invalid request (bad unit/app id), 2=network, 3=no fill.
@@ -126,14 +121,12 @@ export const showRewarded = async () => {
   });
 
   subscriptions.push(
-    await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
+    await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
       earned = true;
-      console.log(`[AdFlow] event=Rewarded reward=${JSON.stringify(reward)}`);
     })
   );
   subscriptions.push(
     await AdMob.addListener(RewardAdPluginEvents.Dismissed, async () => {
-      console.log(`[AdFlow] event=Dismissed earned=${earned}`);
       await cleanup();
       resolveOuter({ rewarded: earned, reason: earned ? undefined : 'dismissed' });
     })

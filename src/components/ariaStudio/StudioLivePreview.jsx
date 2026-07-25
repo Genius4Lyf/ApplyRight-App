@@ -11,6 +11,8 @@ import {
   parseBullets,
 } from '../../lib/studioPreview';
 import AriaOrbit from '../cv/AriaOrbit';
+import CvLanguageToggle from '../cv/CvLanguageToggle';
+import { cvLabel } from '../../lib/cvLabels';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
 // (NOT the template markdown), so it updates the instant an edit lands. Each section
@@ -63,7 +65,7 @@ const Bullets = ({ description }) => {
 
 const StudioLivePreview = ({ onClose }) => {
   const reduce = useReducedMotion();
-  const { cvData } = useAriaStudio();
+  const { cvData, updateCvData } = useAriaStudio();
   const scan = cvData?.studioScan;
 
   // ── "See it change" pulse: when a re-band improves a section, glow it once. ──
@@ -102,6 +104,13 @@ const StudioLivePreview = ({ onClose }) => {
   // empty, unscored section would just be a bare label.
   const show = (key, hasContent) => hasContent || bandOfKey(key) !== 'neutral';
 
+  // This panel builds sections structurally from cvData (not from the localized
+  // markdown), so its labels don't get translated for free — route each through
+  // cvLabel so the section headings track the CV-language toggle. The short-form
+  // labels ("Summary"/"Experience"/"Contact") have their own entries in the table.
+  const docLang = cvData?.outputLang || 'en';
+  const label = (name) => cvLabel(name, docLang);
+
   return (
     <aside className="h-full min-h-0 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
@@ -113,6 +122,17 @@ const StudioLivePreview = ({ onClose }) => {
             {cvData?.title || 'Your CV'}
           </p>
         </div>
+        {/* The language this CV is WRITTEN in — drives Aria's writing and the
+            section labels on the downloaded document. */}
+        {cvData?._id && (
+          <CvLanguageToggle
+            compact
+            draftId={cvData._id}
+            value={cvData.outputLang}
+            onChange={(next) => updateCvData({ outputLang: next })}
+            className="shrink-0"
+          />
+        )}
         {onClose && (
           <button
             type="button"
@@ -143,7 +163,11 @@ const StudioLivePreview = ({ onClose }) => {
           {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
           <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
             {/* Contact header */}
-            <SectionBlock label="Contact" band={bandOfKey('contact')} pulsing={pulsing.contact}>
+            <SectionBlock
+              label={label('Contact')}
+              band={bandOfKey('contact')}
+              pulsing={pulsing.contact}
+            >
               <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
                 {(info.fullName || '').trim() || 'Your name'}
               </p>
@@ -161,7 +185,7 @@ const StudioLivePreview = ({ onClose }) => {
                 return (
                   <SectionBlock
                     key="summary"
-                    label="Summary"
+                    label={label('Summary')}
                     band={bandOfKey('summary')}
                     pulsing={pulsing.summary}
                   >
@@ -182,7 +206,7 @@ const StudioLivePreview = ({ onClose }) => {
                 return (
                   <SectionBlock
                     key="experience"
-                    label="Experience"
+                    label={label('Experience')}
                     band={bandOfKey('experience')}
                     pulsing={pulsing.experience}
                   >
@@ -219,7 +243,7 @@ const StudioLivePreview = ({ onClose }) => {
                 return (
                   <SectionBlock
                     key="projects"
-                    label="Projects"
+                    label={label('Projects')}
                     band={bandOfKey('projects')}
                     pulsing={pulsing.projects}
                   >
@@ -241,7 +265,7 @@ const StudioLivePreview = ({ onClose }) => {
                 return (
                   <SectionBlock
                     key="skills"
-                    label="Skills"
+                    label={label('Skills')}
                     band={bandOfKey('skills')}
                     pulsing={pulsing.skills}
                   >
@@ -269,7 +293,7 @@ const StudioLivePreview = ({ onClose }) => {
                 return (
                   <SectionBlock
                     key="education"
-                    label="Education"
+                    label={label('Education')}
                     band={bandOfKey('education')}
                     pulsing={pulsing.education}
                   >

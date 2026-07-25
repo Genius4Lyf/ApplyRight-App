@@ -24,6 +24,8 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { billingService } from '../services';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 import logo from '../assets/logo/applyright-icon.png';
 
@@ -52,6 +54,7 @@ const AccountMenu = ({
   navigate,
   onSignOut,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
   const initials = ((user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')).toUpperCase();
@@ -166,7 +169,7 @@ const AccountMenu = ({
                   <p className="font-heading text-[15px] font-bold text-slate-900 dark:text-slate-100 truncate">
                     {user && user.firstName
                       ? `${user.firstName} ${user.lastName || ''}`.trim()
-                      : user?.email?.split('@')[0] || 'User'}
+                      : user?.email?.split('@')[0] || t('nav.account.defaultUser')}
                   </p>
                   {isPaid ? (
                     <span className="inline-flex items-center gap-1 mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-700 dark:text-amber-400">
@@ -174,7 +177,7 @@ const AccountMenu = ({
                     </span>
                   ) : (
                     <span className="block mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
-                      Free plan
+                      {t('nav.account.freePlan')}
                     </span>
                   )}
                 </div>
@@ -186,10 +189,10 @@ const AccountMenu = ({
               <div className="px-2.5 py-2">
                 <div className="flex items-baseline justify-between mb-1.5">
                   <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
-                    <Coins className="w-3.5 h-3.5" /> Credits
+                    <Coins className="w-3.5 h-3.5" /> {t('nav.account.credits')}
                   </span>
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    {displayCredits ?? 0} left
+                    {t('nav.account.creditsLeft', { count: displayCredits ?? 0 })}
                   </span>
                 </div>
                 <div className="h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -205,10 +208,10 @@ const AccountMenu = ({
               <div className="px-2.5 py-2">
                 <div className="flex items-baseline justify-between mb-1.5">
                   <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
-                    <Clock className="w-3.5 h-3.5" /> Interview minutes
+                    <Clock className="w-3.5 h-3.5" /> {t('nav.account.interviewMinutes')}
                   </span>
                   <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    {minutesLeft ?? freeTasteMin ?? 0} min
+                    {t('nav.account.minutesShort', { n: minutesLeft ?? freeTasteMin ?? 0 })}
                   </span>
                 </div>
                 <div className="h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -234,9 +237,11 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[13px] text-left transition-colors"
               >
                 <Plus className="w-4 h-4 text-slate-500" />
-                <span className="flex-1 text-slate-600 dark:text-slate-300">Top up credits</span>
+                <span className="flex-1 text-slate-600 dark:text-slate-300">
+                  {t('nav.account.topUpCredits')}
+                </span>
                 <span className="text-[11px] font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full px-3 py-1">
-                  Get
+                  {t('nav.account.topUpAction')}
                 </span>
               </button>
 
@@ -250,7 +255,7 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-800 dark:text-slate-100 text-left transition-colors"
               >
                 <User className="w-4 h-4 text-slate-500" />
-                <span className="flex-1">View profile</span>
+                <span className="flex-1">{t('nav.account.viewProfile')}</span>
                 <span className="text-slate-300 dark:text-slate-600">›</span>
               </button>
 
@@ -264,7 +269,7 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-800 dark:text-slate-100 text-left transition-colors"
               >
                 <Settings className="w-4 h-4 text-slate-500" />
-                <span className="flex-1">Manage account</span>
+                <span className="flex-1">{t('nav.account.manageAccount')}</span>
                 <span className="text-slate-300 dark:text-slate-600">›</span>
               </button>
 
@@ -278,7 +283,7 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-800 dark:text-slate-100 text-left transition-colors"
               >
                 <CreditCard className="w-4 h-4 text-slate-500" />
-                <span className="flex-1">Credits &amp; billing</span>
+                <span className="flex-1">{t('nav.account.creditsAndBilling')}</span>
                 <span className="text-slate-300 dark:text-slate-600">›</span>
               </button>
 
@@ -294,10 +299,12 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-800 dark:text-slate-100 text-left transition-colors"
               >
                 <Moon className="w-4 h-4 text-slate-500" />
-                <span className="flex-1">Dark mode</span>
+                <span className="flex-1">{t('nav.account.darkMode')}</span>
                 <span
                   className={`w-[34px] h-[19px] rounded-full relative transition-colors ${
-                    theme === 'dark' ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
+                    theme === 'dark'
+                      ? 'bg-slate-900 dark:bg-white'
+                      : 'bg-slate-200 dark:bg-slate-700'
                   }`}
                 >
                   <span
@@ -321,7 +328,7 @@ const AccountMenu = ({
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-500 dark:text-slate-400 text-left transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="flex-1">Sign out</span>
+                <span className="flex-1">{t('common.signOut')}</span>
               </button>
             </motion.div>
           )}
@@ -333,6 +340,7 @@ const AccountMenu = ({
 };
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -398,19 +406,15 @@ const Navbar = () => {
 
     // Listen for real-time updates from other components
     const handleCreditUpdate = (event) => {
-      // console.log('📥 Navbar: Received credit_updated event:', event.detail);
       if (typeof event.detail === 'number') {
-        // console.log('✅ Navbar: Updating credits display to:', event.detail);
         setCredits(event.detail);
       } else {
         console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
       }
     };
 
-    // console.log('👂 Navbar: Listening for credit_updated events');
     window.addEventListener('credit_updated', handleCreditUpdate);
     return () => {
-      // console.log('🔇 Navbar: Removing credit_updated listener');
       window.removeEventListener('credit_updated', handleCreditUpdate);
     };
   }, [isAuthenticated]);
@@ -447,7 +451,7 @@ const Navbar = () => {
     }`;
   const deskUnderline = (active) =>
     active ? (
-      <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-indigo-500" />
+      <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-slate-900 dark:bg-white" />
     ) : null;
 
   return (
@@ -455,60 +459,60 @@ const Navbar = () => {
       <div className="w-full px-4 sm:px-6 h-14 flex items-center gap-4">
         {/* LEFT — logo pinned to the left edge; flex-1 pushes the nav to true center */}
         <div className="flex-1 flex items-center min-w-0">
-        <Link
-          to={isAuthenticated ? homePath : '/'}
-          className="flex items-center gap-2.5 z-50 shrink-0"
-        >
-          <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
-          <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
-            ApplyRight
-          </span>
-        </Link>
+          <Link
+            to={isAuthenticated ? homePath : '/'}
+            className="flex items-center gap-2.5 z-50 shrink-0"
+          >
+            <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
+            <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
+              ApplyRight
+            </span>
+          </Link>
         </div>
 
         {/* CENTER — desktop nav tabs */}
         <nav className="hidden md:flex items-center gap-1 shrink-0">
-            {isAuthenticated && (
-              <>
-                <Link to={homePath} className={deskTab(isActive(homePath))}>
-                  {deskUnderline(isActive(homePath))}
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
+          {isAuthenticated && (
+            <>
+              <Link to={homePath} className={deskTab(isActive(homePath))}>
+                {deskUnderline(isActive(homePath))}
+                <LayoutDashboard className="w-4 h-4" />
+                {t('nav.dashboard')}
+              </Link>
+              {isAgent && (
+                <Link
+                  to="/agent/earnings"
+                  className={deskTab(location.pathname.startsWith('/agent/earnings'))}
+                >
+                  {deskUnderline(location.pathname.startsWith('/agent/earnings'))}
+                  <Wallet className="w-4 h-4" />
+                  {t('nav.earnings')}
                 </Link>
-                {isAgent && (
-                  <Link
-                    to="/agent/earnings"
-                    className={deskTab(location.pathname.startsWith('/agent/earnings'))}
-                  >
-                    {deskUnderline(location.pathname.startsWith('/agent/earnings'))}
-                    <Wallet className="w-4 h-4" />
-                    Earnings
+              )}
+              <Link to="/my-cvs" className={deskTab(location.pathname.startsWith('/my-cvs'))}>
+                {deskUnderline(location.pathname.startsWith('/my-cvs'))}
+                <FileText className="w-4 h-4" />
+                {t('nav.myCvs')}
+              </Link>
+              {!isAgent && (
+                <>
+                  <Link to="/history" className={deskTab(isActive('/history'))}>
+                    {deskUnderline(isActive('/history'))}
+                    <History className="w-4 h-4" />
+                    {t('nav.myApplications')}
                   </Link>
-                )}
-                <Link to="/my-cvs" className={deskTab(location.pathname.startsWith('/my-cvs'))}>
-                  {deskUnderline(location.pathname.startsWith('/my-cvs'))}
-                  <FileText className="w-4 h-4" />
-                  My CVs
-                </Link>
-                {!isAgent && (
-                  <>
-                    <Link to="/history" className={deskTab(isActive('/history'))}>
-                      {deskUnderline(isActive('/history'))}
-                      <History className="w-4 h-4" />
-                      My Applications
-                    </Link>
-                    <Link
-                      to="/interview-prep"
-                      className={deskTab(location.pathname.startsWith('/interview-prep'))}
-                    >
-                      {deskUnderline(location.pathname.startsWith('/interview-prep'))}
-                      <MessageSquare className="w-4 h-4" />
-                      Interview Prep
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
+                  <Link
+                    to="/interview-prep"
+                    className={deskTab(location.pathname.startsWith('/interview-prep'))}
+                  >
+                    {deskUnderline(location.pathname.startsWith('/interview-prep'))}
+                    <MessageSquare className="w-4 h-4" />
+                    {t('nav.interviewPrep')}
+                  </Link>
+                </>
+              )}
+            </>
+          )}
         </nav>
 
         {/* RIGHT — desktop cluster + mobile chrome (flex-1 + justify-end mirrors LEFT) */}
@@ -516,76 +520,79 @@ const Navbar = () => {
           {/* desktop right cluster */}
           <div className="hidden md:flex items-center gap-4">
             {!isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <Link
-                to="/pricing"
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Pricing
-              </Link>
-              <Link
-                to="/login"
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="text-sm font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-              >
-                Sign Up
-              </Link>
-            </div>
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher />
+                <Link
+                  to="/pricing"
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  {t('nav.pricing')}
+                </Link>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  {t('common.signIn')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-sm font-semibold px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors"
+                >
+                  {t('common.signUp')}
+                </Link>
+              </div>
             ) : (
-            <div className="flex items-center gap-4">
-              {/* Agents have no interview minutes. With a plan, the scarce
+              <div className="flex items-center gap-4">
+                {/* Agents have no interview minutes. With a plan, the scarce
                   resource is CV credits (for tailoring) — show the balance and
                   link to top up. Without a plan, prompt them to subscribe.
                   Non-agent wallet (minutes/credits pill) now lives in the avatar
                   dropdown, so only the agent credits link renders here. */}
-              {isAgent && (
-                <Link
-                  to={isPaid ? '/credits' : '/upgrade'}
-                  aria-label={isPaid ? 'CV credits — tap to top up' : 'Choose an agent plan'}
-                  className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  {isPaid ? (
-                    <>
-                      <Coins className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                      <span className="font-heading text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
-                        {displayCredits !== null && displayCredits !== undefined
-                          ? displayCredits
-                          : '…'}
-                      </span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                        cr
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
-                        Get a plan
-                      </span>
-                    </>
-                  )}
-                </Link>
-              )}
+                {isAgent && (
+                  <Link
+                    to={isPaid ? '/credits' : '/upgrade'}
+                    aria-label={isPaid ? t('nav.creditsAria') : t('nav.getPlan')}
+                    className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    {isPaid ? (
+                      <>
+                        <Coins className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                        <span className="font-heading text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                          {displayCredits !== null && displayCredits !== undefined
+                            ? displayCredits
+                            : '…'}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                          cr
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        <span className="font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {t('nav.getPlan')}
+                        </span>
+                      </>
+                    )}
+                  </Link>
+                )}
 
-              {/* Account avatar + dropdown — reachable from every top bar. */}
-              <AccountMenu
-                user={user}
-                isPaid={isPaid}
-                entitlement={entitlement}
-                displayCredits={displayCredits}
-                minutesLeft={minutesLeft}
-                freeTasteMin={freeTasteMin}
-                theme={theme}
-                toggleTheme={toggleTheme}
-                navigate={navigate}
-                onSignOut={() => setShowLogoutConfirm(true)}
-              />
-            </div>
+                <LanguageSwitcher />
+
+                {/* Account avatar + dropdown — reachable from every top bar. */}
+                <AccountMenu
+                  user={user}
+                  isPaid={isPaid}
+                  entitlement={entitlement}
+                  displayCredits={displayCredits}
+                  minutesLeft={minutesLeft}
+                  freeTasteMin={freeTasteMin}
+                  theme={theme}
+                  toggleTheme={toggleTheme}
+                  navigate={navigate}
+                  onSignOut={() => setShowLogoutConfirm(true)}
+                />
+              </div>
             )}
           </div>
 
@@ -593,52 +600,53 @@ const Navbar = () => {
               (guests). Primary nav is the shared bottom tab bar (both platforms);
               the hamburger/drawer is retired. */}
           <div className="md:hidden flex items-center gap-2">
-          {/* Primary nav is the bottom tab bar; account lives in the avatar
+            {/* Primary nav is the bottom tab bar; account lives in the avatar
               dropdown (both platforms). Guests get compact auth CTAs. */}
-          {isAuthenticated ? (
-            <>
-              {isAgent && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/upgrade')}
-                  className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  aria-label="Agent plan — tap for plans"
+            <LanguageSwitcher />
+            {isAuthenticated ? (
+              <>
+                {isAgent && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/upgrade')}
+                    className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    aria-label={t('nav.agentPlanAria')}
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                      {isPaid ? planLabelFor(entitlement) : t('nav.agentPlans')}
+                    </span>
+                  </button>
+                )}
+                <AccountMenu
+                  user={user}
+                  isPaid={isPaid}
+                  entitlement={entitlement}
+                  displayCredits={displayCredits}
+                  minutesLeft={minutesLeft}
+                  freeTasteMin={freeTasteMin}
+                  theme={theme}
+                  toggleTheme={toggleTheme}
+                  navigate={navigate}
+                  onSignOut={() => setShowLogoutConfirm(true)}
+                />
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 px-2 py-1"
                 >
-                  <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">
-                    {isPaid ? planLabelFor(entitlement) : 'Plans'}
-                  </span>
-                </button>
-              )}
-              <AccountMenu
-                user={user}
-                isPaid={isPaid}
-                entitlement={entitlement}
-                displayCredits={displayCredits}
-                minutesLeft={minutesLeft}
-                freeTasteMin={freeTasteMin}
-                theme={theme}
-                toggleTheme={toggleTheme}
-                navigate={navigate}
-                onSignOut={() => setShowLogoutConfirm(true)}
-              />
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 px-2 py-1"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
+                  {t('common.signIn')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors"
+                >
+                  {t('common.signUp')}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -654,17 +662,15 @@ const Navbar = () => {
                   <LogOut className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Sign Out?
+                  {t('nav.logout.title')}
                 </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
-                  Are you sure you want to sign out?
-                </p>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">{t('nav.logout.body')}</p>
                 <div className="flex gap-3 w-full">
                   <button
                     onClick={() => setShowLogoutConfirm(false)}
                     className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded-lg font-medium transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={() => {
@@ -673,7 +679,7 @@ const Navbar = () => {
                     }}
                     className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-red-200"
                   >
-                    Sign Out
+                    {t('nav.logout.confirm')}
                   </button>
                 </div>
               </div>

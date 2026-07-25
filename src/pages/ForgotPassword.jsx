@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { ArrowRight, Sparkles, Mail, Lock, Hash } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1); // 1: Email, 2: OTP + New Password
   const [formData, setFormData] = useState({
     email: '',
@@ -29,12 +32,10 @@ const ForgotPassword = () => {
 
     try {
       await api.post('/auth/forgotpassword', { email });
-      setSuccess('If an account exists for that email, a reset code is on its way. Check your inbox.');
+      setSuccess(t('auth.forgot.codeSent'));
       setStep(2);
     } catch (err) {
-      setError(
-        err.response?.data?.message || 'Failed to send reset code. Please try again.'
-      );
+      setError(err.response?.data?.message || t('errors.sendCodeFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +44,7 @@ const ForgotPassword = () => {
   const onResetPassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmNewPassword) {
-      setError('Passwords do not match');
+      setError(t('errors.passwordsDoNotMatch'));
       return;
     }
 
@@ -53,12 +54,12 @@ const ForgotPassword = () => {
 
     try {
       await api.post('/auth/resetpassword', { email, otp, password: newPassword });
-      setSuccess('Password reset successfully! Redirecting to login...');
+      setSuccess(t('auth.forgot.resetSuccess'));
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to reset password');
+      setError(err.response?.data?.message || t('errors.resetPasswordFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -78,19 +79,19 @@ const ForgotPassword = () => {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">ApplyRight</span>
+            <span className="font-brand text-2xl font-bold text-slate-900 tracking-tight">
+              ApplyRight
+            </span>
           </div>
         </div>
 
         <div className="clean-card w-full p-6 sm:p-8 space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              {step === 1 ? 'Reset Password' : 'Verify & Reset'}
+              {step === 1 ? t('auth.forgot.titleStep1') : t('auth.forgot.titleStep2')}
             </h2>
             <p className="text-slate-500">
-              {step === 1
-                ? 'Enter your email and we’ll send you a reset code.'
-                : 'Enter the code sent to your email and your new password.'}
+              {step === 1 ? t('auth.forgot.subtitleStep1') : t('auth.forgot.subtitleStep2')}
             </p>
           </div>
 
@@ -110,7 +111,7 @@ const ForgotPassword = () => {
               {step === 1 && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                    Email Address
+                    {t('common.emailLabel')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -121,7 +122,7 @@ const ForgotPassword = () => {
                       type="email"
                       required
                       className="input-field w-full pl-10"
-                      placeholder="you@example.com"
+                      placeholder={t('auth.forgot.emailPlaceholder')}
                       value={email}
                       onChange={onChange}
                       disabled={isLoading}
@@ -135,7 +136,7 @@ const ForgotPassword = () => {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                      Reset Code
+                      {t('auth.forgot.otpLabel')}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -146,7 +147,7 @@ const ForgotPassword = () => {
                         type="text"
                         required
                         className="input-field w-full pl-10"
-                        placeholder="123456"
+                        placeholder={t('auth.forgot.otpPlaceholder')}
                         value={otp}
                         onChange={onChange}
                         disabled={isLoading}
@@ -156,7 +157,7 @@ const ForgotPassword = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                      New Password
+                      {t('auth.forgot.newPasswordLabel')}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -176,7 +177,7 @@ const ForgotPassword = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-0.5">
-                      Confirm New Password
+                      {t('auth.forgot.confirmNewPasswordLabel')}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -205,31 +206,12 @@ const ForgotPassword = () => {
             >
               {isLoading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  processing...
+                  <AriaLoader inline tone="mono" size={16} label="" className="-ml-1 mr-3" />
+                  {t('common.processing')}
                 </>
               ) : (
                 <>
-                  {step === 1 ? 'Send Reset Code' : 'Reset Password'}
+                  {step === 1 ? t('auth.forgot.sendCode') : t('auth.forgot.resetPassword')}
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -240,18 +222,20 @@ const ForgotPassword = () => {
                 <span className="w-full border-t border-slate-200"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400">Remembered your password?</span>
+                <span className="bg-white px-2 text-slate-400">
+                  {t('auth.forgot.rememberedPassword')}
+                </span>
               </div>
             </div>
 
             <Link to="/login" className="btn-secondary w-full">
-              Back to Sign In
+              {t('auth.forgot.backToSignIn')}
             </Link>
           </form>
         </div>
 
         <p className="text-center mt-8 text-sm text-slate-400">
-          &copy; {new Date().getFullYear()} ApplyRight. All rights reserved.
+          {t('common.copyright', { year: new Date().getFullYear() })}
         </p>
       </div>
     </motion.div>

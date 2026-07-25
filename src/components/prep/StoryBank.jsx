@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import AriaLoader from '../ui/AriaLoader';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
@@ -12,10 +13,10 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
-  Loader,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import InterviewPrepService from '../../services/interviewPrep.service';
 import { CONFIDENCE_OPTIONS } from './PracticeRunner';
 
@@ -26,129 +27,131 @@ const MotionDiv = motion.div;
 
 // Theme presentation. Keys mirror the backend enum
 // (Application.interviewPrep.stories[].theme).
+// `labelKey` resolves via t() at render; `badge` is presentation only.
 const STORY_THEMES = [
   {
     id: 'leadership',
-    label: 'Leadership',
+    labelKey: 'interviewPrep.storyBank.themes.leadership',
     badge:
-      'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30',
+      'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   },
   {
     id: 'problem_solving',
-    label: 'Problem solving',
+    labelKey: 'interviewPrep.storyBank.themes.problem_solving',
     badge:
       'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
   },
   {
     id: 'conflict',
-    label: 'Conflict',
+    labelKey: 'interviewPrep.storyBank.themes.conflict',
     badge:
       'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
   },
   {
     id: 'technical_achievement',
-    label: 'Technical win',
+    labelKey: 'interviewPrep.storyBank.themes.technical_achievement',
     badge:
       'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
   },
   {
     id: 'failure_learning',
-    label: 'Failure & learning',
+    labelKey: 'interviewPrep.storyBank.themes.failure_learning',
     badge:
       'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
   },
   {
     id: 'teamwork',
-    label: 'Teamwork',
+    labelKey: 'interviewPrep.storyBank.themes.teamwork',
     badge:
       'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30',
   },
   {
     id: 'impact',
-    label: 'Measurable impact',
+    labelKey: 'interviewPrep.storyBank.themes.impact',
     badge:
       'bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30',
   },
 ];
 
 const themeMeta = (id) =>
-  STORY_THEMES.find((t) => t.id === id) || {
+  STORY_THEMES.find((th) => th.id === id) || {
     id,
-    label: 'Story',
+    labelKey: 'interviewPrep.storyBank.themeFallback',
     badge:
       'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   };
 
 const STAR_FIELDS = [
-  { key: 'situation', label: 'Situation' },
-  { key: 'task', label: 'Task' },
-  { key: 'action', label: 'Action' },
-  { key: 'result', label: 'Result' },
+  { key: 'situation', labelKey: 'interviewPrep.storyBank.star.situation' },
+  { key: 'task', labelKey: 'interviewPrep.storyBank.star.task' },
+  { key: 'action', labelKey: 'interviewPrep.storyBank.star.action' },
+  { key: 'result', labelKey: 'interviewPrep.storyBank.star.result' },
 ];
 
 // ── Empty state / generate CTA ──────────────────────────────────────────────
-const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => (
-  <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
-    <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
-        <BookOpen className="w-5 h-5" />
+const StoryBankEmpty = ({ isCvOnly, generating, adRewarded, onGenerate }) => {
+  const { t } = useTranslation();
+  return (
+    <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+            {t('interviewPrep.storyBank.emptyTitle')}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            {t('interviewPrep.storyBank.emptySubtitle')}
+          </p>
+        </div>
       </div>
-      <div className="min-w-0">
-        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-          Your Story Bank
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Reusable STAR stories from your real experience — one good story answers many questions.
+      <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        {t('interviewPrep.storyBank.emptyBody')}
+      </p>
+      {isCvOnly ? (
+        <p className="mt-4 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg p-3">
+          {t('interviewPrep.storyBank.cvOnlyNote')}
         </p>
-      </div>
-    </div>
-    <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-      We&apos;ll build 5&ndash;6 stories (leadership, problem-solving, conflict, impact&hellip;)
-      grounded in your CV, each tagged with the questions it can answer. You can edit any of them
-      afterwards.
-    </p>
-    {isCvOnly ? (
-      <p className="mt-4 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3">
-        Attach this prep to a job role to generate a tailored Story Bank, or add stories manually
-        below.
-      </p>
-    ) : (
-      <button
-        type="button"
-        onClick={onGenerate}
-        disabled={generating}
-        className="mt-4 group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-      >
-        {generating ? (
-          <>
-            <Loader className="w-4 h-4 animate-spin" /> Building your stories…
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            Generate Story Bank
-            <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
-              {adRewarded ? (
-                <>
-                  <PlayCircle className="w-3 h-3" /> Ad video
-                </>
-              ) : (
-                '5 credits'
-              )}
-            </span>
-          </>
-        )}
-      </button>
-    )}
-    {!isCvOnly && (
-      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-        {adRewarded
-          ? 'Watch a short ad — free, no credits used.'
-          : 'Uses 5 credits to build your stories.'}
-      </p>
-    )}
-  </section>
-);
+      ) : (
+        <button
+          type="button"
+          onClick={onGenerate}
+          disabled={generating}
+          className="mt-4 group relative inline-flex items-center gap-2.5 pl-4 pr-2 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        >
+          {generating ? (
+            <>
+              <AriaLoader inline tone="mono" size={16} label="" />{' '}
+              {t('interviewPrep.storyBank.buildingStories')}
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              {t('interviewPrep.storyBank.generate')}
+              <span className="inline-flex items-center gap-1 ml-1 pl-2 pr-2 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[10px] font-bold uppercase tracking-wider">
+                {adRewarded ? (
+                  <>
+                    <PlayCircle className="w-3 h-3" /> {t('interviewPrep.storyBank.adVideo')}
+                  </>
+                ) : (
+                  t('interviewPrep.storyBank.fiveCredits')
+                )}
+              </span>
+            </>
+          )}
+        </button>
+      )}
+      {!isCvOnly && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          {adRewarded
+            ? t('interviewPrep.storyBank.helpAd')
+            : t('interviewPrep.storyBank.helpCredits')}
+        </p>
+      )}
+    </section>
+  );
+};
 
 // ── Editable story card ─────────────────────────────────────────────────────
 const StoryCard = ({
@@ -160,6 +163,7 @@ const StoryCard = ({
   onChanged,
   onPractice,
 }) => {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const meta = themeMeta(story.theme);
 
@@ -179,35 +183,36 @@ const StoryCard = ({
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${meta.badge}`}
             >
-              {meta.label}
+              {t(meta.labelKey)}
             </span>
             {answers.length > 0 && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-semibold">
-                Answers {answers.length}
+                {t('interviewPrep.storyBank.answersCount', { n: answers.length })}
               </span>
             )}
             {story.confidence && (
-              <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                  story.confidence === 'ready'
-                    ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
-                    : story.confidence === 'almost'
-                      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                      : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                }`}
-              >
-                {story.confidence.replace('_', ' ')}
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    story.confidence === 'ready'
+                      ? 'bg-emerald-500'
+                      : story.confidence === 'almost'
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500'
+                  }`}
+                />
+                {t(`interviewPrep.practiceRunner.confidence.${story.confidence}`)}
               </span>
             )}
             {warning && warning.unsupportedClaims?.length > 0 && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold">
-                <AlertTriangle className="w-3 h-3 text-amber-500 dark:text-amber-300" /> Verify
-                claims
+                <AlertTriangle className="w-3 h-3 text-amber-500 dark:text-amber-300" />{' '}
+                {t('interviewPrep.storyBank.verifyClaims')}
               </span>
             )}
           </div>
           <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-            {story.title || 'Untitled story'}
+            {story.title || t('interviewPrep.storyBank.untitled')}
           </h4>
         </div>
         <div className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 mt-0.5 shrink-0">
@@ -263,6 +268,7 @@ const StoryView = ({
   onChanged,
   onPractice,
 }) => {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
 
   const handleConfidence = async (level) => {
@@ -272,7 +278,7 @@ const StoryView = ({
       await InterviewPrepService.updateStoryConfidence(applicationId, story.id, next);
       onChanged?.();
     } catch {
-      toast.error('Failed to update readiness');
+      toast.error(t('interviewPrep.storyBank.failedReadiness'));
     } finally {
       setSaving(false);
     }
@@ -281,31 +287,31 @@ const StoryView = ({
   return (
     <div className="pt-2">
       {warning && warning.unsupportedClaims?.length > 0 && (
-        <div className="mb-3.5 p-3.5 bg-amber-50/60 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+        <div className="mb-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-700 dark:text-slate-200 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">Verify these details against your CV:</span>
-            <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-amber-800 dark:text-amber-200">
+            <span className="font-bold">{t('interviewPrep.storyBank.verifyDetails')}</span>
+            <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium text-slate-700 dark:text-slate-200">
               {warning.unsupportedClaims.map((c, i) => (
                 <li key={i}>{c}</li>
               ))}
             </ul>
-            <p className="mt-1 text-amber-700 dark:text-amber-300">
-              Editing the story clears this flag.
+            <p className="mt-1 text-slate-500 dark:text-slate-400">
+              {t('interviewPrep.storyBank.editClears')}
             </p>
           </div>
         </div>
       )}
 
       <div className="space-y-2.5">
-        {STAR_FIELDS.map(({ key, label }) =>
+        {STAR_FIELDS.map(({ key, labelKey }) =>
           story[key] ? (
             <div
               key={key}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-sm"
             >
               <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
-                {label}
+                {t(labelKey)}
               </p>
               <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {story[key]}
@@ -318,7 +324,7 @@ const StoryView = ({
       {skills.length > 0 && (
         <div className="mt-3 flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-            Proves:
+            {t('interviewPrep.storyBank.proves')}
           </span>
           {skills.map((s, i) => (
             <span
@@ -334,7 +340,7 @@ const StoryView = ({
       {answers.length > 0 && (
         <div className="mt-2.5">
           <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">
-            Use this story to answer:
+            {t('interviewPrep.storyBank.useToAnswer')}
           </p>
           <ul className="space-y-1">
             {answers.map((q, i) => (
@@ -352,14 +358,14 @@ const StoryView = ({
       {Array.isArray(story.sourcedFrom) && story.sourcedFrom.length > 0 && (
         <div className="mt-3 flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-            Grounded in:
+            {t('interviewPrep.storyBank.grounded')}
           </span>
           {story.sourcedFrom.map((src, i) => (
             <span
               key={i}
               className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
             >
-              {src.type === 'experience' ? 'Work history' : src.type}
+              {src.type === 'experience' ? t('interviewPrep.storyBank.workHistory') : src.type}
             </span>
           ))}
         </div>
@@ -371,21 +377,21 @@ const StoryView = ({
           <button
             type="button"
             onClick={onPractice}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
           >
-            <PlayCircle className="w-3.5 h-3.5" /> Practice this story
+            <PlayCircle className="w-3.5 h-3.5" /> {t('interviewPrep.storyBank.practiceThis')}
           </button>
           <button
             type="button"
             onClick={onEdit}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
-            <Pencil className="w-3.5 h-3.5" /> Edit
+            <Pencil className="w-3.5 h-3.5" /> {t('interviewPrep.storyBank.edit')}
           </button>
         </div>
         <div className="sm:ml-auto flex flex-wrap items-center gap-1.5">
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mr-1">
-            Readiness:
+            {t('interviewPrep.storyBank.readinessLabel')}
           </span>
           {CONFIDENCE_OPTIONS.map((opt) => {
             const active = story.confidence === opt.id;
@@ -400,7 +406,7 @@ const StoryView = ({
                 } disabled:opacity-60`}
               >
                 {active ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             );
           })}
@@ -412,6 +418,7 @@ const StoryView = ({
 
 // ── Inline editor with debounced autosave (mirrors NoteEditor) ──────────────
 const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState({
     title: story.title || '',
     theme: story.theme || '',
@@ -451,7 +458,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
       setSavedAt(new Date());
       onChanged?.();
     } catch {
-      toast.error('Failed to save story');
+      toast.error(t('interviewPrep.storyBank.failedSave'));
     } finally {
       setSaving(false);
     }
@@ -487,23 +494,23 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
           type="text"
           value={draft.title}
           onChange={set('title')}
-          placeholder="Story title"
+          placeholder={t('interviewPrep.storyBank.storyTitlePlaceholder')}
           className={`${inputCls} sm:flex-1 font-semibold`}
         />
         <select value={draft.theme} onChange={set('theme')} className={`${inputCls} sm:w-52`}>
-          <option value="">Theme…</option>
-          {STORY_THEMES.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.label}
+          <option value="">{t('interviewPrep.storyBank.themePlaceholder')}</option>
+          {STORY_THEMES.map((theme) => (
+            <option key={theme.id} value={theme.id}>
+              {t(theme.labelKey)}
             </option>
           ))}
         </select>
       </div>
 
-      {STAR_FIELDS.map(({ key, label }) => (
+      {STAR_FIELDS.map(({ key, labelKey }) => (
         <div key={key}>
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-            {label}
+            {t(labelKey)}
           </p>
           <textarea
             value={draft[key]}
@@ -516,7 +523,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
 
       <div>
         <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-          Skills proven (comma separated)
+          {t('interviewPrep.storyBank.skillsProven')}
         </p>
         <input
           type="text"
@@ -527,7 +534,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
       </div>
       <div>
         <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-          Questions this answers (one per line)
+          {t('interviewPrep.storyBank.answersQuestions')}
         </p>
         <textarea
           value={draft.answersQuestions}
@@ -542,19 +549,20 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
           type="button"
           onClick={handleDone}
           disabled={saving}
-          className="px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-slate-300"
+          className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold disabled:bg-slate-300"
         >
-          Done
+          {t('interviewPrep.storyBank.done')}
         </button>
         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {saving ? (
-            'Saving…'
+            t('interviewPrep.storyBank.saving')
           ) : savedAt ? (
             <>
-              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-300" /> Saved
+              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-300" />{' '}
+              {t('interviewPrep.storyBank.saved')}
             </>
           ) : (
-            'Auto-saves as you type'
+            t('interviewPrep.storyBank.autoSaves')
           )}
         </span>
       </div>
@@ -574,6 +582,7 @@ const StoryBank = ({
   onChange,
   onPracticeStory,
 }) => {
+  const { t } = useTranslation();
   const [stories, setStories] = useState(initialStories);
   const [expandedId, setExpandedId] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -596,7 +605,7 @@ const StoryBank = ({
       setExpandedId(story.id);
       onChange?.();
     } catch {
-      toast.error('Failed to add story');
+      toast.error(t('interviewPrep.storyBank.failedAdd'));
     } finally {
       setAdding(false);
     }
@@ -615,9 +624,9 @@ const StoryBank = ({
           type="button"
           onClick={handleAddStory}
           disabled={adding}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 disabled:opacity-60"
         >
-          <Plus className="w-4 h-4" /> Add a story manually
+          <Plus className="w-4 h-4" /> {t('interviewPrep.storyBank.addManually')}
         </button>
       </div>
     );
@@ -627,8 +636,7 @@ const StoryBank = ({
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {stories.length} stor{stories.length === 1 ? 'y' : 'ies'} — tap to expand, edit, or
-          practice.
+          {t('interviewPrep.storyBank.storiesCount', { count: stories.length })}
         </p>
         <div className="flex items-center gap-2">
           {!isCvOnly && (
@@ -639,25 +647,25 @@ const StoryBank = ({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors"
               title={
                 adRewarded
-                  ? 'Regenerate the whole bank (watch a short ad)'
-                  : 'Regenerate the whole bank (5 credits)'
+                  ? t('interviewPrep.storyBank.regenTitleAd')
+                  : t('interviewPrep.storyBank.regenTitleCredits')
               }
             >
               {generating ? (
-                <Loader className="w-3.5 h-3.5 animate-spin" />
+                <AriaLoader inline tone="mono" size={14} label={t('interviewPrep.storyBank.saving')} />
               ) : (
                 <Sparkles className="w-3.5 h-3.5" />
               )}
-              Regenerate
+              {t('interviewPrep.storyBank.regenerate')}
             </button>
           )}
           <button
             type="button"
             onClick={handleAddStory}
             disabled={adding}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold disabled:opacity-60"
           >
-            <Plus className="w-3.5 h-3.5" /> Add story
+            <Plus className="w-3.5 h-3.5" /> {t('interviewPrep.storyBank.addStory')}
           </button>
         </div>
       </div>

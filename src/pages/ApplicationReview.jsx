@@ -137,7 +137,7 @@ const ApplicationReview = () => {
         >
           <Link to="/" className="flex items-center gap-2 group">
             <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto object-contain" />
-            <span className="text-xl font-bold font-heading text-slate-900">ApplyRight</span>
+            <span className="text-xl font-bold font-brand text-slate-900">ApplyRight</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link

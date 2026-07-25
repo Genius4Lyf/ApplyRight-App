@@ -17,6 +17,26 @@ const updateSettings = async (settings) => {
   return null;
 };
 
+// App language (en|fr). Persisted server-side so the choice follows the user
+// across devices; localStorage remains the source the request interceptor reads.
+// Mirrors updateSettings above: merge the response back into the stored user and
+// broadcast, so the blob's interfaceLang stays fresh. Without this, App.jsx's
+// syncLangFromStoredUser (precedence rule 1 = server truth) would resurrect the
+// stale value from the blob and overrule the choice the user just made.
+const updateLanguage = async (interfaceLang) => {
+  const response = await api.put('/users/profile', { interfaceLang });
+  if (response.data) {
+    const stored = JSON.parse(localStorage.getItem('user') || 'null');
+    if (stored) {
+      // MERGE, never replace — response.data has no `token` and overwriting the
+      // blob wholesale would sign the user out.
+      localStorage.setItem('user', JSON.stringify({ ...stored, ...response.data }));
+      window.dispatchEvent(new Event('userDataUpdated'));
+    }
+  }
+  return response.data;
+};
+
 const deleteAccount = async () => {
   const response = await api.delete('/users/profile');
   return response.data;
@@ -61,6 +81,7 @@ const exportData = async () => {
 
 const UserService = {
   updateSettings,
+  updateLanguage,
   deleteAccount,
   getReferralStats,
   getActivityStats,

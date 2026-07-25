@@ -1,4 +1,5 @@
 import React from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 
@@ -80,7 +81,7 @@ const DeleteConfirmationModal = ({
                 >
                   {isDeleting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <AriaLoader inline tone="mono" size={16} label="" />
                       Deleting...
                     </>
                   ) : (

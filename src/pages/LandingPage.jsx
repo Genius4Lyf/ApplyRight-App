@@ -12,6 +12,7 @@ import {
   Bot,
 } from 'lucide-react';
 import Seo from '../components/Seo';
+import { useTranslation, Trans } from 'react-i18next';
 import { motion, useReducedMotion } from 'framer-motion';
 import axios from 'axios';
 import FeedbackCard from '../components/FeedbackCard';
@@ -26,43 +27,19 @@ import {
   CvCompareVignette,
 } from '../components/landing/FeatureVignettes';
 
-// Advanced Features — alternating editorial rows. Copy preserved verbatim.
+// Advanced Features — alternating editorial rows.
+// Holds translation KEYS, not literals: this is a module constant, so literals
+// would freeze in whatever language was active at import and ignore a live
+// language switch. Same treatment as DEFAULT_VALUE_PROPS in round 1.
 const FEATURES = [
-  {
-    icon: BookOpen,
-    kicker: 'Interview prep · Story bank',
-    title: 'Grounded STAR Story Bank',
-    body: 'Prep like top candidates actually do. Generate a bank of reusable STAR-formatted stories (Situation, Task, Action, Result) built from your real experience. Each story is verified by AI for claims consistency and linked directly to relevant interview questions.',
-    tags: ['CV-Grounded Stories', 'STAR Method Formatting', 'Claim Verification'],
-    Vignette: StarStoryVignette,
-  },
-  {
-    icon: Volume2,
-    kicker: 'Interview prep · Live voice',
-    title: 'Interactive Voice Interview Mode',
-    body: 'Simulate real interview pressure. Our AI interviewer reads questions aloud using premium ElevenLabs & OpenAI TTS voice synthesis. Practice verbally with question-by-question suggestion timers, rate your own confidence, and receive targeted coaching reviews.',
-    tags: ['Premium TTS (ElevenLabs)', 'Timed Verbal Simulation', 'Coaching Review'],
-    Vignette: VoiceInterviewVignette,
-  },
-  {
-    icon: Printer,
-    kicker: 'Interview prep · Cram sheet',
-    title: 'The 10-Minute Pre-Call Brief',
-    body: 'Never walk in cold. Generate a print-friendly, single-page cram sheet containing your overall readiness score, your top 3 STAR stories, your weakest questions to review, key skills to highlight, and questions to ask the interviewer.',
-    tags: ['Print-Optimized / Save PDF', 'Quick Cram Sheet', 'Readiness Rollup'],
-    Vignette: PreCallBriefVignette,
-  },
-  {
-    icon: GitCompare,
-    kicker: 'CV tools · Compare',
-    title: 'CV Comparison',
-    body: 'Compare two of your CVs side-by-side against the same job. See a detailed breakdown of which one scores higher overall and in each dimension, and exactly which must-have skills each one is still missing.',
-    tags: ['Side-by-Side Analysis', 'Score Breakdown Diff', 'Target Job Benchmarking'],
-    Vignette: CvCompareVignette,
-  },
+  { icon: BookOpen, id: 'star', Vignette: StarStoryVignette },
+  { icon: Volume2, id: 'voice', Vignette: VoiceInterviewVignette },
+  { icon: Printer, id: 'brief', Vignette: PreCallBriefVignette },
+  { icon: GitCompare, id: 'compare', Vignette: CvCompareVignette },
 ];
 
 const LandingPage = () => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
 
   const [featuredFeedbacks, setFeaturedFeedbacks] = useState([]);
@@ -109,10 +86,7 @@ const LandingPage = () => {
       transition={{ duration: 0.5 }}
       className="min-h-screen font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900"
     >
-      <Seo
-        title="ApplyRight - AI Resume Builder & CV Optimizer for Job Seekers"
-        description="Beat the ATS with ApplyRight. Our AI-driven resume builder tailors your CV to specific job descriptions, helping you land more interviews. Try it free."
-      />
+      <Seo title={t('landing.seo.title')} description={t('landing.seo.description')} />
 
       {/* Scrollable Content Layer */}
       <div className="relative z-10">
@@ -133,16 +107,16 @@ const LandingPage = () => {
                 variants={heroItem}
                 className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800"
               >
-                AI résumé · ATS score · live mock interview
+                {t('landing.hero.kicker')}
               </motion.p>
 
               <motion.h1
                 variants={heroItem}
                 className="font-heading text-[2.5rem] font-bold leading-[1.05] tracking-tight text-slate-900 text-balance sm:text-6xl lg:text-[4.3rem]"
               >
-                Win on paper. Then win{' '}
+                {t('landing.hero.titleLead')}{' '}
                 <span className="relative whitespace-nowrap text-indigo-600">
-                  the room.
+                  {t('landing.hero.titleAccent')}
                   <motion.span
                     aria-hidden="true"
                     className="absolute inset-x-0 bottom-[0.02em] block h-[3px] origin-left bg-indigo-600"
@@ -159,9 +133,7 @@ const LandingPage = () => {
                 variants={heroItem}
                 className="max-w-[52ch] text-lg leading-relaxed text-slate-600 lg:text-xl"
               >
-                ApplyRight rewrites your CV to clear the ATS, scores it against the exact job you
-                want, then puts you through a real-time AI interview — so you walk in already
-                rehearsed.
+                {t('landing.hero.subcopy')}
               </motion.p>
 
               <motion.div
@@ -172,13 +144,13 @@ const LandingPage = () => {
                   to="/register"
                   className="inline-flex items-center gap-2 rounded-md border border-indigo-600 bg-indigo-600 px-5 py-2.5 font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-800 hover:bg-indigo-800"
                 >
-                  Start free
+                  {t('common.startFree')}
                 </Link>
                 <Link
                   to="/how-it-works"
                   className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
                 >
-                  Hear a sample interview <ArrowRight size={16} />
+                  {t('landing.hero.ctaSecondary')} <ArrowRight size={16} />
                 </Link>
               </motion.div>
 
@@ -186,7 +158,8 @@ const LandingPage = () => {
                 variants={heroItem}
                 className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-600"
               >
-                <b className="font-medium text-indigo-800">1 free CV download</b> · no card needed
+                <b className="font-medium text-indigo-800">{t('landing.hero.freeNoteStrong')}</b> ·{' '}
+                {t('landing.hero.freeNoteRest')}
               </motion.p>
             </motion.div>
 
@@ -217,14 +190,13 @@ const LandingPage = () => {
               className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
             >
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                The invisible barrier
+                {t('landing.problem.kicker')}
               </p>
               <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                Why good candidates get rejected
+                {t('landing.problem.title')}
               </h2>
               <p className="text-lg leading-relaxed text-slate-600">
-                Most rejections aren&rsquo;t a human decision — they happen before anyone reads a
-                word you wrote.
+                {t('landing.problem.subcopy')}
               </p>
             </motion.div>
 
@@ -238,7 +210,7 @@ const LandingPage = () => {
                 className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean sm:p-7"
               >
                 <p className="mb-6 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-400">
-                  Typical process
+                  {t('landing.problem.typicalProcess')}
                 </p>
 
                 {/* Stage 01 — you apply */}
@@ -248,10 +220,14 @@ const LandingPage = () => {
                   </span>
                   <div className="pt-0.5">
                     <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
-                      Stage 01
+                      {t('landing.problem.stageLabel', { n: '01' })}
                     </p>
-                    <h3 className="font-semibold text-slate-700">You apply</h3>
-                    <p className="text-sm leading-relaxed text-slate-500">Generic résumé sent.</p>
+                    <h3 className="font-semibold text-slate-700">
+                      {t('landing.problem.stage1Title')}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-slate-500">
+                      {t('landing.problem.stage1Body')}
+                    </p>
                   </div>
                 </div>
 
@@ -264,13 +240,17 @@ const LandingPage = () => {
                   </span>
                   <div className="pt-0.5">
                     <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">
-                      Stage 02
+                      {t('landing.problem.stageLabel', { n: '02' })}
                     </p>
-                    <h3 className="font-semibold text-red-700">ATS filter — auto-reject</h3>
+                    <h3 className="font-semibold text-red-700">
+                      {t('landing.problem.stage2Title')}
+                    </h3>
                     <p className="text-sm leading-relaxed text-slate-600">
-                      Scans for the exact keywords in the job description.{' '}
-                      <span className="font-semibold text-red-600">No match? Rejected</span> before
-                      a human looks.
+                      {t('landing.problem.stage2BodyLead')}{' '}
+                      <span className="font-semibold text-red-600">
+                        {t('landing.problem.stage2BodyStrong')}
+                      </span>{' '}
+                      {t('landing.problem.stage2BodyTail')}
                     </p>
                   </div>
                 </div>
@@ -284,11 +264,13 @@ const LandingPage = () => {
                   </span>
                   <div className="pt-0.5">
                     <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
-                      Stage 03
+                      {t('landing.problem.stageLabel', { n: '03' })}
                     </p>
-                    <h3 className="font-semibold text-slate-700">Human review</h3>
+                    <h3 className="font-semibold text-slate-700">
+                      {t('landing.problem.stage3Title')}
+                    </h3>
                     <p className="text-sm leading-relaxed text-slate-500">
-                      Never happens — a person never sees your résumé.
+                      {t('landing.problem.stage3Body')}
                     </p>
                   </div>
                 </div>
@@ -306,30 +288,31 @@ const LandingPage = () => {
                   variants={revealUp}
                   className="font-heading text-2xl font-bold leading-snug text-slate-900 sm:text-[2rem] sm:leading-[1.2]"
                 >
-                  It&rsquo;s not your skills that get you rejected. It&rsquo;s your{' '}
-                  <span className="text-indigo-600">keywords.</span>
+                  {t('landing.problem.truthLead')}{' '}
+                  <span className="text-indigo-600">{t('landing.problem.truthAccent')}</span>
                 </motion.p>
 
                 <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
-                  <h3 className="font-heading text-lg font-bold text-slate-900">What is an ATS?</h3>
+                  <h3 className="font-heading text-lg font-bold text-slate-900">
+                    {t('landing.problem.whatIsAtsTitle')}
+                  </h3>
                   <p className="mt-2 leading-relaxed text-slate-600">
-                    Applicant Tracking Systems screen applications at{' '}
-                    <b className="font-semibold text-indigo-800">99% of Fortune 500</b> companies,
-                    filtering thousands automatically. If your résumé doesn&rsquo;t{' '}
-                    <span className="font-semibold text-slate-900">exactly match</span> the language
-                    of the job description, you&rsquo;re filtered out before a human ever clicks
-                    &ldquo;Open&rdquo;.
+                    <Trans
+                      i18nKey="landing.problem.whatIsAtsBody"
+                      components={{
+                        b: <b className="font-semibold text-indigo-800" />,
+                        s: <span className="font-semibold text-slate-900" />,
+                      }}
+                    />
                   </p>
                 </motion.div>
 
                 <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
                   <h3 className="font-heading text-lg font-bold text-slate-900">
-                    The &ldquo;spray and pray&rdquo; mistake
+                    {t('landing.problem.sprayTitle')}
                   </h3>
                   <p className="mt-2 leading-relaxed text-slate-600">
-                    Sending the same generic CV to 100 jobs guarantees 100 rejections. Each job
-                    description is unique, with its own required skills and &ldquo;magic
-                    words&rdquo;.
+                    {t('landing.problem.sprayBody')}
                   </p>
                 </motion.div>
               </motion.div>
@@ -348,14 +331,12 @@ const LandingPage = () => {
               className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
             >
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                The fix
+                {t('landing.fix.kicker')}
               </p>
               <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                We tailor your CV for every single job.
+                {t('landing.fix.title')}
               </h2>
-              <p className="text-lg leading-relaxed text-slate-600">
-                Three moves that turn a generic résumé into one the software waves through.
-              </p>
+              <p className="text-lg leading-relaxed text-slate-600">{t('landing.fix.subcopy')}</p>
             </motion.div>
 
             <motion.div
@@ -371,12 +352,9 @@ const LandingPage = () => {
               >
                 <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">01</p>
                 <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  We scan the job
+                  {t('landing.fix.step1Title')}
                 </h3>
-                <p className="mt-2 leading-relaxed text-slate-600">
-                  Paste the job link. Our AI reads it like an ATS would, finding the critical
-                  keywords, skills, and requirements hidden in the text.
-                </p>
+                <p className="mt-2 leading-relaxed text-slate-600">{t('landing.fix.step1Body')}</p>
               </motion.div>
 
               <motion.div
@@ -385,11 +363,10 @@ const LandingPage = () => {
               >
                 <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">02</p>
                 <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  We re-write your CV
+                  {t('landing.fix.step2Title')}
                 </h3>
                 <p className="mt-2 leading-relaxed text-slate-600">
-                  We don&rsquo;t just add keywords. We rewrite your bullet points to highlight the{' '}
-                  <em>relevant</em> experience that matches <em>this specific job</em>.
+                  <Trans i18nKey="landing.fix.step2Body" components={{ i: <em /> }} />
                 </p>
               </motion.div>
 
@@ -399,12 +376,9 @@ const LandingPage = () => {
               >
                 <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">03</p>
                 <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  You pass the filter
+                  {t('landing.fix.step3Title')}
                 </h3>
-                <p className="mt-2 leading-relaxed text-slate-600">
-                  You get a tailored PDF for that specific application. The ATS sees a 95%+ match,
-                  and your résumé lands on the recruiter&rsquo;s desk.
-                </p>
+                <p className="mt-2 leading-relaxed text-slate-600">{t('landing.fix.step3Body')}</p>
               </motion.div>
             </motion.div>
           </div>
@@ -421,14 +395,13 @@ const LandingPage = () => {
               className="mb-12 flex max-w-[54ch] flex-col gap-3 sm:mb-16"
             >
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                Advanced job-prep suite
+                {t('landing.features.kicker')}
               </p>
               <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                Go beyond the simple resume.
+                {t('landing.features.title')}
               </h2>
               <p className="text-lg leading-relaxed text-slate-600">
-                ApplyRight gives you a full toolkit designed by career experts to make sure you
-                dominate every step of the hiring pipeline, from CV scoring to the final call.
+                {t('landing.features.subcopy')}
               </p>
             </motion.div>
 
@@ -439,7 +412,7 @@ const LandingPage = () => {
                 const reverse = i % 2 === 1;
                 return (
                   <motion.div
-                    key={f.title}
+                    key={f.id}
                     initial={reduce ? false : 'hidden'}
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.3 }}
@@ -453,23 +426,25 @@ const LandingPage = () => {
                     >
                       <p className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-indigo-800">
                         <Icon size={14} className="text-indigo-600" />
-                        {f.kicker}
+                        {t(`landing.features.${f.id}.kicker`)}
                       </p>
                       <h3 className="font-heading text-2xl font-bold leading-snug text-slate-900 sm:text-[1.7rem]">
-                        {f.title}
+                        {t(`landing.features.${f.id}.title`)}
                       </h3>
-                      <p className="leading-relaxed text-slate-600">{f.body}</p>
+                      <p className="leading-relaxed text-slate-600">
+                        {t(`landing.features.${f.id}.body`)}
+                      </p>
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {f.tags.map((tag, ti) => (
+                        {[1, 2, 3].map((num, ti) => (
                           <span
-                            key={tag}
+                            key={num}
                             className={`rounded border px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-wide ${
                               ti === 0
                                 ? 'border-indigo-200 bg-indigo-50 text-indigo-800'
                                 : 'border-slate-200 text-slate-500'
                             }`}
                           >
-                            {tag}
+                            {t(`landing.features.${f.id}.tag${num}`)}
                           </span>
                         ))}
                       </div>
@@ -498,14 +473,13 @@ const LandingPage = () => {
                 className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
               >
                 <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                  Community
+                  {t('landing.testimonials.kicker')}
                 </p>
                 <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                  What users say
+                  {t('landing.testimonials.title')}
                 </h2>
                 <p className="text-lg leading-relaxed text-slate-600">
-                  Join thousands of satisfied job seekers who have transformed their careers with
-                  ApplyRight.
+                  {t('landing.testimonials.subcopy')}
                 </p>
               </motion.div>
 
@@ -525,7 +499,7 @@ const LandingPage = () => {
                   to="/feedback"
                   className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
                 >
-                  Share your story <ArrowRight size={16} />
+                  {t('landing.testimonials.cta')} <ArrowRight size={16} />
                 </Link>
               </div>
             </div>
@@ -545,23 +519,22 @@ const LandingPage = () => {
               {/* Copy */}
               <div className="flex flex-col items-start gap-5">
                 <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300">
-                  One shot at a first impression
+                  {t('landing.cta.kicker')}
                 </p>
                 <h2 className="max-w-[20ch] font-heading text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.7rem]">
-                  Stop guessing. Start interviewing.
+                  {t('landing.cta.title')}
                 </h2>
                 <p className="max-w-[52ch] text-lg leading-relaxed text-slate-400">
-                  Join thousands of job seekers who stopped fighting the system and started making
-                  it work for them.
+                  {t('landing.cta.subcopy')}
                 </p>
                 <Link
                   to="/register"
                   className="mt-1 inline-flex items-center rounded-md bg-white px-5 py-2.5 font-semibold text-indigo-800 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-100"
                 >
-                  Create free account
+                  {t('landing.cta.button')}
                 </Link>
                 <p className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-500">
-                  No credit card required · Optimized specifically for ATS
+                  {t('landing.cta.note')}
                 </p>
               </div>
 

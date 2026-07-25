@@ -474,8 +474,12 @@ export const CVBuilderProvider = ({ children }) => {
         // once the URL swaps off 'new'.
         const pj = location.state?.prefillJob;
         if (pj) {
-          if (pj.title) payload.title = `CV for ${pj.title}${pj.company ? ` at ${pj.company}` : ''}`;
-          payload.targetJob = { title: pj.title || '', description: cleanJobDescription(pj.description) };
+          if (pj.title)
+            payload.title = `CV for ${pj.title}${pj.company ? ` at ${pj.company}` : ''}`;
+          payload.targetJob = {
+            title: pj.title || '',
+            description: cleanJobDescription(pj.description),
+          };
         }
         const created = await CVService.saveDraft(payload); // no _id → backend creates it (same call as Continue)
         if (!created?._id) throw new Error('create returned no _id');

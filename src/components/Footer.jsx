@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo/applyright-icon.png';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Footer — shared site footer in the landing design language: flat, serif
@@ -8,42 +9,45 @@ import logo from '../assets/logo/applyright-icon.png';
  * indigo hover. Reusable across the landing page, Pricing, and the guide pages.
  */
 
+// Translation KEYS, not literals — a module constant would otherwise freeze in
+// whatever language was active at import and ignore a live language switch.
 const COLUMNS = [
   {
-    header: 'Product',
+    headerKey: 'footer.colProduct',
     links: [
-      { label: 'Pricing', to: '/pricing' },
-      { label: 'Start free', to: '/register' },
-      { label: 'Log in', to: '/login' },
+      { key: 'nav.pricing', to: '/pricing' },
+      { key: 'common.startFreeShort', to: '/register' },
+      { key: 'common.signIn', to: '/login' },
     ],
   },
   {
-    header: 'Guides',
+    headerKey: 'footer.colGuides',
     links: [
-      { label: 'ATS Guide', to: '/ats-guide' },
-      { label: 'CV Builder Guide', to: '/cv-builder-guide' },
-      { label: 'CV Health', to: '/cv-health' },
-      { label: 'How ATS & Recruiters Work', to: '/how-ats-recruiters-work' },
-      { label: 'How to Ace Your Interview', to: '/how-to-ace-your-interview' },
+      { key: 'footer.atsGuide', to: '/ats-guide' },
+      { key: 'footer.cvBuilderGuide', to: '/cv-builder-guide' },
+      { key: 'footer.cvHealth', to: '/cv-health' },
+      { key: 'footer.howAtsWorks', to: '/how-ats-recruiters-work' },
+      { key: 'footer.howToAce', to: '/how-to-ace-your-interview' },
     ],
   },
   {
-    header: 'Company',
+    headerKey: 'footer.colCompany',
     links: [
-      { label: 'Contact', to: '/contact' },
-      { label: 'Give Feedback', to: '/feedback' },
+      { key: 'footer.contact', to: '/contact' },
+      { key: 'footer.giveFeedback', to: '/feedback' },
     ],
   },
   {
-    header: 'Legal',
+    headerKey: 'footer.colLegal',
     links: [
-      { label: 'Privacy Policy', to: '/privacy' },
-      { label: 'Terms of Service', to: '/terms' },
+      { key: 'common.legal.privacyPolicy', to: '/privacy' },
+      { key: 'common.legal.termsOfService', to: '/terms' },
     ],
   },
 ];
 
 const Footer = () => {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
 
   return (
@@ -53,37 +57,35 @@ const Footer = () => {
           {/* Brand block */}
           <div className="flex flex-col items-start gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <img src={logo} alt="ApplyRight Logo" className="h-7 w-auto" />
-              <span className="font-heading text-xl font-bold tracking-tight text-slate-900">
+              <img src={logo} alt={t('common.logoAlt')} className="h-7 w-auto" />
+              <span className="font-brand text-xl font-bold tracking-tight text-slate-900">
                 Apply<span className="text-indigo-600">Right</span>
               </span>
             </Link>
-            <p className="font-heading text-base italic text-slate-600">
-              Get hired — on paper, and in the room.
-            </p>
+            <p className="font-heading text-base italic text-slate-600">{t('footer.tagline')}</p>
             <Link
               to="/register"
               className="mt-1 inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:border-indigo-800 hover:bg-indigo-800"
             >
-              Start free
+              {t('common.startFreeShort')}
             </Link>
           </div>
 
           {/* Link columns */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {COLUMNS.map((col) => (
-              <div key={col.header} className="flex flex-col gap-3">
+              <div key={col.headerKey} className="flex flex-col gap-3">
                 <h3 className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-400">
-                  {col.header}
+                  {t(col.headerKey)}
                 </h3>
                 <ul className="flex flex-col gap-2.5">
                   {col.links.map((link) => (
-                    <li key={link.to + link.label}>
+                    <li key={link.to + link.key}>
                       <Link
                         to={link.to}
                         className="text-sm text-slate-600 transition-colors hover:text-indigo-600"
                       >
-                        {link.label}
+                        {t(link.key)}
                       </Link>
                     </li>
                   ))}
@@ -95,19 +97,15 @@ const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center dark:border-slate-800">
-          <p className="text-sm text-slate-500">© {year} ApplyRight. All rights reserved.</p>
+          <p className="text-sm text-slate-500">{t('common.copyright', { year })}</p>
           <p className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-500">
-            Built for job seekers in Nigeria &amp; beyond.
+            {t('footer.builtFor')}
           </p>
         </div>
 
         {/* Disclaimer */}
         <p className="mt-8 max-w-3xl text-[11px] leading-relaxed text-slate-400">
-          <strong>Disclaimer:</strong> ApplyRight is an interview preparation tool. All mock
-          sessions, voice conversations, and generated questions are designed solely for practice
-          and confidence-building purposes. The questions simulated in our application are
-          illustrative and do not guarantee the actual questions that will be encountered in your
-          live hiring process.
+          <strong>{t('footer.disclaimerLabel')}</strong> {t('footer.disclaimerBody')}
         </p>
       </div>
     </footer>

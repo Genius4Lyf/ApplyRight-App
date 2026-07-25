@@ -197,7 +197,7 @@ const InterviewPrepService = {
   // Returns { assessment, lastInterviewSession }.
   assessInterview: async (
     applicationId,
-    { transcript, durationSec, plannedSec, reservationId, interviewerSeatIndex }
+    { transcript, durationSec, plannedSec, reservationId, interviewerSeatIndex, deliveryTelemetry }
   ) => {
     const response = await api.post(`/interview-prep/${applicationId}/assess-interview`, {
       transcript,
@@ -205,6 +205,7 @@ const InterviewPrepService = {
       plannedSec,
       reservationId, // reconciles the live-minute reservation (realtime sessions only)
       interviewerSeatIndex, // records this round against the chosen interviewer (loop)
+      deliveryTelemetry, // per-answer numbers from the live session (live mode only)
     });
     return response.data;
   },

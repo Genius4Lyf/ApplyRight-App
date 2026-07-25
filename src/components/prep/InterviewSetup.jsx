@@ -1,87 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Volume2, Mic, Check, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import VoiceVisualizer from './VoiceVisualizer';
 
 // Pre-interview personalization + device check for the live (realtime) mode.
 
 // Friendly names + gender for the OpenAI realtime voices. `id` is the actual
-// OpenAI voice sent to the session. Gender is a best-guess label for the
+// OpenAI voice sent to the session. `name` is a proper noun (untranslated);
+// `genderKey` resolves via t() at render. Gender is a best-guess label for the
 // perceived voice (OpenAI doesn't officially gender them) — easy to swap if a
 // voice sounds different on a real run.
 const VOICES = [
-  { id: 'marin', name: 'Obiageli', gender: 'Female' },
-  { id: 'cedar', name: 'Daniel', gender: 'Male' },
-  { id: 'shimmer', name: 'Amara', gender: 'Female' },
+  { id: 'marin', name: 'Obiageli', genderKey: 'interviewPrep.setup.voices.female' },
+  { id: 'cedar', name: 'Daniel', genderKey: 'interviewPrep.setup.voices.male' },
+  { id: 'shimmer', name: 'Amara', genderKey: 'interviewPrep.setup.voices.female' },
 ];
 
+// `id` mirrors the backend style enum; label/blurb/examples resolve via t() at
+// render (examples are indexed 0–2 under styles.<id>.examples).
 const STYLES = [
-  {
-    id: 'balanced',
-    label: 'Balanced',
-    blurb:
-      'A natural mix of behavioural, motivation, and role-relevant skill questions — the all-rounder.',
-    examples: [
-      'Tell me about a project you’re proud of.',
-      'Why are you interested in this role?',
-      'How would you approach this kind of work?',
-    ],
-  },
-  {
-    id: 'screening',
-    label: 'Screening',
-    blurb:
-      'A friendly first-round call — focused on fit, motivation, and your background. Kept broad, not deeply technical.',
-    examples: [
-      'What draws you to this role?',
-      'Walk me through your background.',
-      'What are you looking for in your next role?',
-    ],
-  },
-  {
-    id: 'technical',
-    label: 'Technical',
-    blurb:
-      'A deep-dive on the hard skills the role needs — specifics, trade-offs, and how you’d solve real problems.',
-    examples: [
-      'Walk me through how you’d design X.',
-      'What trade-offs did you weigh on Y?',
-      'How would you debug or improve this?',
-    ],
-  },
-  {
-    id: 'behavioral',
-    label: 'Behavioural',
-    blurb:
-      'Past situations in STAR form — what you actually did and the outcome, to show how you work.',
-    examples: [
-      'Tell me about a time you handled conflict.',
-      'Describe a failure and what you learned.',
-      'Give an example of leading under pressure.',
-    ],
-  },
+  { id: 'balanced', exampleCount: 3 },
+  { id: 'screening', exampleCount: 3 },
+  { id: 'technical', exampleCount: 3 },
+  { id: 'behavioral', exampleCount: 3 },
 ];
 
 // How hard the panel pushes. Set before the interview — the interviewers act like
 // real people on the team making sure the candidate is genuinely prepared.
-const CHALLENGES = [
-  {
-    id: 'gentle',
-    label: 'Gentle',
-    blurb: 'Supportive and encouraging — fair questions, gentle nudges, confidence-building.',
-  },
-  {
-    id: 'realistic',
-    label: 'Realistic',
-    blurb:
-      'Like a real, fair interview — no vague answers; specifics, evidence, and pointed follow-ups.',
-  },
-  {
-    id: 'tough',
-    label: 'Challenging',
-    blurb:
-      'A demanding panel — they pressure-test your claims, push back on weak answers, and make you defend your reasoning against the CV + job.',
-  },
-];
+// `id` mirrors the backend challenge enum; label/blurb resolve via t().
+const CHALLENGES = [{ id: 'gentle' }, { id: 'realistic' }, { id: 'tough' }];
 
 const Pill = ({ active, onClick, children }) => (
   <button
@@ -89,7 +36,7 @@ const Pill = ({ active, onClick, children }) => (
     onClick={onClick}
     className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors select-none cursor-pointer ${
       active
-        ? 'bg-indigo-600 border-indigo-600 text-white'
+        ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:text-slate-900 dark:border-white'
         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-200'
     }`}
   >
@@ -108,100 +55,104 @@ export const VoiceStyleSelector = ({
   borderless = false,
   challenge = 'realistic',
   onChallengeChange = null,
-}) => (
-  <div
-    className={
-      borderless
-        ? `relative z-10 space-y-2.5 ${className}`
-        : `relative z-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 space-y-2.5 ${className}`
-    }
-  >
-    {/* Voice picker only applies to the SOLO (free-taste) interview. Panel
-        interviews give each interviewer their own voice, so it's hidden there. */}
-    {showVoice && (
-      <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-          Interviewer voice
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {VOICES.map((v) => (
-            <Pill key={v.id} active={voice === v.id} onClick={() => onVoiceChange(v.id)}>
-              {v.name} <span className="font-normal opacity-70">· {v.gender}</span>
-            </Pill>
-          ))}
-        </div>
-      </div>
-    )}
-    {/* Interview style — only for the generic (free/solo) interview. When the
-        candidate picks a specific role, the role itself sets the interview type. */}
-    {showStyle && (
-      <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-          Interview style
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {STYLES.map((s) => (
-            <Pill key={s.id} active={style === s.id} onClick={() => onStyleChange(s.id)}>
-              {s.label}
-            </Pill>
-          ))}
-        </div>
-        {STYLES.filter((s) => s.id === style).map((sel) => (
-          <div key={sel.id} className="mt-1.5 space-y-1">
-            <p className="text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
-              {sel.blurb}
-            </p>
-            <details className="group cursor-pointer select-none">
-              <summary className="text-[11px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline list-none [&::-webkit-details-marker]:hidden flex items-center gap-0.5">
-                <span>View example questions</span>
-                <span className="text-[8px] transition-transform duration-200 group-open:rotate-180">
-                  ▼
-                </span>
-              </summary>
-              <ul className="mt-1 ml-1.5 pl-2 border-l border-slate-150 dark:border-slate-800 space-y-0.5">
-                {sel.examples.map((q, i) => (
-                  <li
-                    key={i}
-                    className="text-xs italic text-slate-500 dark:text-slate-400 leading-relaxed"
-                  >
-                    “{q}”
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </div>
-        ))}
-      </div>
-    )}
-    {/* Challenge level — how hard the panel pushes. Only shown when wired up. */}
-    {onChallengeChange && (
-      <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-          Challenge level
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {CHALLENGES.map((c) => (
-            <Pill key={c.id} active={challenge === c.id} onClick={() => onChallengeChange(c.id)}>
-              {c.label}
-            </Pill>
-          ))}
-        </div>
-        {CHALLENGES.filter((c) => c.id === challenge).map((sel) => (
-          <p
-            key={sel.id}
-            className="mt-1.5 text-xs text-slate-550 dark:text-slate-450 leading-relaxed"
-          >
-            {sel.blurb}
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div
+      className={
+        borderless
+          ? `relative z-10 space-y-2.5 ${className}`
+          : `relative z-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 space-y-2.5 ${className}`
+      }
+    >
+      {/* Voice picker only applies to the SOLO (free-taste) interview. Panel
+          interviews give each interviewer their own voice, so it's hidden there. */}
+      {showVoice && (
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
+            {t('interviewPrep.setup.interviewerVoice')}
           </p>
-        ))}
-      </div>
-    )}
-  </div>
-);
+          <div className="flex flex-wrap gap-1.5">
+            {VOICES.map((v) => (
+              <Pill key={v.id} active={voice === v.id} onClick={() => onVoiceChange(v.id)}>
+                {v.name} <span className="font-normal opacity-70">· {t(v.genderKey)}</span>
+              </Pill>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Interview style — only for the generic (free/solo) interview. When the
+          candidate picks a specific role, the role itself sets the interview type. */}
+      {showStyle && (
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
+            {t('interviewPrep.setup.interviewStyle')}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {STYLES.map((s) => (
+              <Pill key={s.id} active={style === s.id} onClick={() => onStyleChange(s.id)}>
+                {t(`interviewPrep.setup.styles.${s.id}.label`)}
+              </Pill>
+            ))}
+          </div>
+          {STYLES.filter((s) => s.id === style).map((sel) => (
+            <div key={sel.id} className="mt-1.5 space-y-1">
+              <p className="text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+                {t(`interviewPrep.setup.styles.${sel.id}.blurb`)}
+              </p>
+              <details className="group cursor-pointer select-none">
+                <summary className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 list-none [&::-webkit-details-marker]:hidden flex items-center gap-0.5">
+                  <span>{t('interviewPrep.setup.viewExamples')}</span>
+                  <span className="text-[8px] transition-transform duration-200 group-open:rotate-180">
+                    ▼
+                  </span>
+                </summary>
+                <ul className="mt-1 ml-1.5 pl-2 border-l border-slate-150 dark:border-slate-800 space-y-0.5">
+                  {Array.from({ length: sel.exampleCount }).map((_, i) => (
+                    <li
+                      key={i}
+                      className="text-xs italic text-slate-500 dark:text-slate-400 leading-relaxed"
+                    >
+                      “{t(`interviewPrep.setup.styles.${sel.id}.examples.${i}`)}”
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Challenge level — how hard the panel pushes. Only shown when wired up. */}
+      {onChallengeChange && (
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
+            {t('interviewPrep.setup.challengeLevel')}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CHALLENGES.map((c) => (
+              <Pill key={c.id} active={challenge === c.id} onClick={() => onChallengeChange(c.id)}>
+                {t(`interviewPrep.setup.challenges.${c.id}.label`)}
+              </Pill>
+            ))}
+          </div>
+          {CHALLENGES.filter((c) => c.id === challenge).map((sel) => (
+            <p
+              key={sel.id}
+              className="mt-1.5 text-xs text-slate-550 dark:text-slate-450 leading-relaxed"
+            >
+              {t(`interviewPrep.setup.challenges.${sel.id}.blurb`)}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Mic + speaker check BEFORE connecting (so a dead mic doesn't waste a paid
 // session). Requesting the mic here also surfaces a permission denial early.
 export const DeviceCheck = ({ inline = false, onDone }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(inline);
   const [stream, setStream] = useState(null);
   const [denied, setDenied] = useState(false);
@@ -263,16 +214,13 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
       <div className="w-full flex flex-col justify-between h-full">
         <div>
           <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-4 text-center">
-            Device check
+            {t('interviewPrep.setup.deviceCheck')}
           </p>
 
           {denied ? (
             <div className="flex items-start gap-2 text-xs text-rose-600 dark:text-rose-350 bg-rose-50/50 dark:bg-rose-500/10 p-3 rounded-xl border border-rose-100 dark:border-rose-900/30">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>
-                We couldn’t access your microphone. Allow mic access in your browser, then try
-                again.
-              </span>
+              <span>{t('interviewPrep.setup.micDenied')}</span>
             </div>
           ) : (
             <div className="space-y-4">
@@ -280,11 +228,11 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
               <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-1.5 justify-center">
                 {stream ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-500" /> Say something — the bars
-                    should move.
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />{' '}
+                    {t('interviewPrep.setup.saySomething')}
                   </>
                 ) : (
-                  'Requesting microphone…'
+                  t('interviewPrep.setup.requestingMic')
                 )}
               </p>
             </div>
@@ -297,14 +245,14 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
             onClick={playTestSound}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
           >
-            <Volume2 className="w-3.5 h-3.5" /> Play test sound
+            <Volume2 className="w-3.5 h-3.5" /> {t('interviewPrep.setup.playTestSound')}
           </button>
           <button
             type="button"
             onClick={onDone}
-            className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer"
           >
-            Done
+            {t('interviewPrep.setup.done')}
           </button>
         </div>
       </div>
@@ -320,24 +268,21 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
             setDenied(false);
             setOpen(true);
           }}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 cursor-pointer select-none"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 cursor-pointer select-none"
         >
-          <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
+          <Mic className="w-3.5 h-3.5" /> {t('interviewPrep.setup.testMicFirst')}
         </button>
       ) : (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl relative animate-in fade-in zoom-in-95 duration-200 text-left">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-              Device check
+              {t('interviewPrep.setup.deviceCheck')}
             </p>
 
             {denied ? (
               <div className="flex items-start gap-2 text-xs text-rose-600 dark:text-rose-350 bg-rose-50/50 dark:bg-rose-500/10 p-3 rounded-xl border border-rose-100 dark:border-rose-900/30">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  We couldn’t access your microphone. Allow mic access in your browser, then try
-                  again.
-                </span>
+                <span>{t('interviewPrep.setup.micDenied')}</span>
               </div>
             ) : (
               <>
@@ -345,11 +290,11 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
                 <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-455 flex items-center gap-1">
                   {stream ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-500" /> Say something — the bars
-                      should move.
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />{' '}
+                      {t('interviewPrep.setup.saySomething')}
                     </>
                   ) : (
-                    'Requesting microphone…'
+                    t('interviewPrep.setup.requestingMic')
                   )}
                 </p>
               </>
@@ -361,14 +306,14 @@ export const DeviceCheck = ({ inline = false, onDone }) => {
                 onClick={playTestSound}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
               >
-                <Volume2 className="w-3.5 h-3.5" /> Play test sound
+                <Volume2 className="w-3.5 h-3.5" /> {t('interviewPrep.setup.playTestSound')}
               </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-750 dark:text-slate-250 text-xs font-semibold transition-colors cursor-pointer"
               >
-                Done
+                {t('interviewPrep.setup.done')}
               </button>
             </div>
           </div>

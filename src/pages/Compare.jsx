@@ -224,7 +224,9 @@ const Compare = () => {
                         Run {formatRelativeDate(app.createdAt)}
                       </p>
                     </div>
-                    <div className={`text-3xl font-bold ${scoreColor(app.fitScore)} shrink-0`}>
+                    <div
+                      className={`font-heading text-3xl font-bold tabular-nums ${scoreColor(app.fitScore)} shrink-0`}
+                    >
                       {typeof app.fitScore === 'number' ? `${app.fitScore}%` : '—'}
                     </div>
                   </div>

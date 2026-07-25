@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, RotateCcw, RotateCw, Download } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // On-brand audio player (replaces the default browser <audio controls> UI).
 // Controls geared to reviewing an interview recording: play/pause, a scrubbable
@@ -19,6 +20,7 @@ const AudioPlayer = ({
   durationHint = 0,
   downloadName = 'interview-recording.webm',
 }) => {
+  const { t } = useTranslation();
   const audioRef = useRef(null);
   const trackRef = useRef(null);
   const draggingRef = useRef(false);
@@ -144,9 +146,9 @@ const AudioPlayer = ({
           <button
             type="button"
             onClick={() => skip(-10)}
-            title="Back 10 seconds"
-            aria-label="Back 10 seconds"
-            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+            title={t('interviewPrep.audioPlayer.back10')}
+            aria-label={t('interviewPrep.audioPlayer.back10')}
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
           >
             <RotateCcw className="w-4.5 h-4.5" />
           </button>
@@ -154,22 +156,26 @@ const AudioPlayer = ({
           <button
             type="button"
             onClick={toggle}
-            aria-label={playing ? 'Pause' : 'Play'}
-            className="w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-750 active:bg-indigo-800 text-white flex items-center justify-center shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer shrink-0"
+            aria-label={
+              playing ? t('interviewPrep.audioPlayer.pause') : t('interviewPrep.audioPlayer.play')
+            }
+            className="w-11 h-11 rounded-full bg-slate-900 hover:bg-slate-800 active:bg-slate-700 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
           >
+            {/* fill-current, not fill-white: the button inverts in dark mode, so the
+                glyph has to follow text colour or it goes white-on-white. */}
             {playing ? (
-              <Pause className="w-5 h-5 fill-white" />
+              <Pause className="w-5 h-5 fill-current" />
             ) : (
-              <Play className="w-5 h-5 fill-white ml-0.5" />
+              <Play className="w-5 h-5 fill-current ml-0.5" />
             )}
           </button>
 
           <button
             type="button"
             onClick={() => skip(10)}
-            title="Forward 10 seconds"
-            aria-label="Forward 10 seconds"
-            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+            title={t('interviewPrep.audioPlayer.forward10')}
+            aria-label={t('interviewPrep.audioPlayer.forward10')}
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
           >
             <RotateCw className="w-4.5 h-4.5" />
           </button>
@@ -189,14 +195,14 @@ const AudioPlayer = ({
               onPointerUp={onPointerUp}
               className="group relative h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 cursor-pointer overflow-visible"
             >
-              {/* Active track with gradient */}
+              {/* Played portion */}
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-indigo-600 dark:bg-indigo-500"
+                className="absolute inset-y-0 left-0 rounded-full bg-slate-900 dark:bg-white"
                 style={{ width: `${pct}%` }}
               />
-              {/* Knob */}
+              {/* Knob — inverts against the ink fill so it stays visible mid-track */}
               <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-indigo-600 dark:border-indigo-500 shadow-md scale-90 group-hover:scale-110 active:scale-120 transition-transform"
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white dark:bg-slate-900 border-2 border-slate-900 dark:border-white shadow-md scale-90 group-hover:scale-110 active:scale-120 transition-transform"
                 style={{ left: `${pct}%` }}
               />
             </div>
@@ -212,7 +218,7 @@ const AudioPlayer = ({
           <button
             type="button"
             onClick={cycleSpeed}
-            title="Playback speed"
+            title={t('interviewPrep.audioPlayer.playbackSpeed')}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-205 dark:hover:bg-slate-700 transition-colors cursor-pointer tabular-nums min-w-[48px] text-center"
           >
             {SPEEDS[speedIdx]}x
@@ -222,9 +228,9 @@ const AudioPlayer = ({
             <a
               href={src}
               download={downloadName}
-              title="Download recording"
-              aria-label="Download recording"
-              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+              title={t('interviewPrep.audioPlayer.downloadRecording')}
+              aria-label={t('interviewPrep.audioPlayer.downloadRecording')}
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
             >
               <Download className="w-4.5 h-4.5" />
             </a>

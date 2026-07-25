@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { FileDown } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
@@ -11,6 +12,7 @@ import { TIERS, AGENT_TIERS, FREE_TIER } from '../lib/plans';
 // pricing to view. Once signed in, /upgrade locks pricing to the account type.
 const Pricing = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [audience, setAudience] = useState('seeker'); // 'seeker' | 'agent'
   const [currency, setCurrency] = useState('NGN');
 
@@ -36,25 +38,21 @@ const Pricing = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-6">
             <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
-              Pricing · one-time · no auto-renewal
+              {t('billing.pricing.eyebrow')}
             </p>
             <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight text-slate-900 leading-tight">
               {audience === 'agent'
-                ? 'Create CVs for clients at scale'
-                : 'Land more interviews, for less'}
+                ? t('billing.common.agentHeading')
+                : t('billing.pricing.headingSeeker')}
             </h1>
             <p className="mt-3 text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
               {audience === 'agent' ? (
-                <>
-                  A generous pool of <strong>AI credits</strong> for CV tailoring and cover letters,
-                  plus <strong>unlimited downloads</strong> — built for CV writers and agencies. No
-                  interview minutes.
-                </>
+                <Trans i18nKey="billing.common.agentSubcopy" components={{ strong: <strong /> }} />
               ) : (
-                <>
-                  Every plan includes <strong>AI credits</strong> for CV tailoring, cover letters
-                  and written prep, plus the live voice interview minutes that make you ready.
-                </>
+                <Trans
+                  i18nKey="billing.pricing.subcopySeeker"
+                  components={{ strong: <strong /> }}
+                />
               )}
             </p>
           </div>
@@ -71,7 +69,7 @@ const Pricing = () => {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                For job seekers
+                {t('billing.pricing.forJobSeekers')}
               </button>
               <button
                 type="button"
@@ -82,7 +80,7 @@ const Pricing = () => {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <FileDown className="w-3.5 h-3.5" /> For CV agents
+                <FileDown className="w-3.5 h-3.5" /> {t('billing.pricing.forCvAgents')}
               </button>
             </div>
           </div>
@@ -99,8 +97,10 @@ const Pricing = () => {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <span>₦ NGN</span>
-                <span className="opacity-60 font-normal">· Nigeria</span>
+                <span>{t('billing.common.currencyNgn')}</span>
+                <span className="opacity-60 font-normal">
+                  {t('billing.common.currencyNgnRegion')}
+                </span>
               </button>
               <button
                 type="button"
@@ -111,8 +111,10 @@ const Pricing = () => {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <span>$ USD</span>
-                <span className="opacity-60 font-normal">· Worldwide</span>
+                <span>{t('billing.common.currencyUsd')}</span>
+                <span className="opacity-60 font-normal">
+                  {t('billing.common.currencyUsdRegion')}
+                </span>
               </button>
             </div>
           </div>
@@ -124,12 +126,12 @@ const Pricing = () => {
         {audience === 'agent' ? (
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch pt-3">
-              {tiers.map((t) => (
+              {tiers.map((tier) => (
                 <TierCard
-                  key={t.id}
-                  tier={t}
+                  key={tier.id}
+                  tier={tier}
                   currency={currency}
-                  ctaLabel="Get started"
+                  ctaLabel={t('billing.pricing.getStarted')}
                   onCta={choose}
                 />
               ))}
@@ -143,12 +145,14 @@ const Pricing = () => {
               scrollPaddingInline: 'max(1rem, calc((100% - 72rem) / 2 + 1rem))',
             }}
           >
-            {tiers.map((t) => (
-              <div key={t.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] lg:w-[30%] flex">
+            {tiers.map((tier) => (
+              <div key={tier.id} className="snap-start shrink-0 w-[80%] sm:w-[46%] lg:w-[30%] flex">
                 <TierCard
-                  tier={t}
+                  tier={tier}
                   currency={currency}
-                  ctaLabel={t.id === 'free' ? 'Start free' : 'Get started'}
+                  ctaLabel={
+                    tier.id === 'free' ? t('common.startFree') : t('billing.pricing.getStarted')
+                  }
                   onCta={choose}
                 />
               </div>
@@ -159,8 +163,8 @@ const Pricing = () => {
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-center text-xs text-slate-400 mt-10">
             {audience === 'agent'
-              ? 'Plus pay-as-you-go credit top-ups. One-time payment via Flutterwave — no auto-renewal.'
-              : 'Plus credit top-ups and minute add-ons any time. One-time payment via Flutterwave — no auto-renewal.'}
+              ? t('billing.pricing.footerNoteAgent')
+              : t('billing.pricing.footerNoteSeeker')}
           </p>
         </div>
       </main>

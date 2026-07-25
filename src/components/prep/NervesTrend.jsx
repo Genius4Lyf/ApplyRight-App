@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrendingUp } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { getInterviewTrend } from '../../utils/interviewPrep';
 import ScoringInfo from './ScoringInfo';
 
@@ -7,11 +8,16 @@ import ScoringInfo from './ScoringInfo';
 // runs — the exposure-therapy selling point made tangible ("each rep gets
 // easier"). Reads interviewPrep.interviewHistory; renders nothing until there's
 // at least one run.
+// Bars are ink — height alone carries the signal, so the chart needs no colour.
 const RANK = { needs_work: 1, almost: 2, ready: 3 };
-const COLOR = { needs_work: 'bg-rose-400', almost: 'bg-amber-400', ready: 'bg-emerald-500' };
-const LABEL = { needs_work: 'Shaky', almost: 'Okay', ready: 'Strong' };
+const LABEL_KEYS = {
+  needs_work: 'interviewPrep.nervesTrend.label.needs_work',
+  almost: 'interviewPrep.nervesTrend.label.almost',
+  ready: 'interviewPrep.nervesTrend.label.ready',
+};
 
 const NervesTrend = ({ application }) => {
+  const { t } = useTranslation();
   const history = Array.isArray(application?.interviewPrep?.interviewHistory)
     ? application.interviewPrep.interviewHistory
     : [];
@@ -23,18 +29,19 @@ const NervesTrend = ({ application }) => {
   return (
     <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
       <div className="flex items-center gap-2 mb-1">
-        <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <TrendingUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
         <h3 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-          Your nerves over time
+          {t('interviewPrep.nervesTrend.heading')}
         </h3>
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
-        Each bar is one interview (oldest left, newest right) — the{' '}
-        <span className="font-semibold text-slate-600 dark:text-slate-300">taller and greener</span>
-        , the more confidently you handled it.{' '}
+        <Trans
+          i18nKey="interviewPrep.nervesTrend.descMain"
+          components={{ b: <span className="font-semibold text-slate-600 dark:text-slate-300" /> }}
+        />{' '}
         {trend.trend === 'up'
-          ? 'Yours are trending stronger — exactly how nerves ease with practice.'
-          : 'Each rep makes the real room feel more familiar.'}
+          ? t('interviewPrep.nervesTrend.trendUp')
+          : t('interviewPrep.nervesTrend.trendOther')}
       </p>
       <div className="flex items-end gap-2 h-20">
         {recent.map((h, i) => {
@@ -43,28 +50,31 @@ const NervesTrend = ({ application }) => {
           return (
             <div
               key={i}
-              className={`flex-1 rounded-t transition-all ${COLOR[conf] || 'bg-slate-300'}`}
+              className="flex-1 rounded-t bg-slate-900 dark:bg-white transition-all"
               style={{ height: `${pct}%` }}
-              title={LABEL[conf]}
+              title={t(LABEL_KEYS[conf])}
             />
           );
         })}
       </div>
       <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-semibold">
-        <span>Earlier</span>
-        <span>Latest</span>
+        <span>{t('interviewPrep.nervesTrend.earlier')}</span>
+        <span>{t('interviewPrep.nervesTrend.latest')}</span>
       </div>
 
-      {/* Legend so the colours are self-explanatory */}
+      {/* Legend — a mini bar at each height so the scale is self-explanatory */}
       <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-3">
           {['needs_work', 'almost', 'ready'].map((c) => (
             <span
               key={c}
-              className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400"
+              className="inline-flex items-end gap-1 text-[11px] text-slate-500 dark:text-slate-400"
             >
-              <span className={`w-2 h-2 rounded-full ${COLOR[c]}`} />
-              {LABEL[c]}
+              <span
+                className="w-1.5 rounded-t bg-slate-900 dark:bg-white"
+                style={{ height: `${(RANK[c] / 3) * 12}px` }}
+              />
+              {t(LABEL_KEYS[c])}
             </span>
           ))}
         </div>

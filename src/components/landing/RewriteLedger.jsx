@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Bot } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 /**
  * RewriteLedger — the before/after section below the hero.
@@ -9,34 +10,13 @@ import { Bot } from 'lucide-react';
  * agent in the centre column, and an ATS bar animating 48% → 92% on scroll-in.
  */
 
+// Keys, not JSX: a module constant would freeze at import language, and the
+// bold span has to be free to move — French word order differs from English.
+// <Trans> places it wherever the translation puts <b>…</b>.
 const ROWS = [
-  {
-    before: 'Responsible for the regional sales process',
-    after: (
-      <>
-        Grew regional revenue <b className="font-bold tabular-nums text-indigo-800">42%</b> across 3
-        quarters
-      </>
-    ),
-  },
-  {
-    before: 'Handled customer relationships day to day',
-    after: (
-      <>
-        Retained <b className="font-bold tabular-nums text-indigo-800">9 of 10</b> key accounts
-        through a pricing overhaul
-      </>
-    ),
-  },
-  {
-    before: 'Worked on improving overall sales',
-    after: (
-      <>
-        Cut the sales cycle <b className="font-bold tabular-nums text-indigo-800">18 days</b> with a
-        new qualifying flow
-      </>
-    ),
-  },
+  { beforeKey: 'landing.ledger.row1Before', afterKey: 'landing.ledger.row1After' },
+  { beforeKey: 'landing.ledger.row2Before', afterKey: 'landing.ledger.row2After' },
+  { beforeKey: 'landing.ledger.row3Before', afterKey: 'landing.ledger.row3After' },
 ];
 
 // Shared 3-column grid: [line] · [40px agent gutter] · [line].
@@ -48,6 +28,7 @@ const reveal = {
 };
 
 const RewriteLedger = () => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
 
   return (
@@ -61,15 +42,12 @@ const RewriteLedger = () => {
           className="mb-9 flex max-w-[48ch] flex-col gap-3"
         >
           <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-            The rewrite
+            {t('landing.ledger.kicker')}
           </p>
           <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">
-            Watch a dead line become a callback.
+            {t('landing.ledger.title')}
           </h2>
-          <p className="text-lg leading-relaxed text-slate-600">
-            Same experience, retold the way recruiters and their software actually read. ApplyRight
-            cuts the filler, leads with results, and lands the keywords the job asks for.
-          </p>
+          <p className="text-lg leading-relaxed text-slate-600">{t('landing.ledger.subcopy')}</p>
         </motion.div>
 
         <motion.div
@@ -84,22 +62,25 @@ const RewriteLedger = () => {
             className={`${GRID} hidden border-b border-slate-200 bg-slate-50 px-4 py-3.5 sm:grid sm:px-6`}
           >
             <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-400">
-              Before — your draft
+              {t('landing.ledger.colBefore')}
             </p>
             <span />
             <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-indigo-800">
-              After ApplyRight
+              {t('landing.ledger.colAfter')}
             </p>
           </div>
 
           {/* Rows */}
           {ROWS.map((row, i) => (
             <div
-              key={i}
+              key={row.beforeKey}
               className={`${GRID} max-sm:!grid-cols-1 max-sm:gap-1 border-b border-slate-200 px-4 py-4 sm:px-6`}
             >
-              <p className="text-[0.97rem] leading-relaxed text-slate-400 line-through decoration-red-600 decoration-2 max-sm:before:text-[0.6rem] max-sm:before:tracking-[0.1em] max-sm:before:content-['WAS_']">
-                {row.before}
+              <p className="text-[0.97rem] leading-relaxed text-slate-400 line-through decoration-red-600 decoration-2">
+                <span className="hidden max-sm:inline text-[0.6rem] tracking-[0.1em] no-underline">
+                  {t('landing.ledger.wasLabel')}{' '}
+                </span>
+                {t(row.beforeKey)}
               </p>
               <span
                 aria-hidden="true"
@@ -111,8 +92,14 @@ const RewriteLedger = () => {
                   <span className="font-mono text-sm">&rarr;</span>
                 )}
               </span>
-              <p className="text-[0.97rem] leading-relaxed text-slate-900 max-sm:before:text-[0.6rem] max-sm:before:tracking-[0.1em] max-sm:before:text-indigo-800 max-sm:before:content-['NOW_']">
-                {row.after}
+              <p className="text-[0.97rem] leading-relaxed text-slate-900">
+                <span className="hidden max-sm:inline text-[0.6rem] tracking-[0.1em] text-indigo-800">
+                  {t('landing.ledger.nowLabel')}{' '}
+                </span>
+                <Trans
+                  i18nKey={row.afterKey}
+                  components={{ b: <b className="font-bold tabular-nums text-indigo-800" /> }}
+                />
               </p>
             </div>
           ))}

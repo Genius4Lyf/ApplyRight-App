@@ -1,4 +1,5 @@
 import React from 'react';
+import AriaLoader from '../ui/AriaLoader';
 import { Eye } from 'lucide-react';
 
 // Shared toolkit primitives so the "My CV toolkit" card looks identical
@@ -37,7 +38,7 @@ export const InkButton = ({ onClick, disabled, generating, cost }) => (
   >
     {generating ? (
       <>
-        <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <AriaLoader inline tone="mono" size={14} label="" />
         Generating…
       </>
     ) : (

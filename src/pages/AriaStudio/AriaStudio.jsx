@@ -5,6 +5,7 @@ import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
+import { useAriaModel } from '../../hooks/useAriaModel';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import CVService from '../../services/cv.service';
@@ -35,16 +36,8 @@ const StudioDesk = () => {
     updateCvData,
   } = useAriaStudio();
 
-  // Persist the Aria model choice onto the session (server-gated), and reflect it locally.
-  const onSelectModel = async (id) => {
-    if (!draftId) return;
-    try {
-      await CVService.setModel(draftId, id);
-      updateCvData?.({ studioModelId: id });
-    } catch {
-      toast.error("Couldn't switch model — try again.");
-    }
-  };
+  // The session's Aria model — the same per-draft choice the chat composers write to.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const layout = useStudioLayout();
   const [sessions, setSessions] = useState([]);
@@ -323,9 +316,7 @@ const StudioDesk = () => {
 
             {/* Model picker — which model powers this session's chat/tailoring. Only once
                 there's a real draft to persist the choice onto. */}
-            {draftId && (
-              <ModelPicker value={cvData?.studioModelId} onSelect={onSelectModel} align="right" />
-            )}
+            {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="right" />}
 
             {/* View switch — the WIDE Live preview vs the NARROW insights. Active view
                 gets the neutral active-state (matching the other header toggles); the

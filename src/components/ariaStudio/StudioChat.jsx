@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { costForActionTier, tierOf } from '../../lib/models';
@@ -27,10 +26,11 @@ import {
 } from '../../lib/studioFlow';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
+import { useAriaModel } from '../../hooks/useAriaModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
-import ChatThemePicker from '../cv/ChatThemePicker';
+import AriaComposer from '../cv/AriaComposer';
 import AriaOrbit from '../cv/AriaOrbit';
 import AriaThinking from '../cv/AriaThinking';
 import ModeChooser from './ModeChooser';
@@ -122,6 +122,10 @@ const StudioChat = ({ onPaywall }) => {
     pendingSource,
     setPendingSource,
   } = useAriaStudio();
+
+  // The session's Aria model — the SAME per-draft choice the Studio header picker and
+  // the builder's coach chat show; the composer's picker writes through this.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   // The scan cost, priced at the SESSION's selected model tier (flagship scan costs more).
   const scanCost = costForActionTier('FIT_ANALYSIS', tierOf(cvData?.studioModelId)) ?? 10;
@@ -1032,6 +1036,8 @@ const StudioChat = ({ onPaywall }) => {
         templateId: cvData.templateId || DEFAULT_TEMPLATE_ID,
         personalInfo: cvData.personalInfo,
         isDraft: true,
+        // Drives the section labels in the rendered CV (and therefore the PDF).
+        outputLang: cvData.outputLang,
       }
     : null;
 
@@ -1056,7 +1062,11 @@ const StudioChat = ({ onPaywall }) => {
               paper: 'a4',
               ...shared,
             })
-          : await downloadDocx({ markdown: printApplication?.optimizedCV, ...shared });
+          : await downloadDocx({
+              markdown: printApplication?.optimizedCV,
+              outputLang: cvData?.outputLang,
+              ...shared,
+            });
 
       if (result.needsPaywall) {
         // Whatever the shared module reports — the entitlement rules themselves live
@@ -1993,45 +2003,20 @@ const StudioChat = ({ onPaywall }) => {
           and hidden outright while the coach has its own (which docks below). */}
       {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
           indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
-      <div
+      <AriaComposer
         className={`shrink-0 pt-3 pb-[env(safe-area-inset-bottom)] ${
           coachOwnsInput ? 'hidden' : ''
         }`}
-      >
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            disabled={inputDisabled}
-            onChange={(e) => setInput(e.target.value)}
-            onInput={(e) => {
-              e.currentTarget.style.height = 'auto';
-              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            rows={1}
-            placeholder={inputDisabled ? 'Use the card above ↑' : 'Ask Aria anything…'}
-            className={`flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none max-h-[140px] ${
-              inputDisabled ? 'opacity-50' : ''
-            }`}
-          />
-          <ChatThemePicker />
-          <button
-            type="button"
-            onClick={() => send()}
-            disabled={inputDisabled || thinking || input.trim().length < 2}
-            aria-label="Send"
-            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-indigo-500/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
-          >
-            <ArrowUp className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        inputRef={inputRef}
+        value={input}
+        onChange={setInput}
+        onSend={send}
+        disabled={inputDisabled}
+        busy={thinking}
+        placeholder={inputDisabled ? 'Use the card above ↑' : 'Ask Aria anything…'}
+        modelId={modelId}
+        onSelectModel={selectModel}
+      />
 
       {/* Active-coach composer dock — a PINNED shrink-0 sibling below the scroll, mounted
           only while a coach drives (the default composer is hidden then). SectionCoach

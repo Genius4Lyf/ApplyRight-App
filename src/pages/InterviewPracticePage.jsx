@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { X, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import InterviewPrepService from '../services/interviewPrep.service';
@@ -10,6 +12,7 @@ import { useMinVisible } from '../hooks/useMinVisible';
 // Full-screen interview simulation. Owns the viewport — no Navbar / no nav
 // chrome — so the experience feels like a real practice session.
 const InterviewPracticePage = () => {
+  const { t } = useTranslation();
   const { applicationId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -40,7 +43,7 @@ const InterviewPracticePage = () => {
         });
         setConfidenceById(seeded);
       } catch (e) {
-        toast.error(e.response?.data?.message || 'Failed to load practice');
+        toast.error(e.response?.data?.message || t('interviewPrep.practice.loadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -62,10 +65,10 @@ const InterviewPracticePage = () => {
       const story = getStories(application).find((s) => s.id === storyFilter);
       if (!story) return [];
       const starText = [
-        ['Situation', story.situation],
-        ['Task', story.task],
-        ['Action', story.action],
-        ['Result', story.result],
+        [t('interviewPrep.practice.star.situation'), story.situation],
+        [t('interviewPrep.practice.star.task'), story.task],
+        [t('interviewPrep.practice.star.action'), story.action],
+        [t('interviewPrep.practice.star.result'), story.result],
       ]
         .filter(([, v]) => v && v.trim())
         .map(([label, v]) => `${label}: ${v}`)
@@ -73,15 +76,15 @@ const InterviewPracticePage = () => {
       const prompt =
         (Array.isArray(story.answersQuestions) && story.answersQuestions[0]) ||
         story.title ||
-        'Tell me about a relevant experience.';
+        t('interviewPrep.practice.fallbackPrompt');
       return [
         {
           id: `story:${story.id}`,
           storyId: story.id,
           kind: 'story',
-          type: 'Story',
+          type: t('interviewPrep.practice.story'),
           prompt,
-          suggestedAnswer: starText || 'No story details saved yet.',
+          suggestedAnswer: starText || t('interviewPrep.practice.noStoryDetails'),
           confidence: story.confidence,
         },
       ];
@@ -116,9 +119,9 @@ const InterviewPracticePage = () => {
       const skillCard = {
         id: `skill:${skill.name}`,
         kind: 'skill',
-        type: 'Skill',
-        prompt: `Tell me about your experience with ${skill.name}.`,
-        suggestedAnswer: skill.talkingPoint || 'No talking point saved for this skill yet.',
+        type: t('interviewPrep.practice.skill'),
+        prompt: t('interviewPrep.practice.skillPrompt', { skill: skill.name }),
+        suggestedAnswer: skill.talkingPoint || t('interviewPrep.practice.noTalkingPoint'),
       };
       // Naive heuristic: include questions whose text mentions the skill name.
       const lower = skill.name.toLowerCase();
@@ -166,7 +169,7 @@ const InterviewPracticePage = () => {
       suggestedAnswer: q.suggestedAnswer || '',
       attempts: q.attempts || [],
     }));
-  }, [application, skillFilter, questionIndexFilter, storyFilter, weakFilter]);
+  }, [application, skillFilter, questionIndexFilter, storyFilter, weakFilter, t]);
 
   // Esc closes the practice view.
   useEffect(() => {
@@ -199,13 +202,13 @@ const InterviewPracticePage = () => {
           nextLevel
         );
       } catch {
-        toast.error('Failed to save confidence');
+        toast.error(t('interviewPrep.practice.confidenceError'));
       }
     } else if (card.kind === 'story') {
       try {
         await InterviewPrepService.updateStoryConfidence(applicationId, card.storyId, nextLevel);
       } catch {
-        toast.error('Failed to save confidence');
+        toast.error(t('interviewPrep.practice.confidenceError'));
       }
     } else if (card.kind === 'question') {
       const dbIndex =
@@ -218,17 +221,13 @@ const InterviewPracticePage = () => {
           nextLevel
         );
       } catch {
-        toast.error('Failed to save confidence');
+        toast.error(t('interviewPrep.practice.confidenceError'));
       }
     }
   };
 
   if (showLoader) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
-      </div>
-    );
+    return <AriaLoader fullscreen size={40} label={t('interviewPrep.practice.loading')} />;
   }
 
   if (!application) return null;
@@ -237,12 +236,14 @@ const InterviewPracticePage = () => {
     ? getStories(application).find((s) => s.id === storyFilter)
     : null;
   const headline = weakFilter
-    ? 'Practice: weak spots'
+    ? t('interviewPrep.practice.headlineWeak')
     : storyForHeadline
-      ? `Practice: ${storyForHeadline.title || 'Story'}`
+      ? t('interviewPrep.practice.headlineStory', {
+          title: storyForHeadline.title || t('interviewPrep.practice.story'),
+        })
       : skillFilter
-        ? `Practice: ${skillFilter}`
-        : application.jobTitle || application.jobId?.title || 'Practice mode';
+        ? t('interviewPrep.practice.headlineSkill', { skill: skillFilter })
+        : application.jobTitle || application.jobId?.title || t('interviewPrep.practice.mode');
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-indigo-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30 text-slate-900 dark:text-slate-100">
@@ -255,7 +256,7 @@ const InterviewPracticePage = () => {
                 <PlayCircle className="w-4 h-4" />
               </div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
-                Practice mode
+                {t('interviewPrep.practice.mode')}
               </span>
             </div>
             <button
@@ -264,7 +265,7 @@ const InterviewPracticePage = () => {
               className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
             >
               <X className="w-3.5 h-3.5" />
-              Exit
+              {t('interviewPrep.practice.exit')}
             </button>
           </div>
           {/* Row 2: headline ↔ progress meta. Headline truncates, meta has
@@ -276,9 +277,12 @@ const InterviewPracticePage = () => {
             {cards.length > 0 && (
               <p className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap">
                 <span>
-                  {markedCount}/{cards.length} marked
+                  {t('interviewPrep.practice.marked', {
+                    marked: markedCount,
+                    total: cards.length,
+                  })}
                 </span>
-                <span className="hidden sm:inline"> · Esc to exit</span>
+                <span className="hidden sm:inline"> {t('interviewPrep.practice.escToExit')}</span>
               </p>
             )}
           </div>
@@ -295,21 +299,23 @@ const InterviewPracticePage = () => {
               />
               <div className="relative z-10">
                 <p className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {weakFilter ? "You're all caught up" : 'Nothing to practice yet'}
+                  {weakFilter
+                    ? t('interviewPrep.practice.emptyCaughtUp')
+                    : t('interviewPrep.practice.emptyNothing')}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                   {weakFilter
-                    ? 'Every question is marked Ready. Nothing weak left to drill.'
+                    ? t('interviewPrep.practice.emptyWeakBody')
                     : skillFilter
-                      ? 'That skill has no talking point saved.'
-                      : 'Run a job analysis to generate practice questions.'}
+                      ? t('interviewPrep.practice.emptySkillBody')
+                      : t('interviewPrep.practice.emptyBody')}
                 </p>
                 <button
                   type="button"
                   onClick={exitToDetail}
                   className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-500/20"
                 >
-                  Back to prep
+                  {t('interviewPrep.common.backToPrep')}
                 </button>
               </div>
             </div>

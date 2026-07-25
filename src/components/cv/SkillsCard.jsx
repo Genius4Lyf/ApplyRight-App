@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const lower = (s) => (s || '').trim().toLowerCase();
 
@@ -21,9 +22,13 @@ const SkillsCard = ({
   initialSelected = [],
   onAdd,
 }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState('all'); // 'all' | 'role'
   const [selected, setSelected] = useState(() => new Set(initialSelected));
   const [openDetail, setOpenDetail] = useState(null);
+  // 'Uncategorized' stays the internal/stored category value; only its display
+  // is localized (like the CV section labels — translate at the render layer).
+  const catLabel = (c) => (c === 'Uncategorized' ? t('cvBuilder.skillsCard.uncategorized') : c);
 
   const existingSet = useMemo(() => new Set(existingSkills.map(lower)), [existingSkills]);
   const bestSet = useMemo(() => new Set(bestForRole.map(lower)), [bestForRole]);
@@ -89,17 +94,20 @@ const SkillsCard = ({
   const bestRows = rows.filter((r) => r.isBest);
   const selectedCount = [...selected].filter((n) => !existingSet.has(lower(n))).length;
 
-  const sections = mode === 'role' ? [['Best for this role', bestRows]] : Object.entries(grouped);
+  const sections =
+    mode === 'role'
+      ? [[t('cvBuilder.skillsCard.bestForRole'), bestRows]]
+      : Object.entries(grouped);
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 bg-white dark:bg-slate-900/60 overflow-hidden">
       {/* Header + segmented control. */}
       <div className="p-3.5 border-b border-slate-100 dark:border-slate-800">
         <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-          Skills you can back up
+          {t('cvBuilder.skillsCard.eyebrow')}
         </span>
         <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 leading-snug">
-          Pick the ones that are genuinely true for you.
+          {t('cvBuilder.skillsCard.subtitle')}
         </p>
         <div className="mt-2.5 inline-flex gap-1 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
           <button
@@ -111,25 +119,25 @@ const SkillsCard = ({
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
-            All skills
+            {t('cvBuilder.skillsCard.allSkills')}
           </button>
           <button
             type="button"
             onClick={() => hasBest && setMode('role')}
             disabled={!hasBest}
-            title={!hasBest ? 'Add a target job to see role-matched picks' : undefined}
+            title={!hasBest ? t('cvBuilder.skillsCard.addTargetJobTitle') : undefined}
             className={`px-3.5 py-1 text-[11px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${
               mode === 'role'
                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
-            ★ Best for this role
+            ★ {t('cvBuilder.skillsCard.bestForRole')}
           </button>
         </div>
         {!hasBest && (
           <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
-            Add a target job (step 1) to unlock role-matched picks.
+            {t('cvBuilder.skillsCard.addTargetJobHint')}
           </p>
         )}
       </div>
@@ -139,7 +147,7 @@ const SkillsCard = ({
         {sections.map(([category, items]) => (
           <div key={category}>
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              {category}
+              {catLabel(category)}
             </h4>
             <div className="flex flex-wrap gap-1.5">
               {items.map((row) => {
@@ -178,7 +186,7 @@ const SkillsCard = ({
                       <button
                         type="button"
                         onClick={() => setOpenDetail(openDetail === row.name ? null : row.name)}
-                        title="Why this skill fits"
+                        title={t('cvBuilder.skillsCard.whyFits')}
                         className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
                       >
                         <Info className="w-3 h-3" />
@@ -187,7 +195,7 @@ const SkillsCard = ({
 
                     {row.isAdded && (
                       <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 dark:text-slate-500">
-                        on CV
+                        {t('cvBuilder.skillsCard.onCv')}
                       </span>
                     )}
                   </div>
@@ -205,7 +213,9 @@ const SkillsCard = ({
                     {d.talkingPoint && <p className="italic">"{d.talkingPoint}"</p>}
                     {Array.isArray(d.evidence) && d.evidence.length > 0 && (
                       <p className="mt-1 text-slate-500 dark:text-slate-400">
-                        From your {d.evidence.map((e) => e.type).join(', ')}.
+                        {t('cvBuilder.skillsCard.fromYour', {
+                          types: d.evidence.map((e) => e.type).join(', '),
+                        })}
                       </p>
                     )}
                   </div>
@@ -216,15 +226,14 @@ const SkillsCard = ({
 
         {/* Soft-skills steer — set expectations before they hunt for "leadership". */}
         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed italic border-t border-slate-100 dark:border-slate-800 pt-2.5">
-          Leadership, teamwork &amp; communication? I'll weave those into your work-history bullets
-          instead — recruiters trust a skill tied to a real result.
+          {t('cvBuilder.skillsCard.softSkillsNote')}
         </p>
       </div>
 
       {/* Footer. */}
       <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
         <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-          {selectedCount} selected
+          {t('cvBuilder.skillsCard.selectedCount', { n: selectedCount })}
         </span>
         <button
           type="button"
@@ -232,7 +241,9 @@ const SkillsCard = ({
           disabled={selectedCount === 0}
           className="text-xs font-semibold px-4 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Add{selectedCount > 0 ? ` ${selectedCount}` : ''} to CV
+          {selectedCount > 0
+            ? t('cvBuilder.skillsCard.addNToCv', { n: selectedCount })
+            : t('cvBuilder.skillsCard.addToCv')}
         </button>
       </div>
     </div>

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Mic, Crown, X, ClipboardCheck, MessagesSquare, Sparkles } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
+import { useTranslation, Trans } from 'react-i18next';
 
 // Shown when a free user who's used their free taste taps "Start" again — the
 // peak "I want to practice NOW" moment. Two ways forward:
@@ -12,6 +14,7 @@ import { toast } from 'sonner';
 // Deliberately NOT shown on /upgrade: the Pass anchors low next to the plans and
 // would cannibalise subscriptions, so it only lives at high-intent flow moments.
 const InterviewPaywallModal = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +31,7 @@ const InterviewPaywallModal = ({ open, onClose }) => {
       window.location.href = link; // hosted checkout; returns to /billing/return
     } catch (e) {
       console.error(e);
-      toast.error('Could not start checkout. Please try again.');
+      toast.error(t('interviewPrep.interviewPaywall.checkoutError'));
       setLoading(false);
     }
   };
@@ -39,7 +42,7 @@ const InterviewPaywallModal = ({ open, onClose }) => {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
-          aria-label="Close"
+          aria-label={t('interviewPrep.interviewPaywall.close')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -48,33 +51,38 @@ const InterviewPaywallModal = ({ open, onClose }) => {
           <Mic className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
-          Run a scored mock interview
+          {t('interviewPrep.interviewPaywall.title')}
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          You’ve used your free taste. For ₦1,000 do a full 10-minute mock interview that comes with
-          a real scored review:
+          {t('interviewPrep.interviewPaywall.subtitle')}
         </p>
 
         <ul className="space-y-2 mb-5">
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <MessagesSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">A real voice interview</span> — talk it through with
-              the AI interviewer, just like the real thing.
+              <Trans
+                i18nKey="interviewPrep.interviewPaywall.item1"
+                components={{ b: <span className="font-semibold" /> }}
+              />
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <ClipboardCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">A scored review</span> — your readiness score,
-              per-answer feedback, and exactly what to fix.
+              <Trans
+                i18nKey="interviewPrep.interviewPaywall.item2"
+                components={{ b: <span className="font-semibold" /> }}
+              />
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">No subscription</span> — one-off, pay only when you
-              want to practice.
+              <Trans
+                i18nKey="interviewPrep.interviewPaywall.item3"
+                components={{ b: <span className="font-semibold" /> }}
+              />
             </span>
           </li>
         </ul>
@@ -85,10 +93,15 @@ const InterviewPaywallModal = ({ open, onClose }) => {
           className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {loading ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <AriaLoader
+              inline
+              tone="mono"
+              size={16}
+              label={t('interviewPrep.interviewPaywall.startingCheckout')}
+            />
           ) : (
             <>
-              <Mic className="w-5 h-5" /> Practice now — ₦1,000 Pass
+              <Mic className="w-5 h-5" /> {t('interviewPrep.interviewPaywall.practiceNowPass')}
             </>
           )}
         </button>
@@ -97,11 +110,12 @@ const InterviewPaywallModal = ({ open, onClose }) => {
           onClick={() => navigate('/upgrade')}
           className="mt-3 w-full py-3 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2"
         >
-          <Crown className="w-5 h-5 text-amber-500" /> Practice often — see plans
+          <Crown className="w-5 h-5 text-amber-500" />{' '}
+          {t('interviewPrep.interviewPaywall.practiceOftenPlans')}
         </button>
 
         <p className="text-center text-[11px] text-slate-400 mt-4">
-          One-time payment via Flutterwave. After paying you’ll return here to start.
+          {t('interviewPrep.interviewPaywall.footnote')}
         </p>
       </div>
     </div>,

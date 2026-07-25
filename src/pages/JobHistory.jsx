@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -98,7 +99,7 @@ const deriveApp = (a) => {
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
   <div className="flex items-start gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
     {Icon && (
-      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0 mt-0.5">
+      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0 mt-0.5">
         <Icon className="w-4 h-4" />
       </div>
     )}
@@ -176,7 +177,7 @@ const SortDropdown = ({ value, onChange, options }) => {
                 }}
                 className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 text-sm text-left transition-colors ${
                   active
-                    ? 'text-indigo-600 dark:text-indigo-300 font-semibold bg-indigo-50/60 dark:bg-indigo-500/10'
+                    ? 'text-slate-900 dark:text-slate-100 font-semibold bg-slate-100 dark:bg-slate-800'
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -703,7 +704,7 @@ const JobHistory = () => {
           >
             <Trash2 className="h-4 w-4" />
           </button>
-          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 whitespace-nowrap group-hover:gap-2 transition-all">
+          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap group-hover:gap-2 transition-all">
             Open
             <ArrowRight className="h-4 w-4" />
           </span>
@@ -735,7 +736,7 @@ const JobHistory = () => {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
             >
               Analyze your first role
               <ArrowRight className="h-4 w-4" />
@@ -775,7 +776,7 @@ const JobHistory = () => {
                       {s.label}
                     </span>
                     <span
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -795,7 +796,7 @@ const JobHistory = () => {
                     className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
                   >
                     <div
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -815,7 +816,7 @@ const JobHistory = () => {
                 <ViewToggle value={view} onChange={handleViewChange} className="w-full" />
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Analyze a new role
@@ -884,7 +885,7 @@ const JobHistory = () => {
                   not a filled bar. */}
               <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-slate-700 pb-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
-                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     Application
                   </p>
                   <h1 className="mt-1 font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
@@ -918,10 +919,14 @@ const JobHistory = () => {
                     type="button"
                     onClick={handleReanalyze}
                     disabled={reanalyzing}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Re-run analysis (10 credits)"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? 'animate-spin' : ''}`} />
+                    {reanalyzing ? (
+                      <AriaLoader inline tone="mono" size={14} label="Re-analyzing…" />
+                    ) : (
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    )}
                     {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
                   </button>
 
@@ -1008,19 +1013,19 @@ const JobHistory = () => {
                 </div>
               </div>
 
-              {/* Wayfinders — thin anchor links, mono/indigo, no buttons. */}
+              {/* Wayfinders — thin anchor links, mono/ink, no buttons. */}
               <div className="mt-4 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[0.7rem] uppercase tracking-[0.16em]">
                 {selectedApp.fitAnalysis && (
                   <a
                     href="#analysis"
-                    className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 transition-colors"
+                    className="text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                   >
                     See what to fix ↓
                   </a>
                 )}
                 <a
                   href="#toolkit"
-                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 transition-colors"
+                  className="text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                 >
                   My CV toolkit ↓
                 </a>
@@ -1047,7 +1052,7 @@ const JobHistory = () => {
                     {/* Header — eyebrow + title, with the bundle as a right action. */}
                     <div className="flex flex-wrap items-start justify-between gap-3 p-5">
                       <div className="min-w-0">
-                        <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-indigo-800 dark:text-indigo-300">
+                        <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                           Ready to use · now that you&apos;ve read the analysis
                         </p>
                         <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -1122,7 +1127,7 @@ const JobHistory = () => {
                           </div>
                           <div className="mt-1 h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                             <div
-                              className="h-1 rounded-full bg-indigo-500 transition-all"
+                              className="h-1 rounded-full bg-slate-900 dark:bg-white transition-all"
                               style={{ width: `${cvGenStatus.progress || 0}%` }}
                             />
                           </div>

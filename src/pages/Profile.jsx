@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useBlocker, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -323,12 +324,7 @@ const Profile = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
+  if (loading) return <AriaLoader fullscreen size={32} label="Loading your profile…" />;
 
   if (!user)
     return (
@@ -1183,7 +1179,7 @@ const Profile = () => {
                 >
                   {deleting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <AriaLoader inline tone="mono" size={16} label="" />
                       Deleting...
                     </>
                   ) : (

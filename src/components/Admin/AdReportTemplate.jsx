@@ -114,7 +114,9 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
             <img src={applyRightIcon} alt="" className="h-9 w-9 object-contain" />
           </div>
           <div className="flex-1">
-            <div className="text-[30px] font-bold tracking-tight text-white">ApplyRight</div>
+            <div className="font-brand text-[30px] font-bold tracking-tight text-white">
+              ApplyRight
+            </div>
             <div className="text-xs font-medium uppercase tracking-[0.25em] text-cyan-200/70">
               AI-powered career platform
             </div>
@@ -294,7 +296,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
           <div className="flex items-center gap-4">
             <img src={applyRightIcon} alt="" className="h-12 w-12 object-contain" />
             <div>
-              <div className="font-heading text-[30px] font-semibold tracking-tight text-slate-950">
+              <div className="font-brand text-[30px] font-semibold tracking-tight text-slate-950">
                 ApplyRight
               </div>
               <div className="text-xs font-semibold uppercase tracking-[0.26em] text-indigo-500/80">
@@ -528,7 +530,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
             <img src={applyRightIcon} alt="" className="h-8 w-8 object-contain" />
           </div>
           <div>
-            <div className="font-heading text-[28px] font-semibold tracking-tight">ApplyRight</div>
+            <div className="font-brand text-[28px] font-semibold tracking-tight">ApplyRight</div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-indigo-100/75">
               AI-powered careers
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import ReactMarkdown from 'react-markdown';
 import {
   FileText,
@@ -532,7 +533,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
               className={`btn-primary flex items-center ${isDownloading ? 'opacity-50 cursor-wait' : ''}`}
             >
               {isDownloading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                <AriaLoader inline tone="mono" size={16} label="" />
               ) : (
                 <Download className="w-4 h-4 mr-2" />
               )}

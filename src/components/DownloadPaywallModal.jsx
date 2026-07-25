@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AriaLoader from './ui/AriaLoader';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Download, Crown, X, FileCheck2, ScanLine, Sparkles } from 'lucide-react';
@@ -91,7 +92,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {loading ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <AriaLoader inline tone="mono" size={16} label="Starting checkout…" />
           ) : (
             <>
               <Download className="w-5 h-5" /> Pay ₦750 — download

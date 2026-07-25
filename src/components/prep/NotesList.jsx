@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, FileText, Pencil, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation, Trans } from 'react-i18next';
 import InterviewPrepService from '../../services/interviewPrep.service';
 import NoteEditor from './NoteEditor';
 
 // Derive a display title when the user didn't supply one — use the first
-// non-empty line of the body, truncated.
-const deriveTitle = (note) => {
+// non-empty line of the body, truncated. `untitled` is the resolved i18n
+// fallback (passed in so this stays a pure module helper).
+const deriveTitle = (note, untitled) => {
   if (note.title && note.title.trim()) return note.title.trim();
   const firstLine = (note.body || '').split('\n').find((l) => l.trim());
-  if (!firstLine) return 'Untitled note';
+  if (!firstLine) return untitled;
   return firstLine.length > 60 ? `${firstLine.slice(0, 60).trim()}…` : firstLine.trim();
 };
 
@@ -27,54 +29,62 @@ const formatTimestamp = (value) => {
 
 // Read-only view of a saved note — what you land on when reopening one, with an
 // Edit button to drop into the editor.
-const NoteView = ({ note, onEdit, onClose, onDelete }) => (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-card">
-    <div className="flex items-start justify-between gap-3">
-      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 min-w-0">
-        {deriveTitle(note)}
-      </h3>
-      <div className="flex items-center gap-1 shrink-0">
+const NoteView = ({ note, onEdit, onClose, onDelete }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-card">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 min-w-0">
+          {deriveTitle(note, t('interviewPrep.notesList.untitled'))}
+        </h3>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
+          >
+            <Pencil className="w-3.5 h-3.5" /> {t('interviewPrep.notesList.edit')}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+            title={t('interviewPrep.notesList.close')}
+            aria-label={t('interviewPrep.notesList.close')}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      {note.body ? (
+        <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed mt-3">
+          {note.body}
+        </p>
+      ) : (
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic mt-3">
+          {t('interviewPrep.notesList.noContent')}
+        </p>
+      )}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          {note.updatedAt
+            ? t('interviewPrep.notesList.updated', { when: formatTimestamp(note.updatedAt) })
+            : ''}
+        </span>
         <button
           type="button"
-          onClick={onEdit}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+          onClick={onDelete}
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 text-xs font-medium"
         >
-          <Pencil className="w-3.5 h-3.5" /> Edit
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" /> {t('interviewPrep.notesList.delete')}
         </button>
       </div>
     </div>
-    {note.body ? (
-      <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed mt-3">
-        {note.body}
-      </p>
-    ) : (
-      <p className="text-sm text-slate-400 dark:text-slate-500 italic mt-3">No content yet.</p>
-    )}
-    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-      <span className="text-[11px] text-slate-400 dark:text-slate-500">
-        {note.updatedAt ? `Updated ${formatTimestamp(note.updatedAt)}` : ''}
-      </span>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 text-xs font-medium"
-      >
-        <Trash2 className="w-3.5 h-3.5" /> Delete
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedConsumed }) => {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState(initialNotes);
   const [openId, setOpenId] = useState(null);
   // 'view' = read-only (default when reopening a saved note); 'edit' = editor.
@@ -144,13 +154,13 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
     };
 
   const handleDelete = async (noteId) => {
-    if (!window.confirm('Delete this note?')) return;
+    if (!window.confirm(t('interviewPrep.notesList.confirmDelete'))) return;
     try {
       await InterviewPrepService.deleteNote(applicationId, noteId);
       commit(notes.filter((n) => n.id !== noteId));
       if (openId === noteId) setOpenId(null);
     } catch (e) {
-      toast.error('Failed to delete note');
+      toast.error(t('interviewPrep.notesList.failedDelete'));
       console.error(e);
     }
   };
@@ -159,18 +169,20 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">My notes</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            {t('interviewPrep.notesList.myNotes')}
+          </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Saved against this prep — auto-saves as you type.
+            {t('interviewPrep.notesList.autoSavesHint')}
           </p>
         </div>
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New note</span>
+          <span className="hidden sm:inline">{t('interviewPrep.notesList.newNote')}</span>
         </button>
       </div>
 
@@ -205,7 +217,10 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
         <div className="border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center">
           <FileText className="w-7 h-7 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            No notes yet. Click <span className="font-semibold">New note</span> to start one.
+            <Trans
+              i18nKey="interviewPrep.notesList.emptyState"
+              components={{ b: <span className="font-semibold" /> }}
+            />
           </p>
         </div>
       ) : (
@@ -221,17 +236,17 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
                     setOpenId(note.id);
                     setMode('view');
                   }}
-                  className="w-full text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/15 transition-colors"
+                  className="w-full text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                          {deriveTitle(note)}
+                          {deriveTitle(note, t('interviewPrep.notesList.untitled'))}
                         </p>
                         {note.status === 'draft' && (
-                          <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300">
-                            Draft
+                          <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                            {t('interviewPrep.notesList.draft')}
                           </span>
                         )}
                       </div>
@@ -241,7 +256,11 @@ const NotesList = ({ applicationId, initialNotes = [], onChange, seed, onSeedCon
                         </p>
                       )}
                       <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
-                        {note.updatedAt ? `Updated ${formatTimestamp(note.updatedAt)}` : 'Just now'}
+                        {note.updatedAt
+                          ? t('interviewPrep.notesList.updated', {
+                              when: formatTimestamp(note.updatedAt),
+                            })
+                          : t('interviewPrep.notesList.justNow')}
                       </p>
                     </div>
                   </div>

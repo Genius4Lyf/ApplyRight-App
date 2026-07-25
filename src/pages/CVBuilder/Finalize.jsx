@@ -13,23 +13,25 @@ import {
   Sparkles,
   Lock,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import TailorDiffView from '../../components/cv/TailorDiffView';
 import StepHeader from '../../components/cv/StepHeader';
+import CvLanguageToggle from '../../components/cv/CvLanguageToggle';
 import useInterstitial from '../../hooks/useInterstitial';
 
 // --- Score-based guidance ---
+// Module-level: returns i18n KEYS (+ interpolation params), resolved via t() at the
+// call sites. No literal copy is baked in, so it follows a live language switch.
 const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
   if (afterScore >= 70) {
     return {
       level: 'strong',
       icon: <ShieldCheck className="w-5 h-5" />,
       color: 'emerald',
-      title: 'Strong Match',
-      message:
-        'Your CV is well-aligned with this role. The tailoring enhanced your keywords and experience to match the job requirements.',
-      advice:
-        'Review the changes below to make sure everything reads naturally, then proceed to preview.',
+      titleKey: 'cvBuilder.finalize.scoreGuidance.strong.title',
+      messageKey: 'cvBuilder.finalize.scoreGuidance.strong.message',
+      adviceKey: 'cvBuilder.finalize.scoreGuidance.strong.advice',
     };
   }
   if (afterScore >= 40) {
@@ -38,31 +40,37 @@ const getScoreGuidance = (afterScore, beforeScore, missingSkills) => {
       level: 'partial',
       icon: <AlertTriangle className="w-5 h-5" />,
       color: 'amber',
-      title: 'Partial Match',
-      message: `Tailoring improved your score by ${improvement > 0 ? '+' + improvement : '0'} points, but there are gaps between your profile and this role.`,
-      advice:
+      titleKey: 'cvBuilder.finalize.scoreGuidance.partial.title',
+      messageKey: 'cvBuilder.finalize.scoreGuidance.partial.message',
+      messageParams: { improvement: improvement > 0 ? '+' + improvement : '0' },
+      adviceKey:
         missingSkills?.length > 0
-          ? `Consider building experience in: ${missingSkills
-              .slice(0, 4)
-              .map((s) => s.name || s)
-              .join(', ')}. You can still apply, but highlighting transferable skills will help.`
-          : 'Consider customizing your summary and experience bullets to better reflect the role requirements.',
+          ? 'cvBuilder.finalize.scoreGuidance.partial.adviceSkills'
+          : 'cvBuilder.finalize.scoreGuidance.partial.adviceGeneric',
+      adviceParams:
+        missingSkills?.length > 0
+          ? {
+              skills: missingSkills
+                .slice(0, 4)
+                .map((s) => s.name || s)
+                .join(', '),
+            }
+          : undefined,
     };
   }
   return {
     level: 'poor',
     icon: <XCircle className="w-5 h-5" />,
     color: 'red',
-    title: 'Low Match',
-    message:
-      'This role may not align well with your current experience. Even after tailoring, key qualifications are missing.',
-    advice:
-      'Consider revisiting your experience and skills sections to better align with your target role.',
+    titleKey: 'cvBuilder.finalize.scoreGuidance.poor.title',
+    messageKey: 'cvBuilder.finalize.scoreGuidance.poor.message',
+    adviceKey: 'cvBuilder.finalize.scoreGuidance.poor.advice',
   };
 };
 
 // --- Review Modal ---
 const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const afterScore = atsScores?.after?.fitScore || 0;
@@ -102,7 +110,7 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close tailoring details"
+        aria-label={t('cvBuilder.finalize.reviewModal.closeLabel')}
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
       />
 
@@ -113,7 +121,7 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-500" />
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-              CV Tailored Successfully
+              {t('cvBuilder.finalize.reviewModal.title')}
             </h3>
           </div>
           <button
@@ -132,18 +140,20 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
                 <div className={`${colors.icon} mt-0.5`}>{guidance.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-bold ${colors.text}`}>{guidance.title}</span>
+                    <span className={`font-bold ${colors.text}`}>{t(guidance.titleKey)}</span>
                     <span className={`text-sm font-semibold ${colors.text}`}>{afterScore}%</span>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {guidance.message}
+                    {t(guidance.messageKey, guidance.messageParams)}
                   </p>
                 </div>
               </div>
 
               {/* Score bar */}
               <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">Before</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">
+                  {t('cvBuilder.finalize.reviewModal.before')}
+                </span>
                 <div className="flex-1 h-1.5 rounded-full bg-white/60 dark:bg-white/10">
                   <div
                     className="h-full rounded-full bg-slate-400"
@@ -155,7 +165,9 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">After</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 w-12">
+                  {t('cvBuilder.finalize.reviewModal.after')}
+                </span>
                 <div className="flex-1 h-1.5 rounded-full bg-white/60 dark:bg-white/10">
                   <div
                     className={`h-full rounded-full ${colors.bar}`}
@@ -172,21 +184,21 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
           {/* Advice */}
           <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {guidance.advice}
+              {t(guidance.adviceKey, guidance.adviceParams)}
             </p>
           </div>
 
           {/* Review Checklist */}
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              Before you proceed, review:
+              {t('cvBuilder.finalize.reviewModal.beforeProceed')}
             </p>
             <ul className="space-y-2">
               {[
-                'Professional summary reads naturally and matches your voice',
-                'Experience bullet points are accurate and not exaggerated',
-                'Added skills are ones you can genuinely demonstrate',
-                'Contact details and personal info are correct',
+                t('cvBuilder.finalize.reviewModal.checklist.0'),
+                t('cvBuilder.finalize.reviewModal.checklist.1'),
+                t('cvBuilder.finalize.reviewModal.checklist.2'),
+                t('cvBuilder.finalize.reviewModal.checklist.3'),
               ].map((item, i) => (
                 <li
                   key={i}
@@ -205,19 +217,22 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
               onClick={onClose}
               className="w-full btn-primary px-6 py-3 flex items-center justify-center gap-2 text-sm font-semibold"
             >
-              Got it
+              {t('cvBuilder.finalize.reviewModal.gotIt')}
             </button>
             <button
               onClick={onEdit}
               className="w-full px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
             >
-              <Pencil className="w-3.5 h-3.5" /> Edit CV
+              <Pencil className="w-3.5 h-3.5" /> {t('cvBuilder.finalize.editCv')}
             </button>
           </div>
 
           {tailoredForJob && (
             <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
-              Tailored for {tailoredForJob.title} at {tailoredForJob.company}
+              {t('cvBuilder.common.tailoredFor', {
+                title: tailoredForJob.title,
+                company: tailoredForJob.company,
+              })}
             </p>
           )}
         </div>
@@ -228,9 +243,10 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
 };
 
 const Finalize = () => {
+  const { t } = useTranslation();
   // Safely destructure context
   const context = useOutletContext();
-  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob, isStepComplete } =
+  const { cvData, handleBack, saving, tailoredFrom, tailoredForJob, isStepComplete, updateCvData } =
     context || {};
   const { id } = useParams();
   const navigate = useNavigate();
@@ -246,7 +262,7 @@ const Finalize = () => {
 
   const handlePreview = () => {
     if (!id || id === 'new') {
-      toast.error('Please add some data to create a draft first.');
+      toast.error(t('cvBuilder.finalize.addDataFirst'));
       return;
     }
     setShowReviewModal(false);
@@ -265,7 +281,9 @@ const Finalize = () => {
 
   if (!cvData) {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading review...</div>
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        {t('cvBuilder.finalize.loading')}
+      </div>
     );
   }
 
@@ -314,13 +332,25 @@ const Finalize = () => {
       />
 
       <StepHeader
-        eyebrow="Review"
-        title={tailoredFrom ? 'Tailored CV review' : 'Final review'}
+        eyebrow={t('cvBuilder.finalize.eyebrow')}
+        title={
+          tailoredFrom
+            ? t('cvBuilder.finalize.titleTailored')
+            : t('cvBuilder.finalize.titleFinal')
+        }
         subtitle={
           tailoredFrom
-            ? 'Review the changes made to your CV before previewing.'
-            : "You've added all the essentials. Ready to visualize?"
+            ? t('cvBuilder.finalize.subtitleTailored')
+            : t('cvBuilder.finalize.subtitleFinal')
         }
+      />
+
+      {/* The language this CV is WRITTEN in — set it here before previewing or
+          downloading, since it drives both the AI writing and the section labels. */}
+      <CvLanguageToggle
+        draftId={id}
+        value={cvData?.outputLang}
+        onChange={(next) => updateCvData?.({ outputLang: next })}
       />
 
       {/* Inline Score Guidance — replaces the auto-opening modal. The
@@ -335,9 +365,14 @@ const Finalize = () => {
           </div>
           <div className="flex-1">
             <p className={`font-semibold text-sm ${guidanceColorMap[guidance.color].text}`}>
-              {guidance.title} — {afterScore}% match
+              {t('cvBuilder.finalize.matchLine', {
+                title: t(guidance.titleKey),
+                n: afterScore,
+              })}
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{guidance.advice}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              {t(guidance.adviceKey, guidance.adviceParams)}
+            </p>
           </div>
           <button
             type="button"
@@ -345,14 +380,14 @@ const Finalize = () => {
             className="shrink-0 self-stretch sm:self-center inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            View tailoring details
+            {t('cvBuilder.finalize.viewTailoringDetails')}
           </button>
         </div>
       )}
 
       <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-700">
         <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4">
-          Summary of your inputs:
+          {t('cvBuilder.finalize.summaryOfInputs')}
         </h3>
         <ul className="space-y-3">
           <li className="flex items-center gap-3">
@@ -372,7 +407,7 @@ const Finalize = () => {
                   : 'text-slate-400 dark:text-slate-500'
               }
             >
-              Heading & Contact Info
+              {t('cvBuilder.finalize.headingContact')}
             </span>
           </li>
           <li className="flex items-center gap-3">
@@ -392,7 +427,7 @@ const Finalize = () => {
                   : 'text-slate-400 dark:text-slate-500'
               }
             >
-              Professional Summary
+              {t('cvBuilder.finalize.professionalSummary')}
             </span>
           </li>
           <li className="flex items-center gap-3">
@@ -412,7 +447,9 @@ const Finalize = () => {
                   : 'text-slate-400 dark:text-slate-500'
               }
             >
-              Work History ({cvData.experience?.length || 0} roles)
+              {t('cvBuilder.finalize.workHistoryRoles', {
+                n: cvData.experience?.length || 0,
+              })}
             </span>
           </li>
           <li className="flex items-center gap-3">
@@ -432,7 +469,9 @@ const Finalize = () => {
                   : 'text-slate-400 dark:text-slate-500'
               }
             >
-              Education ({cvData.education?.length || 0} entries)
+              {t('cvBuilder.finalize.educationEntries', {
+                n: cvData.education?.length || 0,
+              })}
             </span>
           </li>
           <li className="flex items-center gap-3">
@@ -452,7 +491,7 @@ const Finalize = () => {
                   : 'text-slate-400 dark:text-slate-500'
               }
             >
-              Skills ({cvData.skills?.length || 0} listed)
+              {t('cvBuilder.finalize.skillsListed', { n: cvData.skills?.length || 0 })}
             </span>
           </li>
         </ul>
@@ -461,10 +500,11 @@ const Finalize = () => {
           <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-semibold rounded-xl border border-amber-200 dark:border-amber-500/30 flex items-start gap-3">
             <Lock className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
             <div>
-              <p className="font-bold text-slate-800 dark:text-slate-200">Journey Incomplete</p>
+              <p className="font-bold text-slate-800 dark:text-slate-200">
+                {t('cvBuilder.finalize.journeyIncomplete')}
+              </p>
               <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                You have incomplete sections in your CV journey. The final preview and download are
-                locked until all sections are filled in.
+                {t('cvBuilder.finalize.journeyIncompleteBody')}
               </p>
             </div>
           </div>
@@ -488,7 +528,7 @@ const Finalize = () => {
             onClick={handleEditCV}
             className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
-            <Pencil className="w-4 h-4" /> Edit CV
+            <Pencil className="w-4 h-4" /> {t('cvBuilder.finalize.editCv')}
           </button>
         ) : (
           <button
@@ -496,7 +536,7 @@ const Finalize = () => {
             onClick={handleBack}
             className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> {t('common.back')}
           </button>
         )}
         <button
@@ -507,11 +547,11 @@ const Finalize = () => {
         >
           {isComplete ? (
             <>
-              Preview My Application <ExternalLink className="w-4 h-4" />
+              {t('cvBuilder.finalize.previewApp')} <ExternalLink className="w-4 h-4" />
             </>
           ) : (
             <>
-              <Lock className="w-4 h-4" /> Preview Locked
+              <Lock className="w-4 h-4" /> {t('cvBuilder.finalize.previewLocked')}
             </>
           )}
         </button>

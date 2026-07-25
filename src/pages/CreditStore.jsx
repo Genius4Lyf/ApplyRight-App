@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Share2, X, Check, Play, Crown, ArrowRight, Sparkles } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
@@ -26,6 +27,7 @@ const SectionHeading = ({ eyebrow, title, subtitle }) => (
 
 const CreditStore = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Ad State
   const [showAdPlayer, setShowAdPlayer] = useState(false);
@@ -60,7 +62,7 @@ const CreditStore = () => {
       else setBuyingPack(null);
     } catch (error) {
       setBuyingPack(null);
-      alert(error.response?.data?.message || 'Could not start checkout. Please try again.');
+      alert(error.response?.data?.message || t('billing.common.checkoutFailed'));
     }
   };
 
@@ -154,9 +156,6 @@ const CreditStore = () => {
     try {
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
       const resolved = stored?._id || stored?.id || null;
-      console.log(
-        `[AdFlow] getStoredUserId resolved=${resolved} keys=${Object.keys(stored).join(',')}`
-      );
       return resolved;
     } catch (e) {
       console.warn('[AdFlow] getStoredUserId failed to parse localStorage user', e);
@@ -178,7 +177,7 @@ const CreditStore = () => {
       const stats = await billingService.getAdStats();
       if (stats?.cooldownRemainingMs > 0) {
         alert(
-          `Please wait ${Math.ceil(stats.cooldownRemainingMs / 1000)}s before watching another ad.`
+          t('billing.creditStore.adCooldown', { n: Math.ceil(stats.cooldownRemainingMs / 1000) })
         );
         return;
       }
@@ -197,7 +196,7 @@ const CreditStore = () => {
       <button
         onClick={() => navigate(-1)}
         className="absolute top-6 left-6 p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors z-10"
-        title="Go Back"
+        title={t('common.back')}
       >
         <X className="w-5 h-5" />
       </button>
@@ -209,11 +208,10 @@ const CreditStore = () => {
             <Zap className="w-7 h-7 fill-indigo-600 dark:fill-indigo-300" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Credits &amp; Plans
+            {t('billing.creditStore.title')}
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Earn credits for free, top up instantly, or go unlimited with a plan. Credits power AI
-            CV writing, cover letters, ATS scoring and premium templates.
+            {t('billing.creditStore.subtitle')}
           </p>
         </div>
 
@@ -226,13 +224,17 @@ const CreditStore = () => {
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
                 <p className="text-xs uppercase tracking-wider font-bold text-indigo-200">
-                  Your A.I credits
+                  {t('billing.creditStore.yourCredits')}
                 </p>
-                <p className="text-5xl font-black leading-tight mt-1">{availableCredits}</p>
+                <p className="font-heading text-5xl font-black leading-tight tabular-nums mt-1">
+                  {availableCredits}
+                </p>
                 {isPaid && (entitlement.planCredits ?? 0) >= 0 && (
                   <p className="text-sm text-indigo-100/80 mt-1">
-                    {entitlement.planCredits ?? 0} from plan · {entitlement.walletCredits ?? 0} in
-                    wallet
+                    {t('billing.creditStore.fromPlanWallet', {
+                      plan: entitlement.planCredits ?? 0,
+                      wallet: entitlement.walletCredits ?? 0,
+                    })}
                   </p>
                 )}
               </div>
@@ -244,29 +246,35 @@ const CreditStore = () => {
                     <>
                       <Crown className="w-4 h-4 text-amber-300" />
                       <span className="capitalize">
-                        {entitlement.planId || entitlement.tier} plan
+                        {t('billing.creditStore.planLabel', {
+                          plan: entitlement.planId || entitlement.tier,
+                        })}
                       </span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      <span>Free plan</span>
+                      <span>{t('nav.account.freePlan')}</span>
                     </>
                   )}
                 </div>
                 <p className="text-sm text-indigo-100/90 mt-2">
                   {isPaid
-                    ? `${entitlement.minutesRemaining} live interview min left`
-                    : `${Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)} free interview min left`}
+                    ? t('billing.creditStore.minutesLeftPaid', { n: entitlement.minutesRemaining })
+                    : t('billing.creditStore.minutesLeftFree', {
+                        n: Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60),
+                      })}
                   {isPaid && entitlement.expiresAt
-                    ? ` · until ${new Date(entitlement.expiresAt).toLocaleDateString()}`
+                    ? ` ${t('billing.creditStore.untilDate', {
+                        date: new Date(entitlement.expiresAt).toLocaleDateString(),
+                      })}`
                     : ''}
                 </p>
                 <button
                   onClick={() => navigate('/upgrade')}
                   className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition-colors"
                 >
-                  {isPaid ? 'Manage plan' : 'See all plans'}
+                  {isPaid ? t('billing.creditStore.managePlan') : t('billing.creditStore.seeAllPlans')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -277,56 +285,60 @@ const CreditStore = () => {
         {/* ══ ZONE 1 — Earn free credits ══════════════════════════════ */}
         <section>
           <SectionHeading
-            eyebrow="No payment needed"
-            title="Earn free credits"
-            subtitle="Top up your wallet without spending a naira. Earned credits never expire."
+            eyebrow={t('billing.creditStore.earnEyebrow')}
+            title={t('billing.creditStore.earnTitle')}
+            subtitle={t('billing.creditStore.earnSubtitle')}
           />
           <div className="grid md:grid-cols-2 gap-6">
             {/* Watch ad — NATIVE ANDROID ONLY. Web has no ads; the earn-credits
                 surface on web is "Invite friends" + the paid top-up zones below. */}
             {isAndroidNative() && (
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
-              <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
-                <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-md">
-                    <Play className="w-6 h-6 ml-0.5 fill-white" />
-                  </div>
-                  {adStats.streak > 0 && (
-                    <div className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                      🔥 {adStats.streak} day streak
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
+                <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
+                  <div className="flex items-start justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-md">
+                      <Play className="w-6 h-6 ml-0.5 fill-white" />
                     </div>
-                  )}
+                    {adStats.streak > 0 && (
+                      <div className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        🔥 {t('billing.creditStore.streakDays', { n: adStats.streak })}
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
+                    {t('billing.creditStore.watchTitle')}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">
+                    <Trans
+                      i18nKey="billing.creditStore.watchBody"
+                      values={{ n: platformReward }}
+                      components={{
+                        b: <span className="font-bold text-indigo-600 dark:text-indigo-300" />,
+                      }}
+                    />
+                  </p>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-green-500" />{' '}
+                      {t('billing.creditStore.instantReward')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-green-500" />{' '}
+                      {t('billing.creditStore.unlimitedDaily')}
+                    </span>
+                  </div>
+
+                  <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
+                    <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white font-bold hover:opacity-95 transition-opacity shadow-md">
+                      <Zap className="w-5 h-5 fill-white" />
+                      {t('billing.creditStore.watchCta', { n: platformReward })}
+                    </span>
+                  </button>
                 </div>
-
-                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
-                  Watch a video
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
-                  Earn{' '}
-                  <span className="font-bold text-indigo-600 dark:text-indigo-300">
-                    +{platformReward} credits
-                  </span>{' '}
-                  in about 5 seconds.
-                </p>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" /> Instant reward
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" /> Unlimited daily
-                  </span>
-                </div>
-
-                <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
-                  <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white font-bold hover:opacity-95 transition-opacity shadow-md">
-                    <Zap className="w-5 h-5 fill-white" />
-                    Watch video · +{platformReward}
-                  </span>
-                </button>
               </div>
-            </div>
             )}
 
             {/* Invite friends */}
@@ -338,29 +350,33 @@ const CreditStore = () => {
                 </div>
 
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
-                  Invite friends
+                  {t('billing.creditStore.inviteTitle')}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 mt-1">
-                  Get{' '}
-                  <span className="font-bold text-blue-600 dark:text-blue-300">
-                    +{referralBonus} credits
-                  </span>{' '}
-                  for every friend who joins with your link.
+                  <Trans
+                    i18nKey="billing.creditStore.inviteBody"
+                    values={{ n: referralBonus }}
+                    components={{
+                      b: <span className="font-bold text-blue-600 dark:text-blue-300" />,
+                    }}
+                  />
                 </p>
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
                   <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" /> No limit on invites
+                    <Check className="w-4 h-4 text-green-500" />{' '}
+                    {t('billing.creditStore.noLimitInvites')}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" /> Credits never expire
+                    <Check className="w-4 h-4 text-green-500" />{' '}
+                    {t('billing.creditStore.creditsNeverExpire')}
                   </span>
                 </div>
 
                 <button onClick={() => setShowInviteModal(true)} className="mt-auto pt-6 w-full">
                   <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                     <Share2 className="w-5 h-5" />
-                    Get invite link
+                    {t('billing.creditStore.getInviteLink')}
                   </span>
                 </button>
               </div>
@@ -371,9 +387,9 @@ const CreditStore = () => {
         {/* ══ ZONE 2 — Top up instantly ═══════════════════════════════ */}
         <section>
           <SectionHeading
-            eyebrow="One-time purchase"
-            title="Top up instantly"
-            subtitle="Buy a credit pack with card or transfer. Added to your wallet, never expires."
+            eyebrow={t('billing.common.oneTimePurchase')}
+            title={t('billing.creditStore.topUpTitle')}
+            subtitle={t('billing.creditStore.topUpSubtitle')}
           />
           <div className="grid sm:grid-cols-2 gap-4">
             {CREDIT_PACKS.map((p) => (
@@ -390,19 +406,22 @@ const CreditStore = () => {
               >
                 {p.best && (
                   <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                    Best value
+                    {t('billing.common.bestValue')}
                   </span>
                 )}
                 <div>
                   <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                    {p.credits} <span className="text-base font-semibold">credits</span>
+                    {p.credits}{' '}
+                    <span className="text-base font-semibold">
+                      {t('billing.common.creditsUnit')}
+                    </span>
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    {(p.ngn / p.credits).toFixed(1)} ₦ per credit
+                    {t('billing.creditStore.perCreditNgn', { n: (p.ngn / p.credits).toFixed(1) })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
-                  {buyingPack === p.id ? 'Starting…' : `₦${p.ngn.toLocaleString()}`}
+                  {buyingPack === p.id ? t('billing.common.starting') : `₦${p.ngn.toLocaleString()}`}
                 </div>
               </button>
             ))}
@@ -412,41 +431,46 @@ const CreditStore = () => {
         {/* ══ ZONE 3 — Go unlimited (subscriptions) ═══════════════════ */}
         <section>
           <SectionHeading
-            eyebrow="Best for active job hunts"
-            title="Go unlimited with a plan"
-            subtitle="Plans unlock unlimited AI writing, the sharper GPT-4o model, premium templates and live interview minutes."
+            eyebrow={t('billing.creditStore.goUnlimitedEyebrow')}
+            title={t('billing.creditStore.goUnlimitedTitle')}
+            subtitle={t('billing.creditStore.goUnlimitedSubtitle')}
           />
           <div className="grid md:grid-cols-3 gap-4">
-            {TIERS.map((t) => {
-              const featured = t.featuredFor === 'NGN' || t.highlight;
+            {TIERS.map((tier) => {
+              const featured = tier.featuredFor === 'NGN' || tier.highlight;
               return (
                 <div
-                  key={t.id}
+                  key={tier.id}
                   className={`relative flex flex-col rounded-2xl border p-6 transition-shadow hover:shadow-md ${
                     featured
                       ? 'border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-900 ring-1 ring-indigo-200 dark:ring-indigo-500/30'
                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
                   }`}
                 >
-                  {t.badge && (
+                  {tier.badgeKey && (
                     <span className="absolute -top-2.5 left-6 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                      {t.badge}
+                      {t(tier.badgeKey)}
                     </span>
                   )}
                   <p className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                    {t.label}
+                    {t(tier.labelKey)}
                   </p>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
-                      {formatNgn(t.priceNgn)}
+                      {formatNgn(tier.priceNgn)}
                     </span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400">/ {t.period}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      / {tier.period}
+                    </span>
                   </div>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">
-                      {t.credits.toLocaleString()} credits
-                    </span>{' '}
-                    + {t.minutes} live interview min
+                    <Trans
+                      i18nKey="billing.creditStore.creditsPlusMinutes"
+                      values={{ credits: tier.credits.toLocaleString(), minutes: tier.minutes }}
+                      components={{
+                        b: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+                      }}
+                    />
                   </p>
                   <button
                     onClick={() => navigate('/upgrade')}
@@ -459,7 +483,7 @@ const CreditStore = () => {
                           : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      Choose {t.label}
+                      {t('billing.common.choosePlan', { plan: t(tier.labelKey) })}
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   </button>
@@ -468,12 +492,12 @@ const CreditStore = () => {
             })}
           </div>
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
-            Need just a few more interview minutes?{' '}
+            {t('billing.creditStore.moreMinutesPrompt')}{' '}
             <button
               onClick={() => navigate('/upgrade')}
               className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
             >
-              See minute top-ups →
+              {t('billing.creditStore.seeMinuteTopups')}
             </button>
           </p>
         </section>
@@ -481,7 +505,7 @@ const CreditStore = () => {
         {/* Info Footer */}
         <div className="text-center pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
           <p className="text-sm text-slate-400 dark:text-slate-500">
-            Need help? Contact support@applyright.com.ng
+            {t('billing.creditStore.support')}
           </p>
         </div>
       </div>
@@ -494,7 +518,6 @@ const CreditStore = () => {
           onClose={() => setShowAdPlayer(false)}
         />
       )}
-
 
       {/* Invite Friend Modal */}
       <AnimatePresence>
@@ -527,11 +550,14 @@ const CreditStore = () => {
 
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    Invite Friends &amp; Earn
+                    {t('billing.creditStore.inviteModalTitle')}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-300 mt-2">
-                    Share your code with friends. When they sign up, <b>you get</b>{' '}
-                    <span className="text-green-600 font-bold">{referralBonus} A.I Credits</span>!
+                    <Trans
+                      i18nKey="billing.creditStore.inviteModalBody"
+                      values={{ n: referralBonus }}
+                      components={{ b: <b />, em: <span className="text-green-600 font-bold" /> }}
+                    />
                   </p>
                 </div>
 
@@ -539,18 +565,22 @@ const CreditStore = () => {
                   {/* Referral Code */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                      YOUR REFERRAL CODE
+                      {t('billing.creditStore.yourReferralCode')}
                     </label>
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
                       <div className="font-mono text-xl font-bold text-slate-800 dark:text-slate-200 tracking-wider">
-                        {loadingCode ? 'LOADING...' : referralCode || 'ERROR'}
+                        {loadingCode
+                          ? t('billing.creditStore.codeLoadingUpper')
+                          : referralCode || t('billing.creditStore.codeError')}
                       </div>
                       <button
                         onClick={handleCopyCode}
                         disabled={loadingCode || !referralCode}
                         className={`${copySuccess === 'Copied!' ? 'bg-green-500 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'} px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        {copySuccess === 'Copied!' ? 'Copied!' : 'Copy'}
+                        {copySuccess === 'Copied!'
+                          ? t('billing.creditStore.copied')
+                          : t('billing.creditStore.copy')}
                       </button>
                     </div>
                   </div>
@@ -558,7 +588,7 @@ const CreditStore = () => {
                   {/* Share Link */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                      OR SHARE THIS LINK
+                      {t('billing.creditStore.orShareLink')}
                     </label>
                     <button
                       onClick={handleCopyLink}
@@ -567,20 +597,22 @@ const CreditStore = () => {
                     >
                       <div className="text-sm text-indigo-600 dark:text-indigo-300 font-medium truncate">
                         {loadingCode
-                          ? 'Loading...'
+                          ? t('billing.creditStore.linkLoading')
                           : `${window.location.origin}/register?ref=${referralCode}`}
                       </div>
                       <div
                         className={`${copySuccess === 'Link Copied!' ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white'} px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap`}
                       >
-                        {copySuccess === 'Link Copied!' ? '✓ Copied' : 'Copy Link'}
+                        {copySuccess === 'Link Copied!'
+                          ? t('billing.creditStore.linkCopied')
+                          : t('billing.creditStore.copyLink')}
                       </div>
                     </button>
                   </div>
                 </div>
 
                 <div className="text-xs text-slate-400 dark:text-slate-500">
-                  A.I Credits are valid for CV analysis and optimizations.
+                  {t('billing.creditStore.creditsValidNote')}
                 </div>
               </div>
             </motion.div>

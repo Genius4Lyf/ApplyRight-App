@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -14,11 +15,10 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
-  Sparkles,
+  Eye,
   TrendingUp,
   Wind,
   Mic,
-  Loader,
   MessageSquare,
   BookOpen,
   Wifi,
@@ -40,6 +40,8 @@ import {
 import InterviewReadinessChecklist from '../components/prep/InterviewReadinessChecklist';
 import { BreathingExercise } from '../components/prep/CalmKit';
 import InterviewerPanel from '../components/prep/InterviewerPanel';
+import RoomBrief from '../components/prep/RoomBrief';
+import PreflightSteps from '../components/prep/PreflightSteps';
 import MeetingStage from '../components/prep/MeetingStage';
 import { seatUnlocked } from '../utils/interviewLoop';
 import AudioPlayer from '../components/AudioPlayer';
@@ -222,6 +224,8 @@ const MockInterviewPage = () => {
   const segmentsRef = useRef([]); // per-seat plan from the backend
   const segmentIdxRef = useRef(0); // current seat index
   const accumTranscriptRef = useRef([]); // transcript from completed segments
+  const accumTelemetryRef = useRef([]); // delivery telemetry from completed segments
+  const finalTelemetryRef = useRef([]); // stitched telemetry for the graded session
   const segStartRef = useRef(0); // start time of the current segment (per-seg recording)
   const advancingRef = useRef(false); // guard against double-advance on a seat
   // Pre-warmed NEXT interviewer ({ ctl, state }) — connected silently in the
@@ -935,6 +939,7 @@ const MockInterviewPage = () => {
     segmentsRef.current = [];
     segmentIdxRef.current = 0;
     accumTranscriptRef.current = [];
+    accumTelemetryRef.current = [];
     advancingRef.current = false;
     handingOffRef.current = false;
     setHandingOff(false);
@@ -1211,6 +1216,7 @@ const MockInterviewPage = () => {
     const prev = realtimeRef.current;
     const segTx = prev?.getTranscript?.() || [];
     accumTranscriptRef.current = [...accumTranscriptRef.current, ...segTx];
+    accumTelemetryRef.current = [...accumTelemetryRef.current, ...(prev?.getTelemetry?.() || [])];
     await saveSegmentRecording();
 
     // Promote the pre-warmed seat to active and move the countdown to its budget.
@@ -1318,6 +1324,7 @@ const MockInterviewPage = () => {
       segmentsRef.current = isMultiVoice ? sess.segments : [];
       segmentIdxRef.current = 0;
       accumTranscriptRef.current = [];
+      accumTelemetryRef.current = [];
       advancingRef.current = false;
       nextCtlRef.current = null;
       prewarmingRef.current = false;
@@ -1379,6 +1386,13 @@ const MockInterviewPage = () => {
     const liveTranscript = [
       ...accumTranscriptRef.current,
       ...(realtimeRef.current?.getTranscript?.() || []),
+    ];
+    // Same stitch for the delivery numbers. Captured BEFORE stop() tears the
+    // session down, and held in a ref so a re-run of the assessment from the
+    // review screen still has them.
+    finalTelemetryRef.current = [
+      ...accumTelemetryRef.current,
+      ...(realtimeRef.current?.getTelemetry?.() || []),
     ];
     try {
       const blob = await recorderRef.current?.stop();
@@ -1464,6 +1478,12 @@ const MockInterviewPage = () => {
         plannedSec,
         reservationId: reservationRef.current,
         interviewerSeatIndex: sessionSeatRef.current ?? undefined,
+        // Numbers only — hesitation, answer length, pauses, word counts. Absent for
+        // the turn-based (non-live) mode, and the server degrades to transcript-only
+        // when it's missing rather than guessing at delivery.
+        deliveryTelemetry: finalTelemetryRef.current?.length
+          ? finalTelemetryRef.current
+          : undefined,
       });
       // Reservation is now reconciled server-side; don't double-reconcile on a re-run.
       reservationRef.current = null;
@@ -1588,11 +1608,7 @@ const MockInterviewPage = () => {
   };
 
   if (showLoader) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin" />
-      </div>
-    );
+    return <AriaLoader fullscreen size={40} label="Loading your interview…" />;
   }
   if (!application) return null;
 
@@ -1603,7 +1619,7 @@ const MockInterviewPage = () => {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-card text-center">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white flex items-center justify-center">
             <Lock className="w-5 h-5" />
           </div>
           <h1 className="mt-3 text-base font-bold text-slate-900 dark:text-slate-100">
@@ -1641,11 +1657,135 @@ const MockInterviewPage = () => {
     phase === 'grading' ||
     (phase === 'connecting' && mode === 'conversational');
 
+  // ── Live-interview pre-flight, as three steps ────────────────────────────
+  // What this is → who's interviewing you → start. One source of truth per
+  // pane; PreflightSteps owns both the desktop rail and the mobile deck, and
+  // owns the Start/Back footer (hence showActions={false} on IntroView).
+  const panelReady = panelLoading || setupPanel.length >= 2;
+  const preflightPlannedSec = isPaidTier ? lengthSec || plannedSec : liveSecondsAvailable || 180;
+
+  // (1) The pre-call brief. Phase 3 made the room neutral in content — it no
+  // longer explains mid-answer what counts as evidence. That has to be said
+  // HERE, before the freeze it prevents. Derived data only: no AI, no credits.
+  const briefPane = (
+    <RoomBrief
+      careerStage={application?.careerStage}
+      panel={isPaidTier ? setupPanel : []}
+      interviewer={isPaidTier && chosenSeatIndex >= 0 ? setupPanel[chosenSeatIndex] : null}
+      style={style}
+      challenge={challenge}
+      plannedSec={preflightPlannedSec}
+      archetype={application?.archetype}
+      mustHaves={(application?.interviewPrep?.skillsWithEvidence || [])
+        .map((s) => s?.name)
+        .filter(Boolean)}
+    />
+  );
+
+  // (2) Who's interviewing you — paid → tailored panel you pick from; free →
+  // generic teaser (locked). The challenge picker rides along underneath.
+  const interviewerPane = (
+    <div className="space-y-3">
+      {panelReady && (
+        <div>
+          <InterviewerPanel
+            panel={setupPanel}
+            locked={!isPaidTier}
+            loading={panelLoading}
+            heading={isPaidTier ? 'Choose your interviewer' : 'Likely to interview you'}
+            onSelect={isPaidTier ? setChosenSeatIndex : null}
+            selectedIndex={isPaidTier ? chosenSeatIndex : -1}
+            lockedIndices={isPaidTier ? lockedIndices : []}
+            scores={isPaidTier ? seatScores : {}}
+            // Free tier sees the panel blurred behind a lock, so render it
+            // compactly — the per-seat detail is hidden anyway.
+            compact={!isPaidTier}
+          />
+          <p className="mt-1.5 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+            {isPaidTier
+              ? setupPanel[chosenSeatIndex]?.description ||
+                'Pick who runs this round — each interviews you in their own voice, on what they care about.'
+              : 'On a paid plan, you pick who interviews you from this panel.'}
+          </p>
+        </div>
+      )}
+
+      {panelReady && <hr className="border-slate-100 dark:border-slate-800/80" />}
+
+      <VoiceStyleSelector
+        voice={voice}
+        style={style}
+        onVoiceChange={chooseVoice}
+        onStyleChange={chooseStyle}
+        // Paid users pick a specific interviewer whose role sets the voice AND
+        // the interview type — so hide voice + style for them and leave only
+        // the difficulty picker.
+        showVoice={!isPaidTier}
+        showStyle={!isPaidTier}
+        borderless={true}
+        challenge={challenge}
+        onChallengeChange={chooseChallenge}
+      />
+    </div>
+  );
+
+  // (3) Start. The footer carries the primary action, so this pane keeps only
+  // its lede, stats and quiet links.
+  const startPane = (
+    <div className="flex flex-col">
+      <IntroView
+        firstName={firstName}
+        title={title}
+        count={simQuestions.length}
+        plannedSec={preflightPlannedSec}
+        lastSession={lastSession}
+        trend={getInterviewTrend(application)}
+        mode={mode}
+        voice={voice}
+        style={style}
+        onVoiceChange={chooseVoice}
+        onStyleChange={chooseStyle}
+        onStart={handleStartClick}
+        onCancel={() => setPhase('choose')}
+        showSelectors={false}
+        showActions={false}
+        bare
+        entitlement={entitlement}
+        isPaidTier={isPaidTier}
+        lengthSec={lengthSec}
+        setLengthSec={setLengthSec}
+        lengthMinSec={lengthMinSec}
+        lengthMaxSec={lengthMaxSec}
+        liveSecondsAvailable={liveSecondsAvailable}
+        wrapUp={wrapUp}
+        setWrapUp={setWrapUp}
+      />
+
+      {/* Paid users land here directly (chooser skipped) — keep the guided
+          reader reachable with a quiet link, right under Start. */}
+      {isPaidTier && (
+        <button
+          type="button"
+          onClick={() => setMode('scripted')}
+          className="mt-3 self-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer select-none"
+        >
+          Prefer the guided reader instead?
+        </button>
+      )}
+    </div>
+  );
+
+  const preflightSteps = [
+    { key: 'brief', label: 'What this is', hint: 'Step 1 of 3', node: briefPane },
+    { key: 'interviewer', label: 'Your interviewer', hint: 'Step 2 of 3', node: interviewerPane },
+    { key: 'start', label: 'Start', hint: 'Ready when you are', node: startPane },
+  ];
+
   return (
     <div
       className={`min-h-screen flex flex-col ${
         immersive
-          ? 'bg-gradient-to-b from-slate-50 via-white to-indigo-50 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100'
+          ? 'bg-[#f6f6f3] text-slate-900 dark:bg-slate-950 dark:text-slate-100'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'
       }`}
     >
@@ -1657,11 +1797,7 @@ const MockInterviewPage = () => {
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <span
-            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${
-              immersive ? 'text-indigo-600 dark:text-indigo-300' : 'text-indigo-600'
-            }`}
-          >
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
             {(phase === 'running' || phase === 'conversation' || phase === 'live') && (
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
@@ -1717,11 +1853,7 @@ const MockInterviewPage = () => {
       </header>
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-2 sm:py-3.5">
-        <div
-          className={`w-full transition-all duration-300 ${
-            phase === 'intro' && mode === 'conversational' ? 'max-w-3xl lg:max-w-5xl' : 'max-w-3xl'
-          }`}
-        >
+        <div className="w-full max-w-3xl transition-all duration-300">
           {phase === 'choose' &&
             (simQuestions.length === 0 ? (
               <IntroView
@@ -1750,107 +1882,15 @@ const MockInterviewPage = () => {
             <>
               {/* Live-interview length + wrap-up controls (the realtime voice mode only). */}
               {mode === 'conversational' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch text-left">
-                  {/* Left Column: Config Settings */}
-                  <div className="lg:col-span-5 flex flex-col gap-4">
-                    {/* Who's interviewing you today — the panel, shown before you
-                        start. Paid → tailored panel; free → generic teaser (locked). */}
-                    {/* Unified Interviewer Panel & Style Selector Card */}
-                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-card space-y-3">
-                      {(panelLoading || setupPanel.length >= 2) && (
-                        <div>
-                          <InterviewerPanel
-                            panel={setupPanel}
-                            locked={!isPaidTier}
-                            loading={panelLoading}
-                            heading={
-                              isPaidTier ? 'Choose your interviewer' : 'Likely to interview you'
-                            }
-                            onSelect={isPaidTier ? setChosenSeatIndex : null}
-                            selectedIndex={isPaidTier ? chosenSeatIndex : -1}
-                            lockedIndices={isPaidTier ? lockedIndices : []}
-                            scores={isPaidTier ? seatScores : {}}
-                            // Free tier sees the panel blurred behind a lock, so
-                            // render it compactly — the per-seat detail is hidden
-                            // anyway and the tall min-height reservations only made
-                            // the column overflow the viewport.
-                            compact={!isPaidTier}
-                          />
-                          <p className="mt-1.5 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
-                            {isPaidTier
-                              ? setupPanel[chosenSeatIndex]?.description ||
-                                'Pick who runs this round — each interviews you in their own voice, on what they care about.'
-                              : 'On a paid plan, you pick who interviews you from this panel.'}
-                          </p>
-                        </div>
-                      )}
-
-                      {(panelLoading || setupPanel.length >= 2) && (
-                        <hr className="border-slate-100 dark:border-slate-800/80" />
-                      )}
-
-                      <VoiceStyleSelector
-                        voice={voice}
-                        style={style}
-                        onVoiceChange={chooseVoice}
-                        onStyleChange={chooseStyle}
-                        className="flex-grow"
-                        // Paid users pick a specific interviewer whose role sets the
-                        // voice AND the interview type — so hide voice + style for them
-                        // and leave only the difficulty picker.
-                        showVoice={!isPaidTier}
-                        showStyle={!isPaidTier}
-                        borderless={true}
-                        challenge={challenge}
-                        onChallengeChange={chooseChallenge}
-                      />
-                    </div>
-
-                    {/* Paid users land here directly (chooser skipped) — keep the
-                        guided reader reachable with a quiet in-place link. */}
-                    {isPaidTier && (
-                      <button
-                        type="button"
-                        onClick={() => setMode('scripted')}
-                        className="self-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors cursor-pointer select-none"
-                      >
-                        Prefer the guided reader instead?
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Right Column: Info & Actions */}
-                  <div className="lg:col-span-7">
-                    <IntroView
-                      firstName={firstName}
-                      title={title}
-                      count={simQuestions.length}
-                      plannedSec={
-                        isPaidTier ? lengthSec || plannedSec : liveSecondsAvailable || 180
-                      }
-                      lastSession={lastSession}
-                      trend={getInterviewTrend(application)}
-                      mode={mode}
-                      voice={voice}
-                      style={style}
-                      onVoiceChange={chooseVoice}
-                      onStyleChange={chooseStyle}
-                      onStart={handleStartClick}
-                      onCancel={() => setPhase('choose')}
-                      showSelectors={false}
-                      className="h-full"
-                      entitlement={entitlement}
-                      isPaidTier={isPaidTier}
-                      lengthSec={lengthSec}
-                      setLengthSec={setLengthSec}
-                      lengthMinSec={lengthMinSec}
-                      lengthMaxSec={lengthMaxSec}
-                      liveSecondsAvailable={liveSecondsAvailable}
-                      wrapUp={wrapUp}
-                      setWrapUp={setWrapUp}
-                    />
-                  </div>
-                </div>
+                <PreflightSteps
+                  steps={preflightSteps}
+                  // Someone who has interviewed here before lands on Start;
+                  // steps 1 and 2 are one click away on the rail or a dot.
+                  initialStep={lastSession ? 2 : 0}
+                  onFinish={handleStartClick}
+                  onCancel={() => setPhase('choose')}
+                  finishLabel="Start interview"
+                />
               ) : (
                 <>
                   <IntroView
@@ -1875,7 +1915,7 @@ const MockInterviewPage = () => {
                       <button
                         type="button"
                         onClick={() => setMode('conversational')}
-                        className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors cursor-pointer select-none"
+                        className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer select-none"
                       >
                         Use the live panel instead
                       </button>
@@ -2252,9 +2292,9 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 mt-5 leading-relaxed">
-        <span className="font-semibold text-indigo-600 dark:text-indigo-400">Tip:</span> Preparing
-        these essentials enables the AI interviewer to ask targeted questions grounded in your
-        actual history.
+        <span className="font-semibold text-slate-900 dark:text-white">Tip:</span> Preparing these
+        essentials enables the AI interviewer to ask targeted questions grounded in your actual
+        history.
       </p>
 
       <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
@@ -2316,7 +2356,7 @@ const ConnectingView = ({
               <span
                 key={i}
                 className={`absolute inset-0 rounded-full border ${
-                  dark ? 'border-indigo-400/40' : 'border-indigo-300/60'
+                  dark ? 'border-white/30' : 'border-slate-900/30'
                 } animate-sonar`}
                 style={{
                   animationDelay: `${i * 0.8}s`,
@@ -2332,8 +2372,8 @@ const ConnectingView = ({
             connected
               ? 'border border-emerald-300 ring-4 ring-emerald-400/40'
               : dark
-                ? 'border border-white/20 ring-4 ring-indigo-500/30'
-                : 'border border-indigo-200 ring-4 ring-indigo-100'
+                ? 'border border-white/20 ring-2 ring-white/20'
+                : 'border border-slate-200 ring-2 ring-slate-900/10'
           }`}
         >
           <img
@@ -2378,7 +2418,7 @@ const ConnectingView = ({
               : 'Connecting you with your interviewer…'}
       </h2>
       {!connected && isHandoff && activeSeat && (
-        <p className={`mt-1 text-sm font-semibold ${dark ? 'text-indigo-200' : 'text-indigo-600'}`}>
+        <p className={`mt-1 text-sm font-semibold ${dark ? 'text-slate-300' : 'text-slate-600'}`}>
           {activeSeat.role}
         </p>
       )}
@@ -2416,7 +2456,7 @@ const ConnectingView = ({
               connected
                 ? `w-6 ${dark ? 'bg-emerald-400' : 'bg-emerald-500'}`
                 : i <= step
-                  ? `w-6 ${dark ? 'bg-indigo-400' : 'bg-indigo-500'}`
+                  ? `w-6 ${dark ? 'bg-white' : 'bg-slate-900'}`
                   : `w-1.5 ${dark ? 'bg-white/15' : 'bg-slate-200'}`
             }`}
           />
@@ -2430,8 +2470,7 @@ const ConnectingView = ({
 const GradingView = () => (
   <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
     <div className="relative mb-6">
-      <span className="absolute -inset-3 rounded-[1.75rem] bg-indigo-300/40 blur-2xl animate-pulse" />
-      <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-4 ring-indigo-500/30 flex items-center justify-center p-3 shadow-xl">
+      <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-2 ring-slate-900/10 dark:ring-white/20 flex items-center justify-center p-3 shadow-xl">
         <img
           src="/applyright-icon.png"
           alt="ApplyRight AI"
@@ -2446,13 +2485,13 @@ const GradingView = () => (
       Assessing your answers against your CV and the role — the things interviewers look for.
     </p>
     <div className="mt-5 flex items-center gap-1.5" aria-hidden>
-      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" />
+      <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce" />
       <span
-        className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce"
+        className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
         style={{ animationDelay: '0.15s' }}
       />
       <span
-        className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce"
+        className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
         style={{ animationDelay: '0.3s' }}
       />
     </div>
@@ -2475,6 +2514,12 @@ const IntroView = ({
   onStart,
   onCancel,
   showSelectors = true,
+  // Inside the pre-flight stepper the footer owns Start/Back, so this view must
+  // not render its own pair — two Start buttons on one screen.
+  showActions = true,
+  // `bare` drops the card chrome for hosts that already supply a surface (the
+  // stepper pane). Standalone call sites keep the card.
+  bare = false,
   className = '',
   entitlement,
   isPaidTier,
@@ -2490,7 +2535,11 @@ const IntroView = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-card flex flex-col ${className}`}
+      className={`relative overflow-hidden flex flex-col ${
+        bare
+          ? ''
+          : 'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-card'
+      } ${className}`}
     >
       <AnimatePresence mode="wait">
         {activeSubView === 'main' && (
@@ -2616,7 +2665,7 @@ const IntroView = ({
                           Duration
                         </p>
                         {mode === 'conversational' && (
-                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold underline decoration-dotted">
+                          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold underline decoration-dotted">
                             Edit
                           </span>
                         )}
@@ -2628,7 +2677,7 @@ const IntroView = ({
                   </div>
                   {lastSession && (
                     <div className="relative z-10 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
                       <div>
                         <span className="font-semibold text-slate-705 dark:text-slate-295">
                           Last session:
@@ -2649,13 +2698,15 @@ const IntroView = ({
 
             {count > 0 && (
               <div className="mt-3 shrink-0">
+                {/* The quiet links stay wherever this view is used; only the
+                    Start/Back pair below is dropped when a host owns them. */}
                 <div className="relative z-10 flex items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-550 mb-2.5 flex-wrap">
                   {mode === 'conversational' && (
                     <>
                       <button
                         type="button"
                         onClick={() => setActiveSubView('length')}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                       >
                         <Clock className="w-3.5 h-3.5" /> Adjust duration
                       </button>
@@ -2665,7 +2716,7 @@ const IntroView = ({
                   <button
                     type="button"
                     onClick={() => setActiveSubView('mic')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
                     <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
                   </button>
@@ -2673,27 +2724,29 @@ const IntroView = ({
                   <button
                     type="button"
                     onClick={() => setActiveSubView('breathe')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-750 dark:hover:text-indigo-200 cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
                     <Wind className="w-3.5 h-3.5" /> Take a breath first
                   </button>
                 </div>
-                <div className="relative z-10 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={onStart}
-                    className="btn-primary px-6 py-2.5 rounded-xl text-sm select-none cursor-pointer"
-                  >
-                    Start interview
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
-                  >
-                    Back
-                  </button>
-                </div>
+                {showActions && (
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={onStart}
+                      className="btn-primary px-6 py-2.5 rounded-xl text-sm select-none cursor-pointer"
+                    >
+                      Start interview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCancel}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
+                    >
+                      Back
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -2768,7 +2821,7 @@ const IntroView = ({
                         >
                           Duration
                         </label>
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
                           {Math.round((lengthSec || lengthMinSec) / 60)} min
                           {Math.round((lengthSec || lengthMinSec) / 60) === 10 && (
                             <span className="ml-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
@@ -2785,7 +2838,11 @@ const IntroView = ({
                         step={300}
                         value={lengthSec || lengthMinSec}
                         onChange={(e) => setLengthSec(Number(e.target.value))}
-                        className="w-full accent-indigo-600 cursor-pointer"
+                        // Inside the mobile step deck any horizontal drag over
+                        // 8px is captured as a swipe — which would make this
+                        // slider impossible to move. Keep the gesture local.
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="w-full accent-slate-900 cursor-pointer"
                       />
                       <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-450">
                         {`Min ${Math.round(lengthMinSec / 60)} · Max ${Math.round(
@@ -2812,7 +2869,7 @@ const IntroView = ({
                     type="checkbox"
                     checked={wrapUp}
                     onChange={(e) => setWrapUp(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-indigo-600 cursor-pointer"
+                    className="mt-0.5 h-4 w-4 accent-slate-900 cursor-pointer"
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-200">
                     Allow a short wrap-up (~90s)
@@ -2856,8 +2913,8 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
   // an upgrade prompt instead of the answer box.
   if (!isPaid) {
     return (
-      <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
+      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
           Adaptive follow-up · Pro
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
@@ -2890,8 +2947,8 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
   };
 
   return (
-    <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/15 p-4">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
+    <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
         Adaptive follow-up · Pro
       </p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
@@ -2926,7 +2983,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
           className="btn-primary gap-1.5 px-3 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
-            <Loader className="w-3.5 h-3.5 animate-spin" />
+            <AriaLoader inline tone="mono" size={14} label="Thinking…" />
           ) : (
             <Sparkles className="w-3.5 h-3.5" />
           )}
@@ -2935,7 +2992,7 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
       </div>
       {followUp && (
         <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
             Interviewer follow-up
           </p>
           <p className="text-sm text-slate-800 dark:text-slate-200 font-semibold leading-snug">
@@ -2979,9 +3036,9 @@ const RunningView = ({
             key={i}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               i < index
-                ? 'w-6 bg-indigo-500'
+                ? 'w-6 bg-slate-900 dark:bg-white'
                 : i === index
-                  ? 'flex-1 bg-gradient-to-r from-indigo-500 to-violet-500'
+                  ? 'flex-1 bg-slate-900 dark:bg-white'
                   : 'w-6 bg-slate-200 dark:bg-slate-700'
             }`}
           />
@@ -2996,7 +3053,7 @@ const RunningView = ({
             <div
               className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
                 speaking
-                  ? 'border-indigo-600 ring-2 ring-indigo-500/40 scale-[1.03]'
+                  ? 'border-slate-900 dark:border-white ring-2 ring-slate-900 dark:ring-white scale-[1.03]'
                   : 'border-slate-200 dark:border-slate-700 ring-1 ring-slate-100 dark:ring-slate-800'
               }`}
             >
@@ -3008,17 +3065,17 @@ const RunningView = ({
             </div>
             {speaking && (
               <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-3.5 bg-white dark:bg-slate-900 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-200 dark:border-slate-800">
-                <span className="w-0.5 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                <span className="w-0.5 h-2 bg-slate-400 dark:bg-slate-500 rounded-full animate-pulse" />
                 <span
-                  className="w-0.5 h-3 bg-indigo-500 rounded-full animate-pulse"
+                  className="w-0.5 h-3 bg-slate-400 dark:bg-slate-500 rounded-full animate-pulse"
                   style={{ animationDelay: '0.15s' }}
                 />
                 <span
-                  className="w-0.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"
+                  className="w-0.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-pulse"
                   style={{ animationDelay: '0.3s' }}
                 />
                 <span
-                  className="w-0.5 h-2.5 bg-indigo-500 rounded-full animate-pulse"
+                  className="w-0.5 h-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-pulse"
                   style={{ animationDelay: '0.45s' }}
                 />
               </span>
@@ -3034,8 +3091,8 @@ const RunningView = ({
             </p>
             <div className="mt-1.5">
               {speaking ? (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />{' '}
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-900 dark:text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 animate-pulse" />{' '}
                   Speaking…
                 </span>
               ) : loading ? (
@@ -3096,7 +3153,7 @@ const RunningView = ({
                   onClick={onReveal}
                   className="btn-primary gap-2 px-6 py-3.5 rounded-xl text-sm select-none cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-indigo-200" />
+                  <Eye className="w-4 h-4" />
                   Reveal model answer
                 </button>
               </motion.div>
@@ -3108,8 +3165,8 @@ const RunningView = ({
                 className="space-y-4"
               >
                 {/* Model answer outline */}
-                <div className="p-5 rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300">
+                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                     {question.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
                   </p>
                   <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -3199,8 +3256,8 @@ const RunningView = ({
 
         <div className="flex items-center gap-3">
           {!currentRating && revealed && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-indigo-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 animate-ping" />
               Pick a rating
             </span>
           )}
@@ -3282,7 +3339,9 @@ const ReviewView = ({
         <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
             {overall != null ? (
-              <span className={`text-xl font-bold ${scoreTone(overall)}`}>{overall}%</span>
+              <span className={`font-heading text-xl font-bold tabular-nums ${scoreTone(overall)}`}>
+                {overall}%
+              </span>
             ) : (
               <Trophy className="w-7 h-7 text-amber-500" />
             )}
@@ -3321,9 +3380,9 @@ const ReviewView = ({
 
         {/* AI assessment (conversational) — replaces self-rating */}
         {analysisLocked ? (
-          <div className="mt-6 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-500/10 dark:to-slate-900 p-6 text-center">
-            <div className="w-12 h-12 mx-auto rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-              <Lock className="w-6 h-6 text-indigo-600 dark:text-indigo-300" />
+          <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-6 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <Lock className="w-6 h-6 text-slate-900 dark:text-white" />
             </div>
             <h2 className="mt-4 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
               Nice — you finished your free practice run!
@@ -3346,7 +3405,7 @@ const ReviewView = ({
               <button
                 type="button"
                 onClick={onUpgrade}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
                 Or see all plans <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -3388,7 +3447,7 @@ const ReviewView = ({
                     onClick={() => setConfidence(c.id)}
                     className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all select-none cursor-pointer ${
                       confidence === c.id
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                        ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:text-slate-900 dark:border-white shadow-md'
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -3405,7 +3464,7 @@ const ReviewView = ({
                 disabled={saving}
                 className="btn-primary gap-1.5 px-4.5 py-2.5 rounded-xl text-sm select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+                {saving ? <AriaLoader inline tone="mono" size={16} label="Saving…" /> : null}
                 {saved ? 'Update my review' : 'Save my review'}
               </button>
             </div>
@@ -3425,17 +3484,17 @@ const ReviewView = ({
                 return (
                   <div
                     key={i}
-                    className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 hover:border-indigo-200 dark:hover:border-indigo-500/40 transition-colors"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                   >
                     <div className="flex items-center gap-3 p-3">
                       <button
                         type="button"
                         onClick={() => toggleFlag(r._origIndex)}
-                        className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors"
+                        className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white transition-colors"
                         title="Flag to work on"
                       >
                         {on ? (
-                          <CheckCircle2 className="w-4.5 h-4.5 text-indigo-600" />
+                          <CheckCircle2 className="w-4.5 h-4.5 text-slate-900 dark:text-white" />
                         ) : (
                           <Circle className="w-4.5 h-4.5" />
                         )}
@@ -3457,7 +3516,7 @@ const ReviewView = ({
                       <div className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 space-y-4">
                         {/* Suggested answer outline */}
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-300 mb-1.5">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">
                             {r.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
                           </p>
                           <p className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 whitespace-pre-line leading-relaxed">
@@ -3574,7 +3633,7 @@ const ModeCard = ({
   return (
     <div
       className={`relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-card flex flex-col ${
-        accent.recommended ? 'border-t-2 border-t-indigo-600 dark:border-t-indigo-500' : ''
+        accent.recommended ? 'border-t-2 border-t-slate-900 dark:border-t-white' : ''
       }`}
     >
       <div className="relative z-10 flex items-center gap-3">
@@ -3588,7 +3647,7 @@ const ModeCard = ({
               {owned ? null : <Lock className="w-2.5 h-2.5" />} {tierLabel}
             </span>
             {badge && (
-              <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400 select-none">
+              <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.14em] text-slate-900 dark:text-white select-none">
                 {badge}
               </span>
             )}
@@ -3709,7 +3768,7 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
           <div
             className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2.5 border transition-all duration-300 ${
               speaking
-                ? 'border-indigo-600 ring-2 ring-indigo-500/40 scale-[1.03]'
+                ? 'border-slate-900 dark:border-white ring-2 ring-slate-900 dark:ring-white scale-[1.03]'
                 : 'border-slate-200 dark:border-white/20 ring-1 ring-slate-200 dark:ring-white/10'
             }`}
           >
@@ -3730,8 +3789,9 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
           </p>
           <div className="mt-1.5">
             {speaking ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" /> Speaking…
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-900 dark:text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white animate-pulse" />{' '}
+                Speaking…
               </span>
             ) : loading ? (
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 animate-pulse">
@@ -3821,7 +3881,7 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
           className="ml-auto btn-primary gap-1.5 px-4 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
-            <Loader className="w-3.5 h-3.5 animate-spin" />
+            <AriaLoader inline tone="mono" size={14} label="Thinking…" />
           ) : (
             <Send className="w-3.5 h-3.5" />
           )}
@@ -3932,7 +3992,7 @@ const RealtimeView = ({
             Live voice interview
           </p>
           {activeSeat && activeSeat.name && (
-            <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-300 truncate">
+            <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
               {activeSeat.name}
               {activeSeat.role ? ` · ${activeSeat.role}` : ''}
             </p>
@@ -3946,7 +4006,7 @@ const RealtimeView = ({
             aria-pressed={captionsOn}
             className={`inline-flex items-center gap-1 py-2 px-2 -my-1 rounded-lg text-[11px] font-bold transition-colors ${
               captionsOn
-                ? 'text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/10'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >

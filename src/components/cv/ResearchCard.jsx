@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import { SECTION_RESEARCH } from '../../lib/sectionResearch';
 import AriaOrbit from './AriaOrbit';
@@ -11,6 +12,7 @@ import AriaOrbit from './AriaOrbit';
 // block → a source micro-line. Content is trusted static markup, so `points` render
 // via dangerouslySetInnerHTML to show their <b> emphasis.
 const ResearchCard = ({ section }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
   const r = SECTION_RESEARCH[section];
   if (!r) return null;
@@ -24,7 +26,7 @@ const ResearchCard = ({ section }) => {
       <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-3 flex flex-col gap-2.5">
         {/* Eyebrow. */}
         <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-          {r.icon} What research says · {r.eyebrow}
+          {r.icon} {t('cvBuilder.researchCard.whatResearchSays')} · {r.eyebrow}
         </span>
 
         {/* Thesis — the one-line takeaway, in the editorial serif. */}

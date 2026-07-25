@@ -1,5 +1,6 @@
 import React from 'react';
 import { Target, CheckCircle2, AlertTriangle, Flag, Lightbulb } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 // "Understand the exam" orientation, built entirely from the fit-analysis data
 // already on the application (no API call). Shown only for job-linked prep.
@@ -29,8 +30,9 @@ const Block = ({ icon, title, iconColor, children }) => (
 );
 
 const RoleBrief = ({ application }) => {
+  const { t } = useTranslation();
   const job = application.jobId || {};
-  const title = job.title || application.jobTitle || 'This role';
+  const title = job.title || application.jobTitle || t('interviewPrep.roleBrief.thisRole');
   const company = job.company || application.jobCompany || '';
   const fit = application.fitAnalysis || {};
   const fitScore = typeof application.fitScore === 'number' ? application.fitScore : null;
@@ -57,14 +59,15 @@ const RoleBrief = ({ application }) => {
     return hit?.action || hit?.task || null;
   };
 
-  const scoreColor =
+  // The fit figure is ink; the band shows as one small semantic dot on the label.
+  const scoreDot =
     fitScore == null
-      ? 'text-slate-500 dark:text-slate-400'
+      ? 'bg-slate-300 dark:bg-slate-600'
       : fitScore >= 75
-        ? 'text-emerald-600 dark:text-emerald-300'
+        ? 'bg-emerald-500'
         : fitScore >= 50
-          ? 'text-amber-600 dark:text-amber-300'
-          : 'text-rose-600 dark:text-rose-300';
+          ? 'bg-amber-500'
+          : 'bg-rose-500';
 
   const hasAny =
     matched.length || missing.length || recommendation || watchOuts.length || fitScore != null;
@@ -74,7 +77,7 @@ const RoleBrief = ({ application }) => {
       <section className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 text-center">
         <Target className="w-7 h-7 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          No role analysis yet. Run a job fit-analysis to see what this interview will test.
+          {t('interviewPrep.roleBrief.emptyState')}
         </p>
       </section>
     );
@@ -85,12 +88,12 @@ const RoleBrief = ({ application }) => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
             <Target className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              What this interview tests
+              {t('interviewPrep.roleBrief.whatItTests')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
               {title}
@@ -100,9 +103,12 @@ const RoleBrief = ({ application }) => {
         </div>
         {fitScore != null && (
           <div className="text-right shrink-0">
-            <p className={`text-2xl font-bold ${scoreColor}`}>{fitScore}%</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wide">
-              Fit
+            <p className="font-heading text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+              {fitScore}%
+            </p>
+            <p className="flex items-center justify-end gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wide">
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${scoreDot}`} />
+              {t('interviewPrep.roleBrief.fit')}
             </p>
           </div>
         )}
@@ -118,11 +124,11 @@ const RoleBrief = ({ application }) => {
       {matchedMust.length > 0 && (
         <Block
           icon={CheckCircle2}
-          title="Lean on these strengths"
+          title={t('interviewPrep.roleBrief.leanStrengths')}
           iconColor="text-emerald-600 dark:text-emerald-300"
         >
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-            Must-have skills you already match — bring evidence of these.
+            {t('interviewPrep.roleBrief.leanStrengthsBody')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {matchedMust.map((s, i) => (
@@ -136,11 +142,11 @@ const RoleBrief = ({ application }) => {
       {missingMust.length > 0 && (
         <Block
           icon={AlertTriangle}
-          title="Be ready to defend these gaps"
+          title={t('interviewPrep.roleBrief.defendGaps')}
           iconColor="text-rose-600 dark:text-rose-300"
         >
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-            Must-have skills the analysis flagged as weak — expect probing here.
+            {t('interviewPrep.roleBrief.defendGapsBody')}
           </p>
           <div className="space-y-2">
             {missingMust.map((s, i) => {
@@ -162,7 +168,11 @@ const RoleBrief = ({ application }) => {
 
       {/* Watch-outs */}
       {watchOuts.length > 0 && (
-        <Block icon={Flag} title="Watch-outs" iconColor="text-amber-600 dark:text-amber-300">
+        <Block
+          icon={Flag}
+          title={t('interviewPrep.roleBrief.watchOuts')}
+          iconColor="text-amber-600 dark:text-amber-300"
+        >
           <ul className="space-y-1">
             {watchOuts.map((w, i) => (
               <li
@@ -179,40 +189,45 @@ const RoleBrief = ({ application }) => {
       {/* What to prove */}
       <Block
         icon={Lightbulb}
-        title="What you need to prove"
-        iconColor="text-indigo-600 dark:text-indigo-300"
+        title={t('interviewPrep.roleBrief.whatToProve')}
+        iconColor="text-slate-400 dark:text-slate-500"
       >
         <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
           {matchedMust.length > 0 ? (
-            <>
-              Show concrete proof of{' '}
-              <span className="font-semibold">
-                {matchedMust
-                  .slice(0, 3)
-                  .map((s) => s.name)
-                  .join(', ')}
-              </span>
-              {missingMust.length > 0 ? (
-                <>
-                  , and have an honest, forward-looking answer ready for{' '}
-                  <span className="font-semibold">
-                    {missingMust
-                      .slice(0, 2)
-                      .map((s) => s.name)
-                      .join(', ')}
-                  </span>
-                  .
-                </>
-              ) : (
-                '.'
-              )}
-            </>
+            missingMust.length > 0 ? (
+              <Trans
+                i18nKey="interviewPrep.roleBrief.proveBoth"
+                values={{
+                  strengths: matchedMust
+                    .slice(0, 3)
+                    .map((s) => s.name)
+                    .join(', '),
+                  gaps: missingMust
+                    .slice(0, 2)
+                    .map((s) => s.name)
+                    .join(', '),
+                }}
+                components={{ b: <span className="font-semibold" /> }}
+              />
+            ) : (
+              <Trans
+                i18nKey="interviewPrep.roleBrief.proveStrengths"
+                values={{
+                  strengths: matchedMust
+                    .slice(0, 3)
+                    .map((s) => s.name)
+                    .join(', '),
+                }}
+                components={{ b: <span className="font-semibold" /> }}
+              />
+            )
           ) : (
-            'Lead with your most relevant, measurable wins and connect each to what this role needs.'
+            t('interviewPrep.roleBrief.proveFallback')
           )}{' '}
-          Use your{' '}
-          <span className="font-semibold text-indigo-700 dark:text-indigo-300">Stories</span> as the
-          evidence.
+          <Trans
+            i18nKey="interviewPrep.roleBrief.proveSuffix"
+            components={{ b: <span className="font-semibold text-slate-900 dark:text-slate-100" /> }}
+          />
         </p>
       </Block>
     </section>

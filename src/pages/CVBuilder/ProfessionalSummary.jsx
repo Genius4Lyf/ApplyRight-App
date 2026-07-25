@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { ArrowRight, ArrowLeft, MessageCircle } from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
@@ -7,6 +8,7 @@ import InlineExample from '../../components/InlineExample';
 import { useCVBuilder } from '../../context/CVContext';
 
 const ProfessionalSummary = () => {
+  const { t } = useTranslation();
   // Safely destructure context — fallback ensures hooks below see stable
   // shapes on the first render even if the provider hasn't initialised yet.
   const context = useOutletContext();
@@ -41,7 +43,7 @@ const ProfessionalSummary = () => {
   if (!cvData) {
     return (
       <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-        Loading editor context...
+        {t('cvBuilder.professionalSummary.loadingEditor')}
       </div>
     );
   }
@@ -58,20 +60,20 @@ const ProfessionalSummary = () => {
       className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500"
     >
       <StepHeader
-        eyebrow="Summary"
-        title="Professional summary"
-        subtitle="Your 30-second elevator pitch. Make it count."
+        eyebrow={t('cvBuilder.professionalSummary.eyebrow')}
+        title={t('cvBuilder.professionalSummary.title')}
+        subtitle={t('cvBuilder.professionalSummary.subtitle')}
       />
 
       <SectionTips
         sectionKey="cvbuilder_summary"
-        title="2-3 sentences. Specific beats clever."
-        intro="The summary is read first and remembered last. Earn that real estate."
+        title={t('cvBuilder.professionalSummary.tips.title')}
+        intro={t('cvBuilder.professionalSummary.tips.intro')}
         tips={[
-          'Sentence 1: who you are professionally and how many years.',
-          'Sentence 2: a concrete win or area of strongest impact.',
-          "Sentence 3 (optional): what you're looking for next.",
-          'Avoid generic adjectives ("innovative", "passionate") — show, don\'t tell.',
+          t('cvBuilder.professionalSummary.tips.list.0'),
+          t('cvBuilder.professionalSummary.tips.list.1'),
+          t('cvBuilder.professionalSummary.tips.list.2'),
+          t('cvBuilder.professionalSummary.tips.list.3'),
         ]}
       />
 
@@ -86,7 +88,7 @@ const ProfessionalSummary = () => {
             setStepDirty?.(true);
             setSummary(e.target.value);
           }}
-          placeholder="e.g. Innovative Software Engineer with 5+ years of experience in..."
+          placeholder={t('cvBuilder.professionalSummary.placeholder')}
           className="w-full p-4 border border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
         />
       </div>
@@ -96,8 +98,7 @@ const ProfessionalSummary = () => {
           <MessageCircle className="w-3 h-3" />
         </div>
         <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>Tip:</strong> Aria writes this from your Work History &amp; Skills — and tailors it
-          to your target job when you've set one. Open Aria and tap "Draft my summary".
+          <Trans i18nKey="cvBuilder.professionalSummary.ariaTip" components={{ b: <strong /> }} />
         </div>
       </div>
 
@@ -107,14 +108,15 @@ const ProfessionalSummary = () => {
           onClick={handleBack}
           className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t('common.back')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
         >
-          {saving ? 'Saving...' : 'Review & Finish'} <ArrowRight className="w-4 h-4" />
+          {saving ? t('cvBuilder.common.saving') : t('cvBuilder.professionalSummary.reviewFinish')}{' '}
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </form>

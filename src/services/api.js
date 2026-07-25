@@ -21,6 +21,9 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     config.headers['X-Client-Platform'] = CLIENT_PLATFORM;
+    // Read live on every request, so toggling the language takes effect on the
+    // very next AI call without a reload.
+    config.headers['X-App-Language'] = localStorage.getItem('lang') || 'en';
     return config;
   },
   (error) => {

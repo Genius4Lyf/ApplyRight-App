@@ -7,6 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { CREDIT_COSTS } from '../../lib/credits';
+import { useAriaModel } from '../../hooks/useAriaModel';
+import { useAriaStudio } from '../../context/AriaStudioContext';
+import AriaComposer from '../cv/AriaComposer';
 import AriaCard from './AriaCard';
 
 // The focused build-with, ported to the Studio. This is a COPY OF THE PROTOCOL from
@@ -53,6 +56,11 @@ const SectionCoach = ({
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
   const [suggestionsLabel, setSuggestionsLabel] = useState('');
+
+  // The session's Aria model. The coach owns the docked composer while it drives, so its
+  // picker has to write through to the same per-draft choice as StudioChat's.
+  const { cvData, updateCvData } = useAriaStudio();
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const inputRef = useRef(null);
   const buildTurnsRef = useRef(0);
@@ -191,58 +199,43 @@ const SectionCoach = ({
   // portaled into StudioChat's docked slot (`dockNode`) rather than sitting inside the
   // scroll region. Falls back to inline only if the slot isn't attached yet (one frame).
   const composer = phase === 'chat' && (
-    <div className="pt-3 pb-[env(safe-area-inset-bottom)]">
-      <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-        This back-and-forth is free · you only pay for the draft
-      </p>
-      <div className="flex items-end gap-2">
-        <textarea
-          ref={inputRef}
-          value={input}
-          disabled={thinking}
-          onChange={(e) => setInput(e.target.value)}
-          onInput={(e) => {
-            e.currentTarget.style.height = 'auto';
-            e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          rows={1}
-          placeholder="Type your answer…"
-          className="flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none max-h-[140px]"
-        />
-        <button
-          type="button"
-          onClick={() => send()}
-          disabled={thinking || input.trim().length < 2}
-          aria-label="Send"
-          className="shrink-0 px-4 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-white text-sm font-semibold hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
-        >
-          Send
-        </button>
-      </div>
-      <div className="mt-1.5 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => onDone?.(null)}
-          className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-        >
-          ← Back to sections
-        </button>
-        {missingKeywords.length > 0 && (
-          <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-            aiming at {missingKeywords.slice(0, 2).join(', ')}
+    <AriaComposer
+      className="pt-3 pb-[env(safe-area-inset-bottom)]"
+      inputRef={inputRef}
+      value={input}
+      onChange={setInput}
+      onSend={send}
+      disabled={thinking}
+      busy={thinking}
+      placeholder="Type your answer…"
+      sendLabel="Send"
+      modelId={modelId}
+      onSelectModel={selectModel}
+      note={
+        <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+          This back-and-forth is free · you only pay for the draft
+        </p>
+      }
+      footer={
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => onDone?.(null)}
+            className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            ← Back to sections
+          </button>
+          {missingKeywords.length > 0 && (
+            <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
+              aiming at {missingKeywords.slice(0, 2).join(', ')}
+            </span>
+          )}
+          <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {Math.min(buildTurnsRef.current, TURN_CAP)}/{TURN_CAP}
           </span>
-        )}
-        <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          {Math.min(buildTurnsRef.current, TURN_CAP)}/{TURN_CAP}
-        </span>
-      </div>
-    </div>
+        </div>
+      }
+    />
   );
 
   // ─── The live card for whichever step of the build we're on ───

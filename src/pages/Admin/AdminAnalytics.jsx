@@ -305,12 +305,7 @@ const AdminAnalytics = () => {
             </p>
             <p className="text-xs text-slate-500">
               text AI · ~${aiTextCost?.totalUsd ?? 0}
-              {typeof totalAiSpendNgn === 'number' && (
-                <>
-                  {' '}
-                  · all AI ~{fmtNgn(totalAiSpendNgn)}
-                </>
-              )}
+              {typeof totalAiSpendNgn === 'number' && <> · all AI ~{fmtNgn(totalAiSpendNgn)}</>}
             </p>
           </div>
         </div>

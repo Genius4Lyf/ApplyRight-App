@@ -36,7 +36,7 @@ const TopProgressBar = () => {
       className={`fixed top-0 left-0 w-full z-[9999] pointer-events-none transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
     >
       <div
-        className="h-[3px] bg-indigo-600 shadow-[0_0_10px_#4f46e5,0_0_5px_#4f46e5] rounded-r-full transition-all duration-200 ease-out"
+        className="h-[3px] bg-slate-900 dark:bg-white rounded-r-full transition-all duration-200 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>

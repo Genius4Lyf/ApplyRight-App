@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Briefcase, ArrowRight, ArrowLeft, Plus, MessageCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import SectionTips from '../../components/SectionTips';
@@ -44,6 +45,7 @@ const countBullets = (text) =>
 // stable across renders even after the auto-save round-trip.
 
 const History = () => {
+  const { t } = useTranslation();
   // Safely destructure context
   const context = useOutletContext();
   const {
@@ -189,7 +191,9 @@ const History = () => {
   // some of the useState/useSensor calls above on subsequent renders.
   if (!cvData) {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading history...</div>
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        {t('cvBuilder.history.loading')}
+      </div>
     );
   }
 
@@ -200,9 +204,7 @@ const History = () => {
       // Free users can't add a new bullet beyond the limit (editing existing
       // ones is still allowed). Paid users are unlimited.
       if (!isPaid && countBullets(history[index]?.description) >= FREE_BULLET_LIMIT) {
-        toast.info(
-          `Free plan allows up to ${FREE_BULLET_LIMIT} bullets per role. Upgrade to add unlimited.`
-        );
+        toast.info(t('cvBuilder.history.bulletLimit', { n: FREE_BULLET_LIMIT }));
         return;
       }
 
@@ -248,17 +250,16 @@ const History = () => {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
-                Trimming to fit
+                {t('cvBuilder.history.trimEyebrow')}
               </p>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Your CV runs long. Shortening bullets or removing older, less-relevant roles is the
-                fastest way to 1&ndash;2 pages.
+                {t('cvBuilder.history.trimBody')}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setTrimBannerDismissed(true)}
-              aria-label="Dismiss"
+              aria-label={t('cvBuilder.history.dismiss')}
               className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               <X className="w-4 h-4" />
@@ -270,40 +271,42 @@ const History = () => {
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to preview
+              <ArrowLeft className="w-4 h-4" /> {t('cvBuilder.history.backToPreview')}
             </button>
           </div>
         </div>
       )}
 
       <StepHeader
-        eyebrow="Experience"
-        title="Work history"
-        subtitle="Your experience tells your professional story."
+        eyebrow={t('cvBuilder.history.eyebrow')}
+        title={t('cvBuilder.history.title')}
+        subtitle={t('cvBuilder.history.subtitle')}
       />
 
       <SectionTips
         sectionKey="cvbuilder_history"
-        title="Make every role count"
-        intro="Recruiters skim — your bullets do most of the work."
+        title={t('cvBuilder.history.tips.title')}
+        intro={t('cvBuilder.history.tips.intro')}
         tips={[
-          'List your most recent role first, working backwards (reverse chronological).',
-          'Start each bullet with a strong action verb (Built, Led, Reduced, Launched).',
-          'Use the format <strong>Action + Context + Result</strong> — what you did, where, what changed.',
-          'Add concrete numbers wherever you can: team size, %, $, users, time saved.',
-          "Click 'Ask Aria' on any role and she'll build or sharpen its bullets with you — drafted from what you actually did.",
+          t('cvBuilder.history.tips.list.0'),
+          t('cvBuilder.history.tips.list.1'),
+          t('cvBuilder.history.tips.list.2'),
+          t('cvBuilder.history.tips.list.3'),
+          t('cvBuilder.history.tips.list.4'),
         ]}
       />
 
       {history.length === 0 && (
         <div className="text-center p-8 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
-          <p className="text-slate-500 dark:text-slate-400 mb-4">No work history added yet.</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
+            {t('cvBuilder.history.empty')}
+          </p>
           <button
             type="button"
             onClick={addRole}
             className="btn-secondary flex items-center gap-2 mx-auto"
           >
-            <Plus className="w-4 h-4" /> Add First Role
+            <Plus className="w-4 h-4" /> {t('cvBuilder.history.addFirst')}
           </button>
         </div>
       )}
@@ -348,7 +351,7 @@ const History = () => {
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">
-                            {role.title || 'Untitled Role'}
+                            {role.title || t('cvBuilder.history.untitledRole')}
                             {role.company && (
                               <span className="text-slate-500 dark:text-slate-400 font-normal">
                                 {' '}
@@ -358,7 +361,7 @@ const History = () => {
                           </h4>
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                             {role.startDate || '—'} –{' '}
-                            {role.isCurrent ? 'Present' : role.endDate || '—'}
+                            {role.isCurrent ? t('cvBuilder.history.present') : role.endDate || '—'}
                           </p>
                         </div>
                       </div>
@@ -381,14 +384,14 @@ const History = () => {
                                   htmlFor={`history-title-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  Job Title
+                                  {t('cvBuilder.history.jobTitle')}
                                 </label>
                                 <input
                                   id={`history-title-${index}`}
                                   type="text"
                                   value={role.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
-                                  placeholder="e.g. Senior Product Manager"
+                                  placeholder={t('cvBuilder.history.phTitle')}
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
@@ -397,14 +400,14 @@ const History = () => {
                                   htmlFor={`history-company-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  Company
+                                  {t('cvBuilder.history.company')}
                                 </label>
                                 <input
                                   id={`history-company-${index}`}
                                   type="text"
                                   value={role.company}
                                   onChange={(e) => handleChange(index, 'company', e.target.value)}
-                                  placeholder="e.g. Acme Corp"
+                                  placeholder={t('cvBuilder.history.phCompany')}
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
@@ -413,14 +416,14 @@ const History = () => {
                                   htmlFor={`history-start-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  Start Date
+                                  {t('cvBuilder.history.startDate')}
                                 </label>
                                 <input
                                   id={`history-start-${index}`}
                                   type="text"
                                   value={role.startDate}
                                   onChange={(e) => handleChange(index, 'startDate', e.target.value)}
-                                  placeholder="e.g. Jan 2020"
+                                  placeholder={t('cvBuilder.history.phStart')}
                                   className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                               </div>
@@ -429,16 +432,22 @@ const History = () => {
                                   htmlFor={`history-end-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
                                 >
-                                  End Date
+                                  {t('cvBuilder.history.endDate')}
                                 </label>
                                 <div className="flex gap-2">
                                   <input
                                     id={`history-end-${index}`}
                                     type="text"
-                                    value={role.isCurrent ? 'Present' : role.endDate}
+                                    value={
+                                      role.isCurrent ? t('cvBuilder.history.present') : role.endDate
+                                    }
                                     onChange={(e) => handleChange(index, 'endDate', e.target.value)}
                                     disabled={role.isCurrent}
-                                    placeholder={role.isCurrent ? 'Present' : 'e.g. Dec 2023'}
+                                    placeholder={
+                                      role.isCurrent
+                                        ? t('cvBuilder.history.present')
+                                        : t('cvBuilder.history.phEnd')
+                                    }
                                     className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
                                   />
                                   <div className="flex items-center gap-1.5 whitespace-nowrap">
@@ -451,7 +460,7 @@ const History = () => {
                                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                                     />
                                     <span className="text-xs text-slate-600 dark:text-slate-300">
-                                      Current
+                                      {t('cvBuilder.history.current')}
                                     </span>
                                   </div>
                                 </div>
@@ -464,11 +473,11 @@ const History = () => {
                                   htmlFor={`history-description-${index}`}
                                   className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
                                 >
-                                  Description / Bullets
+                                  {t('cvBuilder.common.descriptionBullets')}
                                 </label>
                                 {ariaWroteId === role._sortId && (
                                   <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-in fade-in">
-                                    ◉ Aria filled this in
+                                    {t('cvBuilder.common.ariaFilledIn')}
                                   </span>
                                 )}
                               </div>
@@ -505,7 +514,7 @@ const History = () => {
                                 }}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
-                                placeholder="• Achieved X by doing Y..."
+                                placeholder={t('cvBuilder.history.phDescription')}
                                 className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm ${
                                   ariaWroteId === role._sortId ? 'aria-wrote-field' : ''
                                 }`}
@@ -513,8 +522,11 @@ const History = () => {
                               <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                                   {isPaid
-                                    ? 'Tip: 3-5 bullets is the sweet spot. One per impact, not per task.'
-                                    : `Tip: 3-5 bullets is the sweet spot. ${countBullets(role.description)}/${FREE_BULLET_LIMIT} used — upgrade for unlimited.`}
+                                    ? t('cvBuilder.history.tipPaid')
+                                    : t('cvBuilder.history.tipFree', {
+                                        used: countBullets(role.description),
+                                        limit: FREE_BULLET_LIMIT,
+                                      })}
                                 </p>
                                 <InlineExample
                                   kind="bullet"
@@ -531,8 +543,8 @@ const History = () => {
                                 disabled={!role.title}
                                 title={
                                   role.title
-                                    ? 'Ask Aria to help with this role'
-                                    : 'Add the job title first'
+                                    ? t('cvBuilder.history.askAriaTitle')
+                                    : t('cvBuilder.history.addTitleFirst')
                                 }
                                 className={`shrink-0 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
                                   role.title
@@ -540,7 +552,7 @@ const History = () => {
                                     : 'border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                 }`}
                               >
-                                <MessageCircle className="w-4 h-4" /> Ask Aria
+                                <MessageCircle className="w-4 h-4" /> {t('cvBuilder.common.askAria')}
                               </button>
                               <p
                                 className={`flex-1 min-w-0 text-[12px] leading-snug ${
@@ -550,17 +562,17 @@ const History = () => {
                                 }`}
                               >
                                 {!role.title
-                                  ? "Add the job title first — Aria won't guess the role."
+                                  ? t('cvBuilder.history.hintNoTitle')
                                   : !role.company
-                                    ? "Ready — add the company too and I'll tailor even tighter."
-                                    : 'Sends this role to Aria & focuses her here.'}
+                                    ? t('cvBuilder.history.hintNoCompany')
+                                    : t('cvBuilder.history.hintReady')}
                               </p>
                               <button
                                 type="button"
                                 onClick={() => setExpandedId(null)}
                                 className="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                               >
-                                Done
+                                {t('cvBuilder.common.done')}
                               </button>
                             </div>
                           </div>
@@ -581,7 +593,7 @@ const History = () => {
           onClick={addRole}
           className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         >
-          <Plus className="w-4 h-4" /> Add Another Position
+          <Plus className="w-4 h-4" /> {t('cvBuilder.history.addAnother')}
         </button>
       )}
 
@@ -591,14 +603,15 @@ const History = () => {
           onClick={handleBack}
           className="w-full md:w-auto px-6 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg font-medium flex items-center justify-center md:justify-start gap-2 transition-colors border md:border-transparent border-slate-200 dark:border-slate-700"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t('common.back')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="w-full md:w-auto btn-primary px-8 py-3 flex items-center justify-center gap-2"
         >
-          {saving ? 'Saving...' : 'Next: Projects'} <ArrowRight className="w-4 h-4" />
+          {saving ? t('cvBuilder.common.saving') : t('cvBuilder.history.nextProjects')}{' '}
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </form>

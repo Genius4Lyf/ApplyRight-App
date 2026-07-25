@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Animated audio-level meter (moving bars, like a recording app). Given a live
 // MediaStream it taps a Web Audio AnalyserNode and draws ~22 bars scaled to the
@@ -8,13 +9,22 @@ import React, { useEffect, useRef } from 'react';
 const BAR_COUNT = 22;
 
 const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
+  const { t } = useTranslation();
   const canvasRef = useRef(null);
   const activeRef = useRef(active);
+  // Same ref trick as `active`: the draw loop reads the bar colour every frame,
+  // and putting `dark` in the effect deps would tear down and rebuild the
+  // AudioContext on a theme toggle. A ref keeps the colour live without that.
+  const darkRef = useRef(dark);
 
   // Keep the ref in sync without touching it during render (lint: react-hooks/refs).
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    darkRef.current = dark;
+  }, [dark]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -58,7 +68,11 @@ const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
       ctx.clearRect(0, 0, w, h);
 
       const on = activeRef.current;
-      const color = on ? 'rgba(79,70,229,0.95)' : 'rgba(148,163,184,0.6)';
+      const color = on
+        ? darkRef.current
+          ? 'rgba(226,232,240,0.95)'
+          : 'rgba(15,23,42,0.9)'
+        : 'rgba(148,163,184,0.6)';
       const gap = 4;
       const barW = Math.max(2, (w - gap * (BAR_COUNT - 1)) / BAR_COUNT);
       const mid = h / 2;
@@ -109,10 +123,10 @@ const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
       className={`w-full rounded-2xl border p-4 transition-colors ${
         dark
           ? active
-            ? 'border-indigo-400/40 bg-indigo-500/10'
+            ? 'border-slate-700 bg-slate-800/40'
             : 'border-white/10 bg-white/5'
           : active
-            ? 'border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/15'
+            ? 'border-slate-300 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/40'
             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
       }`}
     >
@@ -121,12 +135,14 @@ const VoiceVisualizer = ({ stream, active = false, dark = false }) => {
         className={`mt-2 text-center text-[11px] font-bold uppercase tracking-wider ${
           active
             ? dark
-              ? 'text-indigo-300'
-              : 'text-indigo-600 dark:text-indigo-300'
+              ? 'text-white'
+              : 'text-slate-900 dark:text-slate-100'
             : 'text-slate-400 dark:text-slate-500'
         }`}
       >
-        {active ? 'Listening to you…' : 'Your turn will light up here'}
+        {active
+          ? t('interviewPrep.voiceVisualizer.listening')
+          : t('interviewPrep.voiceVisualizer.yourTurnLightsUp')}
       </p>
     </div>
   );

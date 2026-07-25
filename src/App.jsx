@@ -32,6 +32,7 @@ import { isMobile, shouldShowBottomNav } from './utils/platform';
 import { waitForReady } from './utils/splash';
 import api from './services/api';
 import { hydrateCreditCosts } from './lib/credits';
+import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
 import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
@@ -676,6 +677,19 @@ const router = createBrowserRouter([
 import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
+  // Seed the app language from the stored user (interfaceLang) so a returning
+  // user's saved choice sticks. Re-runs whenever the user blob is refreshed
+  // (login, profile save, credit sync) via the same-tab userDataUpdated event.
+  useEffect(() => {
+    syncLangFromStoredUser();
+    window.addEventListener('userDataUpdated', syncLangFromStoredUser);
+    window.addEventListener('storage', syncLangFromStoredUser);
+    return () => {
+      window.removeEventListener('userDataUpdated', syncLangFromStoredUser);
+      window.removeEventListener('storage', syncLangFromStoredUser);
+    };
+  }, []);
+
   // Hydrate the credit-cost table from the backend (real defaults + any admin
   // overrides) so preflight checks reflect live prices. Runs on all platforms;
   // on failure the offline fallback in lib/credits.js stays in effect.

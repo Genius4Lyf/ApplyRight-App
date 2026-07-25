@@ -352,7 +352,7 @@ const MyCVs = () => {
                       {s.label}
                     </span>
                     <span
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -372,7 +372,7 @@ const MyCVs = () => {
                     className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
                   >
                     <div
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -392,7 +392,7 @@ const MyCVs = () => {
                 <ViewToggle value={view} onChange={handleViewChange} className="w-full" />
                 <button
                   onClick={() => navigate('/cv-builder/new')}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   New CV
@@ -458,14 +458,16 @@ const MyCVs = () => {
                               onClick={() => setStatusFilter(f.key)}
                               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
                                 active
-                                  ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
                                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                               }`}
                             >
                               {f.label}
                               <span
                                 className={`ml-1.5 text-[10px] ${
-                                  active ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'
+                                  active
+                                    ? 'text-slate-500 dark:text-slate-400'
+                                    : 'text-slate-400 dark:text-slate-500'
                                 }`}
                               >
                                 {count}
@@ -556,7 +558,7 @@ const EmptyState = () => (
     <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
       <Link
         to="/cv-builder/new"
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
       >
         <Plus className="h-4 w-4" /> Create your first CV
       </Link>
@@ -584,7 +586,7 @@ const FilteredEmptyState = ({ onClear }) => (
     <button
       type="button"
       onClick={onClear}
-      className="px-4 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 rounded-lg transition-colors"
+      className="px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
     >
       Clear filters
     </button>

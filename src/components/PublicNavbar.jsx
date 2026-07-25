@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import logo from '../assets/logo/applyright-icon.png';
+import { useTranslation } from 'react-i18next';
 
 /**
  * PublicNavbar — the floating pill navbar for logged-out marketing pages
@@ -9,6 +10,7 @@ import logo from '../assets/logo/applyright-icon.png';
  * a rounded, blurred pill once the page is scrolled past 50px.
  */
 const PublicNavbar = () => {
+  const { t } = useTranslation();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
 
@@ -59,7 +61,7 @@ const PublicNavbar = () => {
         className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}
       >
         <Link to="/" className="flex items-center gap-2 group">
-          <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto" />
+          <img src={logo} alt={t('common.logoAlt')} className="h-8 w-auto" />
           <span className="font-brand text-xl font-semibold tracking-tight text-black dark:text-white">
             ApplyRight
           </span>
@@ -69,19 +71,19 @@ const PublicNavbar = () => {
             to="/pricing"
             className="hidden text-sm text-slate-600 transition-colors hover:text-slate-900 sm:block"
           >
-            Pricing
+            {t('nav.pricing')}
           </Link>
           <Link
             to="/login"
             className="inline-flex min-h-[44px] items-center text-sm text-slate-600 transition-colors hover:text-slate-900"
           >
-            Log in
+            {t('common.signIn')}
           </Link>
           <Link
             to="/register"
             className="inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:border-indigo-800 hover:bg-indigo-800"
           >
-            Start free
+            {t('common.startFreeShort')}
           </Link>
         </div>
       </div>

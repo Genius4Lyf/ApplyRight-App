@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, TrendingUp, Plus, Minus, Equal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import CVService from '../../services/cv.service';
 
 const Section = ({ title, defaultOpen = true, children }) => {
@@ -32,6 +33,7 @@ const ScoreBar = ({ label, score, color }) => (
 );
 
 const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores }) => {
+  const { t } = useTranslation();
   const [original, setOriginal] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +61,7 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
   if (loading) {
     return (
       <div className="text-center py-6 text-sm text-slate-400 dark:text-slate-500">
-        Loading comparison...
+        {t('cvBuilder.tailorDiff.loading')}
       </div>
     );
   }
@@ -84,24 +86,38 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
     <div className="space-y-3 animate-in fade-in duration-500">
       <div className="flex items-center gap-2 mb-1">
         <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-300" />
-        <h3 className="font-bold text-slate-800 dark:text-slate-200">What Changed</h3>
+        <h3 className="font-bold text-slate-800 dark:text-slate-200">
+          {t('cvBuilder.tailorDiff.whatChanged')}
+        </h3>
         {tailoredForJob && (
           <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">
-            Tailored for {tailoredForJob.title} at {tailoredForJob.company}
+            {t('cvBuilder.common.tailoredFor', {
+              title: tailoredForJob.title,
+              company: tailoredForJob.company,
+            })}
           </span>
         )}
       </div>
 
       {/* ATS Score comparison */}
       {atsScores && (
-        <Section title="ATS Match Score" defaultOpen>
+        <Section title={t('cvBuilder.tailorDiff.atsMatchScore')} defaultOpen>
           <div className="space-y-2">
-            <ScoreBar label="Before" score={atsScores.before?.fitScore || 0} color="bg-slate-400" />
-            <ScoreBar label="After" score={atsScores.after?.fitScore || 0} color="bg-emerald-500" />
+            <ScoreBar
+              label={t('cvBuilder.tailorDiff.before')}
+              score={atsScores.before?.fitScore || 0}
+              color="bg-slate-400"
+            />
+            <ScoreBar
+              label={t('cvBuilder.tailorDiff.after')}
+              score={atsScores.after?.fitScore || 0}
+              color="bg-emerald-500"
+            />
             {atsScores.before && atsScores.after && (
               <p className="text-xs text-emerald-600 dark:text-emerald-300 font-medium mt-1">
-                +{(atsScores.after.fitScore || 0) - (atsScores.before.fitScore || 0)} points
-                improvement
+                {t('cvBuilder.tailorDiff.pointsImprovement', {
+                  n: (atsScores.after.fitScore || 0) - (atsScores.before.fitScore || 0),
+                })}
               </p>
             )}
           </div>
@@ -110,22 +126,22 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
 
       {/* Summary diff */}
       {(original.professionalSummary || currentCVData.professionalSummary) && (
-        <Section title="Professional Summary" defaultOpen>
+        <Section title={t('cvBuilder.tailorDiff.professionalSummary')} defaultOpen>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">
-                Original
+                {t('cvBuilder.tailorDiff.original')}
               </span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed bg-slate-50 dark:bg-slate-900 rounded p-2">
-                {original.professionalSummary || 'No summary'}
+                {original.professionalSummary || t('cvBuilder.tailorDiff.noSummary')}
               </p>
             </div>
             <div>
               <span className="text-[10px] uppercase tracking-wider text-emerald-500 dark:text-emerald-300 font-semibold">
-                Tailored
+                {t('cvBuilder.tailorDiff.tailored')}
               </span>
               <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed bg-emerald-50 dark:bg-emerald-500/15 rounded p-2 border border-emerald-100 dark:border-emerald-500/30">
-                {currentCVData.professionalSummary || 'No summary'}
+                {currentCVData.professionalSummary || t('cvBuilder.tailorDiff.noSummary')}
               </p>
             </div>
           </div>
@@ -135,7 +151,9 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
       {/* Experience diff */}
       {currentCVData.experience?.length > 0 && (
         <Section
-          title={`Experience (${currentCVData.experience.length} roles)`}
+          title={t('cvBuilder.tailorDiff.experienceRoles', {
+            n: currentCVData.experience.length,
+          })}
           defaultOpen={false}
         >
           <div className="space-y-4">
@@ -145,24 +163,29 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
               return (
                 <div key={i} className="text-xs">
                   <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {exp.title} at {exp.company}
+                    {t('cvBuilder.tailorDiff.roleAtCompany', {
+                      title: exp.title,
+                      company: exp.company,
+                    })}
                     {changed && (
                       <span className="ml-2 text-[10px] text-emerald-500 dark:text-emerald-300 font-normal">
-                        Enhanced
+                        {t('cvBuilder.tailorDiff.enhanced')}
                       </span>
                     )}
                   </p>
                   {changed ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="bg-slate-50 dark:bg-slate-900 rounded p-2 text-slate-500 dark:text-slate-400 leading-relaxed">
-                        {origExp.description || 'No description'}
+                        {origExp.description || t('cvBuilder.tailorDiff.noDescription')}
                       </div>
                       <div className="bg-emerald-50 dark:bg-emerald-500/15 rounded p-2 text-slate-700 dark:text-slate-300 leading-relaxed border border-emerald-100 dark:border-emerald-500/30">
-                        {exp.description || 'No description'}
+                        {exp.description || t('cvBuilder.tailorDiff.noDescription')}
                       </div>
                     </div>
                   ) : (
-                    <p className="text-slate-400 dark:text-slate-500 italic">No changes</p>
+                    <p className="text-slate-400 dark:text-slate-500 italic">
+                      {t('cvBuilder.tailorDiff.noChanges')}
+                    </p>
                   )}
                 </div>
               );
@@ -173,7 +196,7 @@ const TailorDiffView = ({ originalCVId, currentCVData, tailoredForJob, atsScores
 
       {/* Skills diff */}
       {(addedSkills.length > 0 || removedSkills.length > 0) && (
-        <Section title="Skills" defaultOpen>
+        <Section title={t('cvBuilder.tailorDiff.skills')} defaultOpen>
           <div className="flex flex-wrap gap-1.5">
             {keptSkills.map((s) => (
               <span

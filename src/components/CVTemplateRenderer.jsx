@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { localizeCvMarkdown } from '../lib/cvLabels';
 
 // Template components — same set the full ResumeReview / Preview use.
 import ATSCleanTemplate from './templates/ATSCleanTemplate';
@@ -96,11 +97,20 @@ const CVTemplateRenderer = ({ application, userProfile }) => {
     return extractUserProfile(rawMarkdown);
   }, [userProfile, rawMarkdown]);
 
+  // Section LABELS are translated at this render boundary only — the stored
+  // markdown keeps its canonical English headings so markdownParser can read the
+  // CV back. Covers every template at once, and the PDF (a serialization of this
+  // DOM) inherits it. A CV with no outputLang renders English, exactly as before.
+  const localizedMarkdown = useMemo(
+    () => localizeCvMarkdown(rawMarkdown, application?.outputLang || 'en'),
+    [rawMarkdown, application?.outputLang]
+  );
+
   // Unknown/legacy templateId falls back to the safe, ATS-clean default.
   const Template = TEMPLATES[application?.templateId] || ATSCleanTemplate;
   return (
     <div className="cv-template-container bg-white text-black text-left">
-      <Template markdown={rawMarkdown} userProfile={profile} />
+      <Template markdown={localizedMarkdown} userProfile={profile} />
     </div>
   );
 };

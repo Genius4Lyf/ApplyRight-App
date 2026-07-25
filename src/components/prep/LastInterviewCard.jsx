@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Sparkles, TrendingUp, Sparkle, GraduationCap, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ScoringInfo from './ScoringInfo';
 
 // The interview start CTA. While the readiness gate is locked, show a disabled
@@ -7,6 +8,7 @@ import ScoringInfo from './ScoringInfo';
 // readiness card beside this one); once every prep task is done, swap in the live
 // start button. `gate` is omitted (=> always unlocked) by callers that don't gate.
 const StartCTA = ({ gate, onStart, label }) => {
+  const { t } = useTranslation();
   if (gate && !gate.unlocked) {
     const remaining = gate.requiredCount - gate.doneCount;
     return (
@@ -14,13 +16,13 @@ const StartCTA = ({ gate, onStart, label }) => {
         <button
           type="button"
           disabled
-          title="Complete your interview readiness to unlock"
+          title={t('interviewPrep.lastInterview.completeToUnlockTitle')}
           className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-not-allowed select-none"
         >
-          <Lock className="w-3.5 h-3.5" /> Complete prep to unlock
+          <Lock className="w-3.5 h-3.5" /> {t('interviewPrep.lastInterview.completeToUnlock')}
         </button>
         <p className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
-          {remaining} task{remaining === 1 ? '' : 's'} left in your readiness checklist →
+          {t('interviewPrep.lastInterview.tasksLeft', { count: remaining })}
         </p>
       </div>
     );
@@ -38,39 +40,28 @@ const StartCTA = ({ gate, onStart, label }) => {
 
 // How an interview went + a short, plain-English meaning. Works for both
 // self-rated (guided) and AI-graded (conversational) sessions.
+// Figures and labels are ink — the band shows only as a 6px semantic dot.
 const STATUS = {
   needs_work: {
-    label: 'Shaky',
-    blurb: 'Below the bar — keep practising the fundamentals.',
-    score: 'text-rose-600 dark:text-rose-400',
-    text: 'text-rose-700 dark:text-rose-300',
+    labelKey: 'interviewPrep.lastInterview.status.needs_work.label',
+    blurbKey: 'interviewPrep.lastInterview.status.needs_work.blurb',
     dot: 'bg-rose-500',
-    box: 'border-rose-100 bg-rose-50/60 dark:border-rose-500/15 dark:bg-rose-500/10',
   },
   almost: {
-    label: 'Okay',
-    blurb: 'Getting there — a few rough edges to sharpen.',
-    score: 'text-amber-600 dark:text-amber-400',
-    text: 'text-amber-700 dark:text-amber-300',
+    labelKey: 'interviewPrep.lastInterview.status.almost.label',
+    blurbKey: 'interviewPrep.lastInterview.status.almost.blurb',
     dot: 'bg-amber-500',
-    box: 'border-amber-100 bg-amber-50/60 dark:border-amber-500/15 dark:bg-amber-500/10',
   },
   ready: {
-    label: 'Strong',
-    blurb: 'Sharp and specific — you sound interview-ready.',
-    score: 'text-emerald-600 dark:text-emerald-400',
-    text: 'text-emerald-700 dark:text-emerald-300',
+    labelKey: 'interviewPrep.lastInterview.status.ready.label',
+    blurbKey: 'interviewPrep.lastInterview.status.ready.blurb',
     dot: 'bg-emerald-500',
-    box: 'border-emerald-100 bg-emerald-50/60 dark:border-emerald-500/15 dark:bg-emerald-500/10',
   },
 };
 const FALLBACK = {
-  label: 'Done',
-  blurb: 'Interview completed.',
-  score: 'text-slate-600 dark:text-slate-400',
-  text: 'text-slate-600 dark:text-slate-400',
-  dot: 'bg-slate-400',
-  box: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50',
+  labelKey: 'interviewPrep.lastInterview.fallback.label',
+  blurbKey: 'interviewPrep.lastInterview.fallback.blurb',
+  dot: 'bg-slate-400 dark:bg-slate-500',
 };
 
 const fmtWhen = (value) => {
@@ -84,6 +75,7 @@ const fmtWhen = (value) => {
 // recent is shown prominently with a plain-English read on the status; earlier
 // ones are a compact list below. Driven by interviewHistory.
 const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
+  const { t } = useTranslation();
   const hist = Array.isArray(history) ? history : [];
   const rows = (
     hist.length
@@ -104,40 +96,43 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
 
   if (rows.length === 0) {
     return (
-      <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
+      <section className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300">
         {/* Top-accent gradient line */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-slate-200 dark:bg-slate-700" />
 
         {/* Tiny stars for dark mode */}
-        <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
-        <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
+        <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-slate-500/30 pointer-events-none" />
+        <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-slate-500/30 pointer-events-none" />
 
         {/* Education icon for light mode */}
-        <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
+        <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-slate-900/[0.06] pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="relative mt-2 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-500/30 ring-2 ring-indigo-100/70 flex items-center justify-center shadow-sm p-2">
+            <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800 flex items-center justify-center shadow-sm p-2">
               <img
                 src="/applyright-icon.png"
                 alt="ApplyRight AI"
                 className="w-full h-full object-contain"
               />
             </div>
-            <Sparkles className="w-4 h-4 text-indigo-500 absolute -top-1 -right-1 drop-shadow" />
+            <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute -top-1 -right-1 drop-shadow" />
           </div>
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Interview with ApplyRight AI
+            {t('interviewPrep.lastInterview.aiTitle')}
           </h2>
           <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-[17rem]">
-            Get interview-ready before the real thing. Our AI runs a live mock for this role, asks
-            the questions out loud, then grades how you did.
+            {t('interviewPrep.lastInterview.aiDesc')}
           </p>
         </div>
         <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-center">
           {/* NOTE: "Start your first interview" is planned to become a paid/premium
               service later — keep this entry point but gate it when that lands. */}
-          <StartCTA gate={gate} onStart={onStart} label="Start your first interview" />
+          <StartCTA
+            gate={gate}
+            onStart={onStart}
+            label={t('interviewPrep.lastInterview.startFirst')}
+          />
         </div>
       </section>
     );
@@ -150,20 +145,20 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
   const nervesEasing = trend?.trend === 'up' && count >= 2;
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-indigo-500/50 dark:hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all duration-300">
+    <section className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-4 sm:p-5 flex flex-col justify-between h-full hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300">
       {/* Top-accent gradient line */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-slate-200 dark:bg-slate-700" />
 
       {/* Tiny stars for dark mode */}
-      <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-indigo-400/25 pointer-events-none" />
-      <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-amber-400/25 pointer-events-none" />
+      <Sparkles className="hidden dark:block absolute top-4 right-5 w-4 h-4 text-slate-500/30 pointer-events-none" />
+      <Sparkle className="hidden dark:block absolute bottom-12 left-6 w-3 h-3 text-slate-500/30 pointer-events-none" />
 
       {/* Education icon for light mode */}
-      <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-indigo-600/8 pointer-events-none" />
+      <GraduationCap className="block dark:hidden absolute top-4 right-5 w-10 h-10 text-slate-900/[0.06] pointer-events-none" />
 
       <div className="relative z-10">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-500/30 ring-2 ring-indigo-100/70 flex items-center justify-center shrink-0 p-1.5">
+          <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800 flex items-center justify-center shrink-0 p-1.5">
             <img
               src="/applyright-icon.png"
               alt="ApplyRight AI"
@@ -172,37 +167,40 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Your interviews
+              {t('interviewPrep.lastInterview.yourInterviews')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {count} {count === 1 ? 'session' : 'sessions'} · your progress
+              {t('interviewPrep.lastInterview.sessions', { count })}
             </p>
           </div>
 
           {nervesEasing && (
-            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-              <TrendingUp className="w-3.5 h-3.5" /> Improving
+            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-slate-900 dark:text-slate-100">
+              <TrendingUp className="w-3.5 h-3.5" /> {t('interviewPrep.lastInterview.improving')}
             </span>
           )}
         </div>
 
         {/* Most recent — prominent, with a plain-English read on the status */}
-        <div className={`mt-3 rounded-xl border p-3.5 ${st.box}`}>
+        <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-3.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-baseline gap-2">
               {typeof latest.score === 'number' && (
-                <span className={`text-2xl font-extrabold leading-none ${st.score}`}>
+                <span className="font-heading text-2xl font-extrabold leading-none tabular-nums text-slate-900 dark:text-slate-100">
                   {latest.score}%
                 </span>
               )}
-              <span className={`text-sm font-bold ${st.text}`}>{st.label}</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />
+                {t(st.labelKey)}
+              </span>
             </div>
             <span className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-              Latest · {fmtWhen(latest.completedAt)}
+              {t('interviewPrep.lastInterview.latestWhen', { when: fmtWhen(latest.completedAt) })}
             </span>
           </div>
           <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            {st.blurb}
+            {t(st.blurbKey)}
           </p>
           <div className="mt-2">
             <ScoringInfo />
@@ -213,7 +211,7 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
         {earlier.length > 0 && (
           <div className="mt-3">
             <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
-              Earlier
+              {t('interviewPrep.lastInterview.earlier')}
             </p>
             <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {earlier.map((r, i) => {
@@ -226,9 +224,13 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
                         {fmtWhen(r.completedAt)}
                       </span>
                     </span>
-                    <span className={`shrink-0 text-[11px] font-bold ${e.text}`}>
-                      {typeof r.score === 'number' ? `${r.score}% · ` : ''}
-                      {e.label}
+                    <span className="shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      {typeof r.score === 'number' ? (
+                        <span className="font-heading tabular-nums text-slate-900 dark:text-slate-100">
+                          {r.score}%{' · '}
+                        </span>
+                      ) : null}
+                      {t(e.labelKey)}
                     </span>
                   </li>
                 );
@@ -239,7 +241,7 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
       </div>
 
       <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-        <StartCTA gate={gate} onStart={onStart} label="Start a new interview" />
+        <StartCTA gate={gate} onStart={onStart} label={t('interviewPrep.lastInterview.startNew')} />
       </div>
     </section>
   );

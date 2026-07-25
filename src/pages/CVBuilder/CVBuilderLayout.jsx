@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import AriaLoader from '../../components/ui/AriaLoader';
 import { Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Save,
   LogOut,
@@ -20,6 +22,7 @@ import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
 
 const ScaledCVPreview = ({ cvData }) => {
+  const { t } = useTranslation();
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const { isStepComplete, steps, goToStep } = useCVBuilder();
@@ -101,10 +104,10 @@ const ScaledCVPreview = ({ cvData }) => {
           </div>
 
           <h3 className="font-heading text-base font-extrabold text-slate-800 dark:text-slate-100 mb-1">
-            Live Preview Locked
+            {t('cvBuilder.layout.livePreviewLocked')}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-[280px] leading-relaxed font-medium">
-            Complete all sections of your CV journey to unlock the template rendering.
+            {t('cvBuilder.layout.completeToUnlock')}
           </p>
 
           {/* Progress bar */}
@@ -115,10 +118,8 @@ const ScaledCVPreview = ({ cvData }) => {
             />
           </div>
           <div className="w-full flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-5">
-            <span>Progress</span>
-            <span>
-              {doneCount} / {totalCount} Completed
-            </span>
+            <span>{t('cvBuilder.layout.progress')}</span>
+            <span>{t('cvBuilder.layout.completed', { done: doneCount, total: totalCount })}</span>
           </div>
 
           {/* Steps List */}
@@ -157,7 +158,7 @@ const ScaledCVPreview = ({ cvData }) => {
 
                   {!isStepDone && (
                     <span className="text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider flex items-center gap-0.5">
-                      Fill In &rarr;
+                      {t('cvBuilder.layout.fillIn')}
                     </span>
                   )}
                 </button>
@@ -202,6 +203,7 @@ const ScaledCVPreview = ({ cvData }) => {
 };
 
 const CVBuilderInner = () => {
+  const { t } = useTranslation();
   const {
     cvData,
     liveCvData,
@@ -348,9 +350,7 @@ const CVBuilderInner = () => {
 
   const handleExitClick = () => {
     if (stepDirty) {
-      const ok = window.confirm(
-        'You have unsaved changes in this step. Exit anyway? Your previously-completed steps are saved.'
-      );
+      const ok = window.confirm(t('cvBuilder.layout.confirmExit'));
       if (!ok) return;
     }
     exitWizard();
@@ -359,11 +359,7 @@ const CVBuilderInner = () => {
   // Note: isStepComplete is now retrieved from the unified CVBuilderContext
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <AriaLoader fullscreen size={32} label={t('cvBuilder.layout.loadingCv')} />;
   }
 
   return (
@@ -412,14 +408,14 @@ const CVBuilderInner = () => {
                     e.currentTarget.blur();
                   }
                 }}
-                aria-label="CV name"
+                aria-label={t('cvBuilder.layout.cvNameLabel')}
                 className="hidden sm:block text-sm text-slate-800 dark:text-slate-200 font-medium shrink-0 w-36 sm:w-44 bg-transparent border-0 outline-none p-0 mr-1"
               />
             ) : (
               <button
                 type="button"
                 onClick={beginTitleEdit}
-                title="Rename this CV"
+                title={t('cvBuilder.layout.renameCv')}
                 className="group/title hidden sm:flex items-center gap-1 shrink-0 max-w-[12rem] text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 border-r border-slate-200 dark:border-slate-800 pr-3 mr-1 transition-colors"
               >
                 <span className="truncate">{cvData.title}</span>
@@ -461,10 +457,10 @@ const CVBuilderInner = () => {
                 }[status];
 
                 const title = {
-                  current: `${step.label} (current)`,
-                  complete: `${step.label} — done · click to edit`,
-                  warning: `${step.label} — looks empty · click to complete`,
-                  todo: `Go to ${step.label} — saves this section first`,
+                  current: t('cvBuilder.layout.titleCurrent', { label: step.label }),
+                  complete: t('cvBuilder.layout.titleComplete', { label: step.label }),
+                  warning: t('cvBuilder.layout.titleWarning', { label: step.label }),
+                  todo: t('cvBuilder.layout.titleTodo', { label: step.label }),
                 }[status];
 
                 return (
@@ -501,35 +497,35 @@ const CVBuilderInner = () => {
             {saving && (
               <span className="text-xs text-indigo-600 dark:text-indigo-300 animate-pulse flex items-center gap-1 shrink-0">
                 <Save className="w-3 h-3" />
-                <span className="hidden sm:inline">Saving…</span>
+                <span className="hidden sm:inline">{t('cvBuilder.common.saving')}</span>
               </span>
             )}
             {!saving && stepDirty && (
               <span
                 className="text-xs text-amber-600 dark:text-amber-300 flex items-center gap-1 shrink-0"
-                title="You have unsaved changes in this step"
+                title={t('cvBuilder.layout.unsavedTitle')}
               >
                 <AlertCircle className="w-3 h-3" />
-                <span className="hidden sm:inline">Unsaved</span>
+                <span className="hidden sm:inline">{t('cvBuilder.layout.unsaved')}</span>
               </span>
             )}
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
               className="hidden lg:flex text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 px-2 py-1 rounded-md items-center gap-1.5 shrink-0 transition-colors"
-              title={showPreview ? 'Hide Aria' : 'Show Aria'}
+              title={showPreview ? t('cvBuilder.layout.hideAria') : t('cvBuilder.layout.showAria')}
             >
               {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showPreview ? 'Hide Aria' : 'Show Aria'}</span>
+              <span>{showPreview ? t('cvBuilder.layout.hideAria') : t('cvBuilder.layout.showAria')}</span>
             </button>
             <button
               type="button"
               onClick={handleExitClick}
               className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 px-2 py-1 rounded-md flex items-center gap-1 shrink-0 transition-colors"
-              title="Exit to My CVs (your completed steps are saved)"
+              title={t('cvBuilder.layout.exitTitle')}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Exit</span>
+              <span className="hidden sm:inline">{t('cvBuilder.layout.exit')}</span>
             </button>
           </div>
 
@@ -577,7 +573,7 @@ const CVBuilderInner = () => {
                       <ChevronLeft className="w-3.5 h-3.5" /> Aria
                     </button>
                     <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      Live preview
+                      {t('cvBuilder.layout.livePreview')}
                     </span>
                   </div>
                 )}
@@ -618,53 +614,53 @@ const CVBuilderInner = () => {
           className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex flex-col"
           style={{ height: drawerH, paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-        {/* Drag handle */}
-        <div
-          className="py-2.5 flex justify-center cursor-ns-resize touch-none shrink-0"
-          onPointerDown={onDragStart}
-          onPointerMove={onDragMove}
-          onPointerUp={onDragEnd}
-          onPointerCancel={onDragEnd}
-        >
-          <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-        </div>
+          {/* Drag handle */}
+          <div
+            className="py-2.5 flex justify-center cursor-ns-resize touch-none shrink-0"
+            onPointerDown={onDragStart}
+            onPointerMove={onDragMove}
+            onPointerUp={onDragEnd}
+            onPointerCancel={onDragEnd}
+          >
+            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+          </div>
 
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {/* Slim preview toggle — Coach ↔ Live preview. Coach→preview is the book
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {/* Slim preview toggle — Coach ↔ Live preview. Coach→preview is the book
               icon inside the coach header; preview→coach is this back bar. */}
-          {activeTab === 'preview' && (
-            <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab('coach')}
-                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" /> Aria
-              </button>
-              <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                Live preview
-              </span>
-            </div>
-          )}
+            {activeTab === 'preview' && (
+              <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('coach')}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Aria
+                </button>
+                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  {t('cvBuilder.layout.livePreview')}
+                </span>
+              </div>
+            )}
 
-          {activeTab === 'coach' ? (
-            <div className="flex-1 min-h-0 flex flex-col">
-              <ATSCoachPanel
-                cvData={liveCvData}
-                user={user}
-                currentStepId={currentStepId}
-                updateCvData={updateCvData}
-                onShowPreview={() => setActiveTab('preview')}
-                focusedEntry={focusedEntry}
-                onClearFocus={() => setFocusedEntry(null)}
-              />
-            </div>
-          ) : (
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-              <ScaledCVPreview cvData={cvData} />
-            </div>
-          )}
-        </div>
+            {activeTab === 'coach' ? (
+              <div className="flex-1 min-h-0 flex flex-col">
+                <ATSCoachPanel
+                  cvData={liveCvData}
+                  user={user}
+                  currentStepId={currentStepId}
+                  updateCvData={updateCvData}
+                  onShowPreview={() => setActiveTab('preview')}
+                  focusedEntry={focusedEntry}
+                  onClearFocus={() => setFocusedEntry(null)}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                <ScaledCVPreview cvData={cvData} />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

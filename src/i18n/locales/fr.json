@@ -1,0 +1,2089 @@
+{
+  "_convention": {
+    "_1_source_of_truth": "Ce fichier reflète la structure de en.json — mêmes clés, même imbrication, même ordre. en.json fait foi pour les noms de clés.",
+    "_2_register": "Vouvoiement systématique. Ton professionnel et chaleureux, pas de traduction mot à mot.",
+    "_3_untranslated": "Les textes juridiques (Conditions d'utilisation, Politique de confidentialité) ne sont volontairement PAS traduits — ils doivent être relus par une personne qualifiée."
+  },
+  "common": {
+    "appName": "ApplyRight",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "processing": "Traitement en cours...",
+    "optional": "(facultatif)",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "nom@entreprise.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se déconnecter",
+    "copyright": "© {{year}} ApplyRight. Tous droits réservés.",
+    "trust": {
+      "noCardNeeded": "Sans carte bancaire",
+      "encrypted": "Chiffré",
+      "freeToStart": "Gratuit pour commencer"
+    },
+    "language": {
+      "label": "Langue",
+      "en": "English",
+      "fr": "Français"
+    },
+    "startFree": "Commencer gratuitement",
+    "startFreeShort": "Commencer",
+    "close": "Fermer",
+    "delete": "Supprimer",
+    "legal": {
+      "termsOfService": "Conditions d’utilisation",
+      "privacyPolicy": "Politique de confidentialité"
+    },
+    "logoAlt": "Logo ApplyRight"
+  },
+  "auth": {
+    "shell": {
+      "valueProps": {
+        "tailor": {
+          "title": "L'IA adapte chaque CV à un poste précis",
+          "body": "Des points clés et des mots-clés optimisés en 30 à 60 secondes, au lieu de plusieurs heures."
+        },
+        "score": {
+          "title": "Évaluez votre adéquation avant de postuler",
+          "body": "Obtenez un score de correspondance clair et la liste des points à renforcer."
+        },
+        "ownData": {
+          "title": "Vos données vous appartiennent",
+          "body": "Votre CV reste le vôtre — chiffré, jamais revendu."
+        }
+      },
+      "agentValueProps": {
+        "organize": {
+          "title": "Organisez les CV par client",
+          "body": "Conservez les CV de chaque client dans son propre dossier, prêts à être repris."
+        },
+        "unlimited": {
+          "title": "CV et téléchargements illimités",
+          "body": "Adaptez et exportez autant de CV soignés que vos clients en ont besoin."
+        },
+        "builtFor": {
+          "title": "Conçu pour les professionnels du CV",
+          "body": "Un espace de travail dédié — aucun outil d'entretien, uniquement la production de CV."
+        }
+      }
+    },
+    "login": {
+      "title": "Ravi de vous revoir",
+      "subtitle": "Connectez-vous pour reprendre là où vous en étiez.",
+      "leftHeading": "Décrochez plus d'entretiens avec un CV vraiment conçu pour le poste.",
+      "leftSubcopy": "ApplyRight adapte votre CV à chaque poste auquel vous postulez, évalue votre adéquation et rédige votre lettre de motivation — le tout en quelques minutes.",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submitting": "Connexion en cours...",
+      "noAccount": "Nouveau sur ApplyRight ?",
+      "createAccount": "Créer un compte"
+    },
+    "register": {
+      "title": "Créez votre compte",
+      "titleAgent": "Créez votre compte rédacteur de CV",
+      "subtitle": "Commencez à adapter vos CV en quelques minutes — 10 crédits offerts pour essayer.",
+      "subtitleAgent": "Créez et téléchargez des CV pour vos clients — choisissez une formule rédacteur après l'inscription.",
+      "leftHeading": "Créez un CV qui passe les logiciels de recrutement.",
+      "leftHeadingAgent": "Gérez toute votre activité de rédaction de CV au même endroit.",
+      "leftSubcopy": "ApplyRight extrait les bons mots-clés de chaque offre d'emploi et reformule vos points clés pour que les recruteurs — et les logiciels qu'ils utilisent — vous remarquent vraiment.",
+      "leftSubcopyAgent": "Organisez les CV par client, adaptez chacun au poste visé et téléchargez sans limite des CV soignés avec une formule rédacteur.",
+      "badgeJobSeeker": "Inscription candidat",
+      "badgeAgent": "Inscription rédacteur de CV",
+      "trustFreeCredits": "10 crédits offerts",
+      "trustUnlimitedCvs": "CV illimités",
+      "trustBuiltForClients": "Conçu pour vos clients",
+      "accountTypeLegend": "Je m'inscris en tant que",
+      "accountTypeAria": "Type de compte",
+      "accountTypeHelpAria": "Quelle est la différence entre un candidat et un rédacteur de CV ?",
+      "jobSeeker": "Candidat",
+      "cvAgent": "Rédacteur de CV",
+      "jobSeekerExplainer": "optimisez votre propre CV, évaluez votre adéquation à un poste et entraînez-vous aux entretiens avec l'IA vocale.",
+      "cvAgentExplainer": "créez et téléchargez des CV pour vos clients, organisés par client. Sans outils d'entretien.",
+      "phoneLabel": "Numéro de téléphone",
+      "confirmPasswordLabel": "Confirmez le mot de passe",
+      "passwordHint": "Au moins 8 caractères, avec des majuscules, des minuscules et un chiffre.",
+      "passwordStrength": "Sécurité du mot de passe : {{label}}",
+      "strengthWeak": "Faible",
+      "strengthMedium": "Moyen",
+      "strengthStrong": "Fort",
+      "referralLabel": "Code de parrainage",
+      "referralPlaceholder": "SAVE50",
+      "languageHint": "Vous pourrez modifier ce choix plus tard. Vos CV peuvent être rédigés dans une autre langue.",
+      "termsAgree": "J'accepte les",
+      "termsAnd": "et la",
+      "submit": "Créer mon compte",
+      "submitAgent": "Créer mon compte rédacteur",
+      "submitting": "Création du compte...",
+      "haveAccount": "Vous avez déjà un compte ?"
+    },
+    "forgot": {
+      "titleStep1": "Réinitialiser le mot de passe",
+      "titleStep2": "Vérification et réinitialisation",
+      "subtitleStep1": "Saisissez votre adresse e-mail et nous vous enverrons un code de réinitialisation.",
+      "subtitleStep2": "Saisissez le code reçu par e-mail ainsi que votre nouveau mot de passe.",
+      "emailPlaceholder": "vous@exemple.com",
+      "otpLabel": "Code de réinitialisation",
+      "otpPlaceholder": "123456",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmNewPasswordLabel": "Confirmez le nouveau mot de passe",
+      "sendCode": "Envoyer le code",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "codeSent": "Si un compte existe pour cette adresse, un code de réinitialisation est en route. Consultez votre boîte de réception.",
+      "resetSuccess": "Mot de passe réinitialisé ! Redirection vers la connexion...",
+      "rememberedPassword": "Vous vous souvenez de votre mot de passe ?",
+      "backToSignIn": "Retour à la connexion"
+    }
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "earnings": "Revenus",
+    "myCvs": "Mes CV",
+    "myApplications": "Mes candidatures",
+    "interviewPrep": "Préparation aux entretiens",
+    "pricing": "Tarifs",
+    "account": {
+      "defaultUser": "Utilisateur",
+      "freePlan": "Formule gratuite",
+      "credits": "Crédits",
+      "creditsLeft_one": "{{count}} restant",
+      "creditsLeft_other": "{{count}} restants",
+      "interviewMinutes": "Minutes d'entretien",
+      "minutesShort": "{{n}} min",
+      "topUpCredits": "Recharger mes crédits",
+      "topUpAction": "Obtenir",
+      "viewProfile": "Voir mon profil",
+      "manageAccount": "Gérer mon compte",
+      "creditsAndBilling": "Crédits et facturation",
+      "darkMode": "Mode sombre"
+    },
+    "agentPlanAria": "Formule rédacteur — appuyez pour voir les formules",
+    "agentPlans": "Formules",
+    "creditsAria": "Crédits CV — appuyez pour recharger",
+    "getPlan": "Choisir une formule",
+    "logout": {
+      "title": "Se déconnecter ?",
+      "body": "Voulez-vous vraiment vous déconnecter ?",
+      "confirm": "Se déconnecter"
+    }
+  },
+  "errors": {
+    "loginFailed": "Échec de la connexion",
+    "registrationFailed": "Échec de l'inscription",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordNeedsLowercase": "Le mot de passe doit contenir au moins une minuscule",
+    "passwordNeedsUppercase": "Le mot de passe doit contenir au moins une majuscule",
+    "passwordNeedsNumber": "Le mot de passe doit contenir au moins un chiffre",
+    "sendCodeFailed": "Impossible d'envoyer le code. Veuillez réessayer.",
+    "resetPasswordFailed": "Impossible de réinitialiser le mot de passe"
+  },
+  "landing": {
+    "seo": {
+      "title": "ApplyRight – Créateur de CV par IA et optimisation ATS",
+      "description": "Passez le filtre ATS avec ApplyRight. Notre IA adapte votre CV à chaque offre d’emploi pour décrocher plus d’entretiens. Essai gratuit."
+    },
+    "hero": {
+      "kicker": "CV par IA · score ATS · entretien blanc en direct",
+      "titleLead": "Convainquez sur le papier. Puis dans",
+      "titleAccent": "la salle.",
+      "subcopy": "ApplyRight réécrit votre CV pour passer les filtres ATS, mesure votre adéquation au poste visé, puis vous fait passer un entretien avec une IA en temps réel — vous arrivez déjà entraîné.",
+      "ctaSecondary": "Écouter un entretien type",
+      "freeNoteStrong": "1 CV à télécharger offert",
+      "freeNoteRest": "sans carte bancaire"
+    },
+    "interviewCard": {
+      "aria": "Entretien blanc avec l’IA en cours",
+      "live": "Entretien blanc en direct",
+      "seat": "JURY RH · SIÈGE 1/3",
+      "interviewer": "Recruteur · IA ApplyRight",
+      "question": "« Parlez-moi d’un projet que vous avez mené sous forte pression — et de son résultat. »",
+      "readiness": "Préparation"
+    },
+    "ledger": {
+      "kicker": "La réécriture",
+      "title": "Une ligne sans relief devient un entretien.",
+      "subcopy": "La même expérience, racontée comme les recruteurs et leurs logiciels la lisent vraiment. ApplyRight supprime le remplissage, met les résultats en avant et place les mots-clés attendus.",
+      "colBefore": "Avant — votre version",
+      "colAfter": "Après ApplyRight",
+      "wasLabel": "AVANT",
+      "nowLabel": "APRÈS",
+      "row1Before": "Responsable du processus de vente régional",
+      "row1After": "Chiffre d’affaires régional en hausse de <b>42 %</b> sur 3 trimestres",
+      "row2Before": "Gestion quotidienne de la relation client",
+      "row2After": "Fidélisé <b>9 comptes clés sur 10</b> lors d’une refonte tarifaire",
+      "row3Before": "Participation à l’amélioration des ventes",
+      "row3After": "Cycle de vente raccourci de <b>18 jours</b> grâce à un nouveau processus de qualification"
+    },
+    "problem": {
+      "kicker": "La barrière invisible",
+      "title": "Pourquoi de bons candidats sont écartés",
+      "subcopy": "La plupart des refus ne viennent pas d’un humain — ils tombent avant que quiconque ait lu une seule de vos lignes.",
+      "typicalProcess": "Processus habituel",
+      "stageLabel": "Étape {{n}}",
+      "stage1Title": "Vous postulez",
+      "stage1Body": "CV générique envoyé.",
+      "stage2Title": "Filtre ATS — refus automatique",
+      "stage2BodyLead": "Le logiciel cherche les mots-clés exacts de l’offre.",
+      "stage2BodyStrong": "Pas de correspondance ? Refusé",
+      "stage2BodyTail": "avant tout regard humain.",
+      "stage3Title": "Lecture par un recruteur",
+      "stage3Body": "N’a jamais lieu — personne ne voit votre CV.",
+      "truthLead": "Ce ne sont pas vos compétences qui vous font écarter. Ce sont vos",
+      "truthAccent": "mots-clés.",
+      "whatIsAtsTitle": "Qu’est-ce qu’un ATS ?",
+      "whatIsAtsBody": "Les logiciels de suivi des candidatures (ATS) filtrent les candidatures dans <b>99 % des entreprises du Fortune 500</b>, en triant des milliers de dossiers automatiquement. Si votre CV ne <s>reprend pas exactement</s> les termes de l’offre, vous êtes écarté avant même qu’un recruteur ne l’ouvre.",
+      "sprayTitle": "L’erreur du CV envoyé en masse",
+      "sprayBody": "Envoyer le même CV générique à 100 offres garantit 100 refus. Chaque offre est unique, avec ses compétences attendues et ses « mots magiques »."
+    },
+    "fix": {
+      "kicker": "La solution",
+      "title": "Nous adaptons votre CV à chaque offre.",
+      "subcopy": "Trois étapes pour transformer un CV générique en CV que le logiciel laisse passer.",
+      "step1Title": "Nous analysons l’offre",
+      "step1Body": "Collez le lien de l’offre. Notre IA la lit comme le ferait un ATS et repère les mots-clés, compétences et exigences décisifs cachés dans le texte.",
+      "step2Title": "Nous réécrivons votre CV",
+      "step2Body": "Nous n’ajoutons pas seulement des mots-clés. Nous reformulons vos points clés pour mettre en avant l’expérience <i>pertinente</i> pour <i>cette offre précise</i>.",
+      "step3Title": "Vous passez le filtre",
+      "step3Body": "Vous obtenez un PDF adapté à cette candidature précise. L’ATS voit plus de 95 % de correspondance et votre CV arrive sur le bureau du recruteur."
+    },
+    "features": {
+      "kicker": "Suite de préparation avancée",
+      "title": "Allez plus loin qu’un simple CV.",
+      "subcopy": "ApplyRight vous donne une boîte à outils complète, conçue par des experts en carrière, pour maîtriser chaque étape du recrutement — du score de votre CV jusqu’à l’entretien final.",
+      "star": {
+        "kicker": "Préparation · Banque d’anecdotes",
+        "title": "Banque d’anecdotes STAR ancrées dans votre CV",
+        "body": "Préparez-vous comme les meilleurs candidats. Générez une banque d’anecdotes réutilisables au format STAR (Situation, Tâche, Action, Résultat), construites à partir de votre expérience réelle. Chaque anecdote est vérifiée par l’IA pour la cohérence des faits et rattachée aux questions d’entretien concernées.",
+        "tag1": "Ancrées dans votre CV",
+        "tag2": "Format STAR",
+        "tag3": "Vérification des faits"
+      },
+      "voice": {
+        "kicker": "Préparation · Voix en direct",
+        "title": "Entretien vocal interactif",
+        "body": "Reproduisez la pression d’un vrai entretien. Notre recruteur IA lit les questions à voix haute grâce à la synthèse vocale premium ElevenLabs et OpenAI. Entraînez-vous à l’oral avec un minuteur par question, évaluez votre confiance et recevez un débriefing ciblé.",
+        "tag1": "Synthèse vocale premium (ElevenLabs)",
+        "tag2": "Simulation orale chronométrée",
+        "tag3": "Débriefing personnalisé"
+      },
+      "brief": {
+        "kicker": "Préparation · Fiche de révision",
+        "title": "La fiche de révision de 10 minutes",
+        "body": "N’arrivez jamais sans préparation. Générez une fiche d’une page, optimisée pour l’impression, avec votre score de préparation, vos 3 meilleures anecdotes STAR, vos questions les plus fragiles à revoir, les compétences à mettre en avant et les questions à poser au recruteur.",
+        "tag1": "Optimisé pour l’impression / PDF",
+        "tag2": "Révision express",
+        "tag3": "Synthèse de préparation"
+      },
+      "compare": {
+        "kicker": "Outils CV · Comparaison",
+        "title": "Comparaison de CV",
+        "body": "Comparez deux de vos CV côte à côte pour la même offre. Voyez en détail lequel obtient le meilleur score, globalement et sur chaque critère, et exactement quelles compétences indispensables manquent à chacun.",
+        "tag1": "Analyse côte à côte",
+        "tag2": "Écart de score détaillé",
+        "tag3": "Référence au poste visé"
+      }
+    },
+    "vignettes": {
+      "starLabel": "Anecdote STAR",
+      "verified": "Vérifié",
+      "starS": "L’équipe a manqué ses objectifs du T3 après deux départs clés.",
+      "starT": "Piloter le plan de redressement régional.",
+      "starA": "Reconstruit le pipeline et reformé l’équipe.",
+      "starR": "Objectif dépassé de 42 % le trimestre suivant.",
+      "voiceQuestion": "« Racontez-moi une décision que vous avez mal jugée. »",
+      "confidence": "Confiance",
+      "confidenceHigh": "Élevée",
+      "briefLabel": "Fiche d’avant-entretien",
+      "savePdf": "Enregistrer en PDF",
+      "brief1": "Vos 3 meilleures anecdotes STAR",
+      "brief2": "Les 2 questions les plus fragiles",
+      "brief3": "Compétences à mettre en avant et questions à poser",
+      "compareLabel": "CV A vs CV B",
+      "dimSkills": "Compétences",
+      "dimExperience": "Expérience",
+      "dimEducation": "Formation"
+    },
+    "testimonials": {
+      "kicker": "Communauté",
+      "title": "Ce qu’en disent les utilisateurs",
+      "subcopy": "Rejoignez des milliers de candidats qui ont transformé leur recherche d’emploi avec ApplyRight.",
+      "cta": "Partagez votre expérience"
+    },
+    "cta": {
+      "kicker": "Une seule première impression",
+      "title": "Arrêtez de deviner. Décrochez des entretiens.",
+      "subcopy": "Rejoignez des milliers de candidats qui ont cessé de subir le système pour le faire jouer en leur faveur.",
+      "button": "Créer un compte gratuit",
+      "note": "Sans carte bancaire · Optimisé pour les ATS"
+    }
+  },
+  "footer": {
+    "tagline": "Décrochez le poste — sur le papier, et en entretien.",
+    "colProduct": "Produit",
+    "colGuides": "Guides",
+    "colCompany": "Entreprise",
+    "colLegal": "Mentions légales",
+    "atsGuide": "Guide ATS",
+    "cvBuilderGuide": "Guide du créateur de CV",
+    "cvHealth": "Santé du CV",
+    "howAtsWorks": "Comment fonctionnent les ATS et les recruteurs",
+    "howToAce": "Réussir votre entretien",
+    "contact": "Contact",
+    "giveFeedback": "Donner votre avis",
+    "builtFor": "Conçu pour les candidats au Nigeria et au-delà.",
+    "disclaimerLabel": "Avertissement :",
+    "disclaimerBody": "ApplyRight est un outil de préparation aux entretiens. Les simulations, conversations vocales et questions générées servent uniquement à s’entraîner et à gagner en confiance. Les questions simulées dans l’application sont données à titre d’exemple et ne préjugent pas des questions réellement posées lors de votre processus de recrutement."
+  },
+  "dashboard": {
+    "greetingNoName": "Valorisez votre profil professionnel",
+    "greeting": "Bon retour, {{name}}. Passons à l’action.",
+    "recommendedDefault": "Vos candidatures, travaillées au détail près. Importez votre CV et le poste visé pour lancer l’optimisation.",
+    "recommendedStudent": "En tant qu’étudiant en {{field}}, visez en priorité les stages et les postes juniors.",
+    "recommendedGraduate": "Félicitations pour votre diplôme ! Transformons maintenant ce diplôme en {{field}} en véritable carrière.",
+    "recommendedProfessional": "Prêt pour la suite de votre carrière ? Mettons votre expérience en valeur.",
+    "recommendedOther": "Alignons votre parcours singulier sur le poste que vous visez.",
+    "yourField": "votre domaine",
+    "banner": {
+      "enhanceAria": "Compléter votre profil",
+      "enhanceTitle": "Enrichissez votre profil",
+      "enhanceBody": "Complétez votre profil pour améliorer l’optimisation de votre CV.",
+      "completeAria": "Compléter votre profil",
+      "completeTitle": "Complétez votre profil",
+      "completeBody": "Parlez-nous de vos objectifs pour recevoir des conseils personnalisés."
+    },
+    "workspace": "Votre espace",
+    "studio": {
+      "kicker": "Aria Studio",
+      "title": "Adaptez votre CV à une offre en quelques minutes",
+      "body": "Donnez une offre d’emploi à Aria. Elle retravaille une copie de votre CV, section par section, et vous montre exactement ce qu’elle a changé — votre original reste intact.",
+      "cta": "Ouvrir Aria Studio"
+    },
+    "pillarApplication": "Votre candidature",
+    "pillarInterview": "Entraînement",
+    "tailorCard": {
+      "aria": "Adapter mon CV à une offre",
+      "chip": "Conseillé",
+      "title": "Adapter mon CV à une offre",
+      "body": "Vérifiez si votre profil correspond au poste, puis adaptez automatiquement votre CV à ses attentes.",
+      "cta": "Vérifier mon CV",
+      "poweredBy": "Propulsé par ApplyRight"
+    },
+    "buildCard": {
+      "aria": "Créer un nouveau CV",
+      "title": "Créer un nouveau CV",
+      "body": "Partez de zéro avec un assistant guidé, ou importez un CV existant et laissez l’IA faire le gros du travail.",
+      "cta": "Créer un CV"
+    },
+    "interviewCard": {
+      "aria": "Démarrer un entretien direct",
+      "chip": "Pro",
+      "title": "Passer un entretien",
+      "body": "Passez directement à un entretien blanc oral, en direct, à partir de n’importe quelle offre d’emploi.",
+      "cta": "Démarrer",
+      "companion": "Ou préparez-vous d’abord — chaque candidature adaptée donne accès à un espace de préparation complet : questions, anecdotes et entretien en direct."
+    },
+    "createModal": {
+      "title": "Par où souhaitez-vous commencer ?",
+      "subtitle": "Choisissez la voie qui correspond à votre situation.",
+      "scratchTitle": "Partir de zéro",
+      "scratchBody": "Assistant pas à pas pour construire un CV de A à Z.",
+      "uploadTitle": "Importer un CV existant",
+      "uploadBody": "Nous analysons votre PDF et pré-remplissons le créateur avec vos informations."
+    },
+    "setup": {
+      "checkCv": "Confrontez votre CV à une offre — nous évaluons l’adéquation et l’adaptons en conséquence.",
+      "step2": "Étape 2 · Offre d’emploi",
+      "step2Body": "Renseignez les détails de l’offre à analyser",
+      "uploadTitle": "Importez votre CV",
+      "uploadBody": "Importez votre CV existant (PDF) et nous le convertirons en format modifiable.",
+      "scanning": "Analyse du document...",
+      "scanningBody": "Extraction de votre expérience et de vos compétences",
+      "analyzeCta": "Analyser"
+    },
+    "health": {
+      "title": "Votre CV est prêt.",
+      "body": "Nous avons extrait et structuré vos informations — voici son état de santé.",
+      "scoreLabel": "Santé du CV",
+      "needsWork": "À retravailler",
+      "gettingThere": "En bonne voie",
+      "strong": "Solide 75+"
+    },
+    "fit": {
+      "title": "Votre adéquation",
+      "analyzing": "Analyse de votre profil au regard des exigences du poste..."
+    },
+    "toolkit": {
+      "title": "Ma boîte à outils CV",
+      "optimizedCv": "CV optimisé",
+      "optimizedCvBody": "Adapté à ce poste",
+      "coverLetter": "Lettre de motivation",
+      "coverLetterBody": "Alignée sur l’offre d’emploi",
+      "verifyBeforeSending": "À vérifier avant envoi",
+      "interviewPrep": "Préparation entretien",
+      "interviewPrepBody": "Questions probables et réponses suggérées",
+      "newAnalysis": "Lancer une nouvelle analyse",
+      "newAnalysisBody": "Même CV, autre offre",
+      "prepReady": "Préparation prête",
+      "viewCv": "Voir mon CV"
+    },
+    "autoAnalysis": {
+      "title": "Activer l’analyse automatique ?",
+      "body": "Analysez automatiquement votre CV face à chaque offre importée — sans manipulation supplémentaire.",
+      "keepManual": "Garder le mode manuel",
+      "enable": "Activer"
+    },
+    "deleteCv": {
+      "title": "Supprimer ce CV ?",
+      "body": "Voulez-vous vraiment supprimer « {{title}} » ? Cette action est irréversible.",
+      "confirm": "Supprimer le CV"
+    },
+    "insufficientCredits": "Crédits IA insuffisants",
+    "toasts": {
+      "cvDeleted": "CV supprimé",
+      "cvDeleteFailed": "Échec de la suppression du CV",
+      "autoAnalysisEnabled": "Analyse automatique activée pour les prochaines offres !",
+      "settingSaveFailed": "Échec de l’enregistrement du réglage",
+      "analysisComplete": "Analyse terminée !",
+      "aiUnavailable": "L’IA est momentanément indisponible. Vous n’avez pas été débité. Réessayez dans un instant.",
+      "generationInProgress": "Une génération de CV est déjà en cours pour cette candidature.",
+      "matchLifted": "Adéquation passée de {{before}} % à {{after}} %",
+      "cvGenerated": "CV optimisé généré !",
+      "cvGenerationFailed": "Échec de la génération du CV. Vous n’avez pas été débité.",
+      "cvStartFailed": "Impossible de lancer la génération du CV. Veuillez réessayer.",
+      "bundleStartFailed": "Impossible de lancer la génération groupée. Veuillez réessayer.",
+      "coverLetterWarning_one": "Lettre générée, mais {{count}} affirmation n’est peut-être pas étayée par votre CV — vérifiez avant l’envoi.",
+      "coverLetterWarning_other": "Lettre générée, mais {{count}} affirmations ne sont peut-être pas étayées par votre CV — vérifiez avant l’envoi.",
+      "coverLetterGenerated": "Lettre de motivation générée !",
+      "coverLetterFailed": "Impossible de générer la lettre de motivation. Veuillez réessayer.",
+      "interviewPrepGenerated": "Préparation à l’entretien générée !",
+      "interviewPrepFailed": "Impossible de générer la préparation. Veuillez réessayer.",
+      "resumeParseFailed": "Échec de l’analyse du CV."
+    },
+    "backToDashboard": "Retour au tableau de bord",
+    "creditsCount_one": "{{count}} crédit",
+    "creditsCount_other": "{{count}} crédits",
+    "untitledCv": "CV sans titre",
+    "verdict": {
+      "wellStructured": "Bien structuré.",
+      "gettingThere": "En bonne voie.",
+      "needsWork": "À retravailler."
+    },
+    "savedCv": "CV enregistré",
+    "resumeUploaded": "CV importé",
+    "ready": {
+      "chooseCv": "Choisissez un CV pour continuer.",
+      "addJob": "Ajoutez l’offre pour continuer.",
+      "ready": "Tout est prêt — lançons l’analyse."
+    },
+    "genStage": {
+      "starting": "Démarrage…",
+      "startingBundle": "Démarrage du pack…"
+    },
+    "metricCapture": {
+      "generateBundle": "Générer le pack complet",
+      "generateCv": "Générer le CV"
+    }
+  },
+  "billing": {
+    "common": {
+      "bestValue": "Meilleure offre",
+      "starting": "Démarrage…",
+      "oneTimePurchase": "Achat unique",
+      "creditsUnit": "crédits",
+      "choosePlan": "Choisir {{plan}}",
+      "checkoutFailed": "Impossible de lancer le paiement. Veuillez réessayer.",
+      "currencyNgn": "₦ NGN",
+      "currencyNgnRegion": "· Nigéria",
+      "currencyUsd": "$ USD",
+      "currencyUsdRegion": "· International",
+      "agentHeading": "Créez des CV pour vos clients à grande échelle",
+      "agentSubcopy": "Un généreux pool de <strong>crédits IA</strong> pour l’adaptation de CV et les lettres de motivation, plus des <strong>téléchargements illimités</strong> — conçu pour les rédacteurs de CV et les agences. Sans minutes d’entretien."
+    },
+    "plans": {
+      "free": {
+        "label": "Gratuit",
+        "tagline": "Créez, partagez et préparez-vous — gratuit à vie.",
+        "features": {
+          "0": "5 minutes d’entretien en direct (essai gratuit)",
+          "1": "Des crédits IA offerts pour démarrer (gagnez-en plus par parrainage)",
+          "2": "Modèle IA standard (GPT-4o-mini) pour la rédaction de CV",
+          "3": "Résumé professionnel — 1 ton",
+          "4": "Jusqu’à 3 points par poste",
+          "5": "Appliquez jusqu’à 3 suggestions de l’IA",
+          "6": "Analyse standard CV/offre d’emploi (suggestions de l’IA)",
+          "7": "Modèles de base uniquement",
+          "8": "Téléchargements de CV soignés à 750 ₦ l’unité"
+        },
+        "excluded": {
+          "0": "Modèle IA premium (GPT-4o) pour une rédaction plus fine",
+          "1": "ApplyRight ATS — analyse CV/offre de niveau recruteur",
+          "2": "Téléchargements illimités et tous les modèles premium"
+        }
+      },
+      "paidCvFeatures": {
+        "0": "Modèle IA premium (GPT-4o) — CV, points, résumés et lettres plus percutants",
+        "1": "ApplyRight ATS — analyse CV/offre de niveau recruteur avec notre IA premium",
+        "2": "Coach ATS — santé du CV et score de mots-clés en direct",
+        "3": "Points illimités + application de toutes les suggestions de l’IA",
+        "4": "Tous les tons de résumé",
+        "5": "Tous les modèles de CV premium débloqués",
+        "6": "Téléchargements illimités, soignés et sans filigrane"
+      },
+      "weeklyPro": {
+        "label": "Formule Découverte",
+        "tagline": "Ne payez que les 2 semaines où vous passez des entretiens.",
+        "badge": "Idéal au Nigéria",
+        "features": {
+          "0": "15 minutes d’entretien en direct sur 2 semaines",
+          "1": "150 crédits IA pour vos CV, lettres et préparation",
+          "2": "Ne payez que les 2 semaines de vos entretiens"
+        }
+      },
+      "monthlyPro": {
+        "label": "Niveau Supérieur",
+        "tagline": "Plus de minutes et de crédits, chaque mois.",
+        "badge": "Idéal à l’international",
+        "features": {
+          "0": "50 minutes d’entretien en direct / mois",
+          "1": "500 crédits IA pour vos CV, lettres et préparation",
+          "2": "De nouvelles minutes et crédits chaque mois"
+        }
+      },
+      "monthlyPremium": {
+        "label": "Formule Boss",
+        "tagline": "Notre IA la plus performante, avec l’équipement complet.",
+        "features": {
+          "0": "45 minutes en direct avec notre IA d’entretien la plus performante",
+          "1": "1 000 crédits IA / mois",
+          "2": "Enregistrements complets des entretiens et rapports IA",
+          "3": "Assistance prioritaire"
+        }
+      },
+      "agentWeekly": {
+        "label": "Premiers Succès",
+        "tagline": "Travaillez pour vos clients, payez à la semaine.",
+        "subtitle": "250 crédits CV · pour vos clients",
+        "features": {
+          "0": "250 crédits IA pour l’adaptation de CV et les lettres de motivation",
+          "1": "Ne payez que la semaine où vous êtes actif"
+        }
+      },
+      "agentMonthly": {
+        "label": "Gros Volume",
+        "tagline": "Un flux de clients régulier, tout le mois.",
+        "badge": "Le plus populaire",
+        "subtitle": "1 200 crédits CV · pour vos clients",
+        "features": {
+          "0": "1 200 crédits IA pour tout le mois",
+          "1": "Idéal pour un travail client régulier"
+        }
+      },
+      "agentYearly": {
+        "label": "Odogwu",
+        "tagline": "Pour les activités de rédaction de CV à plein temps.",
+        "badge": "~17 % d’économie",
+        "subtitle": "18 000 crédits CV · pour vos clients",
+        "features": {
+          "0": "18 000 crédits IA / an (~17 % de moins que le mensuel)",
+          "1": "Pensé pour les rédacteurs de CV à plein temps"
+        }
+      }
+    },
+    "tierCard": {
+      "plan": "Formule",
+      "currentPlan": "Formule actuelle",
+      "perPeriod": "par {{period}} ·",
+      "paySublineFree": "Sans carte bancaire",
+      "paySublinePaid": "payez par carte, virement ou USSD",
+      "startingCheckout": "Ouverture du paiement…"
+    },
+    "creditStore": {
+      "title": "Crédits et formules",
+      "subtitle": "Gagnez des crédits gratuitement, rechargez en un instant ou passez en illimité avec une formule. Les crédits alimentent la rédaction de CV par IA, les lettres de motivation, le score ATS et les modèles premium.",
+      "yourCredits": "Vos crédits IA",
+      "fromPlanWallet": "{{plan}} inclus dans la formule · {{wallet}} dans le portefeuille",
+      "planLabel": "Formule {{plan}}",
+      "minutesLeftPaid": "{{n}} min d’entretien en direct restantes",
+      "minutesLeftFree": "{{n}} min d’entretien gratuites restantes",
+      "untilDate": "· jusqu’au {{date}}",
+      "managePlan": "Gérer ma formule",
+      "seeAllPlans": "Voir toutes les formules",
+      "earnEyebrow": "Aucun paiement requis",
+      "earnTitle": "Gagnez des crédits gratuits",
+      "earnSubtitle": "Rechargez votre portefeuille sans dépenser un naira. Les crédits gagnés n’expirent jamais.",
+      "streakDays": "série de {{n}} jours",
+      "watchTitle": "Regardez une vidéo",
+      "watchBody": "Gagnez <b>+{{n}} crédits</b> en 5 secondes environ.",
+      "instantReward": "Récompense immédiate",
+      "unlimitedDaily": "Sans limite quotidienne",
+      "watchCta": "Regarder · +{{n}}",
+      "adCooldown": "Veuillez patienter {{n}} s avant de regarder une autre publicité.",
+      "inviteTitle": "Parrainez vos amis",
+      "inviteBody": "Recevez <b>+{{n}} crédits</b> pour chaque ami qui s’inscrit avec votre lien.",
+      "noLimitInvites": "Aucune limite de parrainages",
+      "creditsNeverExpire": "Les crédits n’expirent jamais",
+      "getInviteLink": "Obtenir mon lien",
+      "topUpTitle": "Rechargez en un instant",
+      "topUpSubtitle": "Achetez un pack de crédits par carte ou virement. Ajoutés à votre portefeuille, ils n’expirent jamais.",
+      "perCreditNgn": "{{n}} ₦ par crédit",
+      "goUnlimitedEyebrow": "Idéal pour une recherche active",
+      "goUnlimitedTitle": "Passez en illimité avec une formule",
+      "goUnlimitedSubtitle": "Les formules débloquent la rédaction IA illimitée, le modèle GPT-4o plus performant, les modèles premium et les minutes d’entretien en direct.",
+      "creditsPlusMinutes": "<b>{{credits}} crédits</b> + {{minutes}} min d’entretien en direct",
+      "moreMinutesPrompt": "Besoin de quelques minutes d’entretien supplémentaires ?",
+      "seeMinuteTopups": "Voir les recharges de minutes →",
+      "support": "Besoin d’aide ? Écrivez à support@applyright.com.ng",
+      "inviteModalTitle": "Parrainez et gagnez",
+      "inviteModalBody": "Partagez votre code avec vos amis. Lorsqu’ils s’inscrivent, <b>vous recevez</b> <em>{{n}} crédits IA</em> !",
+      "yourReferralCode": "VOTRE CODE DE PARRAINAGE",
+      "codeLoadingUpper": "CHARGEMENT...",
+      "codeError": "ERREUR",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "orShareLink": "OU PARTAGEZ CE LIEN",
+      "linkLoading": "Chargement...",
+      "linkCopied": "✓ Copié",
+      "copyLink": "Copier le lien",
+      "creditsValidNote": "Les crédits IA sont valables pour l’analyse et l’optimisation de CV."
+    },
+    "upgrade": {
+      "headingSeeker": "Entraînez-vous avec un vrai recruteur IA",
+      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour l’adaptation de CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment. Rechargez vos crédits à tout moment.",
+      "statusAgentNone": "Vous n’avez pas encore de formule rédacteur active — choisissez-en une ci-dessous.",
+      "statusFreeSeeker": "Vous êtes sur la formule gratuite — il vous reste {{n}} de vos {{total}} minutes d’entretien offertes.",
+      "statusActive": "Active : {{plan}} · {{n}} crédits",
+      "statusMinLeft": "· {{n}} min restantes",
+      "statusExpires": "· expire le {{date}}",
+      "currencyNoteNgn": "Affichage en nairas nigérians (₦) — optimisé pour les cartes locales",
+      "currencyNoteUsd": "Affichage en dollars américains ($) — détecté/sélectionné pour un paiement international",
+      "minutesEyebrow": "Minutes d’entretien en direct",
+      "outOfMinutesTitle": "À court de minutes ?",
+      "minutesSubtitle": "Ajoutez des minutes d’entretien en direct à tout moment. Elles utilisent le recruteur de votre formule actuelle.",
+      "minUnit": "min",
+      "perMinNgn": "{{n}} ₦ / min",
+      "perMinUsd": "{{n}} $ / min",
+      "moreCreditsTitle": "Besoin de plus de crédits IA ?",
+      "creditsSubtitle": "Rechargez des crédits pour l’adaptation de CV, les lettres de motivation et la préparation écrite. Ajoutés à votre portefeuille — ils n’expirent jamais.",
+      "perCreditNgn": "{{n}} ₦ par crédit",
+      "perCreditUsd": "{{n}} $ par crédit",
+      "footerNote": "Paiement unique via Flutterwave. Sans reconduction — rachetez quand vous en avez besoin.",
+      "paymentsUnavailable": "Les paiements sont momentanément indisponibles. Veuillez réessayer sous peu."
+    },
+    "pricing": {
+      "eyebrow": "Tarifs · paiement unique · sans reconduction",
+      "headingSeeker": "Décrochez plus d’entretiens, à moindre coût",
+      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour l’adaptation de CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment.",
+      "forJobSeekers": "Pour les candidats",
+      "forCvAgents": "Pour les rédacteurs de CV",
+      "getStarted": "Commencer",
+      "footerNoteAgent": "Plus des recharges de crédits à la carte. Paiement unique via Flutterwave — sans reconduction.",
+      "footerNoteSeeker": "Plus des recharges de crédits et des minutes supplémentaires à tout moment. Paiement unique via Flutterwave — sans reconduction."
+    },
+    "return": {
+      "toastDownload": "Paiement confirmé — votre téléchargement est prêt !",
+      "toastPlan": "Paiement confirmé — votre formule est active !",
+      "verifyingTitle": "Confirmation de votre paiement…",
+      "verifyingBody": "Cela prend quelques secondes. Ne fermez pas cette page.",
+      "successTitle": "Tout est prêt !",
+      "successDownload": "Votre CV est prêt à être téléchargé — retour en cours pour enregistrer votre PDF…",
+      "successInterview": "Vos {{n}} minutes d’entretien sont prêtes — retour en cours pour démarrer votre entretien…",
+      "successMinutes": "{{n}} minutes d’entretien en direct sont prêtes.",
+      "successPlan": "Votre formule est maintenant active.",
+      "ctaDownload": "Télécharger mon CV",
+      "ctaInterview": "Démarrer mon entretien",
+      "ctaDashboard": "Aller au tableau de bord",
+      "failedTitle": "Paiement non confirmé",
+      "failedBody": "Si vous avez été débité, cela apparaîtra sous peu — vérifiez votre formule sur la page des tarifs. Vous n’avez pas été débité pour un paiement annulé.",
+      "backToPlans": "Retour aux formules"
+    }
+  },
+  "cvBuilder": {
+    "common": {
+      "saving": "Enregistrement…",
+      "done": "Terminé",
+      "askAria": "Demander à Aria",
+      "ariaFilledIn": "◉ Aria l’a rempli",
+      "descriptionBullets": "Description / Points",
+      "creditChip": "{{n}} cr",
+      "couldntSetup": "Hmm — je n’ai pas réussi à configurer votre CV. Actualisez et réessayez.",
+      "couldntReach": "Je n’ai pas pu répondre à l’instant — réessayez.",
+      "freeChatsUsed": "Vous avez épuisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
+      "settingUp": "Préparation de votre CV…",
+      "freeChatsLeft": "{{n}} échanges gratuits restants aujourd’hui",
+      "freeChatsDone": "Échanges gratuits épuisés aujourd’hui · 1 crédit chacun",
+      "tailoredFor": "Adapté pour {{title}} chez {{company}}",
+      "at": "chez",
+      "focus": "Ciblage",
+      "role": "poste",
+      "project": "projet"
+    },
+    "sectionTips": {
+      "tipsForSection": "Conseils pour cette section",
+      "gotItHide": "Compris, masquer"
+    },
+    "targetJob": {
+      "loading": "Chargement...",
+      "greetingLine1": "Je suis votre coach CV — construisons un CV qui vous fait remarquer.",
+      "greetingLine2": "D’abord — visez-vous un poste en particulier ?",
+      "continue": "Continuer",
+      "confirmTitle": "Continuer sans poste visé ?",
+      "confirmBody": "Aria adapte votre CV à un poste précis — vous pourrez toujours en ajouter un plus tard.",
+      "continueAnyway": "Continuer quand même"
+    },
+    "heading": {
+      "eyebrow": "Coordonnées",
+      "title": "Coordonnées",
+      "subtitle": "Votre en-tête professionnel. Restez exact et simple.",
+      "tips": {
+        "title": "Gardez l’en-tête clair et prêt pour les recruteurs",
+        "intro": "Votre en-tête est la première chose qu’ils voient. Quelques petits choix font une grande différence.",
+        "list": {
+          "0": "Utilisez une adresse professionnelle — <code class=\"text-[11px] bg-white/60 px-1 rounded\">prenom.nom@email.com</code> vaut mieux qu’un surnom.",
+          "1": "La ville et le pays suffisent — pas besoin d’une adresse postale complète.",
+          "2": "Ajoutez l’URL de votre LinkedIn si vous en avez une ; les recruteurs cliquent dessus.",
+          "3": "Évitez la photo, sauf si vous postulez dans une région où c’est la norme.",
+          "4": "Exemple : <em>Jane Doe · Londres, R.-U. · jane.doe@email.com · +44 7123 456 789 · linkedin.com/in/janedoe</em>"
+        }
+      },
+      "fullName": "Nom complet",
+      "emailPro": "E-mail (professionnel)",
+      "phone": "Numéro de téléphone",
+      "addMore": "Ajouter des informations complémentaires à votre CV (facultatif)",
+      "addMoreTooltip": "Ne les ajoutez que si elles sont pertinentes pour la candidature.",
+      "chipLocation": "Localisation",
+      "chipLinkedin": "LinkedIn",
+      "chipWebsite": "Site web",
+      "nationality": "Nationalité",
+      "locationLabel": "Localisation (ville, pays)",
+      "linkedinLabel": "URL LinkedIn",
+      "websiteLabel": "Site web / portfolio",
+      "phFullName": "p. ex. Alexander James",
+      "phEmail": "p. ex. alex.james@gmail.com",
+      "phPhone": "p. ex. +33 6 12 34 56 78",
+      "phLocation": "p. ex. Londres, R.-U.",
+      "phLinkedin": "linkedin.com/in/profil",
+      "phWebsite": "votre-portfolio.com",
+      "phNationality": "p. ex. française",
+      "nextWorkHistory": "Suivant : expérience",
+      "defaultCvTitle": "CV de {{name}}"
+    },
+    "history": {
+      "loading": "Chargement de l’expérience...",
+      "trimEyebrow": "Raccourcir pour tenir",
+      "trimBody": "Votre CV est trop long. Raccourcir les points ou retirer les postes anciens et moins pertinents est le moyen le plus rapide de tenir sur 1 à 2 pages.",
+      "dismiss": "Fermer",
+      "backToPreview": "Retour à l’aperçu",
+      "eyebrow": "Expérience",
+      "title": "Expérience professionnelle",
+      "subtitle": "Votre expérience raconte votre parcours professionnel.",
+      "tips": {
+        "title": "Faites compter chaque poste",
+        "intro": "Les recruteurs survolent — vos points font l’essentiel du travail.",
+        "list": {
+          "0": "Indiquez votre poste le plus récent en premier, en remontant le temps (ordre antéchronologique).",
+          "1": "Commencez chaque point par un verbe d’action fort (Conçu, Dirigé, Réduit, Lancé).",
+          "2": "Utilisez le format <strong>Action + Contexte + Résultat</strong> — ce que vous avez fait, où, ce qui a changé.",
+          "3": "Ajoutez des chiffres concrets dès que possible : taille d’équipe, %, €, utilisateurs, temps gagné.",
+          "4": "Cliquez sur « Demander à Aria » sur un poste : elle construit ou affine ses points avec vous — à partir de ce que vous avez vraiment fait."
+        }
+      },
+      "empty": "Aucune expérience ajoutée pour l’instant.",
+      "addFirst": "Ajouter un premier poste",
+      "bulletLimit": "La formule gratuite permet jusqu’à {{n}} points par poste. Passez à une formule payante pour en ajouter sans limite.",
+      "untitledRole": "Poste sans titre",
+      "present": "À ce jour",
+      "jobTitle": "Intitulé du poste",
+      "company": "Entreprise",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "current": "En cours",
+      "phTitle": "p. ex. Chef de produit senior",
+      "phCompany": "p. ex. Acme Corp",
+      "phStart": "p. ex. janv. 2020",
+      "phEnd": "p. ex. déc. 2023",
+      "phDescription": "• Obtenu X en faisant Y...",
+      "tipPaid": "Astuce : 3 à 5 points, c’est l’idéal. Un par impact, pas par tâche.",
+      "tipFree": "Astuce : 3 à 5 points, c’est l’idéal. {{used}}/{{limit}} utilisés — passez à une formule payante pour un nombre illimité.",
+      "askAriaTitle": "Demander à Aria de vous aider sur ce poste",
+      "addTitleFirst": "Ajoutez d’abord l’intitulé du poste",
+      "hintNoTitle": "Ajoutez d’abord l’intitulé du poste — Aria ne devinera pas le rôle.",
+      "hintNoCompany": "C’est prêt — ajoutez aussi l’entreprise et j’affinerai encore plus.",
+      "hintReady": "Envoie ce poste à Aria et l’y concentre.",
+      "addAnother": "Ajouter un autre poste",
+      "nextProjects": "Suivant : projets"
+    },
+    "projects": {
+      "loading": "Chargement des projets...",
+      "eyebrow": "Projets",
+      "title": "Projets",
+      "subtitle": "Mettez en avant vos réalisations et initiatives concrètes.",
+      "tips": {
+        "title": "Les projets montrent ce que vous faites quand personne ne le demande",
+        "intro": "Même les petits projets personnels comptent — ils montrent de l’initiative.",
+        "list": {
+          "0": "Choisissez des projets pertinents pour le poste visé ; supprimez le reste.",
+          "1": "Chaque description : ce que c’est, qui l’a utilisé, le résultat le plus concret (utilisateurs, téléchargements, impact).",
+          "2": "Si c’était un projet d’équipe, précisez votre contribution — ce que <em>vous</em> avez construit ou dirigé.",
+          "3": "Ajoutez un lien si vous en avez un — GitHub, démo en ligne, article, peu importe.",
+          "4": "N’énumérez pas les langages ici — votre section Compétences le couvre déjà."
+        }
+      },
+      "empty": "Aucun projet ajouté pour l’instant.",
+      "addFirst": "Ajouter un premier projet",
+      "skip": "Passer cette section",
+      "untitledProject": "Projet sans titre",
+      "projectTitle": "Titre du projet",
+      "linkOptional": "Lien (facultatif)",
+      "phTitle": "p. ex. Site portfolio",
+      "phLink": "github.com/votre-projet",
+      "phDescription": "• Développé une application complète avec...",
+      "tip": "Astuce : 1 à 3 points courts suffisent. Menez avec ce que ça fait, pas comment vous l’avez construit.",
+      "askAriaTitle": "Demander à Aria de vous aider sur ce projet",
+      "addTitleFirst": "Ajoutez d’abord le titre du projet",
+      "hintNoTitle": "Ajoutez d’abord le titre du projet — Aria ne le devinera pas.",
+      "hintReady": "Envoie ce projet à Aria et l’y concentre.",
+      "addAnother": "Ajouter un autre projet",
+      "nextEducation": "Suivant : formation"
+    },
+    "education": {
+      "loading": "Chargement de la formation...",
+      "eyebrow": "Formation",
+      "title": "Formation",
+      "subtitle": "Votre parcours académique et vos diplômes.",
+      "tips": {
+        "title": "Gardez la formation concise et pertinente",
+        "intro": "La plupart des lecteurs passent quelques secondes sur cette section.",
+        "list": {
+          "0": "Indiquez d’abord votre diplôme le plus récent ou le plus élevé.",
+          "1": "Mentions, moyenne ou mémoire uniquement si cela renforce votre candidature — sinon, passez.",
+          "2": "Pour les profils expérimentés (5 ans et plus), la formation vient après l’expérience.",
+          "3": "Inutile de mentionner le lycée une fois que vous avez un diplôme — c’est sous-entendu."
+        }
+      },
+      "empty": "Aucune formation ajoutée.",
+      "add": "Ajouter une formation",
+      "untitledQualification": "Diplôme sans titre",
+      "school": "École / université",
+      "degree": "Diplôme / spécialité",
+      "graduationDate": "Date d’obtention",
+      "additionalInfo": "Informations complémentaires (facultatif)",
+      "phSchool": "p. ex. Université de technologie",
+      "phDegree": "p. ex. Licence en informatique",
+      "phGrad": "p. ex. mai 2019",
+      "phAdditional": "p. ex. Mention très bien, moyenne : 16/20",
+      "addAnother": "Ajouter un autre",
+      "certsTitle": "Certifications et formations",
+      "certsDesc": "Licences, certificats et formations professionnelles — souvent le prérequis décisif pour les métiers techniques, l’exploitation et la santé.",
+      "phCertName": "Certification (p. ex. NEBOSH IGC, PMP)",
+      "phCertIssuer": "Organisme (p. ex. NEBOSH)",
+      "phCertYear": "Année",
+      "removeCert": "Supprimer la certification",
+      "addCert": "Ajouter une certification",
+      "nextSkills": "Suivant : compétences"
+    },
+    "skills": {
+      "loading": "Chargement des compétences...",
+      "eyebrow": "Compétences",
+      "title": "Compétences",
+      "subtitle": "Mettez en avant votre expertise.",
+      "tips": {
+        "title": "Les compétences sont scannées, pas lues",
+        "intro": "Les recruteurs et les logiciels de recrutement (les systèmes qu’ils utilisent) repèrent les mots-clés ici.",
+        "list": {
+          "0": "Reprenez les termes de l’offre d’emploi — la formulation exacte compte.",
+          "1": "Regroupez les compétences liées (langages, frameworks, outils) pour que ce soit lisible.",
+          "2": "Menez avec des compétences techniques (outils, technos, langages) ; les compétences comportementales comme « bon communicant » ont besoin de preuves ailleurs, ou passez-les ici.",
+          "3": "Listez ce dont vous pouvez parler avec assurance en entretien — rien de plus.",
+          "4": "Visez 15 à 25 au total. Les listes trop longues diluent les meilleures."
+        }
+      },
+      "findSkillsHint": "Vous voulez des compétences que vous pouvez justifier ? Ouvrez Aria → « Trouver mes compétences ».",
+      "categoryName": "Nom de la catégorie",
+      "newCategory": "Nouvelle catégorie…",
+      "addSkillPlaceholder": "Ajouter une compétence…",
+      "add": "Ajouter",
+      "pressEnter": "Appuyez sur <kbd>Entrée</kbd> pour ajouter. Choisissez une catégorie ou créez-en une.",
+      "noSkills": "Aucune compétence ajoutée pour l’instant.",
+      "unlockTalkingPoints": "Débloquer les points d’entretien pour {{name}}",
+      "whyOnCv": "Pourquoi {{name}} figure sur votre CV",
+      "unlockStar": "Débloquer les arguments STAR",
+      "whereFrom": "D’où vient cette compétence",
+      "remove": "Supprimer {{name}}",
+      "giveCategoryName": "Donnez d’abord un nom à la nouvelle catégorie.",
+      "alreadyInList": "« {{name}} » est déjà dans votre liste.",
+      "added": "« {{name}} » ajouté",
+      "saveCvFirstPrep": "Enregistrez d’abord votre CV pour que nous puissions rattacher cette préparation à un poste.",
+      "savedToApps": "Enregistré dans {{n}} candidatures",
+      "savedToPrep": "Enregistré dans votre préparation aux entretiens",
+      "savedToPrepAttach": "Enregistré dans votre préparation — rattachez un poste plus tard pour une préparation complète",
+      "couldntSavePrep": "Impossible d’enregistrer la préparation.",
+      "saveToPrep": "Enregistrer dans la préparation",
+      "proBadge": "Pro",
+      "proBodyPro_one": "Cette {{count}} compétence s’appuie sur votre expérience, votre formation et vos projets, avec des arguments à répéter. C’est exactement ce que les recruteurs creusent — enregistrez-les pour les revoir avant l’entretien.",
+      "proBodyPro_other": "Ces {{count}} compétences s’appuient sur votre expérience, votre formation et vos projets, avec des arguments à répéter. C’est exactement ce que les recruteurs creusent — enregistrez-les pour les revoir avant l’entretien.",
+      "proBodyFree": "Exportez vos compétences générées automatiquement vers votre banque de préparation aux entretiens, avec des réponses STAR pré-rédigées et des liens vers votre expérience. Passez à Pro pour l’activer.",
+      "saved": "Enregistré",
+      "upgradeUnlock": "Passez à une formule payante pour débloquer l’enregistrement",
+      "whereComesFrom": "D’où cela vient",
+      "interviewTalkingPoint": "Argument d’entretien",
+      "proFeature": "Fonctionnalité ApplyRight Pro",
+      "talkingPointsTitle": "Arguments d’entretien",
+      "proLockBody": "Vous voulez savoir comment répondre aux questions sur <b>« {{name}} »</b> en entretien ?",
+      "starPreviewLabel": "Réponse d’entretien STAR (aperçu)",
+      "starPreviewText": "Dans mon poste précédent, j’ai piloté la mise en place de cette méthode, ce qui a permis un gain d’efficacité de 40 % en...",
+      "proAnalyzes": "ApplyRight Pro analyse votre parcours, relie vos compétences directement à votre expérience et génère des guides de réponse STAR prêts à l’emploi pour les recruteurs.",
+      "upgradeToPro": "Passer à Pro",
+      "maybeLater": "Peut-être plus tard",
+      "nextSummary": "Suivant : résumé"
+    },
+    "professionalSummary": {
+      "loadingEditor": "Chargement du contexte de l’éditeur...",
+      "eyebrow": "Résumé",
+      "title": "Résumé professionnel",
+      "subtitle": "Votre argumentaire de 30 secondes. Faites-le compter.",
+      "tips": {
+        "title": "2 à 3 phrases. Précis vaut mieux que malin.",
+        "intro": "Le résumé est lu en premier et retenu en dernier. Méritez cette place.",
+        "list": {
+          "0": "Phrase 1 : qui vous êtes professionnellement et depuis combien d’années.",
+          "1": "Phrase 2 : une réussite concrète ou votre domaine de plus fort impact.",
+          "2": "Phrase 3 (facultative) : ce que vous recherchez ensuite.",
+          "3": "Évitez les adjectifs génériques (« innovant », « passionné ») — montrez, ne dites pas."
+        }
+      },
+      "placeholder": "p. ex. Ingénieur logiciel innovant avec plus de 5 ans d’expérience en...",
+      "ariaTip": "<b>Astuce :</b> Aria le rédige à partir de votre expérience et de vos compétences — et l’adapte au poste visé lorsque vous en avez défini un. Ouvrez Aria et touchez « Rédiger mon résumé ».",
+      "reviewFinish": "Vérifier et terminer"
+    },
+    "finalize": {
+      "loading": "Chargement de la relecture...",
+      "eyebrow": "Relecture",
+      "titleTailored": "Relecture du CV adapté",
+      "titleFinal": "Relecture finale",
+      "subtitleTailored": "Passez en revue les modifications apportées à votre CV avant l’aperçu.",
+      "subtitleFinal": "Vous avez ajouté l’essentiel. Prêt à visualiser ?",
+      "viewTailoringDetails": "Voir le détail de l’adaptation",
+      "matchLine": "{{title}} — {{n}} % de correspondance",
+      "summaryOfInputs": "Récapitulatif de vos informations :",
+      "headingContact": "En-tête et coordonnées",
+      "professionalSummary": "Résumé professionnel",
+      "workHistoryRoles": "Expérience ({{n}} postes)",
+      "educationEntries": "Formation ({{n}} entrées)",
+      "skillsListed": "Compétences ({{n}} listées)",
+      "journeyIncomplete": "Parcours incomplet",
+      "journeyIncompleteBody": "Certaines sections de votre CV sont incomplètes. L’aperçu final et le téléchargement sont verrouillés tant que toutes les sections ne sont pas remplies.",
+      "editCv": "Modifier le CV",
+      "previewApp": "Aperçu de ma candidature",
+      "previewLocked": "Aperçu verrouillé",
+      "addDataFirst": "Veuillez d’abord ajouter des informations pour créer un brouillon.",
+      "reviewModal": {
+        "title": "CV adapté avec succès",
+        "closeLabel": "Fermer le détail de l’adaptation",
+        "before": "Avant",
+        "after": "Après",
+        "beforeProceed": "Avant de continuer, vérifiez :",
+        "checklist": {
+          "0": "Le résumé professionnel est naturel et fidèle à votre voix",
+          "1": "Les points d’expérience sont exacts et non exagérés",
+          "2": "Les compétences ajoutées sont celles que vous savez vraiment démontrer",
+          "3": "Les coordonnées et informations personnelles sont correctes"
+        },
+        "gotIt": "Compris"
+      },
+      "scoreGuidance": {
+        "strong": {
+          "title": "Forte correspondance",
+          "message": "Votre CV est bien aligné sur ce poste. L’adaptation a renforcé vos mots-clés et votre expérience pour correspondre aux exigences.",
+          "advice": "Relisez les changements ci-dessous pour vérifier que tout se lit naturellement, puis passez à l’aperçu."
+        },
+        "partial": {
+          "title": "Correspondance partielle",
+          "message": "L’adaptation a amélioré votre score de {{improvement}} points, mais il subsiste des écarts entre votre profil et ce poste.",
+          "adviceSkills": "Envisagez de développer votre expérience en : {{skills}}. Vous pouvez tout de même postuler, mais mettre en avant vos compétences transférables aidera.",
+          "adviceGeneric": "Envisagez de personnaliser votre résumé et vos points d’expérience pour mieux refléter les exigences du poste."
+        },
+        "poor": {
+          "title": "Faible correspondance",
+          "message": "Ce poste pourrait mal correspondre à votre expérience actuelle. Même après adaptation, des qualifications clés manquent.",
+          "advice": "Envisagez de revoir vos sections expérience et compétences pour mieux vous aligner sur le poste visé."
+        }
+      }
+    },
+    "layout": {
+      "livePreviewLocked": "Aperçu en direct verrouillé",
+      "completeToUnlock": "Complétez toutes les sections de votre parcours CV pour débloquer le rendu du modèle.",
+      "progress": "Progression",
+      "completed": "{{done}} / {{total}} terminées",
+      "fillIn": "Remplir →",
+      "cvNameLabel": "Nom du CV",
+      "renameCv": "Renommer ce CV",
+      "titleCurrent": "{{label}} (en cours)",
+      "titleComplete": "{{label}} — terminé · cliquez pour modifier",
+      "titleWarning": "{{label}} — semble vide · cliquez pour compléter",
+      "titleTodo": "Aller à {{label}} — enregistre d’abord cette section",
+      "unsavedTitle": "Vous avez des modifications non enregistrées dans cette étape",
+      "unsaved": "Non enregistré",
+      "hideAria": "Masquer Aria",
+      "showAria": "Afficher Aria",
+      "exitTitle": "Quitter vers Mes CV (vos étapes terminées sont enregistrées)",
+      "exit": "Quitter",
+      "livePreview": "Aperçu en direct",
+      "confirmExit": "Vous avez des modifications non enregistrées dans cette étape. Quitter quand même ? Vos étapes déjà terminées sont enregistrées.",
+      "loadingCv": "Chargement de votre CV…"
+    },
+    "atsCoach": {
+      "greeting": "Enchantée — je suis Aria, votre coach CV. Ajoutez le poste que vous visez et je façonnerai tout autour, ou passez, et nous construirons un CV polyvalent et solide.",
+      "readingJob": "Lecture de l’offre…",
+      "yourTargetJob": "Votre poste visé",
+      "edit": "✎ Modifier",
+      "showLess": "Voir moins",
+      "readMore": "Lire la suite",
+      "leansOn": "Compris 👀 Je vois que ça repose sur <b>{{kws}}</b>.",
+      "lookRight": "Ça vous convient ? Validez et nous commencerons votre expérience.",
+      "continue": "Continuer →",
+      "addYourTargetJob": "Ajoutez votre poste visé",
+      "jobTitleRole": "Intitulé / rôle",
+      "jobTitlePlaceholder": "p. ex. Opérateur de terrain wireline",
+      "jobDescription": "Description du poste",
+      "jobDescriptionPlaceholder": "Collez la description complète du poste…",
+      "add": "Ajouter",
+      "addJobDescriptionPill": "＋ Ajouter une description de poste",
+      "skipForNow": "Passer pour l’instant",
+      "skipReassurance": "Pas de souci — nous construirons un CV polyvalent et solide. Vous pourrez ajouter un poste visé à tout moment. C’est parti 👇",
+      "inertPlaceholder": "Ajoutez votre poste ci-dessus, ou touchez une question ↑",
+      "inertSendLabel": "Cette étape utilise les boutons ci-dessus",
+      "cvHealth": "Santé du CV",
+      "roleMatch": "Adéquation au poste",
+      "tabAriaSub": "discussion",
+      "addJdShort": "ajouter offre",
+      "previewCv": "Aperçu de votre CV",
+      "exit": "Quitter",
+      "healthStandout": "Remarquable",
+      "healthGettingStrong": "Bien engagé",
+      "healthComingTogether": "Ça prend forme",
+      "healthJustStarting": "Tout début",
+      "noJobYet": "Aucun poste à comparer pour l’instant",
+      "noJobBody": "Ajoutez une description de poste à l’étape Poste visé et Aria évaluera votre CV au regard exact de ce que cet employeur attend.",
+      "addJd": "Ajouter une description de poste",
+      "yourTargetRole": "Votre poste visé",
+      "matched": "Présents — vous les avez",
+      "missing": "Manquants — intégrez-les s’ils sont vrais"
+    },
+    "ariaChat": {
+      "outOfSummaryCredits": "Vous n’avez plus de crédits pour cela — un résumé coûte {{n}} crédits. Gagnez-en plus ou passez à une formule payante, puis réessayez.",
+      "couldntDraft": "Je n’ai pas pu rédiger cela — réessayez.",
+      "skillsShort": "Trouver vos compétences coûte {{n}} crédits et il vous en manque. Gagnez-en plus ou passez à une formule payante, puis réessayez.",
+      "couldntPullSkills": "Je n’ai pas pu extraire vos compétences — réessayez.",
+      "tenFreeChats": "Voilà vos 10 échanges gratuits du jour 🙂 On peut continuer — 1 crédit chacun — ou revenez demain, ça se réinitialise.",
+      "outOfChats": "Vous n’avez plus d’échanges gratuits ni de crédits aujourd’hui — gagnez-en quelques-uns (regardez une pub / parrainez un ami) ou revenez demain. Je peux toujours vous aider à rédiger les points d’un poste à tout moment.",
+      "addedSkills_one": "{{count}} compétence ajoutée à votre CV",
+      "addedSkills_other": "{{count}} compétences ajoutées à votre CV",
+      "tapToReview": "Touchez pour revoir",
+      "draftSummaryChip": "✍️ Rédiger mon résumé · {{n}} cr",
+      "findSkillsChip": "🧰 Trouver mes compétences · {{n}} cr",
+      "skillsEmpty": "Ajoutez d’abord un poste ou un projet — je trouverai ensuite des compétences que vous pouvez vraiment justifier.",
+      "stagePrompt": "Une petite question — où en êtes-vous dans votre carrière ? Je l’écrirai en conséquence.",
+      "yourSummary": "Votre résumé",
+      "useIt": "L’utiliser",
+      "reroll": "↻ Régénérer · {{n}} cr",
+      "differentStage": "Autre étape",
+      "summaryApplied": "Ajouté à votre résumé ✓ — modifiez chaque mot pour vous l’approprier.",
+      "skillsConsent": "Je vais lire votre expérience et vos projets et en extraire des compétences techniques que vous pouvez justifier. Cela utilise {{n}} crédits.",
+      "findThem": "Les trouver · {{n}} cr",
+      "notNow": "Pas maintenant"
+    },
+    "askAria": {
+      "companyType": {
+        "startup": "Startup",
+        "enterprise": "Grande entreprise",
+        "agency": "Agence",
+        "nonprofit": "Association",
+        "government": "Secteur public",
+        "smb": "Petite entreprise"
+      },
+      "companyFallback": "Entreprise",
+      "ariasRead": "Ce qu’Aria a compris",
+      "seniorityLevel": "niveau {{seniority}}",
+      "confirmed": "confirmé ✓",
+      "confirmPrompt": "Quel genre de structure est-ce ? (j’ai deviné — touchez pour confirmer)",
+      "myGuessSuffix": "· mon hypothèse",
+      "focusExited": "Mode ciblage quitté",
+      "addedBullets_one": "✓ {{count}} point ajouté à votre description",
+      "addedBullets_other": "✓ {{count}} points ajoutés à votre description",
+      "recordWrote_one": "Aria a rédigé {{count}} point pour ce {{kind}}",
+      "recordWrote_other": "Aria a rédigé {{count}} points pour ce {{kind}}",
+      "recordReview": "Touchez pour revoir, ajouter ou retirer",
+      "sharpenAnother": "En affiner un autre",
+      "doneWith": "Terminé pour ce {{kind}}",
+      "projectType": {
+        "courseLabel": "Cours / académique",
+        "courseMsg": "C’est un projet de cours / académique.",
+        "personalLabel": "Personnel / perso",
+        "personalMsg": "C’est un projet personnel.",
+        "workLabel": "Travail / client",
+        "workMsg": "C’était un projet professionnel / client."
+      },
+      "starterFallback": "Une amorce à développer",
+      "hideExample": "Masquer l’exemple",
+      "showExample": "Montrez-moi un exemple",
+      "exampleFormat": "p. ex. « {{answer}} »",
+      "howManyBullets": "Combien de points ?",
+      "bestFit": "Idéal",
+      "pickerNoteProject": "Percutant vaut mieux que rembourré — 3 est notre choix.",
+      "pickerNoteRole": "4 à 5 fonctionne le mieux.",
+      "generateBullets_one": "Générer {{count}} point · {{cr}} cr",
+      "generateBullets_other": "Générer {{count}} points · {{cr}} cr",
+      "consentTitle": "Rédiger ceci utilise {{n}} crédits",
+      "consentBody": "Si le premier jet manque sa cible, le suivant est pour moi.",
+      "consentNote": "Les crédits gratuits viennent d’une pub regardée ou d’un ami parrainé.",
+      "justThisOnce": "Juste cette fois",
+      "alwaysAllow": "Toujours autoriser",
+      "recommended": "Recommandé",
+      "ariaDrafted": "Aria en a rédigé {{n}}",
+      "rerollFree": "· régénération · gratuit",
+      "resultsHintOpened": "Dans votre CV — cochez pour ajouter, décochez pour retirer.",
+      "resultsHintProject": "Voici quelques façons de le présenter — choisissez ce qui convient. Ajoutez-en plusieurs si vous voulez.",
+      "resultsHintRole": "Vous m’avez parlé d’une chose — choisissez la version qui convient. Ajoutez-en plusieurs si vous voulez.",
+      "tryAnotherAngle": "↻ Essayer un autre angle",
+      "applying": "Application…",
+      "applyN": "Appliquer ({{n}})",
+      "typeAnswer": "Saisissez votre réponse…",
+      "focusOpenerProject": "Faisons de {{title}} une entrée solide. D’abord une petite question — quel type de projet est-ce ?",
+      "thisProject": "ce projet",
+      "thisRole": "ce poste",
+      "focusOpenerRole": "Affinons {{title}}. Dites-moi une chose que vous y avez vraiment faite.",
+      "focusOpenerRoleCompany": "Affinons {{title}} chez {{company}}. Dites-moi une chose que vous y avez vraiment faite.",
+      "anythingElse": "Autre chose que vous avez faite ici ? Je peux en rédiger un autre.",
+      "couldntSave": "Je n’ai pas pu enregistrer cela — réessayez.",
+      "notEnoughCredits": "Crédits insuffisants — gagnez-en plus ou passez à une formule payante.",
+      "couldntGenerate": "Je n’ai pas pu générer pour l’instant. Réessayez.",
+      "couldntReroll": "Je n’ai pas pu régénérer. Réessayez.",
+      "couldntFind": "Je n’ai pas pu trouver ce {{kind}} — actualisez et réessayez.",
+      "syncFailed": "Modifications enregistrées, mais la synchronisation a échoué — réessayez."
+    },
+    "researchCard": {
+      "whatResearchSays": "Ce que dit la recherche"
+    },
+    "ariaThinking": {
+      "draft": {
+        "0": "Lecture du poste…",
+        "1": "Recherche des attentes des recruteurs…",
+        "2": "Rédaction de vos points…",
+        "3": "Affinage des verbes…",
+        "4": "Peaufinage…"
+      },
+      "thinking": "Réflexion…"
+    },
+    "ariaComposer": {
+      "placeholder": "Posez une question à Aria…",
+      "send": "Envoyer"
+    },
+    "chatThemePicker": {
+      "chatBackground": "Fond de la discussion",
+      "themes": {
+        "studio": "Studio",
+        "paper": "Papier",
+        "slate": "Ardoise",
+        "grid": "Grille",
+        "ledger": "Registre",
+        "campus": "Campus"
+      }
+    },
+    "cvLanguageToggle": {
+      "title": "Langue du CV",
+      "description": "La langue dans laquelle ce CV est rédigé — titres, points et résumé. Distincte de la langue de l’application, pour qu’Aria puisse continuer à vous coacher dans la vôtre.",
+      "writeInTitle": "Rédiger ce CV en {{name}}",
+      "compactTitle": "La langue dans laquelle ce CV est rédigé",
+      "langSetToast": "Langue du CV définie sur {{name}} — titres de sections mis à jour. Votre texte existant reste tel quel.",
+      "langChangeError": "Je n’ai pas pu changer la langue du CV — réessayez."
+    },
+    "skillsCard": {
+      "eyebrow": "Des compétences que vous pouvez justifier",
+      "subtitle": "Choisissez celles qui sont réellement vraies pour vous.",
+      "allSkills": "Toutes les compétences",
+      "addTargetJobTitle": "Ajoutez un poste visé pour voir les suggestions adaptées",
+      "bestForRole": "Idéales pour ce poste",
+      "addTargetJobHint": "Ajoutez un poste visé (étape 1) pour débloquer les suggestions adaptées.",
+      "uncategorized": "Non classé",
+      "whyFits": "Pourquoi cette compétence convient",
+      "onCv": "sur le CV",
+      "fromYour": "D’après votre {{types}}.",
+      "softSkillsNote": "Leadership, esprit d’équipe et communication ? Je les intégrerai plutôt dans les points de votre expérience — les recruteurs font confiance à une compétence liée à un vrai résultat.",
+      "selectedCount": "{{n}} sélectionnées",
+      "addToCv": "Ajouter au CV",
+      "addNToCv": "Ajouter {{n}} au CV"
+    },
+    "summaryTrim": {
+      "aiUnavailable": "L’IA est indisponible pour l’instant — modifiez manuellement.",
+      "notEnoughCredits": "Crédits insuffisants.",
+      "couldntTighten": "Impossible de resserrer le résumé. Veuillez réessayer.",
+      "eyebrow": "Resserrer le résumé",
+      "title": "Resserrez votre résumé",
+      "subtitle": "Un résumé plus court et plus net libère de la place — le moyen le plus rapide de gagner une page.",
+      "placeholder": "Votre résumé professionnel…",
+      "aim": "Visez 2 à 3 phrases",
+      "charCount": "{{n}} caractères",
+      "tightening": "Resserrement…",
+      "tightenWithAi": "Resserrer avec l’IA",
+      "suggestedRewrite": "Réécriture suggérée",
+      "emptyRewrite": "L’IA a renvoyé une réécriture vide — modifiez manuellement.",
+      "useThis": "Utiliser ceci",
+      "keepMine": "Garder le mien",
+      "apply": "Appliquer"
+    },
+    "tailorDiff": {
+      "loading": "Chargement de la comparaison...",
+      "whatChanged": "Ce qui a changé",
+      "atsMatchScore": "Score de correspondance ATS",
+      "before": "Avant",
+      "after": "Après",
+      "pointsImprovement": "+{{n}} points d’amélioration",
+      "professionalSummary": "Résumé professionnel",
+      "original": "D’origine",
+      "noSummary": "Aucun résumé",
+      "tailored": "Adapté",
+      "experienceRoles": "Expérience ({{n}} postes)",
+      "roleAtCompany": "{{title}} chez {{company}}",
+      "enhanced": "Amélioré",
+      "noDescription": "Aucune description",
+      "noChanges": "Aucun changement",
+      "skills": "Compétences"
+    },
+    "jobKeywords": {
+      "couldntPull": "Impossible d’extraire les mots-clés de cette offre. Veuillez réessayer.",
+      "tailored": "Mots-clés adaptés à ce poste ✨",
+      "loaded": "Mots-clés chargés pour ce poste",
+      "insufficientCredits": "Crédits IA insuffisants (nécessite {{n}})",
+      "saveCvFirst": "Enregistrez d’abord votre CV pour adapter les mots-clés.",
+      "couldntTailor": "Impossible d’adapter les mots-clés. Veuillez réessayer.",
+      "subtitleEnhanced": "Adaptés par l’IA à cette description de poste.",
+      "subtitleTitle": "Aucune description fournie — voici des mots-clés typiques pour ce poste.",
+      "subtitleJd": "Extraits du poste visé. Incluez ceux qui sont réellement vrais pour vous.",
+      "keywordsForJob": "Mots-clés pour ce poste",
+      "aiBadge": "IA",
+      "coverage": "{{covered}} termes clés couverts sur {{total}}",
+      "mustHaves": "indispensables {{covered}}/{{total}}",
+      "finding": "Recherche de mots-clés…",
+      "noneDetected": "Aucun mot-clé courant détecté — essayez l’adaptation par IA ci-dessous.",
+      "addAsSkill": "Ajouter comme compétence",
+      "findingMore": "Recherche…",
+      "findMore": "Trouver plus de mots-clés",
+      "helperAdd": "Vert = déjà dans vos compétences. Cliquez sur un mot-clé gris pour l’ajouter — uniquement s’il est réellement vrai pour vous.",
+      "helperCovered": "Vert = déjà dans votre CV. Intégrez les mots-clés gris dans vos points là où ils sont réellement vrais.",
+      "showCoverage": "Afficher la couverture des mots-clés",
+      "keywordsCount": "{{covered}}/{{total}} mots-clés",
+      "keywords": "Mots-clés",
+      "minimize": "Réduire",
+      "minimizeAria": "Réduire l’aide aux mots-clés"
+    }
+  },
+  "interviewPrep": {
+    "common": {
+      "loadError": "Échec du chargement de la préparation",
+      "backToPrep": "Retour à la préparation",
+      "startInterview": "Démarrer l’entretien",
+      "ready": "Prêt",
+      "fromCv": "Depuis le CV",
+      "change": "Modifier",
+      "mockInterview": "Entretien blanc",
+      "notEnoughCreditsAd": "Crédits insuffisants. Regardez une pub pour en gagner."
+    },
+    "list": {
+      "eyebrow": "Répétez avant l’entretien",
+      "title": "Préparation aux entretiens",
+      "subtitle": "Chaque poste pour lequel vous vous entraînez.",
+      "momentum": {
+        "preps": "Préparations",
+        "avgReadiness": "Préparation moy.",
+        "ready": "Prêts",
+        "practiced": "Entraînés"
+      },
+      "readinessStamp": "Préparation",
+      "eyebrowPracticed": "{{company}} · entraîné {{relative}}",
+      "eyebrowUpdated": "{{company}} · mis à jour {{relative}}",
+      "cvDraft": "Brouillon de CV",
+      "untitledRole": "Poste sans titre",
+      "openAria": "Ouvrir {{title}}",
+      "open": "Ouvrir",
+      "startDirect": "Démarrer un entretien direct",
+      "tenRecent": "10 plus récents",
+      "emptyEyebrow": "Rien à répéter pour l’instant",
+      "emptyTitle": "Aucune préparation pour l’instant",
+      "emptyBody": "Lancez une analyse d’offre pour générer une préparation, ou démarrez un entretien direct pour vous entraîner tout de suite.",
+      "runAnalysis": "Lancer une analyse d’offre"
+    },
+    "practice": {
+      "loadError": "Échec du chargement de l’entraînement",
+      "star": {
+        "situation": "Situation",
+        "task": "Tâche",
+        "action": "Action",
+        "result": "Résultat"
+      },
+      "fallbackPrompt": "Parlez-moi d’une expérience pertinente.",
+      "story": "Anecdote",
+      "noStoryDetails": "Aucun détail d’anecdote enregistré pour l’instant.",
+      "skillPrompt": "Parlez-moi de votre expérience avec {{skill}}.",
+      "skill": "Compétence",
+      "noTalkingPoint": "Aucun argument enregistré pour cette compétence.",
+      "loading": "Chargement de votre séance d’entraînement…",
+      "headlineWeak": "Entraînement : points faibles",
+      "headlineStory": "Entraînement : {{title}}",
+      "headlineSkill": "Entraînement : {{skill}}",
+      "mode": "Mode entraînement",
+      "exit": "Quitter",
+      "marked": "{{marked}}/{{total}} évalués",
+      "escToExit": "· Échap pour quitter",
+      "emptyCaughtUp": "Vous êtes à jour",
+      "emptyNothing": "Rien à travailler pour l’instant",
+      "emptyWeakBody": "Chaque question est marquée « Prêt ». Plus aucun point faible à travailler.",
+      "emptySkillBody": "Cette compétence n’a aucun argument enregistré.",
+      "emptyBody": "Lancez une analyse d’offre pour générer des questions d’entraînement.",
+      "confidenceError": "Échec de l’enregistrement de la confiance"
+    },
+    "start": {
+      "noCvGrounding": "Ce CV doit comporter au moins une expérience professionnelle (poste et entreprise) avant que nous puissions vous faire passer un entretien.",
+      "startError": "Impossible de démarrer l’entretien. Réessayez.",
+      "proFeature": "Fonctionnalité Pro",
+      "proTitle": "Les entretiens directs sont une fonctionnalité Pro",
+      "proBody": "Sautez l’analyse et lancez directement un entretien blanc vocal en direct à partir de n’importe quelle offre d’emploi.",
+      "proFeat1": "Entretiens blancs vocaux en direct",
+      "proFeat2": "Adaptés à toute offre que vous collez",
+      "proFeat3": "Retour immédiat — aucune analyse complète requise",
+      "seePlans": "Voir les formules",
+      "notNow": "Pas maintenant",
+      "eyebrow": "Entraînement à l’entretien",
+      "title": "Passer un entretien",
+      "subtitle": "Sautez l’analyse — passez directement à un entretien en direct face à une offre.",
+      "minutesRemaining": "{{n}} minutes d’entretien restantes",
+      "step1": "Étape 1 · Votre CV",
+      "step1Sub": "Choisissez un CV enregistré ou importez-en un",
+      "savedCv": "CV enregistré",
+      "upload": "Importer",
+      "noSavedCvs": "Aucun CV enregistré — passez à <b>Importer</b> pour utiliser un PDF.",
+      "readyToInterview": "Prêt pour l’entretien",
+      "step2": "Étape 2 · Poste visé",
+      "step2Tailor": "Nous adapterons l’entretien à ce poste",
+      "statusChooseCv": "Choisissez un CV pour continuer.",
+      "statusAddJob": "Ajoutez la description du poste pour continuer.",
+      "statusReady": "Vous êtes prêt — commençons.",
+      "preparing": "Préparation de votre entretien…",
+      "barChooseCv": "Choisissez un CV pour continuer",
+      "barAddJob": "Ajoutez l’offre pour continuer",
+      "jobAdded": "Offre ajoutée",
+      "pickedUp": "Voici ce que nous avons retenu de ce poste",
+      "seniorityLevel": "niveau {{seniority}}",
+      "yrsExperience": "{{n}}+ ans d’expérience",
+      "keySkills": "Compétences clés qu’ils sonderont",
+      "tailorHint": "Nous adapterons vos questions d’entretien autour de celles-ci."
+    },
+    "preCallBrief": {
+      "themes": {
+        "leadership": "Leadership",
+        "problemSolving": "Résolution de problèmes",
+        "conflict": "Conflit",
+        "technicalAchievement": "Réussite technique",
+        "failureLearning": "Échec et apprentissage",
+        "teamwork": "Travail d’équipe",
+        "impact": "Impact mesurable"
+      },
+      "loadError": "Échec du chargement de la fiche",
+      "loading": "Chargement de votre fiche d’avant-entretien…",
+      "interviewFallback": "Entretien",
+      "eyebrow": "Fiche d’avant-entretien",
+      "printSave": "Imprimer / Enregistrer en PDF",
+      "emptyTitle": "Rien de plus à préparer pour l’instant",
+      "emptyBody": "Générez une banque d’anecdotes ou des questions d’entretien pour ajouter votre propre contenu ci-dessus.",
+      "secWhereStand": "Où vous en êtes",
+      "secLeadStories": "Menez avec ces anecdotes",
+      "hintStrongest": "vos meilleures",
+      "secQuestions": "Questions à revoir",
+      "hintWeakest": "les plus fragiles d’abord",
+      "secSkills": "Compétences à mettre en avant",
+      "secAskThem": "Questions à leur poser",
+      "secDontForget": "À ne pas oublier",
+      "readyCount": "{{n}} prêtes",
+      "almostCount": "{{n}} presque",
+      "needWorkCount": "{{n}} à travailler",
+      "notRatedCount": "{{n}} non évaluées",
+      "acrossItems_one": "sur {{count}} élément.",
+      "acrossItems_other": "sur {{count}} éléments.",
+      "storyFallback": "Anecdote",
+      "resultLabel": "Résultat :",
+      "footer": "ApplyRight · Fiche d’avant-entretien · Respirez. Vous vous êtes préparé pour ça."
+    },
+    "detail": {
+      "loading": "Chargement de votre préparation…",
+      "weaknessSeed": {
+        "title": "Ma faiblesse / axe de progression",
+        "body": "Faiblesse ou axe de progression dont je parlerai :\n- \n\nCe que je fais activement pour m’améliorer :\n- \n\n(Astuce : choisissez un vrai axe de progression — pas une fausse modestie — et montrez l’action que vous menez. Faites écho à une lacune signalée dans l’onglet Poste.)"
+      },
+      "placeholderSeats": {
+        "hrName": "Entretien RH",
+        "hrRole": "Recruteur",
+        "hmName": "Responsable du recrutement",
+        "hmRole": "Votre futur manager",
+        "panelName": "Membre du jury",
+        "panelRole": "Transversal"
+      },
+      "categories": {
+        "intro": "Parlez-moi de vous",
+        "behavioral": "Comportemental",
+        "technical": "Technique",
+        "situational": "Mise en situation",
+        "motivation": "Pourquoi ce poste / cette entreprise",
+        "gap": "Lacunes et faiblesses",
+        "other": "Autre"
+      },
+      "typeBadge": {
+        "intro": "Intro",
+        "behavioral": "Comportemental",
+        "technical": "Technique",
+        "situational": "Situation",
+        "motivation": "Motivation",
+        "gap": "Lacune"
+      },
+      "conf": {
+        "ready": "prêt",
+        "almost": "presque",
+        "needs_work": "à travailler"
+      },
+      "essentials": {
+        "introQ": "Parlez-moi de vous.",
+        "introTip": "Un pitch de 60 à 90 s : poste actuel → 1 à 2 réussites pertinentes → pourquoi ce poste vous enthousiasme. Menez avec un temps fort de votre banque d’anecdotes ; ne récitez pas votre CV de haut en bas.",
+        "motivationQ": "Pourquoi voulez-vous ce poste / cette entreprise ?",
+        "motivationTip": "Reliez vos objectifs au poste et citez quelque chose de précis sur l’entreprise ou le produit. Rattachez-le à un point fort de l’onglet Poste.",
+        "gapQ": "Quelle est votre plus grande faiblesse / une lacune dans votre expérience ?",
+        "gapTip": "Choisissez un vrai axe de progression (pas une fausse modestie), puis montrez ce que vous faites activement pour vous améliorer — faites écho aux lacunes signalées dans l’onglet Poste."
+      },
+      "toasts": {
+        "questionsAdded_one": "{{count}} nouvelle question ajoutée",
+        "questionsAdded_other": "{{count}} nouvelles questions ajoutées",
+        "noNewQuestions": "Aucune nouvelle question cette fois — réessayez pour un autre angle.",
+        "failedMore": "Échec de la génération de questions supplémentaires",
+        "notEnoughMore": "Crédits insuffisants pour générer plus de questions.",
+        "rewardNotLand": "La récompense n’est pas arrivée à temps — réessayez dans un instant.",
+        "crediting": "Crédit de votre compte…",
+        "cooldown": "Veuillez patienter un instant avant de regarder une autre pub.",
+        "dailyCap": "Limite quotidienne de pubs atteinte. Revenez demain.",
+        "failedAdReward": "Échec de la récupération de la récompense.",
+        "genQuestions": "Génération de nouvelles questions…",
+        "storiesReady": "{{n}} anecdotes prêtes",
+        "storyBankGenerated": "Banque d’anecdotes générée",
+        "failedStories": "Échec de la génération des anecdotes",
+        "notEnoughStories": "Crédits insuffisants pour générer votre banque d’anecdotes.",
+        "introReady": "Votre réponse « à propos de vous » est prête",
+        "motivationReady": "Votre réponse « pourquoi ce poste » est prête",
+        "notEnoughEssential": "Crédits insuffisants (2 requis).",
+        "failedAnswer": "Échec de la génération de la réponse",
+        "dressReady": "Votre guide vestimentaire est prêt",
+        "failedDress": "Échec de la génération du guide vestimentaire",
+        "buildingStories": "Construction de vos anecdotes…",
+        "writingAnswer": "Rédaction de votre réponse…",
+        "stylingLook": "Composition de votre tenue…",
+        "confidenceUpdated": "Confiance mise à jour",
+        "failedConfidence": "Échec de la mise à jour de la confiance"
+      },
+      "header": {
+        "backToList": "Retour à la liste",
+        "jobRole": "Poste",
+        "notAttached": "Pas encore rattaché à une offre",
+        "brief": "Fiche",
+        "briefAria": "Fiche d’avant-entretien",
+        "howScoring": "Comment fonctionne la notation",
+        "openCv": "Ouvrir le CV",
+        "viewCv": "Voir le CV"
+      },
+      "rail": {
+        "completeToUnlock": "Terminez la préparation pour débloquer",
+        "completeToUnlockTitle": "Terminez votre préparation à l’entretien pour débloquer",
+        "mockDesc": "Un entretien blanc oral, en direct, avec une IA qui connaît votre CV.",
+        "whoInterviews": "Qui vous fait passer l’entretien",
+        "unlockPanel": "Débloquez votre jury d’entretien complet",
+        "upgrade": "Passer à une formule payante",
+        "readiness": "Préparation",
+        "prepped": "Vous êtes prêt — l’entretien est débloqué.",
+        "finishToUnlock": "Terminez ceci pour débloquer votre entretien.",
+        "doIt": "Le faire",
+        "practiceWeak": "Travailler les points faibles"
+      },
+      "panel": {
+        "finishRounds": "Terminez votre liste de préparation à l’entretien pour débloquer ces tours.",
+        "paidNote": "Avec une formule payante, vous choisissez chacun de ces recruteurs pour un tour en tête-à-tête — et bouclez votre cycle d’entretien."
+      },
+      "tabs": {
+        "prepare": "Préparer",
+        "gameday": "Jour J",
+        "results": "Résultats",
+        "recordings": "Enregistrements",
+        "role": "Poste",
+        "questions": "Questions",
+        "stories": "Anecdotes",
+        "skills": "Compétences",
+        "notes": "Notes"
+      },
+      "gameday": {
+        "title": "Préparation du jour J",
+        "subtitle": "Arrivez calme et prêt — pas seulement préparé sur quoi dire."
+      },
+      "recordings": {
+        "emptyTitle": "Aucun enregistrement pour l’instant",
+        "emptyBody": "Vos entretiens en direct sont enregistrés ici, sur cet appareil, pour que vous puissiez les revoir."
+      },
+      "adPlayer": {
+        "creditsEarned": "Crédits gagnés !",
+        "watchVideo": "Regarder la vidéo",
+        "moreTitle": "Débloquer plus de questions",
+        "moreSubtitle": "Regardez une courte pub pour gagner des crédits et générer de nouvelles questions d’entretien pour ce poste.",
+        "moreButton": "Regarder et débloquer",
+        "moreSuccess": "Génération de plus de questions pour vous…",
+        "moreAndroidSubtitle": "Regardez une courte vidéo pour gagner des crédits, puis nous générerons de nouvelles questions.",
+        "storiesTitle": "Construisez votre banque d’anecdotes",
+        "storiesSubtitle": "Regardez une courte pub pour gagner des crédits et générer des anecdotes STAR à partir de votre CV pour ce poste.",
+        "storiesButton": "Regarder et construire",
+        "storiesSuccess": "Construction de vos anecdotes…",
+        "storiesAndroidSubtitle": "Regardez une courte vidéo pour gagner des crédits, puis nous construirons vos anecdotes STAR.",
+        "essentialTitle": "Générer votre réponse",
+        "essentialSubtitle": "Regardez une courte pub pour gagner des crédits et rédiger une réponse personnalisée à partir de votre CV.",
+        "essentialButton": "Regarder et générer",
+        "essentialSuccess": "Rédaction de votre réponse…",
+        "essentialAndroidSubtitle": "Regardez une courte vidéo pour gagner des crédits, puis nous rédigerons votre réponse.",
+        "dressTitle": "Obtenez votre guide vestimentaire",
+        "dressSubtitle": "Regardez une courte pub pour gagner des crédits et obtenir un guide sur quoi porter, adapté à ce poste.",
+        "dressButton": "Regarder et générer",
+        "dressSuccess": "Composition de votre tenue…",
+        "dressAndroidSubtitle": "Regardez une courte vidéo pour gagner des crédits, puis nous adapterons votre tenue d’entretien."
+      },
+      "skillsTab": {
+        "eyebrow": "Référence",
+        "title": "Arguments compétences",
+        "subtitle": "Des réponses rapides, ancrées dans votre CV, pour les questions sur les compétences",
+        "emptyBody": "Lorsque votre CV contient des compétences générées par l’IA avec des preuves, leurs arguments à répéter apparaissent ici automatiquement. Générez des compétences dans le créateur de CV pour les remplir.",
+        "openBuilder": "Ouvrir le créateur de CV",
+        "soundbitesIntro": "<b>Arguments rapides</b> pour les questions « quelle est votre expérience avec X ? », tirés de votre CV. Pour des récits STAR complets, utilisez l’onglet <s>Anecdotes</s>.",
+        "from": "Depuis :",
+        "workHistory": "Expérience",
+        "rehearseThis": "Répéter ceci"
+      },
+      "questions": {
+        "verifyClaims": "Vérifier les affirmations",
+        "best_one": "Meilleur {{score}} % · {{count}} tentative",
+        "best_other": "Meilleur {{score}} % · {{count}} tentatives",
+        "grounded": "Ancré dans :",
+        "verifyFactsBody": "<b>Vérifiez ces faits avant de répéter :</b> la réponse type (montrée en mode Entraînement / Entretien) inclut des détails absents de votre profil de CV :",
+        "modelHidden": "Réponse type masquée volontairement",
+        "modelHiddenBody": "Répétez d’abord à voix haute, puis révélez la réponse type en <b>mode Entraînement</b> ou faites-vous-la lire en <b>mode Entretien</b>.",
+        "practiceThisQuestion": "S’entraîner à cette question",
+        "readinessLabel": "Préparation :"
+      },
+      "questionsTab": {
+        "noJobQuestions": "Aucune question propre au poste pour l’instant. Générez une préparation d’entretien depuis le tableau de bord.",
+        "eyebrow": "Questions",
+        "title": "Préparation par poste",
+        "subtitle_one": "{{count}} question probable avec des réponses à répéter",
+        "subtitle_other": "{{count}} questions probables avec des réponses à répéter",
+        "practiceAll": "Tout travailler",
+        "interviewMode": "Mode entretien",
+        "justAdded": "Vient d’être ajouté",
+        "new": "Nouveau",
+        "getMore": "Obtenir plus de questions",
+        "generating": "Génération…",
+        "adVideo": "Pub vidéo",
+        "fiveCredits": "5 crédits",
+        "getMoreHelpAd": "Regardez une courte pub pour débloquer de nouvelles questions — gratuit, sans crédits.",
+        "getMoreHelpCredits": "Utilise 5 crédits pour générer de nouvelles questions.",
+        "questionsToAsk": "Questions à poser au recruteur"
+      },
+      "essentialsSection": {
+        "eyebrow": "Essentiels",
+        "title": "Les essentiels de l’entretien",
+        "subtitle": "Les questions par lesquelles presque tous les entretiens commencent",
+        "writing": "Rédaction…",
+        "generateFromCv": "Générer depuis mon CV",
+        "ad": "Pub",
+        "twoCr": "2 cr",
+        "draftInNotes": "Rédigez votre réponse dans Mes notes"
+      }
+    },
+    "lastAssessment": {
+      "readiness": {
+        "ready": "Prêt pour l’entretien",
+        "almost": "Presque prêt",
+        "needs_work": "À travailler"
+      },
+      "scored": "Évalué",
+      "overall": "Global",
+      "title": "Votre dernière évaluation d’entretien",
+      "tapHide": "touchez pour masquer",
+      "tapReview": "touchez pour revoir vos retours"
+    },
+    "bodyLanguage": {
+      "heading": "Entrez avec de la présence",
+      "subtitle": "Votre attitude parle avant vous. Quelques habitudes qui inspirent confiance :",
+      "tips": {
+        "0": {
+          "title": "Les 7 premières secondes",
+          "body": "L’impression se forme presque instantanément. Entrez épaules en arrière, un sourire chaleureux, d’un pas posé et assuré."
+        },
+        "1": {
+          "title": "Posture",
+          "body": "Tenez-vous droit, poitrine ouverte ; penchez-vous légèrement en écoutant. Ne vous recroquevillez pas, ne vous avachissez pas, ne croisez pas les bras."
+        },
+        "2": {
+          "title": "Contact visuel",
+          "body": "Tenez-le ~4 à 5 secondes à la fois — un lien, pas un regard fixe. En visio, regardez la caméra, pas votre propre image."
+        },
+        "3": {
+          "title": "Poignée de main",
+          "body": "Si on vous la tend, une poignée ferme (sans écraser) avec un sourire. Posez vos mains calmement et laissez-les gesticuler naturellement."
+        },
+        "4": {
+          "title": "Posture de pouvoir",
+          "body": "Deux minutes debout bien droit, mains sur les hanches, avant d’entrer. Cela renforce vraiment la confiance et réduit le stress."
+        },
+        "5": {
+          "title": "Voix et rythme",
+          "body": "Ralentissez. Une respiration avant de répondre vaut mieux que des mots de remplissage, et un ton calme et chaleureux inspire confiance."
+        }
+      }
+    },
+    "nervesTrend": {
+      "heading": "Votre trac au fil du temps",
+      "descMain": "Chaque barre est un entretien (du plus ancien à gauche au plus récent à droite) — <b>plus la barre est haute</b>, plus vous l’avez géré avec assurance.",
+      "trendUp": "Les vôtres progressent — c’est exactement ainsi que le trac s’apaise avec l’entraînement.",
+      "trendOther": "Chaque répétition rend la vraie salle plus familière.",
+      "label": {
+        "needs_work": "Fébrile",
+        "almost": "Correct",
+        "ready": "Solide"
+      },
+      "earlier": "Plus tôt",
+      "latest": "Le plus récent"
+    },
+    "roundReviews": {
+      "readiness": {
+        "needs_work": "À travailler",
+        "almost": "Presque prêt",
+        "ready": "Prêt pour l’entretien"
+      },
+      "emptyTitle": "Aucun retour pour l’instant",
+      "emptyBody": "Terminez un tour de votre cycle d’entretien et le retour du recruteur apparaîtra ici.",
+      "desc": "Ce que chaque recruteur vous a attribué et dit — touchez une carte pour voir tout son retour."
+    },
+    "scoringInfo": {
+      "howScored": "Comment suis-je noté ?",
+      "title": "Comment votre entretien est noté",
+      "intro": "Chaque entretien reçoit une note de 0 à 100, présentée sous forme de statut :",
+      "bands": {
+        "strong": "Solide",
+        "okay": "Correct",
+        "shaky": "Fébrile"
+      },
+      "whatWeLookAt": "Ce que nous regardons",
+      "looksAt": {
+        "0": "Pertinence par rapport au poste",
+        "1": "Preuves et précision (exemples réels, chiffres)",
+        "2": "Structure (STAR) sur les réponses comportementales",
+        "3": "Communication et clarté",
+        "4": "Profondeur et adéquation au niveau",
+        "5": "Motivation et « pourquoi ce poste / cette entreprise »",
+        "6": "Cohérence avec votre CV"
+      },
+      "footer": "Les entretiens en direct sont <b>notés par l’IA</b> sur ce que vous dites (le contenu, pas le ton). Le mode guidé utilise votre propre auto-évaluation."
+    },
+    "readinessOverview": {
+      "heading": "Préparation à l’entretien",
+      "unlockedDesc": "Vous êtes prêt — lancez votre entretien quand vous voulez.",
+      "lockedDesc": "Complétez la liste ci-dessous pour débloquer votre entretien.",
+      "unlocked": "Entretien débloqué",
+      "tasksLeft_one": "{{count}} tâche restante pour débloquer",
+      "tasksLeft_other": "{{count}} tâches restantes pour débloquer",
+      "practiceWeak": "Travailler les points faibles"
+    },
+    "readinessChecklist": {
+      "interviewReadiness": "Préparation à l’entretien",
+      "readinessChecklist": "Liste de préparation",
+      "prepped": "Vous êtes prêt — l’entretien est débloqué.",
+      "finishToUnlock": "Terminez ceci pour débloquer votre entretien.",
+      "doIt": "Le faire"
+    },
+    "dressGuide": {
+      "labels": {
+        "business_formal": "Tenue formelle",
+        "business_casual": "Tenue business decontractée",
+        "smart_casual": "Décontracté chic",
+        "creative": "Créatif / soigné",
+        "uniform_or_specialized": "Spécifique au poste"
+      },
+      "dressCodeFallback": "Code vestimentaire",
+      "heading": "Tenue et première impression",
+      "wear": "À porter",
+      "avoid": "À éviter",
+      "onCamera": "À la caméra :",
+      "grooming": "Soins :",
+      "refreshing": "Actualisation…",
+      "regenerate": "Régénérer le guide",
+      "thisRole": "ce poste",
+      "emptyBody": "Obtenez un guide vestimentaire adapté pour <b>{{company}}</b> — tenue, ce qu’il faut éviter et conseils de première impression. S’habiller un cran au-dessus de l’équipe peut faire pencher la balance en votre faveur.",
+      "styling": "Composition…",
+      "watchAd": "regarder une pub",
+      "twoCredits": "2 crédits",
+      "generateGuide": "Générer le guide vestimentaire · {{cost}}"
+    },
+    "calmKit": {
+      "breath": {
+        "inhale": "Inspirez",
+        "hold": "Retenez",
+        "exhale": "Expirez"
+      },
+      "ready": "Prêt",
+      "cycle": "Cycle {{n}} · respiration 4-7-8",
+      "breathHint": "Respiration 4-7-8 · visez 3 à 4 tours",
+      "pause": "Pause",
+      "resume": "Reprendre",
+      "start": "Commencer à respirer",
+      "reset": "Réinitialiser",
+      "settleHeading": "Apaisez votre trac",
+      "settleDesc": "Une respiration lente et rythmée abaisse votre rythme cardiaque et stabilise votre voix. Faites-le dans le hall ou juste avant de rejoindre.",
+      "reframeHeading": "Recadrez le trac",
+      "reframeBody": "Dites-vous <b>« je suis enthousiaste »</b>, pas « je suis nerveux ». C’est le même cœur qui s’emballe — mais les candidats qui le rebaptisent enthousiasme réussissent nettement mieux. L’adrénaline est de votre côté.",
+      "pictureHeading": "Imaginez que ça se passe bien",
+      "pictureBody": "Prenez 20 secondes : voyez-vous entrer, un accueil chaleureux, répondre à la première question avec calme et clarté. Répéter la réussite fait taire la partie de votre cerveau qui répète la catastrophe.",
+      "nightHeading": "La veille",
+      "nightDesc": "Décidez tout ce soir pour que le matin n’ajoute aucun stress.",
+      "checklist": {
+        "0": "Tenue choisie et prête (un cran au-dessus de l’équipe)",
+        "1": "Trajet / lien testé — sachez exactement comment vous arriverez ou vous connecterez",
+        "2": "Deux ou trois anecdotes fraîches en tête",
+        "3": "Quelques questions prêtes à leur poser",
+        "4": "Bonne nuit de sommeil + eau — l’esprit est plus clair reposé"
+      }
+    },
+    "loopBoard": {
+      "readiness": {
+        "needs_work": "À travailler",
+        "almost": "Presque prêt",
+        "ready": "Prêt pour l’entretien"
+      },
+      "heading": "Votre cycle d’entretien",
+      "loopComplete": "Cycle terminé — vous avez affronté tout le jury.",
+      "roundsProgress": "{{done}} tours terminés sur {{total}} — entraînez-vous avec n’importe quel recruteur, dans n’importe quel ordre. Chaque tour ajoute à votre préparation combinée.",
+      "combined": "Combiné",
+      "redo": "Refaire",
+      "start": "Démarrer",
+      "locked": "Verrouillé"
+    },
+    "lastInterview": {
+      "completeToUnlockTitle": "Terminez votre préparation à l’entretien pour débloquer",
+      "completeToUnlock": "Terminez la préparation pour débloquer",
+      "tasksLeft_one": "{{count}} tâche restante dans votre liste de préparation →",
+      "tasksLeft_other": "{{count}} tâches restantes dans votre liste de préparation →",
+      "status": {
+        "needs_work": {
+          "label": "Fébrile",
+          "blurb": "En dessous du niveau — continuez à travailler les bases."
+        },
+        "almost": {
+          "label": "Correct",
+          "blurb": "Vous y arrivez — quelques aspérités à polir."
+        },
+        "ready": {
+          "label": "Solide",
+          "blurb": "Net et précis — vous semblez prêt pour l’entretien."
+        }
+      },
+      "fallback": {
+        "label": "Terminé",
+        "blurb": "Entretien terminé."
+      },
+      "aiTitle": "Entretien avec l’IA ApplyRight",
+      "aiDesc": "Soyez prêt avant le vrai entretien. Notre IA mène un entretien blanc en direct pour ce poste, pose les questions à voix haute, puis note votre prestation.",
+      "startFirst": "Démarrer votre premier entretien",
+      "yourInterviews": "Vos entretiens",
+      "sessions_one": "{{count}} séance · votre progression",
+      "sessions_other": "{{count}} séances · votre progression",
+      "improving": "En progrès",
+      "latestWhen": "Le plus récent · {{when}}",
+      "earlier": "Plus tôt",
+      "startNew": "Démarrer un nouvel entretien"
+    },
+    "practiceRunner": {
+      "confidence": {
+        "needs_work": "À travailler",
+        "almost": "Presque prêt",
+        "ready": "Prêt"
+      },
+      "noCards": "Aucune carte d’entraînement disponible.",
+      "labelSkill": "Argument compétence",
+      "yourStarStory": "Votre anecdote STAR",
+      "labelQuestion": "Question",
+      "answerSkill": "Argument suggéré",
+      "answerQuestion": "Réponse suggérée",
+      "cardOf": "Carte {{n}} sur {{total}}",
+      "hearQuestion": "Écouter la question",
+      "hear": "Écouter",
+      "yourTurn": "À vous",
+      "noSuggestedAnswer": "Aucune réponse suggérée disponible.",
+      "answerOutLoud": "Répondez à voix haute",
+      "outLoudDesc": "Dites votre réponse avant de révéler la réponse type — c’est ainsi qu’elle s’ancre.",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "hideAnswer": "Masquer la réponse",
+      "revealAnswer": "Révéler la réponse",
+      "rateReadiness": "Évaluez votre préparation :"
+    },
+    "storyBank": {
+      "themes": {
+        "leadership": "Leadership",
+        "problem_solving": "Résolution de problèmes",
+        "conflict": "Conflit",
+        "technical_achievement": "Réussite technique",
+        "failure_learning": "Échec et apprentissage",
+        "teamwork": "Travail d’équipe",
+        "impact": "Impact mesurable"
+      },
+      "themeFallback": "Anecdote",
+      "star": {
+        "situation": "Situation",
+        "task": "Tâche",
+        "action": "Action",
+        "result": "Résultat"
+      },
+      "emptyTitle": "Votre banque d’anecdotes",
+      "emptySubtitle": "Des anecdotes STAR réutilisables tirées de votre expérience réelle — une bonne anecdote répond à de nombreuses questions.",
+      "emptyBody": "Nous construirons 5 à 6 anecdotes (leadership, résolution de problèmes, conflit, impact…) ancrées dans votre CV, chacune étiquetée avec les questions auxquelles elle répond. Vous pourrez les modifier ensuite.",
+      "cvOnlyNote": "Rattachez cette préparation à un poste pour générer une banque d’anecdotes sur mesure, ou ajoutez des anecdotes manuellement ci-dessous.",
+      "buildingStories": "Construction de vos anecdotes…",
+      "generate": "Générer la banque d’anecdotes",
+      "adVideo": "Pub vidéo",
+      "fiveCredits": "5 crédits",
+      "helpAd": "Regardez une courte pub — gratuit, sans crédits.",
+      "helpCredits": "Utilise 5 crédits pour construire vos anecdotes.",
+      "answersCount": "Répond à {{n}}",
+      "verifyClaims": "Vérifier les affirmations",
+      "untitled": "Anecdote sans titre",
+      "verifyDetails": "Vérifiez ces détails par rapport à votre CV :",
+      "editClears": "Modifier l’anecdote efface ce signalement.",
+      "proves": "Prouve :",
+      "useToAnswer": "Utilisez cette anecdote pour répondre à :",
+      "grounded": "Ancré dans :",
+      "workHistory": "Expérience",
+      "practiceThis": "S’entraîner à cette anecdote",
+      "edit": "Modifier",
+      "readinessLabel": "Préparation :",
+      "failedReadiness": "Échec de la mise à jour de la préparation",
+      "failedSave": "Échec de l’enregistrement de l’anecdote",
+      "failedAdd": "Échec de l’ajout de l’anecdote",
+      "storyTitlePlaceholder": "Titre de l’anecdote",
+      "themePlaceholder": "Thème…",
+      "skillsProven": "Compétences prouvées (séparées par des virgules)",
+      "answersQuestions": "Questions auxquelles elle répond (une par ligne)",
+      "done": "Terminé",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré",
+      "autoSaves": "Enregistrement automatique en cours de saisie",
+      "addManually": "Ajouter une anecdote manuellement",
+      "storiesCount_one": "{{count}} anecdote — touchez pour développer, modifier ou vous entraîner.",
+      "storiesCount_other": "{{count}} anecdotes — touchez pour développer, modifier ou vous entraîner.",
+      "regenTitleAd": "Régénérer toute la banque (regarder une courte pub)",
+      "regenTitleCredits": "Régénérer toute la banque (5 crédits)",
+      "regenerate": "Régénérer",
+      "addStory": "Ajouter une anecdote"
+    },
+    "setup": {
+      "voices": {
+        "female": "Femme",
+        "male": "Homme"
+      },
+      "styles": {
+        "balanced": {
+          "label": "Équilibré",
+          "blurb": "Un mélange naturel de questions comportementales, de motivation et de compétences liées au poste — le polyvalent.",
+          "examples": {
+            "0": "Parlez-moi d’un projet dont vous êtes fier.",
+            "1": "Pourquoi ce poste vous intéresse-t-il ?",
+            "2": "Comment aborderiez-vous ce type de travail ?"
+          }
+        },
+        "screening": {
+          "label": "Présélection",
+          "blurb": "Un premier échange convivial — centré sur l’adéquation, la motivation et votre parcours. Large, pas très technique.",
+          "examples": {
+            "0": "Qu’est-ce qui vous attire dans ce poste ?",
+            "1": "Présentez-moi votre parcours.",
+            "2": "Que recherchez-vous pour votre prochain poste ?"
+          }
+        },
+        "technical": {
+          "label": "Technique",
+          "blurb": "Un approfondissement des compétences techniques requises — précisions, arbitrages et comment vous résoudriez de vrais problèmes.",
+          "examples": {
+            "0": "Expliquez-moi comment vous concevriez X.",
+            "1": "Quels arbitrages avez-vous pesés sur Y ?",
+            "2": "Comment déboggeriez-vous ou amélioreriez-vous ceci ?"
+          }
+        },
+        "behavioral": {
+          "label": "Comportemental",
+          "blurb": "Des situations passées au format STAR — ce que vous avez réellement fait et le résultat, pour montrer votre façon de travailler.",
+          "examples": {
+            "0": "Parlez-moi d’une fois où vous avez géré un conflit.",
+            "1": "Décrivez un échec et ce que vous en avez tiré.",
+            "2": "Donnez un exemple de leadership sous pression."
+          }
+        }
+      },
+      "challenges": {
+        "gentle": {
+          "label": "Bienveillant",
+          "blurb": "Encourageant et rassurant — des questions justes, des relances douces, pour bâtir la confiance."
+        },
+        "realistic": {
+          "label": "Réaliste",
+          "blurb": "Comme un vrai entretien équitable — pas de réponses vagues ; précisions, preuves et relances ciblées."
+        },
+        "tough": {
+          "label": "Exigeant",
+          "blurb": "Un jury exigeant — il met vos affirmations à l’épreuve, conteste les réponses faibles et vous fait défendre votre raisonnement face au CV et au poste."
+        }
+      },
+      "interviewerVoice": "Voix du recruteur",
+      "interviewStyle": "Style d’entretien",
+      "viewExamples": "Voir des exemples de questions",
+      "challengeLevel": "Niveau de difficulté",
+      "deviceCheck": "Vérification du matériel",
+      "micDenied": "Nous n’avons pas pu accéder à votre microphone. Autorisez l’accès au micro dans votre navigateur, puis réessayez.",
+      "saySomething": "Dites quelque chose — les barres devraient bouger.",
+      "requestingMic": "Demande d’accès au microphone…",
+      "playTestSound": "Jouer un son de test",
+      "done": "Terminé",
+      "testMicFirst": "Testez d’abord votre micro et le son"
+    },
+    "assessmentReport": {
+      "howYouDelivered": "Comment vous l’avez livré",
+      "typicalPause": "Pause typique avant de répondre",
+      "averageLength": "Durée moyenne des réponses",
+      "longestSilence": "Plus long silence en pleine réponse",
+      "fillerPer100": "Mots de remplissage pour 100",
+      "updateCv": "Mettez à jour votre CV",
+      "youSaid": "Vous avez dit : {{claim}}",
+      "yourCv": "Votre CV : {{cvSays}}",
+      "sayInstead": "Dites-le plutôt comme ça",
+      "howYouScored": "Vos scores",
+      "strengths": "Points forts",
+      "gapsToClose": "Lacunes à combler",
+      "practiceNext": "À travailler ensuite",
+      "transcript": "Votre transcription d’entretien"
+    },
+    "meetingStage": {
+      "joining": "Rejoint…",
+      "speaking": "Parle",
+      "onCall": "En ligne",
+      "you": "Vous"
+    },
+    "noteEditor": {
+      "saving": "Enregistrement…",
+      "savedNow": "Enregistré · à l’instant",
+      "draftSavedNow": "Brouillon enregistré · à l’instant",
+      "editingAutoSaves": "Modification — enregistrement auto dans 3 s",
+      "titlePlaceholder": "Titre de la note (facultatif)",
+      "bodyPlaceholder": "Notez tout ce que vous voulez retenir — histoires STAR, relances, choses à rechercher…",
+      "save": "Enregistrer",
+      "close": "Fermer",
+      "delete": "Supprimer"
+    },
+    "notesList": {
+      "untitled": "Note sans titre",
+      "edit": "Modifier",
+      "close": "Fermer",
+      "noContent": "Aucun contenu pour l’instant.",
+      "updated": "Mis à jour {{when}}",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer cette note ?",
+      "failedDelete": "Échec de la suppression de la note",
+      "myNotes": "Mes notes",
+      "autoSavesHint": "Enregistré pour cette préparation — sauvegarde auto à la frappe.",
+      "newNote": "Nouvelle note",
+      "emptyState": "Aucune note pour l’instant. Cliquez sur <b>Nouvelle note</b> pour en créer une.",
+      "draft": "Brouillon",
+      "justNow": "À l’instant"
+    },
+    "preflight": {
+      "startInterview": "Démarrer l’entretien",
+      "setupSteps": "Étapes de configuration de l’entretien",
+      "cancel": "Annuler",
+      "back": "Retour",
+      "continue": "Continuer",
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "stepAria": "Étape {{n}} : {{label}}"
+    },
+    "recordings": {
+      "onThisDevice": "Sur cet appareil",
+      "pastInterviews": "Entretiens passés",
+      "savedReplay": "Enregistrés sur cet appareil — réécoutez vos entretiens en direct",
+      "play": "Lire",
+      "durationLong": "{{duration}} de durée",
+      "deleteConfirm": "Supprimer ?",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "deleteRecording": "Supprimer l’enregistrement"
+    },
+    "roleBrief": {
+      "emptyState": "Pas encore d’analyse du poste. Lancez une analyse d’adéquation pour voir ce que cet entretien évaluera.",
+      "whatItTests": "Ce que cet entretien évalue",
+      "thisRole": "Ce poste",
+      "fit": "Adéquation",
+      "leanStrengths": "Appuyez-vous sur ces points forts",
+      "leanStrengthsBody": "Compétences indispensables que vous possédez déjà — apportez-en des preuves.",
+      "defendGaps": "Préparez-vous à défendre ces lacunes",
+      "defendGapsBody": "Compétences indispensables jugées faibles par l’analyse — attendez-vous à être questionné là-dessus.",
+      "watchOuts": "Points de vigilance",
+      "whatToProve": "Ce que vous devez prouver",
+      "proveBoth": "Montrez des preuves concrètes de <b>{{strengths}}</b>, et préparez une réponse honnête et tournée vers l’avenir pour <b>{{gaps}}</b>.",
+      "proveStrengths": "Montrez des preuves concrètes de <b>{{strengths}}</b>.",
+      "proveFallback": "Commencez par vos réussites les plus pertinentes et mesurables, et reliez chacune aux besoins de ce poste.",
+      "proveSuffix": "Utilisez vos <b>Histoires</b> comme preuves."
+    },
+    "roomBrief": {
+      "whatThisIs": "Ce que c’est",
+      "whatTheyCareAbout": "Ce qui compte pour eux",
+      "whatCountsAsEvidence": "Ce qui fait office de preuve",
+      "theyHaveYourCv": "Ils ont votre CV",
+      "allowedToBeBad": "Vous avez le droit d’être mauvais à cet exercice",
+      "aboutMin": "environ {{minutes}} min",
+      "likelyToComeUp": "Susceptible d’être abordé : {{topics}}."
+    },
+    "voiceVisualizer": {
+      "listening": "On vous écoute…",
+      "yourTurnLightsUp": "Votre tour s’allumera ici"
+    },
+    "interviewerPanel": {
+      "heading": "Susceptibles de vous interviewer",
+      "paidPanel": "Les offres payantes sont menées par ce panel"
+    },
+    "audioPlayer": {
+      "back10": "Reculer de 10 secondes",
+      "pause": "Pause",
+      "play": "Lecture",
+      "forward10": "Avancer de 10 secondes",
+      "playbackSpeed": "Vitesse de lecture",
+      "downloadRecording": "Télécharger l’enregistrement"
+    },
+    "interviewPaywall": {
+      "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
+      "close": "Fermer",
+      "title": "Passez un entretien blanc noté",
+      "subtitle": "Vous avez utilisé votre essai gratuit. Pour 1 000 ₦, passez un entretien blanc complet de 10 minutes accompagné d’un vrai bilan noté :",
+      "item1": "<b>Un vrai entretien vocal</b> — échangez de vive voix avec l’IA recruteuse, comme en conditions réelles.",
+      "item2": "<b>Un bilan noté</b> — votre score de préparation, un retour réponse par réponse, et exactement quoi corriger.",
+      "item3": "<b>Sans abonnement</b> — à l’unité, payez seulement quand vous voulez vous entraîner.",
+      "startingCheckout": "Démarrage du paiement…",
+      "practiceNowPass": "S’entraîner maintenant — Pass 1 000 ₦",
+      "practiceOftenPlans": "S’entraîner souvent — voir les offres",
+      "footnote": "Paiement unique via Flutterwave. Après le paiement, vous reviendrez ici pour commencer."
+    }
+  }
+}

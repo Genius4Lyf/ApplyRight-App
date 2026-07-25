@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { BookOpen, ArrowUp } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
+import { BookOpen } from 'lucide-react';
 import CVService from '../../services/cv.service';
 import { computeCvHealth, healthColor } from '../../utils/cvHealth';
 import { roleMatch } from '../../utils/roleMatch';
@@ -10,12 +11,13 @@ import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
+import { useAriaModel } from '../../hooks/useAriaModel';
+import AriaComposer from './AriaComposer';
 import AskAriaGenerate from './AskAriaGenerate';
 import AriaChat from './AriaChat';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
-import ChatThemePicker from './ChatThemePicker';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -63,7 +65,18 @@ const ScoreRing = ({ score, size = 88 }) => {
 // editable summary card with the keywords Aria noticed; "Continue →" advances to Work
 // History. Starter questions answer live via /coach/chat (unfocused, ephemeral). The
 // "skipped" choice persists in coachState; the saved job survives reload.
-const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, setAck, draftId, ensureDraft }) => {
+const TargetChat = ({
+  cvData,
+  updateCvData,
+  skipped,
+  onSkip,
+  onAdvance,
+  ack,
+  setAck,
+  draftId,
+  ensureDraft,
+}) => {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [roleInput, setRoleInput] = useState('');
   const [jdInput, setJdInput] = useState('');
@@ -77,6 +90,10 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
   const [qThinking, setQThinking] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState(false); // ensureDraft in-flight → pin "Setting up…"
   const [showChips, setShowChips] = useState(savedQa.length === 0);
+
+  // The Aria model for this CV — the inert row still offers the pick, so the choice is
+  // reachable from the Target step like every other one.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const desc = (cvData.targetJob?.description || '').trim();
   const sent = !!desc;
@@ -180,10 +197,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
     const id = await ensureDraft();
     setCreatingDraft(false);
     if (!id) {
-      setQa((m) => [
-        ...m,
-        { who: 'aria', text: "Hmm — I couldn't get your CV set up. Refresh and try again." },
-      ]);
+      setQa((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
       setQThinking(false);
       return;
     }
@@ -202,8 +216,8 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
           who: 'aria',
           text:
             e?.response?.data?.code === 'CHAT_LIMIT_REACHED'
-              ? "You've used today's free chats — top up credits or come back tomorrow."
-              : "Couldn't reach me just now — try again.",
+              ? t('cvBuilder.common.freeChatsUsed')
+              : t('cvBuilder.common.couldntReach'),
         },
       ]);
     } finally {
@@ -228,8 +242,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
           >
             <AriaOrbit size={16} className="mt-2" />
             <span className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
-              Nice to meet you — I'm Aria, your CV coach. Add the job you're aiming for and I'll
-              shape everything around it, or skip, and we'll build a strong all-rounder.
+              {t('cvBuilder.atsCoach.greeting')}
             </span>
           </motion.div>
 
@@ -260,7 +273,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
           {qThinking && (
             <AriaThinking
               variant="chat"
-              label={creatingDraft ? 'Setting up your CV draft…' : undefined}
+              label={creatingDraft ? t('cvBuilder.common.settingUp') : undefined}
             />
           )}
 
@@ -269,7 +282,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
             <div className="self-start flex items-center gap-2">
               <AriaOrbit size={16} working />
               <span className="text-[12px] text-slate-400 dark:text-slate-500">
-                Reading the job…
+                {t('cvBuilder.atsCoach.readingJob')}
               </span>
             </div>
           )}
@@ -284,14 +297,14 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
               <div className="w-full min-w-[240px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md p-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    Your target job
+                    {t('cvBuilder.atsCoach.yourTargetJob')}
                   </p>
                   <button
                     type="button"
                     onClick={openForm}
                     className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
                   >
-                    ✎ Edit
+                    {t('cvBuilder.atsCoach.edit')}
                   </button>
                 </div>
                 {role && (
@@ -312,29 +325,33 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                     onClick={() => setDescExpanded((v) => !v)}
                     className="mt-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                   >
-                    {descExpanded ? 'Show less' : 'Read more'}
+                    {descExpanded ? t('cvBuilder.atsCoach.showLess') : t('cvBuilder.atsCoach.readMore')}
                   </button>
                 )}
                 {kws.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
-                      Got it 👀 I can see this leans on{' '}
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                        {kws.join(', ')}
-                      </span>
-                      .
+                      <Trans
+                        i18nKey="cvBuilder.atsCoach.leansOn"
+                        values={{ kws: kws.join(', ') }}
+                        components={{
+                          b: (
+                            <span className="font-semibold text-indigo-600 dark:text-indigo-400" />
+                          ),
+                        }}
+                      />
                     </p>
                   </div>
                 )}
                 <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
-                  Look right? Lock it in and we'll start on your work history.
+                  {t('cvBuilder.atsCoach.lookRight')}
                 </p>
                 <button
                   type="button"
                   onClick={() => onAdvance?.()}
                   className="btn-primary w-full mt-2 py-2 text-sm"
                 >
-                  Continue →
+                  {t('cvBuilder.atsCoach.continue')}
                 </button>
               </div>
             </motion.div>
@@ -350,25 +367,25 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                 <AriaOrbit size={16} className="mt-2" />
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md p-4 w-full min-w-[240px]">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    Add your target job
+                    {t('cvBuilder.atsCoach.addYourTargetJob')}
                   </p>
                   <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                    Job title / role
+                    {t('cvBuilder.atsCoach.jobTitleRole')}
                   </label>
                   <input
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value)}
-                    placeholder="e.g. Wireline Field Operator"
+                    placeholder={t('cvBuilder.atsCoach.jobTitlePlaceholder')}
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
                   />
                   <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                    Job description
+                    {t('cvBuilder.atsCoach.jobDescription')}
                   </label>
                   <textarea
                     value={jdInput}
                     onChange={(e) => setJdInput(e.target.value)}
                     rows={4}
-                    placeholder="Paste the full job description…"
+                    placeholder={t('cvBuilder.atsCoach.jobDescriptionPlaceholder')}
                     className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none"
                   />
                   <div className="mt-4 flex items-center justify-between gap-2">
@@ -377,7 +394,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                       onClick={closeForm}
                       className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                     >
-                      Back
+                      {t('common.back')}
                     </button>
                     <button
                       type="button"
@@ -385,7 +402,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                       disabled={!canAdd}
                       className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
                     >
-                      Add
+                      {t('cvBuilder.atsCoach.add')}
                     </button>
                   </div>
                 </div>
@@ -401,7 +418,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                 onClick={openForm}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
               >
-                ＋ Add a job description
+                {t('cvBuilder.atsCoach.addJobDescriptionPill')}
               </button>
               {showChips &&
                 suggestionsFor('target_job').map((chip) => (
@@ -419,7 +436,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                 onClick={injectResearch}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                📖 What research says
+                📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>
               {!skipped && (
                 <button
@@ -427,7 +444,7 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
                   onClick={handleSkip}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  Skip for now
+                  {t('cvBuilder.atsCoach.skipForNow')}
                 </button>
               )}
             </div>
@@ -441,34 +458,24 @@ const TargetChat = ({ cvData, updateCvData, skipped, onSkip, onAdvance, ack, set
             >
               <AriaOrbit size={16} className="mt-2" />
               <span className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
-                No worries — we'll build a strong all-rounder. You can add a target job anytime.
-                Let's get going 👇
+                {t('cvBuilder.atsCoach.skipReassurance')}
               </span>
             </motion.div>
           )}
         </div>
       </div>
 
-      {/* Docked input row — visual parity with the other sections' chats, but INERT:
-          this step is driven by the form + starter chips, not free typing. The theme
-          picker stays live so the chat background can be changed here too. */}
-      <div className="shrink-0 flex items-end gap-2 mt-2">
-        <textarea
-          disabled
-          rows={1}
-          placeholder="Add your job above, or tap a question ↑"
-          className="flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none opacity-70 cursor-not-allowed"
-        />
-        <ChatThemePicker />
-        <button
-          type="button"
-          disabled
-          aria-label="This step uses the buttons above"
-          className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-        >
-          <ArrowUp className="w-4 h-4" />
-        </button>
-      </div>
+      {/* Docked composer — visual parity with the other sections' chats, but INERT:
+          this step is driven by the form + starter chips, not free typing. The control
+          row stays live, so the model and chat background are switchable here too. */}
+      <AriaComposer
+        className="shrink-0 mt-2"
+        inert
+        placeholder={t('cvBuilder.atsCoach.inertPlaceholder')}
+        sendAriaLabel={t('cvBuilder.atsCoach.inertSendLabel')}
+        modelId={modelId}
+        onSelectModel={selectModel}
+      />
     </section>
   );
 };
@@ -482,6 +489,7 @@ const ATSCoachPanel = ({
   focusedEntry,
   onClearFocus,
 }) => {
+  const { t } = useTranslation();
   const { id: draftId } = useParams();
   const [chatTheme] = useChatTheme();
   const health = useMemo(() => computeCvHealth(cvData), [cvData]);
@@ -544,20 +552,20 @@ const ATSCoachPanel = ({
           {/* the 3-tab segmented pill — now single-line + compact, takes the remaining width */}
           <div className="flex-1 flex gap-1 rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5">
             {[
-              { key: 'aria', label: 'Aria', sub: 'chat' },
-              { key: 'health', label: 'CV Health', sub: `${health.score}` },
+              { key: 'aria', label: 'Aria', sub: t('cvBuilder.atsCoach.tabAriaSub') },
+              { key: 'health', label: t('cvBuilder.atsCoach.cvHealth'), sub: `${health.score}` },
               {
                 key: 'match',
-                label: 'Role Match',
-                sub: match ? `${match.coverage}%` : hasJd ? '—' : 'add JD',
+                label: t('cvBuilder.atsCoach.roleMatch'),
+                sub: match ? `${match.coverage}%` : hasJd ? '—' : t('cvBuilder.atsCoach.addJdShort'),
               },
-            ].map((t) => {
-              const active = coachTab === t.key;
+            ].map((tab) => {
+              const active = coachTab === tab.key;
               return (
                 <button
-                  key={t.key}
+                  key={tab.key}
                   type="button"
-                  onClick={() => setCoachTab(t.key)}
+                  onClick={() => setCoachTab(tab.key)}
                   className={`flex-1 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 transition-colors ${
                     active
                       ? 'bg-white dark:bg-slate-900 shadow-sm'
@@ -571,7 +579,7 @@ const ATSCoachPanel = ({
                         : 'text-slate-500 dark:text-slate-400'
                     }`}
                   >
-                    {t.label}
+                    {tab.label}
                   </span>
                   <span
                     className={`font-mono text-[8px] uppercase tracking-wide tabular-nums ${
@@ -580,7 +588,7 @@ const ATSCoachPanel = ({
                         : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
-                    {t.sub}
+                    {tab.sub}
                   </span>
                 </button>
               );
@@ -591,7 +599,7 @@ const ATSCoachPanel = ({
             <button
               type="button"
               onClick={onShowPreview}
-              title="Preview your CV"
+              title={t('cvBuilder.atsCoach.previewCv')}
               className="shrink-0 w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <BookOpen className="w-4 h-4" />
@@ -619,7 +627,7 @@ const ATSCoachPanel = ({
                 <div className="mx-4 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 px-3 py-2">
                   <AriaOrbit size={16} />
                   <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] font-bold text-indigo-600 dark:text-indigo-400">
-                    Focus
+                    {t('cvBuilder.common.focus')}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[12px]">
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
@@ -637,7 +645,8 @@ const ATSCoachPanel = ({
                     onClick={onClearFocus}
                     className="shrink-0 inline-flex items-center gap-1 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                   >
-                    Exit <span className="text-[10px] leading-none">✕</span>
+                    {t('cvBuilder.atsCoach.exit')}{' '}
+                    <span className="text-[10px] leading-none">✕</span>
                   </button>
                 </div>
               </motion.div>
@@ -716,16 +725,16 @@ const ATSCoachPanel = ({
             <ScoreRing score={health.score} size={72} />
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                CV Health
+                {t('cvBuilder.atsCoach.cvHealth')}
               </p>
               <p className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100">
                 {health.score >= 85
-                  ? 'Standout'
+                  ? t('cvBuilder.atsCoach.healthStandout')
                   : health.score >= 70
-                    ? 'Getting strong'
+                    ? t('cvBuilder.atsCoach.healthGettingStrong')
                     : health.score >= 50
-                      ? 'Coming together'
-                      : 'Just starting'}
+                      ? t('cvBuilder.atsCoach.healthComingTogether')
+                      : t('cvBuilder.atsCoach.healthJustStarting')}
               </p>
             </div>
           </div>
@@ -772,11 +781,10 @@ const ATSCoachPanel = ({
             <div className="h-full flex flex-col items-center justify-center text-center gap-3 px-4">
               <span className="text-3xl">🎯</span>
               <p className="font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                No job to match against yet
+                {t('cvBuilder.atsCoach.noJobYet')}
               </p>
               <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
-                Add a job description on the Target step and Aria will score your CV against exactly
-                what this employer wants.
+                {t('cvBuilder.atsCoach.noJobBody')}
               </p>
               <button
                 type="button"
@@ -786,21 +794,24 @@ const ATSCoachPanel = ({
                 }}
                 className="btn-primary px-4 py-2 text-sm"
               >
-                Add a job description
+                {t('cvBuilder.atsCoach.addJd')}
               </button>
             </div>
           ) : !match ? (
-            <p className="text-[13px] text-slate-500 dark:text-slate-400">Reading the job…</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400">
+              {t('cvBuilder.atsCoach.readingJob')}
+            </p>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <ScoreRing score={match.coverage} size={72} />
                 <div className="min-w-0">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    Role Match
+                    {t('cvBuilder.atsCoach.roleMatch')}
                   </p>
                   <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {[match.role, match.company].filter(Boolean).join(' at ') || 'Your target role'}
+                    {[match.role, match.company].filter(Boolean).join(` ${t('cvBuilder.common.at')} `) ||
+                      t('cvBuilder.atsCoach.yourTargetRole')}
                   </p>
                 </div>
               </div>
@@ -808,7 +819,7 @@ const ATSCoachPanel = ({
               {match.matched.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400 mb-1.5">
-                    Matched — you&apos;ve got these
+                    {t('cvBuilder.atsCoach.matched')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {match.matched.map((k) => (
@@ -826,7 +837,7 @@ const ATSCoachPanel = ({
               {match.missing.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-amber-600 dark:text-amber-400 mb-1.5">
-                    Missing — weave these in if they&apos;re true
+                    {t('cvBuilder.atsCoach.missing')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {match.missing.map((k) => (

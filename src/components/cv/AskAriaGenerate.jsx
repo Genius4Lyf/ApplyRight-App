@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
@@ -9,20 +9,22 @@ import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
-import ChatThemePicker from './ChatThemePicker';
+import { useAriaModel } from '../../hooks/useAriaModel';
+import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 
 // Human-facing labels for the inferred company type (the enum lives in the backend
-// Role Brief). Drives the infer+confirm chip on the "Aria's read" strip.
-const COMPANY_TYPE_LABELS = {
-  startup: 'Startup',
-  enterprise: 'Big company',
-  agency: 'Agency',
-  nonprofit: 'Nonprofit',
-  government: 'Public sector',
-  smb: 'Small business',
+// Role Brief). Module-level → i18n KEYS resolved via t() at render. Drives the
+// infer+confirm chip on the "Aria's read" strip.
+const COMPANY_TYPE_KEYS = {
+  startup: 'cvBuilder.askAria.companyType.startup',
+  enterprise: 'cvBuilder.askAria.companyType.enterprise',
+  agency: 'cvBuilder.askAria.companyType.agency',
+  nonprofit: 'cvBuilder.askAria.companyType.nonprofit',
+  government: 'cvBuilder.askAria.companyType.government',
+  smb: 'cvBuilder.askAria.companyType.smb',
 };
 
 // Aria's generation spine (Chunk 5a–5c): chat (free build-with mini-interview) →
@@ -43,6 +45,7 @@ const AskAriaGenerate = ({
   isPaid,
   onClearFocus,
 }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
 
   const focused = !!focusedEntry;
@@ -55,10 +58,17 @@ const AskAriaGenerate = ({
 
   // Openers — general (per-step coaching) vs focused (role/project build-with).
   const generalOpener = getStepCoaching(currentStepId, cvData).message;
-  const focusOpener = (e) =>
-    e.section === 'project'
-      ? `Let's turn ${e.title || 'this project'} into a strong entry. Quick one first — what kind of project is it?`
-      : `Let's sharpen ${e.title || 'this role'}${e.company ? ` at ${e.company}` : ''}. Tell me one thing you actually did there.`;
+  const focusOpener = (e) => {
+    if (e.section === 'project') {
+      return t('cvBuilder.askAria.focusOpenerProject', {
+        title: e.title || t('cvBuilder.askAria.thisProject'),
+      });
+    }
+    const title = e.title || t('cvBuilder.askAria.thisRole');
+    return e.company
+      ? t('cvBuilder.askAria.focusOpenerRoleCompany', { title, company: e.company })
+      : t('cvBuilder.askAria.focusOpenerRole', { title });
+  };
 
   const [phase, setPhase] = useState('chat'); // 'chat'|'picking'|'consent'|'generating'|'results'
   const [description, setDescription] = useState('');
@@ -104,6 +114,9 @@ const AskAriaGenerate = ({
   // For a focused PROJECT, ask the project type upfront (chips) before interviewing.
   // Dismissed once the user picks a chip OR types any answer; reset on focus change.
   const [projectTypePicked, setProjectTypePicked] = useState(false);
+  // The Aria model for this CV — same per-draft choice the Studio shows.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+
   const chatRef = useRef(null);
   const inputRef = useRef(null);
   const resultsRef = useRef(null); // the results card, so we can scroll its TOP into view
@@ -191,13 +204,15 @@ const AskAriaGenerate = ({
         companyTypeConfirmed: true,
       }));
     } catch {
-      toast.error("Couldn't save that — try again.");
+      toast.error(t('cvBuilder.askAria.couldntSave'));
     } finally {
       setConfirming(false);
     }
   };
 
-  const pickerNote = isProject ? 'Punchy beats padded — 3 is our pick.' : '4–5 lands best.';
+  const pickerNote = isProject
+    ? t('cvBuilder.askAria.pickerNoteProject')
+    : t('cvBuilder.askAria.pickerNoteRole');
 
   // "Sharpen another" / "Start over" — DON'T wipe the thread; just return to chat
   // and append a fresh prompt to keep the conversation going.
@@ -211,7 +226,7 @@ const AskAriaGenerate = ({
       ...m,
       {
         who: 'aria',
-        text: focused ? 'Anything else you did here? I can draft another.' : generalOpener,
+        text: focused ? t('cvBuilder.askAria.anythingElse') : generalOpener,
       },
     ]);
   };
@@ -258,7 +273,9 @@ const AskAriaGenerate = ({
     setThinking(true);
     setTimeout(() => {
       setMessages((m) =>
-        m.some((x) => x.who === 'research') ? m : [...m, { who: 'research', section: currentStepId }]
+        m.some((x) => x.who === 'research')
+          ? m
+          : [...m, { who: 'research', section: currentStepId }]
       );
       setThinking(false);
     }, 900);
@@ -291,10 +308,7 @@ const AskAriaGenerate = ({
     const id = await ensureDraft();
     setCreatingDraft(false);
     if (!id) {
-      setMessages((m) => [
-        ...m,
-        { who: 'aria', text: "Hmm — I couldn't get your CV set up. Refresh and try again." },
-      ]);
+      setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
       setThinking(false);
       return;
     }
@@ -327,15 +341,9 @@ const AskAriaGenerate = ({
       }
     } catch (e) {
       if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
-        setMessages((m) => [
-          ...m,
-          {
-            who: 'aria',
-            text: "You've used today's free chats — top up credits or come back tomorrow.",
-          },
-        ]);
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.freeChatsUsed') }]);
       } else {
-        toast.error("Couldn't reach me just now — try again.");
+        toast.error(t('cvBuilder.common.couldntReach'));
       }
     } finally {
       setThinking(false);
@@ -385,9 +393,9 @@ const AskAriaGenerate = ({
     } catch (e) {
       const code = e?.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
-        toast.error('Not enough credits — earn more or upgrade.');
+        toast.error(t('cvBuilder.askAria.notEnoughCredits'));
       } else {
-        toast.error(e?.response?.data?.message || "Couldn't generate right now. Try again.");
+        toast.error(e?.response?.data?.message || t('cvBuilder.askAria.couldntGenerate'));
       }
       setPhase('picking');
     }
@@ -417,7 +425,7 @@ const AskAriaGenerate = ({
       setWasFree(!!res.wasFree);
       setPhase('results');
     } catch (e) {
-      toast.error(e?.response?.data?.message || "Couldn't re-roll. Try again.");
+      toast.error(e?.response?.data?.message || t('cvBuilder.askAria.couldntReroll'));
       setPhase('results');
     }
   };
@@ -438,7 +446,9 @@ const AskAriaGenerate = ({
     const e = focusedEntry || recordEntryRef.current || builtEntryRef.current;
     const rec = {
       who: 'record',
-      entry: e ? { section: e.section, sortId: e.sortId, title: e.title, company: e.company } : null,
+      entry: e
+        ? { section: e.section, sortId: e.sortId, title: e.title, company: e.company }
+        : null,
       bullets: [...bullets],
       applied: [...selected], // the indices just applied (selected == applied here)
     };
@@ -476,10 +486,15 @@ const AskAriaGenerate = ({
       landInStream(add.length);
     } else if (!res.found) {
       toast.error(
-        `Couldn't find this ${target?.section === 'project' ? 'project' : 'role'} — refresh and try again.`
+        t('cvBuilder.askAria.couldntFind', {
+          kind:
+            target?.section === 'project'
+              ? t('cvBuilder.common.project')
+              : t('cvBuilder.common.role'),
+        })
       );
     } else {
-      toast.error('Saved changes, but syncing failed — try again.');
+      toast.error(t('cvBuilder.askAria.syncFailed'));
     }
   };
 
@@ -506,24 +521,31 @@ const AskAriaGenerate = ({
       {brief && (brief.role || brief.company) && (
         <div className="shrink-0 mb-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 px-3 py-2.5">
           <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-indigo-500 dark:text-indigo-400">
-            Aria&apos;s read
+            {t('cvBuilder.askAria.ariasRead')}
           </p>
           <p className="mt-0.5 text-[12px] font-semibold text-slate-700 dark:text-slate-200 truncate">
-            {[brief.role, brief.company, brief.seniority && `${brief.seniority} level`]
+            {[
+              brief.role,
+              brief.company,
+              brief.seniority && t('cvBuilder.askAria.seniorityLevel', { seniority: brief.seniority }),
+            ]
               .filter(Boolean)
               .join(' · ')}
           </p>
           {brief.companyTypeConfirmed ? (
             <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              {COMPANY_TYPE_LABELS[brief.companyType] || 'Company'} · confirmed ✓
+              {COMPANY_TYPE_KEYS[brief.companyType]
+                ? t(COMPANY_TYPE_KEYS[brief.companyType])
+                : t('cvBuilder.askAria.companyFallback')}{' '}
+              · {t('cvBuilder.askAria.confirmed')}
             </p>
           ) : (
             <div className="mt-2">
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
-                What kind of place is it? (I guessed — tap to confirm)
+                {t('cvBuilder.askAria.confirmPrompt')}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {Object.entries(COMPANY_TYPE_LABELS).map(([key, label]) => (
+                {Object.entries(COMPANY_TYPE_KEYS).map(([key, labelKey]) => (
                   <button
                     key={key}
                     type="button"
@@ -535,8 +557,8 @@ const AskAriaGenerate = ({
                         : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
                     }`}
                   >
-                    {label}
-                    {brief.companyType === key ? ' · my guess' : ''}
+                    {t(labelKey)}
+                    {brief.companyType === key ? ` ${t('cvBuilder.askAria.myGuessSuffix')}` : ''}
                   </button>
                 ))}
               </div>
@@ -587,11 +609,11 @@ const AskAriaGenerate = ({
                     />
                     {exited ? (
                       <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400">
-                        Focus mode exited
+                        {t('cvBuilder.askAria.focusExited')}
                       </span>
                     ) : (
                       <span className="max-w-[180px] truncate text-[9px] font-medium text-emerald-600/80 dark:text-emerald-400/80">
-                        Focus ·{' '}
+                        {t('cvBuilder.common.focus')} ·{' '}
                         <span className="font-semibold text-emerald-700 dark:text-emerald-300">
                           {m.title}
                           {m.company ? ` · ${m.company}` : ''}
@@ -611,7 +633,7 @@ const AskAriaGenerate = ({
                   className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  ✓ Added {m.n} bullet{m.n === 1 ? '' : 's'} to your description
+                  {t('cvBuilder.askAria.addedBullets', { count: m.n })}
                 </motion.div>
               );
             }
@@ -645,11 +667,16 @@ const AskAriaGenerate = ({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                          Aria wrote {cnt} bullet{cnt === 1 ? '' : 's'} to this{' '}
-                          {m.entry?.section === 'project' ? 'project' : 'role'}
+                          {t('cvBuilder.askAria.recordWrote', {
+                            count: cnt,
+                            kind:
+                              m.entry?.section === 'project'
+                                ? t('cvBuilder.common.project')
+                                : t('cvBuilder.common.role'),
+                          })}
                         </span>
                         <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                          Tap to review, add or remove
+                          {t('cvBuilder.askAria.recordReview')}
                         </span>
                       </span>
                       <span className="shrink-0 text-slate-400 dark:text-slate-500 text-lg leading-none">
@@ -665,14 +692,18 @@ const AskAriaGenerate = ({
                           onClick={resetToChat}
                           className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >
-                          Sharpen another
+                          {t('cvBuilder.askAria.sharpenAnother')}
                         </button>
                         <button
                           type="button"
                           onClick={() => onClearFocus?.()}
                           className="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                         >
-                          Done with this {isProject ? 'project' : 'role'}
+                          {t('cvBuilder.askAria.doneWith', {
+                            kind: isProject
+                              ? t('cvBuilder.common.project')
+                              : t('cvBuilder.common.role'),
+                          })}
                         </button>
                       </div>
                     )}
@@ -717,7 +748,7 @@ const AskAriaGenerate = ({
                 onClick={injectResearch}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                📖 What research says
+                📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>
             </div>
           )}
@@ -758,9 +789,18 @@ const AskAriaGenerate = ({
           {focused && isProject && !projectTypePicked && phase === 'chat' && !thinking && (
             <div className="self-start pl-6 flex flex-wrap gap-1.5">
               {[
-                ['Course / academic', 'This is a course / academic project.'],
-                ['Personal / side', 'This is a personal / side project.'],
-                ['Work / client', 'This was a work / client project.'],
+                [
+                  t('cvBuilder.askAria.projectType.courseLabel'),
+                  t('cvBuilder.askAria.projectType.courseMsg'),
+                ],
+                [
+                  t('cvBuilder.askAria.projectType.personalLabel'),
+                  t('cvBuilder.askAria.projectType.personalMsg'),
+                ],
+                [
+                  t('cvBuilder.askAria.projectType.workLabel'),
+                  t('cvBuilder.askAria.projectType.workMsg'),
+                ],
               ].map(([label, msg]) => (
                 <button
                   key={label}
@@ -783,7 +823,7 @@ const AskAriaGenerate = ({
           {focused && phase === 'chat' && !thinking && suggestions.length > 0 && (
             <div className="self-start pl-6 flex flex-col gap-1.5">
               <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                {suggestionsLabel || 'A starter to build on'}
+                {suggestionsLabel || t('cvBuilder.askAria.starterFallback')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {suggestions.map((s, i) => (
@@ -802,13 +842,15 @@ const AskAriaGenerate = ({
                     onClick={() => setExampleOpen((o) => !o)}
                     className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    {exampleOpen ? 'Hide example' : 'Show me an example'}
+                    {exampleOpen
+                      ? t('cvBuilder.askAria.hideExample')
+                      : t('cvBuilder.askAria.showExample')}
                   </button>
                 )}
               </div>
               {exampleOpen && exampleAnswer && (
                 <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic">
-                  e.g. “{exampleAnswer}”
+                  {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
                 </div>
               )}
             </div>
@@ -817,7 +859,7 @@ const AskAriaGenerate = ({
           {thinking && (
             <AriaThinking
               variant="chat"
-              label={creatingDraft ? 'Setting up your CV draft…' : undefined}
+              label={creatingDraft ? t('cvBuilder.common.settingUp') : undefined}
             />
           )}
 
@@ -828,7 +870,7 @@ const AskAriaGenerate = ({
                 'pick',
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    How many bullets?
+                    {t('cvBuilder.askAria.howManyBullets')}
                   </p>
                   <div className="mt-3 grid grid-cols-4 gap-2">
                     {[3, 4, 5, 6].map((n) => {
@@ -848,11 +890,11 @@ const AskAriaGenerate = ({
                             {n}
                           </span>
                           <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
-                            {n * per} cr
+                            {t('cvBuilder.common.creditChip', { n: n * per })}
                           </span>
                           {n === REC && (
                             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded-full border border-emerald-300 dark:border-emerald-700 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 font-mono text-[9px] uppercase tracking-wide px-1.5 py-0.5">
-                              Best fit
+                              {t('cvBuilder.askAria.bestFit')}
                             </span>
                           )}
                         </button>
@@ -868,14 +910,14 @@ const AskAriaGenerate = ({
                       onClick={() => setPhase('chat')}
                       className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                     >
-                      Back
+                      {t('common.back')}
                     </button>
                     <button
                       type="button"
                       onClick={startGenerate}
                       className="btn-primary px-5 py-2 text-sm"
                     >
-                      Generate {count} bullets · {count * per} cr
+                      {t('cvBuilder.askAria.generateBullets', { count, cr: count * per })}
                     </button>
                   </div>
                 </div>
@@ -891,13 +933,13 @@ const AskAriaGenerate = ({
                     </span>
                     <div className="min-w-0">
                       <h4 className="font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
-                        Writing this uses {count * per} credits
+                        {t('cvBuilder.askAria.consentTitle', { n: count * per })}
                       </h4>
                       <p className="mt-1 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
-                        If the first draft misses, your next angle&apos;s on me.
+                        {t('cvBuilder.askAria.consentBody')}
                       </p>
                       <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                        Free credits come from watching an ad or referring a friend.
+                        {t('cvBuilder.askAria.consentNote')}
                       </p>
                     </div>
                   </div>
@@ -907,7 +949,7 @@ const AskAriaGenerate = ({
                       onClick={generate}
                       className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-3 py-2 rounded-lg transition-colors"
                     >
-                      Just this once
+                      {t('cvBuilder.askAria.justThisOnce')}
                     </button>
                     <button
                       type="button"
@@ -917,9 +959,9 @@ const AskAriaGenerate = ({
                       }}
                       className="btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
                     >
-                      Always allow
+                      {t('cvBuilder.askAria.alwaysAllow')}
                       <span className="font-mono text-[9px] uppercase tracking-wide bg-white/20 dark:bg-slate-900/20 px-1.5 py-0.5 rounded">
-                        Recommended
+                        {t('cvBuilder.askAria.recommended')}
                       </span>
                     </button>
                   </div>
@@ -934,7 +976,7 @@ const AskAriaGenerate = ({
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      Aria drafted {bullets.length}
+                      {t('cvBuilder.askAria.ariaDrafted', { n: bullets.length })}
                     </p>
                     <span
                       className={`font-mono text-[10px] ${
@@ -943,15 +985,17 @@ const AskAriaGenerate = ({
                           : 'text-amber-500/80 dark:text-amber-400/70'
                       }`}
                     >
-                      {wasFree ? '· re-roll · free' : `· ${count * per} cr`}
+                      {wasFree
+                        ? t('cvBuilder.askAria.rerollFree')
+                        : `· ${t('cvBuilder.common.creditChip', { n: count * per })}`}
                     </span>
                   </div>
                   <p className="mt-3 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
                     {opened
-                      ? 'In your CV — check to add, uncheck to remove.'
+                      ? t('cvBuilder.askAria.resultsHintOpened')
                       : isProject
-                        ? 'Here are a few ways to frame it — pick what fits. Add more than one if you like.'
-                        : 'You told me about one thing — pick the version that fits. Add more than one if you like.'}
+                        ? t('cvBuilder.askAria.resultsHintProject')
+                        : t('cvBuilder.askAria.resultsHintRole')}
                   </p>
                   <div className="mt-2 space-y-1.5">
                     {bullets.map((b, i) => (
@@ -990,7 +1034,7 @@ const AskAriaGenerate = ({
                         onClick={() => setPhase('chat')}
                         className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                       >
-                        Close
+                        {t('common.close')}
                       </button>
                     ) : (
                       <button
@@ -998,7 +1042,7 @@ const AskAriaGenerate = ({
                         onClick={reroll}
                         className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                       >
-                        ↻ Try another angle
+                        {t('cvBuilder.askAria.tryAnotherAngle')}
                       </button>
                     )}
                     <button
@@ -1007,7 +1051,9 @@ const AskAriaGenerate = ({
                       disabled={applying}
                       className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
                     >
-                      {applying ? 'Applying…' : `Apply (${selected.size})`}
+                      {applying
+                        ? t('cvBuilder.askAria.applying')
+                        : t('cvBuilder.askAria.applyN', { n: selected.size })}
                     </button>
                   </div>
                 </div>,
@@ -1020,46 +1066,30 @@ const AskAriaGenerate = ({
       {/* Docked input — always mounted; dimmed + disabled while an action card owns
           the stream (phase !== 'chat'), so the card is the focus. */}
       <div className="shrink-0 pt-3">
-        {freeLeft != null && (
-          <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {freeLeft > 0
-              ? `${freeLeft} free chats left today`
-              : 'Free chats done today · 1 credit each'}
-          </p>
-        )}
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            disabled={phase !== 'chat'}
-            onChange={(e) => setInput(e.target.value)}
-            onInput={(e) => {
-              e.currentTarget.style.height = 'auto';
-              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            rows={1}
-            placeholder={focused ? 'Type your answer…' : 'Ask Aria anything…'}
-            className={`flex-1 resize-none rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-5 py-2.5 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none max-h-[140px] ${
-              phase !== 'chat' ? 'opacity-50' : ''
-            }`}
-          />
-          <ChatThemePicker />
-          <button
-            type="button"
-            onClick={() => send()}
-            disabled={phase !== 'chat' || thinking || input.trim().length < 2}
-            aria-label="Send"
-            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-indigo-500/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
-          >
-            <ArrowUp className="w-4 h-4" />
-          </button>
-        </div>
+        <AriaComposer
+          inputRef={inputRef}
+          value={input}
+          onChange={setInput}
+          onSend={send}
+          disabled={phase !== 'chat'}
+          busy={thinking}
+          placeholder={
+            focused
+              ? t('cvBuilder.askAria.typeAnswer')
+              : t('cvBuilder.ariaComposer.placeholder')
+          }
+          modelId={modelId}
+          onSelectModel={selectModel}
+          note={
+            freeLeft != null ? (
+              <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                {freeLeft > 0
+                  ? t('cvBuilder.common.freeChatsLeft', { n: freeLeft })
+                  : t('cvBuilder.common.freeChatsDone')}
+              </p>
+            ) : null
+          }
+        />
       </div>
     </div>
   );

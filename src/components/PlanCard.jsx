@@ -186,7 +186,7 @@ const PlanCard = () => {
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold tracking-tight">{planName}</span>
+            <span className="font-heading text-2xl font-extrabold tracking-tight">{planName}</span>
           </div>
 
           {isPaid ? (

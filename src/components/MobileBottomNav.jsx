@@ -55,12 +55,17 @@ const MobileBottomNav = () => {
               to={to}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 text-[10px] font-semibold transition-colors ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 text-[10px] font-semibold transition-colors ${
                 active
-                  ? 'text-indigo-600 dark:text-indigo-400'
+                  ? 'text-slate-900 dark:text-white'
                   : 'text-gray-500 active:text-gray-700 dark:text-slate-400 dark:active:text-slate-200'
               }`}
             >
+              {/* Same ink marker as the desktop masthead, flipped to the top edge
+                  — an underline on a bottom bar would sit in the safe-area gutter. */}
+              {active && (
+                <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-slate-900 dark:bg-white" />
+              )}
               {icon}
               <span>{label}</span>
             </Link>

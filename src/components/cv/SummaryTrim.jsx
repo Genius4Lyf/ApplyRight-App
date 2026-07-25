@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import AriaLoader from '../ui/AriaLoader';
 import { createPortal } from 'react-dom';
-import { X, Loader, ArrowRight, Check } from 'lucide-react';
+import { X, ArrowRight, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { CREDIT_COSTS } from '../../lib/credits';
@@ -12,6 +14,7 @@ import { CREDIT_COSTS } from '../../lib/credits';
 const LONG_HINT = 320; // chars beyond which we nudge the count amber
 
 const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState(currentSummary || '');
   const [proposal, setProposal] = useState(null); // AI rewrite awaiting a decision
   const [loading, setLoading] = useState(false);
@@ -55,11 +58,11 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
       const status = err?.response?.status;
       const code = err?.response?.data?.code;
       if (status === 503) {
-        toast.error('AI is unavailable right now — edit manually.');
+        toast.error(t('cvBuilder.summaryTrim.aiUnavailable'));
       } else if (status === 403 && code === 'INSUFFICIENT_CREDITS') {
-        toast.error('Not enough credits.');
+        toast.error(t('cvBuilder.summaryTrim.notEnoughCredits'));
       } else {
-        toast.error('Could not tighten the summary. Please try again.');
+        toast.error(t('cvBuilder.summaryTrim.couldntTighten'));
       }
     } finally {
       setLoading(false);
@@ -80,37 +83,39 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
       <div
         role="dialog"
-        aria-label="Tighten your summary"
+        aria-label={t('cvBuilder.summaryTrim.title')}
         className="relative w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl animate-in zoom-in-95 duration-200"
       >
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('common.close')}
           className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          Trim summary
+          {t('cvBuilder.summaryTrim.eyebrow')}
         </p>
         <h3 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-          Tighten your summary
+          {t('cvBuilder.summaryTrim.title')}
         </h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-          A shorter, sharper summary frees up space — the fastest way to lose a page.
+          {t('cvBuilder.summaryTrim.subtitle')}
         </p>
 
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={5}
-          placeholder="Your professional summary…"
+          placeholder={t('cvBuilder.summaryTrim.placeholder')}
           className="mt-4 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-[16px] sm:text-sm leading-relaxed text-slate-900 dark:text-slate-100 outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
         />
         <div className="mt-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em]">
-          <span className="text-slate-400 dark:text-slate-500">Aim for 2&ndash;3 sentences</span>
+          <span className="text-slate-400 dark:text-slate-500">
+            {t('cvBuilder.summaryTrim.aim')}
+          </span>
           <span
             className={
               overLong
@@ -118,7 +123,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
                 : 'text-slate-400 dark:text-slate-500 tabular-nums'
             }
           >
-            {text.length} chars
+            {t('cvBuilder.summaryTrim.charCount', { n: text.length })}
           </span>
         </div>
 
@@ -132,13 +137,14 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
           >
             {loading ? (
               <>
-                <Loader className="w-4 h-4 animate-spin" /> Tightening…
+                <AriaLoader inline tone="mono" size={16} label="" />{' '}
+                {t('cvBuilder.summaryTrim.tightening')}
               </>
             ) : (
               <>
-                Tighten with AI
+                {t('cvBuilder.summaryTrim.tightenWithAi')}
                 <span className="inline-flex items-center rounded bg-white/20 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
-                  {CREDIT_COSTS.TIGHTEN_SUMMARY} cr
+                  {t('cvBuilder.common.creditChip', { n: CREDIT_COSTS.TIGHTEN_SUMMARY })}
                 </span>
               </>
             )}
@@ -149,10 +155,10 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
         {proposal !== null && (
           <div className="mt-4 border-l-2 border-indigo-500 pl-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
-              Suggested rewrite
+              {t('cvBuilder.summaryTrim.suggestedRewrite')}
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {proposal || 'The AI returned an empty rewrite — edit manually.'}
+              {proposal || t('cvBuilder.summaryTrim.emptyRewrite')}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
@@ -161,14 +167,14 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
                 disabled={!proposal}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold px-3 py-1.5 transition-colors"
               >
-                <Check className="w-3.5 h-3.5" /> Use this
+                <Check className="w-3.5 h-3.5" /> {t('cvBuilder.summaryTrim.useThis')}
               </button>
               <button
                 type="button"
                 onClick={() => setProposal(null)}
                 className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-xs font-semibold px-3 py-1.5 transition-colors"
               >
-                Keep mine
+                {t('cvBuilder.summaryTrim.keepMine')}
               </button>
             </div>
           </div>
@@ -181,7 +187,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
             onClick={onClose}
             className="rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-sm font-semibold px-4 py-2 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -189,7 +195,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
             disabled={applyDisabled}
             className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 transition-colors"
           >
-            Apply <ArrowRight className="w-4 h-4" />
+            {t('cvBuilder.summaryTrim.apply')} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

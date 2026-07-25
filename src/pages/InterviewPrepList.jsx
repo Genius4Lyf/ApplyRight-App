@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mic, Play, ArrowRight, BookOpen } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Navbar from '../components/Navbar';
@@ -42,14 +43,15 @@ const prepMomentum = (items = []) => {
   }).length;
   const practiced = list.filter((a) => a?.interviewPrep?.lastInterviewSession?.completedAt).length;
   return [
-    { label: 'Preps', value: list.length, tone: 'neutral' },
-    { label: 'Avg readiness', value: `${avg}%`, tone: 'ok' },
-    { label: 'Ready', value: ready, tone: 'neutral' },
-    { label: 'Practiced', value: practiced, tone: 'neutral' },
+    { labelKey: 'interviewPrep.list.momentum.preps', value: list.length, tone: 'neutral' },
+    { labelKey: 'interviewPrep.list.momentum.avgReadiness', value: `${avg}%`, tone: 'ok' },
+    { labelKey: 'interviewPrep.list.momentum.ready', value: ready, tone: 'neutral' },
+    { labelKey: 'interviewPrep.list.momentum.practiced', value: practiced, tone: 'neutral' },
   ];
 };
 
 const InterviewPrepList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ const InterviewPrepList = () => {
         const { items: list } = await InterviewPrepService.list();
         if (!cancelled) setItems(list || []);
       } catch (e) {
-        if (!cancelled) setError(e.response?.data?.message || 'Failed to load interview prep');
+        if (!cancelled) setError(e.response?.data?.message || t('interviewPrep.common.loadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -105,9 +107,19 @@ const InterviewPrepList = () => {
     const practicedAt = prep.lastInterviewSession?.completedAt;
     const dateRef = practicedAt || prep.savedAt || app.updatedAt;
     const relative = dateRef ? formatDistanceToNow(new Date(dateRef), { addSuffix: true }) : '';
-    const title = job.title || app.jobTitle || (isCvOnly ? 'CV draft' : 'Untitled role');
+    const title =
+      job.title ||
+      app.jobTitle ||
+      (isCvOnly ? t('interviewPrep.list.cvDraft') : t('interviewPrep.list.untitledRole'));
     return { isCvOnly, score, total, nextAction, band, company, practicedAt, relative, title };
   };
+
+  // Shared eyebrow — "{company} · practiced/updated {relative}".
+  const eyebrowFor = (company, practicedAt, relative) =>
+    t(practicedAt ? 'interviewPrep.list.eyebrowPracticed' : 'interviewPrep.list.eyebrowUpdated', {
+      company: company || t('interviewPrep.list.cvDraft'),
+      relative,
+    });
 
   // A single prep as a paper note for the deck.
   const renderPrepNote = (app) => {
@@ -116,10 +128,10 @@ const InterviewPrepList = () => {
     return (
       <NoteCard
         band={band}
-        stamp={{ value: total ? score : '—', label: 'Readiness' }}
-        eyebrow={`${company || 'CV draft'} · ${practicedAt ? 'practiced ' : 'updated '}${relative}`}
+        stamp={{ value: total ? score : '—', label: t('interviewPrep.list.readinessStamp') }}
+        eyebrow={eyebrowFor(company, practicedAt, relative)}
         title={title}
-        chip={isCvOnly ? { label: 'From CV', tone: 'warn' } : undefined}
+        chip={isCvOnly ? { label: t('interviewPrep.common.fromCv'), tone: 'warn' } : undefined}
         verdict={getPrepSummary(app) || undefined}
         nextMove={{ label: nextAction.label, tone: band, Icon: Play }}
         onOpen={() => navigate(`/interview-prep/${app._id}`)}
@@ -137,7 +149,7 @@ const InterviewPrepList = () => {
         key={app._id}
         role="button"
         tabIndex={0}
-        aria-label={`Open ${title}`}
+        aria-label={t('interviewPrep.list.openAria', { title })}
         onClick={open}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -161,15 +173,14 @@ const InterviewPrepList = () => {
             {total ? `${score}%` : '—'}
           </div>
           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-            Ready
+            {t('interviewPrep.common.ready')}
           </div>
         </div>
 
         {/* Role + next action */}
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 truncate">
-            {company || 'CV draft'} · {practicedAt ? 'practiced ' : 'updated '}
-            {relative}
+            {eyebrowFor(company, practicedAt, relative)}
           </p>
           <div className="mt-0.5 flex items-center gap-2">
             <h3 className="font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
@@ -177,7 +188,7 @@ const InterviewPrepList = () => {
             </h3>
             {isCvOnly && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300">
-                <BookOpen className="h-3 w-3" /> From CV
+                <BookOpen className="h-3 w-3" /> {t('interviewPrep.common.fromCv')}
               </span>
             )}
           </div>
@@ -198,13 +209,13 @@ const InterviewPrepList = () => {
               navigate(`/interview-prep/${app._id}/mock`);
             }}
             className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Mock interview"
+            aria-label={t('interviewPrep.common.mockInterview')}
           >
             <Play className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden sm:inline">Mock interview</span>
+            <span className="hidden sm:inline">{t('interviewPrep.common.mockInterview')}</span>
           </button>
-          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300 whitespace-nowrap group-hover:gap-2 transition-all">
-            Open
+          <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap group-hover:gap-2 transition-all">
+            {t('interviewPrep.list.open')}
             <ArrowRight className="h-4 w-4" />
           </span>
         </div>
@@ -234,29 +245,29 @@ const InterviewPrepList = () => {
             {/* LEFT RAIL */}
             <div className="flex flex-col">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Rehearse before the call
+                {t('interviewPrep.list.eyebrow')}
               </p>
               <h1 className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
-                Interview prep
+                {t('interviewPrep.list.title')}
               </h1>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Every role you&apos;re rehearsing for.
+                {t('interviewPrep.list.subtitle')}
               </p>
 
               {/* Momentum — vertical list on desktop */}
               <div className="mt-8 hidden lg:block">
                 {prepMomentum(items).map((s, i) => (
                   <div
-                    key={s.label}
+                    key={s.labelKey}
                     className={`flex items-baseline justify-between py-3.5 border-b border-slate-200 dark:border-slate-700 ${
                       i === 0 ? 'border-t' : ''
                     }`}
                   >
                     <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-                      {s.label}
+                      {t(s.labelKey)}
                     </span>
                     <span
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -272,11 +283,11 @@ const InterviewPrepList = () => {
               <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 lg:hidden">
                 {prepMomentum(items).map((s) => (
                   <div
-                    key={s.label}
+                    key={s.labelKey}
                     className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
                   >
                     <div
-                      className={`text-2xl font-bold tabular-nums ${
+                      className={`font-heading text-2xl font-bold tabular-nums ${
                         s.tone === 'ok'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-slate-900 dark:text-slate-100'
@@ -285,7 +296,7 @@ const InterviewPrepList = () => {
                       {s.value}
                     </div>
                     <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                      {s.label}
+                      {t(s.labelKey)}
                     </div>
                   </div>
                 ))}
@@ -296,10 +307,10 @@ const InterviewPrepList = () => {
                 <ViewToggle value={view} onChange={handleViewChange} className="w-full" />
                 <button
                   onClick={() => navigate('/interview/start')}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
                 >
                   <Mic className="h-4 w-4" />
-                  Start a direct interview
+                  {t('interviewPrep.list.startDirect')}
                 </button>
               </div>
             </div>
@@ -316,7 +327,7 @@ const InterviewPrepList = () => {
                   getKey={(a) => a._id}
                   renderItem={renderPrepNote}
                   cardClassName={PAPER_CARD}
-                  label="10 most recent"
+                  label={t('interviewPrep.list.tenRecent')}
                 />
               ) : (
                 <div className="space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-1 scrollbar-none">
@@ -331,32 +342,35 @@ const InterviewPrepList = () => {
   );
 };
 
-const EmptyState = () => (
-  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
-    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-      Nothing to rehearse yet
-    </p>
-    <h2 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
-      No interview prep yet
-    </h2>
-    <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-      Run a job analysis to auto-generate prep, or start a direct interview to rehearse right now.
-    </p>
-    <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-      <Link
-        to="/interview/start"
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
-      >
-        <Mic className="h-4 w-4" /> Start a direct interview
-      </Link>
-      <Link
-        to="/dashboard"
-        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-      >
-        Run a job analysis
-      </Link>
+const EmptyState = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
+      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+        {t('interviewPrep.list.emptyEyebrow')}
+      </p>
+      <h2 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
+        {t('interviewPrep.list.emptyTitle')}
+      </h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+        {t('interviewPrep.list.emptyBody')}
+      </p>
+      <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+        <Link
+          to="/interview/start"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
+        >
+          <Mic className="h-4 w-4" /> {t('interviewPrep.list.startDirect')}
+        </Link>
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+        >
+          {t('interviewPrep.list.runAnalysis')}
+        </Link>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default InterviewPrepList;

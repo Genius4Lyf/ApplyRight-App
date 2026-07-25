@@ -69,6 +69,36 @@ describe('StudioLivePreview — section bands from the scan', () => {
   });
 });
 
+describe('StudioLivePreview — section labels track the CV language', () => {
+  const sections = [
+    { key: 'summary', band: 'ok', score: 80 },
+    { key: 'experience', band: 'warn', score: 55 },
+    { key: 'skills', band: 'bad', score: 20 },
+  ];
+
+  it('renders English section labels by default', () => {
+    mockCvData = withScan(sections);
+    render(<StudioLivePreview />);
+    // The <h3> textContent is the real string; the uppercase is CSS-only.
+    for (const l of ['Contact', 'Summary', 'Experience', 'Skills']) {
+      expect(screen.getByText(l)).toBeTruthy();
+    }
+  });
+
+  it('renders FRENCH section labels when outputLang is fr — the FIX', () => {
+    mockCvData = { ...withScan(sections), outputLang: 'fr' };
+    render(<StudioLivePreview />);
+    // Short panel forms: Summary→Résumé, Experience→Expérience, Skills→Compétences.
+    for (const l of ['Contact', 'Résumé', 'Expérience', 'Compétences']) {
+      expect(screen.getByText(l)).toBeTruthy();
+    }
+    // The English labels are gone — proving the flip actually did something.
+    expect(screen.queryByText('Summary')).toBeNull();
+    expect(screen.queryByText('Experience')).toBeNull();
+    expect(screen.queryByText('Skills')).toBeNull();
+  });
+});
+
 describe('StudioLivePreview — transform-on-fix pulse', () => {
   it('pulses ONLY the section whose band improved on re-band', async () => {
     mockCvData = withScan([

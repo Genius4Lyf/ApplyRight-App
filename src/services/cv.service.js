@@ -1,5 +1,46 @@
 import api from './api';
 
+// Download requests use `responseType: 'blob'`, so a JSON *error* body arrives as
+// an opaque Blob too — `error.message` degrades to "[object Blob]" and the real
+// server reason never surfaces anywhere. Read the Blob back to text, parse it
+// (guarded: a proxy/HTML error page is not JSON), and rethrow a typed Error
+// carrying the server's `message` + `code`. Always throws.
+const throwDecodedBlobError = async (error) => {
+  const { status, data } = error.response || {};
+  let body = null;
+  let raw = '';
+
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    try {
+      raw = await data.text();
+      body = JSON.parse(raw);
+    } catch {
+      body = null; // non-JSON body (HTML error page, empty, truncated) — keep `raw`
+    }
+  } else if (data && typeof data === 'object') {
+    body = data;
+  }
+
+  // Paywall: unchanged contract — callers switch on `.code === 'NEED_DOWNLOAD'`.
+  if (status === 402 && data) {
+    const e = new Error(body?.message || 'Payment required to download');
+    e.code = body?.code || 'NEED_DOWNLOAD';
+    e.status = 402;
+    throw e;
+  }
+
+  const message =
+    body?.message || body?.error || (raw && !raw.startsWith('<') ? raw.slice(0, 300) : '');
+  if (message) {
+    const e = new Error(message);
+    if (body?.code) e.code = body.code;
+    e.status = status;
+    throw e;
+  }
+
+  throw error;
+};
+
 const CVService = {
   // Save or Update a Draft CV
   saveDraft: async (data) => {
@@ -250,8 +291,8 @@ const CVService = {
 
   // Generate PDF (Puppeteer). Throws an Error with `.code === 'NEED_DOWNLOAD'`
   // when the user is out of download entitlement (so callers can show the
-  // paywall). Because the request is a blob, a 402 JSON body arrives as a Blob
-  // and must be read back to text first.
+  // paywall). Every other failure is decoded too, so the server's real message
+  // reaches the caller instead of an opaque Blob (see throwDecodedBlobError).
   generatePdf: async (htmlContent, options = {}, metadata = {}) => {
     try {
       const response = await api.post(
@@ -267,28 +308,14 @@ const CVService = {
       );
       return response.data;
     } catch (error) {
-      if (error.response?.status === 402 && error.response.data) {
-        try {
-          const text = await error.response.data.text();
-          const json = JSON.parse(text);
-          const e = new Error(json.message || 'Payment required to download');
-          e.code = json.code || 'NEED_DOWNLOAD';
-          throw e;
-        } catch (parseErr) {
-          if (parseErr.code) throw parseErr;
-          const e = new Error('Payment required to download');
-          e.code = 'NEED_DOWNLOAD';
-          throw e;
-        }
-      }
-      throw error;
+      await throwDecodedBlobError(error);
     }
   },
 
   // Generate a Word (.docx) from the CV data (server-side via the `docx` lib).
-  // Mirrors generatePdf: same download paywall, so a NEED_DOWNLOAD 402 (delivered
-  // as a Blob body because responseType is 'blob') is decoded back into a typed
-  // Error with `.code === 'NEED_DOWNLOAD'` for callers to show the paywall.
+  // Mirrors generatePdf: same download paywall (402 → typed Error with
+  // `.code === 'NEED_DOWNLOAD'`), and every other error status is decoded out of
+  // its Blob body so the server's message is diagnosable client-side.
   // data = { markdown, userProfile }; metadata = { applicationId, isDraft, templateId }.
   generateDocx: async (data = {}, metadata = {}) => {
     try {
@@ -304,21 +331,7 @@ const CVService = {
       );
       return response.data;
     } catch (error) {
-      if (error.response?.status === 402 && error.response.data) {
-        try {
-          const text = await error.response.data.text();
-          const json = JSON.parse(text);
-          const e = new Error(json.message || 'Payment required to download');
-          e.code = json.code || 'NEED_DOWNLOAD';
-          throw e;
-        } catch (parseErr) {
-          if (parseErr.code) throw parseErr;
-          const e = new Error('Payment required to download');
-          e.code = 'NEED_DOWNLOAD';
-          throw e;
-        }
-      }
-      throw error;
+      await throwDecodedBlobError(error);
     }
   },
 };

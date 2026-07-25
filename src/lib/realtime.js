@@ -9,6 +9,7 @@
 // getUserMedia) — verify manually in desktop Chrome.
 // SECURITY: never log the ephemeral clientSecret.
 import { getPlatform } from '../utils/platform';
+import { createInterviewTelemetry } from './interviewTelemetry';
 
 // Realtime needs raw mic capture + WebRTC, which only work in a real browser.
 // Capacitor native (Android/iOS) WebView has no RECORD_AUDIO yet → unsupported,
@@ -112,6 +113,10 @@ export function createRealtimeSession({
   // grading. Both sides are transcribed by OpenAI (input transcription is enabled
   // server-side in the session config).
   const transcript = [];
+  // Delivery telemetry (hesitation, answer length, pauses) measured from this
+  // session's events. Audio never leaves the browser, so this is the only place
+  // these numbers can be taken — see interviewTelemetry.js.
+  const telemetry = createInterviewTelemetry();
   // The mic stays OFF until the interviewer has actually spoken AND then stopped
   // (the UI state goes speaking → listening), so the candidate's voice (or room
   // noise) isn't captured — and the AI isn't interrupted — while it's still
@@ -289,6 +294,7 @@ export function createRealtimeSession({
         const turn = collectTranscript(msg, transcript);
         if (turn && onCaption) onCaption(turn);
         const s = eventToState(msg.type);
+        telemetry.onEvent(msg, s);
         if (s) {
           // First real state means the AI is engaging — cancel the connect guard.
           if (connectTimer) {
@@ -455,6 +461,9 @@ export function createRealtimeSession({
     getLocalStream: () => localStream,
     getRemoteStream: () => remoteStream,
     getTranscript: () => transcript.slice(),
+    // Per-answer delivery numbers for this session/segment. Merged across panel
+    // segments by the caller, exactly like the transcript.
+    getTelemetry: () => telemetry.snapshot(),
   };
 }
 

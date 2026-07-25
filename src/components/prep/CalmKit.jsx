@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Wind, Sparkles, Eye, CheckCircle2, Circle, Play, Pause } from 'lucide-react';
 
 // Calm-the-nerves toolkit — evidence-based, frontend-only (no AI, no credits).
@@ -12,12 +13,13 @@ import { Wind, Sparkles, Eye, CheckCircle2, Circle, Play, Pause } from 'lucide-r
 // watching a counter. Exported so Interview Mode can reuse it as a pre-interview
 // centering step.
 const BREATH_STEPS = [
-  { key: 'inhale', label: 'Breathe in', secs: 4 },
-  { key: 'hold', label: 'Hold', secs: 7 },
-  { key: 'exhale', label: 'Breathe out', secs: 8 },
+  { key: 'inhale', labelKey: 'interviewPrep.calmKit.breath.inhale', secs: 4 },
+  { key: 'hold', labelKey: 'interviewPrep.calmKit.breath.hold', secs: 7 },
+  { key: 'exhale', labelKey: 'interviewPrep.calmKit.breath.exhale', secs: 8 },
 ];
 
 export const BreathingExercise = ({ compact = false }) => {
+  const { t } = useTranslation();
   const [running, setRunning] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
   const [cycles, setCycles] = useState(0);
@@ -51,7 +53,7 @@ export const BreathingExercise = ({ compact = false }) => {
     <div className="flex flex-col items-center text-center">
       <div className={`relative flex items-center justify-center ${compact ? 'h-36' : 'h-44'}`}>
         <div
-          className="rounded-full bg-gradient-to-br from-indigo-400/30 to-violet-400/30 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center"
+          className="rounded-full bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-center justify-center"
           style={{
             width: compact ? 110 : 140,
             height: compact ? 110 : 140,
@@ -61,24 +63,30 @@ export const BreathingExercise = ({ compact = false }) => {
             transitionDuration: `${running ? step.secs : 0.6}s`,
           }}
         >
-          <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-            {running ? step.label : 'Ready'}
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {running ? t(step.labelKey) : t('interviewPrep.calmKit.ready')}
           </span>
         </div>
       </div>
 
       <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-1">
-        {running ? `Cycle ${cycles + 1} · 4-7-8 breathing` : '4-7-8 breathing · aim for 3–4 rounds'}
+        {running
+          ? t('interviewPrep.calmKit.cycle', { n: cycles + 1 })
+          : t('interviewPrep.calmKit.breathHint')}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() => (running ? setRunning(false) : setRunning(true))}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold transition-colors"
         >
           {running ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-          {running ? 'Pause' : cycles > 0 ? 'Resume' : 'Start breathing'}
+          {running
+            ? t('interviewPrep.calmKit.pause')
+            : cycles > 0
+              ? t('interviewPrep.calmKit.resume')
+              : t('interviewPrep.calmKit.start')}
         </button>
         {(running || cycles > 0) && (
           <button
@@ -86,7 +94,7 @@ export const BreathingExercise = ({ compact = false }) => {
             onClick={reset}
             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors"
           >
-            Reset
+            {t('interviewPrep.calmKit.reset')}
           </button>
         )}
       </div>
@@ -94,16 +102,17 @@ export const BreathingExercise = ({ compact = false }) => {
   );
 };
 
-const CHECKLIST = [
-  'Outfit picked and ready (one step above the team)',
-  'Route / link tested — know exactly how you’ll arrive or log in',
-  'Two or three Stories fresh in your mind',
-  'A few questions ready to ask them',
-  'Good night’s sleep + water — you think clearer rested',
+const CHECKLIST_KEYS = [
+  'interviewPrep.calmKit.checklist.0',
+  'interviewPrep.calmKit.checklist.1',
+  'interviewPrep.calmKit.checklist.2',
+  'interviewPrep.calmKit.checklist.3',
+  'interviewPrep.calmKit.checklist.4',
 ];
 
 // Full game-day panel: breathing + reframe + visualization + night-before list.
 const CalmKit = () => {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState(() => new Set());
   const toggle = (i) =>
     setChecked((prev) => {
@@ -119,14 +128,13 @@ const CalmKit = () => {
       <section className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <Wind className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+            <Wind className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Settle your nerves
+              {t('interviewPrep.calmKit.settleHeading')}
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-            Slow, paced breathing lowers your heart rate and steadies your voice. Do this in the
-            lobby or just before you join.
+            {t('interviewPrep.calmKit.settleDesc')}
           </p>
           <BreathingExercise />
         </div>
@@ -134,31 +142,29 @@ const CalmKit = () => {
 
       {/* Reframe + Visualization */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <section className="rounded-2xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-500/15 p-4">
+        <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300" />
+            <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Reframe the nerves
+              {t('interviewPrep.calmKit.reframeHeading')}
             </h3>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Tell yourself{' '}
-            <span className="font-semibold text-slate-800 dark:text-slate-200">“I’m excited”</span>,
-            not “I’m nervous.” It’s the same racing heart — but candidates who relabel it as
-            excitement perform measurably better. The adrenaline is on your side.
+            <Trans
+              i18nKey="interviewPrep.calmKit.reframeBody"
+              components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-200" /> }}
+            />
           </p>
         </section>
-        <section className="rounded-2xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15 p-4">
+        <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+            <Eye className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Picture it going well
+              {t('interviewPrep.calmKit.pictureHeading')}
             </h3>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Take 20 seconds: see yourself walking in, a warm greeting, answering the first question
-            calmly and clearly. Rehearsing success quiets the part of your brain that rehearses
-            disaster.
+            {t('interviewPrep.calmKit.pictureBody')}
           </p>
         </section>
       </div>
@@ -166,31 +172,33 @@ const CalmKit = () => {
       {/* Night-before checklist */}
       <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card p-5">
         <div className="flex items-center gap-2 mb-1">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">The night before</h3>
+          <CheckCircle2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            {t('interviewPrep.calmKit.nightHeading')}
+          </h3>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-          Decide everything tonight so the morning has zero stress to add.
+          {t('interviewPrep.calmKit.nightDesc')}
         </p>
         <ul className="space-y-2">
-          {CHECKLIST.map((item, i) => {
+          {CHECKLIST_KEYS.map((itemKey, i) => {
             const on = checked.has(i);
             return (
-              <li key={i}>
+              <li key={itemKey}>
                 <button
                   type="button"
                   onClick={() => toggle(i)}
                   className="w-full flex items-start gap-2.5 text-left group"
                 >
                   {on ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-slate-900 dark:text-white shrink-0 mt-0.5" />
                   ) : (
                     <Circle className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 shrink-0 mt-0.5" />
                   )}
                   <span
                     className={`text-xs leading-relaxed ${on ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-700 dark:text-slate-300'}`}
                   >
-                    {item}
+                    {t(itemKey)}
                   </span>
                 </button>
               </li>
