@@ -27,8 +27,10 @@ import {
   MicOff,
   Captions,
   Briefcase,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation, Trans } from 'react-i18next';
 import InterviewPrepService from '../services/interviewPrep.service';
 import billingService from '../services/billing.service';
 import {
@@ -71,18 +73,10 @@ const budgetMin = (q) => MINUTES_BY_TYPE[(q.type || '').toLowerCase()] || 3;
 const FLOW_RANK = { intro: 0, behavioral: 1, technical: 1, situational: 1, motivation: 2, gap: 3 };
 const flowRank = (q) => FLOW_RANK[(q.type || '').toLowerCase()] ?? 1;
 
-const TYPE_LABEL = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Question');
-const CONF = [
-  { id: 'needs_work', label: 'Shaky' },
-  { id: 'almost', label: 'Okay' },
-  { id: 'ready', label: 'Strong' },
-];
-const CONF_WORD = { needs_work: 'shaky', almost: 'okay', ready: 'strong' };
-const READINESS_LABEL = {
-  ready: 'Interview-ready',
-  almost: 'Almost there',
-  needs_work: 'Needs work',
-};
+// Rating-chip ids; the label is resolved per render via t(`interviewPrep.mock.conf.${id}`)
+// so module scope stays language-free. CONF_WORD / READINESS_LABEL are likewise
+// resolved at their call sites (interviewPrep.mock.confWord.* / .readiness.*).
+const CONF = [{ id: 'needs_work' }, { id: 'almost' }, { id: 'ready' }];
 // Seconds remaining at which we nudge the live interviewer to start its closing.
 const REALTIME_NUDGE_SEC = 45;
 // Seconds before a panel seat's budget ends at which we pre-connect the NEXT
@@ -97,9 +91,9 @@ const CONNECT_MIN_MS = 1800;
 // ringing resolves into a connected beat, then opens, like a call being answered.
 const CONNECTED_HOLD_MS = 600;
 
+// `questionKey` resolves to the spoken/displayed text via t() in simQuestions.
 const WEAKNESS_Q = {
-  question:
-    'Tell me about a weakness, or a gap in your experience — and what you’re doing about it.',
+  questionKey: 'interviewPrep.mock.weaknessQuestion',
   type: 'gap',
   _origIndex: -1,
   isWeakness: true,
@@ -108,19 +102,24 @@ const WEAKNESS_Q = {
 // Scripted hand-off lines the AI speaks before each next question, so the
 // interview feels like a paced conversation rather than a slideshow. Rotated by
 // index (no randomness needed) so consecutive questions don't repeat a line.
-const TRANSITIONS = [
-  'Thanks for that. Let’s move on.',
-  'Great — next up.',
-  'Good. Let’s keep going.',
-  'Understood. Here’s the next one.',
-  'Appreciate it. Moving on.',
+// pickTransition returns an i18n KEY; the call site resolves it with t() so the
+// spoken line is synthesized in the user's language.
+const TRANSITION_KEYS = [
+  'interviewPrep.mock.transitions.0',
+  'interviewPrep.mock.transitions.1',
+  'interviewPrep.mock.transitions.2',
+  'interviewPrep.mock.transitions.3',
+  'interviewPrep.mock.transitions.4',
 ];
-const LAST_TRANSITIONS = ['Last one for you.', 'And the final question.'];
-const TIMEUP_LINE = 'In the interest of time, let’s move on.';
+const LAST_TRANSITION_KEYS = [
+  'interviewPrep.mock.lastTransitions.0',
+  'interviewPrep.mock.lastTransitions.1',
+];
+const TIMEUP_KEY = 'interviewPrep.mock.timeupLine';
 const pickTransition = (toIndex, isLast, reason) => {
-  if (reason === 'timeup') return TIMEUP_LINE;
-  if (isLast) return LAST_TRANSITIONS[toIndex % LAST_TRANSITIONS.length];
-  return TRANSITIONS[toIndex % TRANSITIONS.length];
+  if (reason === 'timeup') return TIMEUP_KEY;
+  if (isLast) return LAST_TRANSITION_KEYS[toIndex % LAST_TRANSITION_KEYS.length];
+  return TRANSITION_KEYS[toIndex % TRANSITION_KEYS.length];
 };
 
 const fmt = (sec) => {
@@ -138,6 +137,7 @@ const readStoredUser = () => {
 };
 
 const MockInterviewPage = () => {
+  const { t } = useTranslation();
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -399,11 +399,11 @@ const MockInterviewPage = () => {
       const { link } = await billingService.checkout('practice_pass', 'NGN');
       if (link) window.location.href = link;
       else {
-        toast.error('Could not start checkout — please try again.');
+        toast.error(t('interviewPrep.mock.toast.checkoutError'));
         setBuyingPass(false);
       }
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Could not start checkout — please try again.');
+      toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.checkoutError'));
       setBuyingPass(false);
     }
   };
@@ -484,7 +484,8 @@ const MockInterviewPage = () => {
           setFlagged(initialFlags);
         }
       } catch (e) {
-        if (!cancelled) toast.error(e.response?.data?.message || 'Failed to load interview');
+        if (!cancelled)
+          toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.loadFailed'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -503,8 +504,10 @@ const MockInterviewPage = () => {
       .sort((a, b) => flowRank(a) - flowRank(b))
       .slice(0, 10);
     const hasGap = ordered.some((q) => (q.type || '').toLowerCase() === 'gap');
-    return hasGap ? ordered : [...ordered, WEAKNESS_Q];
-  }, [jobQuestions]);
+    return hasGap
+      ? ordered
+      : [...ordered, { ...WEAKNESS_Q, question: t(WEAKNESS_Q.questionKey) }];
+  }, [jobQuestions, t]);
 
   const plannedSec = useMemo(
     () => simQuestions.reduce((s, q) => s + budgetMin(q) * 60, 0),
@@ -757,12 +760,15 @@ const MockInterviewPage = () => {
     enterConnecting();
 
     const q = simQuestions[0];
-    const role = title && title !== 'Interview' ? ` for the ${title} role` : '';
-    const greeting =
-      `Hi ${firstName}, welcome — and thank you for making the time today. It's great to meet you. ` +
-      `I'll be your interviewer${role}. We'll keep this conversational: I'll ask a question, ` +
-      `you take a moment and answer out loud, just like a real interview. ` +
-      `Let's get started with the first question. ${q?.question || ''}`;
+    const role =
+      title && title !== t('interviewPrep.mock.interviewTitleFallback')
+        ? t('interviewPrep.mock.greeting.rolePart', { title })
+        : '';
+    const hasName = firstName && firstName !== 'there';
+    const greeting = t(
+      hasName ? 'interviewPrep.mock.greeting.withName' : 'interviewPrep.mock.greeting.noName',
+      { name: firstName, role, question: q?.question || '' }
+    );
 
     // Only flip to the live interview once the interviewer's voice actually
     // begins — so the timer starts when the interview truly does.
@@ -803,7 +809,7 @@ const MockInterviewPage = () => {
           };
         });
       } catch (e) {
-        toast.error('Failed to update question confidence');
+        toast.error(t('interviewPrep.mock.toast.confidenceFailed'));
       }
     }
   };
@@ -823,7 +829,7 @@ const MockInterviewPage = () => {
     setTimeLeft(budgetMin(simQuestions[next]) * 60); // reset answer window
     const q = simQuestions[next];
     const line = pickTransition(next, next === simQuestions.length - 1, reason);
-    speakText(`${line} ${q.question}`);
+    speakText(`${t(line)} ${q.question}`);
   };
 
   const goNext = () => advance('next');
@@ -835,7 +841,7 @@ const MockInterviewPage = () => {
   const handleFollowUp = async (answerText) => {
     if (!answerText || loadingFollowUp) return;
     if (!isPaidTier) {
-      toast.error('Adaptive follow-ups are a Pro feature.');
+      toast.error(t('interviewPrep.mock.toast.followUpPro'));
       navigate('/upgrade');
       return;
     }
@@ -853,19 +859,19 @@ const MockInterviewPage = () => {
           window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
         }
       } else {
-        toast.message('No follow-up this time — try a fuller answer.');
+        toast.message(t('interviewPrep.mock.toast.noFollowUp'));
       }
     } catch (e) {
       const code = e.response?.data?.code;
       if (code === 'TIER_REQUIRED') {
-        toast.error('Adaptive follow-ups are a Pro feature.');
+        toast.error(t('interviewPrep.mock.toast.followUpPro'));
         navigate('/upgrade');
       } else if (code === 'INSUFFICIENT_CREDITS') {
-        toast.error('Not enough credits for a follow-up.');
+        toast.error(t('interviewPrep.mock.toast.insufficientCredits'));
       } else if (code === 'AI_UNAVAILABLE') {
-        toast.error('The AI interviewer is unavailable right now.');
+        toast.error(t('interviewPrep.mock.toast.aiUnavailable'));
       } else {
-        toast.error(e.response?.data?.message || 'Failed to get a follow-up');
+        toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.followUpFailed'));
       }
     } finally {
       setLoadingFollowUp(false);
@@ -874,7 +880,7 @@ const MockInterviewPage = () => {
 
   const finishInterview = () => {
     // A short spoken sign-off, then the review screen.
-    speakText('That brings us to the end. Thanks for your time today — nice work.');
+    speakText(t('interviewPrep.mock.signoff'));
     const resultsWithRatings = simQuestions.map((q, i) => ({
       ...q,
       confidence: sessionRatings[i] || q.confidence || null,
@@ -911,7 +917,7 @@ const MockInterviewPage = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('paid');
     setSearchParams(next, { replace: true });
-    toast.success('Practice Pass active — starting your interview.');
+    toast.success(t('interviewPrep.mock.toast.passActive'));
     setMode('conversational');
     beginConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -977,8 +983,8 @@ const MockInterviewPage = () => {
       const code = e.response?.data?.code;
       toast.error(
         code === 'AI_UNAVAILABLE'
-          ? 'The AI interviewer is unavailable right now. Try the guided mode instead.'
-          : e.response?.data?.message || 'Failed to start the conversation'
+          ? t('interviewPrep.mock.toast.aiUnavailableGuided')
+          : e.response?.data?.message || t('interviewPrep.mock.toast.conversationStartFailed')
       );
       setPhase('intro');
     }
@@ -987,7 +993,7 @@ const MockInterviewPage = () => {
   // ── realtime (live voice) flow ──
   const handleRealtimeError = (err) => {
     if (err?.code === 'MIC_DENIED') {
-      toast.error('We need microphone access for the live interview.');
+      toast.error(t('interviewPrep.mock.toast.micNeeded'));
       realtimeRef.current?.stop();
       realtimeRef.current = null;
       setMicStream(null);
@@ -997,9 +1003,9 @@ const MockInterviewPage = () => {
     // Network drop / handshake loss mid-interview: don't waste it — save and
     // score whatever was captured.
     if (err?.code === 'CONNECTION_LOST' || err?.code === 'HANDSHAKE_FAILED') {
-      toast.error('Connection lost — saving and scoring the interview so far.');
+      toast.error(t('interviewPrep.mock.toast.connectionLost'));
     } else {
-      toast.error('The live interview hit a problem — scoring what we have.');
+      toast.error(t('interviewPrep.mock.toast.liveProblem'));
     }
     endRealtime();
   };
@@ -1207,7 +1213,7 @@ const MockInterviewPage = () => {
       advancingRef.current = false;
       handingOffRef.current = false;
       setHandingOff(false);
-      toast.error('Could not bring in the next interviewer — scoring the interview so far.');
+      toast.error(t('interviewPrep.mock.toast.nextInterviewerFailed'));
       endRealtime();
       return;
     }
@@ -1255,7 +1261,7 @@ const MockInterviewPage = () => {
       if (entitlement?.tier === 'free') {
         setShowInterviewPaywall(true);
       } else {
-        toast.error('You’re out of interview minutes. Grab a plan or a top-up.');
+        toast.error(t('interviewPrep.mock.toast.outOfMinutesPlan'));
         navigate('/upgrade');
       }
       return;
@@ -1291,10 +1297,7 @@ const MockInterviewPage = () => {
       // resume content found), the interviewer can't reference their background —
       // warn so they know to attach/upload a CV for a tailored interview.
       if (sess.cvGrounded === false) {
-        toast(
-          "Heads up — this interview isn't tied to your CV, so it won't reference your background. Attach or upload your CV/resume to this application for a tailored interview.",
-          { icon: '⚠️', duration: 7000 }
-        );
+        toast(t('interviewPrep.mock.toast.cvGuard'), { icon: '⚠️', duration: 7000 });
       }
 
       // Pick-a-role single interviewer: one chosen person runs the whole round in
@@ -1353,14 +1356,14 @@ const MockInterviewPage = () => {
         clearTimeout(connectTimerRef.current);
         setPhase('choose');
         await refreshEntitlement();
-        toast.error(e.response?.data?.message || 'You’re out of interview minutes.');
+        toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.outOfMinutes'));
         navigate('/upgrade');
         return;
       }
       toast.error(
         code === 'REALTIME_UNAVAILABLE' || code === 'AI_UNAVAILABLE'
-          ? 'The live interviewer is unavailable — switching to the typed conversation.'
-          : e.response?.data?.message || 'Failed to start the live interview.'
+          ? t('interviewPrep.mock.toast.liveUnavailableFallback')
+          : e.response?.data?.message || t('interviewPrep.mock.toast.liveStartFailed')
       );
       // Seamless fallback to the turn-based conversational mode.
       beginTurnBasedConversation();
@@ -1403,7 +1406,7 @@ const MockInterviewPage = () => {
         if (id) {
           setSavedRecordingBlob(blob);
           setSavedRecordingDuration(durationSec);
-          toast.success('Interview recording saved — replay it anytime on this device.');
+          toast.success(t('interviewPrep.mock.toast.recordingSaved'));
         }
       }
     } catch {
@@ -1454,8 +1457,8 @@ const MockInterviewPage = () => {
       const code = e.response?.data?.code;
       toast.error(
         code === 'AI_UNAVAILABLE'
-          ? 'The AI interviewer is unavailable right now.'
-          : e.response?.data?.message || 'Failed to continue the interview'
+          ? t('interviewPrep.mock.toast.aiUnavailable')
+          : e.response?.data?.message || t('interviewPrep.mock.toast.continueFailed')
       );
       setVoiceState('idle');
     } finally {
@@ -1501,10 +1504,7 @@ const MockInterviewPage = () => {
       // (costly) AI review. Nothing to show — let them know their minutes counted
       // and head back, rather than parking on an empty review screen.
       if (res.tooShort) {
-        toast.message(
-          res.message ||
-            'That interview was too short for a scored review — the minutes you used were counted.'
-        );
+        toast.message(res.message || t('interviewPrep.mock.toast.tooShort'));
         exitToDetail();
         return;
       }
@@ -1527,8 +1527,8 @@ const MockInterviewPage = () => {
       setGradeError(true);
       toast.error(
         e.response?.data?.code === 'AI_UNAVAILABLE'
-          ? 'Couldn’t score this interview right now — your recording is saved; you can re-run it.'
-          : 'Couldn’t score this interview right now — you can re-run it.'
+          ? t('interviewPrep.mock.toast.scoreFailedSaved')
+          : t('interviewPrep.mock.toast.scoreFailed')
       );
     } finally {
       setPhase('review');
@@ -1599,16 +1599,16 @@ const MockInterviewPage = () => {
             }
           : prev
       );
-      toast.success('Interview saved');
+      toast.success(t('interviewPrep.mock.toast.saved'));
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to save interview');
+      toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   if (showLoader) {
-    return <AriaLoader fullscreen size={40} label="Loading your interview…" />;
+    return <AriaLoader fullscreen size={40} label={t('interviewPrep.mock.loading')} />;
   }
   if (!application) return null;
 
@@ -1623,11 +1623,10 @@ const MockInterviewPage = () => {
             <Lock className="w-5 h-5" />
           </div>
           <h1 className="mt-3 text-base font-bold text-slate-900 dark:text-slate-100">
-            Finish your interview readiness first
+            {t('interviewPrep.mock.gate.title')}
           </h1>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            Complete a few quick prep tasks and your interview unlocks — you'll walk in genuinely
-            ready.
+            {t('interviewPrep.mock.gate.body')}
           </p>
           <div className="mt-4 text-left">
             <InterviewReadinessChecklist gate={gate} />
@@ -1637,14 +1636,17 @@ const MockInterviewPage = () => {
             onClick={() => navigate(`/interview-prep/${applicationId}`)}
             className="mt-4 w-full btn-primary gap-1.5 px-4 py-2.5 rounded-lg text-sm"
           >
-            Go to prep
+            {t('interviewPrep.mock.gate.goToPrep')}
           </button>
         </div>
       </div>
     );
   }
 
-  const title = application.jobTitle || application.jobId?.title || 'Interview';
+  const title =
+    application.jobTitle ||
+    application.jobId?.title ||
+    t('interviewPrep.mock.interviewTitleFallback');
 
   // Dark "call room" theme for the conversational interview itself — the live
   // voice run, the turn-based conversation, the connect beat that leads into
@@ -1692,7 +1694,11 @@ const MockInterviewPage = () => {
             panel={setupPanel}
             locked={!isPaidTier}
             loading={panelLoading}
-            heading={isPaidTier ? 'Choose your interviewer' : 'Likely to interview you'}
+            heading={
+              isPaidTier
+                ? t('interviewPrep.mock.setupScreen.chooseInterviewer')
+                : t('interviewPrep.interviewerPanel.heading')
+            }
             onSelect={isPaidTier ? setChosenSeatIndex : null}
             selectedIndex={isPaidTier ? chosenSeatIndex : -1}
             lockedIndices={isPaidTier ? lockedIndices : []}
@@ -1704,8 +1710,8 @@ const MockInterviewPage = () => {
           <p className="mt-1.5 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
             {isPaidTier
               ? setupPanel[chosenSeatIndex]?.description ||
-                'Pick who runs this round — each interviews you in their own voice, on what they care about.'
-              : 'On a paid plan, you pick who interviews you from this panel.'}
+                t('interviewPrep.mock.setupScreen.seatDescFallback')
+              : t('interviewPrep.mock.setupScreen.freePanelNote')}
           </p>
         </div>
       )}
@@ -1769,16 +1775,31 @@ const MockInterviewPage = () => {
           onClick={() => setMode('scripted')}
           className="mt-3 self-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer select-none"
         >
-          Prefer the guided reader instead?
+          {t('interviewPrep.mock.setupScreen.preferGuided')}
         </button>
       )}
     </div>
   );
 
   const preflightSteps = [
-    { key: 'brief', label: 'What this is', hint: 'Step 1 of 3', node: briefPane },
-    { key: 'interviewer', label: 'Your interviewer', hint: 'Step 2 of 3', node: interviewerPane },
-    { key: 'start', label: 'Start', hint: 'Ready when you are', node: startPane },
+    {
+      key: 'brief',
+      label: t('interviewPrep.mock.steps.briefLabel'),
+      hint: t('interviewPrep.mock.steps.briefHint'),
+      node: briefPane,
+    },
+    {
+      key: 'interviewer',
+      label: t('interviewPrep.mock.steps.interviewerLabel'),
+      hint: t('interviewPrep.mock.steps.interviewerHint'),
+      node: interviewerPane,
+    },
+    {
+      key: 'start',
+      label: t('interviewPrep.mock.steps.startLabel'),
+      hint: t('interviewPrep.mock.steps.startHint'),
+      node: startPane,
+    },
   ];
 
   return (
@@ -1805,10 +1826,10 @@ const MockInterviewPage = () => {
               </span>
             )}
             {phase === 'live'
-              ? 'Live interview'
+              ? t('interviewPrep.mock.header.live')
               : phase === 'conversation'
-                ? 'Conversational interview'
-                : 'Interview mode'}
+                ? t('interviewPrep.mock.header.conversational')
+                : t('interviewPrep.mock.header.mode')}
           </span>
           <div className="flex items-center gap-3">
             {phase === 'running' && (
@@ -1816,7 +1837,7 @@ const MockInterviewPage = () => {
                 className={`inline-flex items-center gap-1.5 text-sm font-bold tabular-nums ${
                   timeLeft <= 30 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'
                 }`}
-                title="Time left on this question"
+                title={t('interviewPrep.mock.header.timeOnQuestion')}
               >
                 <Clock className="w-4 h-4" /> {fmt(timeLeft)}
               </span>
@@ -1830,10 +1851,18 @@ const MockInterviewPage = () => {
                       ? 'text-rose-500 dark:text-rose-400'
                       : 'text-slate-700 dark:text-slate-200'
                 }`}
-                title={inGrace ? 'Wrapping up' : 'Time left in this interview'}
+                title={
+                  inGrace
+                    ? t('interviewPrep.mock.header.wrappingUp')
+                    : t('interviewPrep.mock.header.timeInInterview')
+                }
               >
                 <Clock className="w-4 h-4" />
-                {inGrace && <span className="hidden sm:inline">Wrapping up ·</span>}{' '}
+                {inGrace && (
+                  <span className="hidden sm:inline">
+                    {t('interviewPrep.mock.header.wrappingUpInline')}
+                  </span>
+                )}{' '}
                 {fmt(secondsLeft)}
               </span>
             )}
@@ -1846,7 +1875,7 @@ const MockInterviewPage = () => {
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
-              <X className="w-3.5 h-3.5" /> Exit
+              <X className="w-3.5 h-3.5" /> {t('interviewPrep.mock.header.exit')}
             </button>
           </div>
         </div>
@@ -1889,7 +1918,7 @@ const MockInterviewPage = () => {
                   initialStep={lastSession ? 2 : 0}
                   onFinish={handleStartClick}
                   onCancel={() => setPhase('choose')}
-                  finishLabel="Start interview"
+                  finishLabel={t('interviewPrep.preflight.startInterview')}
                 />
               ) : (
                 <>
@@ -1917,7 +1946,7 @@ const MockInterviewPage = () => {
                         onClick={() => setMode('conversational')}
                         className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer select-none"
                       >
-                        Use the live panel instead
+                        {t('interviewPrep.mock.setupScreen.useLivePanel')}
                       </button>
                     </div>
                   )}
@@ -1969,7 +1998,9 @@ const MockInterviewPage = () => {
               onEnd={requestEndReview}
               activeSeat={panel.length >= 1 ? activeSeat : null}
               panel={panel}
-              candidateName={firstName && firstName !== 'there' ? firstName : 'You'}
+              candidateName={
+                firstName && firstName !== 'there' ? firstName : t('interviewPrep.meetingStage.you')
+              }
               handingOff={handingOff}
             />
           )}
@@ -2080,7 +2111,9 @@ const MockInterviewPage = () => {
 };
 
 // ── Exit confirmation (only while an interview is in progress) ──
-const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
+const ExitConfirmModal = ({ isLive, onLeave, onStay }) => {
+  const { t } = useTranslation();
+  return (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <motion.div
       initial={{ opacity: 0 }}
@@ -2102,16 +2135,19 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
         </div>
         <div className="min-w-0">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
-            Leave the interview?
+            {t('interviewPrep.mock.exitModal.title')}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-            You’re in the middle of an interview. If you leave now, this session won’t be saved
-            {isLive ? ' — no recording and no assessment' : ' and won’t be assessed'}. To get your
-            score, finish and tap{' '}
-            <span className="font-semibold text-slate-700 dark:text-slate-300">
-              End &amp; review
-            </span>{' '}
-            instead.
+            <Trans
+              i18nKey={
+                isLive
+                  ? 'interviewPrep.mock.exitModal.bodyLive'
+                  : 'interviewPrep.mock.exitModal.bodyGuided'
+              }
+              components={{
+                b: <span className="font-semibold text-slate-700 dark:text-slate-300" />,
+              }}
+            />
           </p>
         </div>
       </div>
@@ -2122,19 +2158,20 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
           onClick={onStay}
           className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
         >
-          Stay in the interview
+          {t('interviewPrep.mock.exitModal.stay')}
         </button>
         <button
           type="button"
           onClick={onLeave}
           className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
         >
-          Leave anyway
+          {t('interviewPrep.mock.exitModal.leave')}
         </button>
       </div>
     </motion.div>
   </div>
-);
+  );
+};
 
 // ── End & review confirmation (live interview only — minutes are metered) ──
 // Two faces, decided by how long they've interviewed:
@@ -2145,9 +2182,13 @@ const ExitConfirmModal = ({ isLive, onLeave, onStay }) => (
 // and the server independently refuses to grade a sub-threshold session — this
 // modal just sets expectations so users don't keep ending early to re-trigger it.
 const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, onCancel }) => {
+  const { t } = useTranslation();
   const canReview = elapsedSec >= minReviewSec;
   const minReviewMin = Math.round(minReviewSec / 60);
-  const spentLabel = elapsedSec < 60 ? 'less than a minute' : `${Math.floor(elapsedSec / 60)} min`;
+  const spentLabel =
+    elapsedSec < 60
+      ? t('interviewPrep.mock.endModal.spentLessThanMinute')
+      : t('interviewPrep.mock.endModal.spentMinutes', { n: Math.floor(elapsedSec / 60) });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -2170,24 +2211,19 @@ const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, 
           </div>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
-              {canReview ? 'End the interview now?' : 'Exit the interview?'}
+              {canReview
+                ? t('interviewPrep.mock.endModal.titleReview')
+                : t('interviewPrep.mock.endModal.titleExit')}
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               {canReview ? (
-                <>
-                  The interview minutes you’ve used will be counted toward your balance — they won’t
-                  be returned. For the most useful feedback, it’s best to complete the full
-                  interview before ending.
-                </>
+                t('interviewPrep.mock.endModal.bodyReview')
               ) : (
-                <>
-                  You’re only <span className="font-semibold">{spentLabel}</span> in. A scored
-                  review needs at least{' '}
-                  <span className="font-semibold">{minReviewMin} minutes</span> of interview, so
-                  exiting now means <span className="font-semibold">no score</span> — and the{' '}
-                  {spentLabel} you’ve used will still be deducted from your minutes. Keep going to
-                  unlock your review.
-                </>
+                <Trans
+                  i18nKey="interviewPrep.mock.endModal.bodyExit"
+                  values={{ spent: spentLabel, minReview: minReviewMin }}
+                  components={{ b: <span className="font-semibold" /> }}
+                />
               )}
             </p>
           </div>
@@ -2199,14 +2235,16 @@ const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, 
             onClick={onCancel}
             className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
           >
-            Keep going
+            {t('interviewPrep.mock.endModal.keepGoing')}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
           >
-            {canReview ? 'End & review' : 'Exit anyway'}
+            {canReview
+              ? t('interviewPrep.mock.endModal.endReview')
+              : t('interviewPrep.mock.endModal.exitAnyway')}
           </button>
         </div>
       </motion.div>
@@ -2215,7 +2253,9 @@ const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, 
 };
 
 // ── Ready check ──
-const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose }) => (
+const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose }) => {
+  const { t } = useTranslation();
+  return (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <motion.div
       initial={{ opacity: 0 }}
@@ -2235,7 +2275,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
         type="button"
         onClick={onClose}
         className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-        aria-label="Close"
+        aria-label={t('interviewPrep.mock.close')}
       >
         <X className="w-4 h-4" />
       </button>
@@ -2246,10 +2286,10 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
         </div>
         <div className="min-w-0 pr-6">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
-            Ready for this interview?
+            {t('interviewPrep.mock.readyCheck.title')}
           </h2>
           <p className="text-xs text-slate-550 dark:text-slate-450 mt-0.5 font-normal">
-            Some essentials are still missing
+            {t('interviewPrep.mock.readyCheck.subtitle')}
           </p>
         </div>
       </div>
@@ -2257,7 +2297,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       <div className="mt-5 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/80">
         <div className="flex justify-between items-center text-xs mb-2">
           <span className="font-semibold text-slate-650 dark:text-slate-350">
-            Your readiness score
+            {t('interviewPrep.mock.readyCheck.readinessScore')}
           </span>
           <span className="font-bold text-slate-900 dark:text-slate-100">{readiness}%</span>
         </div>
@@ -2271,7 +2311,7 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
 
       <div className="mt-5">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
-          To-do before you start:
+          {t('interviewPrep.mock.readyCheck.todo')}
         </p>
         <ul className="space-y-2.5">
           {missing.map((m, i) => (
@@ -2281,10 +2321,13 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0 animate-pulse" />
               <span className="leading-relaxed">
-                Prepare{' '}
-                <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {m.replace('your ', '')}
-                </span>
+                <Trans
+                  i18nKey="interviewPrep.mock.readyCheck.prepare"
+                  values={{ item: m.replace('your ', '') }}
+                  components={{
+                    b: <span className="font-medium text-slate-900 dark:text-slate-100" />,
+                  }}
+                />
               </span>
             </li>
           ))}
@@ -2292,9 +2335,10 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 mt-5 leading-relaxed">
-        <span className="font-semibold text-slate-900 dark:text-white">Tip:</span> Preparing these
-        essentials enables the AI interviewer to ask targeted questions grounded in your actual
-        history.
+        <Trans
+          i18nKey="interviewPrep.mock.readyCheck.tip"
+          components={{ b: <span className="font-semibold text-slate-900 dark:text-white" /> }}
+        />
       </p>
 
       <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
@@ -2303,19 +2347,20 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
           onClick={onPrepare}
           className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
         >
-          Prepare these first
+          {t('interviewPrep.mock.readyCheck.prepareFirst')}
         </button>
         <button
           type="button"
           onClick={onStartAnyway}
           className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center"
         >
-          Start anyway
+          {t('interviewPrep.mock.readyCheck.startAnyway')}
         </button>
       </div>
     </motion.div>
   </div>
-);
+  );
+};
 
 // ── Going live (connecting) ──
 // A short "placing the call" beat shown after the user starts, while the
@@ -2324,7 +2369,8 @@ const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose
 // instant the interviewer's voice begins. A minimum on-screen time (CONNECT_MIN_MS,
 // enforced by the parent) keeps it from flashing past too fast to read.
 // `dark` styles it for the immersive conversational call room.
-const CONNECT_STEPS = ['Dialing…', 'Ringing…', 'Connecting…'];
+// i18n key suffixes; rendered via t(`interviewPrep.mock.connectSteps.${i}`).
+const CONNECT_STEPS = ['0', '1', '2'];
 
 const ConnectingView = ({
   firstName,
@@ -2337,6 +2383,7 @@ const ConnectingView = ({
   activeSeatIndex = 0,
   isHandoff = false,
 }) => {
+  const { t } = useTranslation();
   const hasPanel = Array.isArray(panel) && panel.length >= 2;
   const [step, setStep] = useState(0);
   useEffect(() => {
@@ -2392,7 +2439,7 @@ const ConnectingView = ({
             dark ? 'text-emerald-300' : 'text-emerald-600'
           }`}
         >
-          <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+          <CheckCircle2 className="w-3.5 h-3.5" /> {t('interviewPrep.mock.connecting.connected')}
         </motion.span>
       ) : (
         <span
@@ -2404,18 +2451,18 @@ const ConnectingView = ({
             <span className="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
           </span>
-          {CONNECT_STEPS[step]}
+          {t(`interviewPrep.mock.connectSteps.${CONNECT_STEPS[step]}`)}
         </span>
       )}
 
       <h2 className={`mt-3 text-lg sm:text-xl font-bold ${dark ? 'text-white' : 'text-slate-900'}`}>
         {connected
-          ? 'Connected — here we go.'
+          ? t('interviewPrep.mock.connecting.connectedHeadline')
           : isHandoff && activeSeat
-            ? `Bringing in ${activeSeat.name}…`
+            ? t('interviewPrep.mock.connecting.bringingIn', { name: activeSeat.name })
             : hasPanel
-              ? 'Connecting you with your panel…'
-              : 'Connecting you with your interviewer…'}
+              ? t('interviewPrep.mock.connecting.connectingPanel')
+              : t('interviewPrep.mock.connecting.connectingInterviewer')}
       </h2>
       {!connected && isHandoff && activeSeat && (
         <p className={`mt-1 text-sm font-semibold ${dark ? 'text-slate-300' : 'text-slate-600'}`}>
@@ -2424,14 +2471,16 @@ const ConnectingView = ({
       )}
       <p className={`mt-1 text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
         {connected
-          ? 'Putting you through…'
-          : `${firstName && firstName !== 'there' ? `One moment, ${firstName}.` : 'One moment.'}${
-              title ? ` ${title}` : ''
-            }`}
+          ? t('interviewPrep.mock.connecting.puttingThrough')
+          : `${
+              firstName && firstName !== 'there'
+                ? t('interviewPrep.mock.connecting.oneMomentName', { name: firstName })
+                : t('interviewPrep.mock.connecting.oneMoment')
+            }${title ? ` ${title}` : ''}`}
       </p>
       {!connected && mode === 'conversational' && !hasPanel && (
         <p className={`mt-2 text-xs max-w-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Setting up a live conversation — this works best on a strong, stable connection.
+          {t('interviewPrep.mock.connecting.convHint')}
         </p>
       )}
 
@@ -2467,7 +2516,9 @@ const ConnectingView = ({
 };
 
 // Shown while the AI scores a finished conversational interview.
-const GradingView = () => (
+const GradingView = () => {
+  const { t } = useTranslation();
+  return (
   <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
     <div className="relative mb-6">
       <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-2 ring-slate-900/10 dark:ring-white/20 flex items-center justify-center p-3 shadow-xl">
@@ -2479,10 +2530,10 @@ const GradingView = () => (
       </div>
     </div>
     <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-      Scoring your interview…
+      {t('interviewPrep.mock.grading.title')}
     </h2>
     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-      Assessing your answers against your CV and the role — the things interviewers look for.
+      {t('interviewPrep.mock.grading.body')}
     </p>
     <div className="mt-5 flex items-center gap-1.5" aria-hidden>
       <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce" />
@@ -2496,7 +2547,8 @@ const GradingView = () => (
       />
     </div>
   </div>
-);
+  );
+};
 
 // ── Intro ──
 const IntroView = ({
@@ -2531,6 +2583,7 @@ const IntroView = ({
   wrapUp,
   setWrapUp,
 }) => {
+  const { t } = useTranslation();
   const [activeSubView, setActiveSubView] = useState('main'); // 'main' | 'mic' | 'breathe' | 'length'
 
   return (
@@ -2556,7 +2609,10 @@ const IntroView = ({
                 <h1 className="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
                   <Briefcase className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" />
                   <span>
-                    {title.toLowerCase().endsWith('interview') ? title : `${title} Interview`}
+                    {title === t('interviewPrep.mock.interviewTitleFallback') ||
+                    title.toLowerCase().endsWith('interview')
+                      ? title
+                      : t('interviewPrep.mock.interviewHeading', { title })}
                   </span>
                 </h1>
               </div>
@@ -2564,8 +2620,7 @@ const IntroView = ({
               {count === 0 ? (
                 <>
                   <p className="relative z-10 text-sm text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
-                    No interview questions yet. Generate interview prep first to activate the
-                    simulation.
+                    {t('interviewPrep.mock.intro.noQuestions')}
                   </p>
                   <div className="relative z-10 mt-6 text-center">
                     <button
@@ -2573,7 +2628,7 @@ const IntroView = ({
                       onClick={onCancel}
                       className="btn-primary px-5 py-2.5 rounded-xl text-sm cursor-pointer select-none"
                     >
-                      Back to prep
+                      {t('interviewPrep.mock.intro.backToPrep')}
                     </button>
                   </div>
                 </>
@@ -2581,39 +2636,39 @@ const IntroView = ({
                 <>
                   {mode === 'conversational' ? (
                     <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed text-center">
-                      Hi{' '}
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
-                        {firstName}
-                      </span>{' '}
-                      — take a breath. Your ApplyRight AI interviewer will{' '}
-                      <strong className="text-slate-900 dark:text-slate-100">
-                        actually talk with you
-                      </strong>
-                      : it reacts to your answers and asks natural follow-ups. Reply by voice or
-                      text — just have the conversation.
+                      <Trans
+                        i18nKey="interviewPrep.mock.intro.ledeConversational"
+                        values={{ name: firstName }}
+                        components={{
+                          n: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+                          b: <strong className="text-slate-900 dark:text-slate-100" />,
+                        }}
+                      />
                     </p>
                   ) : (
                     <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-305 mt-2 leading-relaxed text-center">
-                      Hi{' '}
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
-                        {firstName}
-                      </span>{' '}
-                      — take a breath. Your ApplyRight AI interviewer will ask each question aloud.
-                      Answer out loud as if you’re in the room, then{' '}
-                      <strong className="text-slate-900 dark:text-slate-100">
-                        reveal a model answer
-                      </strong>{' '}
-                      and rate how it felt.
+                      <Trans
+                        i18nKey="interviewPrep.mock.intro.ledeScripted"
+                        values={{ name: firstName }}
+                        components={{
+                          n: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+                          b: <strong className="text-slate-900 dark:text-slate-100" />,
+                        }}
+                      />
                     </p>
                   )}
                   {mode === 'conversational' && (
                     <div className="relative z-10 mt-2 border-l-2 border-amber-400 pl-3 flex items-start gap-2">
                       <Mic className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          Find a quiet spot first.
-                        </span>{' '}
-                        The interviewer is always listening. Earphones help a lot.
+                        <Trans
+                          i18nKey="interviewPrep.mock.intro.quietSpot"
+                          components={{
+                            b: (
+                              <span className="font-semibold text-slate-800 dark:text-slate-200" />
+                            ),
+                          }}
+                        />
                       </p>
                     </div>
                   )}
@@ -2630,20 +2685,22 @@ const IntroView = ({
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          You’ve done {trend.count} {trend.count === 1 ? 'interview' : 'interviews'}
-                          .
+                          {t('interviewPrep.mock.intro.trendDone', { count: trend.count })}
                         </span>{' '}
                         {trend.trend === 'up' && trend.firstConfidence && trend.lastConfidence
-                          ? `Your nerves are easing — ${CONF_WORD[trend.firstConfidence]} → ${CONF_WORD[trend.lastConfidence]}. `
+                          ? t('interviewPrep.mock.intro.trendEasing', {
+                              from: t(`interviewPrep.mock.confWord.${trend.firstConfidence}`),
+                              to: t(`interviewPrep.mock.confWord.${trend.lastConfidence}`),
+                            })
                           : ''}
-                        Each rep builds confidence.
+                        {t('interviewPrep.mock.intro.trendRep')}
                       </p>
                     </div>
                   )}
                   <div className="relative z-10 mt-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-2 gap-2 divide-x divide-slate-100 dark:divide-slate-800">
                     <div className="flex flex-col items-center justify-center text-center px-1">
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 leading-none">
-                        Questions
+                        {t('interviewPrep.mock.intro.statsQuestions')}
                       </p>
                       <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
                         {count}
@@ -2662,16 +2719,18 @@ const IntroView = ({
                     >
                       <div className="flex items-center gap-1.5 leading-none">
                         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                          Duration
+                          {t('interviewPrep.mock.intro.statsDuration')}
                         </p>
                         {mode === 'conversational' && (
                           <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold underline decoration-dotted">
-                            Edit
+                            {t('interviewPrep.mock.intro.statsEdit')}
                           </span>
                         )}
                       </div>
                       <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
-                        ~{Math.round(plannedSec / 60)} min
+                        {t('interviewPrep.mock.intro.minutesApprox', {
+                          n: Math.round(plannedSec / 60),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -2680,14 +2739,18 @@ const IntroView = ({
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
                       <div>
                         <span className="font-semibold text-slate-705 dark:text-slate-295">
-                          Last session:
+                          {t('interviewPrep.mock.intro.lastSessionLabel')}
                         </span>{' '}
                         {typeof lastSession.score === 'number'
-                          ? `${lastSession.score}% overall · `
+                          ? t('interviewPrep.mock.intro.lastSessionScore', {
+                              score: lastSession.score,
+                            })
                           : ''}
                         {lastSession.flagged?.length
-                          ? `${lastSession.flagged.length} flagged questions to practice`
-                          : 'no questions flagged'}
+                          ? t('interviewPrep.mock.intro.lastSessionFlagged', {
+                              count: lastSession.flagged.length,
+                            })
+                          : t('interviewPrep.mock.intro.lastSessionNoneFlagged')}
                         .
                       </div>
                     </div>
@@ -2708,7 +2771,8 @@ const IntroView = ({
                         onClick={() => setActiveSubView('length')}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                       >
-                        <Clock className="w-3.5 h-3.5" /> Adjust duration
+                        <Clock className="w-3.5 h-3.5" />{' '}
+                        {t('interviewPrep.mock.intro.adjustDuration')}
                       </button>
                       <span className="text-slate-200 dark:text-slate-750">|</span>
                     </>
@@ -2718,7 +2782,7 @@ const IntroView = ({
                     onClick={() => setActiveSubView('mic')}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
-                    <Mic className="w-3.5 h-3.5" /> Test your mic &amp; sound first
+                    <Mic className="w-3.5 h-3.5" /> {t('interviewPrep.setup.testMicFirst')}
                   </button>
                   <span className="text-slate-200 dark:text-slate-750">|</span>
                   <button
@@ -2726,7 +2790,7 @@ const IntroView = ({
                     onClick={() => setActiveSubView('breathe')}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
-                    <Wind className="w-3.5 h-3.5" /> Take a breath first
+                    <Wind className="w-3.5 h-3.5" /> {t('interviewPrep.mock.intro.takeBreathFirst')}
                   </button>
                 </div>
                 {showActions && (
@@ -2736,14 +2800,14 @@ const IntroView = ({
                       onClick={onStart}
                       className="btn-primary px-6 py-2.5 rounded-xl text-sm select-none cursor-pointer"
                     >
-                      Start interview
+                      {t('interviewPrep.preflight.startInterview')}
                     </button>
                     <button
                       type="button"
                       onClick={onCancel}
                       className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
                     >
-                      Back
+                      {t('interviewPrep.preflight.back')}
                     </button>
                   </div>
                 )}
@@ -2777,7 +2841,7 @@ const IntroView = ({
             <div className="w-full flex flex-col justify-between h-full">
               <div>
                 <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-4 text-center">
-                  Take a breath
+                  {t('interviewPrep.mock.intro.takeBreath')}
                 </p>
                 <div className="flex items-center justify-center py-4">
                   <BreathingExercise compact />
@@ -2789,7 +2853,7 @@ const IntroView = ({
                   onClick={() => setActiveSubView('main')}
                   className="btn-primary px-4 py-1.5 rounded-lg text-xs cursor-pointer"
                 >
-                  Done
+                  {t('interviewPrep.setup.done')}
                 </button>
               </div>
             </div>
@@ -2807,7 +2871,7 @@ const IntroView = ({
           >
             <div className="w-full flex-grow flex flex-col justify-center">
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-5 text-center">
-                Set interview length
+                {t('interviewPrep.mock.intro.setLength')}
               </p>
 
               <div className="max-w-sm mx-auto w-full bg-slate-55/40 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-5">
@@ -2819,13 +2883,15 @@ const IntroView = ({
                           htmlFor="inline-interview-length"
                           className="text-sm font-semibold text-slate-700 dark:text-slate-200"
                         >
-                          Duration
+                          {t('interviewPrep.mock.intro.duration')}
                         </label>
                         <span className="text-sm font-bold text-slate-900 dark:text-white">
-                          {Math.round((lengthSec || lengthMinSec) / 60)} min
+                          {t('interviewPrep.mock.endModal.spentMinutes', {
+                            n: Math.round((lengthSec || lengthMinSec) / 60),
+                          })}
                           {Math.round((lengthSec || lengthMinSec) / 60) === 10 && (
                             <span className="ml-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                              recommended
+                              {t('interviewPrep.mock.intro.recommendedTag')}
                             </span>
                           )}
                         </span>
@@ -2845,20 +2911,24 @@ const IntroView = ({
                         className="w-full accent-slate-900 cursor-pointer"
                       />
                       <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-450">
-                        {`Min ${Math.round(lengthMinSec / 60)} · Max ${Math.round(
-                          lengthMaxSec / 60
-                        )} min · Balance ${Math.floor((liveSecondsAvailable || 0) / 60)} min`}
+                        {t('interviewPrep.mock.intro.lengthRange', {
+                          min: Math.round(lengthMinSec / 60),
+                          max: Math.round(lengthMaxSec / 60),
+                          balance: Math.floor((liveSecondsAvailable || 0) / 60),
+                        })}
                       </p>
                       <p className="mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                        💡 10 minutes is recommended for a complete interview.
+                        {t('interviewPrep.mock.intro.lengthTip')}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                     {entitlement?.tier === 'free'
-                      ? `Your free interview runs up to ${Math.ceil((liveSecondsAvailable || 0) / 60)} min.`
-                      : 'Add minutes to run a longer interview.'}
+                      ? t('interviewPrep.mock.intro.freeLength', {
+                          n: Math.ceil((liveSecondsAvailable || 0) / 60),
+                        })
+                      : t('interviewPrep.mock.intro.addMinutes')}
                   </p>
                 )}
 
@@ -2872,11 +2942,11 @@ const IntroView = ({
                     className="mt-0.5 h-4 w-4 accent-slate-900 cursor-pointer"
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-200">
-                    Allow a short wrap-up (~90s)
+                    {t('interviewPrep.mock.intro.allowWrapUp')}
                     <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5 leading-normal">
                       {wrapUp
-                        ? 'Counts toward your minutes so the interviewer can finish your answer and close out.'
-                        : 'The interview stops exactly at time — no wrap-up.'}
+                        ? t('interviewPrep.mock.intro.wrapUpOn')
+                        : t('interviewPrep.mock.intro.wrapUpOff')}
                     </span>
                   </span>
                 </label>
@@ -2889,7 +2959,7 @@ const IntroView = ({
                 onClick={() => setActiveSubView('main')}
                 className="btn-primary px-4.5 py-2 rounded-xl text-xs cursor-pointer"
               >
-                Back to setup
+                {t('interviewPrep.mock.intro.backToSetup')}
               </button>
             </div>
           </motion.div>
@@ -2902,6 +2972,7 @@ const IntroView = ({
 // Adaptive follow-up — the premium "real interview" upgrade. The user types or
 // dictates their answer and the AI interviewer asks one dynamic follow-up.
 const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => {
+  const { t } = useTranslation();
   const [answer, setAnswer] = useState('');
   const [listening, setListening] = useState(false);
   const stopRef = useRef(null);
@@ -2915,18 +2986,17 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
     return (
       <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
         <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
-          Adaptive follow-up · Pro
+          {t('interviewPrep.mock.followUp.label')}
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
-          Let the AI interviewer react to your answer and ask a real follow-up — just like the live
-          interview. Unlimited on a Pro or Premium plan.
+          {t('interviewPrep.mock.followUp.freeBlurb')}
         </p>
         <button
           type="button"
           onClick={() => onUpgrade?.()}
           className="btn-primary gap-1.5 px-3 py-2 rounded-lg text-xs"
         >
-          <Sparkles className="w-3.5 h-3.5" /> Upgrade to unlock
+          <Sparkles className="w-3.5 h-3.5" /> {t('interviewPrep.mock.followUp.upgradeUnlock')}
         </button>
       </div>
     );
@@ -2949,17 +3019,16 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
   return (
     <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
       <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
-        Adaptive follow-up · Pro
+        {t('interviewPrep.mock.followUp.label')}
       </p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
-        Type or dictate your answer and the AI interviewer asks a real follow-up — just like the
-        live thing.
+        {t('interviewPrep.mock.followUp.paidBlurb')}
       </p>
       <textarea
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
-        placeholder="Your answer…"
+        placeholder={t('interviewPrep.mock.followUp.answerPlaceholder')}
         className="w-full text-[16px] sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200"
       />
       <div className="mt-2 flex items-center gap-2">
@@ -2973,7 +3042,8 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
-            <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
+            <Mic className="w-3.5 h-3.5" />{' '}
+            {listening ? t('interviewPrep.mock.stop') : t('interviewPrep.mock.dictate')}
           </button>
         )}
         <button
@@ -2983,17 +3053,17 @@ const FollowUpPanel = ({ onFollowUp, followUp, loading, isPaid, onUpgrade }) => 
           className="btn-primary gap-1.5 px-3 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
-            <AriaLoader inline tone="mono" size={14} label="Thinking…" />
+            <AriaLoader inline tone="mono" size={14} label={t('interviewPrep.mock.thinking')} />
           ) : (
             <Sparkles className="w-3.5 h-3.5" />
           )}
-          Ask me a follow-up
+          {t('interviewPrep.mock.followUp.ask')}
         </button>
       </div>
       {followUp && (
         <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1">
-            Interviewer follow-up
+            {t('interviewPrep.mock.followUp.interviewerFollowUp')}
           </p>
           <p className="text-sm text-slate-800 dark:text-slate-200 font-semibold leading-snug">
             “{followUp}”
@@ -3023,6 +3093,7 @@ const RunningView = ({
   isPaid,
   onUpgrade,
 }) => {
+  const { t } = useTranslation();
   const isLast = index + 1 >= total;
   const speaking = voiceState === 'speaking';
   const loading = voiceState === 'loading';
@@ -3087,21 +3158,22 @@ const RunningView = ({
               ApplyRight AI
             </p>
             <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
-              Your interviewer
+              {t('interviewPrep.mock.yourInterviewer')}
             </p>
             <div className="mt-1.5">
               {speaking ? (
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-900 dark:text-white">
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 animate-pulse" />{' '}
-                  Speaking…
+                  {t('interviewPrep.mock.speaking')}
                 </span>
               ) : loading ? (
                 <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 animate-pulse">
-                  Preparing question…
+                  {t('interviewPrep.mock.running.preparing')}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Listening
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{' '}
+                  {t('interviewPrep.mock.listening')}
                 </span>
               )}
             </div>
@@ -3110,18 +3182,25 @@ const RunningView = ({
           <button
             type="button"
             onClick={onReplay}
-            title="Hear the question again"
+            title={t('interviewPrep.mock.running.hearQuestionAgain')}
             className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer select-none"
           >
-            <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
+            <Volume2 className="w-3.5 h-3.5" />{' '}
+            <span className="hidden sm:inline">{t('interviewPrep.mock.hearAgain')}</span>
           </button>
         </div>
 
         {/* The question, framed as something the interviewer is asking you */}
         <div className="relative z-10 mt-4">
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-            Question {index + 1} of {total} · {TYPE_LABEL(question.type)} · ~{budgetMin(question)}{' '}
-            min
+            {t('interviewPrep.mock.running.questionMeta', {
+              index: index + 1,
+              total,
+              type: t(`interviewPrep.mock.types.${(question.type || '').toLowerCase()}`, {
+                defaultValue: t('interviewPrep.mock.types.question'),
+              }),
+              min: budgetMin(question),
+            })}
           </p>
           <h2 className="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">
             “{question.question}”
@@ -3132,7 +3211,7 @@ const RunningView = ({
       {/* Your turn — scrolls internally so the controls stay pinned and the page never scrolls */}
       <div className="flex-1 min-h-0 flex flex-col mt-4">
         <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2 px-1">
-          Your turn
+          {t('interviewPrep.mock.yourTurn')}
         </p>
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           <AnimatePresence mode="wait">
@@ -3145,8 +3224,7 @@ const RunningView = ({
                 className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-white/60 dark:bg-slate-900/60 text-center"
               >
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 max-w-md leading-relaxed">
-                  Answer out loud, as if you’re really in the room. When you’re done, reveal a model
-                  outline and rate how it felt.
+                  {t('interviewPrep.mock.running.answerPrompt')}
                 </p>
                 <button
                   type="button"
@@ -3154,7 +3232,7 @@ const RunningView = ({
                   className="btn-primary gap-2 px-6 py-3.5 rounded-xl text-sm select-none cursor-pointer"
                 >
                   <Eye className="w-4 h-4" />
-                  Reveal model answer
+                  {t('interviewPrep.mock.running.revealAnswer')}
                 </button>
               </motion.div>
             ) : (
@@ -3167,27 +3245,22 @@ const RunningView = ({
                 {/* Model answer outline */}
                 <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3">
                   <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-                    {question.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
+                    {question.isWeakness
+                      ? t('interviewPrep.mock.running.coachingStrategy')
+                      : t('interviewPrep.mock.running.modelOutline')}
                   </p>
                   <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-slate-300">
                     {question.suggestedAnswer ||
                       (question.isWeakness
-                        ? 'A strong weakness answer is personal, honest, and growth-oriented. Follow these principles:\n\n' +
-                          "1. **State a genuine weakness**: Choose a real growth area or technical skill you previously lacked. Avoid cliches like 'I'm a perfectionist'.\n" +
-                          "2. **Explain the steps you've taken**: Detail the concrete actions you've executed to improve (e.g., enrolling in a course, reading, seeking feedback).\n" +
-                          '3. **Show positive progress**: Conclude by demonstrating how you apply your learning to turn this gap into a strength.'
-                        : 'Structure your answer using the STAR framework:\n\n' +
-                          '• **Situation**: Outline the context or problem you faced.\n' +
-                          '• **Task**: Explain the goal or responsibility you had.\n' +
-                          '• **Action**: Describe the specific actions you took (focus on *your* contributions).\n' +
-                          '• **Result**: Share the quantitative outcomes, lessons learned, or improvements.')}
+                        ? t('interviewPrep.mock.running.defaultWeakness')
+                        : t('interviewPrep.mock.running.defaultStar'))}
                   </div>
                 </div>
 
                 {/* Rating deck */}
                 <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-card">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-center sm:text-left">
-                    How did your answer feel?
+                    {t('interviewPrep.mock.running.howFeel')}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
@@ -3200,7 +3273,7 @@ const RunningView = ({
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                      Felt shaky
+                      {t('interviewPrep.mock.running.feltShaky')}
                     </button>
                     <button
                       type="button"
@@ -3212,7 +3285,7 @@ const RunningView = ({
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                      Felt okay
+                      {t('interviewPrep.mock.running.feltOkay')}
                     </button>
                     <button
                       type="button"
@@ -3224,7 +3297,7 @@ const RunningView = ({
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                      Felt strong
+                      {t('interviewPrep.mock.running.feltStrong')}
                     </button>
                   </div>
                 </div>
@@ -3251,14 +3324,14 @@ const RunningView = ({
           onClick={onSkip}
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer select-none"
         >
-          <SkipForward className="w-3.5 h-3.5" /> Skip question
+          <SkipForward className="w-3.5 h-3.5" /> {t('interviewPrep.mock.running.skipQuestion')}
         </button>
 
         <div className="flex items-center gap-3">
           {!currentRating && revealed && (
             <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 animate-ping" />
-              Pick a rating
+              {t('interviewPrep.mock.running.pickRating')}
             </span>
           )}
           <button
@@ -3266,7 +3339,10 @@ const RunningView = ({
             onClick={onNext}
             className="btn-primary gap-1.5 px-5 py-2.5 rounded-xl text-xs cursor-pointer select-none"
           >
-            {isLast ? 'Finish interview' : 'Next question'} <ArrowRight className="w-3.5 h-3.5" />
+            {isLast
+              ? t('interviewPrep.mock.running.finishInterview')
+              : t('interviewPrep.mock.running.nextQuestion')}{' '}
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -3300,6 +3376,7 @@ const ReviewView = ({
   onDone,
   onRateQuestion,
 }) => {
+  const { t } = useTranslation();
   const [openIdx, setOpenIdx] = useState(null);
 
   // Object URL for the just-recorded live session (replay on the review screen).
@@ -3319,12 +3396,10 @@ const ReviewView = ({
     return 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
   };
 
-  const confLabel = (c) => {
-    if (c === 'ready') return 'Strong';
-    if (c === 'almost') return 'Okay';
-    if (c === 'needs_work') return 'Shaky';
-    return 'Unrated';
-  };
+  const confLabel = (c) =>
+    c === 'ready' || c === 'almost' || c === 'needs_work'
+      ? t(`interviewPrep.mock.conf.${c}`)
+      : t('interviewPrep.mock.conf.unrated');
 
   const scoreTone = (s) =>
     s >= 75
@@ -3348,14 +3423,21 @@ const ReviewView = ({
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
-              Interview complete
+              {t('interviewPrep.mock.review.complete')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {assessment
-                ? `AI readiness score: ${overall}% — ${READINESS_LABEL[assessment.readiness] || ''}`
+                ? t('interviewPrep.mock.review.aiScore', {
+                    score: overall,
+                    readiness: assessment.readiness
+                      ? t(`interviewPrep.mock.readiness.${assessment.readiness}`, {
+                          defaultValue: '',
+                        })
+                      : '',
+                  })
                 : overall != null
-                  ? `Self-assessed performance score: ${overall}% average`
-                  : 'Complete your ratings to calculate your score.'}
+                  ? t('interviewPrep.mock.review.selfScore', { score: overall })
+                  : t('interviewPrep.mock.review.completeRatings')}
             </p>
           </div>
         </div>
@@ -3365,15 +3447,15 @@ const ReviewView = ({
           <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-55/40 dark:bg-slate-950/40 p-4.5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
-                Your interview recording
+                {t('interviewPrep.mock.review.recordingTitle')}
               </p>
               <span className="text-[9px] font-semibold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
-                Saved locally
+                {t('interviewPrep.mock.review.savedLocally')}
               </span>
             </div>
             <AudioPlayer src={recordingUrl} durationHint={recordingDuration} />
             <p className="mt-3.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-              Saved on this device — find it again under “Past interviews” on your prep page.
+              {t('interviewPrep.mock.review.recordingNote')}
             </p>
           </div>
         )}
@@ -3385,12 +3467,13 @@ const ReviewView = ({
               <Lock className="w-6 h-6 text-slate-900 dark:text-white" />
             </div>
             <h2 className="mt-4 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              Nice — you finished your free practice run!
+              {t('interviewPrep.mock.review.freeRunTitle')}
             </h2>
             <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-              That was a free taste — practice only. Grab a Practice Pass to run a full mock
-              interview <span className="font-semibold">with a scored review</span>: your readiness
-              score, per-answer feedback, and exactly what to fix.
+              <Trans
+                i18nKey="interviewPrep.mock.review.freeRunBody"
+                components={{ b: <span className="font-semibold" /> }}
+              />
             </p>
             <div className="mt-5 flex flex-col items-center gap-2.5">
               <button
@@ -3400,18 +3483,20 @@ const ReviewView = ({
                 className="btn-primary gap-2 px-5 py-2.5 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed text-sm cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                {buyingPass ? 'Starting checkout…' : 'Interview & Score Review — ₦1,000'}
+                {buyingPass
+                  ? t('interviewPrep.interviewPaywall.startingCheckout')
+                  : t('interviewPrep.mock.review.buyPass')}
               </button>
               <button
                 type="button"
                 onClick={onUpgrade}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                Or see all plans <ArrowRight className="w-3.5 h-3.5" />
+                {t('interviewPrep.mock.review.seeAllPlans')} <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
             <p className="mt-3 text-[11px] text-slate-450 dark:text-slate-500">
-              One scored practice run. No subscription.
+              {t('interviewPrep.mock.review.oneScoredRun')}
             </p>
           </div>
         ) : assessment ? (
@@ -3419,17 +3504,17 @@ const ReviewView = ({
         ) : gradeError ? (
           <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/15 p-4 text-center">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              We couldn’t score this interview just now.
+              {t('interviewPrep.mock.review.gradeErrorTitle')}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Your answers are still here — give it another try.
+              {t('interviewPrep.mock.review.gradeErrorBody')}
             </p>
             <button
               type="button"
               onClick={onRetryAssessment}
               className="mt-3 btn-primary gap-1.5 px-4 py-2 rounded-xl text-sm cursor-pointer"
             >
-              <RefreshCw className="w-4 h-4" /> Re-run assessment
+              <RefreshCw className="w-4 h-4" /> {t('interviewPrep.mock.review.rerunAssessment')}
             </button>
           </div>
         ) : (
@@ -3437,7 +3522,7 @@ const ReviewView = ({
             {/* Self confidence overall (guided/scripted mode) */}
             <div className="mt-6">
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2.5">
-                How did that feel overall?
+                {t('interviewPrep.mock.review.howFeelOverall')}
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 {CONF.map((c) => (
@@ -3451,7 +3536,7 @@ const ReviewView = ({
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
-                    {c.label}
+                    {t(`interviewPrep.mock.conf.${c.id}`)}
                   </button>
                 ))}
               </div>
@@ -3464,8 +3549,12 @@ const ReviewView = ({
                 disabled={saving}
                 className="btn-primary gap-1.5 px-4.5 py-2.5 rounded-xl text-sm select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {saving ? <AriaLoader inline tone="mono" size={16} label="Saving…" /> : null}
-                {saved ? 'Update my review' : 'Save my review'}
+                {saving ? (
+                  <AriaLoader inline tone="mono" size={16} label={t('interviewPrep.mock.saving')} />
+                ) : null}
+                {saved
+                  ? t('interviewPrep.mock.review.updateReview')
+                  : t('interviewPrep.mock.review.saveReview')}
               </button>
             </div>
           </>
@@ -3475,7 +3564,7 @@ const ReviewView = ({
         {!assessment && results.length > 0 && (
           <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
             <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-3.5">
-              Your practiced questions — tick any you want to keep working on
+              {t('interviewPrep.mock.review.practicedList')}
             </p>
             <div className="space-y-3">
               {results.map((r, i) => {
@@ -3491,7 +3580,7 @@ const ReviewView = ({
                         type="button"
                         onClick={() => toggleFlag(r._origIndex)}
                         className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white transition-colors"
-                        title="Flag to work on"
+                        title={t('interviewPrep.mock.review.flagToWork')}
                       >
                         {on ? (
                           <CheckCircle2 className="w-4.5 h-4.5 text-slate-900 dark:text-white" />
@@ -3517,25 +3606,22 @@ const ReviewView = ({
                         {/* Suggested answer outline */}
                         <div>
                           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">
-                            {r.isWeakness ? 'Coaching strategy' : 'Model answer outline'}
+                            {r.isWeakness
+                              ? t('interviewPrep.mock.running.coachingStrategy')
+                              : t('interviewPrep.mock.running.modelOutline')}
                           </p>
                           <p className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 whitespace-pre-line leading-relaxed">
                             {r.suggestedAnswer ||
                               (r.isWeakness
-                                ? "1. State a genuine weakness (avoid cliches like 'perfectionist').\n" +
-                                  '2. Detail concrete actions you are executing to improve (courses, feedback, practice).\n' +
-                                  '3. Show positive progress of turning this gap into a strength.'
-                                : '• Situation: Outline context/problem.\n' +
-                                  '• Task: Explain the goal/responsibility.\n' +
-                                  '• Action: Describe specific action steps you executed.\n' +
-                                  '• Result: Share quantitative outcomes or learnings.')}
+                                ? t('interviewPrep.mock.review.defaultWeaknessShort')
+                                : t('interviewPrep.mock.review.defaultStarShort'))}
                           </p>
                         </div>
 
                         {/* Micro rating adjustment */}
                         <div className="border-t border-slate-200/80 dark:border-slate-700/80 pt-3">
                           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-2">
-                            Adjust your rating
+                            {t('interviewPrep.mock.review.adjustRating')}
                           </p>
                           <div className="flex items-center gap-2">
                             {CONF.map((c) => (
@@ -3553,7 +3639,7 @@ const ReviewView = ({
                                     : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
                               >
-                                {c.label}
+                                {t(`interviewPrep.mock.conf.${c.id}`)}
                               </button>
                             ))}
                           </div>
@@ -3565,7 +3651,8 @@ const ReviewView = ({
                             onClick={() => onPracticeQuestion(r._origIndex)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-semibold transition-all cursor-pointer"
                           >
-                            <Play className="w-3.5 h-3.5" /> Practice this question
+                            <Play className="w-3.5 h-3.5" />{' '}
+                            {t('interviewPrep.mock.review.practiceThisQuestion')}
                           </button>
                         </div>
                       </div>
@@ -3584,21 +3671,21 @@ const ReviewView = ({
             onClick={onPracticeWeak}
             className="btn-primary gap-1.5 px-4.5 py-2.5 rounded-xl text-sm select-none cursor-pointer"
           >
-            <PlayCircle className="w-4 h-4" /> Practice weak spots
+            <PlayCircle className="w-4 h-4" /> {t('interviewPrep.mock.review.practiceWeak')}
           </button>
           <button
             type="button"
             onClick={onRetake}
             className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-all cursor-pointer select-none"
           >
-            <RefreshCw className="w-4 h-4" /> Retake
+            <RefreshCw className="w-4 h-4" /> {t('interviewPrep.mock.review.retake')}
           </button>
           <button
             type="button"
             onClick={onDone}
             className="sm:ml-auto px-4.5 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none text-center"
           >
-            Back to prep
+            {t('interviewPrep.mock.intro.backToPrep')}
           </button>
         </div>
       </div>
@@ -3626,6 +3713,7 @@ const ModeCard = ({
   accent,
   onPick,
   badge,
+  startLabel,
 }) => {
   // Free during testing: everyone can start either mode. The pill tells the
   // user which tier this mode will need once Interview Mode becomes paid.
@@ -3679,86 +3767,94 @@ const ModeCard = ({
           onClick={onPick}
           className={`w-full px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer select-none ${accent.btn}`}
         >
-          {name.startsWith('Conversational') ? 'Start conversational' : 'Start guided'}
+          {startLabel}
         </button>
       </div>
     </div>
   );
 };
 
-const ModeChooserView = ({ title, userTier, onPick, onCancel }) => (
-  <div className="relative">
-    <div className="text-center mb-5">
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-        Choose your interview
-      </h1>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-        Two ways to practice for{' '}
-        <span className="font-semibold text-slate-700 dark:text-slate-300">{title}</span> — pick the
-        one that fits your connection.
-      </p>
-    </div>
+const ModeChooserView = ({ title, userTier, onPick, onCancel }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="relative">
+      <div className="text-center mb-5">
+        <h1 className="font-heading text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {t('interviewPrep.mock.chooser.title')}
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <Trans
+            i18nKey="interviewPrep.mock.chooser.subtitle"
+            values={{ title }}
+            components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-300" /> }}
+          />
+        </p>
+      </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <ModeCard
-        icon={<MessageSquare className="w-5 h-5" />}
-        name="Conversational interview"
-        tierLabel="Paid"
-        tierKey="plus"
-        userTier={userTier}
-        blurb="A real back-and-forth. The AI reacts to what you actually say, references your CV, and asks natural follow-ups — the closest thing to the real room."
-        bullets={[
-          'Talks with you, not at you — live follow-ups',
-          'Reply by voice or text, at your own pace',
-          'Best on desktop / Chrome',
-        ]}
-        network="Needs excellent network coverage — every answer is a live round-trip to the interviewer."
-        networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
-        badge="Recommended"
-        accent={{
-          recommended: true,
-          btn: 'btn-primary',
-        }}
-        onPick={() => onPick('conversational')}
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ModeCard
+          icon={<MessageSquare className="w-5 h-5" />}
+          name={t('interviewPrep.mock.chooser.conversational.name')}
+          tierLabel={t('interviewPrep.mock.chooser.conversational.tier')}
+          tierKey="plus"
+          userTier={userTier}
+          blurb={t('interviewPrep.mock.chooser.conversational.blurb')}
+          bullets={[
+            t('interviewPrep.mock.chooser.conversational.bullet0'),
+            t('interviewPrep.mock.chooser.conversational.bullet1'),
+            t('interviewPrep.mock.chooser.conversational.bullet2'),
+          ]}
+          network={t('interviewPrep.mock.chooser.conversational.network')}
+          networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
+          badge={t('interviewPrep.mock.chooser.conversational.badge')}
+          startLabel={t('interviewPrep.mock.chooser.startConversational')}
+          accent={{
+            recommended: true,
+            btn: 'btn-primary',
+          }}
+          onPick={() => onPick('conversational')}
+        />
 
-      <ModeCard
-        icon={<BookOpen className="w-5 h-5" />}
-        name="Guided question reader"
-        tierLabel="Free"
-        tierKey="free"
-        userTier={userTier}
-        blurb="The interviewer reads each prepared question aloud with a warm, human delivery. You answer out loud, reveal a model outline, and rate how it felt."
-        bullets={[
-          'Steady, predictable pace — one question at a time',
-          'Reveal a model answer after each question',
-          'Self-rate to track your readiness',
-        ]}
-        network="Needs only a normal, good internet connection — questions are prepared up front, so brief dips are fine."
-        networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
-        accent={{
-          recommended: false,
-          btn: 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800',
-        }}
-        onPick={() => onPick('scripted')}
-      />
-    </div>
+        <ModeCard
+          icon={<BookOpen className="w-5 h-5" />}
+          name={t('interviewPrep.mock.chooser.guided.name')}
+          tierLabel={t('interviewPrep.mock.chooser.guided.tier')}
+          tierKey="free"
+          userTier={userTier}
+          blurb={t('interviewPrep.mock.chooser.guided.blurb')}
+          bullets={[
+            t('interviewPrep.mock.chooser.guided.bullet0'),
+            t('interviewPrep.mock.chooser.guided.bullet1'),
+            t('interviewPrep.mock.chooser.guided.bullet2'),
+          ]}
+          network={t('interviewPrep.mock.chooser.guided.network')}
+          networkIcon={<Wifi className="w-4 h-4 shrink-0 mt-0.5" />}
+          startLabel={t('interviewPrep.mock.chooser.startGuided')}
+          accent={{
+            recommended: false,
+            btn: 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800',
+          }}
+          onPick={() => onPick('scripted')}
+        />
+      </div>
 
-    <div className="mt-5 text-center">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none"
-      >
-        Cancel
-      </button>
+      <div className="mt-5 text-center">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none"
+        >
+          {t('interviewPrep.preflight.cancel')}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Shared interviewer "tile" for the conversational run — avatar + live voice
 // state + a replay button. (The guided RunningView keeps its own inline tile.)
 const InterviewerTile = ({ voiceState, onReplay }) => {
+  const { t } = useTranslation();
   const speaking = voiceState === 'speaking';
   const loading = voiceState === 'loading';
   return (
@@ -3785,21 +3881,22 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
             ApplyRight AI
           </p>
           <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
-            Your interviewer
+            {t('interviewPrep.mock.yourInterviewer')}
           </p>
           <div className="mt-1.5">
             {speaking ? (
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-900 dark:text-white">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white animate-pulse" />{' '}
-                Speaking…
+                {t('interviewPrep.mock.speaking')}
               </span>
             ) : loading ? (
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 animate-pulse">
-                Thinking…
+                {t('interviewPrep.mock.thinking')}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Listening
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />{' '}
+                {t('interviewPrep.mock.listening')}
               </span>
             )}
           </div>
@@ -3809,10 +3906,11 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
           <button
             type="button"
             onClick={onReplay}
-            title="Hear that again"
+            title={t('interviewPrep.mock.hearAgain')}
             className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer select-none"
           >
-            <Volume2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Hear again</span>
+            <Volume2 className="w-3.5 h-3.5" />{' '}
+            <span className="hidden sm:inline">{t('interviewPrep.mock.hearAgain')}</span>
           </button>
         )}
       </div>
@@ -3823,6 +3921,7 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
 // Reusable answer box — textarea + optional voice dictation + submit. Used by
 // the conversational run for every turn.
 const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
+  const { t } = useTranslation();
   const [answer, setAnswer] = useState('');
   const [listening, setListening] = useState(false);
   const stopRef = useRef(null);
@@ -3857,7 +3956,7 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         rows={4}
-        placeholder={placeholder || 'Answer naturally — speak or type…'}
+        placeholder={placeholder || t('interviewPrep.mock.conversation.answerPlaceholder')}
         className="w-full text-[16px] sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
       />
       <div className="mt-2 flex items-center gap-2">
@@ -3871,7 +3970,8 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
                 : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
             }`}
           >
-            <Mic className="w-3.5 h-3.5" /> {listening ? 'Stop' : 'Dictate'}
+            <Mic className="w-3.5 h-3.5" />{' '}
+            {listening ? t('interviewPrep.mock.stop') : t('interviewPrep.mock.dictate')}
           </button>
         )}
         <button
@@ -3881,11 +3981,11 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
           className="ml-auto btn-primary gap-1.5 px-4 py-2 rounded-lg text-xs disabled:opacity-50"
         >
           {loading ? (
-            <AriaLoader inline tone="mono" size={14} label="Thinking…" />
+            <AriaLoader inline tone="mono" size={14} label={t('interviewPrep.mock.thinking')} />
           ) : (
             <Send className="w-3.5 h-3.5" />
           )}
-          Send answer
+          {t('interviewPrep.mock.conversation.sendAnswer')}
         </button>
       </div>
     </div>
@@ -3896,48 +3996,51 @@ const AnswerComposer = ({ onSubmit, loading, placeholder }) => {
 // Turn-based conversational fallback (Android / no-mic). It's a real
 // conversation, so the QUESTION is NOT shown on screen — you listen and reply.
 // The typed composer stays here because it's the only way to answer without a mic.
-const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.96, y: 10 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    className="flex flex-col h-[calc(100dvh-5.5rem)]"
-  >
-    {/* header row */}
-    <div className="shrink-0 flex items-center justify-between mb-3 px-1">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
-        Conversation in progress
-      </p>
-      <button
-        type="button"
-        onClick={onEnd}
-        className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-      >
-        End &amp; review
-      </button>
-    </div>
-
-    <InterviewerTile voiceState={voiceState} onReplay={onReplay} />
-
-    {/* Your turn — listen to the interviewer, then answer (no question shown) */}
-    <div className="flex-1 min-h-0 flex flex-col mt-4">
-      <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-2 px-1">
-        Your turn
-      </p>
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-        <AnswerComposer onSubmit={onSubmit} loading={turnLoading} />
-        <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          Listen to the interviewer, then answer like you would in a real interview — they respond
-          to what you say.
+const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }) => {
+  const { t } = useTranslation();
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col h-[calc(100dvh-5.5rem)]"
+    >
+      {/* header row */}
+      <div className="shrink-0 flex items-center justify-between mb-3 px-1">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
+          {t('interviewPrep.mock.conversation.inProgress')}
         </p>
+        <button
+          type="button"
+          onClick={onEnd}
+          className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+        >
+          {t('interviewPrep.mock.endReview')}
+        </button>
       </div>
-    </div>
-  </motion.div>
-);
+
+      <InterviewerTile voiceState={voiceState} onReplay={onReplay} />
+
+      {/* Your turn — listen to the interviewer, then answer (no question shown) */}
+      <div className="flex-1 min-h-0 flex flex-col mt-4">
+        <p className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-2 px-1">
+          {t('interviewPrep.mock.yourTurn')}
+        </p>
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          <AnswerComposer onSubmit={onSubmit} loading={turnLoading} />
+          <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            {t('interviewPrep.mock.conversation.helper')}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 // Generic interviewer shown on the Meet-style stage for free/solo live sessions
 // (no AI-generated panel). Gives free users the same polished call surface.
-const SOLO_SEAT = { name: 'ApplyRight AI', role: 'Your interviewer' };
+// `name` is the brand (untranslated); `roleKey` resolves via t() in RealtimeView.
+const SOLO_SEAT = { name: 'ApplyRight AI', roleKey: 'interviewPrep.mock.yourInterviewer' };
 
 // ── Realtime (live voice) view — VOICE ONLY, no text, no question on screen ──
 const RealtimeView = ({
@@ -3956,29 +4059,35 @@ const RealtimeView = ({
   candidateName = '',
   handingOff = false,
 }) => {
+  const { t } = useTranslation();
+  const soloSeat = { name: SOLO_SEAT.name, role: t(SOLO_SEAT.roleKey) };
   // Everyone gets the Google-Meet-style stage — the polished call surface costs
   // nothing. Paid interviews show the real roster (named, JD-tailored seats +
   // multi-voice); free/solo (no roster) shows the SAME stage with one generic
   // ApplyRight AI interviewer, so the free live-interview UX feels identical.
   const hasRoster = Array.isArray(panel) && panel.length >= 1;
-  const stageSeats = hasRoster ? panel : [SOLO_SEAT];
+  const stageSeats = hasRoster ? panel : [soloSeat];
   // Light up the generic seat's tile while it's speaking; a real roster has the
   // orchestrator drive activeSeat. Header (above) keeps using the raw activeSeat
   // so it only shows a name for a real named interviewer.
-  const stageActiveSeat = hasRoster ? activeSeat : SOLO_SEAT;
+  const stageActiveSeat = hasRoster ? activeSeat : soloSeat;
   const speaking = voiceState === 'speaking';
   const connecting = voiceState === 'loading';
   // Single source of truth for the live status line — shown large on desktop and
   // compact inside the mobile control dock so the two never drift.
   const statusPrimary = handingOff
-    ? `Bringing in ${activeSeat?.name || 'the next interviewer'}…`
+    ? activeSeat?.name
+      ? t('interviewPrep.mock.realtime.bringingIn', { name: activeSeat.name })
+      : t('interviewPrep.mock.realtime.bringingInGeneric')
     : inGrace
-      ? 'We’re at time — any questions for me?'
+      ? t('interviewPrep.mock.realtime.atTime')
       : connecting
-        ? 'Connecting…'
+        ? t('interviewPrep.mock.realtime.connecting')
         : speaking
-          ? `${activeSeat?.name || 'Interviewer'} is speaking`
-          : 'Go ahead — I’m listening';
+          ? t('interviewPrep.mock.realtime.isSpeaking', {
+              name: activeSeat?.name || t('interviewPrep.mock.realtime.interviewerGeneric'),
+            })
+          : t('interviewPrep.mock.realtime.goAhead');
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -3989,7 +4098,7 @@ const RealtimeView = ({
       <div className="shrink-0 flex items-center justify-between mb-3 px-1">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
-            Live voice interview
+            {t('interviewPrep.mock.realtime.liveVoice')}
           </p>
           {activeSeat && activeSeat.name && (
             <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
@@ -4002,7 +4111,7 @@ const RealtimeView = ({
           <button
             type="button"
             onClick={onToggleCaptions}
-            title="Toggle captions"
+            title={t('interviewPrep.mock.realtime.toggleCaptions')}
             aria-pressed={captionsOn}
             className={`inline-flex items-center gap-1 py-2 px-2 -my-1 rounded-lg text-[11px] font-bold transition-colors ${
               captionsOn
@@ -4021,7 +4130,9 @@ const RealtimeView = ({
                   : 'text-slate-500 dark:text-slate-400'
             }`}
           >
-            {inGrace ? `Wrapping up · ${fmt(secondsLeft)}` : `${fmt(secondsLeft)} left`}
+            {inGrace
+              ? t('interviewPrep.mock.realtime.wrappingUpTime', { time: fmt(secondsLeft) })
+              : t('interviewPrep.mock.realtime.timeLeft', { time: fmt(secondsLeft) })}
           </span>
         </div>
       </div>
@@ -4046,10 +4157,10 @@ const RealtimeView = ({
         </p>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {handingOff
-            ? 'Handing you over to the next person on the panel — one moment.'
+            ? t('interviewPrep.mock.realtime.handoffSecondary')
             : inGrace
-              ? 'Just wrapping up — ask anything you’d like, then we’ll close.'
-              : 'Just talk — the interviewer hears you and replies in real time.'}
+              ? t('interviewPrep.mock.realtime.graceSecondary')
+              : t('interviewPrep.mock.realtime.defaultSecondary')}
         </p>
       </div>
 
@@ -4057,7 +4168,7 @@ const RealtimeView = ({
       {captionsOn && (
         <div className="shrink-0 mt-4 mx-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 min-h-[3rem]">
           <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
-            Interviewer (captions)
+            {t('interviewPrep.mock.realtime.captionsLabel')}
           </p>
           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
             {caption || '…'}
@@ -4087,14 +4198,16 @@ const RealtimeView = ({
             ) : (
               <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             )}
-            {muted ? 'Unmute' : 'Mute'}
+            {muted
+              ? t('interviewPrep.mock.realtime.unmute')
+              : t('interviewPrep.mock.realtime.mute')}
           </button>
           <button
             type="button"
             onClick={onEnd}
             className="btn-primary flex-1 sm:flex-none gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl text-sm sm:text-xs cursor-pointer select-none"
           >
-            End &amp; review
+            {t('interviewPrep.mock.endReview')}
           </button>
         </div>
       </div>

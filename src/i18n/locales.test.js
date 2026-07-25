@@ -122,6 +122,13 @@ describe('locale files', () => {
       'interviewPrep.calmKit.pause', // "Pause" — same word in French
       'interviewPrep.practiceRunner.labelQuestion', // "Question" — same word in French
       'interviewPrep.audioPlayer.pause', // "Pause" — same word in French
+      // Prompt B (MockInterviewPage) — genuinely language-neutral:
+      'interviewPrep.mock.types.intro', // "Intro" — same abbreviation in French
+      'interviewPrep.mock.types.motivation', // "Motivation" — same word in French
+      'interviewPrep.mock.types.question', // "Question" — same word in French
+      'interviewPrep.mock.intro.statsQuestions', // "Questions" — same word in French
+      'interviewPrep.mock.intro.minutesApprox', // "~{{n}} min" — units, language-neutral
+      'interviewPrep.mock.endModal.spentMinutes', // "{{n}} min" — units, language-neutral
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);
