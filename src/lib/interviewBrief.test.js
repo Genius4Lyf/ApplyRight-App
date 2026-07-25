@@ -1,12 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { buildRoomBrief, evidenceForStage } from './interviewBrief';
+import en from '../i18n/locales/en.json';
+
+// buildRoomBrief/evidenceForStage are plain JS (no react-i18next context), so they
+// return i18n KEYS (+ interpolation params) rather than resolved English prose —
+// every caller (a React component with useTranslation) resolves them with t().
+// These tests assert on the actual COPY the keys point at, by resolving them
+// against en.json with the same {{param}} interpolation react-i18next uses.
+const getByPath = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj);
+
+const tt = (key, params) => {
+  const str = getByPath(en, key);
+  if (typeof str !== 'string') throw new Error(`Missing key in en.json: ${key}`);
+  if (!params) return str;
+  return str.replace(/\{\{(\w+)\}\}/g, (_, k) => (params[k] ?? ''));
+};
 
 describe('what counts as evidence — career-stage aware', () => {
   it('tells a graduate plainly that a job example is not required', () => {
     const e = evidenceForStage('grad');
-    expect(e.headline).toMatch(/not the only thing that counts/i);
-    expect(e.body).toMatch(/do not need a paid role/i);
-    const all = e.sources.join(' ').toLowerCase();
+    expect(tt(e.headlineKey)).toMatch(/not the only thing that counts/i);
+    expect(tt(e.bodyKey)).toMatch(/do not need a paid role/i);
+    const all = e.sourceKeys
+      .map((k) => tt(k))
+      .join(' ')
+      .toLowerCase();
     // The evidence sources that actually exist in a Nigerian graduate's life.
     ['project', 'nysc', 'volunteer', 'societ', 'side hustle', 'internship'].forEach((s) =>
       expect(all).toContain(s)
@@ -15,16 +33,16 @@ describe('what counts as evidence — career-stage aware', () => {
 
   it('gives a mid-career candidate specificity guidance, not permission', () => {
     const e = evidenceForStage('experienced');
-    expect(e.headline).toMatch(/specifics/i);
-    expect(e.sources.join(' ')).toMatch(/numbers/i);
+    expect(tt(e.headlineKey)).toMatch(/specifics/i);
+    expect(e.sourceKeys.map((k) => tt(k)).join(' ')).toMatch(/numbers/i);
     // And never tells an experienced candidate a job is optional.
-    expect(e.body).not.toMatch(/do not need a paid role/i);
+    expect(tt(e.bodyKey)).not.toMatch(/do not need a paid role/i);
     // Anti-fabrication carries into the brief too.
-    expect(e.closer).toMatch(/rather than inventing one/i);
+    expect(tt(e.closerKey)).toMatch(/rather than inventing one/i);
   });
 
   it('handles a career changer distinctly', () => {
-    expect(evidenceForStage('changer').headline).toMatch(/old field still counts/i);
+    expect(tt(evidenceForStage('changer').headlineKey)).toMatch(/old field still counts/i);
   });
 
   it('falls back to the graduate copy for an unknown or missing stage', () => {
@@ -43,7 +61,7 @@ describe('the brief describes the room that will actually run', () => {
       ],
       plannedSec: 900,
     });
-    expect(b.kind.label).toMatch(/Panel interview · 2 interviewers/);
+    expect(tt(b.kind.labelKey, b.kind.labelParams)).toMatch(/Panel interview · 2 interviewers/);
     expect(b.minutes).toBe(15);
     expect(b.caresAbout).toHaveLength(2);
     expect(b.caresAbout[1]).toEqual({ who: 'Bola', role: 'Engineer', focus: 'systems' });
@@ -54,22 +72,24 @@ describe('the brief describes the room that will actually run', () => {
       careerStage: 'experienced',
       interviewer: { name: 'Chidi', role: 'Engineering Manager', focus: 'delivery' },
     });
-    expect(b.kind.label).toMatch(/One-on-one with Chidi/);
+    expect(tt(b.kind.labelKey, b.kind.labelParams)).toMatch(/One-on-one with Chidi/);
     expect(b.caresAbout[0].focus).toBe('delivery');
   });
 
   it('falls back to the interview style when there is no panel', () => {
-    expect(buildRoomBrief({ style: 'technical' }).kind.label).toMatch(/Technical deep-dive/);
-    expect(buildRoomBrief({ style: 'screening' }).kind.label).toMatch(/screening/i);
-    expect(buildRoomBrief({}).kind.label).toMatch(/General interview/);
+    expect(tt(buildRoomBrief({ style: 'technical' }).kind.labelKey)).toMatch(
+      /Technical deep-dive/
+    );
+    expect(tt(buildRoomBrief({ style: 'screening' }).kind.labelKey)).toMatch(/screening/i);
+    expect(tt(buildRoomBrief({}).kind.labelKey)).toMatch(/General interview/);
   });
 
   it('describes the challenge level as pressure, never as comfort', () => {
-    expect(buildRoomBrief({ challenge: 'gentle' }).challengeNote).toMatch(/low pressure/i);
-    expect(buildRoomBrief({ challenge: 'tough' }).challengeNote).toMatch(/pressure-test/i);
+    expect(tt(buildRoomBrief({ challenge: 'gentle' }).challengeNoteKey)).toMatch(/low pressure/i);
+    expect(tt(buildRoomBrief({ challenge: 'tough' }).challengeNoteKey)).toMatch(/pressure-test/i);
     // No promise of reassurance the room will not deliver.
     ['gentle', 'realistic', 'tough'].forEach((c) => {
-      expect(buildRoomBrief({ challenge: c }).challengeNote).not.toMatch(
+      expect(tt(buildRoomBrief({ challenge: c }).challengeNoteKey)).not.toMatch(
         /encourag|reassur|confidence/i
       );
     });
@@ -94,23 +114,38 @@ describe('the brief describes the room that will actually run', () => {
 describe('the brief carries what the room stopped saying', () => {
   it('sets the expectation that the interviewer has their CV and will cross-check', () => {
     const b = buildRoomBrief({});
-    expect(b.cvNote).toMatch(/CV open in front of them/i);
-    expect(b.cvNote).toMatch(/asked to square the two/i);
+    const cvNote = tt(b.cvNoteKey);
+    expect(cvNote).toMatch(/CV open in front of them/i);
+    expect(cvNote).toMatch(/asked to square the two/i);
     // Framed as a CV gap, not as suspicion — matching the room's Phase 1 stance.
-    expect(b.cvNote).toMatch(/your CV is missing something/i);
+    expect(cvNote).toMatch(/your CV is missing something/i);
   });
 
   it('gives explicit permission to be bad at it', () => {
     const b = buildRoomBrief({});
-    expect(b.permission).toMatch(/allowed to freeze/i);
-    expect(b.permission).toMatch(/run it again/i);
+    const permission = tt(b.permissionKey);
+    expect(permission).toMatch(/allowed to freeze/i);
+    expect(permission).toMatch(/run it again/i);
   });
 
   it('never promises the interviewer will be encouraging', () => {
     const b = buildRoomBrief({ careerStage: 'grad', challenge: 'gentle' });
-    const text = JSON.stringify(b);
-    expect(text).not.toMatch(/will encourage you/i);
-    expect(text).not.toMatch(/they will reassure/i);
+    // Resolve every key the brief references and check the actual copy — not
+    // just the object of keys, which would trivially never match this regex.
+    const resolvedText = [
+      tt(b.kind.labelKey, b.kind.labelParams),
+      tt(b.kind.aboutKey, b.kind.aboutParams),
+      tt(b.challengeNoteKey),
+      tt(b.cvNoteKey),
+      tt(b.permissionKey),
+      tt(b.evidence.headlineKey),
+      tt(b.evidence.bodyKey),
+      tt(b.evidence.closerKey),
+      ...b.evidence.sourceKeys.map((k) => tt(k)),
+      ...b.lookingForKeys.map((k) => tt(k)),
+    ].join(' ');
+    expect(resolvedText).not.toMatch(/will encourage you/i);
+    expect(resolvedText).not.toMatch(/they will reassure/i);
   });
 
   it('is fully derived — nothing here requires an AI call', () => {

@@ -59,7 +59,7 @@ const RoomBrief = ({
       {/* (a) what kind of interview + how long */}
       <Row icon={Clock} title={t('interviewPrep.roomBrief.whatThisIs')}>
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {brief.kind.label}
+          {t(brief.kind.labelKey, brief.kind.labelParams)}
           {brief.minutes > 0 && (
             <span className="font-normal text-slate-500 dark:text-slate-400">
               {' '}
@@ -68,26 +68,28 @@ const RoomBrief = ({
           )}
         </p>
         <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-          {brief.kind.about}
+          {t(brief.kind.aboutKey, brief.kind.aboutParams)}
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-          {brief.challengeNote}
+          {t(brief.challengeNoteKey)}
         </p>
       </Row>
 
       {/* (b) what this interviewer cares about */}
-      {(brief.lookingFor.length > 0 || brief.caresAbout.length > 0 || brief.topics.length > 0) && (
+      {(brief.lookingForKeys.length > 0 ||
+        brief.caresAbout.length > 0 ||
+        brief.topics.length > 0) && (
         <Row icon={Users} title={t('interviewPrep.roomBrief.whatTheyCareAbout')}>
           {/* From the archetype's arc — what this round is actually weighing. */}
-          {brief.lookingFor.length > 0 && (
+          {brief.lookingForKeys.length > 0 && (
             <ul className="space-y-1 mb-2">
-              {brief.lookingFor.map((c, i) => (
+              {brief.lookingForKeys.map((k, i) => (
                 <li
                   key={i}
                   className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed"
                 >
                   <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-slate-400 dark:bg-slate-500" />
-                  <span>{c}</span>
+                  <span>{t(k)}</span>
                 </li>
               ))}
             </ul>
@@ -118,37 +120,39 @@ const RoomBrief = ({
       <Row icon={Lightbulb} title={t('interviewPrep.roomBrief.whatCountsAsEvidence')}>
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-3.5">
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            {brief.evidence.headline}
+            {t(brief.evidence.headlineKey)}
           </p>
           <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
-            {brief.evidence.body}
+            {t(brief.evidence.bodyKey)}
           </p>
           <ul className="mt-2 space-y-1">
-            {brief.evidence.sources.map((s, i) => (
+            {brief.evidence.sourceKeys.map((k, i) => (
               <li
                 key={i}
                 className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed"
               >
                 <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-slate-400 dark:bg-slate-500" />
-                <span>{s}</span>
+                <span>{t(k)}</span>
               </li>
             ))}
           </ul>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-            {brief.evidence.closer}
+            {t(brief.evidence.closerKey)}
           </p>
         </div>
       </Row>
 
       {/* (d) they have your CV */}
       <Row icon={FileText} title={t('interviewPrep.roomBrief.theyHaveYourCv')}>
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{brief.cvNote}</p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          {t(brief.cvNoteKey)}
+        </p>
       </Row>
 
       {/* (e) permission to be bad at it */}
       <Row icon={RefreshCw} title={t('interviewPrep.roomBrief.allowedToBeBad')}>
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          {brief.permission}
+          {t(brief.permissionKey)}
         </p>
       </Row>
     </div>

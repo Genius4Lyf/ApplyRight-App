@@ -182,26 +182,28 @@ export const computeInterviewGate = (application) => {
 
   const tasks = [];
 
+  // `labelKey`/`hintKey` resolve via t() at render (InterviewReadinessChecklist,
+  // InterviewPrepDetail) — this module has no react-i18next context of its own.
   if (!isCvOnly) {
     tasks.push(
       {
         key: 'questions',
-        label: 'Generate interview prep',
-        hint: 'Your likely questions for this role.',
+        labelKey: 'interviewPrep.gate.tasks.questions.label',
+        hintKey: 'interviewPrep.gate.tasks.questions.hint',
         tab: 'questions',
         done: questions.length > 0,
       },
       {
         key: 'pitch',
-        label: 'Prepare your pitch',
-        hint: '“Tell me about yourself.”',
+        labelKey: 'interviewPrep.gate.tasks.pitch.label',
+        hintKey: 'interviewPrep.gate.tasks.pitch.hint',
         tab: 'questions',
         done: hasType('intro'),
       },
       {
         key: 'motivation',
-        label: 'Prepare “Why this role”',
-        hint: 'Show why you want this job.',
+        labelKey: 'interviewPrep.gate.tasks.motivation.label',
+        hintKey: 'interviewPrep.gate.tasks.motivation.hint',
         tab: 'questions',
         done: hasType('motivation'),
       }
@@ -210,8 +212,8 @@ export const computeInterviewGate = (application) => {
 
   tasks.push({
     key: 'weakness',
-    label: 'Draft your weakness',
-    hint: 'A real growth area + what you’re doing about it.',
+    labelKey: 'interviewPrep.gate.tasks.weakness.label',
+    hintKey: 'interviewPrep.gate.tasks.weakness.hint',
     tab: 'notes',
     done: hasWeaknessNote(application),
   });
@@ -219,8 +221,8 @@ export const computeInterviewGate = (application) => {
   if (!isCvOnly) {
     tasks.push({
       key: 'asks',
-      label: 'Questions to ask the interviewer',
-      hint: 'Have a few sharp questions ready.',
+      labelKey: 'interviewPrep.gate.tasks.asks.label',
+      hintKey: 'interviewPrep.gate.tasks.asks.hint',
       tab: 'questions',
       done: asks.length > 0,
     });
@@ -228,8 +230,8 @@ export const computeInterviewGate = (application) => {
 
   tasks.push({
     key: 'story',
-    label: 'Build a STAR story',
-    hint: 'At least one story to draw on.',
+    labelKey: 'interviewPrep.gate.tasks.story.label',
+    hintKey: 'interviewPrep.gate.tasks.story.hint',
     tab: 'stories',
     done: stories.length > 0,
   });

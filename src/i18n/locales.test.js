@@ -129,6 +129,11 @@ describe('locale files', () => {
       'interviewPrep.mock.intro.statsQuestions', // "Questions" — same word in French
       'interviewPrep.mock.intro.minutesApprox', // "~{{n}} min" — units, language-neutral
       'interviewPrep.mock.endModal.spentMinutes', // "{{n}} min" — units, language-neutral
+      // Prompt E (HowToAceYourInterview) — genuinely language-neutral:
+      'howToAce.star.situationTitle', // "Situation" — identical STAR-method label in French
+      'howToAce.star.actionTitle', // "Action" — identical STAR-method label in French
+      'howToAce.rubric.d3Label', // "Structure (STAR)" — the acronym stays as-is in French
+      'howToAce.rubric.bandAlmostRange', // "45 – 74" — a number range, language-neutral
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

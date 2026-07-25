@@ -2395,6 +2395,303 @@
         "saved": "Interview saved",
         "saveFailed": "Failed to save interview"
       }
+    },
+    "brief": {
+      "kind": {
+        "panel": {
+          "label": "Panel interview · {{n}} interviewers",
+          "about": "Each interviewer covers their own area and hands over. Answer the person asking; they have all read your CV."
+        },
+        "oneOnOne": {
+          "label": "One-on-one with {{name}}, {{role}}",
+          "about": "This whole round is {{name}}’s lens — expect depth in their area rather than broad coverage."
+        },
+        "style": {
+          "screening": {
+            "label": "First-round screening call",
+            "about": "Fit, motivation and a broad walk through your background. It stays high-level — this is not a technical test."
+          },
+          "technical": {
+            "label": "Technical deep-dive",
+            "about": "The hard skills this role needs. Expect to be asked how and why, and to be pushed for specifics."
+          },
+          "behavioral": {
+            "label": "Behavioural / competency interview",
+            "about": "Past situations — “tell me about a time…”. Expect follow-ups on what you personally did."
+          },
+          "balanced": {
+            "label": "General interview",
+            "about": "A mix of background, motivation and role-relevant skill questions."
+          }
+        },
+        "archetype": {
+          "screening": {
+            "label": "Screening interview",
+            "about": "A recruiter-style first round: who you are, why this role and this employer, and a walk through your evidence at a high level. Not a technical test.",
+            "cares": {
+              "0": "Whether you can frame yourself clearly",
+              "1": "Motivation that is specific to this role and employer",
+              "2": "Concrete evidence, and what YOU personally did"
+            }
+          },
+          "behavioural": {
+            "label": "Behavioural interview",
+            "about": "A competency round built on real situations — working with others, setbacks, and things you started yourself. Expect follow-ups on what YOU did.",
+            "cares": {
+              "0": "Real situations, not general views",
+              "1": "Situation → what you did → what happened",
+              "2": "Honest self-awareness, including what went badly"
+            }
+          }
+        }
+      },
+      "challenge": {
+        "gentle": "Set to low pressure: unhurried, and it will take a reasonable answer at face value.",
+        "realistic": "Set to realistic: it will ask for specifics and follow up when an answer is thin.",
+        "tough": "Set to tough: it will pressure-test your claims and push back on vague answers."
+      },
+      "cvNote": "The interviewer has your CV open in front of them and may ask about anything on it. If you mention something that is not on there, expect to be asked to square the two — that is normal, and it usually means your CV is missing something.",
+      "permission": "This is practice. You are allowed to freeze, ramble, or give an answer you regret — that is what it is for, and none of it counts against you. You can run it again as many times as you like.",
+      "evidence": {
+        "grad": {
+          "headline": "A job is not the only thing that counts as experience",
+          "body": "You do not need a paid role to answer these questions well. Any of these is real, usable evidence, and interviewers accept them:",
+          "sources": {
+            "0": "Course projects, your final-year project, or a dissertation",
+            "1": "Volunteering, NYSC, or a church/community role",
+            "2": "Student societies, class rep, a club you helped run",
+            "3": "Side hustles, freelance work, anything you built or sold",
+            "4": "Internships, industrial training, or holiday work",
+            "5": "Something you taught yourself and then actually used"
+          },
+          "closer": "Pick the example with the most detail you can remember — what the situation was, what YOU did, and how it turned out."
+        },
+        "experienced": {
+          "headline": "Bring specifics, not job descriptions",
+          "body": "You have the material. What separates a strong answer from a flat one is detail:",
+          "sources": {
+            "0": "A situation you personally owned, not what your team generally did",
+            "1": "The decision you made and what you traded off",
+            "2": "Numbers where you have them — size, time, money, volume, percentage",
+            "3": "What actually happened afterwards, including when it went badly",
+            "4": "Work outside your job title: side projects, mentoring, things you fixed"
+          },
+          "closer": "If you cannot remember an exact number, say the scale honestly rather than inventing one — a made-up figure is the fastest way to lose a real interview."
+        },
+        "changer": {
+          "headline": "Evidence from your old field still counts",
+          "body": "You are not starting from zero. Draw on both sides:",
+          "sources": {
+            "0": "Transferable work from your previous field — the skill, not the job title",
+            "1": "Projects, courses or certifications from the switch itself",
+            "2": "Anything you have built, freelanced or volunteered in the new field",
+            "3": "Why you are moving — have a clear, honest answer ready"
+          },
+          "closer": "Connect each example explicitly to what this role needs; do not leave the interviewer to work out the link."
+        }
+      }
+    },
+    "gate": {
+      "tasks": {
+        "questions": {
+          "label": "Generate interview prep",
+          "hint": "Your likely questions for this role."
+        },
+        "pitch": {
+          "label": "Prepare your pitch",
+          "hint": "“Tell me about yourself.”"
+        },
+        "motivation": {
+          "label": "Prepare “Why this role”",
+          "hint": "Show why you want this job."
+        },
+        "weakness": {
+          "label": "Draft your weakness",
+          "hint": "A real growth area + what you’re doing about it."
+        },
+        "asks": {
+          "label": "Questions to ask the interviewer",
+          "hint": "Have a few sharp questions ready."
+        },
+        "story": {
+          "label": "Build a STAR story",
+          "hint": "At least one story to draw on."
+        }
+      }
+    }
+  },
+  "howToAce": {
+    "pageTitle": "How to Ace Your Interview — ApplyRight",
+    "hero": {
+      "kicker": "Interviewing is a learnable skill",
+      "titleLead": "How to",
+      "titleAccent": "Ace Your Interview",
+      "subcopy": "Nobody is born good at interviews — it's a skill you practise. This guide shows you exactly what great answers look like, and exactly how we score you, so you can rehearse for the real thing with confidence.",
+      "cta": "Take an Interview Session and See your Score"
+    },
+    "listening": {
+      "kicker": "What they're listening for",
+      "title": "What Interviewers Are Actually Listening For",
+      "p1": "Behind every question, an interviewer is listening for one thing: <b>signal</b>. Evidence that you can do the job. Proof that you've thought about <i>this</i> role specifically. A sense that you'd be good to have on the team.",
+      "p2": "Vague, generic, or rehearsed-sounding answers are noise — they could come from any candidate for any job. The candidates who stand out aren't the smoothest talkers; they're the ones who give <b>specific, evidenced answers</b> that clearly map to what the role needs.",
+      "p3": "Everything below — the STAR method, the question playbook, and how we score you — is really about one goal: turning what you've genuinely done into clear, convincing signal."
+    },
+    "star": {
+      "kicker": "The STAR method",
+      "title": "The STAR Method — the Backbone of Strong Answers",
+      "subcopy": "The single most reliable way to structure a behavioural answer. Four beats that turn a vague memory into a story that lands.",
+      "situationTitle": "Situation",
+      "situationBody": "Set the scene in one or two sentences. Just enough context for the story to make sense — don't over-explain.",
+      "taskTitle": "Task",
+      "taskBody": "What were you responsible for? What was the goal or the problem you had to solve?",
+      "actionTitle": "Action",
+      "actionBody": "What did YOU personally do? This is the heart of it — \"we\" hides your contribution, \"I\" reveals it.",
+      "resultTitle": "Result",
+      "resultBody": "How did it end? Quantify wherever you honestly can — \"cut processing time 30%\" beats \"it went well.\"",
+      "weakLabel": "Weak answer",
+      "sampleQuestion": "\"Tell me about a time you solved a difficult problem.\"",
+      "weakBody": "\"We had a lot of issues with our system being slow, so I worked with the team and we fixed it. Everyone was happy with the result and it was a good experience.\"",
+      "weakNote": "No specifics, no \"I\", no measurable outcome. It could be anyone, on any project.",
+      "starLabel": "STAR answer",
+      "sameQuestion": "Same question.",
+      "starBody": "\"Our checkout page was timing out for about 1 in 5 users <s1>(Situation)</s1>. I owned fixing it before the holiday rush <s2>(Task)</s2>. I profiled the requests, found an un-indexed database query, added the index and cached the slowest call <s3>(Action)</s3>. Load time dropped from 4.2s to 0.8s and checkout completion rose 12% that month <s4>(Result)</s4>.\"",
+      "starNote": "Specific, owned, measurable. This is the answer that earns the score."
+    },
+    "questionTypes": {
+      "kicker": "The six question types",
+      "title": "The Six Question Types — and How to Handle Each",
+      "subcopy": "Almost every interview question is a variation of these. Know the move for each and nothing catches you off guard.",
+      "q1Title": "\"Tell me about yourself\"",
+      "q1Example": "Almost always the opener.",
+      "q1Approach": "A tight 60–90s narrative: present (what you do now) → past (the experience that got you here) → why-here (why this role, this company). Not your life story — a trailer for the rest of the interview.",
+      "q2Title": "Behavioural",
+      "q2Example": "\"Tell me about a time you…\"",
+      "q2Approach": "Pure STAR territory. Reach for a real, specific story with a concrete outcome. The interviewer is testing whether your example holds up under follow-up questions — so pick ones you actually lived.",
+      "q3Title": "Technical / role-specific",
+      "q3Example": "\"Walk me through how you'd…\"",
+      "q3Approach": "They care about your reasoning more than the \"right\" answer. Think out loud, name the trade-offs, explain why you'd choose one path over another. Show the decisions, not just the conclusion.",
+      "q4Title": "Motivation / fit",
+      "q4Example": "\"Why this role? Why us?\"",
+      "q4Approach": "This is where research shows. Reference something specific about the team, product, or mission — and connect it to what you genuinely want next. Generic flattery reads as \"I'll take any job.\"",
+      "q5Title": "Weakness / growth",
+      "q5Example": "\"What's a weakness?\"",
+      "q5Approach": "Name a real one and what you're actively doing about it. Skip the humble-brags (\"I work too hard\") — they're transparent. Self-awareness plus a plan is the signal they want.",
+      "q6Title": "\"Any questions for us?\"",
+      "q6Example": "The closer.",
+      "q6Approach": "Never say \"no.\" Have 2–3 thoughtful questions ready about the team, the challenges of the role, or how success is measured. It's your last chance to show genuine interest."
+    },
+    "checklist": {
+      "kicker": "Before & during",
+      "title": "Before & During — the Practical Checklist",
+      "beforeLabel": "Before",
+      "beforeHeading": "Before the interview",
+      "before1": "Research the company and the role — read the job description twice and find something specific about the team or product.",
+      "before2": "Know your own CV cold. Every line is fair game for a follow-up.",
+      "before3": "Prepare 5–6 STAR stories mapped to the competencies the role likely tests.",
+      "before4": "Rehearse out loud — not in your head. Saying it is a different skill from thinking it.",
+      "before5": "Prepare your 2–3 questions for them in advance.",
+      "duringLabel": "During",
+      "duringHeading": "During the interview",
+      "during1": "Answer the question that was actually asked — don't pivot to a rehearsed speech.",
+      "during2": "Be specific and quantify whenever you honestly can.",
+      "during3": "Stay honest. Never claim what you can't back up — it unravels under follow-ups.",
+      "during4": "Keep answers to roughly 60–90 seconds, then stop and let them dig in.",
+      "during5": "Ask a clarifying question if you need one — it's a strength, not a weakness.",
+      "deliveryHeading": "A note on delivery",
+      "deliveryBody": "In a real, in-person interview, delivery matters too — eye contact (or camera contact on video), steady pacing, structure over rambling, staying calm under pressure. Our score reads a transcript, so it judges your <b>content only</b> — but in the room, how you say it counts. Practise both.",
+      "mistakesHeading": "Common mistakes to avoid",
+      "mistake1": "Vague, generic answers that could fit any job",
+      "mistake2": "Going off-topic or rambling past the point",
+      "mistake3": "Badmouthing past employers",
+      "mistake4": "Reciting an obviously memorised script",
+      "mistake5": "Having no questions at the end",
+      "mistake6": "Claiming skills or experience not on your CV"
+    },
+    "rounds": {
+      "kicker": "Interviews come in rounds",
+      "title": "Real Interviews Come in Rounds",
+      "subcopy": "Most hiring processes aren't one conversation — they're a sequence of rounds, each with a different person looking for something different.",
+      "r1Title": "The recruiter / HR screen",
+      "r1Body": "First contact. They're checking motivation, basic fit, and whether your story holds together — \"why this role, why now?\"",
+      "r2Title": "The technical / specialist round",
+      "r2Body": "A deep dive with someone who does your job. Here it's all about depth, reasoning, and real examples of your work.",
+      "r3Title": "The hiring manager",
+      "r3Body": "The person who'll lead you. They weigh role fit, how you'd work with the team, and whether they want you on it.",
+      "closer": "That's exactly why ApplyRight lets you <b>pick your interviewer</b> and run each round in any order — it mirrors a real hiring loop, so you practise the whole journey, not just one chat."
+    },
+    "rubric": {
+      "kicker": "The exact rubric",
+      "title": "How ApplyRight Scores Your Mock Interview",
+      "subcopy": "No black box. After every interview we read your transcript and rate it across seven dimensions — the same things real interviewers look for. Here's exactly how it works.",
+      "d1Label": "Relevance to the role",
+      "d1Body": "Do your answers speak to what this specific job actually needs — or could they apply to any job anywhere?",
+      "d2Label": "Evidence & specificity",
+      "d2Body": "Real examples, names, numbers, outcomes. Concrete beats abstract every single time.",
+      "d3Label": "Structure (STAR)",
+      "d3Body": "Are your stories organised — situation, task, action, result — or do they wander and trail off?",
+      "d4Label": "Communication & clarity",
+      "d4Body": "Clear, focused answers that get to the point. Rambling buries your best material.",
+      "d5Label": "Depth & role fit",
+      "d5Body": "Genuine understanding of the work, not surface-level buzzwords — and a fit for the seniority of the role.",
+      "d6Label": "Motivation & company fit",
+      "d6Body": "Do you show real interest in this role and company, or could this be a script for anyone?",
+      "d7Label": "Consistency with CV",
+      "d7Body": "Your spoken answers should match your CV. Claims it can't back up are flagged as overreach.",
+      "scoredNote": "Scored 0–100",
+      "bandNeedsWork": "Needs work",
+      "bandNeedsWorkRange": "Below 45",
+      "bandNeedsWorkBody": "Answers are too vague or generic to show you're ready yet.",
+      "bandAlmost": "Almost",
+      "bandAlmostRange": "45 – 74",
+      "bandAlmostBody": "Solid, evidenced answers that are nearly there.",
+      "bandReady": "Ready",
+      "bandReadyRange": "75 and up",
+      "bandReadyBody": "Specific, role-relevant, well-structured — interview-ready.",
+      "fp1Bold": "It judges content, not your voice.",
+      "fp1Body": "The score reads a transcript — your tone, accent, and audio quality never affect it. Only what you said.",
+      "fp2Bold": "Honesty counts.",
+      "fp2Body": "Claims your CV can't support are flagged as overreach under \"Consistency with CV\" and count against you.",
+      "fp3Bold": "Speak fully.",
+      "fp3Body": "If you barely answer (under ~40 characters total), you score 0. Give real, complete answers out loud — about 60–90 seconds each.",
+      "fp4Bold": "You get coached, every time.",
+      "fp4Body": "Per-dimension scores plus Strengths, Gaps to close, and Practice next — viewable per interviewer in the Reviews tab."
+    },
+    "practice": {
+      "kicker": "Practise with a conversation",
+      "title": "Practise With a Real Conversation",
+      "subcopy": "Reading about interviews only gets you so far. ApplyRight's live voice interview lets you actually do it — and get scored.",
+      "f1Title": "Live voice, real conversation",
+      "f1Body": "It listens and reacts to your answers — it follows up and digs in, not a fixed list of questions.",
+      "f2Title": "Grounded in your CV + the job",
+      "f2Body": "It asks about your real experience and this specific role — not generic textbook questions.",
+      "f3Title": "Pick your interviewer",
+      "f3Body": "HR, hiring manager, or a role specialist — each stays in their lane, just like a real loop.",
+      "f4Title": "Set the difficulty",
+      "f4Body": "Choose gentle, realistic, or challenging — warm up easy, then turn up the pressure.",
+      "f5Title": "Scored + coached",
+      "f5Body": "The 7-dimension rubric plus tailored next steps after every single round.",
+      "f6Title": "Complete the loop",
+      "f6Body": "Practise every interviewer in any order — each round builds your combined readiness across the whole loop."
+    },
+    "finalCta": {
+      "kicker": "See where you stand",
+      "title": "Ready to find out where you stand?",
+      "subcopy": "Everything on this page is something you can practise right now — in a real, scored conversation grounded in your CV and the job you want.",
+      "freeNote": "Free 5-minute taste — no card needed."
+    },
+    "faq": {
+      "kicker": "Questions, answered",
+      "title": "Questions, Answered",
+      "q1Q": "Is the score harsh?",
+      "q1A": "It's honest, not cruel. It rewards specific, evidenced, role-relevant answers and is candid about vague or generic ones — so the feedback actually helps you improve. Solid, well-evidenced answers comfortably clear the \"almost\" band.",
+      "q2Q": "Does my accent affect my score?",
+      "q2A": "No. The score reads a transcript of what you said — it judges content only. Your accent, tone, pace, and audio quality have zero effect on it.",
+      "q3Q": "How many minutes do I need?",
+      "q3A": "You get a free 5-minute taste to try it, no card needed. Each round is short, so that's enough to complete a full interview and get scored. Longer practice uses metered live-interview minutes.",
+      "q4Q": "Can I re-do a round?",
+      "q4A": "Yes. Run an interviewer as many times as you like — your scores and feedback are saved per interviewer in the Reviews tab, so you can watch yourself improve.",
+      "q5Q": "Is this like a real interview?",
+      "q5A": "Close. It's a live voice conversation that reacts to your answers, grounded in your CV and the specific job, with interviewers that stay in their lane — HR, hiring manager, or specialist. The main difference is it scores content only, where a real interview also weighs delivery."
     }
   }
 }

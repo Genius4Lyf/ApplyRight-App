@@ -809,11 +809,11 @@ const InterviewPrepDetail = () => {
                             : 'text-slate-700 dark:text-slate-200'
                         }`}
                       >
-                        {task.label}
+                        {t(task.labelKey)}
                       </span>
                       {!task.done && (
                         <span className="block text-[11px] leading-tight text-slate-400 dark:text-slate-500">
-                          {task.hint}
+                          {t(task.hintKey)}
                         </span>
                       )}
                     </span>

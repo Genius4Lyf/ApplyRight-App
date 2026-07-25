@@ -2391,6 +2391,303 @@
         "saved": "Entretien enregistré",
         "saveFailed": "Échec de l’enregistrement de l’entretien"
       }
+    },
+    "brief": {
+      "kind": {
+        "panel": {
+          "label": "Entretien en panel · {{n}} intervieweurs",
+          "about": "Chaque intervieweur couvre son propre domaine puis passe la main. Répondez à la personne qui pose la question ; ils ont tous lu votre CV."
+        },
+        "oneOnOne": {
+          "label": "En tête-à-tête avec {{name}}, {{role}}",
+          "about": "Tout ce tour se joue sous le regard de {{name}} — attendez-vous à de la profondeur sur son domaine plutôt qu’à une couverture large."
+        },
+        "style": {
+          "screening": {
+            "label": "Premier appel de sélection",
+            "about": "Adéquation, motivation et un large tour d’horizon de votre parcours. Cela reste général — ce n’est pas un test technique."
+          },
+          "technical": {
+            "label": "Entretien technique approfondi",
+            "about": "Les compétences techniques dont ce poste a besoin. Attendez-vous à devoir expliquer comment et pourquoi, et à être poussé vers des précisions."
+          },
+          "behavioral": {
+            "label": "Entretien comportemental / de compétences",
+            "about": "Des situations passées — « parlez-moi d’une fois où… ». Attendez-vous à des relances sur ce que VOUS avez fait personnellement."
+          },
+          "balanced": {
+            "label": "Entretien général",
+            "about": "Un mélange de parcours, de motivation et de questions de compétences liées au poste."
+          }
+        },
+        "archetype": {
+          "screening": {
+            "label": "Entretien de sélection",
+            "about": "Un premier tour façon recruteur : qui vous êtes, pourquoi ce poste et cet employeur, et un tour d’horizon de vos preuves à un niveau général. Ce n’est pas un test technique.",
+            "cares": {
+              "0": "Si vous pouvez vous présenter clairement",
+              "1": "Une motivation précise pour ce poste et cet employeur",
+              "2": "Des preuves concrètes, et ce que VOUS avez personnellement fait"
+            }
+          },
+          "behavioural": {
+            "label": "Entretien comportemental",
+            "about": "Un tour de compétences bâti sur des situations réelles — travail avec les autres, revers, et choses que vous avez lancées vous-même. Attendez-vous à des relances sur ce que VOUS avez fait.",
+            "cares": {
+              "0": "Des situations réelles, pas des avis généraux",
+              "1": "Situation → ce que vous avez fait → ce qui s’est passé",
+              "2": "Une lucidité honnête sur vous-même, y compris ce qui s’est mal passé"
+            }
+          }
+        }
+      },
+      "challenge": {
+        "gentle": "Réglé sur une pression faible : sans précipitation, et une réponse raisonnable sera prise pour argent comptant.",
+        "realistic": "Réglé sur réaliste : des précisions seront demandées et une relance suivra si une réponse est mince.",
+        "tough": "Réglé sur exigeant : vos affirmations seront mises à l’épreuve et les réponses vagues seront contestées."
+      },
+      "cvNote": "L’intervieweur a votre CV ouvert devant lui et peut vous questionner sur n’importe quel élément qui y figure. Si vous mentionnez quelque chose qui n’y est pas, attendez-vous à devoir concilier les deux — c’est normal, et cela signifie généralement qu’il manque quelque chose à votre CV.",
+      "permission": "C’est un entraînement. Vous avez le droit de vous figer, de partir dans tous les sens, ou de donner une réponse que vous regretterez — c’est justement à ça que ça sert, et rien de tout cela ne compte contre vous. Vous pouvez recommencer autant de fois que vous voulez.",
+      "evidence": {
+        "grad": {
+          "headline": "Un emploi n’est pas la seule chose qui compte comme expérience",
+          "body": "Vous n’avez pas besoin d’un poste rémunéré pour bien répondre à ces questions. Chacun de ces éléments constitue une preuve réelle et utilisable, acceptée par les recruteurs :",
+          "sources": {
+            "0": "Projets de cours, votre projet de fin d’études, ou un mémoire",
+            "1": "Bénévolat, NYSC, ou un rôle religieux/communautaire",
+            "2": "Associations étudiantes, délégué de classe, un club que vous avez aidé à faire tourner",
+            "3": "Petits business, freelance, tout ce que vous avez construit ou vendu",
+            "4": "Stages, formation en entreprise, ou jobs de vacances",
+            "5": "Quelque chose que vous vous êtes appris seul et que vous avez réellement utilisé"
+          },
+          "closer": "Choisissez l’exemple dont vous vous souvenez le mieux en détail — quelle était la situation, ce que VOUS avez fait, et comment cela s’est terminé."
+        },
+        "experienced": {
+          "headline": "Apportez des précisions, pas des fiches de poste",
+          "body": "Vous avez la matière. Ce qui distingue une réponse solide d’une réponse plate, c’est le détail :",
+          "sources": {
+            "0": "Une situation que vous avez personnellement portée, pas ce que votre équipe faisait en général",
+            "1": "La décision que vous avez prise et ce que vous avez sacrifié en échange",
+            "2": "Des chiffres quand vous les avez — taille, temps, argent, volume, pourcentage",
+            "3": "Ce qui s’est réellement passé ensuite, y compris quand ça s’est mal passé",
+            "4": "Du travail en dehors de votre intitulé de poste : projets personnels, mentorat, choses que vous avez corrigées"
+          },
+          "closer": "Si vous ne vous souvenez pas d’un chiffre exact, indiquez honnêtement l’ordre de grandeur plutôt que d’en inventer un — un chiffre inventé est le moyen le plus rapide de perdre un vrai entretien."
+        },
+        "changer": {
+          "headline": "Les preuves de votre ancien domaine comptent toujours",
+          "body": "Vous ne partez pas de zéro. Appuyez-vous sur les deux :",
+          "sources": {
+            "0": "Le travail transférable de votre ancien domaine — la compétence, pas l’intitulé du poste",
+            "1": "Les projets, formations ou certifications liés à la reconversion elle-même",
+            "2": "Tout ce que vous avez construit, fait en freelance ou en bénévolat dans le nouveau domaine",
+            "3": "Pourquoi vous changez de voie — ayez une réponse claire et honnête prête"
+          },
+          "closer": "Reliez explicitement chaque exemple à ce dont ce poste a besoin ; ne laissez pas l’intervieweur faire le lien lui-même."
+        }
+      }
+    },
+    "gate": {
+      "tasks": {
+        "questions": {
+          "label": "Générer la préparation à l’entretien",
+          "hint": "Vos questions probables pour ce poste."
+        },
+        "pitch": {
+          "label": "Préparez votre pitch",
+          "hint": "« Parlez-moi de vous. »"
+        },
+        "motivation": {
+          "label": "Préparez « Pourquoi ce poste »",
+          "hint": "Montrez pourquoi vous voulez ce poste."
+        },
+        "weakness": {
+          "label": "Rédigez votre faiblesse",
+          "hint": "Un véritable axe de progrès + ce que vous faites pour y remédier."
+        },
+        "asks": {
+          "label": "Questions à poser à l’intervieweur",
+          "hint": "Ayez quelques questions pertinentes prêtes."
+        },
+        "story": {
+          "label": "Construisez une histoire STAR",
+          "hint": "Au moins une histoire sur laquelle vous appuyer."
+        }
+      }
+    }
+  },
+  "howToAce": {
+    "pageTitle": "Comment réussir votre entretien — ApplyRight",
+    "hero": {
+      "kicker": "L'entretien, ça s'apprend",
+      "titleLead": "Comment",
+      "titleAccent": "réussir votre entretien",
+      "subcopy": "Personne ne naît doué pour les entretiens — c'est une compétence qui se travaille. Ce guide vous montre exactement à quoi ressemblent les bonnes réponses, et comment nous vous notons, pour que vous puissiez vous entraîner en confiance avant le jour J.",
+      "cta": "Faites une session d'entretien et découvrez votre score"
+    },
+    "listening": {
+      "kicker": "Ce qu'ils écoutent vraiment",
+      "title": "Ce Que les Recruteurs Écoutent Vraiment",
+      "p1": "Derrière chaque question, un recruteur écoute une seule chose : <b>un signal</b>. La preuve que vous savez faire le travail. La preuve que vous avez réfléchi à <i>ce</i> poste en particulier. Le sentiment que vous seriez un bon atout pour l'équipe.",
+      "p2": "Les réponses vagues, génériques ou trop répétées sont du bruit — elles pourraient venir de n'importe quel candidat pour n'importe quel poste. Les candidats qui se démarquent ne sont pas les plus éloquents ; ce sont ceux qui donnent des <b>réponses précises et étayées</b> qui répondent clairement aux besoins du poste.",
+      "p3": "Tout ce qui suit — la méthode STAR, le répertoire de questions, et notre façon de vous noter — poursuit un seul objectif : transformer ce que vous avez réellement accompli en un signal clair et convaincant."
+    },
+    "star": {
+      "kicker": "La méthode STAR",
+      "title": "La Méthode STAR — l'Ossature des Bonnes Réponses",
+      "subcopy": "La façon la plus fiable de structurer une réponse comportementale. Quatre temps qui transforment un souvenir vague en une histoire qui marque.",
+      "situationTitle": "Situation",
+      "situationBody": "Plantez le décor en une ou deux phrases. Juste assez de contexte pour que l'histoire ait du sens — n'en faites pas trop.",
+      "taskTitle": "Tâche",
+      "taskBody": "De quoi étiez-vous responsable ? Quel était l'objectif ou le problème à résoudre ?",
+      "actionTitle": "Action",
+      "actionBody": "Qu'avez-vous fait, VOUS, personnellement ? C'est le cœur de l'histoire — le « nous » masque votre contribution, le « je » la révèle.",
+      "resultTitle": "Résultat",
+      "resultBody": "Comment cela s'est-il terminé ? Chiffrez chaque fois que vous le pouvez honnêtement — « réduit le temps de traitement de 30 % » vaut mieux que « ça s'est bien passé ».",
+      "weakLabel": "Réponse faible",
+      "sampleQuestion": "« Parlez-moi d'une fois où vous avez résolu un problème difficile. »",
+      "weakBody": "« On avait beaucoup de problèmes de lenteur sur notre système, donc j'ai travaillé avec l'équipe et on l'a réglé. Tout le monde était content du résultat, c'était une bonne expérience. »",
+      "weakNote": "Aucune précision, aucun « je », aucun résultat mesurable. Ça pourrait être n'importe qui, sur n'importe quel projet.",
+      "starLabel": "Réponse STAR",
+      "sameQuestion": "Même question.",
+      "starBody": "« Notre page de paiement était en timeout pour environ 1 utilisateur sur 5 <s1>(Situation)</s1>. J'ai pris en charge la correction avant le pic des fêtes <s2>(Tâche)</s2>. J'ai analysé les requêtes, trouvé une requête de base de données sans index, ajouté l'index et mis en cache l'appel le plus lent <s3>(Action)</s3>. Le temps de chargement est passé de 4,2 s à 0,8 s et le taux de finalisation des paiements a augmenté de 12 % ce mois-là <s4>(Résultat)</s4>. »",
+      "starNote": "Précis, assumé, mesurable. C'est ce type de réponse qui obtient le score."
+    },
+    "questionTypes": {
+      "kicker": "Les six types de questions",
+      "title": "Les Six Types de Questions — et Comment les Gérer",
+      "subcopy": "Presque toutes les questions d'entretien sont une variation de celles-ci. Connaissez le bon réflexe pour chacune et rien ne vous prendra au dépourvu.",
+      "q1Title": "« Parlez-moi de vous »",
+      "q1Example": "Presque toujours la question d'ouverture.",
+      "q1Approach": "Un récit serré de 60 à 90 secondes : présent (ce que vous faites aujourd'hui) → passé (l'expérience qui vous a mené ici) → pourquoi ici (pourquoi ce poste, cette entreprise). Pas le récit de votre vie — une bande-annonce pour le reste de l'entretien.",
+      "q2Title": "Comportementale",
+      "q2Example": "« Parlez-moi d'une fois où vous… »",
+      "q2Approach": "Le terrain de jeu de STAR. Allez chercher une histoire réelle et précise, avec un résultat concret. Le recruteur teste si votre exemple tient sous les questions de relance — choisissez-en un que vous avez vraiment vécu.",
+      "q3Title": "Technique / spécifique au poste",
+      "q3Example": "« Expliquez-moi comment vous… »",
+      "q3Approach": "Votre raisonnement compte plus que la « bonne » réponse. Réfléchissez à voix haute, nommez les compromis, expliquez pourquoi vous choisiriez une voie plutôt qu'une autre. Montrez les décisions, pas seulement la conclusion.",
+      "q4Title": "Motivation / adéquation",
+      "q4Example": "« Pourquoi ce poste ? Pourquoi nous ? »",
+      "q4Approach": "C'est là que vos recherches se voient. Mentionnez quelque chose de précis sur l'équipe, le produit ou la mission — et reliez-le à ce que vous voulez vraiment ensuite. Les compliments génériques donnent l'impression que « n'importe quel poste ferait l'affaire ».",
+      "q5Title": "Point faible / axe de progrès",
+      "q5Example": "« Quel est votre point faible ? »",
+      "q5Approach": "Nommez-en un vrai et dites ce que vous faites concrètement pour progresser. Évitez les fausses modesties (« je travaille trop ») — elles se voient. La lucidité, plus un plan d'action, c'est le signal qu'ils recherchent.",
+      "q6Title": "« Des questions pour nous ? »",
+      "q6Example": "La question de clôture.",
+      "q6Approach": "Ne dites jamais « non ». Ayez 2 à 3 questions réfléchies prêtes sur l'équipe, les défis du poste, ou la façon dont la réussite est mesurée. C'est votre dernière chance de montrer un intérêt sincère."
+    },
+    "checklist": {
+      "kicker": "Avant & pendant",
+      "title": "Avant & Pendant — la Checklist Pratique",
+      "beforeLabel": "Avant",
+      "beforeHeading": "Avant l'entretien",
+      "before1": "Renseignez-vous sur l'entreprise et le poste — lisez l'offre d'emploi deux fois et trouvez un élément précis sur l'équipe ou le produit.",
+      "before2": "Connaissez votre CV par cœur. Chaque ligne peut faire l'objet d'une relance.",
+      "before3": "Préparez 5 à 6 histoires STAR correspondant aux compétences probablement testées pour ce poste.",
+      "before4": "Répétez à voix haute — pas seulement dans votre tête. Le dire est une compétence différente de le penser.",
+      "before5": "Préparez à l'avance vos 2 à 3 questions pour eux.",
+      "duringLabel": "Pendant",
+      "duringHeading": "Pendant l'entretien",
+      "during1": "Répondez à la question réellement posée — ne bifurquez pas vers un discours préparé.",
+      "during2": "Soyez précis et chiffrez chaque fois que vous le pouvez honnêtement.",
+      "during3": "Restez honnête. Ne prétendez jamais ce que vous ne pouvez pas justifier — ça se voit dès la relance.",
+      "during4": "Gardez vos réponses à environ 60–90 secondes, puis arrêtez-vous et laissez-les creuser.",
+      "during5": "Posez une question de clarification si besoin — c'est une force, pas une faiblesse.",
+      "deliveryHeading": "Une remarque sur la prestation",
+      "deliveryBody": "Dans un vrai entretien en personne, la prestation compte aussi — le contact visuel (ou face caméra en visio), un débit posé, une structure plutôt que du remplissage, rester calme sous pression. Notre score lit une transcription, il juge donc uniquement votre <b>contenu</b> — mais dans la salle, la façon de le dire compte. Entraînez-vous sur les deux.",
+      "mistakesHeading": "Erreurs courantes à éviter",
+      "mistake1": "Des réponses vagues et génériques qui pourraient convenir à n'importe quel poste",
+      "mistake2": "S'éloigner du sujet ou tourner en rond",
+      "mistake3": "Dénigrer d'anciens employeurs",
+      "mistake4": "Réciter un script visiblement appris par cœur",
+      "mistake5": "N'avoir aucune question à la fin",
+      "mistake6": "Prétendre avoir des compétences ou une expérience absentes de votre CV"
+    },
+    "rounds": {
+      "kicker": "Les entretiens se déroulent en plusieurs tours",
+      "title": "Les Vrais Entretiens se Déroulent en Plusieurs Tours",
+      "subcopy": "La plupart des processus de recrutement ne se résument pas à une seule conversation — ce sont une série de tours, chacun avec une personne différente qui recherche quelque chose de différent.",
+      "r1Title": "L'entretien recruteur / RH",
+      "r1Body": "Premier contact. On y vérifie votre motivation, votre adéquation de base, et si votre parcours tient debout — « pourquoi ce poste, pourquoi maintenant ? »",
+      "r2Title": "L'entretien technique / spécialiste",
+      "r2Body": "Une immersion avec quelqu'un qui exerce votre métier. Ici, tout est question de profondeur, de raisonnement et d'exemples concrets de votre travail.",
+      "r3Title": "Le responsable du recrutement",
+      "r3Body": "La personne qui vous encadrera. Elle évalue l'adéquation au poste, votre façon de travailler avec l'équipe, et si elle a envie de vous avoir dans son équipe.",
+      "closer": "C'est exactement pour cela qu'ApplyRight vous permet de <b>choisir votre recruteur</b> et de faire chaque tour dans l'ordre de votre choix — cela reproduit un vrai processus de recrutement, pour que vous vous entraîniez sur le parcours complet, pas seulement une conversation."
+    },
+    "rubric": {
+      "kicker": "La grille exacte",
+      "title": "Comment ApplyRight Note Votre Entretien Blanc",
+      "subcopy": "Aucune boîte noire. Après chaque entretien, nous lisons votre transcription et la notons sur sept dimensions — les mêmes que les vrais recruteurs recherchent. Voici exactement comment cela fonctionne.",
+      "d1Label": "Pertinence par rapport au poste",
+      "d1Body": "Vos réponses parlent-elles vraiment des besoins de ce poste précis — ou pourraient-elles s'appliquer à n'importe quel poste, n'importe où ?",
+      "d2Label": "Preuves et précision",
+      "d2Body": "De vrais exemples, des noms, des chiffres, des résultats. Le concret l'emporte toujours sur l'abstrait.",
+      "d3Label": "Structure (STAR)",
+      "d3Body": "Vos histoires sont-elles organisées — situation, tâche, action, résultat — ou partent-elles dans tous les sens ?",
+      "d4Label": "Communication et clarté",
+      "d4Body": "Des réponses claires et précises qui vont droit au but. Les digressions enterrent vos meilleurs arguments.",
+      "d5Label": "Profondeur et adéquation au poste",
+      "d5Body": "Une compréhension réelle du métier, pas des mots à la mode en surface — et une adéquation avec le niveau de séniorité du poste.",
+      "d6Label": "Motivation et adéquation à l'entreprise",
+      "d6Body": "Montrez-vous un intérêt réel pour ce poste et cette entreprise, ou ce discours pourrait-il convenir à n'importe qui ?",
+      "d7Label": "Cohérence avec le CV",
+      "d7Body": "Vos réponses orales doivent correspondre à votre CV. Les affirmations que vous ne pouvez pas justifier sont signalées comme excessives.",
+      "scoredNote": "Noté de 0 à 100",
+      "bandNeedsWork": "À travailler",
+      "bandNeedsWorkRange": "Moins de 45",
+      "bandNeedsWorkBody": "Les réponses sont trop vagues ou génériques pour montrer que vous êtes déjà prêt·e.",
+      "bandAlmost": "Presque prêt·e",
+      "bandAlmostRange": "45 – 74",
+      "bandAlmostBody": "Des réponses solides et étayées, presque au niveau.",
+      "bandReady": "Prêt·e",
+      "bandReadyRange": "75 et plus",
+      "bandReadyBody": "Précis, pertinent pour le poste, bien structuré — prêt·e pour l'entretien.",
+      "fp1Bold": "Il juge le contenu, pas votre voix.",
+      "fp1Body": "Le score lit une transcription — votre ton, votre accent et la qualité audio n'ont jamais d'impact. Seul ce que vous avez dit compte.",
+      "fp2Bold": "L'honnêteté compte.",
+      "fp2Body": "Les affirmations que votre CV ne peut pas justifier sont signalées comme excessives dans « Cohérence avec le CV » et jouent contre vous.",
+      "fp3Bold": "Exprimez-vous pleinement.",
+      "fp3Body": "Si vous répondez à peine (moins de 40 caractères au total), vous obtenez 0. Donnez des réponses réelles et complètes à voix haute — environ 60–90 secondes chacune.",
+      "fp4Bold": "Vous êtes coaché·e à chaque fois.",
+      "fp4Body": "Des scores par dimension, plus vos points forts, les axes à combler et les prochains exercices — consultables par recruteur dans l'onglet Évaluations."
+    },
+    "practice": {
+      "kicker": "S'entraîner avec une conversation",
+      "title": "Entraînez-Vous avec une Vraie Conversation",
+      "subcopy": "Lire sur les entretiens a ses limites. L'entretien vocal en direct d'ApplyRight vous permet de le faire réellement — et d'être noté·e.",
+      "f1Title": "Voix en direct, vraie conversation",
+      "f1Body": "Il écoute et réagit à vos réponses — il relance et creuse, ce n'est pas une liste fixe de questions.",
+      "f2Title": "Ancré dans votre CV et le poste",
+      "f2Body": "Il vous interroge sur votre expérience réelle et ce poste précis — pas des questions génériques de manuel.",
+      "f3Title": "Choisissez votre recruteur",
+      "f3Body": "RH, responsable du recrutement, ou spécialiste du métier — chacun reste dans son rôle, exactement comme un vrai processus.",
+      "f4Title": "Réglez le niveau de difficulté",
+      "f4Body": "Choisissez doux, réaliste ou exigeant — échauffez-vous en douceur, puis montez la pression.",
+      "f5Title": "Noté et coaché",
+      "f5Body": "La grille à 7 dimensions, plus des prochaines étapes personnalisées après chaque tour.",
+      "f6Title": "Complétez le parcours",
+      "f6Body": "Entraînez-vous avec chaque recruteur, dans l'ordre de votre choix — chaque tour renforce votre préparation globale sur l'ensemble du parcours."
+    },
+    "finalCta": {
+      "kicker": "Découvrez où vous en êtes",
+      "title": "Prêt·e à découvrir où vous en êtes ?",
+      "subcopy": "Tout ce qui figure sur cette page, vous pouvez le pratiquer dès maintenant — dans une vraie conversation notée, ancrée dans votre CV et le poste que vous visez.",
+      "freeNote": "5 minutes gratuites à l'essai — sans carte bancaire."
+    },
+    "faq": {
+      "kicker": "Vos questions, nos réponses",
+      "title": "Vos Questions, Nos Réponses",
+      "q1Q": "Le score est-il sévère ?",
+      "q1A": "Il est honnête, pas cruel. Il récompense les réponses précises, étayées et pertinentes pour le poste, et reste franc sur celles qui sont vagues ou génériques — pour que le retour vous aide vraiment à progresser. Des réponses solides et bien étayées franchissent aisément le seuil « presque prêt·e ».",
+      "q2Q": "Mon accent affecte-t-il mon score ?",
+      "q2A": "Non. Le score lit une transcription de ce que vous avez dit — il ne juge que le contenu. Votre accent, votre ton, votre débit et la qualité audio n'ont aucun effet sur lui.",
+      "q3Q": "De combien de minutes ai-je besoin ?",
+      "q3A": "Vous avez droit à un essai gratuit de 5 minutes, sans carte bancaire. Chaque tour est court, donc c'est suffisant pour compléter un entretien entier et être noté·e. Un entraînement plus long utilise vos minutes d'entretien en direct décomptées.",
+      "q4Q": "Puis-je refaire un tour ?",
+      "q4A": "Oui. Passez un recruteur autant de fois que vous le souhaitez — vos scores et retours sont enregistrés par recruteur dans l'onglet Évaluations, pour que vous puissiez suivre votre progression.",
+      "q5Q": "Est-ce comparable à un vrai entretien ?",
+      "q5A": "Presque. C'est une conversation vocale en direct qui réagit à vos réponses, ancrée dans votre CV et le poste précis, avec des recruteurs qui restent dans leur rôle — RH, responsable du recrutement, ou spécialiste. La principale différence est qu'il ne note que le contenu, alors qu'un vrai entretien évalue aussi la prestation."
     }
   }
 }
