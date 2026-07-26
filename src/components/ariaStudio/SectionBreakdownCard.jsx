@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BAND_RULEBG } from '../../lib/noteStyles';
 import AriaCard from './AriaCard';
 
@@ -16,6 +17,7 @@ const SectionBreakdownCard = ({
   rescanning,
   rescanCost = 10,
 }) => {
+  const { t } = useTranslation();
   if (!sections.length) return null;
 
   const needsWork = sections.filter((s) => s.band !== 'ok').length;
@@ -25,10 +27,12 @@ const SectionBreakdownCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-baseline justify-between gap-2">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Section by section
+            {t('ariaStudio.sectionBreakdown.heading')}
           </p>
           <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
-            {needsWork === 0 ? 'all clear' : `${needsWork} to fix`}
+            {needsWork === 0
+              ? t('ariaStudio.sectionBreakdown.allClear')
+              : t('ariaStudio.sectionBreakdown.toFix', { n: needsWork })}
           </span>
         </div>
 
@@ -58,7 +62,7 @@ const SectionBreakdownCard = ({
                   onClick={() => onFix?.(s)}
                   className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
-                  Fix
+                  {t('ariaStudio.sectionBreakdown.fix')}
                 </button>
               )}
             </li>
@@ -77,7 +81,9 @@ const SectionBreakdownCard = ({
                 disabled={recomputing || rescanning}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
-                {recomputing ? 'Re-scoring…' : 'Re-score · free'}
+                {recomputing
+                  ? t('ariaStudio.sectionBreakdown.rescoring')
+                  : t('ariaStudio.sectionBreakdown.rescoreFree')}
               </button>
             )}
             {onRescan && (
@@ -87,7 +93,9 @@ const SectionBreakdownCard = ({
                 disabled={recomputing || rescanning}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
               >
-                {rescanning ? 'Re-checking…' : `Re-check my score · ${rescanCost} cr`}
+                {rescanning
+                  ? t('ariaStudio.sectionBreakdown.rechecking')
+                  : t('ariaStudio.sectionBreakdown.recheckScore', { cost: rescanCost })}
               </button>
             )}
           </div>
@@ -97,9 +105,16 @@ const SectionBreakdownCard = ({
             decoration, so it can't live in colour alone. */}
         <p className="sr-only">
           {sections
-            .map(
-              (s) =>
-                `${s.label}: ${s.band === 'ok' ? 'good' : s.band === 'warn' ? 'needs work' : 'poor'}.`
+            .map((s) =>
+              t('ariaStudio.studioArtifactPanel.srSectionLine', {
+                label: s.label,
+                status:
+                  s.band === 'ok'
+                    ? t('ariaStudio.studioArtifactPanel.srGood')
+                    : s.band === 'warn'
+                      ? t('ariaStudio.studioArtifactPanel.srNeedsWork')
+                      : t('ariaStudio.studioArtifactPanel.srPoor'),
+              })
             )
             .join(' ')}
         </p>

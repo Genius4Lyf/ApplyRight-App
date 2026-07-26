@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -34,27 +36,36 @@ import {
  * Relative time for recent items, absolute for older ones. Tuned for a job-
  * history list where "2d ago" matters more than "April 15, 2026" for items
  * from this week, but full dates are clearer once items are months old.
+ *
+ * `t` is passed in explicitly — this is a plain module-level function, not a
+ * component, so it has no useTranslation() of its own. The absolute-date
+ * fallback reads the current language off the app's global i18n singleton
+ * (same pattern as lib/relativeDate.js) so it formats in French too.
  */
-const formatRelativeDate = (date) => {
+const formatRelativeDate = (date, t) => {
   if (!date) return '';
   const d = new Date(date);
   const diffMs = Date.now() - d.getTime();
   const minutes = Math.floor(diffMs / 60000);
   const hours = Math.floor(diffMs / 3600000);
   const days = Math.floor(diffMs / 86400000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (minutes < 1) return t('jobHistory.time.justNow');
+  if (minutes < 60) return t('jobHistory.time.minutesAgo', { n: minutes });
+  if (hours < 24) return t('jobHistory.time.hoursAgo', { n: hours });
+  if (days === 1) return t('jobHistory.time.yesterday');
+  if (days < 7) return t('jobHistory.time.daysAgo', { n: days });
+  return d.toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 };
 
 const SORT_OPTIONS = [
-  { id: 'newest', label: 'Newest first' },
-  { id: 'oldest', label: 'Oldest first' },
-  { id: 'score_desc', label: 'Highest match' },
-  { id: 'score_asc', label: 'Lowest match' },
+  { id: 'newest', labelKey: 'jobHistory.sort.newest' },
+  { id: 'oldest', labelKey: 'jobHistory.sort.oldest' },
+  { id: 'score_desc', labelKey: 'jobHistory.sort.highestMatch' },
+  { id: 'score_asc', labelKey: 'jobHistory.sort.lowestMatch' },
 ];
 
 import FitScoreCard from '../components/FitScoreCard';
@@ -79,16 +90,18 @@ import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD, RULED_PAPER } from '../l
 const NEXT_ICON = { Wrench, TrendingUp, Mail, CheckCircle2, ArrowRight };
 
 // Derive every display value a note/row needs from one application record.
-const deriveApp = (a) => {
-  const title = a.jobId?.title || a.jobTitle || 'Unknown Role';
-  const company = a.jobId?.company || a.jobCompany || 'Unknown Company';
+// `t` is passed in explicitly — this is a plain module-level function, not a
+// component, so it has no useTranslation() of its own.
+const deriveApp = (a, t) => {
+  const title = a.jobId?.title || a.jobTitle || t('jobHistory.card.unknownRole');
+  const company = a.jobId?.company || a.jobCompany || t('jobHistory.card.unknownCompany');
   const score = a.optimizedFitScore ?? a.fitScore;
   const band = bandOf(score);
   const improved =
     typeof a.optimizedFitScore === 'number' &&
     typeof a.fitScore === 'number' &&
     a.optimizedFitScore > a.fitScore;
-  return { title, company, score, band, improved, mv: nextMove(a) };
+  return { title, company, score, band, improved, mv: nextMove(a, t) };
 };
 
 /**
@@ -193,6 +206,7 @@ const SortDropdown = ({ value, onChange, options }) => {
 };
 
 const JobHistory = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState([]);
@@ -301,7 +315,7 @@ const JobHistory = () => {
       setApplicationToDelete(null);
     } catch (error) {
       console.error('Failed to delete application', error);
-      alert('Failed to delete application. Please try again.');
+      alert(t('jobHistory.errors.deleteApplicationFailed'));
     } finally {
       setIsDeleting(false);
     }
@@ -360,18 +374,19 @@ const JobHistory = () => {
     const code = err.response?.data?.code;
     if (err.response?.status === 403 && code === 'INSUFFICIENT_CREDITS') {
       toast.error(
-        `Insufficient credits. Need ${err.response.data.required}, have ${err.response.data.current}.`
+        t('jobHistory.errors.insufficientCredits', {
+          required: err.response.data.required,
+          current: err.response.data.current,
+        })
       );
       return;
     }
     if (err.response?.status === 503 && code === 'AI_UNAVAILABLE') {
-      toast.error(
-        'AI is temporarily unavailable. You have not been charged. Please try again in a moment.'
-      );
+      toast.error(t('dashboard.toasts.aiUnavailable'));
       return;
     }
     if (err.response?.status === 409 && code === 'GENERATION_IN_PROGRESS') {
-      toast.error('A CV generation is already running for this application.');
+      toast.error(t('dashboard.toasts.generationInProgress'));
       return;
     }
     if (err.response?.status === 422 && code === 'NO_CV_GROUNDING') {
@@ -414,16 +429,16 @@ const JobHistory = () => {
           const before = fresh.fitScore;
           const after = fresh.optimizedFitScore;
           if (typeof before === 'number' && typeof after === 'number' && after > before) {
-            toast.success(`Match lifted ${before}% → ${after}%`);
+            toast.success(t('dashboard.toasts.matchLifted', { before, after }));
           } else {
-            toast.success('CV generated successfully!');
+            toast.success(t('dashboard.toasts.cvGenerated'));
           }
           setGeneratingCV(false);
           setCvGenStatus(null);
         } else if (status?.stage === 'failed') {
           clearInterval(cvPollRef.current);
           cvPollRef.current = null;
-          toast.error(status.error || 'CV generation failed. You have not been charged.');
+          toast.error(status.error || t('dashboard.toasts.cvGenerationFailed'));
           setGeneratingCV(false);
           setCvGenStatus(null);
         }
@@ -439,9 +454,12 @@ const JobHistory = () => {
   const startGeneration = async (mode, providedMetrics = {}) => {
     if (!selectedApp || generatingCV) return;
     const endpoint = mode === 'bundle' ? 'generate-bundle' : 'generate-cv';
-    const startMessage = mode === 'bundle' ? 'Starting bundle…' : 'Starting…';
+    const startMessage =
+      mode === 'bundle' ? t('dashboard.genStage.startingBundle') : t('dashboard.genStage.starting');
     const errorMessage =
-      mode === 'bundle' ? 'Failed to start bundle generation.' : 'Failed to start CV generation.';
+      mode === 'bundle'
+        ? t('dashboard.toasts.bundleStartFailed')
+        : t('dashboard.toasts.cvStartFailed');
 
     setGeneratingCV(true);
     setCvGenStatus({ stage: 'extracting', progress: 5, stageMessage: startMessage });
@@ -502,12 +520,11 @@ const JobHistory = () => {
 
   const showCoverLetterToast = (warnings) => {
     if (warnings && warnings.length > 0) {
-      toast.warning(
-        `Cover letter generated, but ${warnings.length} claim${warnings.length === 1 ? '' : 's'} may not be supported by your resume — verify before sending.`,
-        { duration: 8000 }
-      );
+      toast.warning(t('dashboard.toasts.coverLetterWarning', { count: warnings.length }), {
+        duration: 8000,
+      });
     } else {
-      toast.success('Cover letter generated successfully!');
+      toast.success(t('dashboard.toasts.coverLetterGenerated'));
     }
   };
 
@@ -542,7 +559,7 @@ const JobHistory = () => {
       } catch (_) {
         /* fall through */
       }
-      handleAssetGenError(err, 'Failed to generate cover letter.');
+      handleAssetGenError(err, t('dashboard.toasts.coverLetterFailed'));
     } finally {
       setGeneratingCL(false);
     }
@@ -554,7 +571,7 @@ const JobHistory = () => {
     try {
       const res = await api.post(`/analysis/${selectedApp._id}/generate-interview`);
       updateSelectedApp(mergeInterviewPrepResponse(selectedApp, res.data));
-      toast.success('Interview prep generated!');
+      toast.success(t('dashboard.toasts.interviewPrepGenerated'));
       window.dispatchEvent(
         new CustomEvent('credit_updated', { detail: res.data.remainingCredits })
       );
@@ -564,14 +581,14 @@ const JobHistory = () => {
         const recovery = await api.get(`/applications/${selectedApp._id}`);
         if (hasInterviewPrep(recovery.data)) {
           updateSelectedApp(recovery.data);
-          toast.success('Interview prep generated!');
+          toast.success(t('dashboard.toasts.interviewPrepGenerated'));
           refreshBalance();
           return;
         }
       } catch (_) {
         /* fall through */
       }
-      handleAssetGenError(err, 'Failed to generate interview prep.');
+      handleAssetGenError(err, t('dashboard.toasts.interviewPrepFailed'));
     } finally {
       setGeneratingInterview(false);
     }
@@ -588,7 +605,7 @@ const JobHistory = () => {
     const resumeId = selectedApp.resumeId?._id || selectedApp.resumeId;
     const jobId = selectedApp.jobId?._id || selectedApp.jobId;
     if (!resumeId || !jobId) {
-      toast.error("Can't re-run: missing resume or job reference.");
+      toast.error(t('jobHistory.errors.reanalyzeMissingRefs'));
       return;
     }
     setReanalyzing(true);
@@ -604,9 +621,9 @@ const JobHistory = () => {
           new CustomEvent('credit_updated', { detail: res.data.remainingCredits })
         );
       }
-      toast.success(`Re-analyzed: ${res.data.fitScore}% match`);
+      toast.success(t('jobHistory.toasts.reanalyzed', { score: res.data.fitScore }));
     } catch (err) {
-      handleAssetGenError(err, 'Failed to re-run analysis.');
+      handleAssetGenError(err, t('jobHistory.errors.reanalyzeFailed'));
     } finally {
       setReanalyzing(false);
     }
@@ -622,16 +639,16 @@ const JobHistory = () => {
   // shared NoteCard (which owns the tap-vs-drag guard, spiral binding, stamp,
   // ruled verdict, band rail, and footer). Tapping opens it.
   const renderNote = (a) => {
-    const { title, company, score, band, improved, mv } = deriveApp(a);
+    const { title, company, score, band, improved, mv } = deriveApp(a, t);
     return (
       <NoteCard
         band={band}
         stamp={{
           value: score == null ? '—' : score,
-          label: 'Match',
-          sub: improved ? `↑ from ${a.fitScore}` : undefined,
+          label: t('jobHistory.card.match'),
+          sub: improved ? t('jobHistory.card.improvedFrom', { score: a.fitScore }) : undefined,
         }}
-        eyebrow={`${company} · ${formatRelativeDate(a.createdAt)}`}
+        eyebrow={`${company} · ${formatRelativeDate(a.createdAt, t)}`}
         title={title}
         verdict={a.fitAnalysis?.overallFeedback}
         nextMove={{ label: mv.label, tone: mv.tone, Icon: NEXT_ICON[mv.icon] || ArrowRight }}
@@ -643,14 +660,14 @@ const JobHistory = () => {
 
   // A single application as a dense editorial row for the list view.
   const renderRow = (app) => {
-    const { title, company, score, band, mv } = deriveApp(app);
+    const { title, company, score, band, mv } = deriveApp(app, t);
     const NextIcon = NEXT_ICON[mv.icon] || ArrowRight;
     return (
       <div
         key={app._id}
         role="button"
         tabIndex={0}
-        aria-label={`Open ${title} at ${company}`}
+        aria-label={t('jobHistory.card.openAria', { title, company })}
         onClick={() => openApp(app)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -674,14 +691,14 @@ const JobHistory = () => {
             {score == null ? '—' : `${score}%`}
           </div>
           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-            Match
+            {t('jobHistory.card.match')}
           </div>
         </div>
 
         {/* Role + next move */}
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 truncate">
-            {company} · {formatRelativeDate(app.createdAt)}
+            {company} · {formatRelativeDate(app.createdAt, t)}
           </p>
           <h3 className="mt-0.5 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
             {title}
@@ -699,13 +716,13 @@ const JobHistory = () => {
           <button
             onClick={(e) => handleDelete(e, app._id)}
             className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all sm:opacity-0 sm:group-hover:opacity-100"
-            title="Delete application"
-            aria-label="Delete application"
+            title={t('jobHistory.card.deleteApplication')}
+            aria-label={t('jobHistory.card.deleteApplication')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
           <span className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap group-hover:gap-2 transition-all">
-            Open
+            {t('jobHistory.card.open')}
             <ArrowRight className="h-4 w-4" />
           </span>
         </div>
@@ -725,20 +742,19 @@ const JobHistory = () => {
              starts everything. */
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-              Your desk is clear
+              {t('jobHistory.empty.eyebrow')}
             </p>
             <h3 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
-              No applications yet
+              {t('jobHistory.empty.title')}
             </h3>
             <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-              Analyze a role to see how your CV measures up — then tailor it, draft a cover letter,
-              and prep for the interview.
+              {t('jobHistory.empty.body')}
             </p>
             <button
               onClick={() => navigate('/dashboard')}
               className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
             >
-              Analyze your first role
+              {t('jobHistory.empty.cta')}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -754,18 +770,18 @@ const JobHistory = () => {
             {/* LEFT RAIL */}
             <div className="flex flex-col">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Your job hunt
+                {t('jobHistory.eyebrow')}
               </p>
               <h1 className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
-                Applications
+                {t('jobHistory.title')}
               </h1>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Every role you&apos;ve analyzed, most recent first.
+                {t('jobHistory.subtitle')}
               </p>
 
               {/* Momentum — vertical list on desktop */}
               <div className="mt-8 hidden lg:block">
-                {momentumStats(applications).map((s, i) => (
+                {momentumStats(applications, t).map((s, i) => (
                   <div
                     key={s.label}
                     className={`flex items-baseline justify-between py-3.5 border-b border-slate-200 dark:border-slate-700 ${
@@ -790,7 +806,7 @@ const JobHistory = () => {
 
               {/* Momentum — 2×2 grid on mobile */}
               <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 lg:hidden">
-                {momentumStats(applications).map((s) => (
+                {momentumStats(applications, t).map((s) => (
                   <div
                     key={s.label}
                     className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
@@ -819,7 +835,7 @@ const JobHistory = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
                 >
                   <Plus className="h-4 w-4" />
-                  Analyze a new role
+                  {t('jobHistory.analyzeNewRole')}
                 </button>
               </div>
             </div>
@@ -836,7 +852,7 @@ const JobHistory = () => {
                   getKey={(a) => a._id}
                   renderItem={renderNote}
                   cardClassName={PAPER_CARD}
-                  label="10 most recent"
+                  label={t('myCvs.deckLabel')}
                 />
               ) : (
                 /* List view — keeps search + sort */
@@ -848,19 +864,23 @@ const JobHistory = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search by job title or company"
+                        placeholder={t('jobHistory.search.placeholder')}
                         className="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-300 transition-colors"
                       />
                     </div>
-                    <SortDropdown value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+                    <SortDropdown
+                      value={sortBy}
+                      onChange={setSortBy}
+                      options={SORT_OPTIONS.map((o) => ({ id: o.id, label: t(o.labelKey) }))}
+                    />
                   </div>
 
                   <div className="space-y-3 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1 scrollbar-none">
                     {filteredApplications.length === 0 ? (
                       <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
                         {searchQuery.trim()
-                          ? 'No applications match your search.'
-                          : 'No applications yet.'}
+                          ? t('jobHistory.search.noMatch')
+                          : t('jobHistory.search.noneYet')}
                       </div>
                     ) : (
                       filteredApplications.map(renderRow)
@@ -878,7 +898,7 @@ const JobHistory = () => {
               onClick={() => setSelectedApp(null)}
               className="inline-flex items-center gap-1.5 mb-6 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to applications
+              <ArrowLeft className="w-4 h-4" /> {t('jobHistory.detail.back')}
             </button>
             <div className="animate-in fade-in duration-300">
               {/* Editorial header — the role is the title; a hairline border,
@@ -886,15 +906,19 @@ const JobHistory = () => {
               <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-slate-700 pb-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                    Application
+                    {t('jobHistory.detail.eyebrow')}
                   </p>
                   <h1 className="mt-1 font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {selectedApp.jobId?.title || selectedApp.jobTitle || 'Application'}
+                    {selectedApp.jobId?.title ||
+                      selectedApp.jobTitle ||
+                      t('jobHistory.detail.titleFallback')}
                   </h1>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     {(selectedApp.jobId?.company || selectedApp.jobCompany) &&
                       `${selectedApp.jobId?.company || selectedApp.jobCompany} · `}
-                    analyzed {formatRelativeDate(selectedApp.createdAt)}
+                    {t('jobHistory.detail.analyzedMeta', {
+                      relative: formatRelativeDate(selectedApp.createdAt, t),
+                    })}
                   </p>
                 </div>
 
@@ -906,10 +930,10 @@ const JobHistory = () => {
                     type="button"
                     onClick={() => setJobDrawerOpen(true)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                    title="View the original job posting"
+                    title={t('jobHistory.detail.jobPostingTitle')}
                   >
                     <FileSearch className="w-3.5 h-3.5" />
-                    Job posting
+                    {t('jobHistory.detail.jobPostingBtn')}
                   </button>
 
                   {/* Re-run analysis — refreshes fitScore + analysis using
@@ -920,14 +944,21 @@ const JobHistory = () => {
                     onClick={handleReanalyze}
                     disabled={reanalyzing}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Re-run analysis (10 credits)"
+                    title={t('jobHistory.detail.reRunTitle')}
                   >
                     {reanalyzing ? (
-                      <AriaLoader inline tone="mono" size={14} label="Re-analyzing…" />
+                      <AriaLoader
+                        inline
+                        tone="mono"
+                        size={14}
+                        label={t('jobHistory.detail.reanalyzingLabel')}
+                      />
                     ) : (
                       <RefreshCw className="w-3.5 h-3.5" />
                     )}
-                    {reanalyzing ? 'Re-running…' : 'Re-run (10 cr)'}
+                    {reanalyzing
+                      ? t('jobHistory.detail.reRunning')
+                      : t('jobHistory.detail.reRunCr')}
                   </button>
 
                   {/* Compare with… — only shows other applications for the
@@ -949,10 +980,10 @@ const JobHistory = () => {
                             setCompareMenuOpen(!compareMenuOpen);
                           }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                          title="Compare with another analysis for the same job"
+                          title={t('jobHistory.detail.compareTitle')}
                         >
                           <GitCompare className="w-3.5 h-3.5" />
-                          Compare
+                          {t('jobHistory.detail.compare')}
                           <ChevronDown className="w-3 h-3 opacity-60" />
                         </button>
                         {compareMenuOpen && (
@@ -961,7 +992,7 @@ const JobHistory = () => {
                             className="absolute top-full right-0 mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[260px] max-h-[280px] overflow-y-auto"
                           >
                             <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                              Compare against
+                              {t('jobHistory.detail.compareAgainst')}
                             </div>
                             {sameJobOthers.map((other) => (
                               <button
@@ -974,10 +1005,14 @@ const JobHistory = () => {
                               >
                                 <div className="flex flex-col leading-tight min-w-0">
                                   <span className="text-slate-700 dark:text-slate-300 truncate">
-                                    Resume from {formatRelativeDate(other.resumeId?.createdAt)}
+                                    {t('jobHistory.detail.resumeFrom', {
+                                      relative: formatRelativeDate(other.resumeId?.createdAt, t),
+                                    })}
                                   </span>
                                   <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                                    Run {formatRelativeDate(other.createdAt)}
+                                    {t('jobHistory.detail.runAt', {
+                                      relative: formatRelativeDate(other.createdAt, t),
+                                    })}
                                   </span>
                                 </div>
                                 {typeof other.fitScore === 'number' && (
@@ -1002,11 +1037,13 @@ const JobHistory = () => {
                   })()}
                   <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex flex-col items-end leading-tight">
                     <span title={new Date(selectedApp.createdAt).toLocaleString()}>
-                      {formatRelativeDate(selectedApp.createdAt)}
+                      {formatRelativeDate(selectedApp.createdAt, t)}
                     </span>
                     {selectedApp.resumeId?.createdAt && (
                       <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                        Resume from {formatRelativeDate(selectedApp.resumeId.createdAt)}
+                        {t('jobHistory.detail.resumeFrom', {
+                          relative: formatRelativeDate(selectedApp.resumeId.createdAt, t),
+                        })}
                       </span>
                     )}
                   </div>
@@ -1020,14 +1057,14 @@ const JobHistory = () => {
                     href="#analysis"
                     className="text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                   >
-                    See what to fix ↓
+                    {t('jobHistory.detail.seeWhatToFix')}
                   </a>
                 )}
                 <a
                   href="#toolkit"
                   className="text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                 >
-                  My CV toolkit ↓
+                  {t('jobHistory.detail.toolkitLink')}
                 </a>
               </div>
 
@@ -1053,10 +1090,10 @@ const JobHistory = () => {
                     <div className="flex flex-wrap items-start justify-between gap-3 p-5">
                       <div className="min-w-0">
                         <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                          Ready to use · now that you&apos;ve read the analysis
+                          {t('jobHistory.toolkit.readyEyebrow')}
                         </p>
                         <h2 className="mt-1 font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                          My CV toolkit
+                          {t('dashboard.toolkit.title')}
                         </h2>
                       </div>
                       {!selectedApp.optimizedCV &&
@@ -1069,9 +1106,12 @@ const JobHistory = () => {
                               onClick={handleGenerateBundle}
                               className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                             >
-                              <Layers className="w-4 h-4 text-slate-400" /> Full kit
+                              <Layers className="w-4 h-4 text-slate-400" />{' '}
+                              {t('jobHistory.toolkit.fullKit')}
                               <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
-                                {CREDIT_COSTS.GENERATE_BUNDLE} cr · save 2
+                                {t('jobHistory.toolkit.fullKitCr', {
+                                  cr: CREDIT_COSTS.GENERATE_BUNDLE,
+                                })}
                               </span>
                             </button>
                           </CreditGate>
@@ -1084,10 +1124,10 @@ const JobHistory = () => {
                         <FileText className="w-4 h-4 text-slate-400 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                            Optimized CV
+                            {t('dashboard.toolkit.optimizedCv')}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Tailored to this role
+                            {t('dashboard.toolkit.optimizedCvBody')}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -1101,7 +1141,7 @@ const JobHistory = () => {
                                   )
                                 }
                               >
-                                View &amp; download
+                                {t('jobHistory.toolkit.viewDownload')}
                               </GhostButton>
                             </>
                           ) : (
@@ -1141,10 +1181,10 @@ const JobHistory = () => {
                         <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                            Cover letter
+                            {t('dashboard.toolkit.coverLetter')}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Matched to the job description
+                            {t('dashboard.toolkit.coverLetterBody')}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -1158,7 +1198,7 @@ const JobHistory = () => {
                                   )
                                 }
                               >
-                                View &amp; download
+                                {t('jobHistory.toolkit.viewDownload')}
                               </GhostButton>
                             </>
                           ) : (
@@ -1175,7 +1215,7 @@ const JobHistory = () => {
                       {selectedApp.coverLetter && selectedApp.coverLetterWarnings?.length > 0 && (
                         <div className="mt-3 border-l-2 border-amber-500 pl-3">
                           <div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400 mb-1">
-                            Verify before sending
+                            {t('dashboard.toolkit.verifyBeforeSending')}
                           </div>
                           <ul className="space-y-0.5 list-disc pl-3 text-[11px] text-slate-600 dark:text-slate-300">
                             {selectedApp.coverLetterWarnings.slice(0, 5).map((w, i) => (
@@ -1192,10 +1232,10 @@ const JobHistory = () => {
                         <MessageSquare className="w-4 h-4 text-slate-400 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                            Interview prep
+                            {t('dashboard.toolkit.interviewPrep')}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Likely questions + suggested answers
+                            {t('dashboard.toolkit.interviewPrepBody')}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -1205,7 +1245,7 @@ const JobHistory = () => {
                               <GhostButton
                                 onClick={() => navigate(`/interview-prep/${selectedApp._id}`)}
                               >
-                                View
+                                {t('jobHistory.toolkit.view')}
                               </GhostButton>
                             </>
                           ) : (
@@ -1241,7 +1281,11 @@ const JobHistory = () => {
         <MetricCaptureModal
           isOpen={metricCapture.isOpen}
           vagueBullets={metricCapture.vagueBullets}
-          primaryLabel={metricCapture.mode === 'bundle' ? 'Generate full kit' : 'Generate CV'}
+          primaryLabel={
+            metricCapture.mode === 'bundle'
+              ? t('dashboard.metricCapture.generateBundle')
+              : t('dashboard.metricCapture.generateCv')
+          }
           onSubmit={handleMetricCaptureSubmit}
           onCancel={handleMetricCaptureCancel}
         />

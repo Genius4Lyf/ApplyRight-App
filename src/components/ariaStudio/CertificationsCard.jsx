@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
 // Certifications are a sub-list of Education, not a section of their own — that's how the
@@ -9,6 +10,7 @@ import AriaCard from './AriaCard';
 //
 // FREE. Nothing on this card calls the AI or spends a credit.
 const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [issuer, setIssuer] = useState('');
   const [date, setDate] = useState('');
@@ -28,15 +30,14 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Certifications &amp; training
+            {t('ariaStudio.certifications.heading')}
           </p>
           <span className="shrink-0 rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-            No charge
+            {t('ariaStudio.certifications.noCharge')}
           </span>
         </div>
         <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-          Anything licensed or certified — these get filtered on in trades, healthcare and
-          operations roles. Skip if you have none.
+          {t('ariaStudio.certifications.body')}
         </p>
 
         {certifications.length > 0 && (
@@ -54,7 +55,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
                 <button
                   type="button"
                   onClick={() => onRemove?.(i)}
-                  aria-label={`Remove ${c.name}`}
+                  aria-label={t('ariaStudio.certifications.removeAria', { name: c.name })}
                   className="shrink-0 text-slate-400 hover:text-rose-500 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -70,14 +71,14 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               htmlFor="studio-cert-name"
               className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
-              Certification
+              {t('ariaStudio.certifications.fieldCertification')}
             </label>
             <input
               id="studio-cert-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
-              placeholder="e.g. H2S Awareness"
+              placeholder={t('ariaStudio.certifications.placeholderCertification')}
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
             />
           </div>
@@ -86,14 +87,14 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               htmlFor="studio-cert-issuer"
               className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
-              Issued by
+              {t('ariaStudio.certifications.fieldIssuer')}
             </label>
             <input
               id="studio-cert-issuer"
               value={issuer}
               onChange={(e) => setIssuer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
-              placeholder="e.g. OPITO"
+              placeholder={t('ariaStudio.certifications.placeholderIssuer')}
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
             />
           </div>
@@ -102,14 +103,14 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               htmlFor="studio-cert-date"
               className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
-              Year
+              {t('ariaStudio.certifications.fieldYear')}
             </label>
             <input
               id="studio-cert-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
-              placeholder="e.g. 2023"
+              placeholder={t('ariaStudio.certifications.placeholderYear')}
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
             />
           </div>
@@ -122,7 +123,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             disabled={!canAdd || busy}
             className="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
-            + Add
+            + {t('ariaStudio.certifications.add')}
           </button>
           <button
             type="button"
@@ -130,7 +131,9 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             disabled={busy}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
-            {certifications.length ? 'Done' : 'I have none'}
+            {certifications.length
+              ? t('ariaStudio.certifications.done')
+              : t('ariaStudio.certifications.haveNone')}
           </button>
         </div>
       </div>

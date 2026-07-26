@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelative } from '../../lib/relativeDate';
+import { useTranslation } from 'react-i18next';
 import CVService from '../../services/cv.service';
 import { getCompletionStatus, cvBand } from '../../lib/cvCompleteness';
 import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
@@ -9,6 +10,7 @@ import AriaCard from './AriaCard';
 // cvCompleteness helpers (the same source /my-cvs and the dashboard use) — MyCVs'
 // deriveCv is page-local, so the primitives are recomputed here rather than imported.
 const CvPickerCard = ({ onPick, onCancel, busyId }) => {
+  const { t } = useTranslation();
   const [drafts, setDrafts] = useState(null); // null = loading
   const [error, setError] = useState(false);
 
@@ -34,18 +36,18 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
     <AriaCard cardKey="cvpicker">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          Which CV should I work from?
+          {t('ariaStudio.cvPicker.whichCv')}
         </p>
 
         {drafts === null && (
-          <p className="mt-3 text-[12px] text-slate-400 dark:text-slate-500">Fetching your CVs…</p>
+          <p className="mt-3 text-[12px] text-slate-400 dark:text-slate-500">
+            {t('ariaStudio.cvPicker.fetching')}
+          </p>
         )}
 
         {drafts?.length === 0 && (
           <p className="mt-3 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
-            {error
-              ? "I couldn't load your CVs just now — try again in a moment."
-              : "You don't have a CV saved yet. Build or upload one first and I'll tailor it."}
+            {error ? t('ariaStudio.cvPicker.loadError') : t('ariaStudio.cvPicker.noneYet')}
           </p>
         )}
 
@@ -54,9 +56,9 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
             {drafts.map((d) => {
               const { percent, isComplete } = getCompletionStatus(d);
               const band = cvBand(percent, isComplete);
-              const name = d.personalInfo?.fullName || 'Draft';
+              const name = d.personalInfo?.fullName || t('ariaStudio.cvPicker.draft');
               const relative = d.updatedAt
-                ? formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true })
+                ? formatRelative(new Date(d.updatedAt))
                 : '';
               const busy = busyId === d._id;
 
@@ -71,11 +73,11 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
                   <span className={`absolute left-0 inset-y-0 w-[3px] ${BAND_RULEBG[band]}`} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                      {d.title || 'Untitled CV'}
+                      {d.title || t('ariaStudio.cvPicker.untitledCv')}
                     </span>
                     <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {name}
-                      {relative ? ` · edited ${relative}` : ''}
+                      {relative ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}` : ''}
                     </span>
                   </span>
                   <span className={`shrink-0 font-mono text-[11px] font-bold ${BAND_TEXT[band]}`}>
@@ -94,7 +96,7 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
             disabled={!!busyId}
             className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            Back
+            {t('common.back')}
           </button>
         </div>
       </div>

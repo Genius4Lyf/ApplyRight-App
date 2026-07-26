@@ -1,16 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaLoader from './ui/AriaLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 
-const DeleteConfirmationModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  isDeleting,
-  title = 'Delete Application',
-  message = 'Are you sure you want to delete this application? This action cannot be undone.',
-}) => {
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isDeleting, title, message }) => {
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t('jobHistory.deleteModal.title');
+  const resolvedMessage = message ?? t('jobHistory.deleteModal.message');
   return (
     <AnimatePresence>
       {isOpen && (
@@ -43,14 +40,14 @@ const DeleteConfirmationModal = ({
                     <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
-                    {title}
+                    {resolvedTitle}
                   </h3>
                 </div>
                 <button
                   onClick={!isDeleting ? onClose : undefined}
                   className="p-1.5 -mr-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   disabled={isDeleting}
-                  aria-label="Close"
+                  aria-label={t('common.close')}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -59,7 +56,7 @@ const DeleteConfirmationModal = ({
               {/* Body */}
               <div className="p-4 sm:p-5 overflow-y-auto">
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {message}
+                  {resolvedMessage}
                 </p>
               </div>
 
@@ -72,7 +69,7 @@ const DeleteConfirmationModal = ({
                   disabled={isDeleting}
                   className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={onConfirm}
@@ -82,13 +79,13 @@ const DeleteConfirmationModal = ({
                   {isDeleting ? (
                     <>
                       <AriaLoader inline tone="mono" size={16} label="" />
-                      Deleting...
+                      {t('jobHistory.deleteModal.deleting')}
                     </>
                   ) : (
                     <>
                       <Trash2 className="w-4 h-4" />
-                      <span className="sm:hidden">Delete</span>
-                      <span className="hidden sm:inline">Delete Application</span>
+                      <span className="sm:hidden">{t('common.delete')}</span>
+                      <span className="hidden sm:inline">{t('jobHistory.deleteModal.title')}</span>
                     </>
                   )}
                 </button>

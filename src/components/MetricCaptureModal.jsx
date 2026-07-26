@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, ArrowRight, Hash, ShieldCheck } from 'lucide-react';
 
@@ -12,13 +13,9 @@ import { Sparkles, X, ArrowRight, Hash, ShieldCheck } from 'lucide-react';
  *
  * Skipping is always one click; cancelling aborts the whole generation.
  */
-const MetricCaptureModal = ({
-  isOpen,
-  vagueBullets = [],
-  onSubmit,
-  onCancel,
-  primaryLabel = 'Generate CV',
-}) => {
+const MetricCaptureModal = ({ isOpen, vagueBullets = [], onSubmit, onCancel, primaryLabel }) => {
+  const { t } = useTranslation();
+  const resolvedPrimaryLabel = primaryLabel ?? t('dashboard.metricCapture.generateCv');
   const [values, setValues] = useState({});
 
   const setVal = (id, v) => setValues((prev) => ({ ...prev, [id]: v }));
@@ -73,22 +70,24 @@ const MetricCaptureModal = ({
               </div>
               <div className="flex-1 min-w-0 pr-8">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                  Quick step before we generate
+                  {t('dashboard.metricCapture.title')}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                  We spotted{' '}
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {total} bullet{total === 1 ? '' : 's'}
-                  </span>{' '}
-                  that say what you did but not the impact. Recruiters scan for numbers — adding one
-                  or two makes your CV instantly stronger.
+                  <Trans
+                    i18nKey="dashboard.metricCapture.intro"
+                    count={total}
+                    values={{ count: total }}
+                    components={{
+                      bold: <span className="font-semibold text-slate-800 dark:text-slate-200" />,
+                    }}
+                  />
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onCancel}
                 className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                aria-label="Cancel"
+                aria-label={t('common.cancel')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -97,7 +96,7 @@ const MetricCaptureModal = ({
             {/* Progress chip — gives the user a sense of how much they've done */}
             <div className="mt-3 flex items-center gap-2 text-xs">
               <span className="font-semibold text-slate-700 dark:text-slate-300">
-                {filledCount} of {total} filled
+                {t('dashboard.metricCapture.filledOfTotal', { filled: filledCount, total })}
               </span>
               <div className="flex-1 h-1 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
                 <motion.div
@@ -107,7 +106,9 @@ const MetricCaptureModal = ({
                   className="h-full bg-indigo-500 rounded-full"
                 />
               </div>
-              <span className="text-slate-400 dark:text-slate-500">All optional</span>
+              <span className="text-slate-400 dark:text-slate-500">
+                {t('dashboard.metricCapture.allOptional')}
+              </span>
             </div>
           </div>
 
@@ -139,14 +140,14 @@ const MetricCaptureModal = ({
                     "{b.original}"
                   </p>
                   <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Add a number (optional)
+                    {t('dashboard.metricCapture.addNumberLabel')}
                   </label>
                   <input
                     type="text"
                     maxLength={200}
                     value={value}
                     onChange={(e) => setVal(b.bulletId, e.target.value)}
-                    placeholder={b.placeholder || 'e.g., 5-person team, 30% faster, $100K'}
+                    placeholder={b.placeholder || t('dashboard.metricCapture.numberPlaceholder')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-slate-100 ${
                       hasValue
                         ? 'border-indigo-300 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/15'
@@ -161,9 +162,10 @@ const MetricCaptureModal = ({
             <div className="flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
               <span className="leading-relaxed">
-                <strong className="font-semibold">Your numbers stay yours.</strong> We only weave
-                them into the matching bullet — nothing else gets fabricated, and your skills and
-                roles are preserved exactly.
+                <Trans
+                  i18nKey="dashboard.metricCapture.reassurance"
+                  components={{ bold: <strong className="font-semibold" /> }}
+                />
               </span>
             </div>
           </div>
@@ -175,7 +177,7 @@ const MetricCaptureModal = ({
               onClick={() => handleSubmit(true)}
               className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
             >
-              Skip — just generate now
+              {t('dashboard.metricCapture.skip')}
             </button>
             <button
               type="button"
@@ -183,8 +185,11 @@ const MetricCaptureModal = ({
               className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 text-sm"
             >
               {filledCount > 0
-                ? `${primaryLabel} with ${filledCount} number${filledCount === 1 ? '' : 's'}`
-                : primaryLabel}
+                ? t('dashboard.metricCapture.withNumbers', {
+                    label: resolvedPrimaryLabel,
+                    count: filledCount,
+                  })
+                : resolvedPrimaryLabel}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -15,13 +15,19 @@ import { CV_SECTIONS, getCompletionStatus } from './cvCompleteness';
  * the moment it does, the user is told they've finished a section that's actually empty.
  * Deriving is slightly more work and cannot lie.
  */
+// `labelKey` is an i18n key, not text — this file is plain JS with no react-i18next
+// context, so every caller (a React component with useTranslation) resolves it via t().
 export const BUILD_SECTIONS = [
-  { key: 'contact', label: 'Contact', cvKey: 'name' },
-  { key: 'experience', label: 'Work history', cvKey: 'experience' },
-  { key: 'projects', label: 'Projects', cvKey: 'projects' },
-  { key: 'education', label: 'Education & certifications', cvKey: 'education' },
-  { key: 'skills', label: 'Skills', cvKey: 'skills' },
-  { key: 'summary', label: 'Summary', cvKey: 'summary' },
+  { key: 'contact', labelKey: 'ariaStudio.studioFlow.sections.contact', cvKey: 'name' },
+  { key: 'experience', labelKey: 'ariaStudio.studioFlow.sections.experience', cvKey: 'experience' },
+  { key: 'projects', labelKey: 'ariaStudio.studioFlow.sections.projects', cvKey: 'projects' },
+  {
+    key: 'education',
+    labelKey: 'ariaStudio.studioFlow.sections.education',
+    cvKey: 'education',
+  },
+  { key: 'skills', labelKey: 'ariaStudio.studioFlow.sections.skills', cvKey: 'skills' },
+  { key: 'summary', labelKey: 'ariaStudio.studioFlow.sections.summary', cvKey: 'summary' },
 ];
 
 // An entry counts as REAL once it carries anything a reader would see. A row that exists
@@ -92,21 +98,21 @@ export function buildProgress(cv) {
 export const PROJECT_TYPES = [
   {
     key: 'course',
-    label: 'Course / academic',
-    hint: 'Coursework, capstone, dissertation',
-    message: 'This is a course / academic project.',
+    labelKey: 'ariaStudio.studioFlow.projectTypes.course.label',
+    hintKey: 'ariaStudio.studioFlow.projectTypes.course.hint',
+    messageKey: 'ariaStudio.studioFlow.projectTypes.course.message',
   },
   {
     key: 'personal',
-    label: 'Personal / side',
-    hint: 'Something you chose to build',
-    message: 'This is a personal / side project.',
+    labelKey: 'ariaStudio.studioFlow.projectTypes.personal.label',
+    hintKey: 'ariaStudio.studioFlow.projectTypes.personal.hint',
+    messageKey: 'ariaStudio.studioFlow.projectTypes.personal.message',
   },
   {
     key: 'work',
-    label: 'Work / client',
-    hint: 'Built for an employer or client',
-    message: 'This was a work / client project.',
+    labelKey: 'ariaStudio.studioFlow.projectTypes.work.label',
+    hintKey: 'ariaStudio.studioFlow.projectTypes.work.hint',
+    messageKey: 'ariaStudio.studioFlow.projectTypes.work.message',
   },
 ];
 
@@ -127,31 +133,68 @@ export const bulletCount = (entry) =>
  */
 export const SECTION_FIELDS = {
   experience: [
-    { key: 'title', label: 'Role', done: (e) => !!(e?.title || '').trim() },
-    { key: 'company', label: 'Company', done: (e) => !!(e?.company || '').trim() },
+    {
+      key: 'title',
+      labelKey: 'ariaStudio.studioFlow.fields.experience.title',
+      done: (e) => !!(e?.title || '').trim(),
+    },
+    {
+      key: 'company',
+      labelKey: 'ariaStudio.studioFlow.fields.experience.company',
+      done: (e) => !!(e?.company || '').trim(),
+    },
     {
       key: 'dates',
-      label: 'Dates',
+      labelKey: 'ariaStudio.studioFlow.fields.experience.dates',
       // A start date is the floor; "present" is a valid end, so isCurrent counts.
       done: (e) => !!(e?.startDate || '').trim(),
     },
-    { key: 'achievements', label: 'Achievements', done: (e) => bulletCount(e) > 0 },
+    {
+      key: 'achievements',
+      labelKey: 'ariaStudio.studioFlow.fields.experience.achievements',
+      done: (e) => bulletCount(e) > 0,
+    },
   ],
   project: [
     // The type isn't a DraftCV field — it's stated in the thread, which is what the
     // backend's project prompt reads. `done` is supplied by the caller via opts.
-    { key: 'type', label: 'Kind', fromContext: true },
-    { key: 'title', label: 'Project', done: (e) => !!(e?.title || '').trim() },
-    { key: 'achievements', label: 'What you did', done: (e) => bulletCount(e) > 0 },
-    { key: 'link', label: 'Link', optional: true, done: (e) => !!(e?.link || '').trim() },
+    { key: 'type', labelKey: 'ariaStudio.studioFlow.fields.project.type', fromContext: true },
+    {
+      key: 'title',
+      labelKey: 'ariaStudio.studioFlow.fields.project.title',
+      done: (e) => !!(e?.title || '').trim(),
+    },
+    {
+      key: 'achievements',
+      labelKey: 'ariaStudio.studioFlow.fields.project.achievements',
+      done: (e) => bulletCount(e) > 0,
+    },
+    {
+      key: 'link',
+      labelKey: 'ariaStudio.studioFlow.fields.project.link',
+      optional: true,
+      done: (e) => !!(e?.link || '').trim(),
+    },
   ],
   education: [
-    { key: 'degree', label: 'Qualification', done: (e) => !!(e?.degree || '').trim() },
-    { key: 'school', label: 'School', done: (e) => !!(e?.school || '').trim() },
-    { key: 'graduationDate', label: 'Finished', done: (e) => !!(e?.graduationDate || '').trim() },
+    {
+      key: 'degree',
+      labelKey: 'ariaStudio.studioFlow.fields.education.degree',
+      done: (e) => !!(e?.degree || '').trim(),
+    },
+    {
+      key: 'school',
+      labelKey: 'ariaStudio.studioFlow.fields.education.school',
+      done: (e) => !!(e?.school || '').trim(),
+    },
+    {
+      key: 'graduationDate',
+      labelKey: 'ariaStudio.studioFlow.fields.education.graduationDate',
+      done: (e) => !!(e?.graduationDate || '').trim(),
+    },
     {
       key: 'description',
-      label: 'Notes',
+      labelKey: 'ariaStudio.studioFlow.fields.education.description',
       optional: true,
       done: (e) => !!(e?.description || '').trim(),
     },
@@ -170,13 +213,13 @@ export const ROLE_FIELDS = SECTION_FIELDS.experience;
  * @param {object} entry
  * @param {'experience'|'project'|'education'} [section]
  * @param {{ typePicked?: boolean }} [opts] context the entry itself can't carry
- * @returns {{ fields: Array<{key,label,done,optional}>, done: number, total: number }}
+ * @returns {{ fields: Array<{key,labelKey,done,optional}>, done: number, total: number }}
  */
 export function entryProgress(entry, section = 'experience', opts = {}) {
   const spec = SECTION_FIELDS[section] || SECTION_FIELDS.experience;
   const fields = spec.map((f) => ({
     key: f.key,
-    label: f.label,
+    labelKey: f.labelKey,
     optional: !!f.optional,
     done: f.fromContext ? !!opts.typePicked : f.done(entry),
   }));

@@ -1,43 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Lightbulb, Rocket, BookOpen, CheckCircle } from 'lucide-react';
 
 // Per-step icon tint is the one accent touch; the tile itself stays a flat
 // neutral surface (no pastel fills, no gradients). Emerald marks the win.
+//
+// i18n note: this is a MODULE-LEVEL CONSTANT, evaluated once at import time —
+// it must hold i18n KEYS, not resolved copy, or the text would freeze at
+// import-time language. Resolved via t() at the two render sites below.
 const LOADING_STEPS = [
   {
     icon: Rocket,
     color: 'text-slate-900 dark:text-slate-100',
-    title: 'Igniting your potential...',
-    message:
-      "You've taken the first step towards your dream career, {name}. We're excited to be part of your journey!",
-    type: 'MOTIVATION',
+    titleKey: 'onboarding.welcome.steps.0.title',
+    messageKey: 'onboarding.welcome.steps.0.message',
+    typeKey: 'onboarding.welcome.steps.0.type',
   },
   {
     icon: Lightbulb,
     color: 'text-slate-900 dark:text-slate-100',
-    title: 'Did you know?',
-    message:
-      '75% of resumes are rejected by ATS before a human sees them. ApplyRight helps you beat the odds.',
-    type: 'TIP',
+    titleKey: 'onboarding.welcome.steps.1.title',
+    messageKey: 'onboarding.welcome.steps.1.message',
+    typeKey: 'onboarding.welcome.steps.1.type',
   },
   {
     icon: BookOpen,
     color: 'text-slate-900 dark:text-slate-100',
-    title: 'Must Know',
-    message: 'Tailoring your CV for every single application is the #1 way to get more interviews.',
-    type: 'GUIDE',
+    titleKey: 'onboarding.welcome.steps.2.title',
+    messageKey: 'onboarding.welcome.steps.2.message',
+    typeKey: 'onboarding.welcome.steps.2.type',
   },
   {
     icon: CheckCircle,
     color: 'text-emerald-600 dark:text-emerald-400',
-    title: 'All set!',
-    message: "Your dashboard is ready. Let's start building your future.",
-    type: 'READY',
+    titleKey: 'onboarding.welcome.steps.3.title',
+    messageKey: 'onboarding.welcome.steps.3.message',
+    typeKey: 'onboarding.welcome.steps.3.type',
   },
 ];
 
 const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -86,7 +90,7 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
 
   const StepIcon = LOADING_STEPS[currentStep].icon;
   const isReady = currentStep === LOADING_STEPS.length - 1;
-  const cleanName = firstName || 'Future Pro';
+  const cleanName = firstName || t('onboarding.welcome.defaultName');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-slate-950">
@@ -111,17 +115,17 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
 
             {/* Category Label — editorial hairline pill */}
             <span className="text-xs font-semibold tracking-wider uppercase px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 mb-4">
-              {LOADING_STEPS[currentStep].type}
+              {t(LOADING_STEPS[currentStep].typeKey)}
             </span>
 
             {/* Title */}
             <h2 className="text-3xl md:text-4xl font-heading font-semibold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
-              {LOADING_STEPS[currentStep].title}
+              {t(LOADING_STEPS[currentStep].titleKey)}
             </h2>
 
             {/* Message */}
             <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed mb-12">
-              {LOADING_STEPS[currentStep].message.replace('{name}', cleanName)}
+              {t(LOADING_STEPS[currentStep].messageKey, { name: cleanName })}
             </p>
           </motion.div>
         </AnimatePresence>
@@ -139,7 +143,7 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
                 />
               </div>
               <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium animate-pulse">
-                Setting up your personal dashboard...
+                {t('onboarding.welcome.settingUp')}
               </p>
             </div>
           ) : (
@@ -149,7 +153,7 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
               onClick={onComplete}
               className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-8 py-4 rounded-lg font-semibold text-lg shadow-sm flex items-center gap-3 transition-all active:scale-[0.98]"
             >
-              Enter Dashboard
+              {t('onboarding.welcome.enterDashboard')}
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           )}

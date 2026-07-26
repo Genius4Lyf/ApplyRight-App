@@ -134,6 +134,31 @@ describe('locale files', () => {
       'howToAce.star.actionTitle', // "Action" — identical STAR-method label in French
       'howToAce.rubric.d3Label', // "Structure (STAR)" — the acronym stays as-is in French
       'howToAce.rubric.bandAlmostRange', // "45 – 74" — a number range, language-neutral
+      // Aria Studio Prompt A (studioFlow + cards) — genuinely language-neutral:
+      'ariaStudio.studioFlow.sections.contact', // "Contact" — same word in French
+      'ariaStudio.studioFlow.fields.experience.dates', // "Dates" — same word in French
+      'ariaStudio.studioFlow.fields.education.description', // "Notes" — same word in French
+      'ariaStudio.studioArtifactPanel.sections', // "Sections" — same word in French
+      'ariaStudio.common.outOf100', // "/ 100" — a number format, language-neutral
+      'ariaStudio.certifications.fieldCertification', // "Certification" — same word in French
+      'ariaStudio.contactConfirm.fields.email.label', // "Email" — same word in French
+      'ariaStudio.contactConfirm.fields.linkedin.label', // "LinkedIn" — brand name
+      'ariaStudio.contactConfirm.fields.linkedin.placeholder', // "linkedin.com/in/…" — a URL format
+      'ariaStudio.sessionRail.sessions', // "Sessions" — same word in French
+      'ariaStudio.scoreCard.bandPossible', // "Possible" — same word in French
+      'ariaStudio.chat.sectionFallback', // "section" — same word in French
+      'ariaStudio.desk.title', // "Aria Studio" — brand name
+      'ariaStudio.desk.outOf100', // "/100" — a number format, language-neutral
+      'onboarding.welcome.steps.0.type', // "MOTIVATION" — same word in French
+      'onboarding.welcome.steps.2.type', // "GUIDE" — same word in French
+      'fitScoreCard.liftPts', // "+{{lift}} pts" — abbreviation format, language-neutral
+      'fitScoreCard.levels.junior', // "Junior" — same word in French
+      'fitScoreCard.levels.senior', // "Senior" — same word in French
+      'fitScoreCard.levels.staff', // "Staff" — same word in French
+      'fitScoreCard.levels.lead', // "Lead" — same word in French (tech job title)
+      'fitScoreCard.levels.principal', // "Principal" — same word in French
+      'fitScoreCard.levels.manager', // "Manager" — same word in French
+      'fitScoreCard.levels.vp', // "VP" — same abbreviation in French
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

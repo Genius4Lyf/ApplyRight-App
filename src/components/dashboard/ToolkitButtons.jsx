@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaLoader from '../ui/AriaLoader';
 import { Eye } from 'lucide-react';
 
@@ -6,11 +7,14 @@ import { Eye } from 'lucide-react';
 // wherever it appears (Dashboard results + JobHistory detail).
 
 // Emerald "Ready" status chip (dot + label).
-export const ReadyChip = () => (
-  <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-  </span>
-);
+export const ReadyChip = () => {
+  const { t } = useTranslation();
+  return (
+    <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t('dashboard.toolkit.ready')}
+    </span>
+  );
+};
 
 // Ghost / secondary action (View). Compact, hairline, right-aligned.
 export const GhostButton = ({ onClick, children }) => (
@@ -25,29 +29,32 @@ export const GhostButton = ({ onClick, children }) => (
 
 // Ink / primary action (Generate). The cost rides along as a quiet mono badge;
 // the generating state swaps to a muted disabled pill with a spinner.
-export const InkButton = ({ onClick, disabled, generating, cost }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled}
-    className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors ${
-      disabled
-        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-        : 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
-    }`}
-  >
-    {generating ? (
-      <>
-        <AriaLoader inline tone="mono" size={14} label="" />
-        Generating…
-      </>
-    ) : (
-      <>
-        Generate
-        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
-          {cost} cr
-        </span>
-      </>
-    )}
-  </button>
-);
+export const InkButton = ({ onClick, disabled, generating, cost }) => {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors ${
+        disabled
+          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+          : 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
+      }`}
+    >
+      {generating ? (
+        <>
+          <AriaLoader inline tone="mono" size={14} label="" />
+          {t('dashboard.toolkit.generating')}
+        </>
+      ) : (
+        <>
+          {t('dashboard.toolkit.generate')}
+          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
+            {t('cvBuilder.common.creditChip', { n: cost })}
+          </span>
+        </>
+      )}
+    </button>
+  );
+};

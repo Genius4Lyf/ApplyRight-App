@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mic, Play, ArrowRight, BookOpen } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelative } from '../lib/relativeDate';
 import Navbar from '../components/Navbar';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { useMinVisible } from '../hooks/useMinVisible';
@@ -106,7 +106,7 @@ const InterviewPrepList = () => {
     const company = job.company || app.jobCompany || '';
     const practicedAt = prep.lastInterviewSession?.completedAt;
     const dateRef = practicedAt || prep.savedAt || app.updatedAt;
-    const relative = dateRef ? formatDistanceToNow(new Date(dateRef), { addSuffix: true }) : '';
+    const relative = dateRef ? formatRelative(new Date(dateRef)) : '';
     const title =
       job.title ||
       app.jobTitle ||

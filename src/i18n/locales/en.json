@@ -171,6 +171,12 @@
       "title": "Sign Out?",
       "body": "Are you sure you want to sign out?",
       "confirm": "Sign Out"
+    },
+    "mobile": {
+      "home": "Home",
+      "myCvs": "My CVs",
+      "applications": "Applications",
+      "interview": "Interview"
     }
   },
   "errors": {
@@ -341,6 +347,76 @@
     "disclaimerLabel": "Disclaimer:",
     "disclaimerBody": "ApplyRight is an interview preparation tool. All mock sessions, voice conversations, and generated questions are designed solely for practice and confidence-building purposes. The questions simulated in our application are illustrative and do not guarantee the actual questions that will be encountered in your live hiring process."
   },
+  "onboarding": {
+    "progress": {
+      "basicInfo": "Basic Info",
+      "education": "Education"
+    },
+    "step1": {
+      "heading": "Let's get to know you",
+      "subheading": "Tell us a bit about yourself to get started.",
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "Jane",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Doe",
+      "otherNameLabel": "Other Name (Optional)",
+      "otherNamePlaceholder": "Middle Name",
+      "currentStatusLabel": "Current Status",
+      "status": {
+        "student": "Student",
+        "graduate": "Recent Graduate",
+        "professional": "Professional",
+        "other": "Other"
+      }
+    },
+    "step2": {
+      "heading": "Your Academic Journey",
+      "subheading": "Help us tailor resources to your field of study.",
+      "universityLabel": "University / Institution",
+      "universityPlaceholder": "e.g. Stanford University",
+      "disciplineLabel": "Discipline / Major",
+      "disciplinePlaceholder": "e.g. Computer Science",
+      "graduationYearLabel": "Graduation Year (Expected)",
+      "graduationYearPlaceholder": "e.g. 2026"
+    },
+    "actions": {
+      "next": "Next",
+      "complete": "Complete Profile",
+      "completing": "Completing Profile..."
+    },
+    "toasts": {
+      "validationTitle": "Please fill in all required fields to proceed.",
+      "validationDescription": "It helps us tailor your experience on ApplyRight.",
+      "saveFailed": "Failed to save profile. Please try again."
+    },
+    "welcome": {
+      "steps": {
+        "0": {
+          "title": "Igniting your potential...",
+          "message": "You've taken the first step towards your dream career, {{name}}. We're excited to be part of your journey!",
+          "type": "MOTIVATION"
+        },
+        "1": {
+          "title": "Did you know?",
+          "message": "75% of resumes are rejected by ATS before a human sees them. ApplyRight helps you beat the odds.",
+          "type": "TIP"
+        },
+        "2": {
+          "title": "Must Know",
+          "message": "Tailoring your CV for every single application is the #1 way to get more interviews.",
+          "type": "GUIDE"
+        },
+        "3": {
+          "title": "All set!",
+          "message": "Your dashboard is ready. Let's start building your future.",
+          "type": "READY"
+        }
+      },
+      "settingUp": "Setting up your personal dashboard...",
+      "enterDashboard": "Enter Dashboard",
+      "defaultName": "Future Pro"
+    }
+  },
   "dashboard": {
     "greetingNoName": "Optimize Your Professional Presence",
     "greeting": "Welcome back, {{name}}. Let’s get you hired.",
@@ -428,6 +504,9 @@
       "verifyBeforeSending": "Verify before sending",
       "interviewPrep": "Interview prep",
       "interviewPrepBody": "Likely questions + suggested answers",
+      "ready": "Ready",
+      "generating": "Generating…",
+      "generate": "Generate",
       "newAnalysis": "Generate New Analysis",
       "newAnalysisBody": "Same resume, different job",
       "prepReady": "Interview prep ready",
@@ -488,7 +567,18 @@
     },
     "metricCapture": {
       "generateBundle": "Generate full kit",
-      "generateCv": "Generate CV"
+      "generateCv": "Generate CV",
+      "title": "Quick step before we generate",
+      "intro_one": "We spotted <bold>{{count}} bullet</bold> that say what you did but not the impact. Recruiters scan for numbers — adding one or two makes your CV instantly stronger.",
+      "intro_other": "We spotted <bold>{{count}} bullets</bold> that say what you did but not the impact. Recruiters scan for numbers — adding one or two makes your CV instantly stronger.",
+      "filledOfTotal": "{{filled}} of {{total}} filled",
+      "allOptional": "All optional",
+      "addNumberLabel": "Add a number (optional)",
+      "numberPlaceholder": "e.g., 5-person team, 30% faster, $100K",
+      "reassurance": "<bold>Your numbers stay yours.</bold> We only weave them into the matching bullet — nothing else gets fabricated, and your skills and roles are preserved exactly.",
+      "skip": "Skip — just generate now",
+      "withNumbers_one": "{{label}} with {{count}} number",
+      "withNumbers_other": "{{label}} with {{count}} numbers"
     }
   },
   "billing": {
@@ -504,7 +594,14 @@
       "currencyUsd": "$ USD",
       "currencyUsdRegion": "· Worldwide",
       "agentHeading": "Create CVs for clients at scale",
-      "agentSubcopy": "A generous pool of <strong>AI credits</strong> for CV tailoring and cover letters, plus <strong>unlimited downloads</strong> — built for CV writers and agencies. No interview minutes."
+      "agentSubcopy": "A generous pool of <strong>AI credits</strong> for CV tailoring and cover letters, plus <strong>unlimited downloads</strong> — built for CV writers and agencies. No interview minutes.",
+      "periods": {
+        "forever": "forever",
+        "day14": "14 days",
+        "month": "month",
+        "year": "year",
+        "week": "week"
+      }
     },
     "plans": {
       "free": {
@@ -1282,6 +1379,268 @@
       "keywords": "Keywords",
       "minimize": "Minimize",
       "minimizeAria": "Minimize keyword helper"
+    }
+  },
+  "myCvs": {
+    "eyebrow": "Build & tailor",
+    "title": "My CVs",
+    "subtitle": "Every CV you're building, most recent first.",
+    "newCv": "New CV",
+    "deckLabel": "10 most recent",
+    "complete": "Complete",
+    "momentum": {
+      "cvs": "CVs",
+      "avgCompletion": "Avg completion",
+      "inProgress": "In progress"
+    },
+    "search": {
+      "placeholder": "Search by title or name…",
+      "aria": "Search CVs",
+      "clearAria": "Clear search"
+    },
+    "statusFilters": {
+      "all": "All",
+      "incomplete": "Incomplete"
+    },
+    "filterAria": "Filter by status",
+    "sort": {
+      "recent": "Recently updated",
+      "oldest": "Oldest first",
+      "title": "Title (A–Z)",
+      "completion": "Least complete first",
+      "sortByAria": "Sort by",
+      "sortLabel": "Sort:"
+    },
+    "card": {
+      "draftFallbackName": "Draft",
+      "untitledCv": "Untitled CV",
+      "editedMeta": "{{name}} · edited {{relative}}",
+      "reviewDownload": "Review & download",
+      "finishCv_one": "Finish your CV — {{count}} section left",
+      "finishCv_other": "Finish your CV — {{count}} sections left",
+      "openLabelReview": "Review",
+      "openLabelEdit": "Edit",
+      "emptyHint": "no summary yet",
+      "openAria": "Open {{title}}",
+      "deleteCv": "Delete CV"
+    },
+    "deleteModal": {
+      "title": "Delete CV?",
+      "body": "Are you sure you want to delete “{{title}}”? This action cannot be undone."
+    },
+    "empty": {
+      "eyebrow": "Nothing built yet",
+      "title": "No CVs yet",
+      "body": "Build a fresh CV from scratch, or head to the dashboard to tailor one against a job posting.",
+      "createFirst": "Create your first CV",
+      "goToDashboard": "Go to dashboard"
+    },
+    "filteredEmpty": {
+      "title": "No CVs match these filters",
+      "body": "Try a different search or clear the filters.",
+      "clear": "Clear filters"
+    },
+    "error": {
+      "title": "Couldn't load your CVs",
+      "loadFailed": "Failed to load your CVs",
+      "retry": "Try again"
+    },
+    "toasts": {
+      "deleted": "CV deleted",
+      "deleteFailed": "Failed to delete CV"
+    }
+  },
+  "jobHistory": {
+    "eyebrow": "Your job hunt",
+    "title": "Applications",
+    "subtitle": "Every role you've analyzed, most recent first.",
+    "analyzeNewRole": "Analyze a new role",
+    "sort": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "highestMatch": "Highest match",
+      "lowestMatch": "Lowest match"
+    },
+    "momentum": {
+      "rolesAnalyzed": "Roles analyzed",
+      "bestMatch": "Best match",
+      "interviewReady": "Interview-ready",
+      "tailoredCvs": "Tailored CVs"
+    },
+    "nextMove": {
+      "fixCv_one": "Fix your CV — {{count}} skill to close",
+      "fixCv_other": "Fix your CV — {{count}} skills to close",
+      "optimizeCv": "Optimize your CV",
+      "generateCoverLetter": "Generate your cover letter",
+      "interviewReady": "Interview-ready — review your prep",
+      "reviewApplication": "Review your application"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "yesterday": "Yesterday",
+      "daysAgo": "{{n}}d ago"
+    },
+    "search": {
+      "placeholder": "Search by job title or company",
+      "noMatch": "No applications match your search.",
+      "noneYet": "No applications yet."
+    },
+    "card": {
+      "match": "Match",
+      "improvedFrom": "↑ from {{score}}",
+      "openAria": "Open {{title}} at {{company}}",
+      "deleteApplication": "Delete application",
+      "open": "Open",
+      "unknownRole": "Unknown Role",
+      "unknownCompany": "Unknown Company"
+    },
+    "empty": {
+      "eyebrow": "Your desk is clear",
+      "title": "No applications yet",
+      "body": "Analyze a role to see how your CV measures up — then tailor it, draft a cover letter, and prep for the interview.",
+      "cta": "Analyze your first role"
+    },
+    "detail": {
+      "back": "Back to applications",
+      "eyebrow": "Application",
+      "titleFallback": "Application",
+      "analyzedMeta": "analyzed {{relative}}",
+      "jobPostingBtn": "Job posting",
+      "jobPostingTitle": "View the original job posting",
+      "reRunTitle": "Re-run analysis (10 credits)",
+      "reanalyzingLabel": "Re-analyzing…",
+      "reRunning": "Re-running…",
+      "reRunCr": "Re-run (10 cr)",
+      "compare": "Compare",
+      "compareTitle": "Compare with another analysis for the same job",
+      "compareAgainst": "Compare against",
+      "resumeFrom": "Resume from {{relative}}",
+      "runAt": "Run {{relative}}",
+      "seeWhatToFix": "See what to fix ↓",
+      "toolkitLink": "My CV toolkit ↓"
+    },
+    "toolkit": {
+      "readyEyebrow": "Ready to use · now that you've read the analysis",
+      "fullKit": "Full kit",
+      "fullKitCr": "{{cr}} cr · save 2",
+      "viewDownload": "View & download",
+      "view": "View"
+    },
+    "errors": {
+      "insufficientCredits": "Insufficient credits. Need {{required}}, have {{current}}.",
+      "reanalyzeMissingRefs": "Can't re-run: missing resume or job reference.",
+      "reanalyzeFailed": "Failed to re-run analysis.",
+      "deleteApplicationFailed": "Failed to delete application. Please try again."
+    },
+    "toasts": {
+      "reanalyzed": "Re-analyzed: {{score}}% match"
+    },
+    "jobPostingDrawer": {
+      "eyebrow": "The posting you analyzed against",
+      "closeAria": "Close job posting",
+      "viewOriginal": "View original posting",
+      "screenedFor": "What they screen for",
+      "jobDescription": "Job description",
+      "noDescription": "No description was saved for this posting."
+    },
+    "deleteModal": {
+      "title": "Delete Application",
+      "message": "Are you sure you want to delete this application? This action cannot be undone.",
+      "deleting": "Deleting..."
+    }
+  },
+  "creditGate": {
+    "needMoreCredits_one": "You need {{count}} more credit to run this",
+    "needMoreCredits_other": "You need {{count}} more credits to run this",
+    "costVsBalance": "This action costs {{cost}} credits — you have {{credits}}.",
+    "checking": "Checking…",
+    "watchAd": "Watch ad",
+    "getCredits": "Get credits",
+    "adWaitCooldown": "Please wait {{seconds}}s before watching another ad.",
+    "balanceRefreshFailed": "Could not refresh your balance. Please try again.",
+    "ad": {
+      "title": "Earn Free Credits",
+      "subtitle": "View our sponsor's offer to instantly unlock free A.I credits for this action.",
+      "buttonText": "View Offer",
+      "successTitle": "Credits Unlocked!",
+      "successMessage": "Your credits have been added — you can generate now.",
+      "androidTitle": "Watch a Quick Video",
+      "androidSubtitle": "Watch a short video to earn free A.I credits for this action.",
+      "androidButtonText": "Watch Video"
+    }
+  },
+  "fitScoreCard": {
+    "eyebrow": "Fit analysis",
+    "bottomLine": "The bottom line",
+    "optimizedTo": "optimized to",
+    "liftPts": "+{{lift}} pts",
+    "band": {
+      "needsWork": "Needs work",
+      "almost": "Almost",
+      "ready": "Ready 75+"
+    },
+    "skillsMatched": "Skills matched",
+    "youHave": "✓ You have",
+    "moreCount": "+{{n}} more",
+    "experience": "Experience",
+    "yearsNeeds": "{{years}} yrs · needs {{required}}",
+    "meets": "Meets",
+    "belowPreferred": "Below preferred",
+    "seniority": "Seniority",
+    "levelVaries": "Level varies",
+    "aligned": "Aligned",
+    "mixed": "Mixed",
+    "theGap": "The gap",
+    "whereShort": "Where you're short",
+    "matchedOfTotal": "{{matched}}/{{total}} matched",
+    "allSkillsMatched": "All required skills matched — strong fit on skills.",
+    "noSkillRequirements": "No specific skill requirements were detected for this role.",
+    "criticalRequired": "Critical — required by the role",
+    "bonusSkills": "Bonus — would strengthen the application",
+    "skillsMatchedToggle_one": "{{count}} skill matched",
+    "skillsMatchedToggle_other": "{{count}} skills matched",
+    "readFromResume": "Read from your résumé",
+    "whatStoodOut": "What stood out",
+    "theMath": "The math · fixed weights",
+    "whyWeights": "Why these weights?",
+    "weightsExplainer": "Skills (40%) are the strongest predictor of fit, followed by experience (25%) and education (15%). Seniority and profile strength (10% each) round out the picture. Fixed across every analysis so scores are directly comparable.",
+    "scoreBreakdown": "Score breakdown",
+    "dims": {
+      "skills": "Skills",
+      "experience": "Experience",
+      "education": "Education",
+      "seniority": "Seniority",
+      "profileStrength": "Profile Strength"
+    },
+    "yourMove": "Your move",
+    "whatToFixNext": "What to fix next",
+    "critical": "Critical",
+    "wasAnalysisAccurate": "Was this analysis accurate?",
+    "levels": {
+      "intern": "Intern",
+      "entry": "Entry",
+      "junior": "Junior",
+      "mid": "Mid-Level",
+      "midSenior": "Mid-Senior",
+      "senior": "Senior",
+      "staff": "Staff",
+      "lead": "Lead",
+      "principal": "Principal",
+      "manager": "Manager",
+      "director": "Director",
+      "vp": "VP",
+      "executive": "Executive",
+      "notSpecified": "Not Specified",
+      "unknown": "Unknown"
+    },
+    "feedback": {
+      "wasHelpful": "Was this helpful?",
+      "thanks": "Thanks for the feedback",
+      "saveFailed": "Couldn't save feedback",
+      "helpfulAria": "Helpful",
+      "notHelpfulAria": "Not helpful"
     }
   },
   "interviewPrep": {
@@ -2692,6 +3051,599 @@
       "q4A": "Yes. Run an interviewer as many times as you like — your scores and feedback are saved per interviewer in the Reviews tab, so you can watch yourself improve.",
       "q5Q": "Is this like a real interview?",
       "q5A": "Close. It's a live voice conversation that reacts to your answers, grounded in your CV and the specific job, with interviewers that stay in their lane — HR, hiring manager, or specialist. The main difference is it scores content only, where a real interview also weighs delivery."
+    }
+  },
+  "ariaStudio": {
+    "studioFlow": {
+      "sections": {
+        "contact": "Contact",
+        "experience": "Work history",
+        "projects": "Projects",
+        "education": "Education & certifications",
+        "skills": "Skills",
+        "summary": "Summary"
+      },
+      "projectTypes": {
+        "course": {
+          "label": "Course / academic",
+          "hint": "Coursework, capstone, dissertation",
+          "message": "This is a course / academic project."
+        },
+        "personal": {
+          "label": "Personal / side",
+          "hint": "Something you chose to build",
+          "message": "This is a personal / side project."
+        },
+        "work": {
+          "label": "Work / client",
+          "hint": "Built for an employer or client",
+          "message": "This was a work / client project."
+        }
+      },
+      "fields": {
+        "experience": {
+          "title": "Role",
+          "company": "Company",
+          "dates": "Dates",
+          "achievements": "Achievements"
+        },
+        "project": {
+          "type": "Kind",
+          "title": "Project",
+          "achievements": "What you did",
+          "link": "Link"
+        },
+        "education": {
+          "degree": "Qualification",
+          "school": "School",
+          "graduationDate": "Finished",
+          "description": "Notes"
+        }
+      }
+    },
+    "buildRoadmap": {
+      "heresThePlan": "Here's the plan",
+      "sixSections": "Six sections. I'll take them one at a time and ask you questions — you never face a blank page.",
+      "settingUp": "Setting up…",
+      "startBuilding": "Start building"
+    },
+    "projectType": {
+      "whatKind": "What kind of project is it?"
+    },
+    "pinnedEntry": {
+      "copy": {
+        "experience": {
+          "label": "Building",
+          "blank": "New role",
+          "next": "Next role",
+          "done": "Done with work history"
+        },
+        "project": {
+          "label": "Building",
+          "blank": "New project",
+          "next": "Next project",
+          "done": "Done with projects"
+        },
+        "education": {
+          "label": "Adding",
+          "blank": "New qualification",
+          "next": "Add another",
+          "done": "Done with education"
+        }
+      },
+      "present": "Present",
+      "optional": "optional",
+      "notYet": "not yet",
+      "finishFirst": "Finish this role first",
+      "saving": "Saving…",
+      "finishing": "Finishing…",
+      "edit": "Edit",
+      "addedCount": "{{n}} added"
+    },
+    "studioArtifactPanel": {
+      "tailoredCopy": "Tailored copy",
+      "noCvYet": "No CV yet",
+      "closePanel": "Close panel",
+      "cvHealth": "CV health",
+      "sectionsDoneCount": "{{done}} of {{total}} sections done",
+      "sections": "Sections",
+      "srSectionLine": "{{label}}: {{status}}.",
+      "srDone": "done",
+      "srNotStarted": "not started",
+      "inYourCv": "In your CV",
+      "untitledRole": "Untitled role",
+      "untitledProject": "Untitled project",
+      "standingBy": "Standing by",
+      "emptyWithCv": "Run a scan and your section-by-section verdict lands here.",
+      "emptyNoCv": "Bring me a job and your tailored CV takes shape here.",
+      "fit": "Fit",
+      "stillNotMentioned": "Still not mentioned",
+      "srGood": "good",
+      "srNeedsWork": "needs work",
+      "srPoor": "poor"
+    },
+    "common": {
+      "outOf100": "/ 100"
+    },
+    "finishCard": {
+      "readyToSend": "Ready to send",
+      "percentComplete": "% complete",
+      "contentsRoles_one": "{{count}} role",
+      "contentsRoles_other": "{{count}} roles",
+      "contentsProjects_one": "{{count}} project",
+      "contentsProjects_other": "{{count}} projects",
+      "contentsSkills": "{{n}} skills",
+      "cvSaved": "Your CV is saved.",
+      "sectionsEmpty_one": "{{count}} section still empty — you can come back to those any time.",
+      "sectionsEmpty_other": "{{count}} sections still empty — you can come back to those any time.",
+      "movedIntoGreen": "moved into the green.",
+      "scoreNotMoved": "The score hasn't moved yet — your copy is saved either way, and you can keep fixing sections whenever you like.",
+      "stillWorthLook": "Still worth a look: {{list}}.",
+      "savedAs": "Saved in <b>My CVs</b> as “{{title}}”.",
+      "yourNewCv": "your new CV",
+      "yourTailoredCopy": "your tailored copy",
+      "masterNote": "This one is your master — tailored copies are made from it and never overwrite it.",
+      "originalUntouched": "Your original is untouched.",
+      "openInStudio": "Open in CV Studio",
+      "openInStudioBodyBuild": "You've built this whole CV without seeing it yet — open it up and look at it as real pages, pick a template, and check nothing spills onto page 2.",
+      "openInStudioBodyTailor": "See it as real pages before you send it — that's where you'll spot anything spilling onto page 2, try the 8 templates, and adjust the accent, margins and spacing.",
+      "tailorToJob": "Now tailor it to a job",
+      "seeHowItMatches": "See how it matches · {{cost}} cr",
+      "orGrabItNow": "Or grab it now",
+      "preparing": "Preparing…",
+      "downloadPdf": "Download PDF",
+      "downloadWord": "Download Word",
+      "usesTemplate": "Uses <b>{{name}}</b>",
+      "atsSafeByDefault": "— ATS-safe by default.",
+      "wantDifferentLook": "Want a different look?",
+      "openInEditor": "Open in editor"
+    },
+    "certifications": {
+      "heading": "Certifications & training",
+      "noCharge": "No charge",
+      "body": "Anything licensed or certified — these get filtered on in trades, healthcare and operations roles. Skip if you have none.",
+      "removeAria": "Remove {{name}}",
+      "fieldCertification": "Certification",
+      "placeholderCertification": "e.g. H2S Awareness",
+      "fieldIssuer": "Issued by",
+      "placeholderIssuer": "e.g. OPITO",
+      "fieldYear": "Year",
+      "placeholderYear": "e.g. 2023",
+      "add": "Add",
+      "done": "Done",
+      "haveNone": "I have none"
+    },
+    "contactConfirm": {
+      "fields": {
+        "fullName": {
+          "label": "Full name",
+          "placeholder": "Ernest Akibor"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "you@example.com"
+        },
+        "phone": {
+          "label": "Phone",
+          "placeholder": "+234 …"
+        },
+        "linkedin": {
+          "label": "LinkedIn",
+          "placeholder": "linkedin.com/in/…"
+        },
+        "website": {
+          "label": "Portfolio / website",
+          "placeholder": "yoursite.com"
+        },
+        "address": {
+          "label": "Location",
+          "placeholder": "Lagos, Nigeria"
+        }
+      },
+      "howReachYou": "How can employers reach you?",
+      "yourDetails": "Your details",
+      "saving": "Saving…",
+      "saveContinue": "Save & continue",
+      "filledFromProfile": "I've filled these in from your profile",
+      "looksRight": "Looks right"
+    },
+    "cvPicker": {
+      "whichCv": "Which CV should I work from?",
+      "fetching": "Fetching your CVs…",
+      "loadError": "I couldn't load your CVs just now — try again in a moment.",
+      "noneYet": "You don't have a CV saved yet. Build or upload one first and I'll tailor it.",
+      "draft": "Draft",
+      "untitledCv": "Untitled CV",
+      "editedRelative": "edited {{relative}}"
+    },
+    "deleteSession": {
+      "untitledSession": "Untitled session",
+      "removeThisCv": "Remove this CV?",
+      "deleteThisTailoring": "Delete this tailoring?",
+      "buildBody": "“{{name}}” is a CV you built here, and it lives in <b>My CVs</b>. You can take it out of the Studio sidebar and keep the CV, or delete it everywhere.",
+      "tailorBody": "This deletes the tailored copy “{{name}}” and its conversation. It will also disappear from <b>My CVs</b>.",
+      "originalNotAffected": "Your original <b>{{source}}</b> is not affected.",
+      "cannotUndo": "This can't be undone.",
+      "removing": "Removing…",
+      "removeKeepCv": "Remove from Studio · keep the CV",
+      "deleting": "Deleting…",
+      "deleteEntirely": "Delete CV entirely",
+      "deleteOnly": "Delete"
+    },
+    "entryPicker": {
+      "whichOne": "Which one should we sharpen?",
+      "nothingHere": "There's nothing here yet — add an entry in the CV builder and I'll help you write it.",
+      "untitled": "Untitled",
+      "noKeyword": "no {{keyword}}"
+    },
+    "jobCapture": {
+      "theJob": "The job you're going for",
+      "add": "Add"
+    },
+    "modeChooser": {
+      "whatAreWeDoing": "What are we doing?",
+      "tailorTitle": "Tailor my CV to a job",
+      "tailorBody": "I'll rework a copy against the job description. Your original stays as it is.",
+      "buildTitle": "Create a new CV",
+      "buildBody": "I'll build it with you section by section — I ask, you answer, and I write it up as we go."
+    },
+    "roleBrief": {
+      "ariasRead": "Aria's read",
+      "thisRole": "This role",
+      "seniorityLevel": "{{seniority}} level",
+      "lookingForYears_one": "Looking for around {{count}} year of experience.",
+      "lookingForYears_other": "Looking for around {{count}} years of experience.",
+      "keepsAskingFor": "What it keeps asking for",
+      "couldntFullyRead": "I couldn't fully read the job just now — we can still carry on, and I'll re-read it when I start tailoring."
+    },
+    "roleCapture": {
+      "whenWereYouThere": "When were you there?",
+      "started": "Started",
+      "startedPlaceholder": "e.g. Mar 2021",
+      "stillWorkHere": "I still work here",
+      "ended": "Ended",
+      "endedPlaceholder": "e.g. Aug 2024",
+      "saving": "Saving…",
+      "save": "Save",
+      "skip": "Skip",
+      "prompts": {
+        "title": {
+          "q": "What was your role called?",
+          "hint": "Use the title on your contract — an inflated one is the first thing a reference check catches."
+        },
+        "company": {
+          "q": "Where was this?",
+          "placeholder": "e.g. Baker Hughes",
+          "hint": "The employer's name as it would appear on a payslip."
+        },
+        "degree": {
+          "q": "What did you study?",
+          "placeholder": "e.g. BSc Mechanical Engineering",
+          "hint": "The qualification as it appears on the certificate."
+        },
+        "school": {
+          "q": "Where did you study it?",
+          "placeholder": "e.g. University of Benin"
+        },
+        "graduationDate": {
+          "q": "When did you finish?",
+          "placeholder": "e.g. 2019 (or expected 2026)",
+          "hint": "An expected date is fine if you're still studying."
+        },
+        "projectTitle": {
+          "q": "What's the project called?",
+          "placeholder": "e.g. Rig telemetry dashboard",
+          "hint": "A short, plain name — what you'd call it out loud."
+        }
+      }
+    },
+    "sectionGuidance": {
+      "education": {
+        "title": "Education",
+        "body": "Most ATS filters check for a degree field before a human ever sees your CV. List the qualification, the school, and the year — even if it's in progress.",
+        "cta": "Edit education"
+      },
+      "contact": {
+        "title": "Contact details",
+        "body": "Recruiters need more than one way to reach you. Full name, email, phone and a LinkedIn URL is the complete set — anything missing is a dead end.",
+        "cta": "Edit contact details"
+      }
+    },
+    "targetJobAsk": {
+      "oneThingFirst": "One thing first",
+      "areYouAiming": "Are you aiming at a specific job? If you paste it, I'll shape every section around what that employer actually asks for.",
+      "yesIHaveOne": "Yes, I have one",
+      "notYet": "Not yet — build a strong all-rounder",
+      "addLater": "You can add a job later, and tailor this CV to as many as you like."
+    },
+    "skillsFix": {
+      "heading": "Skills this job asks for",
+      "body": "Tick only the ones you genuinely have. An interviewer will ask about anything on this list.",
+      "nothingMissing": "Nothing missing here — your skills already cover what the job asks for.",
+      "adding": "Adding…",
+      "add": "Add",
+      "addCount": "Add {{n}}"
+    },
+    "sectionBreakdown": {
+      "heading": "Section by section",
+      "allClear": "all clear",
+      "toFix": "{{n}} to fix",
+      "fix": "Fix",
+      "rescoring": "Re-scoring…",
+      "rescoreFree": "Re-score · free",
+      "rechecking": "Re-checking…",
+      "recheckScore": "Re-check my score · {{cost}} cr"
+    },
+    "sessionRail": {
+      "sessions": "Sessions",
+      "closeSessions": "Close sessions",
+      "newTailoring": "New Tailoring",
+      "newCv": "New CV",
+      "loading": "Loading…",
+      "noSessionsYet": "No sessions yet. Start a tailoring and it'll live here — one per job you go for.",
+      "fromSource": "from {{source}}",
+      "removeOrDeleteCv": "Remove or delete this CV",
+      "deleteTailoring": "Delete this tailoring",
+      "deleteAria": "Delete {{heading}}"
+    },
+    "skillsBuild": {
+      "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. You pick which ones go in.",
+      "bodyNoJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up. You pick which ones go in.",
+      "readingCv": "Reading your CV…",
+      "findMySkills": "Find my skills · {{cost}} cr",
+      "typeYourselfFree": "Or type them yourself — free",
+      "manualPlaceholder": "Python, pressure testing, HSE…",
+      "commaSeparated": "Comma-separated.",
+      "skipForNow": "Skip skills for now"
+    },
+    "summaryFix": {
+      "anotherAngle": "Another angle",
+      "yourTailoredSummary": "Your tailored summary",
+      "rewriting": "Re-writing…",
+      "tryAnother": "Try another · {{cost}} cr",
+      "applying": "Applying…",
+      "useThis": "Use this",
+      "whereAreYou": "Where are you in your career?",
+      "writing": "Writing…",
+      "writeIt": "Write it",
+      "stages": {
+        "grad": {
+          "label": "Student / recent grad",
+          "hint": "Little or no full-time history yet"
+        },
+        "experienced": {
+          "label": "Experienced in this field",
+          "hint": "Years of directly relevant work"
+        },
+        "changer": {
+          "label": "Changing careers",
+          "hint": "Strong history, different field"
+        }
+      }
+    },
+    "scoreCard": {
+      "recommendation": {
+        "strongMatch": "You're a strong fit — this is worth applying to now.",
+        "goodMatch": "Good fit. A few targeted edits and this is ready.",
+        "potentialMatch": "You're in range, but the CV needs work to show it.",
+        "weakMatch": "This one's a stretch. Worth repositioning before you apply."
+      },
+      "bandWeak": "Weak",
+      "bandPossible": "Possible",
+      "bandStrong": "Strong",
+      "fitAgainstJob": "Fit against this job",
+      "costAnalysis": "−{{price}} cr · analysis",
+      "scanComplete": "Scan complete.",
+      "scoresUpdated": "Scores updated · notes from your last full scan",
+      "hideFullAnalysis": "Hide full analysis",
+      "showFullAnalysis": "Show full analysis",
+      "theMath": "The math · fixed weights",
+      "dims": {
+        "skills": "Skills",
+        "experience": "Experience",
+        "education": "Education",
+        "seniority": "Seniority",
+        "profileStrength": "Profile strength"
+      },
+      "youHave": "You have · {{n}}",
+      "missing": "Missing · {{n}}",
+      "readFromCv": "Read from your CV"
+    },
+    "chat": {
+      "opener": "Hey — I'm Aria. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.",
+      "kindOpenerBuild": "Let's build your CV together. I'll ask, you answer, and I'll write it up as we go — here's how it'll run.",
+      "kindOpenerTailor": "New tailoring. Paste the job you're going for and I'll read it properly.",
+      "pickModeBuild": "Let's build it together. Here's how it'll run.",
+      "pickModeTailor": "Good — paste the job below and I'll read it properly.",
+      "captureJobWithBrief": "Here's how I read it — check I've got this right before I touch your CV.",
+      "captureJobNoBrief": "I couldn't fully read that one, but I've got the job saved. Have a look and carry on.",
+      "tailorStartDone": "Your tailored copy is saved — your original is untouched. Now let me read it against the job properly and show you what to change.",
+      "tailorStartFailed": "I couldn't set up the tailored copy just now — pick a CV again and I'll retry.",
+      "confirmBriefWithSource": "Good. I'll tailor a copy of {{title}} — one moment.",
+      "confirmBriefNoSource": "Good. Which CV should I work from?",
+      "scanDone": "Here's where you stand. The red and amber sections are where the work is.",
+      "scanInsufficientCredits": "You need {{required}} credits for a full scan and you have {{current}}. Top up and I'll run it.",
+      "scanFailed": "I couldn't finish the scan just now — try again in a moment.",
+      "fixPickWithKeywords": "Let's fix {{section}}. This job leans on {{keywords}} — which one should we sharpen?",
+      "fixPickNoKeywords": "Let's fix {{section}}. Which one should we sharpen?",
+      "fixSkills": "Here's what the job asks for that your CV doesn't claim yet.",
+      "fixSummary": "I'll rewrite your summary around this job. First — where are you in your career?",
+      "and": " and ",
+      "pickEntryWithGaps": "Right — {{title}}. The job leans on {{gaps}}. Did you do either of those here? Tell me what you actually did.",
+      "pickEntryNoGaps": "Right — {{title}}. Tell me one thing you actually did there.",
+      "outOfTheRedNote": " — that's out of the red.",
+      "intoTheGreenNote": " — that's into the green.",
+      "fixMovedScore": "{{section}} moved {{from}} → {{to}}{{bandNote}} Re-scoring is free, so keep going.",
+      "fixSavedNoMove": "{{section}} is saved. The score didn't move much yet — it usually takes a couple of entries.",
+      "nSkills": "{{n}} skills",
+      "aTailoredSummary": "a tailored summary",
+      "beginBuild": "Good. Are you going for a particular job right now?",
+      "cvForJob": "CV for {{jobTitle}}",
+      "buildJobDoneWithBrief": "Got it — {{role}}. Now let's make sure they can reach you.",
+      "buildJobDoneNoBrief": "Got it. Now let's make sure they can reach you.",
+      "buildSkipJob": "No problem — we'll build a strong all-rounder. First, your contact details.",
+      "firstNamesCv": "{{first}}'s CV",
+      "confirmContactDone": "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you.",
+      "sectionOpener": {
+        "experience": "Let's start with your most recent job. What was the role called?",
+        "project": "Let's add a project. First — what kind is it?",
+        "education": "Let's add your education. What did you study?"
+      },
+      "skipProject": "Fine — plenty of strong CVs have none. Your work history is doing that job.",
+      "skipOther": "No problem, we'll leave that out.",
+      "itFallback": "it",
+      "thisJobFallback": "this job",
+      "nextLine": {
+        "company": "Got it. Where was this?",
+        "dates": "And when were you there?",
+        "school": "Where did you study it?",
+        "graduationDate": "And when did you finish?",
+        "achievementsProject": "Now the interesting part — what does {{title}} actually do, and what was your role in it?",
+        "achievementsRole": "Now the part that matters — what did you actually do at {{company}}? Tell me one thing and I'll shape it."
+      },
+      "educationNoBullets": "That's it for that one — education doesn't need bullets.",
+      "nextEntry": {
+        "project": "Next one — what kind of project is it?",
+        "education": "What else did you study?",
+        "experience": "Next one — what was that role called?"
+      },
+      "finishSection": {
+        "experience": "Work history's done. Projects are next whenever you're ready — they're optional, so skip if you'd rather.",
+        "project": "Projects done. Education next.",
+        "education": "Education's in. Any certifications or training to add?"
+      },
+      "pickProjectType": "Good. What's the project called?",
+      "skillsInsufficientCredits": "Finding your skills costs {{cost}} credits and you're short right now. You can type them in yourself for free instead.",
+      "skillsInDone": "{{n}} skills in. Last one — the summary at the top of your CV.",
+      "manualSkillsAdded": "Added {{n}}. Any more, or shall we move on?",
+      "buildSummaryDone": "That's your CV built. Here's where it stands.",
+      "certsDone": "That's your education section complete.",
+      "chatLimitReached": "You've used today's free chats — top up credits or come back tomorrow.",
+      "chatUnreachable": "Couldn't reach me just now — try again.",
+      "freeTypingResults": "Your scan's above. Walking you through each fix is what I'm learning next.",
+      "freeTypingOther": "Use the card above and I'll take it from there.",
+      "nextUp": "Next up",
+      "sectionMenu": {
+        "experienceBlurbMore": "Add another role, or move on whenever you like.",
+        "experienceBlurbFirst": "Work history carries the most weight on a CV, so let's do that next. I'll ask about one job at a time.",
+        "experienceCtaMore": "Add another role",
+        "experienceCtaFirst": "Start work history",
+        "experienceSkipLabel": "That's all my roles",
+        "projectsEyebrow": "Projects · optional",
+        "projectsBlurb": "Projects are worth a lot when your work history is short, and worth little when it isn't. Add one if you've built something you'd talk about in an interview.",
+        "projectsCta": "Add a project",
+        "projectsSkipLabel": "Skip projects — my work history covers it",
+        "educationBlurb": "Most ATS filters check for a qualification before a human sees your CV. Add what you studied — an in-progress degree counts.",
+        "educationCta": "Add education",
+        "skipForNow": "Skip for now",
+        "certsEyebrow": "Certifications · optional",
+        "certsBlurb": "Any licences or training worth listing? These get filtered on in trades, healthcare and operations roles.",
+        "certsCta": "Add certifications",
+        "certsSkipLabel": "I have none",
+        "skillsBlurb": "Now I've got your roles and projects, I can pull out the hard skills you can actually back up — or you can type them in yourself for free.",
+        "skillsCta": "Do skills",
+        "skillsSkipLabel": "Skip skills",
+        "summaryEyebrow": "Summary · last one",
+        "summaryBlurb": "Now I've got the full picture, I can write the summary at the top — it's the first thing anyone reads, and it works best written last.",
+        "summaryCta": "Write my summary",
+        "summarySkipLabel": "Skip the summary"
+      },
+      "noProblem": "No problem.",
+      "skillsSkipSaid": "No problem — you can add skills any time.",
+      "summarySkipSaid": "Fine — you can write it later. Here's your CV.",
+      "theJob": "The job",
+      "tailoredCopyCreated": "Tailored copy created",
+      "readConfirmed": "Read confirmed",
+      "scannedAgainstJob": "Scanned against the job",
+      "fixClosed": "Fix closed",
+      "fixingSection": "Fixing · {{section}}",
+      "sectionFallback": "section",
+      "addedWhat": "Added {{what}}",
+      "addedBullets_one": "Added {{count}} bullet",
+      "addedBullets_other": "Added {{count}} bullets",
+      "noSpecificJobYet": "No specific job yet",
+      "untitledRole": "Untitled role",
+      "bulletsOnCv_one": "{{count}} bullet on your CV",
+      "bulletsOnCv_other": "{{count}} bullets on your CV",
+      "contactConfirmed": "Contact details confirmed",
+      "thinking": {
+        "pickingUp": "Picking up where we left off…",
+        "settingUpCopy": "Setting up your tailored copy…",
+        "readingJob": "Reading the job…",
+        "readingCvAgainstJob": "Reading your CV against the job…"
+      },
+      "buildNewCvHeading": "Build a new CV",
+      "buildNewCvBody": "Building one with you in chat is what I'm learning next. For now the builder is the fastest route — make your CV there, then come back and I'll tailor it to any job you like.",
+      "openTheBuilder": "Open the builder",
+      "scanOffer": {
+        "heading": "Read it against the job",
+        "body": "I'll score your fit for this role and mark every section red, amber or green so you know exactly where to start.",
+        "cta": "Scan my CV"
+      },
+      "achievementsLanded": "That's landed on the role above. Add another job, or call work history done.",
+      "nBullets_one": "{{count}} bullet",
+      "nBullets_other": "{{count}} bullets",
+      "useCardAbove": "Use the card above ↑",
+      "pinCleared": "That role isn't on your CV any more, so I've let it go. Want to add another?",
+      "toast": {
+        "recomputeFailed": "Couldn't re-score just now.",
+        "summaryInsufficientCredits": "Not enough credits for a summary — top up and try again.",
+        "summaryWriteFailed": "Couldn't write it just now. Try again.",
+        "saveFailed": "Couldn't save that — try again.",
+        "skillsPullFailed": "Couldn't pull your skills — try again.",
+        "downloadFailed": "Download failed",
+        "pdfDownloaded": "PDF downloaded",
+        "wordDownloaded": "Word document downloaded"
+      }
+    },
+    "sectionCoach": {
+      "rerollWasFree": "That re-roll was free.",
+      "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
+      "backToSections": "Back to sections",
+      "aimingAt": "aiming at {{keywords}}",
+      "send": "Send",
+      "draftCount": "Draft {{n}} · {{cr}} cr",
+      "pickWhatsTrue": "Pick what's true",
+      "tryAnotherAngle": "Try another angle"
+    },
+    "livePreview": {
+      "heading": "Live preview",
+      "yourCv": "Your CV",
+      "closePreview": "Close preview",
+      "emptyState": "Run a scan and your CV lights up here.",
+      "yourName": "Your name",
+      "noSummaryYet": "No summary yet.",
+      "noSkillsYet": "No skills yet.",
+      "verdict": {
+        "ok": "Strong",
+        "warn": "Needs work",
+        "bad": "Weak"
+      }
+    },
+    "desk": {
+      "toast": {
+        "agentPlanRequired": "An active agent plan is required to create CVs.",
+        "removedFromStudio": "Removed from the Studio — the CV is still in My CVs.",
+        "removeFailed": "Couldn't remove that — try again.",
+        "deleted": "Deleted.",
+        "deleteFailed": "Couldn't delete that — try again."
+      },
+      "newCv": "New CV",
+      "title": "Aria Studio",
+      "buildingWithAria": "Building a CV with Aria",
+      "tailorToJob": "Tailor a CV to a job",
+      "hideSessions": "Hide sessions",
+      "showSessions": "Show sessions",
+      "cvName": "CV name",
+      "renameCv": "Rename this CV",
+      "fitScoreAria": "Fit score {{score}} of 100 — open sections",
+      "outOf100": "/100",
+      "insights": "Insights",
+      "sectionVerdicts": "Section verdicts",
+      "showPanel": "Show panel",
+      "panel": "Panel",
+      "studioSessions": "Studio sessions",
+      "tailoredCopy": "Tailored copy"
     }
   }
 }

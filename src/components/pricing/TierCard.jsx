@@ -75,13 +75,13 @@ const TierCard = ({
           {priceLabel}
         </span>
         {!isFree && (
-          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">/ {tier.period}</span>
+          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">/ {t(tier.periodKey)}</span>
         )}
       </div>
       <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500 min-h-[16px]">
         {!isFree && (
           <span className="capitalize">
-            {t('billing.tierCard.perPeriod', { period: tier.period })}{' '}
+            {t('billing.tierCard.perPeriod', { period: t(tier.periodKey) })}{' '}
           </span>
         )}
         {paySubline}

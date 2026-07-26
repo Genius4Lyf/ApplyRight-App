@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { costForActionTier, tierOf } from '../../lib/models';
@@ -61,8 +62,9 @@ import SkillsBuildCard from './SkillsBuildCard';
 
 // Aria's opening line in the Studio. Flagged `_opening` so it's regenerated on every
 // mount and never persisted — same contract as the coach panel's step openers.
-const OPENER =
-  "Hey — I'm Aria. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.";
+// Key, not text — resolved via t() where used, since this is module scope with no
+// react-i18next context.
+const OPENER_KEY = 'ariaStudio.chat.opener';
 
 // Phase-0 transcript home. Retired the moment a draft exists: the array migrates into
 // `cvData.coachChats.studio` (identical shape) and the context autosave takes over.
@@ -101,6 +103,7 @@ const loadSession = () => {
 // snapshot (including after a free recompute) rather than a stale copy of it.
 
 const StudioChat = ({ onPaywall }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
   const [chatTheme] = useChatTheme();
   const {
@@ -135,10 +138,10 @@ const StudioChat = ({ onPaywall }) => {
   // Both openers below are `_opening`, so neither is ever persisted.
   const kindOpener =
     pendingKind === 'build'
-      ? "Let's build your CV together. I'll ask, you answer, and I'll write it up as we go — here's how it'll run."
+      ? t('ariaStudio.chat.kindOpenerBuild')
       : pendingKind === 'tailor'
-        ? "New tailoring. Paste the job you're going for and I'll read it properly."
-        : OPENER;
+        ? t('ariaStudio.chat.kindOpenerTailor')
+        : t(OPENER_KEY);
 
   const [messages, setMessages] = useState(() => [
     { who: 'aria', text: kindOpener, _opening: true },
@@ -209,7 +212,7 @@ const StudioChat = ({ onPaywall }) => {
       if (localPersisted.length) return prev; // local thread wins; nothing to restore
       migratedRef.current = true; // came FROM the backend — don't migrate back over it
       setPhase(derivePhase(saved));
-      return [{ who: 'aria', text: OPENER, _opening: true }, ...saved];
+      return [{ who: 'aria', text: t(OPENER_KEY), _opening: true }, ...saved];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftId]);
@@ -275,7 +278,7 @@ const StudioChat = ({ onPaywall }) => {
       { who: 'unpinrole' },
       {
         who: 'aria',
-        text: "That role isn't on your CV any more, so I've let it go. Want to add another?",
+        text: t('ariaStudio.chat.pinCleared'),
       }
     );
     setPhase('build:sections');
@@ -298,11 +301,11 @@ const StudioChat = ({ onPaywall }) => {
     // reached two ways.
     if (mode === 'build') {
       setPhase('build:roadmap');
-      ariaSays("Let's build it together. Here's how it'll run.");
+      ariaSays(t('ariaStudio.chat.pickModeBuild'));
       return;
     }
     setPhase('job');
-    ariaSays("Good — paste the job below and I'll read it properly.");
+    ariaSays(t('ariaStudio.chat.pickModeTailor'));
   };
 
   // ─── Step 2: the job → read it (keywords + Role Brief) with NOTHING created yet ───
@@ -348,8 +351,8 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('brief');
     ariaSays(
       brief
-        ? "Here's how I read it — check I've got this right before I touch your CV."
-        : "I couldn't fully read that one, but I've got the job saved. Have a look and carry on."
+        ? t('ariaStudio.chat.captureJobWithBrief')
+        : t('ariaStudio.chat.captureJobNoBrief')
     );
   };
 
@@ -381,7 +384,11 @@ const StudioChat = ({ onPaywall }) => {
       if (res?.draft) setCvData(res.draft);
 
       push(
-        { who: 'cvpick', sourceTitle: draft.title || 'Untitled CV', sourceId: draft._id },
+        {
+          who: 'cvpick',
+          sourceTitle: draft.title || t('ariaStudio.cvPicker.untitledCv'),
+          sourceId: draft._id,
+        },
         {
           who: 'tailored',
           draftId: res?.draftId,
@@ -391,9 +398,7 @@ const StudioChat = ({ onPaywall }) => {
         }
       );
       setPhase('scanoffer');
-      ariaSays(
-        'Your tailored copy is saved — your original is untouched. Now let me read it against the job properly and show you what to change.'
-      );
+      ariaSays(t('ariaStudio.chat.tailorStartDone'));
     } catch (err) {
       if (err?.response?.status === 402 && err?.response?.data?.code === 'NEED_AGENT_SUB') {
         onPaywall?.();
@@ -402,7 +407,7 @@ const StudioChat = ({ onPaywall }) => {
       console.error('tailor-start failed', err);
       push({
         who: 'aria',
-        text: "I couldn't set up the tailored copy just now — pick a CV again and I'll retry.",
+        text: t('ariaStudio.chat.tailorStartFailed'),
       });
     } finally {
       setWorking(false);
@@ -419,11 +424,11 @@ const StudioChat = ({ onPaywall }) => {
     // obvious answer. The user can still pick another from the card if it's wrong.
     const pre = preSourceRef.current;
     if (pre?.id) {
-      ariaSays(`Good. I'll tailor a copy of ${pre.title} — one moment.`);
+      ariaSays(t('ariaStudio.chat.confirmBriefWithSource', { title: pre.title }));
       setTimeout(() => pickCv({ _id: pre.id, title: pre.title }), 700);
       return;
     }
-    ariaSays('Good. Which CV should I work from?');
+    ariaSays(t('ariaStudio.chat.confirmBriefNoSource'));
   };
 
   // Edit re-opens the job form so the JD can be corrected and re-previewed. Nothing has
@@ -447,17 +452,20 @@ const StudioChat = ({ onPaywall }) => {
       }
       push({ who: 'scan', at: res.studioScan?.scannedAt });
       setPhase('results');
-      ariaSays("Here's where you stand. The red and amber sections are where the work is.");
+      ariaSays(t('ariaStudio.chat.scanDone'));
     } catch (err) {
       const code = err?.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
         push({
           who: 'aria',
-          text: `You need ${err.response.data.required} credits for a full scan and you have ${err.response.data.current}. Top up and I'll run it.`,
+          text: t('ariaStudio.chat.scanInsufficientCredits', {
+            required: err.response.data.required,
+            current: err.response.data.current,
+          }),
         });
       } else {
         console.error('studio scan failed', err);
-        push({ who: 'aria', text: "I couldn't finish the scan just now — try again in a moment." });
+        push({ who: 'aria', text: t('ariaStudio.chat.scanFailed') });
       }
     } finally {
       setScanning(false);
@@ -475,7 +483,7 @@ const StudioChat = ({ onPaywall }) => {
       return res.studioScan;
     } catch (err) {
       console.error('studio recompute failed', err);
-      toast.error("Couldn't re-score just now.");
+      toast.error(t('ariaStudio.chat.toast.recomputeFailed'));
       return null;
     } finally {
       setScanning(false);
@@ -501,13 +509,16 @@ const StudioChat = ({ onPaywall }) => {
     if (mode === 'pick') {
       ariaSays(
         section.missingKeywords?.length
-          ? `Let's fix ${section.label.toLowerCase()}. This job leans on ${section.missingKeywords.slice(0, 3).join(', ')} — which one should we sharpen?`
-          : `Let's fix ${section.label.toLowerCase()}. Which one should we sharpen?`
+          ? t('ariaStudio.chat.fixPickWithKeywords', {
+              section: section.label.toLowerCase(),
+              keywords: section.missingKeywords.slice(0, 3).join(', '),
+            })
+          : t('ariaStudio.chat.fixPickNoKeywords', { section: section.label.toLowerCase() })
       );
     } else if (mode === 'skills') {
-      ariaSays("Here's what the job asks for that your CV doesn't claim yet.");
+      ariaSays(t('ariaStudio.chat.fixSkills'));
     } else if (mode === 'summary') {
-      ariaSays("I'll rewrite your summary around this job. First — where are you in your career?");
+      ariaSays(t('ariaStudio.chat.fixSummary'));
     }
   };
 
@@ -535,8 +546,11 @@ const StudioChat = ({ onPaywall }) => {
       {
         who: 'aria',
         text: gaps.length
-          ? `Right — ${entry.title}. The job leans on ${gaps.slice(0, 2).join(' and ')}. Did you do either of those here? Tell me what you actually did.`
-          : `Right — ${entry.title}. Tell me one thing you actually did there.`,
+          ? t('ariaStudio.chat.pickEntryWithGaps', {
+              title: entry.title,
+              gaps: gaps.slice(0, 2).join(t('ariaStudio.chat.and')),
+            })
+          : t('ariaStudio.chat.pickEntryNoGaps', { title: entry.title }),
       }
     );
     setPhase('fix:coach');
@@ -571,12 +585,24 @@ const StudioChat = ({ onPaywall }) => {
     if (after && before) {
       const moved = after.score - before.score;
       const bandChanged = after.band !== before.band;
+      const bandNote = bandChanged
+        ? t(
+            before.band === 'bad'
+              ? 'ariaStudio.chat.outOfTheRedNote'
+              : 'ariaStudio.chat.intoTheGreenNote'
+          )
+        : '.';
       push({
         who: 'aria',
         text:
           moved > 0
-            ? `${fix.sectionLabel} moved ${before.score} → ${after.score}${bandChanged ? ` — that's ${before.band === 'bad' ? 'out of the red' : 'into the green'}.` : '.'} Re-scoring is free, so keep going.`
-            : `${fix.sectionLabel} is saved. The score didn't move much yet — it usually takes a couple of entries.`,
+            ? t('ariaStudio.chat.fixMovedScore', {
+                section: fix.sectionLabel,
+                from: before.score,
+                to: after.score,
+                bandNote,
+              })
+            : t('ariaStudio.chat.fixSavedNoMove', { section: fix.sectionLabel }),
       });
     }
     setPhase('results');
@@ -588,7 +614,10 @@ const StudioChat = ({ onPaywall }) => {
     setApplyingFix(true);
     try {
       const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
-      await finishFix({ what: `${res?.added ?? names.length} skills`, applied: names });
+      await finishFix({
+        what: t('ariaStudio.chat.nSkills', { n: res?.added ?? names.length }),
+        applied: names,
+      });
     } finally {
       setApplyingFix(false);
     }
@@ -609,8 +638,8 @@ const StudioChat = ({ onPaywall }) => {
     } catch (e) {
       toast.error(
         e?.response?.data?.code === 'INSUFFICIENT_CREDITS'
-          ? 'Not enough credits for a summary — top up and try again.'
-          : "Couldn't write it just now. Try again."
+          ? t('ariaStudio.chat.toast.summaryInsufficientCredits')
+          : t('ariaStudio.chat.toast.summaryWriteFailed')
       );
     } finally {
       setSummaryBusy(false);
@@ -622,7 +651,7 @@ const StudioChat = ({ onPaywall }) => {
     try {
       await applySummary(text);
       setSummaryDraft('');
-      await finishFix({ what: 'a tailored summary' });
+      await finishFix({ what: t('ariaStudio.chat.aTailoredSummary') });
     } finally {
       setApplyingFix(false);
     }
@@ -644,7 +673,7 @@ const StudioChat = ({ onPaywall }) => {
       if (!res) return; // startBuild already surfaced the failure
       push({ who: 'buildintro' }, { who: 'buildstart', draftId: res.draftId });
       setPhase('build:job');
-      ariaSays('Good. Are you going for a particular job right now?');
+      ariaSays(t('ariaStudio.chat.beginBuild'));
     } finally {
       setWorking(false);
     }
@@ -663,7 +692,9 @@ const StudioChat = ({ onPaywall }) => {
     }
     // Auto-name the build from its job — mirroring the tailor path's job-derived title.
     // Only while the CV is still unnamed, so a title the user typed is never overwritten.
-    const autoTitle = isUnnamedCv(cvData?.title) ? `CV for ${jobTitle}` : null;
+    const autoTitle = isUnnamedCv(cvData?.title)
+      ? t('ariaStudio.chat.cvForJob', { jobTitle })
+      : null;
     // Persist the job onto the draft so every later section is JD-grounded.
     updateCvData({
       targetJob: { ...(cvData?.targetJob || {}), title: jobTitle, description: jobDescription },
@@ -688,15 +719,15 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('build:contact');
     ariaSays(
       brief
-        ? `Got it — ${brief.role || jobTitle}. Now let's make sure they can reach you.`
-        : "Got it. Now let's make sure they can reach you."
+        ? t('ariaStudio.chat.buildJobDoneWithBrief', { role: brief.role || jobTitle })
+        : t('ariaStudio.chat.buildJobDoneNoBrief')
     );
   };
 
   const buildSkipJob = () => {
     push({ who: 'buildjobdone', skipped: true });
     setPhase('build:contact');
-    ariaSays("No problem — we'll build a strong all-rounder. First, your contact details.");
+    ariaSays(t('ariaStudio.chat.buildSkipJob'));
   };
 
   const confirmContact = async (info) => {
@@ -710,7 +741,7 @@ const StudioChat = ({ onPaywall }) => {
         isUnnamedCv(cvData?.title) && !(cvData?.targetJob?.title || '').trim()
           ? firstNameFrom(info)
           : '';
-      const autoTitle = first ? `${first}'s CV` : null;
+      const autoTitle = first ? t('ariaStudio.chat.firstNamesCv', { first }) : null;
       if (info) updateCvData({ personalInfo: info, ...(autoTitle ? { title: autoTitle } : {}) });
       if (draftId && info) {
         try {
@@ -725,9 +756,7 @@ const StudioChat = ({ onPaywall }) => {
       }
       push({ who: 'contactdone' });
       setPhase('build:sections');
-      ariaSays(
-        "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you."
-      );
+      ariaSays(t('ariaStudio.chat.confirmContactDone'));
     } finally {
       setApplyingFix(false);
     }
@@ -762,9 +791,9 @@ const StudioChat = ({ onPaywall }) => {
   };
 
   const SECTION_OPENER = {
-    experience: "Let's start with your most recent job. What was the role called?",
-    project: "Let's add a project. First — what kind is it?",
-    education: "Let's add your education. What did you study?",
+    experience: t('ariaStudio.chat.sectionOpener.experience'),
+    project: t('ariaStudio.chat.sectionOpener.project'),
+    education: t('ariaStudio.chat.sectionOpener.education'),
   };
 
   const enterSection = async (section) => {
@@ -779,8 +808,8 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('build:sections');
     ariaSays(
       section === 'project'
-        ? 'Fine — plenty of strong CVs have none. Your work history is doing that job.'
-        : "No problem, we'll leave that out."
+        ? t('ariaStudio.chat.skipProject')
+        : t('ariaStudio.chat.skipOther')
     );
   };
 
@@ -800,7 +829,7 @@ const StudioChat = ({ onPaywall }) => {
           await CVService.saveDraft({ _id: draftId, [list]: next });
         } catch (err) {
           console.error('Failed to save entry field', err);
-          toast.error("Couldn't save that — try again.");
+          toast.error(t('ariaStudio.chat.toast.saveFailed'));
         }
       }
       // Aria acknowledges and asks for the next missing thing. Reading the stage off the
@@ -808,18 +837,22 @@ const StudioChat = ({ onPaywall }) => {
       const updated = { ...pinnedEntry, ...patch };
       const stage = roleStage(updated, pinnedSectionKey, { typePicked: !!pinnedType });
       const NEXT_LINE = {
-        company: 'Got it. Where was this?',
-        dates: 'And when were you there?',
-        school: 'Where did you study it?',
-        graduationDate: 'And when did you finish?',
+        company: t('ariaStudio.chat.nextLine.company'),
+        dates: t('ariaStudio.chat.nextLine.dates'),
+        school: t('ariaStudio.chat.nextLine.school'),
+        graduationDate: t('ariaStudio.chat.nextLine.graduationDate'),
         achievements:
           pinnedSectionKey === 'project'
-            ? `Now the interesting part — what does ${updated.title || 'it'} actually do, and what was your role in it?`
-            : `Now the part that matters — what did you actually do at ${updated.company || 'this job'}? Tell me one thing and I'll shape it.`,
+            ? t('ariaStudio.chat.nextLine.achievementsProject', {
+                title: updated.title || t('ariaStudio.chat.itFallback'),
+              })
+            : t('ariaStudio.chat.nextLine.achievementsRole', {
+                company: updated.company || t('ariaStudio.chat.thisJobFallback'),
+              }),
       };
       if (NEXT_LINE[stage]) ariaSays(NEXT_LINE[stage]);
       else if (stage === 'complete' && pinnedSectionKey === 'education')
-        ariaSays("That's it for that one — education doesn't need bullets.");
+        ariaSays(t('ariaStudio.chat.educationNoBullets'));
     } finally {
       setRoleBusy(null);
     }
@@ -840,10 +873,10 @@ const StudioChat = ({ onPaywall }) => {
     if (sortId) {
       ariaSays(
         pinnedSectionKey === 'project'
-          ? 'Next one — what kind of project is it?'
+          ? t('ariaStudio.chat.nextEntry.project')
           : pinnedSectionKey === 'education'
-            ? 'What else did you study?'
-            : 'Next one — what was that role called?'
+            ? t('ariaStudio.chat.nextEntry.education')
+            : t('ariaStudio.chat.nextEntry.experience')
       );
     }
   };
@@ -874,10 +907,10 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('build:sections');
     ariaSays(
       section === 'experience'
-        ? "Work history's done. Projects are next whenever you're ready — they're optional, so skip if you'd rather."
+        ? t('ariaStudio.chat.finishSection.experience')
         : section === 'project'
-          ? 'Projects done. Education next.'
-          : "Education's in. Any certifications or training to add?"
+          ? t('ariaStudio.chat.finishSection.project')
+          : t('ariaStudio.chat.finishSection.education')
     );
   };
 
@@ -886,10 +919,10 @@ const StudioChat = ({ onPaywall }) => {
   const pickProjectType = (type) => {
     if (!pinnedEntry) return;
     push(
-      { who: 'user', text: type.message },
-      { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, label: type.label }
+      { who: 'user', text: t(type.messageKey) },
+      { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, labelKey: type.labelKey }
     );
-    ariaSays("Good. What's the project called?");
+    ariaSays(t('ariaStudio.chat.pickProjectType'));
   };
 
   // ─── Skills ───
@@ -915,10 +948,12 @@ const StudioChat = ({ onPaywall }) => {
       if ([402, 403].includes(e?.response?.status)) {
         push({
           who: 'aria',
-          text: `Finding your skills costs ${CREDIT_COSTS.GENERATE_SKILLS ?? 10} credits and you're short right now. You can type them in yourself for free instead.`,
+          text: t('ariaStudio.chat.skillsInsufficientCredits', {
+            cost: CREDIT_COSTS.GENERATE_SKILLS ?? 10,
+          }),
         });
       } else {
-        toast.error("Couldn't pull your skills — try again.");
+        toast.error(t('ariaStudio.chat.toast.skillsPullFailed'));
       }
     } finally {
       setRoleBusy(null);
@@ -931,7 +966,7 @@ const StudioChat = ({ onPaywall }) => {
     push({ who: 'skillsdone', n: res?.added ?? picked.length });
     setPhase('build:sections');
     ariaSays(
-      `${res?.added ?? picked.length} skills in. Last one — the summary at the top of your CV.`
+      t('ariaStudio.chat.skillsInDone', { n: res?.added ?? picked.length })
     );
   };
 
@@ -946,7 +981,7 @@ const StudioChat = ({ onPaywall }) => {
     setRoleBusy('skills');
     try {
       const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
-      if (res?.added) ariaSays(`Added ${res.added}. Any more, or shall we move on?`);
+      if (res?.added) ariaSays(t('ariaStudio.chat.manualSkillsAdded', { n: res.added }));
     } finally {
       setRoleBusy(null);
     }
@@ -968,8 +1003,8 @@ const StudioChat = ({ onPaywall }) => {
     } catch (e) {
       toast.error(
         e?.response?.data?.code === 'INSUFFICIENT_CREDITS'
-          ? 'Not enough credits for a summary — top up and try again.'
-          : "Couldn't write it just now. Try again."
+          ? t('ariaStudio.chat.toast.summaryInsufficientCredits')
+          : t('ariaStudio.chat.toast.summaryWriteFailed')
       );
     } finally {
       setSummaryBusy(false);
@@ -983,7 +1018,7 @@ const StudioChat = ({ onPaywall }) => {
       setSummaryDraft('');
       push({ who: 'summarydone' });
       setPhase('build:done');
-      ariaSays("That's your CV built. Here's where it stands.");
+      ariaSays(t('ariaStudio.chat.buildSummaryDone'));
     } finally {
       setApplyingFix(false);
     }
@@ -995,7 +1030,10 @@ const StudioChat = ({ onPaywall }) => {
   // first and the clone happens through the normal tailor-start path.
   const tailorThisCv = async () => {
     if (!draftId) return;
-    await newSession('tailor', { id: draftId, title: cvData?.title || 'Untitled CV' });
+    await newSession('tailor', {
+      id: draftId,
+      title: cvData?.title || t('ariaStudio.cvPicker.untitledCv'),
+    });
   };
 
   // Certifications — a plain sub-list of education, no AI, no credits.
@@ -1007,7 +1045,7 @@ const StudioChat = ({ onPaywall }) => {
         await CVService.saveDraft({ _id: draftId, certifications: next });
       } catch (err) {
         console.error('Failed to save certification', err);
-        toast.error("Couldn't save that — try again.");
+        toast.error(t('ariaStudio.chat.toast.saveFailed'));
       }
     }
   };
@@ -1075,10 +1113,14 @@ const StudioChat = ({ onPaywall }) => {
         return;
       }
       if (!result.ok) {
-        toast.error('Download failed');
+        toast.error(t('ariaStudio.chat.toast.downloadFailed'));
         return;
       }
-      toast.success(format === 'pdf' ? 'PDF downloaded' : 'Word document downloaded');
+      toast.success(
+        format === 'pdf'
+          ? t('ariaStudio.chat.toast.pdfDownloaded')
+          : t('ariaStudio.chat.toast.wordDownloaded')
+      );
     } finally {
       setDownloadBusy(null);
     }
@@ -1122,8 +1164,8 @@ const StudioChat = ({ onPaywall }) => {
           who: 'aria',
           text:
             e?.response?.data?.code === 'CHAT_LIMIT_REACHED'
-              ? "You've used today's free chats — top up credits or come back tomorrow."
-              : "Couldn't reach me just now — try again.",
+              ? t('ariaStudio.chat.chatLimitReached')
+              : t('ariaStudio.chat.chatUnreachable'),
         });
       } finally {
         setThinking(false);
@@ -1134,8 +1176,8 @@ const StudioChat = ({ onPaywall }) => {
     // Tailor intake stays card-driven; free typing gets a nudge back to the card in play.
     ariaSays(
       phase === 'results'
-        ? "Your scan's above. Walking you through each fix is what I'm learning next."
-        : "Use the card above and I'll take it from there."
+        ? t('ariaStudio.chat.freeTypingResults')
+        : t('ariaStudio.chat.freeTypingOther')
     );
   };
 
@@ -1174,80 +1216,79 @@ const StudioChat = ({ onPaywall }) => {
   const nextSection = !closed('experiencedone')
     ? {
         key: 'experience',
-        eyebrow: progress.status.experience ? 'Work history' : 'Next up',
+        eyebrow: progress.status.experience
+          ? t('ariaStudio.studioFlow.sections.experience')
+          : t('ariaStudio.chat.nextUp'),
         blurb: progress.status.experience
-          ? 'Add another role, or move on whenever you like.'
-          : "Work history carries the most weight on a CV, so let's do that next. I'll ask about one job at a time.",
-        cta: progress.status.experience ? 'Add another role' : 'Start work history',
+          ? t('ariaStudio.chat.sectionMenu.experienceBlurbMore')
+          : t('ariaStudio.chat.sectionMenu.experienceBlurbFirst'),
+        cta: progress.status.experience
+          ? t('ariaStudio.chat.sectionMenu.experienceCtaMore')
+          : t('ariaStudio.chat.sectionMenu.experienceCtaFirst'),
         start: () => enterSection('experience'),
         // Only offer to close work history once something is actually in it.
         skip: progress.status.experience ? () => skipSection('experience', 'experiencedone') : null,
-        skipLabel: "That's all my roles",
+        skipLabel: t('ariaStudio.chat.sectionMenu.experienceSkipLabel'),
       }
     : !closed('projectsdone')
       ? {
           key: 'project',
-          eyebrow: 'Projects · optional',
-          blurb:
-            "Projects are worth a lot when your work history is short, and worth little when it isn't. Add one if you've built something you'd talk about in an interview.",
-          cta: 'Add a project',
+          eyebrow: t('ariaStudio.chat.sectionMenu.projectsEyebrow'),
+          blurb: t('ariaStudio.chat.sectionMenu.projectsBlurb'),
+          cta: t('ariaStudio.chat.sectionMenu.projectsCta'),
           start: () => enterSection('project'),
           skip: () => skipSection('project', 'projectsdone'),
-          skipLabel: 'Skip projects — my work history covers it',
+          skipLabel: t('ariaStudio.chat.sectionMenu.projectsSkipLabel'),
         }
       : !closed('educationdone')
         ? {
             key: 'education',
-            eyebrow: 'Education',
-            blurb:
-              'Most ATS filters check for a qualification before a human sees your CV. Add what you studied — an in-progress degree counts.',
-            cta: 'Add education',
+            eyebrow: t('ariaStudio.studioFlow.sections.education'),
+            blurb: t('ariaStudio.chat.sectionMenu.educationBlurb'),
+            cta: t('ariaStudio.chat.sectionMenu.educationCta'),
             start: () => enterSection('education'),
             skip: () => skipSection('education', 'educationdone'),
-            skipLabel: 'Skip for now',
+            skipLabel: t('ariaStudio.chat.sectionMenu.skipForNow'),
           }
         : !closed('certsdone')
           ? {
               key: 'certs',
-              eyebrow: 'Certifications · optional',
-              blurb:
-                'Any licences or training worth listing? These get filtered on in trades, healthcare and operations roles.',
-              cta: 'Add certifications',
+              eyebrow: t('ariaStudio.chat.sectionMenu.certsEyebrow'),
+              blurb: t('ariaStudio.chat.sectionMenu.certsBlurb'),
+              cta: t('ariaStudio.chat.sectionMenu.certsCta'),
               start: () => setPhase('build:certs'),
               skip: () => {
                 push({ who: 'certsdone', skipped: true });
-                ariaSays('No problem.');
+                ariaSays(t('ariaStudio.chat.noProblem'));
               },
-              skipLabel: 'I have none',
+              skipLabel: t('ariaStudio.chat.sectionMenu.certsSkipLabel'),
             }
           : !closed('skillsdone')
             ? {
                 key: 'skills',
-                eyebrow: 'Skills',
-                blurb:
-                  "Now I've got your roles and projects, I can pull out the hard skills you can actually back up — or you can type them in yourself for free.",
-                cta: 'Do skills',
+                eyebrow: t('ariaStudio.studioFlow.sections.skills'),
+                blurb: t('ariaStudio.chat.sectionMenu.skillsBlurb'),
+                cta: t('ariaStudio.chat.sectionMenu.skillsCta'),
                 start: () => setPhase('build:skills'),
                 skip: () => {
                   push({ who: 'skillsdone', skipped: true });
-                  ariaSays('No problem — you can add them any time.');
+                  ariaSays(t('ariaStudio.chat.skillsSkipSaid'));
                 },
-                skipLabel: 'Skip skills',
+                skipLabel: t('ariaStudio.chat.sectionMenu.skillsSkipLabel'),
               }
             : !closed('summarydone')
               ? {
                   key: 'summary',
-                  eyebrow: 'Summary · last one',
-                  blurb:
-                    "Now I've got the full picture, I can write the summary at the top — it's the first thing anyone reads, and it works best written last.",
-                  cta: 'Write my summary',
+                  eyebrow: t('ariaStudio.chat.sectionMenu.summaryEyebrow'),
+                  blurb: t('ariaStudio.chat.sectionMenu.summaryBlurb'),
+                  cta: t('ariaStudio.chat.sectionMenu.summaryCta'),
                   start: () => setPhase('build:summary'),
                   skip: () => {
                     push({ who: 'summarydone', skipped: true });
                     setPhase('build:done');
-                    ariaSays("Fine — you can write it later. Here's your CV.");
+                    ariaSays(t('ariaStudio.chat.summarySkipSaid'));
                   },
-                  skipLabel: 'Skip the summary',
+                  skipLabel: t('ariaStudio.chat.sectionMenu.summarySkipLabel'),
                 }
               : null;
 
@@ -1273,7 +1314,10 @@ const StudioChat = ({ onPaywall }) => {
                 entry={pinnedEntry}
                 section={pinnedSectionKey}
                 typePicked={!!pinnedType}
-                typeLabel={PROJECT_TYPES.find((t) => t.key === pinnedType)?.label || ''}
+                typeLabel={(() => {
+                  const found = PROJECT_TYPES.find((pt) => pt.key === pinnedType);
+                  return found ? t(found.labelKey) : '';
+                })()}
                 busy={roleBusy}
                 defaultExpanded={typeof window !== 'undefined' ? window.innerWidth >= 640 : true}
                 onNextRole={nextEntry}
@@ -1306,7 +1350,9 @@ const StudioChat = ({ onPaywall }) => {
                   className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
                   {...bubbleAnim('user', reduce)}
                 >
-                  {m.mode === 'build' ? 'Create a new CV' : 'Tailor my CV to a job'}
+                  {m.mode === 'build'
+                    ? t('ariaStudio.modeChooser.buildTitle')
+                    : t('ariaStudio.modeChooser.tailorTitle')}
                 </motion.div>
               );
             }
@@ -1322,7 +1368,7 @@ const StudioChat = ({ onPaywall }) => {
                   <AriaOrbit size={16} className="mt-2" />
                   <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      The job
+                      {t('ariaStudio.chat.theJob')}
                     </p>
                     <p className="mt-1.5 font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
                       {m.jobTitle}
@@ -1377,7 +1423,7 @@ const StudioChat = ({ onPaywall }) => {
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        Tailored copy created
+                        {t('ariaStudio.chat.tailoredCopyCreated')}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {m.title}
@@ -1396,7 +1442,7 @@ const StudioChat = ({ onPaywall }) => {
                   className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  ✓ Read confirmed
+                  ✓ {t('ariaStudio.chat.readConfirmed')}
                 </motion.div>
               );
             }
@@ -1411,7 +1457,7 @@ const StudioChat = ({ onPaywall }) => {
                   className="self-center rounded-full border border-indigo-500/35 bg-indigo-500/[0.12] text-indigo-600 dark:text-indigo-400 px-3 py-1 text-[12px] font-semibold"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  ✓ Scanned against the job
+                  ✓ {t('ariaStudio.chat.scannedAgainstJob')}
                 </motion.div>
               );
             }
@@ -1439,8 +1485,10 @@ const StudioChat = ({ onPaywall }) => {
                       }`}
                     >
                       {ended
-                        ? 'Fix closed'
-                        : `Fixing · ${m.entry?.title || m.sectionLabel || 'section'}`}
+                        ? t('ariaStudio.chat.fixClosed')
+                        : t('ariaStudio.chat.fixingSection', {
+                            section: m.entry?.title || m.sectionLabel || t('ariaStudio.chat.sectionFallback'),
+                          })}
                     </span>
                   </span>
                   <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
@@ -1466,7 +1514,9 @@ const StudioChat = ({ onPaywall }) => {
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        {m.what ? `Added ${m.what}` : `Added ${n} bullet${n === 1 ? '' : 's'}`}
+                        {m.what
+                          ? t('ariaStudio.chat.addedWhat', { what: m.what })
+                          : t('ariaStudio.chat.addedBullets', { count: n })}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {m.entry?.title || m.sectionLabel}
@@ -1492,7 +1542,7 @@ const StudioChat = ({ onPaywall }) => {
                   className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
                   {...bubbleAnim('user', reduce)}
                 >
-                  No specific job yet
+                  {t('ariaStudio.chat.noSpecificJobYet')}
                 </motion.div>
               );
             }
@@ -1516,11 +1566,11 @@ const StudioChat = ({ onPaywall }) => {
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                        {live.title || 'Untitled role'}
+                        {live.title || t('ariaStudio.chat.untitledRole')}
                         {live.company ? ` · ${live.company}` : ''}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        {n} bullet{n === 1 ? '' : 's'} on your CV
+                        {t('ariaStudio.chat.bulletsOnCv', { count: n })}
                       </span>
                     </span>
                   </div>
@@ -1535,7 +1585,7 @@ const StudioChat = ({ onPaywall }) => {
                   className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  ✓ Contact details confirmed
+                  ✓ {t('ariaStudio.chat.contactConfirmed')}
                 </motion.div>
               );
             }
@@ -1555,11 +1605,17 @@ const StudioChat = ({ onPaywall }) => {
             );
           })}
 
-          {loading && <AriaThinking variant="chat" label="Picking up where we left off…" />}
+          {loading && (
+            <AriaThinking variant="chat" label={t('ariaStudio.chat.thinking.pickingUp')} />
+          )}
           {thinking && <AriaThinking variant="chat" />}
-          {working && <AriaThinking variant="draft" label="Setting up your tailored copy…" />}
-          {reading && <AriaThinking variant="chat" label="Reading the job…" />}
-          {scanning && <AriaThinking variant="draft" label="Reading your CV against the job…" />}
+          {working && (
+            <AriaThinking variant="draft" label={t('ariaStudio.chat.thinking.settingUpCopy')} />
+          )}
+          {reading && <AriaThinking variant="chat" label={t('ariaStudio.chat.thinking.readingJob')} />}
+          {scanning && (
+            <AriaThinking variant="draft" label={t('ariaStudio.chat.thinking.readingCvAgainstJob')} />
+          )}
 
           {/* The live card — always the LAST item in the stream, blooming from Aria's
               orbit and collapsing back into it. Never a phase-swap. */}
@@ -1613,7 +1669,7 @@ const StudioChat = ({ onPaywall }) => {
                     disabled={roleBusy}
                     className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
                   >
-                    {roleBusy ? 'Setting up…' : nextSection.cta}
+                    {roleBusy ? t('ariaStudio.buildRoadmap.settingUp') : nextSection.cta}
                   </button>
                   {/* Optional sections get a guilt-free out, stated plainly. */}
                   {nextSection.skip && (
@@ -1658,7 +1714,7 @@ const StudioChat = ({ onPaywall }) => {
                 onSkip={() => {
                   push({ who: 'skillsdone', skipped: true });
                   setPhase('build:sections');
-                  ariaSays('No problem — you can add skills any time.');
+                  ariaSays(t('ariaStudio.chat.skillsSkipSaid'));
                 }}
               />
             )}
@@ -1677,7 +1733,7 @@ const StudioChat = ({ onPaywall }) => {
                   setSummaryDraft('');
                   push({ who: 'summarydone', skipped: true });
                   setPhase('build:done');
-                  ariaSays("Fine — you can write it later. Here's your CV.");
+                  ariaSays(t('ariaStudio.chat.summarySkipSaid'));
                 }}
               />
             )}
@@ -1719,7 +1775,7 @@ const StudioChat = ({ onPaywall }) => {
                 onDone={() => {
                   push({ who: 'certsdone' });
                   setPhase('build:sections');
-                  ariaSays("That's your education section complete.");
+                  ariaSays(t('ariaStudio.chat.certsDone'));
                 }}
               />
             )}
@@ -1756,12 +1812,10 @@ const StudioChat = ({ onPaywall }) => {
               <AriaCard cardKey="build" key="build">
                 <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    Build a new CV
+                    {t('ariaStudio.chat.buildNewCvHeading')}
                   </p>
                   <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-                    Building one with you in chat is what I&rsquo;m learning next. For now the
-                    builder is the fastest route — make your CV there, then come back and I&rsquo;ll
-                    tailor it to any job you like.
+                    {t('ariaStudio.chat.buildNewCvBody')}
                   </p>
                   <div className="mt-4 flex items-center justify-between gap-2">
                     <button
@@ -1769,13 +1823,13 @@ const StudioChat = ({ onPaywall }) => {
                       onClick={() => setPhase('mode')}
                       className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                     >
-                      Back
+                      {t('common.back')}
                     </button>
                     <a
                       href="/cv-builder/new/target-job"
                       className="btn-primary px-5 py-2 text-sm no-underline"
                     >
-                      Open the builder →
+                      {t('ariaStudio.chat.openTheBuilder')} →
                     </a>
                   </div>
                 </div>
@@ -1824,22 +1878,21 @@ const StudioChat = ({ onPaywall }) => {
                 <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      Read it against the job
+                      {t('ariaStudio.chat.scanOffer.heading')}
                     </p>
                     <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       −{scanCost} cr
                     </span>
                   </div>
                   <p className="mt-2 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
-                    I&rsquo;ll score your fit for this role and mark every section red, amber or
-                    green so you know exactly where to start.
+                    {t('ariaStudio.chat.scanOffer.body')}
                   </p>
                   <button
                     type="button"
                     onClick={runScan}
                     className="btn-primary w-full mt-3 py-2 text-sm"
                   >
-                    Scan my CV
+                    {t('ariaStudio.chat.scanOffer.cta')}
                   </button>
                 </div>
               </AriaCard>
@@ -1960,9 +2013,7 @@ const StudioChat = ({ onPaywall }) => {
               onDone={(result) => {
                 if (result?.applied?.length) {
                   push({ who: 'added', n: result.applied.length });
-                  ariaSays(
-                    "That's landed on the role above. Add another job, or call work history done."
-                  );
+                  ariaSays(t('ariaStudio.chat.achievementsLanded'));
                 }
               }}
             />
@@ -1988,9 +2039,7 @@ const StudioChat = ({ onPaywall }) => {
                   result && {
                     entry: activeFix.entry,
                     applied: result.applied,
-                    what: `${result.applied?.length || 0} bullet${
-                      result.applied?.length === 1 ? '' : 's'
-                    }`,
+                    what: t('ariaStudio.chat.nBullets', { count: result.applied?.length || 0 }),
                   }
                 )
               }
@@ -2013,7 +2062,11 @@ const StudioChat = ({ onPaywall }) => {
         onSend={send}
         disabled={inputDisabled}
         busy={thinking}
-        placeholder={inputDisabled ? 'Use the card above ↑' : 'Ask Aria anything…'}
+        placeholder={
+          inputDisabled
+            ? t('ariaStudio.chat.useCardAbove')
+            : t('cvBuilder.ariaComposer.placeholder')
+        }
         modelId={modelId}
         onSelectModel={selectModel}
       />

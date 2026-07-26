@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, ArrowUpDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -16,10 +17,12 @@ import { AnimatePresence, motion } from 'framer-motion';
  * @param {string} [ariaLabel]
  * @param {string} [className]
  */
-const SortSelect = ({ value, onChange, options, ariaLabel = 'Sort by', className = '' }) => {
+const SortSelect = ({ value, onChange, options, ariaLabel, className = '' }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const selected = options.find((o) => o.key === value);
+  const resolvedAriaLabel = ariaLabel ?? t('myCvs.sort.sortByAria');
 
   useEffect(() => {
     if (!open) return undefined;
@@ -49,7 +52,7 @@ const SortSelect = ({ value, onChange, options, ariaLabel = 'Sort by', className
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
         className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
           open
             ? 'border-indigo-400 bg-white text-indigo-700 ring-2 ring-indigo-100 dark:border-indigo-500/50 dark:bg-slate-900 dark:text-indigo-300 dark:ring-indigo-500/20'
@@ -58,7 +61,7 @@ const SortSelect = ({ value, onChange, options, ariaLabel = 'Sort by', className
       >
         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
         <span className="hidden font-medium text-slate-400 dark:text-slate-500 sm:inline">
-          Sort:
+          {t('myCvs.sort.sortLabel')}
         </span>
         <span className="max-w-[130px] truncate">{selected?.label}</span>
         <ChevronDown

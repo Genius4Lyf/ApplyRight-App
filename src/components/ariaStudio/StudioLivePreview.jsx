@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
 import {
   PREVIEW_ORDER,
-  VERDICT_LABEL,
+  VERDICT_LABEL_KEY,
   bandsByKey,
   bandForKey,
   improvedKeys,
@@ -22,29 +23,32 @@ import { cvLabel } from '../../lib/cvLabels';
 
 // One section block: the band rail down the left, a labelled header with its verdict
 // chip, then the caller's content. Pulses green briefly when its band just improved.
-const SectionBlock = ({ label, band, pulsing, children }) => (
-  <section className={`relative pl-4 rounded-r-md ${pulsing ? 'aria-just-fixed' : ''}`}>
-    <span
-      className={`absolute left-0 top-0.5 bottom-0.5 w-[3px] rounded-full ${
-        BAND_RULEBG[band] || 'bg-slate-300 dark:bg-slate-600'
-      }`}
-      aria-hidden="true"
-    />
-    <div className="flex items-center justify-between gap-2 mb-1.5">
-      <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
-        {label}
-      </h3>
-      {band !== 'neutral' && (
-        <span
-          className={`shrink-0 font-mono text-[9px] uppercase tracking-wider font-semibold ${BAND_TEXT[band]}`}
-        >
-          {VERDICT_LABEL[band]}
-        </span>
-      )}
-    </div>
-    {children}
-  </section>
-);
+const SectionBlock = ({ label, band, pulsing, children }) => {
+  const { t } = useTranslation();
+  return (
+    <section className={`relative pl-4 rounded-r-md ${pulsing ? 'aria-just-fixed' : ''}`}>
+      <span
+        className={`absolute left-0 top-0.5 bottom-0.5 w-[3px] rounded-full ${
+          BAND_RULEBG[band] || 'bg-slate-300 dark:bg-slate-600'
+        }`}
+        aria-hidden="true"
+      />
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+          {label}
+        </h3>
+        {band !== 'neutral' && (
+          <span
+            className={`shrink-0 font-mono text-[9px] uppercase tracking-wider font-semibold ${BAND_TEXT[band]}`}
+          >
+            {t(VERDICT_LABEL_KEY[band])}
+          </span>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+};
 
 const Bullets = ({ description }) => {
   const bullets = parseBullets(description);
@@ -64,6 +68,7 @@ const Bullets = ({ description }) => {
 };
 
 const StudioLivePreview = ({ onClose }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
   const { cvData, updateCvData } = useAriaStudio();
   const scan = cvData?.studioScan;
@@ -116,10 +121,10 @@ const StudioLivePreview = ({ onClose }) => {
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Live preview
+            {t('ariaStudio.livePreview.heading')}
           </p>
           <p className="mt-0.5 text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-            {cvData?.title || 'Your CV'}
+            {cvData?.title || t('ariaStudio.livePreview.yourCv')}
           </p>
         </div>
         {/* The language this CV is WRITTEN in — drives Aria's writing and the
@@ -137,7 +142,7 @@ const StudioLivePreview = ({ onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close preview"
+            aria-label={t('ariaStudio.livePreview.closePreview')}
             className="shrink-0 -mr-1 w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             ✕
@@ -154,7 +159,7 @@ const StudioLivePreview = ({ onClose }) => {
               <AriaOrbit size={44} working />
             </span>
             <p className="mt-4 text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Run a scan and your CV lights up here.
+              {t('ariaStudio.livePreview.emptyState')}
             </p>
           </div>
         </div>
@@ -169,7 +174,7 @@ const StudioLivePreview = ({ onClose }) => {
               pulsing={pulsing.contact}
             >
               <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                {(info.fullName || '').trim() || 'Your name'}
+                {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
               </p>
               {contactLine && (
                 <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400 break-words">
@@ -195,7 +200,7 @@ const StudioLivePreview = ({ onClose }) => {
                       </p>
                     ) : (
                       <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                        No summary yet.
+                        {t('ariaStudio.livePreview.noSummaryYet')}
                       </p>
                     )}
                   </SectionBlock>
@@ -215,7 +220,7 @@ const StudioLivePreview = ({ onClose }) => {
                         <div key={r._sortId}>
                           <div className="flex items-baseline justify-between gap-3">
                             <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                              {r.title || 'Role'}
+                              {r.title || t('ariaStudio.studioFlow.fields.experience.title')}
                               {r.company ? (
                                 <span className="font-normal text-slate-500 dark:text-slate-400">
                                   {' '}
@@ -227,7 +232,7 @@ const StudioLivePreview = ({ onClose }) => {
                               <span className="shrink-0 font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                                 {r.startDate || ''}
                                 {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
-                                {r.isCurrent ? 'Present' : r.endDate || ''}
+                                {r.isCurrent ? t('ariaStudio.pinnedEntry.present') : r.endDate || ''}
                               </span>
                             )}
                           </div>
@@ -251,7 +256,7 @@ const StudioLivePreview = ({ onClose }) => {
                       {projects.map((p) => (
                         <div key={p._sortId}>
                           <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                            {p.title || 'Project'}
+                            {p.title || t('ariaStudio.studioFlow.fields.project.title')}
                           </p>
                           <Bullets description={p.description} />
                         </div>
@@ -282,7 +287,7 @@ const StudioLivePreview = ({ onClose }) => {
                       </div>
                     ) : (
                       <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                        No skills yet.
+                        {t('ariaStudio.livePreview.noSkillsYet')}
                       </p>
                     )}
                   </SectionBlock>
@@ -301,7 +306,7 @@ const StudioLivePreview = ({ onClose }) => {
                       {education.map((e) => (
                         <div key={e._sortId}>
                           <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                            {e.degree || 'Qualification'}
+                            {e.degree || t('ariaStudio.studioFlow.fields.education.degree')}
                             {e.school ? (
                               <span className="font-normal text-slate-500 dark:text-slate-400">
                                 {' '}

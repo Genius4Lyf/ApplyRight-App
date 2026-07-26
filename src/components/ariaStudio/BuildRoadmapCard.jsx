@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BUILD_SECTIONS } from '../../lib/studioFlow';
 import AriaCard from './AriaCard';
 
@@ -12,15 +13,16 @@ import AriaCard from './AriaCard';
 // Section states come from the live document via getCompletionStatus, so a session
 // resumed halfway shows what's genuinely done — there is no separate "steps completed"
 // flag that could disagree with the CV itself.
-const BuildRoadmapCard = ({ status = {}, onStart, starting }) => (
+const BuildRoadmapCard = ({ status = {}, onStart, starting }) => {
+  const { t } = useTranslation();
+  return (
   <AriaCard cardKey="roadmap">
     <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        Here&rsquo;s the plan
+        {t('ariaStudio.buildRoadmap.heresThePlan')}
       </p>
       <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-        Six sections. I&rsquo;ll take them one at a time and ask you questions — you never face a
-        blank page.
+        {t('ariaStudio.buildRoadmap.sixSections')}
       </p>
 
       <ol className="mt-3 space-y-1.5">
@@ -44,7 +46,7 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting }) => (
                     : 'text-slate-700 dark:text-slate-200'
                 }`}
               >
-                {s.label}
+                {t(s.labelKey)}
               </span>
             </li>
           );
@@ -57,10 +59,11 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting }) => (
         disabled={starting}
         className="btn-primary w-full mt-4 py-2 text-sm disabled:opacity-50"
       >
-        {starting ? 'Setting up…' : 'Start building'}
+        {starting ? t('ariaStudio.buildRoadmap.settingUp') : t('ariaStudio.buildRoadmap.startBuilding')}
       </button>
     </div>
   </AriaCard>
-);
+  );
+};
 
 export default BuildRoadmapCard;

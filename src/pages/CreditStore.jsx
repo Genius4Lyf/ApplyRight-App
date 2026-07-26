@@ -460,7 +460,7 @@ const CreditStore = () => {
                       {formatNgn(tier.priceNgn)}
                     </span>
                     <span className="text-sm text-slate-500 dark:text-slate-400">
-                      / {tier.period}
+                      / {t(tier.periodKey)}
                     </span>
                   </div>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">

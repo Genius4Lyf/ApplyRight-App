@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelative } from '../lib/relativeDate';
 import { Plus, Search, X, Trash2, Eye, PenLine } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SortSelect from '../components/ui/SortSelect';
@@ -14,24 +15,29 @@ import NoteCard from '../components/ui/NoteCard';
 import WorkspaceSkeleton from '../components/ui/WorkspaceSkeleton';
 import { BAND_TEXT, BAND_RULEBG, NEXT_TONE, PAPER_CARD } from '../lib/noteStyles';
 
+// i18n note: these are MODULE-LEVEL CONSTANTS, evaluated once at import time —
+// `label` holds an i18n KEY, resolved via t() at render. 'complete' reuses the
+// shared myCvs.complete key (same word used for the momentum stat).
 const STATUS_FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'incomplete', label: 'Incomplete' },
-  { key: 'complete', label: 'Complete' },
+  { key: 'all', labelKey: 'myCvs.statusFilters.all' },
+  { key: 'incomplete', labelKey: 'myCvs.statusFilters.incomplete' },
+  { key: 'complete', labelKey: 'myCvs.complete' },
 ];
 
 const SORT_OPTIONS = [
-  { key: 'recent', label: 'Recently updated' },
-  { key: 'oldest', label: 'Oldest first' },
-  { key: 'title', label: 'Title (A–Z)' },
-  { key: 'completion', label: 'Least complete first' },
+  { key: 'recent', labelKey: 'myCvs.sort.recent' },
+  { key: 'oldest', labelKey: 'myCvs.sort.oldest' },
+  { key: 'title', labelKey: 'myCvs.sort.title' },
+  { key: 'completion', labelKey: 'myCvs.sort.completion' },
 ];
 
 const SORT_STORAGE_KEY = 'myCvsSort';
 
 // Momentum figures computed only from fields that exist on a draft. Every value
 // guards against missing fields and falls back to 0 rather than throwing.
-const cvMomentum = (drafts = []) => {
+// `t` is passed in explicitly — this is a plain module-level function, not a
+// component, so it has no useTranslation() of its own.
+const cvMomentum = (drafts = [], t) => {
   const list = Array.isArray(drafts) ? drafts : [];
   let complete = 0;
   let sum = 0;
@@ -42,26 +48,25 @@ const cvMomentum = (drafts = []) => {
   });
   const avg = list.length ? Math.round(sum / list.length) : 0;
   return [
-    { label: 'CVs', value: list.length, tone: 'neutral' },
-    { label: 'Complete', value: complete, tone: 'neutral' },
-    { label: 'Avg completion', value: `${avg}%`, tone: 'ok' },
-    { label: 'In progress', value: list.length - complete, tone: 'neutral' },
+    { label: t('myCvs.momentum.cvs'), value: list.length, tone: 'neutral' },
+    { label: t('myCvs.complete'), value: complete, tone: 'neutral' },
+    { label: t('myCvs.momentum.avgCompletion'), value: `${avg}%`, tone: 'ok' },
+    { label: t('myCvs.momentum.inProgress'), value: list.length - complete, tone: 'neutral' },
   ];
 };
 
 // The primitives a note/row needs from one draft — completeness + display bits.
-const deriveCv = (d) => {
+const deriveCv = (d, t) => {
   const { percent, isComplete, missing } = getCompletionStatus(d);
   const band = cvBand(percent, isComplete);
-  const name = d.personalInfo?.fullName || 'Draft';
-  const relative = d.updatedAt
-    ? formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true })
-    : '';
-  const title = d.title || 'Untitled CV';
+  const name = d.personalInfo?.fullName || t('myCvs.card.draftFallbackName');
+  const relative = d.updatedAt ? formatRelative(new Date(d.updatedAt)) : '';
+  const title = d.title || t('myCvs.card.untitledCv');
   return { percent, isComplete, missingCount: missing.length, band, name, relative, title };
 };
 
 const MyCVs = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +99,7 @@ const MyCVs = () => {
         const data = await CVService.getMyDrafts();
         if (!cancelled) setDrafts(Array.isArray(data) ? data : []);
       } catch (e) {
-        if (!cancelled) setError(e.response?.data?.message || 'Failed to load your CVs');
+        if (!cancelled) setError(e.response?.data?.message || t('myCvs.error.loadFailed'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -103,11 +108,12 @@ const MyCVs = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query.trim().toLowerCase()), 200);
-    return () => clearTimeout(t);
+    const debounceTimer = setTimeout(() => setDebouncedQuery(query.trim().toLowerCase()), 200);
+    return () => clearTimeout(debounceTimer);
   }, [query]);
 
   useEffect(() => {
@@ -170,8 +176,10 @@ const MyCVs = () => {
       switch (sortBy) {
         case 'oldest':
           return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
-        case 'title':
-          return (a.title || 'Untitled CV').localeCompare(b.title || 'Untitled CV');
+        case 'title': {
+          const untitled = t('myCvs.card.untitledCv');
+          return (a.title || untitled).localeCompare(b.title || untitled);
+        }
         case 'completion':
           return getCompletionStatus(a).percent - getCompletionStatus(b).percent;
         case 'recent':
@@ -180,7 +188,7 @@ const MyCVs = () => {
       }
     });
     return sorted;
-  }, [drafts, statusFilter, debouncedQuery, sortBy]);
+  }, [drafts, statusFilter, debouncedQuery, sortBy, t]);
 
   const handleDelete = (draft) => setDraftToDelete(draft);
   const cancelDelete = () => setDraftToDelete(null);
@@ -190,9 +198,9 @@ const MyCVs = () => {
     try {
       await CVService.deleteDraft(id);
       setDrafts((prev) => prev.filter((d) => d._id !== id));
-      toast.success('CV deleted');
+      toast.success(t('myCvs.toasts.deleted'));
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to delete CV');
+      toast.error(e.response?.data?.message || t('myCvs.toasts.deleteFailed'));
     } finally {
       setDraftToDelete(null);
     }
@@ -206,27 +214,27 @@ const MyCVs = () => {
   // The single most useful next action + its accent, shared by note and row.
   const moveFor = ({ isComplete, missingCount }) =>
     isComplete
-      ? { label: 'Review & download', tone: 'ok', Icon: Eye }
+      ? { label: t('myCvs.card.reviewDownload'), tone: 'ok', Icon: Eye }
       : {
-          label: `Finish your CV — ${missingCount} section${missingCount === 1 ? '' : 's'} left`,
+          label: t('myCvs.card.finishCv', { count: missingCount }),
           tone: 'accent',
           Icon: PenLine,
         };
 
   // A single draft as a paper note for the deck.
   const renderCvNote = (d) => {
-    const info = deriveCv(d);
+    const info = deriveCv(d, t);
     const { percent, isComplete, band, name, relative, title } = info;
     return (
       <NoteCard
         band={band}
-        stamp={{ value: percent, label: 'Complete' }}
-        eyebrow={`${name} · edited ${relative}`}
+        stamp={{ value: percent, label: t('myCvs.complete') }}
+        eyebrow={t('myCvs.card.editedMeta', { name, relative })}
         title={title}
         verdict={d.professionalSummary || undefined}
-        emptyHint="no summary yet"
+        emptyHint={t('myCvs.card.emptyHint')}
         nextMove={moveFor(info)}
-        openLabel={isComplete ? 'Review' : 'Edit'}
+        openLabel={isComplete ? t('myCvs.card.openLabelReview') : t('myCvs.card.openLabelEdit')}
         onOpen={() => navigate(isComplete ? `/resume/${d._id}` : `/cv-builder/${d._id}`)}
         onDelete={() => handleDelete(d)}
       />
@@ -235,7 +243,7 @@ const MyCVs = () => {
 
   // A single draft as a dense editorial row for the list view.
   const renderRow = (d) => {
-    const info = deriveCv(d);
+    const info = deriveCv(d, t);
     const { percent, isComplete, band, name, relative, title } = info;
     const mv = moveFor(info);
     const NextIcon = mv.Icon;
@@ -245,7 +253,7 @@ const MyCVs = () => {
         key={d._id}
         role="button"
         tabIndex={0}
-        aria-label={`Open ${title}`}
+        aria-label={t('myCvs.card.openAria', { title })}
         onClick={open}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -269,14 +277,14 @@ const MyCVs = () => {
             {percent}%
           </div>
           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-            Complete
+            {t('myCvs.complete')}
           </div>
         </div>
 
         {/* Title + next move */}
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 truncate">
-            {name} · edited {relative}
+            {t('myCvs.card.editedMeta', { name, relative })}
           </p>
           <h3 className="mt-0.5 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
             {title}
@@ -298,8 +306,8 @@ const MyCVs = () => {
               handleDelete(d);
             }}
             className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all"
-            title="Delete CV"
-            aria-label="Delete CV"
+            title={t('myCvs.card.deleteCv')}
+            aria-label={t('myCvs.card.deleteCv')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -330,18 +338,18 @@ const MyCVs = () => {
             {/* LEFT RAIL */}
             <div className="flex flex-col">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Build &amp; tailor
+                {t('myCvs.eyebrow')}
               </p>
               <h1 className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
-                My CVs
+                {t('myCvs.title')}
               </h1>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Every CV you&apos;re building, most recent first.
+                {t('myCvs.subtitle')}
               </p>
 
               {/* Momentum — vertical list on desktop */}
               <div className="mt-8 hidden lg:block">
-                {cvMomentum(drafts).map((s, i) => (
+                {cvMomentum(drafts, t).map((s, i) => (
                   <div
                     key={s.label}
                     className={`flex items-baseline justify-between py-3.5 border-b border-slate-200 dark:border-slate-700 ${
@@ -366,7 +374,7 @@ const MyCVs = () => {
 
               {/* Momentum — 2×2 grid on mobile */}
               <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 lg:hidden">
-                {cvMomentum(drafts).map((s) => (
+                {cvMomentum(drafts, t).map((s) => (
                   <div
                     key={s.label}
                     className="px-4 py-3 border-slate-200 dark:border-slate-700 [&:nth-child(2)]:border-l [&:nth-child(4)]:border-l [&:nth-child(3)]:border-t [&:nth-child(4)]:border-t"
@@ -395,7 +403,7 @@ const MyCVs = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
                 >
                   <Plus className="h-4 w-4" />
-                  New CV
+                  {t('myCvs.newCv')}
                 </button>
               </div>
             </div>
@@ -412,7 +420,7 @@ const MyCVs = () => {
                   getKey={(d) => d._id}
                   renderItem={renderCvNote}
                   cardClassName={PAPER_CARD}
-                  label="10 most recent"
+                  label={t('myCvs.deckLabel')}
                 />
               ) : (
                 <div className="space-y-4 lg:flex lg:flex-col lg:h-full lg:min-h-0">
@@ -424,16 +432,16 @@ const MyCVs = () => {
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search by title or name…"
+                        placeholder={t('myCvs.search.placeholder')}
                         className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-100"
-                        aria-label="Search CVs"
+                        aria-label={t('myCvs.search.aria')}
                       />
                       {query && (
                         <button
                           type="button"
                           onClick={() => setQuery('')}
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                          aria-label="Clear search"
+                          aria-label={t('myCvs.search.clearAria')}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -444,7 +452,7 @@ const MyCVs = () => {
                       <div
                         className="inline-flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-0.5"
                         role="tablist"
-                        aria-label="Filter by status"
+                        aria-label={t('myCvs.filterAria')}
                       >
                         {STATUS_FILTERS.map((f) => {
                           const count = counts[f.key];
@@ -462,7 +470,7 @@ const MyCVs = () => {
                                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                               }`}
                             >
-                              {f.label}
+                              {t(f.labelKey)}
                               <span
                                 className={`ml-1.5 text-[10px] ${
                                   active
@@ -477,7 +485,11 @@ const MyCVs = () => {
                         })}
                       </div>
 
-                      <SortSelect value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+                      <SortSelect
+                        value={sortBy}
+                        onChange={setSortBy}
+                        options={SORT_OPTIONS.map((o) => ({ key: o.key, label: t(o.labelKey) }))}
+                      />
                     </div>
                   </div>
 
@@ -513,11 +525,12 @@ const MyCVs = () => {
                   id="delete-cv-title"
                   className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2"
                 >
-                  Delete CV?
+                  {t('myCvs.deleteModal.title')}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Are you sure you want to delete &ldquo;{draftToDelete.title || 'Untitled CV'}
-                  &rdquo;? This action cannot be undone.
+                  {t('myCvs.deleteModal.body', {
+                    title: draftToDelete.title || t('myCvs.card.untitledCv'),
+                  })}
                 </p>
               </div>
             </div>
@@ -527,14 +540,14 @@ const MyCVs = () => {
                 onClick={cancelDelete}
                 className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={confirmDelete}
                 className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors"
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -544,69 +557,78 @@ const MyCVs = () => {
   );
 };
 
-const EmptyState = () => (
-  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
-    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-      Nothing built yet
-    </p>
-    <h2 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
-      No CVs yet
-    </h2>
-    <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-      Build a fresh CV from scratch, or head to the dashboard to tailor one against a job posting.
-    </p>
-    <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-      <Link
-        to="/cv-builder/new"
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
-      >
-        <Plus className="h-4 w-4" /> Create your first CV
-      </Link>
-      <Link
-        to="/dashboard"
-        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-      >
-        Go to dashboard
-      </Link>
+const EmptyState = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-14 text-center">
+      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+        {t('myCvs.empty.eyebrow')}
+      </p>
+      <h2 className="mt-3 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
+        {t('myCvs.empty.title')}
+      </h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+        {t('myCvs.empty.body')}
+      </p>
+      <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+        <Link
+          to="/cv-builder/new"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-5 py-2.5 text-sm font-semibold transition-colors"
+        >
+          <Plus className="h-4 w-4" /> {t('myCvs.empty.createFirst')}
+        </Link>
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+        >
+          {t('myCvs.empty.goToDashboard')}
+        </Link>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-const FilteredEmptyState = ({ onClear }) => (
-  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-    <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
-      <Search className="w-7 h-7" />
+const FilteredEmptyState = ({ onClear }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+      <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
+        <Search className="w-7 h-7" />
+      </div>
+      <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">
+        {t('myCvs.filteredEmpty.title')}
+      </h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
+        {t('myCvs.filteredEmpty.body')}
+      </p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+      >
+        {t('myCvs.filteredEmpty.clear')}
+      </button>
     </div>
-    <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">
-      No CVs match these filters
-    </h2>
-    <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
-      Try a different search or clear the filters.
-    </p>
-    <button
-      type="button"
-      onClick={onClear}
-      className="px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-    >
-      Clear filters
-    </button>
-  </div>
-);
+  );
+};
 
-const ErrorState = ({ message, onRetry }) => (
-  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-    <h2 className="text-base font-bold text-rose-600 dark:text-rose-300 mb-1">
-      Couldn&rsquo;t load your CVs
-    </h2>
-    <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">{message}</p>
-    <button
-      type="button"
-      onClick={onRetry}
-      className="px-4 py-2 text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 rounded-lg transition-colors"
-    >
-      Try again
-    </button>
-  </div>
-);
+const ErrorState = ({ message, onRetry }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+      <h2 className="text-base font-bold text-rose-600 dark:text-rose-300 mb-1">
+        {t('myCvs.error.title')}
+      </h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="px-4 py-2 text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 rounded-lg transition-colors"
+      >
+        {t('myCvs.error.retry')}
+      </button>
+    </div>
+  );
+};
 
 export default MyCVs;

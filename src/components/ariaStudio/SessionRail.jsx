@@ -1,6 +1,7 @@
 import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelative } from '../../lib/relativeDate';
 import { Plus, FilePlus2, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import AriaOrbit from '../cv/AriaOrbit';
@@ -25,18 +26,20 @@ const SessionRail = ({
   onNewTailoring,
   onNewCv,
   onClose, // drawer only — absent inline
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <div className="h-full min-h-0 flex flex-col">
     <div className="shrink-0 p-3 space-y-2">
       {onClose && (
         <div className="flex items-center justify-between pb-1">
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Sessions
+            {t('ariaStudio.sessionRail.sessions')}
           </span>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close sessions"
+            aria-label={t('ariaStudio.sessionRail.closeSessions')}
             className="w-8 h-8 -mr-1 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             ✕
@@ -52,20 +55,22 @@ const SessionRail = ({
         onClick={onNewTailoring}
         className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
       >
-        <Plus className="w-4 h-4" /> New Tailoring
+        <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
       </button>
       <button
         type="button"
         onClick={onNewCv}
         className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
       >
-        <FilePlus2 className="w-4 h-4" /> New CV
+        <FilePlus2 className="w-4 h-4" /> {t('ariaStudio.sessionRail.newCv')}
       </button>
     </div>
 
     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none pb-3">
       {loading && (
-        <p className="px-4 py-3 text-[12px] text-slate-400 dark:text-slate-500">Loading…</p>
+        <p className="px-4 py-3 text-[12px] text-slate-400 dark:text-slate-500">
+          {t('ariaStudio.sessionRail.loading')}
+        </p>
       )}
 
       {/* First run — an invitation, not an empty box. */}
@@ -73,7 +78,7 @@ const SessionRail = ({
         <div className="px-4 py-6 text-center">
           <AriaOrbit size={22} className="mx-auto" />
           <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            No sessions yet. Start a tailoring and it&rsquo;ll live here — one per job you go for.
+            {t('ariaStudio.sessionRail.noSessionsYet')}
           </p>
         </div>
       )}
@@ -84,10 +89,14 @@ const SessionRail = ({
           const isBuild = s.kind === 'build';
           const band = bandOf(s.fitScore);
           const when = s.updatedAt
-            ? formatDistanceToNow(new Date(s.updatedAt), { addSuffix: true })
+            ? formatRelative(new Date(s.updatedAt))
             : '';
-          const heading = s.jobTitle || s.title || 'Untitled session';
-          const meta = [s.company, s.sourceTitle && `from ${s.sourceTitle}`, when]
+          const heading = s.jobTitle || s.title || t('ariaStudio.deleteSession.untitledSession');
+          const meta = [
+            s.company,
+            s.sourceTitle && t('ariaStudio.sessionRail.fromSource', { source: s.sourceTitle }),
+            when,
+          ]
             .filter(Boolean)
             .join(' · ');
 
@@ -124,7 +133,7 @@ const SessionRail = ({
                       keeps its band colour because that encodes meaning. */}
                   {isBuild ? (
                     <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      New CV
+                      {t('ariaStudio.sessionRail.newCv')}
                     </span>
                   ) : (
                     s.fitScore != null && (
@@ -149,8 +158,12 @@ const SessionRail = ({
                 <button
                   type="button"
                   onClick={() => onDelete(s)}
-                  title={isBuild ? 'Remove or delete this CV' : 'Delete this tailoring'}
-                  aria-label={`Delete ${heading}`}
+                  title={
+                    isBuild
+                      ? t('ariaStudio.sessionRail.removeOrDeleteCv')
+                      : t('ariaStudio.sessionRail.deleteTailoring')
+                  }
+                  aria-label={t('ariaStudio.sessionRail.deleteAria', { heading })}
                   className="absolute right-1 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -162,6 +175,7 @@ const SessionRail = ({
       </ul>
     </div>
   </div>
-);
+  );
+};
 
 export default SessionRail;

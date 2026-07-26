@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
@@ -24,6 +25,7 @@ import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
 // score stays in the top bar at every width, because on a phone the top bar is the only
 // thing always on screen.
 const StudioDesk = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     cvData,
@@ -84,7 +86,7 @@ const StudioDesk = () => {
   // CV agents need an active plan to create CVs (402 NEED_AGENT_SUB). The page owns the
   // router, so routing to the plans lives here rather than in the provider or the chat.
   const handlePaywall = () => {
-    toast.error('An active agent plan is required to create CVs.');
+    toast.error(t('ariaStudio.desk.toast.agentPlanRequired'));
     navigate('/upgrade');
   };
 
@@ -114,11 +116,11 @@ const StudioDesk = () => {
     setDeleteBusy('remove');
     try {
       await CVService.studioRemoveSession(session._id);
-      toast.success('Removed from the Studio — the CV is still in My CVs.');
+      toast.success(t('ariaStudio.desk.toast.removedFromStudio'));
       await finishRemoval(session);
     } catch (err) {
       console.error('Failed to remove session', err);
-      toast.error("Couldn't remove that — try again.");
+      toast.error(t('ariaStudio.desk.toast.removeFailed'));
       setDeleteBusy(null);
     }
   };
@@ -127,11 +129,11 @@ const StudioDesk = () => {
     setDeleteBusy('delete');
     try {
       await CVService.deleteDraft(session._id);
-      toast.success('Deleted.');
+      toast.success(t('ariaStudio.desk.toast.deleted'));
       await finishRemoval(session);
     } catch (err) {
       console.error('Failed to delete session', err);
-      toast.error("Couldn't delete that — try again.");
+      toast.error(t('ariaStudio.desk.toast.deleteFailed'));
       setDeleteBusy(null);
     }
   };
@@ -172,17 +174,22 @@ const StudioDesk = () => {
 
   const isBuildSession = cvData?.studioKind === 'build';
   const headingTitle = isBuildSession
-    ? cvData?.title || 'New CV'
-    : cvData?.tailoredForJob?.title || cvData?.targetJob?.title || cvData?.title || 'Aria Studio';
+    ? cvData?.title || t('ariaStudio.desk.newCv')
+    : cvData?.tailoredForJob?.title ||
+      cvData?.targetJob?.title ||
+      cvData?.title ||
+      t('ariaStudio.desk.title');
   // A build session isn't tailoring anything, so it must not claim to be. Falls back to
   // the kind's own description rather than the tailor strapline.
   const headingSub =
     [
       cvData?.targetJob?.brief?.company,
-      cvData?.tailoredFromTitle && `from ${cvData.tailoredFromTitle}`,
+      cvData?.tailoredFromTitle &&
+        t('ariaStudio.sessionRail.fromSource', { source: cvData.tailoredFromTitle }),
     ]
       .filter(Boolean)
-      .join(' · ') || (isBuildSession ? 'Building a CV with Aria' : 'Tailor a CV to a job');
+      .join(' · ') ||
+    (isBuildSession ? t('ariaStudio.desk.buildingWithAria') : t('ariaStudio.desk.tailorToJob'));
 
   // Inline title editing for BUILD sessions — mirrors the CV builder's header rename
   // (click → focused input; Enter or blur saves; Escape cancels). A tailor session's
@@ -246,7 +253,11 @@ const StudioDesk = () => {
               onClick={() =>
                 layout.isMobile ? layout.setRailOverlay(true) : layout.setRailOpen(!layout.railOpen)
               }
-              aria-label={layout.railInline ? 'Hide sessions' : 'Show sessions'}
+              aria-label={
+                layout.railInline
+                  ? t('ariaStudio.desk.hideSessions')
+                  : t('ariaStudio.desk.showSessions')
+              }
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <PanelLeft className="w-4 h-4" />
@@ -271,14 +282,14 @@ const StudioDesk = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  aria-label="CV name"
+                  aria-label={t('ariaStudio.desk.cvName')}
                   className="w-full max-w-[18rem] text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight bg-transparent border-0 outline-none p-0"
                 />
               ) : isBuildSession ? (
                 <button
                   type="button"
                   onClick={beginTitleEdit}
-                  title="Rename this CV"
+                  title={t('ariaStudio.desk.renameCv')}
                   className="group/title flex items-center gap-1 max-w-full text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   <span className="truncate">{headingTitle}</span>
@@ -300,7 +311,7 @@ const StudioDesk = () => {
               <button
                 type="button"
                 onClick={openPanel}
-                aria-label={`Fit score ${score} of 100 — open sections`}
+                aria-label={t('ariaStudio.desk.fitScoreAria', { score })}
                 className="shrink-0 inline-flex items-baseline gap-1 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <span
@@ -309,7 +320,7 @@ const StudioDesk = () => {
                   {score}
                 </span>
                 <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">
-                  /100
+                  {t('ariaStudio.desk.outOf100')}
                 </span>
               </button>
             )}
@@ -326,7 +337,7 @@ const StudioDesk = () => {
                 type="button"
                 onClick={() => selectView('preview')}
                 aria-pressed={layout.panelView === 'preview'}
-                aria-label="Live preview"
+                aria-label={t('ariaStudio.livePreview.heading')}
                 className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
                   layout.panelView === 'preview'
                     ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
@@ -334,14 +345,14 @@ const StudioDesk = () => {
                 }`}
               >
                 <Eye className="w-4 h-4" />
-                <span className="hidden md:inline">Live preview</span>
+                <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => selectView('insights')}
                 aria-pressed={layout.panelView === 'insights'}
-                aria-label="Insights"
-                title="Section verdicts"
+                aria-label={t('ariaStudio.desk.insights')}
+                title={t('ariaStudio.desk.sectionVerdicts')}
                 className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
                   layout.panelView === 'insights'
                     ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
@@ -376,11 +387,11 @@ const StudioDesk = () => {
           <button
             type="button"
             onClick={() => layout.setPanelView('insights')}
-            aria-label="Show panel"
+            aria-label={t('ariaStudio.desk.showPanel')}
             className="shrink-0 self-center w-6 py-6 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
             <span className="block [writing-mode:vertical-rl] rotate-180 font-mono text-[9px] uppercase tracking-[0.16em]">
-              Panel
+              {t('ariaStudio.desk.panel')}
             </span>
           </button>
         )}
@@ -391,7 +402,7 @@ const StudioDesk = () => {
         open={layout.railOverlay}
         onClose={() => layout.setRailOverlay(false)}
         side="left"
-        label="Studio sessions"
+        label={t('ariaStudio.desk.studioSessions')}
       >
         <SessionRail {...railProps} onClose={() => layout.setRailOverlay(false)} />
       </StudioOverlay>
@@ -400,7 +411,11 @@ const StudioDesk = () => {
         open={layout.panelOverlay}
         onClose={() => layout.setPanelOverlay(false)}
         side="bottom"
-        label={layout.panelView === 'preview' ? 'Live preview' : 'Tailored copy'}
+        label={
+          layout.panelView === 'preview'
+            ? t('ariaStudio.livePreview.heading')
+            : t('ariaStudio.desk.tailoredCopy')
+        }
       >
         {layout.panelView === 'preview' ? (
           <StudioLivePreview onClose={() => layout.setPanelOverlay(false)} />

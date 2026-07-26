@@ -1329,7 +1329,7 @@ const ResumeReview = () => {
                   onClick={() => setDownloadMenuOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={downloadMenuOpen}
-                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-wait text-white font-semibold text-sm px-3.5 py-1.5 rounded-lg shadow-sm transition-colors"
                 >
                   {isDownloading || isDownloadingDocx ? (
                     <AriaLoader inline tone="mono" size={16} label="" />
@@ -1798,7 +1798,7 @@ const ResumeReview = () => {
               onClick={() => setDownloadSheetOpen(true)}
               aria-haspopup="menu"
               aria-expanded={downloadSheetOpen}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+              className="flex-1 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
             >
               {isDownloading || isDownloadingDocx ? (
                 <AriaLoader inline tone="mono" size={16} label="" />
@@ -2077,7 +2077,7 @@ const ResumeReview = () => {
               )}
             </div>
 
-            {/* b) Rail tabs — Templates / Design (indigo underline like the masthead). */}
+            {/* b) Rail tabs — Templates / Design (ink underline like the masthead). */}
             <div className="px-5 flex gap-5 border-b border-slate-100 dark:border-slate-800">
               {['templates', 'design'].map((tab) => (
                 <button
@@ -2086,13 +2086,13 @@ const ResumeReview = () => {
                   onClick={() => setRailTab(tab)}
                   className={`relative py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
                     railTab === tab
-                      ? 'text-indigo-600 dark:text-indigo-400'
+                      ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   {tab}
                   {railTab === tab && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
+                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-slate-900 dark:bg-white rounded-full" />
                   )}
                 </button>
               ))}
@@ -2128,7 +2128,7 @@ const ResumeReview = () => {
                           onClick={() => setDesign((d) => ({ ...d, font: f.value }))}
                           className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2.5 transition-all ${
                             design.font === f.value
-                              ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10'
+                              ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white dark:ring-white'
                               : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                           }`}
                         >
@@ -2283,7 +2283,7 @@ const ResumeReview = () => {
                                 }}
                                 className={`cursor-pointer rounded-lg border overflow-hidden transition-all ${
                                   templateId === t.id
-                                    ? 'border-indigo-600 ring-1 ring-indigo-600'
+                                    ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
                                     : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                                 }`}
                               >
@@ -2327,7 +2327,7 @@ const ResumeReview = () => {
                                 <div
                                   className={`flex items-center gap-1.5 px-2 py-1.5 ${
                                     templateId === t.id
-                                      ? 'bg-indigo-50/50 dark:bg-indigo-500/10'
+                                      ? 'bg-slate-100 dark:bg-slate-800'
                                       : ''
                                   }`}
                                 >
@@ -2337,7 +2337,7 @@ const ResumeReview = () => {
                                   {templateId === t.id && (
                                     <Check
                                       size={13}
-                                      className="shrink-0 text-indigo-600 dark:text-indigo-400"
+                                      className="shrink-0 text-slate-900 dark:text-slate-100"
                                     />
                                   )}
                                 </div>

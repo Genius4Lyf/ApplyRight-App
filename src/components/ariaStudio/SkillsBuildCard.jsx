@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CREDIT_COSTS } from '../../lib/credits';
 import SkillsCard from '../cv/SkillsCard';
 import AriaCard from './AriaCard';
@@ -21,6 +22,7 @@ const SkillsBuildCard = ({
   onSkip,
   busy,
 }) => {
+  const { t } = useTranslation();
   const cost = CREDIT_COSTS.GENERATE_SKILLS ?? 10;
   const [manual, setManual] = useState('');
 
@@ -44,7 +46,7 @@ const SkillsBuildCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Skills
+            {t('ariaStudio.studioFlow.sections.skills')}
           </p>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr
@@ -52,9 +54,9 @@ const SkillsBuildCard = ({
         </div>
 
         <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-          I&rsquo;ll read the roles and projects you just described and pull out the hard skills you
-          can actually back up
-          {hasJob ? ', weighted toward what this job asks for' : ''}. You pick which ones go in.
+          {hasJob
+            ? t('ariaStudio.skillsBuild.bodyWithJob')
+            : t('ariaStudio.skillsBuild.bodyNoJob')}
         </p>
 
         <button
@@ -63,7 +65,9 @@ const SkillsBuildCard = ({
           disabled={busy}
           className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
         >
-          {busy ? 'Reading your CV…' : `Find my skills · ${cost} cr`}
+          {busy
+            ? t('ariaStudio.skillsBuild.readingCv')
+            : t('ariaStudio.skillsBuild.findMySkills', { cost })}
         </button>
 
         {/* Free alternative, offered plainly rather than buried — nobody should feel
@@ -73,7 +77,7 @@ const SkillsBuildCard = ({
             htmlFor="studio-skills-manual"
             className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
           >
-            Or type them yourself — free
+            {t('ariaStudio.skillsBuild.typeYourselfFree')}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -86,7 +90,7 @@ const SkillsBuildCard = ({
                   setManual('');
                 }
               }}
-              placeholder="Python, pressure testing, HSE…"
+              placeholder={t('ariaStudio.skillsBuild.manualPlaceholder')}
               className="min-w-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
             />
             <button
@@ -100,10 +104,12 @@ const SkillsBuildCard = ({
               disabled={!manual.trim() || busy}
               className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
-              Add
+              {t('ariaStudio.jobCapture.add')}
             </button>
           </div>
-          <p className="mt-1 text-[10.5px] text-slate-400 dark:text-slate-500">Comma-separated.</p>
+          <p className="mt-1 text-[10.5px] text-slate-400 dark:text-slate-500">
+            {t('ariaStudio.skillsBuild.commaSeparated')}
+          </p>
         </div>
 
         <button
@@ -112,7 +118,7 @@ const SkillsBuildCard = ({
           disabled={busy}
           className="w-full mt-3 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
         >
-          Skip skills for now
+          {t('ariaStudio.skillsBuild.skipForNow')}
         </button>
       </div>
     </AriaCard>

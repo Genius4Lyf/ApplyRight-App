@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
 // The current year, for the "still here" affordance and the year chips.
@@ -12,6 +13,7 @@ const RECENT_YEARS = Array.from({ length: 8 }, (_, i) => String(THIS_YEAR - i));
 //
 // FREE — this is typing, not generation. Nothing here calls the AI.
 const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSkip, busy }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [start, setStart] = useState(entry?.startDate || '');
   const [end, setEnd] = useState(entry?.endDate || '');
@@ -23,20 +25,20 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
       <AriaCard cardKey="capture-dates">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            When were you there?
+            {t('ariaStudio.roleCapture.whenWereYouThere')}
           </p>
 
           <label
             htmlFor="studio-role-start"
             className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
           >
-            Started
+            {t('ariaStudio.roleCapture.started')}
           </label>
           <input
             id="studio-role-start"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            placeholder="e.g. Mar 2021"
+            placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
             className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
           />
           <div className="mt-1.5 flex flex-wrap gap-1">
@@ -60,7 +62,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
             />
             <span className="text-[12.5px] text-slate-700 dark:text-slate-200">
-              I still work here
+              {t('ariaStudio.roleCapture.stillWorkHere')}
             </span>
           </label>
 
@@ -70,13 +72,13 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
                 htmlFor="studio-role-end"
                 className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
               >
-                Ended
+                {t('ariaStudio.roleCapture.ended')}
               </label>
               <input
                 id="studio-role-end"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-                placeholder="e.g. Aug 2024"
+                placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
                 className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
               />
             </>
@@ -90,7 +92,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             disabled={!canSave || busy}
             className="btn-primary w-full mt-4 py-2 text-sm disabled:opacity-50"
           >
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? t('ariaStudio.roleCapture.saving') : t('ariaStudio.roleCapture.save')}
           </button>
         </div>
       </AriaCard>
@@ -100,29 +102,29 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
   // One short question per field, across every section that uses this card.
   const PROMPTS = {
     title: {
-      q: 'What was your role called?',
-      placeholder: 'e.g. Wireline Field Operator',
-      hint: 'Use the title on your contract — an inflated one is the first thing a reference check catches.',
+      q: t('ariaStudio.roleCapture.prompts.title.q'),
+      placeholder: t('cvBuilder.atsCoach.jobTitlePlaceholder'),
+      hint: t('ariaStudio.roleCapture.prompts.title.hint'),
     },
     company: {
-      q: 'Where was this?',
-      placeholder: 'e.g. Baker Hughes',
-      hint: 'The employer’s name as it would appear on a payslip.',
+      q: t('ariaStudio.roleCapture.prompts.company.q'),
+      placeholder: t('ariaStudio.roleCapture.prompts.company.placeholder'),
+      hint: t('ariaStudio.roleCapture.prompts.company.hint'),
     },
     degree: {
-      q: 'What did you study?',
-      placeholder: 'e.g. BSc Mechanical Engineering',
-      hint: 'The qualification as it appears on the certificate.',
+      q: t('ariaStudio.roleCapture.prompts.degree.q'),
+      placeholder: t('ariaStudio.roleCapture.prompts.degree.placeholder'),
+      hint: t('ariaStudio.roleCapture.prompts.degree.hint'),
     },
     school: {
-      q: 'Where did you study it?',
-      placeholder: 'e.g. University of Benin',
+      q: t('ariaStudio.roleCapture.prompts.school.q'),
+      placeholder: t('ariaStudio.roleCapture.prompts.school.placeholder'),
       hint: '',
     },
     graduationDate: {
-      q: 'When did you finish?',
-      placeholder: 'e.g. 2019 (or expected 2026)',
-      hint: 'An expected date is fine if you’re still studying.',
+      q: t('ariaStudio.roleCapture.prompts.graduationDate.q'),
+      placeholder: t('ariaStudio.roleCapture.prompts.graduationDate.placeholder'),
+      hint: t('ariaStudio.roleCapture.prompts.graduationDate.hint'),
     },
   };
 
@@ -130,9 +132,9 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
   const prompt =
     stage === 'title' && section === 'project'
       ? {
-          q: 'What’s the project called?',
-          placeholder: 'e.g. Rig telemetry dashboard',
-          hint: 'A short, plain name — what you’d call it out loud.',
+          q: t('ariaStudio.roleCapture.prompts.projectTitle.q'),
+          placeholder: t('ariaStudio.roleCapture.prompts.projectTitle.placeholder'),
+          hint: t('ariaStudio.roleCapture.prompts.projectTitle.hint'),
         }
       : PROMPTS[stage] || PROMPTS.title;
 
@@ -164,7 +166,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               disabled={busy}
               className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
-              Skip
+              {t('ariaStudio.roleCapture.skip')}
             </button>
           ) : (
             <span />
@@ -175,7 +177,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             disabled={!canSave || busy}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? t('ariaStudio.roleCapture.saving') : t('ariaStudio.roleCapture.save')}
           </button>
         </div>
       </div>

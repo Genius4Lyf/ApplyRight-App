@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, PlayCircle, Sparkles } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
@@ -32,6 +33,7 @@ const readStoredUserId = () => {
 // safety net for cases where credits change between preflight and click
 // (e.g. a parallel tab spent some).
 const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { credits, hasEnough, shortBy } = useCredits();
   const [showAd, setShowAd] = useState(false);
@@ -46,7 +48,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
       const stats = await billingService.getAdStats();
       const remMs = stats?.cooldownRemainingMs || 0;
       if (remMs > 0) {
-        toast.error(`Please wait ${Math.ceil(remMs / 1000)}s before watching another ad.`);
+        toast.error(t('creditGate.adWaitCooldown', { seconds: Math.ceil(remMs / 1000) }));
         return;
       }
       setShowAd(true);
@@ -71,7 +73,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: bal.credits }));
       }
     } catch {
-      toast.error('Could not refresh your balance. Please try again.');
+      toast.error(t('creditGate.balanceRefreshFailed'));
     }
   };
 
@@ -98,10 +100,10 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 leading-tight">
-                You need {short} more credit{short === 1 ? '' : 's'} to run this
+                {t('creditGate.needMoreCredits', { count: short })}
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                This action costs {cost} credits — you have {credits}.
+                {t('creditGate.costVsBalance', { cost, credits })}
               </p>
             </div>
           </div>
@@ -118,7 +120,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
                 }`}
               >
                 <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
-                {checking ? 'Checking…' : 'Watch ad'}
+                {checking ? t('creditGate.checking') : t('creditGate.watchAd')}
               </button>
             )}
             <button
@@ -129,7 +131,7 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Get credits
+              {t('creditGate.getCredits')}
             </button>
           </div>
         </div>
@@ -147,16 +149,16 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
           userId={readStoredUserId()}
           onComplete={handleAdComplete}
           onClose={() => setShowAd(false)}
-          title="Earn Free Credits"
-          subtitle="View our sponsor's offer to instantly unlock free A.I credits for this action."
-          buttonText="View Offer"
-          successTitle="Credits Unlocked!"
-          successMessage="Your credits have been added — you can generate now."
-          androidTitle="Watch a Quick Video"
-          androidSubtitle="Watch a short video to earn free A.I credits for this action."
-          androidButtonText="Watch Video"
-          androidSuccessTitle="Credits Unlocked!"
-          androidSuccessMessage="Your credits have been added — you can generate now."
+          title={t('creditGate.ad.title')}
+          subtitle={t('creditGate.ad.subtitle')}
+          buttonText={t('creditGate.ad.buttonText')}
+          successTitle={t('creditGate.ad.successTitle')}
+          successMessage={t('creditGate.ad.successMessage')}
+          androidTitle={t('creditGate.ad.androidTitle')}
+          androidSubtitle={t('creditGate.ad.androidSubtitle')}
+          androidButtonText={t('creditGate.ad.androidButtonText')}
+          androidSuccessTitle={t('creditGate.ad.successTitle')}
+          androidSuccessMessage={t('creditGate.ad.successMessage')}
         />
       )}
     </div>

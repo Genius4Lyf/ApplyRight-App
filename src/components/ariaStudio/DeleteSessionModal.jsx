@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 // Deleting a Studio session deletes a real DraftCV — the session IS the CV. What that
 // costs the user depends entirely on which kind it is, so the confirm does too:
@@ -14,6 +15,7 @@ import { Trash2 } from 'lucide-react';
 // The asymmetry is deliberate: the two objects genuinely differ in value, and a single
 // uniform confirm would either over-warn on copies or under-warn on masters.
 const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => {
+  const { t } = useTranslation();
   // Escape closes it. On DOCUMENT, not the scrim: an onKeyDown on an unfocused div
   // never fires, so the handler would have looked right and done nothing.
   useEffect(() => {
@@ -28,7 +30,7 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
   if (!session) return null;
 
   const isBuild = session.kind === 'build';
-  const name = session.jobTitle || session.title || 'Untitled session';
+  const name = session.jobTitle || session.title || t('ariaStudio.deleteSession.untitledSession');
 
   return (
     <div
@@ -41,7 +43,7 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
           screen-reader-coherent rather than a click handler on a plain div. */}
       <button
         type="button"
-        aria-label="Cancel"
+        aria-label={t('common.cancel')}
         onClick={onCancel}
         className="absolute inset-0 cursor-default"
       />
@@ -55,31 +57,37 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
               id="studio-delete-title"
               className="text-xl font-bold text-slate-900 dark:text-slate-100"
             >
-              {isBuild ? 'Remove this CV?' : 'Delete this tailoring?'}
+              {isBuild
+                ? t('ariaStudio.deleteSession.removeThisCv')
+                : t('ariaStudio.deleteSession.deleteThisTailoring')}
             </h3>
 
             {isBuild ? (
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                &ldquo;{name}&rdquo; is a CV you built here, and it lives in{' '}
-                <span className="font-semibold text-slate-800 dark:text-slate-100">My CVs</span>.
-                You can take it out of the Studio sidebar and keep the CV, or delete it everywhere.
+                <Trans
+                  i18nKey="ariaStudio.deleteSession.buildBody"
+                  values={{ name }}
+                  components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                />
               </p>
             ) : (
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                This deletes the tailored copy &ldquo;{name}&rdquo; and its conversation. It will
-                also disappear from{' '}
-                <span className="font-semibold text-slate-800 dark:text-slate-100">My CVs</span>.
+                <Trans
+                  i18nKey="ariaStudio.deleteSession.tailorBody"
+                  values={{ name }}
+                  components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                />
                 {session.sourceTitle ? (
                   <>
                     {' '}
-                    Your original{' '}
-                    <span className="font-semibold text-slate-800 dark:text-slate-100">
-                      {session.sourceTitle}
-                    </span>{' '}
-                    is not affected.
+                    <Trans
+                      i18nKey="ariaStudio.deleteSession.originalNotAffected"
+                      values={{ source: session.sourceTitle }}
+                      components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                    />
                   </>
                 ) : null}{' '}
-                This can&rsquo;t be undone.
+                {t('ariaStudio.deleteSession.cannotUndo')}
               </p>
             )}
           </div>
@@ -94,7 +102,9 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
               disabled={busy}
               className="btn-primary w-full py-2.5 text-sm disabled:opacity-50"
             >
-              {busy === 'remove' ? 'Removing…' : 'Remove from Studio · keep the CV'}
+              {busy === 'remove'
+                ? t('ariaStudio.deleteSession.removing')
+                : t('ariaStudio.deleteSession.removeKeepCv')}
             </button>
           )}
 
@@ -105,7 +115,7 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
               disabled={busy}
               className="btn-secondary flex-1 py-2.5 text-sm disabled:opacity-50"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -113,7 +123,11 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
               disabled={busy}
               className="flex-1 px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
             >
-              {busy === 'delete' ? 'Deleting…' : isBuild ? 'Delete CV entirely' : 'Delete'}
+              {busy === 'delete'
+                ? t('ariaStudio.deleteSession.deleting')
+                : isBuild
+                  ? t('ariaStudio.deleteSession.deleteEntirely')
+                  : t('ariaStudio.deleteSession.deleteOnly')}
             </button>
           </div>
         </div>

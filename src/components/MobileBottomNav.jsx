@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, History, FileText, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { shouldShowBottomNav, isMobile } from '../utils/platform';
 
 // Four labeled tabs (icon + text below): Home / My CVs / Applications / Interview.
@@ -9,31 +10,32 @@ import { shouldShowBottomNav, isMobile } from '../utils/platform';
 const TABS = [
   {
     to: '/dashboard',
-    label: 'Home',
+    labelKey: 'nav.mobile.home',
     icon: <Home className="w-5 h-5" strokeWidth={2} />,
     matches: ['/dashboard'],
   },
   {
     to: '/my-cvs',
-    label: 'My CVs',
+    labelKey: 'nav.mobile.myCvs',
     icon: <FileText className="w-5 h-5" strokeWidth={2} />,
     matches: ['/my-cvs'],
   },
   {
     to: '/history',
-    label: 'Applications',
+    labelKey: 'nav.mobile.applications',
     icon: <History className="w-5 h-5" strokeWidth={2} />,
     matches: ['/history'],
   },
   {
     to: '/interview-prep',
-    label: 'Interview',
+    labelKey: 'nav.mobile.interview',
     icon: <MessageSquare className="w-5 h-5" strokeWidth={2} />,
     matches: ['/interview-prep'],
   },
 ];
 
 const MobileBottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   if (!shouldShowBottomNav(location.pathname)) return null;
 
@@ -44,10 +46,11 @@ const MobileBottomNav = () => {
       }`}
     >
       <div className="flex items-stretch h-14">
-        {TABS.map(({ to, label, icon, matches }) => {
+        {TABS.map(({ to, labelKey, icon, matches }) => {
           const active = matches.some(
             (path) => location.pathname === path || location.pathname.startsWith(`${path}/`)
           );
+          const label = t(labelKey);
 
           return (
             <Link

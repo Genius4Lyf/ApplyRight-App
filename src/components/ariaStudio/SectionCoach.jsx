@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { CREDIT_COSTS } from '../../lib/credits';
@@ -39,6 +40,7 @@ const SectionCoach = ({
   onDone, // () => void — fix finished, hand back to the breakdown
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
 }) => {
+  const { t } = useTranslation();
   const isProject = entry?.section === 'project';
   const REC = isProject ? 3 : 5;
   const per = CREDIT_COSTS.GENERATE_BULLET ?? 1;
@@ -67,7 +69,7 @@ const SectionCoach = ({
 
   // One free re-roll is granted per charged generation — the SERVER owns that via
   // genState, so this only tracks whether the last result claimed it.
-  const rerollNote = wasFree ? 'That re-roll was free.' : '';
+  const rerollNote = wasFree ? t('ariaStudio.sectionCoach.rerollWasFree') : '';
 
   const send = async (text) => {
     const val = (text ?? input).trim();
@@ -115,10 +117,10 @@ const SectionCoach = ({
       if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
         onPush({
           who: 'aria',
-          text: "You've used today's free chats — top up credits or come back tomorrow.",
+          text: t('ariaStudio.chat.chatLimitReached'),
         });
       } else {
-        toast.error("Couldn't reach me just now — try again.");
+        toast.error(t('ariaStudio.chat.chatUnreachable'));
       }
     } finally {
       setThinking(false);
@@ -164,8 +166,8 @@ const SectionCoach = ({
       const code = e?.response?.data?.code;
       toast.error(
         code === 'INSUFFICIENT_CREDITS'
-          ? 'Not enough credits — earn more or upgrade.'
-          : e?.response?.data?.message || "Couldn't generate right now. Try again."
+          ? t('cvBuilder.askAria.notEnoughCredits')
+          : e?.response?.data?.message || t('cvBuilder.askAria.couldntGenerate')
       );
       setPhase(reroll ? 'results' : 'picking');
     }
@@ -188,9 +190,13 @@ const SectionCoach = ({
     if (res?.ok) {
       onDone?.({ entry, applied: add });
     } else if (res && !res.found) {
-      toast.error(`Couldn't find this ${isProject ? 'project' : 'role'} — refresh and try again.`);
+      toast.error(
+        t('cvBuilder.askAria.couldntFind', {
+          kind: isProject ? t('cvBuilder.common.project') : t('cvBuilder.common.role'),
+        })
+      );
     } else {
-      toast.error('Saved, but syncing failed — try again.');
+      toast.error(t('cvBuilder.askAria.syncFailed'));
     }
   };
 
@@ -207,13 +213,13 @@ const SectionCoach = ({
       onSend={send}
       disabled={thinking}
       busy={thinking}
-      placeholder="Type your answer…"
-      sendLabel="Send"
+      placeholder={t('cvBuilder.askAria.typeAnswer')}
+      sendLabel={t('ariaStudio.sectionCoach.send')}
       modelId={modelId}
       onSelectModel={selectModel}
       note={
         <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-          This back-and-forth is free · you only pay for the draft
+          {t('ariaStudio.sectionCoach.freeBackAndForth')}
         </p>
       }
       footer={
@@ -223,11 +229,11 @@ const SectionCoach = ({
             onClick={() => onDone?.(null)}
             className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
-            ← Back to sections
+            ← {t('ariaStudio.sectionCoach.backToSections')}
           </button>
           {missingKeywords.length > 0 && (
             <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-              aiming at {missingKeywords.slice(0, 2).join(', ')}
+              {t('ariaStudio.sectionCoach.aimingAt', { keywords: missingKeywords.slice(0, 2).join(', ') })}
             </span>
           )}
           <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
@@ -246,7 +252,7 @@ const SectionCoach = ({
       {phase === 'chat' && !thinking && suggestions.length > 0 && (
         <div className="self-start pl-6 flex flex-col gap-1.5">
           <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {suggestionsLabel || 'A starter to build on'}
+            {suggestionsLabel || t('cvBuilder.askAria.starterFallback')}
           </span>
           <div className="flex flex-wrap gap-1.5">
             {suggestions.map((s, i) => (
@@ -265,13 +271,15 @@ const SectionCoach = ({
                 onClick={() => setExampleOpen((o) => !o)}
                 className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                {exampleOpen ? 'Hide example' : 'Show me an example'}
+                {exampleOpen
+                  ? t('cvBuilder.askAria.hideExample')
+                  : t('cvBuilder.askAria.showExample')}
               </button>
             )}
           </div>
           {exampleOpen && exampleAnswer && (
             <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic">
-              e.g. &ldquo;{exampleAnswer}&rdquo;
+              {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
             </div>
           )}
         </div>
@@ -283,7 +291,7 @@ const SectionCoach = ({
           <AriaCard cardKey="picking" key="picking">
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                How many bullets?
+                {t('cvBuilder.askAria.howManyBullets')}
               </p>
               <div className="mt-3 grid grid-cols-4 gap-2">
                 {[3, 4, 5, 6].map((n) => {
@@ -307,7 +315,7 @@ const SectionCoach = ({
                       </span>
                       {n === REC && (
                         <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded-full border border-emerald-300 dark:border-emerald-700 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 font-mono text-[9px] uppercase tracking-wide px-1.5 py-0.5">
-                          Best fit
+                          {t('cvBuilder.askAria.bestFit')}
                         </span>
                       )}
                     </button>
@@ -315,7 +323,9 @@ const SectionCoach = ({
                 })}
               </div>
               <p className="mt-3 text-[12px] text-slate-500 dark:text-slate-400">
-                {isProject ? 'Punchy beats padded — 3 is our pick.' : '4–5 lands best.'}
+                {isProject
+                  ? t('cvBuilder.askAria.pickerNoteProject')
+                  : t('cvBuilder.askAria.pickerNoteRole')}
               </p>
               <div className="mt-4 flex items-center justify-between gap-2">
                 <button
@@ -323,14 +333,14 @@ const SectionCoach = ({
                   onClick={() => setPhase('chat')}
                   className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
                 >
-                  Back
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
                   onClick={() => generate(false)}
                   className="btn-primary px-5 py-2 text-sm"
                 >
-                  Draft {count} · {count * per} cr
+                  {t('ariaStudio.sectionCoach.draftCount', { n: count, cr: count * per })}
                 </button>
               </div>
             </div>
@@ -342,7 +352,7 @@ const SectionCoach = ({
           <AriaCard cardKey="results" key="results">
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                Pick what&rsquo;s true
+                {t('ariaStudio.sectionCoach.pickWhatsTrue')}
               </p>
               {rerollNote && (
                 <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
@@ -388,7 +398,7 @@ const SectionCoach = ({
                   disabled={applying}
                   className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  Try another angle
+                  {t('ariaStudio.sectionCoach.tryAnotherAngle')}
                 </button>
                 <button
                   type="button"
@@ -396,7 +406,9 @@ const SectionCoach = ({
                   disabled={applying || selected.size === 0}
                   className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
                 >
-                  {applying ? 'Applying…' : `Apply (${selected.size})`}
+                  {applying
+                    ? t('cvBuilder.askAria.applying')
+                    : t('cvBuilder.askAria.applyN', { n: selected.size })}
                 </button>
               </div>
             </div>

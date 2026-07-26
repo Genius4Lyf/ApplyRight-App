@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
 // Which role (or project) are we sharpening? Work history and projects are fixed
@@ -8,6 +9,7 @@ import AriaCard from './AriaCard';
 // Each row surfaces how many of the section's missing keywords that entry is silent
 // on, so the worst offender is obvious without the user reading six job descriptions.
 const EntryPickerCard = ({ entries = [], missingKeywords = [], onPick, onCancel }) => {
+  const { t } = useTranslation();
   // Which of the section's missing keywords this entry doesn't mention. Plain substring
   // matching on purpose: the authoritative coverage already ran server-side during the
   // scan — this is a hint for ordering, not a second scoring system.
@@ -27,13 +29,12 @@ const EntryPickerCard = ({ entries = [], missingKeywords = [], onPick, onCancel 
     <AriaCard cardKey="entrypicker">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          Which one should we sharpen?
+          {t('ariaStudio.entryPicker.whichOne')}
         </p>
 
         {ranked.length === 0 && (
           <p className="mt-3 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
-            There&rsquo;s nothing here yet — add an entry in the CV builder and I&rsquo;ll help you
-            write it.
+            {t('ariaStudio.entryPicker.nothingHere')}
           </p>
         )}
 
@@ -46,7 +47,7 @@ const EntryPickerCard = ({ entries = [], missingKeywords = [], onPick, onCancel 
               className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 bg-white dark:bg-slate-900 px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
             >
               <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                {entry.title || 'Untitled'}
+                {entry.title || t('ariaStudio.entryPicker.untitled')}
               </span>
               {entry.company && (
                 <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -60,7 +61,7 @@ const EntryPickerCard = ({ entries = [], missingKeywords = [], onPick, onCancel 
                       key={k}
                       className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400"
                     >
-                      no {k}
+                      {t('ariaStudio.entryPicker.noKeyword', { keyword: k })}
                     </span>
                   ))}
                   {gaps.length > 3 && (
@@ -80,7 +81,7 @@ const EntryPickerCard = ({ entries = [], missingKeywords = [], onPick, onCancel 
             onClick={() => onCancel?.()}
             className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
           >
-            Back
+            {t('common.back')}
           </button>
         </div>
       </div>

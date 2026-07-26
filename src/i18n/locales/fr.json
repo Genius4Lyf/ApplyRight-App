@@ -167,6 +167,12 @@
       "title": "Se déconnecter ?",
       "body": "Voulez-vous vraiment vous déconnecter ?",
       "confirm": "Se déconnecter"
+    },
+    "mobile": {
+      "home": "Accueil",
+      "myCvs": "Mes CV",
+      "applications": "Candidatures",
+      "interview": "Entretien"
     }
   },
   "errors": {
@@ -337,6 +343,76 @@
     "disclaimerLabel": "Avertissement :",
     "disclaimerBody": "ApplyRight est un outil de préparation aux entretiens. Les simulations, conversations vocales et questions générées servent uniquement à s’entraîner et à gagner en confiance. Les questions simulées dans l’application sont données à titre d’exemple et ne préjugent pas des questions réellement posées lors de votre processus de recrutement."
   },
+  "onboarding": {
+    "progress": {
+      "basicInfo": "Infos de base",
+      "education": "Formation"
+    },
+    "step1": {
+      "heading": "Faisons connaissance",
+      "subheading": "Parlez-nous un peu de vous pour commencer.",
+      "firstNameLabel": "Prénom",
+      "firstNamePlaceholder": "Aminata",
+      "lastNameLabel": "Nom de famille",
+      "lastNamePlaceholder": "Diallo",
+      "otherNameLabel": "Autre prénom (facultatif)",
+      "otherNamePlaceholder": "Deuxième prénom",
+      "currentStatusLabel": "Statut actuel",
+      "status": {
+        "student": "Étudiant(e)",
+        "graduate": "Jeune diplômé(e)",
+        "professional": "Professionnel(le)",
+        "other": "Autre"
+      }
+    },
+    "step2": {
+      "heading": "Votre parcours académique",
+      "subheading": "Aidez-nous à adapter nos ressources à votre domaine d’études.",
+      "universityLabel": "Université / Établissement",
+      "universityPlaceholder": "ex. Université Félix Houphouët-Boigny",
+      "disciplineLabel": "Discipline / Filière",
+      "disciplinePlaceholder": "ex. Informatique",
+      "graduationYearLabel": "Année de fin d’études (prévue)",
+      "graduationYearPlaceholder": "ex. 2026"
+    },
+    "actions": {
+      "next": "Suivant",
+      "complete": "Finaliser mon profil",
+      "completing": "Finalisation du profil..."
+    },
+    "toasts": {
+      "validationTitle": "Merci de remplir tous les champs obligatoires pour continuer.",
+      "validationDescription": "Cela nous aide à personnaliser votre expérience sur ApplyRight.",
+      "saveFailed": "Échec de l’enregistrement du profil. Veuillez réessayer."
+    },
+    "welcome": {
+      "steps": {
+        "0": {
+          "title": "On allume la mèche...",
+          "message": "Vous venez de faire le premier pas vers la carrière de vos rêves, {{name}}. On est ravis de faire partie de votre parcours !",
+          "type": "MOTIVATION"
+        },
+        "1": {
+          "title": "Le saviez-vous ?",
+          "message": "75 % des CV sont rejetés par les logiciels de tri (ATS) avant même qu’un humain ne les voie. ApplyRight vous aide à inverser la tendance.",
+          "type": "ASTUCE"
+        },
+        "2": {
+          "title": "À savoir",
+          "message": "Adapter son CV à chaque candidature est le meilleur moyen d’obtenir plus d’entretiens.",
+          "type": "GUIDE"
+        },
+        "3": {
+          "title": "C’est prêt !",
+          "message": "Votre tableau de bord est prêt. Construisons votre avenir, dès maintenant.",
+          "type": "PRÊT"
+        }
+      },
+      "settingUp": "Préparation de votre tableau de bord personnel...",
+      "enterDashboard": "Accéder au tableau de bord",
+      "defaultName": "futur(e) pro"
+    }
+  },
   "dashboard": {
     "greetingNoName": "Valorisez votre profil professionnel",
     "greeting": "Bon retour, {{name}}. Passons à l’action.",
@@ -424,6 +500,9 @@
       "verifyBeforeSending": "À vérifier avant envoi",
       "interviewPrep": "Préparation entretien",
       "interviewPrepBody": "Questions probables et réponses suggérées",
+      "ready": "Prêt",
+      "generating": "Génération…",
+      "generate": "Générer",
       "newAnalysis": "Lancer une nouvelle analyse",
       "newAnalysisBody": "Même CV, autre offre",
       "prepReady": "Préparation prête",
@@ -484,7 +563,18 @@
     },
     "metricCapture": {
       "generateBundle": "Générer le pack complet",
-      "generateCv": "Générer le CV"
+      "generateCv": "Générer le CV",
+      "title": "Une étape rapide avant de générer",
+      "intro_one": "Nous avons repéré <bold>{{count}} point</bold> qui décrit ce que vous avez fait sans en préciser l'impact. Les recruteurs recherchent des chiffres — en ajouter un ou deux rend votre CV instantanément plus percutant.",
+      "intro_other": "Nous avons repéré <bold>{{count}} points</bold> qui décrivent ce que vous avez fait sans en préciser l'impact. Les recruteurs recherchent des chiffres — en ajouter un ou deux rend votre CV instantanément plus percutant.",
+      "filledOfTotal": "{{filled}} sur {{total}} complétés",
+      "allOptional": "Tout est facultatif",
+      "addNumberLabel": "Ajoutez un chiffre (facultatif)",
+      "numberPlaceholder": "ex. équipe de 5 personnes, 30 % plus rapide, 100 000 ₦",
+      "reassurance": "<bold>Vos chiffres restent les vôtres.</bold> Nous les intégrons uniquement dans le point correspondant — rien d'autre n'est inventé, et vos compétences et postes restent inchangés.",
+      "skip": "Ignorer — générer maintenant",
+      "withNumbers_one": "{{label}} avec {{count}} chiffre",
+      "withNumbers_other": "{{label}} avec {{count}} chiffres"
     }
   },
   "billing": {
@@ -500,7 +590,14 @@
       "currencyUsd": "$ USD",
       "currencyUsdRegion": "· International",
       "agentHeading": "Créez des CV pour vos clients à grande échelle",
-      "agentSubcopy": "Un généreux pool de <strong>crédits IA</strong> pour l’adaptation de CV et les lettres de motivation, plus des <strong>téléchargements illimités</strong> — conçu pour les rédacteurs de CV et les agences. Sans minutes d’entretien."
+      "agentSubcopy": "Un généreux pool de <strong>crédits IA</strong> pour l’adaptation de CV et les lettres de motivation, plus des <strong>téléchargements illimités</strong> — conçu pour les rédacteurs de CV et les agences. Sans minutes d’entretien.",
+      "periods": {
+        "forever": "à vie",
+        "day14": "14 jours",
+        "month": "mois",
+        "year": "an",
+        "week": "semaine"
+      }
     },
     "plans": {
       "free": {
@@ -1278,6 +1375,268 @@
       "keywords": "Mots-clés",
       "minimize": "Réduire",
       "minimizeAria": "Réduire l’aide aux mots-clés"
+    }
+  },
+  "myCvs": {
+    "eyebrow": "Créer et adapter",
+    "title": "Mes CV",
+    "subtitle": "Tous vos CV en cours, du plus récent au plus ancien.",
+    "newCv": "Nouveau CV",
+    "deckLabel": "10 plus récents",
+    "complete": "Complet",
+    "momentum": {
+      "cvs": "CV",
+      "avgCompletion": "Complétude moy.",
+      "inProgress": "En cours"
+    },
+    "search": {
+      "placeholder": "Rechercher par titre ou nom…",
+      "aria": "Rechercher des CV",
+      "clearAria": "Effacer la recherche"
+    },
+    "statusFilters": {
+      "all": "Tous",
+      "incomplete": "Incomplets"
+    },
+    "filterAria": "Filtrer par statut",
+    "sort": {
+      "recent": "Mis à jour récemment",
+      "oldest": "Plus anciens d'abord",
+      "title": "Titre (A–Z)",
+      "completion": "Les moins complets d'abord",
+      "sortByAria": "Trier par",
+      "sortLabel": "Trier :"
+    },
+    "card": {
+      "draftFallbackName": "Brouillon",
+      "untitledCv": "CV sans titre",
+      "editedMeta": "{{name}} · modifié {{relative}}",
+      "reviewDownload": "Vérifier et télécharger",
+      "finishCv_one": "Terminez votre CV — {{count}} section restante",
+      "finishCv_other": "Terminez votre CV — {{count}} sections restantes",
+      "openLabelReview": "Vérifier",
+      "openLabelEdit": "Modifier",
+      "emptyHint": "aucun résumé pour l'instant",
+      "openAria": "Ouvrir {{title}}",
+      "deleteCv": "Supprimer le CV"
+    },
+    "deleteModal": {
+      "title": "Supprimer le CV ?",
+      "body": "Voulez-vous vraiment supprimer « {{title}} » ? Cette action est irréversible."
+    },
+    "empty": {
+      "eyebrow": "Rien construit pour l'instant",
+      "title": "Aucun CV pour l'instant",
+      "body": "Créez un nouveau CV de zéro, ou rendez-vous sur le tableau de bord pour en adapter un à une offre d'emploi.",
+      "createFirst": "Créer votre premier CV",
+      "goToDashboard": "Aller au tableau de bord"
+    },
+    "filteredEmpty": {
+      "title": "Aucun CV ne correspond à ces filtres",
+      "body": "Essayez une autre recherche ou effacez les filtres.",
+      "clear": "Effacer les filtres"
+    },
+    "error": {
+      "title": "Impossible de charger vos CV",
+      "loadFailed": "Échec du chargement de vos CV",
+      "retry": "Réessayer"
+    },
+    "toasts": {
+      "deleted": "CV supprimé",
+      "deleteFailed": "Échec de la suppression du CV"
+    }
+  },
+  "jobHistory": {
+    "eyebrow": "Votre recherche d'emploi",
+    "title": "Candidatures",
+    "subtitle": "Tous les postes que vous avez analysés, du plus récent au plus ancien.",
+    "analyzeNewRole": "Analyser un nouveau poste",
+    "sort": {
+      "newest": "Plus récent d'abord",
+      "oldest": "Plus ancien d'abord",
+      "highestMatch": "Meilleure correspondance",
+      "lowestMatch": "Plus faible correspondance"
+    },
+    "momentum": {
+      "rolesAnalyzed": "Postes analysés",
+      "bestMatch": "Meilleure correspondance",
+      "interviewReady": "Prêt pour l'entretien",
+      "tailoredCvs": "CV adaptés"
+    },
+    "nextMove": {
+      "fixCv_one": "Corrigez votre CV — {{count}} compétence à combler",
+      "fixCv_other": "Corrigez votre CV — {{count}} compétences à combler",
+      "optimizeCv": "Optimisez votre CV",
+      "generateCoverLetter": "Générez votre lettre de motivation",
+      "interviewReady": "Prêt pour l'entretien — relisez votre préparation",
+      "reviewApplication": "Relisez votre candidature"
+    },
+    "time": {
+      "justNow": "À l'instant",
+      "minutesAgo": "il y a {{n}} min",
+      "hoursAgo": "il y a {{n}} h",
+      "yesterday": "Hier",
+      "daysAgo": "il y a {{n}} j"
+    },
+    "search": {
+      "placeholder": "Rechercher par titre de poste ou entreprise",
+      "noMatch": "Aucune candidature ne correspond à votre recherche.",
+      "noneYet": "Aucune candidature pour l'instant."
+    },
+    "card": {
+      "match": "Correspondance",
+      "improvedFrom": "↑ depuis {{score}}",
+      "openAria": "Ouvrir {{title}} chez {{company}}",
+      "deleteApplication": "Supprimer la candidature",
+      "open": "Ouvrir",
+      "unknownRole": "Poste inconnu",
+      "unknownCompany": "Entreprise inconnue"
+    },
+    "empty": {
+      "eyebrow": "Votre bureau est vide",
+      "title": "Aucune candidature pour l'instant",
+      "body": "Analysez un poste pour voir comment votre CV se positionne — puis adaptez-le, rédigez une lettre de motivation et préparez l'entretien.",
+      "cta": "Analyser votre premier poste"
+    },
+    "detail": {
+      "back": "Retour aux candidatures",
+      "eyebrow": "Candidature",
+      "titleFallback": "Candidature",
+      "analyzedMeta": "analysé {{relative}}",
+      "jobPostingBtn": "Offre d'emploi",
+      "jobPostingTitle": "Voir l'offre d'emploi originale",
+      "reRunTitle": "Relancer l'analyse (10 crédits)",
+      "reanalyzingLabel": "Nouvelle analyse…",
+      "reRunning": "Relance en cours…",
+      "reRunCr": "Relancer (10 cr)",
+      "compare": "Comparer",
+      "compareTitle": "Comparer avec une autre analyse pour le même poste",
+      "compareAgainst": "Comparer avec",
+      "resumeFrom": "CV du {{relative}}",
+      "runAt": "Analyse {{relative}}",
+      "seeWhatToFix": "Voir ce qu'il faut corriger ↓",
+      "toolkitLink": "Mon kit CV ↓"
+    },
+    "toolkit": {
+      "readyEyebrow": "Prêt à l'emploi · maintenant que vous avez lu l'analyse",
+      "fullKit": "Kit complet",
+      "fullKitCr": "{{cr}} cr · économisez 2",
+      "viewDownload": "Voir et télécharger",
+      "view": "Voir"
+    },
+    "errors": {
+      "insufficientCredits": "Crédits insuffisants. Il en faut {{required}}, vous en avez {{current}}.",
+      "reanalyzeMissingRefs": "Impossible de relancer : CV ou offre manquant.",
+      "reanalyzeFailed": "Échec de la relance de l'analyse.",
+      "deleteApplicationFailed": "Échec de la suppression de la candidature. Veuillez réessayer."
+    },
+    "toasts": {
+      "reanalyzed": "Nouvelle analyse : {{score}} % de correspondance"
+    },
+    "jobPostingDrawer": {
+      "eyebrow": "L'offre sur laquelle l'analyse a été faite",
+      "closeAria": "Fermer l'offre d'emploi",
+      "viewOriginal": "Voir l'offre originale",
+      "screenedFor": "Ce qu'ils recherchent",
+      "jobDescription": "Description du poste",
+      "noDescription": "Aucune description n'a été enregistrée pour cette offre."
+    },
+    "deleteModal": {
+      "title": "Supprimer la candidature",
+      "message": "Voulez-vous vraiment supprimer cette candidature ? Cette action est irréversible.",
+      "deleting": "Suppression..."
+    }
+  },
+  "creditGate": {
+    "needMoreCredits_one": "Il vous manque {{count}} crédit pour effectuer cette action",
+    "needMoreCredits_other": "Il vous manque {{count}} crédits pour effectuer cette action",
+    "costVsBalance": "Cette action coûte {{cost}} crédits — vous en avez {{credits}}.",
+    "checking": "Vérification…",
+    "watchAd": "Regarder une pub",
+    "getCredits": "Obtenir des crédits",
+    "adWaitCooldown": "Veuillez patienter {{seconds}} s avant de regarder une autre pub.",
+    "balanceRefreshFailed": "Impossible d'actualiser votre solde. Veuillez réessayer.",
+    "ad": {
+      "title": "Gagnez des crédits gratuits",
+      "subtitle": "Regardez l'offre de notre sponsor pour débloquer instantanément des crédits IA gratuits pour cette action.",
+      "buttonText": "Voir l'offre",
+      "successTitle": "Crédits débloqués !",
+      "successMessage": "Vos crédits ont été ajoutés — vous pouvez générer maintenant.",
+      "androidTitle": "Regardez une courte vidéo",
+      "androidSubtitle": "Regardez une courte vidéo pour gagner des crédits IA gratuits pour cette action.",
+      "androidButtonText": "Regarder la vidéo"
+    }
+  },
+  "fitScoreCard": {
+    "eyebrow": "Analyse de correspondance",
+    "bottomLine": "L'essentiel à retenir",
+    "optimizedTo": "optimisé à",
+    "liftPts": "+{{lift}} pts",
+    "band": {
+      "needsWork": "À travailler",
+      "almost": "Presque",
+      "ready": "Prêt 75+"
+    },
+    "skillsMatched": "Compétences correspondantes",
+    "youHave": "✓ Vous avez",
+    "moreCount": "+{{n}} de plus",
+    "experience": "Expérience",
+    "yearsNeeds": "{{years}} ans · requis {{required}}",
+    "meets": "Conforme",
+    "belowPreferred": "En dessous du préféré",
+    "seniority": "Ancienneté",
+    "levelVaries": "Niveau variable",
+    "aligned": "Aligné",
+    "mixed": "Mitigé",
+    "theGap": "L'écart",
+    "whereShort": "Ce qu'il vous manque",
+    "matchedOfTotal": "{{matched}}/{{total}} correspondantes",
+    "allSkillsMatched": "Toutes les compétences requises correspondent — excellente adéquation.",
+    "noSkillRequirements": "Aucune compétence spécifique n'a été détectée pour ce poste.",
+    "criticalRequired": "Critique — requis par le poste",
+    "bonusSkills": "Bonus — renforcerait la candidature",
+    "skillsMatchedToggle_one": "{{count}} compétence correspondante",
+    "skillsMatchedToggle_other": "{{count}} compétences correspondantes",
+    "readFromResume": "Extrait de votre CV",
+    "whatStoodOut": "Ce qui a retenu l'attention",
+    "theMath": "Le calcul · pondération fixe",
+    "whyWeights": "Pourquoi cette pondération ?",
+    "weightsExplainer": "Les compétences (40 %) sont le meilleur indicateur de correspondance, suivies de l'expérience (25 %) et de la formation (15 %). L'ancienneté et la solidité du profil (10 % chacune) complètent le tableau. Fixe pour chaque analyse afin que les scores soient directement comparables.",
+    "scoreBreakdown": "Détail du score",
+    "dims": {
+      "skills": "Compétences",
+      "experience": "Expérience",
+      "education": "Formation",
+      "seniority": "Ancienneté",
+      "profileStrength": "Solidité du profil"
+    },
+    "yourMove": "À vous de jouer",
+    "whatToFixNext": "Prochaines corrections",
+    "critical": "Critique",
+    "wasAnalysisAccurate": "Cette analyse était-elle juste ?",
+    "levels": {
+      "intern": "Stagiaire",
+      "entry": "Débutant",
+      "junior": "Junior",
+      "mid": "Confirmé",
+      "midSenior": "Confirmé-Senior",
+      "senior": "Senior",
+      "staff": "Staff",
+      "lead": "Lead",
+      "principal": "Principal",
+      "manager": "Manager",
+      "director": "Directeur",
+      "vp": "VP",
+      "executive": "Direction générale",
+      "notSpecified": "Non précisé",
+      "unknown": "Inconnu"
+    },
+    "feedback": {
+      "wasHelpful": "Cela vous a-t-il aidé ?",
+      "thanks": "Merci pour votre retour",
+      "saveFailed": "Impossible d'enregistrer le retour",
+      "helpfulAria": "Utile",
+      "notHelpfulAria": "Pas utile"
     }
   },
   "interviewPrep": {
@@ -2688,6 +3047,599 @@
       "q4A": "Oui. Passez un recruteur autant de fois que vous le souhaitez — vos scores et retours sont enregistrés par recruteur dans l'onglet Évaluations, pour que vous puissiez suivre votre progression.",
       "q5Q": "Est-ce comparable à un vrai entretien ?",
       "q5A": "Presque. C'est une conversation vocale en direct qui réagit à vos réponses, ancrée dans votre CV et le poste précis, avec des recruteurs qui restent dans leur rôle — RH, responsable du recrutement, ou spécialiste. La principale différence est qu'il ne note que le contenu, alors qu'un vrai entretien évalue aussi la prestation."
+    }
+  },
+  "ariaStudio": {
+    "studioFlow": {
+      "sections": {
+        "contact": "Contact",
+        "experience": "Expérience professionnelle",
+        "projects": "Projets",
+        "education": "Formation & certifications",
+        "skills": "Compétences",
+        "summary": "Résumé"
+      },
+      "projectTypes": {
+        "course": {
+          "label": "Cours / académique",
+          "hint": "Travaux de cours, projet de fin d'études, mémoire",
+          "message": "C'est un projet de cours / académique."
+        },
+        "personal": {
+          "label": "Personnel / à titre privé",
+          "hint": "Quelque chose que vous avez choisi de créer",
+          "message": "C'est un projet personnel."
+        },
+        "work": {
+          "label": "Professionnel / client",
+          "hint": "Réalisé pour un employeur ou un client",
+          "message": "C'était un projet professionnel / client."
+        }
+      },
+      "fields": {
+        "experience": {
+          "title": "Poste",
+          "company": "Entreprise",
+          "dates": "Dates",
+          "achievements": "Réalisations"
+        },
+        "project": {
+          "type": "Type",
+          "title": "Projet",
+          "achievements": "Ce que vous avez fait",
+          "link": "Lien"
+        },
+        "education": {
+          "degree": "Diplôme",
+          "school": "Établissement",
+          "graduationDate": "Fin d'études",
+          "description": "Notes"
+        }
+      }
+    },
+    "buildRoadmap": {
+      "heresThePlan": "Voici le plan",
+      "sixSections": "Six sections. On les fera une à la fois, et je vous poserai des questions — vous ne serez jamais face à une page blanche.",
+      "settingUp": "Préparation…",
+      "startBuilding": "Commencer"
+    },
+    "projectType": {
+      "whatKind": "De quel type de projet s'agit-il ?"
+    },
+    "pinnedEntry": {
+      "copy": {
+        "experience": {
+          "label": "En cours",
+          "blank": "Nouveau poste",
+          "next": "Poste suivant",
+          "done": "Expérience terminée"
+        },
+        "project": {
+          "label": "En cours",
+          "blank": "Nouveau projet",
+          "next": "Projet suivant",
+          "done": "Projets terminés"
+        },
+        "education": {
+          "label": "Ajout en cours",
+          "blank": "Nouveau diplôme",
+          "next": "Ajouter un autre",
+          "done": "Formation terminée"
+        }
+      },
+      "present": "Aujourd'hui",
+      "optional": "facultatif",
+      "notYet": "pas encore",
+      "finishFirst": "Terminez ce poste d'abord",
+      "saving": "Enregistrement…",
+      "finishing": "Finalisation…",
+      "edit": "Modifier",
+      "addedCount": "{{n}} ajouté(s)"
+    },
+    "studioArtifactPanel": {
+      "tailoredCopy": "Copie adaptée",
+      "noCvYet": "Aucun CV pour l'instant",
+      "closePanel": "Fermer le panneau",
+      "cvHealth": "Santé du CV",
+      "sectionsDoneCount": "{{done}} section(s) sur {{total}} terminée(s)",
+      "sections": "Sections",
+      "srSectionLine": "{{label}} : {{status}}.",
+      "srDone": "terminé",
+      "srNotStarted": "pas commencé",
+      "inYourCv": "Dans votre CV",
+      "untitledRole": "Poste sans titre",
+      "untitledProject": "Projet sans titre",
+      "standingBy": "En attente",
+      "emptyWithCv": "Lancez une analyse et votre verdict section par section apparaîtra ici.",
+      "emptyNoCv": "Indiquez-moi un poste et votre CV adapté prendra forme ici.",
+      "fit": "Adéquation",
+      "stillNotMentioned": "Toujours pas mentionné",
+      "srGood": "bon",
+      "srNeedsWork": "à améliorer",
+      "srPoor": "faible"
+    },
+    "common": {
+      "outOf100": "/ 100"
+    },
+    "finishCard": {
+      "readyToSend": "Prêt à envoyer",
+      "percentComplete": "% complet",
+      "contentsRoles_one": "{{count}} poste",
+      "contentsRoles_other": "{{count}} postes",
+      "contentsProjects_one": "{{count}} projet",
+      "contentsProjects_other": "{{count}} projets",
+      "contentsSkills": "{{n}} compétences",
+      "cvSaved": "Votre CV est enregistré.",
+      "sectionsEmpty_one": "{{count}} section encore vide — vous pourrez y revenir à tout moment.",
+      "sectionsEmpty_other": "{{count}} sections encore vides — vous pourrez y revenir à tout moment.",
+      "movedIntoGreen": "sont passées au vert.",
+      "scoreNotMoved": "Le score n'a pas encore bougé — votre copie est enregistrée dans tous les cas, et vous pouvez continuer à corriger des sections quand vous voulez.",
+      "stillWorthLook": "Encore à surveiller : {{list}}.",
+      "savedAs": "Enregistré dans <b>Mes CV</b> sous « {{title}} ».",
+      "yourNewCv": "votre nouveau CV",
+      "yourTailoredCopy": "votre copie adaptée",
+      "masterNote": "Celui-ci est votre document maître — les copies adaptées en sont issues et ne l'écrasent jamais.",
+      "originalUntouched": "Votre original reste intact.",
+      "openInStudio": "Ouvrir dans le Studio CV",
+      "openInStudioBodyBuild": "Vous avez construit tout ce CV sans encore l'avoir vu — ouvrez-le et regardez-le en pages réelles, choisissez un modèle, et vérifiez que rien ne déborde sur la page 2.",
+      "openInStudioBodyTailor": "Regardez-le en pages réelles avant de l'envoyer — c'est là que vous repérerez ce qui déborde sur la page 2, essaierez les 8 modèles, et ajusterez l'accent, les marges et l'espacement.",
+      "tailorToJob": "Adapter maintenant à un poste",
+      "seeHowItMatches": "Voir la correspondance · {{cost}} cr",
+      "orGrabItNow": "Ou récupérez-le maintenant",
+      "preparing": "Préparation…",
+      "downloadPdf": "Télécharger en PDF",
+      "downloadWord": "Télécharger en Word",
+      "usesTemplate": "Utilise <b>{{name}}</b>",
+      "atsSafeByDefault": "— sûr pour les ATS par défaut.",
+      "wantDifferentLook": "Envie d'un autre style ?",
+      "openInEditor": "Ouvrir dans l'éditeur"
+    },
+    "certifications": {
+      "heading": "Certifications & formations",
+      "noCharge": "Gratuit",
+      "body": "Tout ce qui est agréé ou certifié — c'est un critère de filtrage dans les métiers techniques, la santé et les opérations. Passez si vous n'en avez aucune.",
+      "removeAria": "Supprimer {{name}}",
+      "fieldCertification": "Certification",
+      "placeholderCertification": "ex. Sensibilisation H2S",
+      "fieldIssuer": "Délivré par",
+      "placeholderIssuer": "ex. OPITO",
+      "fieldYear": "Année",
+      "placeholderYear": "ex. 2023",
+      "add": "Ajouter",
+      "done": "Terminé",
+      "haveNone": "Je n'en ai aucune"
+    },
+    "contactConfirm": {
+      "fields": {
+        "fullName": {
+          "label": "Nom complet",
+          "placeholder": "Aminata Diallo"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "vous@example.com"
+        },
+        "phone": {
+          "label": "Téléphone",
+          "placeholder": "+225 …"
+        },
+        "linkedin": {
+          "label": "LinkedIn",
+          "placeholder": "linkedin.com/in/…"
+        },
+        "website": {
+          "label": "Portfolio / site web",
+          "placeholder": "votresite.com"
+        },
+        "address": {
+          "label": "Localisation",
+          "placeholder": "Abidjan, Côte d'Ivoire"
+        }
+      },
+      "howReachYou": "Comment les employeurs peuvent-ils vous joindre ?",
+      "yourDetails": "Vos coordonnées",
+      "saving": "Enregistrement…",
+      "saveContinue": "Enregistrer et continuer",
+      "filledFromProfile": "J'ai rempli ces champs à partir de votre profil",
+      "looksRight": "C'est bon"
+    },
+    "cvPicker": {
+      "whichCv": "À partir de quel CV dois-je travailler ?",
+      "fetching": "Récupération de vos CV…",
+      "loadError": "Je n'ai pas pu charger vos CV pour l'instant — réessayez dans un instant.",
+      "noneYet": "Vous n'avez pas encore de CV enregistré. Créez-en un ou importez-en un d'abord, et je l'adapterai.",
+      "draft": "Brouillon",
+      "untitledCv": "CV sans titre",
+      "editedRelative": "modifié {{relative}}"
+    },
+    "deleteSession": {
+      "untitledSession": "Session sans titre",
+      "removeThisCv": "Retirer ce CV ?",
+      "deleteThisTailoring": "Supprimer cette adaptation ?",
+      "buildBody": "« {{name}} » est un CV que vous avez créé ici, et il se trouve dans <b>Mes CV</b>. Vous pouvez le retirer de la barre latérale du Studio tout en gardant le CV, ou le supprimer entièrement.",
+      "tailorBody": "Cela supprime la copie adaptée « {{name}} » et sa conversation. Elle disparaîtra aussi de <b>Mes CV</b>.",
+      "originalNotAffected": "Votre original <b>{{source}}</b> n'est pas affecté.",
+      "cannotUndo": "Cette action est irréversible.",
+      "removing": "Retrait…",
+      "removeKeepCv": "Retirer du Studio · garder le CV",
+      "deleting": "Suppression…",
+      "deleteEntirely": "Supprimer le CV entièrement",
+      "deleteOnly": "Supprimer"
+    },
+    "entryPicker": {
+      "whichOne": "Lequel devrions-nous affiner ?",
+      "nothingHere": "Il n'y a rien ici pour l'instant — ajoutez une entrée dans le générateur de CV et je vous aiderai à la rédiger.",
+      "untitled": "Sans titre",
+      "noKeyword": "pas de {{keyword}}"
+    },
+    "jobCapture": {
+      "theJob": "Le poste que vous visez",
+      "add": "Ajouter"
+    },
+    "modeChooser": {
+      "whatAreWeDoing": "Que faisons-nous ?",
+      "tailorTitle": "Adapter mon CV à un poste",
+      "tailorBody": "Je vais retravailler une copie en fonction de l'offre d'emploi. Votre original reste tel quel.",
+      "buildTitle": "Créer un nouveau CV",
+      "buildBody": "Je vais le construire avec vous section par section — je pose des questions, vous répondez, et je le rédige au fur et à mesure."
+    },
+    "roleBrief": {
+      "ariasRead": "La lecture d'Aria",
+      "thisRole": "Ce poste",
+      "seniorityLevel": "Niveau {{seniority}}",
+      "lookingForYears_one": "Recherche environ {{count}} an d'expérience.",
+      "lookingForYears_other": "Recherche environ {{count}} ans d'expérience.",
+      "keepsAskingFor": "Ce qui revient sans cesse",
+      "couldntFullyRead": "Je n'ai pas pu lire le poste en entier pour l'instant — on peut quand même continuer, et je le relirai quand je commencerai à adapter le CV."
+    },
+    "roleCapture": {
+      "whenWereYouThere": "Vous y étiez de quand à quand ?",
+      "started": "Début",
+      "startedPlaceholder": "ex. mars 2021",
+      "stillWorkHere": "J'y travaille encore",
+      "ended": "Fin",
+      "endedPlaceholder": "ex. août 2024",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer",
+      "skip": "Passer",
+      "prompts": {
+        "title": {
+          "q": "Comment s'appelait votre poste ?",
+          "hint": "Utilisez l'intitulé de votre contrat — un titre gonflé est la première chose qu'une vérification de références repère."
+        },
+        "company": {
+          "q": "C'était où ?",
+          "placeholder": "ex. Baker Hughes",
+          "hint": "Le nom de l'employeur tel qu'il apparaîtrait sur une fiche de paie."
+        },
+        "degree": {
+          "q": "Qu'avez-vous étudié ?",
+          "placeholder": "ex. Licence en génie mécanique",
+          "hint": "Le diplôme tel qu'il figure sur le certificat."
+        },
+        "school": {
+          "q": "Où l'avez-vous étudié ?",
+          "placeholder": "ex. Université de Benin City"
+        },
+        "graduationDate": {
+          "q": "Quand avez-vous terminé ?",
+          "placeholder": "ex. 2019 (ou prévu en 2026)",
+          "hint": "Une date prévue convient si vous étudiez encore."
+        },
+        "projectTitle": {
+          "q": "Comment s'appelle le projet ?",
+          "placeholder": "ex. Tableau de bord de télémétrie de plateforme",
+          "hint": "Un nom court et simple — celui que vous utiliseriez à l'oral."
+        }
+      }
+    },
+    "sectionGuidance": {
+      "education": {
+        "title": "Formation",
+        "body": "La plupart des filtres ATS vérifient un champ diplôme avant qu'un humain ne voie votre CV. Indiquez le diplôme, l'établissement et l'année — même en cours.",
+        "cta": "Modifier la formation"
+      },
+      "contact": {
+        "title": "Coordonnées",
+        "body": "Les recruteurs ont besoin de plusieurs façons de vous joindre. Nom complet, email, téléphone et une URL LinkedIn forment l'ensemble complet — tout élément manquant est une impasse.",
+        "cta": "Modifier les coordonnées"
+      }
+    },
+    "targetJobAsk": {
+      "oneThingFirst": "Une chose avant tout",
+      "areYouAiming": "Visez-vous un poste précis ? Si vous le collez ici, je façonnerai chaque section autour de ce que cet employeur demande vraiment.",
+      "yesIHaveOne": "Oui, j'en ai un",
+      "notYet": "Pas encore — construire un CV solide et polyvalent",
+      "addLater": "Vous pourrez ajouter un poste plus tard, et adapter ce CV à autant de postes que vous voulez."
+    },
+    "skillsFix": {
+      "heading": "Compétences que ce poste demande",
+      "body": "Cochez uniquement celles que vous possédez réellement. Un recruteur peut vous interroger sur tout ce qui figure sur cette liste.",
+      "nothingMissing": "Rien ne manque ici — vos compétences couvrent déjà ce que le poste demande.",
+      "adding": "Ajout…",
+      "add": "Ajouter",
+      "addCount": "Ajouter {{n}}"
+    },
+    "sectionBreakdown": {
+      "heading": "Section par section",
+      "allClear": "tout est bon",
+      "toFix": "{{n}} à corriger",
+      "fix": "Corriger",
+      "rescoring": "Recalcul…",
+      "rescoreFree": "Recalculer · gratuit",
+      "rechecking": "Nouvelle vérification…",
+      "recheckScore": "Revérifier mon score · {{cost}} cr"
+    },
+    "sessionRail": {
+      "sessions": "Sessions",
+      "closeSessions": "Fermer les sessions",
+      "newTailoring": "Nouvelle adaptation",
+      "newCv": "Nouveau CV",
+      "loading": "Chargement…",
+      "noSessionsYet": "Aucune session pour l'instant. Lancez une adaptation et elle vivra ici — une par poste que vous visez.",
+      "fromSource": "de {{source}}",
+      "removeOrDeleteCv": "Retirer ou supprimer ce CV",
+      "deleteTailoring": "Supprimer cette adaptation",
+      "deleteAria": "Supprimer {{heading}}"
+    },
+    "skillsBuild": {
+      "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Vous choisissez lesquelles ajouter.",
+      "bodyNoJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier. Vous choisissez lesquelles ajouter.",
+      "readingCv": "Lecture de votre CV…",
+      "findMySkills": "Trouver mes compétences · {{cost}} cr",
+      "typeYourselfFree": "Ou saisissez-les vous-même — gratuit",
+      "manualPlaceholder": "Python, tests sous pression, HSE…",
+      "commaSeparated": "Séparées par des virgules.",
+      "skipForNow": "Passer les compétences pour l'instant"
+    },
+    "summaryFix": {
+      "anotherAngle": "Un autre angle",
+      "yourTailoredSummary": "Votre résumé adapté",
+      "rewriting": "Réécriture…",
+      "tryAnother": "Essayer autre chose · {{cost}} cr",
+      "applying": "Application…",
+      "useThis": "Utiliser celui-ci",
+      "whereAreYou": "Où en êtes-vous dans votre carrière ?",
+      "writing": "Rédaction…",
+      "writeIt": "Rédiger",
+      "stages": {
+        "grad": {
+          "label": "Étudiant·e / jeune diplômé·e",
+          "hint": "Peu ou pas d'expérience à temps plein encore"
+        },
+        "experienced": {
+          "label": "Expérimenté·e dans ce domaine",
+          "hint": "Des années d'expérience directement pertinente"
+        },
+        "changer": {
+          "label": "En reconversion",
+          "hint": "Solide parcours, domaine différent"
+        }
+      }
+    },
+    "scoreCard": {
+      "recommendation": {
+        "strongMatch": "Vous êtes un excellent candidat — cela vaut la peine de postuler dès maintenant.",
+        "goodMatch": "Bonne adéquation. Quelques ajustements ciblés et ce sera prêt.",
+        "potentialMatch": "Vous êtes dans la fourchette, mais le CV a besoin de travail pour le montrer.",
+        "weakMatch": "C'est un peu tiré par les cheveux. Vaut le coup de repositionner avant de postuler."
+      },
+      "bandWeak": "Faible",
+      "bandPossible": "Possible",
+      "bandStrong": "Fort",
+      "fitAgainstJob": "Adéquation avec ce poste",
+      "costAnalysis": "−{{price}} cr · analyse",
+      "scanComplete": "Analyse terminée.",
+      "scoresUpdated": "Scores mis à jour · notes de votre dernière analyse complète",
+      "hideFullAnalysis": "Masquer l'analyse complète",
+      "showFullAnalysis": "Afficher l'analyse complète",
+      "theMath": "Le calcul · pondérations fixes",
+      "dims": {
+        "skills": "Compétences",
+        "experience": "Expérience",
+        "education": "Formation",
+        "seniority": "Séniorité",
+        "profileStrength": "Solidité du profil"
+      },
+      "youHave": "Vous avez · {{n}}",
+      "missing": "Manquant · {{n}}",
+      "readFromCv": "Extrait de votre CV"
+    },
+    "chat": {
+      "opener": "Bonjour — je suis Aria. Dites-moi le poste que vous visez et j'adapterai une copie de votre CV, section par section. Votre original reste intact.",
+      "kindOpenerBuild": "Construisons votre CV ensemble. Je vous poserai des questions, vous répondrez, et je le rédigerai au fur et à mesure — voici comment ça va se passer.",
+      "kindOpenerTailor": "Nouvelle adaptation. Collez le poste que vous visez et je le lirai attentivement.",
+      "pickModeBuild": "Construisons-le ensemble. Voici comment ça va se passer.",
+      "pickModeTailor": "Parfait — collez le poste ci-dessous et je le lirai attentivement.",
+      "captureJobWithBrief": "Voici comment je l'ai compris — vérifiez que j'ai bien saisi avant que je touche à votre CV.",
+      "captureJobNoBrief": "Je n'ai pas pu tout comprendre cette fois, mais j'ai enregistré le poste. Jetez-y un œil et continuons.",
+      "tailorStartDone": "Votre copie adaptée est enregistrée — votre original reste intact. Laissez-moi maintenant la lire par rapport au poste et vous montrer quoi changer.",
+      "tailorStartFailed": "Je n'ai pas pu créer la copie adaptée pour l'instant — choisissez un CV à nouveau et je réessaierai.",
+      "confirmBriefWithSource": "Parfait. Je vais adapter une copie de {{title}} — un instant.",
+      "confirmBriefNoSource": "Parfait. À partir de quel CV dois-je travailler ?",
+      "scanDone": "Voici où vous en êtes. Les sections rouges et orange sont là où il y a du travail.",
+      "scanInsufficientCredits": "Une analyse complète nécessite {{required}} crédits et vous en avez {{current}}. Rechargez et je la lancerai.",
+      "scanFailed": "Je n'ai pas pu terminer l'analyse pour l'instant — réessayez dans un instant.",
+      "fixPickWithKeywords": "Corrigeons {{section}}. Ce poste s'appuie sur {{keywords}} — lequel devrions-nous affiner ?",
+      "fixPickNoKeywords": "Corrigeons {{section}}. Lequel devrions-nous affiner ?",
+      "fixSkills": "Voici ce que le poste demande et que votre CV ne mentionne pas encore.",
+      "fixSummary": "Je vais réécrire votre résumé autour de ce poste. D'abord — où en êtes-vous dans votre carrière ?",
+      "and": " et ",
+      "pickEntryWithGaps": "D'accord — {{title}}. Le poste s'appuie sur {{gaps}}. Avez-vous fait l'un ou l'autre ici ? Dites-moi ce que vous avez réellement fait.",
+      "pickEntryNoGaps": "D'accord — {{title}}. Dites-moi une chose que vous avez réellement faite là-bas.",
+      "outOfTheRedNote": " — c'est sorti du rouge.",
+      "intoTheGreenNote": " — c'est passé au vert.",
+      "fixMovedScore": "{{section}} est passé de {{from}} → {{to}}{{bandNote}} Recalculer est gratuit, alors continuez.",
+      "fixSavedNoMove": "{{section}} est enregistré. Le score n'a pas encore beaucoup bougé — ça prend généralement quelques entrées.",
+      "nSkills": "{{n}} compétences",
+      "aTailoredSummary": "un résumé adapté",
+      "beginBuild": "Parfait. Visez-vous un poste précis en ce moment ?",
+      "cvForJob": "CV pour {{jobTitle}}",
+      "buildJobDoneWithBrief": "Compris — {{role}}. Assurons-nous maintenant qu'on puisse vous joindre.",
+      "buildJobDoneNoBrief": "Compris. Assurons-nous maintenant qu'on puisse vous joindre.",
+      "buildSkipJob": "Pas de problème — on va construire un CV solide et polyvalent. D'abord, vos coordonnées.",
+      "firstNamesCv": "CV de {{first}}",
+      "confirmContactDone": "Votre en-tête est fait. L'expérience professionnelle est la prochaine étape — c'est là que se joue le plus gros du poids, et c'est là que je passerai le plus de temps avec vous.",
+      "sectionOpener": {
+        "experience": "Commençons par votre poste le plus récent. Comment s'appelait-il ?",
+        "project": "Ajoutons un projet. D'abord — de quel type s'agit-il ?",
+        "education": "Ajoutons votre formation. Qu'avez-vous étudié ?"
+      },
+      "skipProject": "D'accord — beaucoup de bons CV n'en ont aucun. Votre expérience professionnelle fait déjà ce travail.",
+      "skipOther": "Pas de problème, on laisse ça de côté.",
+      "itFallback": "il",
+      "thisJobFallback": "ce poste",
+      "nextLine": {
+        "company": "Compris. C'était où ?",
+        "dates": "Et vous y étiez de quand à quand ?",
+        "school": "Où l'avez-vous étudié ?",
+        "graduationDate": "Et quand avez-vous terminé ?",
+        "achievementsProject": "Maintenant la partie intéressante — que fait {{title}} concrètement, et quel était votre rôle dedans ?",
+        "achievementsRole": "Maintenant ce qui compte vraiment — qu'avez-vous réellement fait chez {{company}} ? Dites-m'en une chose et je la façonnerai."
+      },
+      "educationNoBullets": "C'est tout pour celle-ci — la formation n'a pas besoin de puces.",
+      "nextEntry": {
+        "project": "Suivant — de quel type de projet s'agit-il ?",
+        "education": "Qu'avez-vous étudié d'autre ?",
+        "experience": "Suivant — comment s'appelait ce poste ?"
+      },
+      "finishSection": {
+        "experience": "L'expérience professionnelle est terminée. Les projets sont la suite quand vous êtes prêt·e — ils sont facultatifs, alors passez si vous préférez.",
+        "project": "Projets terminés. La formation est la suite.",
+        "education": "La formation est ajoutée. Des certifications ou formations à ajouter ?"
+      },
+      "pickProjectType": "Parfait. Comment s'appelle le projet ?",
+      "skillsInsufficientCredits": "Trouver vos compétences coûte {{cost}} crédits et il vous en manque pour l'instant. Vous pouvez les saisir vous-même gratuitement à la place.",
+      "skillsInDone": "{{n}} compétences ajoutées. Dernière étape — le résumé en haut de votre CV.",
+      "manualSkillsAdded": "{{n}} ajoutée(s). D'autres, ou on passe à la suite ?",
+      "buildSummaryDone": "Votre CV est construit. Voici où il en est.",
+      "certsDone": "Votre section formation est complète.",
+      "chatLimitReached": "Vous avez utilisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
+      "chatUnreachable": "Je n'ai pas pu vous joindre pour l'instant — réessayez.",
+      "freeTypingResults": "Votre analyse est ci-dessus. Vous guider à travers chaque correction est ce que j'apprends à faire ensuite.",
+      "freeTypingOther": "Utilisez la carte ci-dessus et je prendrai le relais à partir de là.",
+      "nextUp": "À suivre",
+      "sectionMenu": {
+        "experienceBlurbMore": "Ajoutez un autre poste, ou continuez quand vous voulez.",
+        "experienceBlurbFirst": "L'expérience professionnelle pèse le plus lourd sur un CV, alors faisons ça ensuite. Je vous interrogerai sur un poste à la fois.",
+        "experienceCtaMore": "Ajouter un autre poste",
+        "experienceCtaFirst": "Commencer l'expérience professionnelle",
+        "experienceSkipLabel": "C'est tout pour mes postes",
+        "projectsEyebrow": "Projets · facultatif",
+        "projectsBlurb": "Les projets comptent beaucoup quand votre expérience est courte, et peu quand elle ne l'est pas. Ajoutez-en un si vous avez construit quelque chose dont vous parleriez en entretien.",
+        "projectsCta": "Ajouter un projet",
+        "projectsSkipLabel": "Passer les projets — mon expérience professionnelle couvre déjà ça",
+        "educationBlurb": "La plupart des filtres ATS vérifient un diplôme avant qu'un humain ne voie votre CV. Ajoutez ce que vous avez étudié — un diplôme en cours compte.",
+        "educationCta": "Ajouter la formation",
+        "skipForNow": "Passer pour l'instant",
+        "certsEyebrow": "Certifications · facultatif",
+        "certsBlurb": "Des licences ou formations à mentionner ? C'est un critère de filtrage dans les métiers techniques, la santé et les opérations.",
+        "certsCta": "Ajouter des certifications",
+        "certsSkipLabel": "Je n'en ai aucune",
+        "skillsBlurb": "Maintenant que j'ai vos postes et projets, je peux en tirer les compétences techniques que vous pouvez réellement justifier — ou vous pouvez les saisir vous-même gratuitement.",
+        "skillsCta": "Faire les compétences",
+        "skillsSkipLabel": "Passer les compétences",
+        "summaryEyebrow": "Résumé · dernière étape",
+        "summaryBlurb": "Maintenant que j'ai la vue d'ensemble, je peux rédiger le résumé en haut — c'est la première chose que tout le monde lit, et ça marche mieux rédigé en dernier.",
+        "summaryCta": "Rédiger mon résumé",
+        "summarySkipLabel": "Passer le résumé"
+      },
+      "noProblem": "Pas de problème.",
+      "skillsSkipSaid": "Pas de problème — vous pourrez ajouter des compétences à tout moment.",
+      "summarySkipSaid": "D'accord — vous pourrez le rédiger plus tard. Voici votre CV.",
+      "theJob": "Le poste",
+      "tailoredCopyCreated": "Copie adaptée créée",
+      "readConfirmed": "Lecture confirmée",
+      "scannedAgainstJob": "Analysé par rapport au poste",
+      "fixClosed": "Correction terminée",
+      "fixingSection": "Correction · {{section}}",
+      "sectionFallback": "section",
+      "addedWhat": "{{what}} ajouté(s)",
+      "addedBullets_one": "{{count}} puce ajoutée",
+      "addedBullets_other": "{{count}} puces ajoutées",
+      "noSpecificJobYet": "Pas encore de poste précis",
+      "untitledRole": "Poste sans titre",
+      "bulletsOnCv_one": "{{count}} puce sur votre CV",
+      "bulletsOnCv_other": "{{count}} puces sur votre CV",
+      "contactConfirmed": "Coordonnées confirmées",
+      "thinking": {
+        "pickingUp": "Reprise là où on s'était arrêté…",
+        "settingUpCopy": "Préparation de votre copie adaptée…",
+        "readingJob": "Lecture du poste…",
+        "readingCvAgainstJob": "Lecture de votre CV par rapport au poste…"
+      },
+      "buildNewCvHeading": "Créer un nouveau CV",
+      "buildNewCvBody": "Le construire avec vous dans le chat, c'est ce que j'apprends à faire ensuite. Pour l'instant, le générateur est le chemin le plus rapide — créez votre CV là-bas, puis revenez et je l'adapterai à n'importe quel poste que vous voulez.",
+      "openTheBuilder": "Ouvrir le générateur",
+      "scanOffer": {
+        "heading": "Le lire par rapport au poste",
+        "body": "Je vais évaluer votre adéquation pour ce poste et marquer chaque section en rouge, orange ou vert pour que vous sachiez exactement par où commencer.",
+        "cta": "Analyser mon CV"
+      },
+      "achievementsLanded": "C'est ajouté sur le poste ci-dessus. Ajoutez un autre poste, ou déclarez l'expérience professionnelle terminée.",
+      "nBullets_one": "{{count}} puce",
+      "nBullets_other": "{{count}} puces",
+      "useCardAbove": "Utilisez la carte ci-dessus ↑",
+      "pinCleared": "Ce poste n'est plus sur votre CV, donc je l'ai laissé de côté. Voulez-vous en ajouter un autre ?",
+      "toast": {
+        "recomputeFailed": "Impossible de recalculer le score pour l'instant.",
+        "summaryInsufficientCredits": "Pas assez de crédits pour un résumé — rechargez et réessayez.",
+        "summaryWriteFailed": "Impossible de le rédiger pour l'instant. Réessayez.",
+        "saveFailed": "Impossible d'enregistrer — réessayez.",
+        "skillsPullFailed": "Impossible de récupérer vos compétences — réessayez.",
+        "downloadFailed": "Échec du téléchargement",
+        "pdfDownloaded": "PDF téléchargé",
+        "wordDownloaded": "Document Word téléchargé"
+      }
+    },
+    "sectionCoach": {
+      "rerollWasFree": "Cette relance était gratuite.",
+      "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
+      "backToSections": "Retour aux sections",
+      "aimingAt": "vise {{keywords}}",
+      "send": "Envoyer",
+      "draftCount": "Rédiger {{n}} · {{cr}} cr",
+      "pickWhatsTrue": "Choisissez ce qui est vrai",
+      "tryAnotherAngle": "Essayer un autre angle"
+    },
+    "livePreview": {
+      "heading": "Aperçu en direct",
+      "yourCv": "Votre CV",
+      "closePreview": "Fermer l'aperçu",
+      "emptyState": "Lancez une analyse et votre CV s'illumine ici.",
+      "yourName": "Votre nom",
+      "noSummaryYet": "Pas encore de résumé.",
+      "noSkillsYet": "Pas encore de compétences.",
+      "verdict": {
+        "ok": "Solide",
+        "warn": "À améliorer",
+        "bad": "Faible"
+      }
+    },
+    "desk": {
+      "toast": {
+        "agentPlanRequired": "Un plan agent actif est requis pour créer des CV.",
+        "removedFromStudio": "Retiré du Studio — le CV est toujours dans Mes CV.",
+        "removeFailed": "Impossible de le retirer — réessayez.",
+        "deleted": "Supprimé.",
+        "deleteFailed": "Impossible de le supprimer — réessayez."
+      },
+      "newCv": "Nouveau CV",
+      "title": "Aria Studio",
+      "buildingWithAria": "Construction d'un CV avec Aria",
+      "tailorToJob": "Adapter un CV à un poste",
+      "hideSessions": "Masquer les sessions",
+      "showSessions": "Afficher les sessions",
+      "cvName": "Nom du CV",
+      "renameCv": "Renommer ce CV",
+      "fitScoreAria": "Score d'adéquation {{score}} sur 100 — ouvrir les sections",
+      "outOf100": "/100",
+      "insights": "Analyses",
+      "sectionVerdicts": "Verdicts par section",
+      "showPanel": "Afficher le panneau",
+      "panel": "Panneau",
+      "studioSessions": "Sessions du Studio",
+      "tailoredCopy": "Copie adaptée"
     }
   }
 }

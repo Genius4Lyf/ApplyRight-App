@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
@@ -12,6 +13,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 // Reads entirely from the persisted `studioScan` snapshot on the draft, so it survives a
 // refresh without re-scanning (and without re-charging).
 const StudioArtifactPanel = ({ onClose, bare = false }) => {
+  const { t } = useTranslation();
   const { cvData } = useAriaStudio();
 
   const scan = cvData?.studioScan;
@@ -47,10 +49,10 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Tailored copy
+            {t('ariaStudio.studioArtifactPanel.tailoredCopy')}
           </p>
           <p className="mt-0.5 text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-            {cvData?.title || 'No CV yet'}
+            {cvData?.title || t('ariaStudio.studioArtifactPanel.noCvYet')}
           </p>
           {(brief?.role || targetJob?.title) && (
             <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -62,7 +64,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close panel"
+            aria-label={t('ariaStudio.studioArtifactPanel.closePanel')}
             className="shrink-0 -mr-1 w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             ✕
@@ -75,7 +77,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none p-4 space-y-5">
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              CV health
+              {t('ariaStudio.studioArtifactPanel.cvHealth')}
             </p>
             <div className="mt-0.5 flex items-baseline gap-1.5">
               <span
@@ -88,13 +90,16 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
               <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">%</span>
             </div>
             <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              {progress.done} of {progress.total} sections done
+              {t('ariaStudio.studioArtifactPanel.sectionsDoneCount', {
+                done: progress.done,
+                total: progress.total,
+              })}
             </p>
           </div>
 
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-              Sections
+              {t('ariaStudio.studioArtifactPanel.sections')}
             </p>
             <ul className="space-y-1.5">
               {BUILD_SECTIONS.map((s) => {
@@ -114,7 +119,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
                           : 'text-slate-700 dark:text-slate-200'
                       }`}
                     >
-                      {s.label}
+                      {t(s.labelKey)}
                     </span>
                     {done && (
                       <span className="shrink-0 font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
@@ -126,8 +131,13 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
               })}
             </ul>
             <p className="sr-only">
-              {BUILD_SECTIONS.map(
-                (s) => `${s.label}: ${progress.status[s.key] ? 'done' : 'not started'}.`
+              {BUILD_SECTIONS.map((s) =>
+                t('ariaStudio.studioArtifactPanel.srSectionLine', {
+                  label: t(s.labelKey),
+                  status: progress.status[s.key]
+                    ? t('ariaStudio.studioArtifactPanel.srDone')
+                    : t('ariaStudio.studioArtifactPanel.srNotStarted'),
+                })
               ).join(' ')}
             </p>
           </div>
@@ -135,7 +145,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
           {(roles.length > 0 || projects.length > 0) && (
             <div>
               <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                In your CV
+                {t('ariaStudio.studioArtifactPanel.inYourCv')}
               </p>
               <ul className="space-y-1">
                 {roles.map((r) => (
@@ -143,7 +153,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
                     key={r._sortId}
                     className="truncate text-[12px] text-slate-600 dark:text-slate-300"
                   >
-                    {r.title || 'Untitled role'}
+                    {r.title || t('ariaStudio.studioArtifactPanel.untitledRole')}
                     {r.company ? ` · ${r.company}` : ''}
                   </li>
                 ))}
@@ -152,7 +162,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
                     key={p._sortId}
                     className="truncate text-[12px] text-slate-500 dark:text-slate-400"
                   >
-                    {p.title || 'Untitled project'}
+                    {p.title || t('ariaStudio.studioArtifactPanel.untitledProject')}
                   </li>
                 ))}
               </ul>
@@ -169,12 +179,12 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
               <AriaOrbit size={44} working />
             </span>
             <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
-              Standing by
+              {t('ariaStudio.studioArtifactPanel.standingBy')}
             </p>
             <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
               {cvData?._id
-                ? 'Run a scan and your section-by-section verdict lands here.'
-                : 'Bring me a job and your tailored CV takes shape here.'}
+                ? t('ariaStudio.studioArtifactPanel.emptyWithCv')
+                : t('ariaStudio.studioArtifactPanel.emptyNoCv')}
             </p>
           </div>
         </div>
@@ -183,14 +193,14 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
           {/* Overall */}
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Fit
+              {t('ariaStudio.studioArtifactPanel.fit')}
             </p>
             <div className="mt-0.5 flex items-baseline gap-1.5">
               <span className={`font-heading text-3xl font-bold tabular-nums ${BAND_TEXT[band]}`}>
                 {score ?? '—'}
               </span>
               <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
-                / 100
+                {t('ariaStudio.common.outOf100')}
               </span>
             </div>
           </div>
@@ -198,7 +208,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
           {/* Section dots */}
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-              Sections
+              {t('ariaStudio.studioArtifactPanel.sections')}
             </p>
             <ul className="space-y-1.5">
               {sections.map((s) => (
@@ -218,9 +228,16 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
             </ul>
             <p className="sr-only">
               {sections
-                .map(
-                  (s) =>
-                    `${s.label}: ${s.band === 'ok' ? 'good' : s.band === 'warn' ? 'needs work' : 'poor'}.`
+                .map((s) =>
+                  t('ariaStudio.studioArtifactPanel.srSectionLine', {
+                    label: s.label,
+                    status:
+                      s.band === 'ok'
+                        ? t('ariaStudio.studioArtifactPanel.srGood')
+                        : s.band === 'warn'
+                          ? t('ariaStudio.studioArtifactPanel.srNeedsWork')
+                          : t('ariaStudio.studioArtifactPanel.srPoor'),
+                  })
                 )
                 .join(' ')}
             </p>
@@ -230,7 +247,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
           {missingKeywords.length > 0 && (
             <div>
               <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                Still not mentioned
+                {t('ariaStudio.studioArtifactPanel.stillNotMentioned')}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {missingKeywords.map((k) => (

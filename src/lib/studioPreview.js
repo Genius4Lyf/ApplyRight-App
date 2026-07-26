@@ -17,7 +17,14 @@ export const PREVIEW_ORDER = [
 export const BAND_RANK = { neutral: 0, bad: 1, warn: 2, ok: 3 };
 
 // Human verdict per band for the section chip. Neutral (unscored) shows no chip.
-export const VERDICT_LABEL = { ok: 'Strong', warn: 'Needs work', bad: 'Weak', neutral: '' };
+// Keys, not text — this is plain JS with no react-i18next context, so the caller
+// (a React component with useTranslation) resolves via t().
+export const VERDICT_LABEL_KEY = {
+  ok: 'ariaStudio.livePreview.verdict.ok',
+  warn: 'ariaStudio.livePreview.verdict.warn',
+  bad: 'ariaStudio.livePreview.verdict.bad',
+  neutral: '',
+};
 
 // scan.sections → { key: band }. A missing/absent scan yields an empty map, so every
 // section reads as 'neutral' downstream.

@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CREDIT_COSTS } from '../../lib/credits';
 import AriaCard from './AriaCard';
 
 // Career stage drives the whole shape of a summary — a student leads with potential,
 // a career-changer leads with transferable evidence. The backend's stage enum is
 // 'grad' | 'experienced' | 'changer'; these are its human labels.
+// Keys, not text — resolved via t() at render so the runtime UI language decides.
 const STAGES = [
-  { key: 'grad', label: 'Student / recent grad', hint: 'Little or no full-time history yet' },
+  {
+    key: 'grad',
+    labelKey: 'ariaStudio.summaryFix.stages.grad.label',
+    hintKey: 'ariaStudio.summaryFix.stages.grad.hint',
+  },
   {
     key: 'experienced',
-    label: 'Experienced in this field',
-    hint: 'Years of directly relevant work',
+    labelKey: 'ariaStudio.summaryFix.stages.experienced.label',
+    hintKey: 'ariaStudio.summaryFix.stages.experienced.hint',
   },
-  { key: 'changer', label: 'Changing careers', hint: 'Strong history, different field' },
+  {
+    key: 'changer',
+    labelKey: 'ariaStudio.summaryFix.stages.changer.label',
+    hintKey: 'ariaStudio.summaryFix.stages.changer.hint',
+  },
 ];
 
 // Summary is regenerated whole rather than interviewed for — it's short, and the
@@ -27,6 +37,7 @@ const SummaryFixCard = ({
   applying,
   wasReroll,
 }) => {
+  const { t } = useTranslation();
   const [stage, setStage] = useState(null);
   const cost = CREDIT_COSTS.GENERATE_SUMMARY ?? 3;
 
@@ -36,7 +47,9 @@ const SummaryFixCard = ({
       <AriaCard cardKey="summarydraft">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {wasReroll ? 'Another angle' : 'Your tailored summary'}
+            {wasReroll
+              ? t('ariaStudio.summaryFix.anotherAngle')
+              : t('ariaStudio.summaryFix.yourTailoredSummary')}
           </p>
           <p className="mt-2.5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
             {draft}
@@ -48,7 +61,9 @@ const SummaryFixCard = ({
               disabled={generating || applying}
               className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
-              {generating ? 'Re-writing…' : `Try another · ${cost} cr`}
+              {generating
+                ? t('ariaStudio.summaryFix.rewriting')
+                : t('ariaStudio.summaryFix.tryAnother', { cost })}
             </button>
             <button
               type="button"
@@ -56,7 +71,7 @@ const SummaryFixCard = ({
               disabled={generating || applying}
               className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
             >
-              {applying ? 'Applying…' : 'Use this'}
+              {applying ? t('ariaStudio.summaryFix.applying') : t('ariaStudio.summaryFix.useThis')}
             </button>
           </div>
         </div>
@@ -70,7 +85,7 @@ const SummaryFixCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Where are you in your career?
+            {t('ariaStudio.summaryFix.whereAreYou')}
           </p>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr
@@ -92,10 +107,10 @@ const SummaryFixCard = ({
                 }`}
               >
                 <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                  {s.label}
+                  {t(s.labelKey)}
                 </span>
                 <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                  {s.hint}
+                  {t(s.hintKey)}
                 </span>
               </button>
             );
@@ -109,7 +124,7 @@ const SummaryFixCard = ({
             disabled={generating}
             className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            Back
+            {t('common.back')}
           </button>
           <button
             type="button"
@@ -117,7 +132,7 @@ const SummaryFixCard = ({
             disabled={!stage || generating}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
-            {generating ? 'Writing…' : 'Write it'}
+            {generating ? t('ariaStudio.summaryFix.writing') : t('ariaStudio.summaryFix.writeIt')}
           </button>
         </div>
       </div>

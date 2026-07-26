@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
 // Skills need no generation. The scan already identified exactly which of the job's
@@ -9,6 +10,7 @@ import AriaCard from './AriaCard';
 // is how people get caught in interviews, so the card says so plainly and starts with
 // NOTHING pre-checked.
 const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(() => new Set());
 
   const names = missingSkills.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
@@ -26,21 +28,20 @@ const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Skills this job asks for
+            {t('ariaStudio.skillsFix.heading')}
           </p>
           <span className="shrink-0 rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-            No charge
+            {t('ariaStudio.certifications.noCharge')}
           </span>
         </div>
 
         <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-          Tick only the ones you genuinely have. An interviewer will ask about anything on this
-          list.
+          {t('ariaStudio.skillsFix.body')}
         </p>
 
         {names.length === 0 ? (
           <p className="mt-3 text-[12px] text-slate-500 dark:text-slate-400">
-            Nothing missing here — your skills already cover what the job asks for.
+            {t('ariaStudio.skillsFix.nothingMissing')}
           </p>
         ) : (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -73,7 +74,7 @@ const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
             disabled={applying}
             className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            Back
+            {t('common.back')}
           </button>
           <button
             type="button"
@@ -81,7 +82,11 @@ const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
             disabled={applying || selected.size === 0}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
-            {applying ? 'Adding…' : `Add ${selected.size || ''}`.trim()}
+            {applying
+              ? t('ariaStudio.skillsFix.adding')
+              : selected.size
+                ? t('ariaStudio.skillsFix.addCount', { n: selected.size })
+                : t('ariaStudio.skillsFix.add')}
           </button>
         </div>
       </div>

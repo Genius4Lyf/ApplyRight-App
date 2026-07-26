@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { ArrowRight, CheckCircle, User, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,6 +8,7 @@ import CustomSelect from '../components/ui/CustomSelect';
 import WelcomeModal from '../components/onboarding/WelcomeModal';
 
 const Onboarding = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -64,8 +66,8 @@ const Onboarding = () => {
     // Validation for Step 1
     if (step === 1) {
       if (!formData.firstName || !formData.lastName || !formData.currentStatus) {
-        toast.error('Please fill in all required fields to proceed.', {
-          description: 'It helps us tailor your experience on ApplyRight.',
+        toast.error(t('onboarding.toasts.validationTitle'), {
+          description: t('onboarding.toasts.validationDescription'),
         });
         return;
       }
@@ -108,7 +110,7 @@ const Onboarding = () => {
       setShowWelcome(true);
     } catch (error) {
       console.error('Onboarding failed', error);
-      toast.error('Failed to save profile. Please try again.');
+      toast.error(t('onboarding.toasts.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -130,7 +132,7 @@ const Onboarding = () => {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
-            {['Basic Info', 'Education'].map((label, index) => (
+            {[t('onboarding.progress.basicInfo'), t('onboarding.progress.education')].map((label, index) => (
               <span
                 key={label}
                 className={`text-sm font-medium ${step > index ? 'text-slate-900 dark:text-slate-100' : step === index + 1 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}
@@ -155,12 +157,12 @@ const Onboarding = () => {
                 {step === 2 && <GraduationCap className="w-6 h-6" />}
               </div>
               <h2 className="text-2xl font-heading font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {step === 1 && "Let's get to know you"}
-                {step === 2 && 'Your Academic Journey'}
+                {step === 1 && t('onboarding.step1.heading')}
+                {step === 2 && t('onboarding.step2.heading')}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 mt-2">
-                {step === 1 && 'Tell us a bit about yourself to get started.'}
-                {step === 2 && 'Help us tailor resources to your field of study.'}
+                {step === 1 && t('onboarding.step1.subheading')}
+                {step === 2 && t('onboarding.step2.subheading')}
               </p>
             </div>
           </div>
@@ -171,27 +173,27 @@ const Onboarding = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                      First Name
+                      {t('onboarding.step1.firstNameLabel')}
                     </label>
                     <input
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
                       className="input-field w-full"
-                      placeholder="Jane"
+                      placeholder={t('onboarding.step1.firstNamePlaceholder')}
                       required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                      Last Name
+                      {t('onboarding.step1.lastNameLabel')}
                     </label>
                     <input
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
                       className="input-field w-full"
-                      placeholder="Doe"
+                      placeholder={t('onboarding.step1.lastNamePlaceholder')}
                       required
                     />
                   </div>
@@ -199,28 +201,28 @@ const Onboarding = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Other Name (Optional)
+                    {t('onboarding.step1.otherNameLabel')}
                   </label>
                   <input
                     name="otherName"
                     value={formData.otherName}
                     onChange={handleChange}
                     className="input-field w-full"
-                    placeholder="Middle Name"
+                    placeholder={t('onboarding.step1.otherNamePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <CustomSelect
-                    label="Current Status"
+                    label={t('onboarding.step1.currentStatusLabel')}
                     name="currentStatus"
                     value={formData.currentStatus}
                     onChange={(e) => handleChange(e)}
                     options={[
-                      { value: 'student', label: 'Student' },
-                      { value: 'graduate', label: 'Recent Graduate' },
-                      { value: 'professional', label: 'Professional' },
-                      { value: 'other', label: 'Other' },
+                      { value: 'student', label: t('onboarding.step1.status.student') },
+                      { value: 'graduate', label: t('onboarding.step1.status.graduate') },
+                      { value: 'professional', label: t('onboarding.step1.status.professional') },
+                      { value: 'other', label: t('onboarding.step1.status.other') },
                     ]}
                   />
                 </div>
@@ -231,39 +233,39 @@ const Onboarding = () => {
               <div className="space-y-5 animate-fadeIn">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    University / Institution
+                    {t('onboarding.step2.universityLabel')}
                   </label>
                   <input
                     name="university"
                     value={formData.university}
                     onChange={handleChange}
                     className="input-field w-full"
-                    placeholder="e.g. Stanford University"
+                    placeholder={t('onboarding.step2.universityPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Discipline / Major
+                    {t('onboarding.step2.disciplineLabel')}
                   </label>
                   <input
                     name="discipline"
                     value={formData.discipline}
                     onChange={handleChange}
                     className="input-field w-full"
-                    placeholder="e.g. Computer Science"
+                    placeholder={t('onboarding.step2.disciplinePlaceholder')}
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Graduation Year (Expected)
+                    {t('onboarding.step2.graduationYearLabel')}
                   </label>
                   <input
                     name="graduationYear"
                     value={formData.graduationYear}
                     onChange={handleChange}
                     className="input-field w-full"
-                    placeholder="e.g. 2026"
+                    placeholder={t('onboarding.step2.graduationYearPlaceholder')}
                     type="number"
                   />
                 </div>
@@ -277,7 +279,7 @@ const Onboarding = () => {
                   onClick={handleBack}
                   className="px-6 py-2 text-slate-600 dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
                 >
-                  Back
+                  {t('common.back')}
                 </button>
               ) : (
                 <div></div>
@@ -289,11 +291,11 @@ const Onboarding = () => {
                   onClick={handleNext}
                   className="btn-primary px-6 py-2 flex items-center"
                 >
-                  Next <ArrowRight className="ml-2 w-4 h-4" />
+                  {t('onboarding.actions.next')} <ArrowRight className="ml-2 w-4 h-4" />
                 </button>
               ) : (
                 <button type="submit" disabled={loading} className="btn-primary">
-                  {loading ? 'Completing Profile...' : 'Complete Profile'}
+                  {loading ? t('onboarding.actions.completing') : t('onboarding.actions.complete')}
                   {!loading && <CheckCircle className="ml-2 w-4 h-4" />}
                 </button>
               )}

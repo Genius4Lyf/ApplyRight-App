@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink } from 'lucide-react';
 
@@ -129,6 +130,7 @@ const Description = ({ description }) => {
 };
 
 const JobPostingDrawer = ({ isOpen, onClose, job }) => {
+  const { t } = useTranslation();
   // Esc to close + lock body scroll while open so the page behind doesn't
   // scroll under the drawer on desktop.
   useEffect(() => {
@@ -145,7 +147,7 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
     };
   }, [isOpen, onClose]);
 
-  const title = job?.title || 'Job posting';
+  const title = job?.title || t('jobHistory.detail.jobPostingBtn');
   const company = job?.company || '';
   const description = job?.description || '';
   const jobUrl = job?.jobUrl || '';
@@ -170,13 +172,13 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
             className="w-full sm:max-w-md lg:max-w-lg h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col"
             role="dialog"
             aria-modal="true"
-            aria-label="Job posting"
+            aria-label={t('jobHistory.detail.jobPostingBtn')}
           >
             {/* Editorial header */}
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-start gap-3 shrink-0">
               <div className="flex-1 min-w-0">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  The posting you analyzed against
+                  {t('jobHistory.jobPostingDrawer.eyebrow')}
                 </p>
                 <h2 className="mt-1 font-heading text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
                   {title}
@@ -190,7 +192,7 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
               <button
                 onClick={onClose}
                 className="p-1.5 -mr-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
-                aria-label="Close job posting"
+                aria-label={t('jobHistory.jobPostingDrawer.closeAria')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -206,7 +208,8 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" /> View original posting
+                  <ExternalLink className="w-3.5 h-3.5" />{' '}
+                  {t('jobHistory.jobPostingDrawer.viewOriginal')}
                 </a>
               )}
 
@@ -214,7 +217,7 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
               {keywords.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-                    What they screen for
+                    {t('jobHistory.jobPostingDrawer.screenedFor')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {keywords.map((kw, i) => (
@@ -232,13 +235,13 @@ const JobPostingDrawer = ({ isOpen, onClose, job }) => {
               {/* Full description — rendered as a structured document */}
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
-                  Job description
+                  {t('jobHistory.jobPostingDrawer.jobDescription')}
                 </p>
                 {description ? (
                   <Description description={description} />
                 ) : (
                   <p className="text-sm text-slate-400 dark:text-slate-500 italic">
-                    No description was saved for this posting.
+                    {t('jobHistory.jobPostingDrawer.noDescription')}
                   </p>
                 )}
               </div>

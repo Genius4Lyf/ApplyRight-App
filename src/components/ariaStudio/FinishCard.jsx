@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileDown, FileText, ArrowRight } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { finishSummary } from '../../lib/studioFlow';
@@ -32,6 +33,7 @@ const FinishCard = ({
   onScan, // only when a job WAS supplied at build-start
   scanCost,
 }) => {
+  const { t } = useTranslation();
   const isBuild = mode === 'build';
   const summary = finishSummary(scan);
   const score = scan?.fitScore;
@@ -44,7 +46,7 @@ const FinishCard = ({
     <AriaCard cardKey="finish">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
-          Ready to send
+          {t('ariaStudio.finishCard.readyToSend')}
         </p>
 
         {/* Build mode — CV HEALTH, not a match score. There is no job here, so there is
@@ -62,25 +64,29 @@ const FinishCard = ({
                 {progress?.percent ?? 0}
               </span>
               <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
-                % complete
+                {t('ariaStudio.finishCard.percentComplete')}
               </span>
             </div>
             <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
               {[
-                contents?.roles ? `${contents.roles} role${contents.roles === 1 ? '' : 's'}` : null,
-                contents?.projects
-                  ? `${contents.projects} project${contents.projects === 1 ? '' : 's'}`
+                contents?.roles
+                  ? t('ariaStudio.finishCard.contentsRoles', { count: contents.roles })
                   : null,
-                contents?.skills ? `${contents.skills} skills` : null,
+                contents?.projects
+                  ? t('ariaStudio.finishCard.contentsProjects', { count: contents.projects })
+                  : null,
+                contents?.skills
+                  ? t('ariaStudio.finishCard.contentsSkills', { n: contents.skills })
+                  : null,
               ]
                 .filter(Boolean)
-                .join(' · ') || 'Your CV is saved.'}
+                .join(' · ') || t('ariaStudio.finishCard.cvSaved')}
             </p>
             {progress && progress.done < progress.total && (
               <p className="mt-1.5 text-[12px] text-slate-500 dark:text-slate-400">
-                {progress.total - progress.done} section
-                {progress.total - progress.done === 1 ? '' : 's'} still empty — you can come back to
-                those any time.
+                {t('ariaStudio.finishCard.sectionsEmpty', {
+                  count: progress.total - progress.done,
+                })}
               </p>
             )}
           </>
@@ -111,7 +117,9 @@ const FinishCard = ({
             <span className={`font-heading text-3xl font-bold tabular-nums ${BAND_TEXT[band]}`}>
               {score ?? '—'}
             </span>
-            <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">/ 100</span>
+            <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.common.outOf100')}
+            </span>
           </div>
         )}
 
@@ -120,31 +128,35 @@ const FinishCard = ({
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               {summary.newlyGreen.join(', ')}
             </span>{' '}
-            moved into the green.
+            {t('ariaStudio.finishCard.movedIntoGreen')}
           </p>
         )}
 
         {!isBuild && summary && summary.moved === 0 && (
           <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            The score hasn&rsquo;t moved yet — your copy is saved either way, and you can keep
-            fixing sections whenever you like.
+            {t('ariaStudio.finishCard.scoreNotMoved')}
           </p>
         )}
 
         {!isBuild && summary?.stillWeak?.length > 0 && (
           <p className="mt-1.5 text-[12px] text-slate-500 dark:text-slate-400">
-            Still worth a look: {summary.stillWeak.join(', ')}.
+            {t('ariaStudio.finishCard.stillWorthLook', { list: summary.stillWeak.join(', ') })}
           </p>
         )}
 
         {/* Where the file lives — said plainly, because "where did it go?" is the most
             common thing to wonder after a download. */}
         <p className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
-          Saved in <span className="font-semibold text-slate-700 dark:text-slate-200">My CVs</span>{' '}
-          as “{scan?.title || (isBuild ? 'your new CV' : 'your tailored copy')}”.{' '}
+          <Trans
+            i18nKey="ariaStudio.finishCard.savedAs"
+            values={{
+              title: scan?.title || t(isBuild ? 'ariaStudio.finishCard.yourNewCv' : 'ariaStudio.finishCard.yourTailoredCopy'),
+            }}
+            components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-200" /> }}
+          />{' '}
           {isBuild
-            ? 'This one is your master — tailored copies are made from it and never overwrite it.'
-            : 'Your original is untouched.'}
+            ? t('ariaStudio.finishCard.masterNote')
+            : t('ariaStudio.finishCard.originalUntouched')}
         </p>
 
         {/* PRIMARY — the CV Studio. A tailored CV is a document before it's a file, and
@@ -161,14 +173,14 @@ const FinishCard = ({
               // it loses no weight by dropping the indigo fill.
               className="btn-primary w-full gap-2 px-4 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
             >
-              Open in CV Studio <ArrowRight className="w-4 h-4" />
+              {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
             </button>
             <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
               {isBuild
                 ? // They have literally never seen this document — it only ever existed as a
                   // conversation. Looking at it as pages matters more here than anywhere.
-                  'You’ve built this whole CV without seeing it yet — open it up and look at it as real pages, pick a template, and check nothing spills onto page 2.'
-                : 'See it as real pages before you send it — that’s where you’ll spot anything spilling onto page 2, try the 8 templates, and adjust the accent, margins and spacing.'}
+                  t('ariaStudio.finishCard.openInStudioBodyBuild')
+                : t('ariaStudio.finishCard.openInStudioBodyTailor')}
             </p>
           </div>
         )}
@@ -184,7 +196,7 @@ const FinishCard = ({
                 disabled={busy}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
               >
-                Now tailor it to a job <ArrowRight className="w-3.5 h-3.5" />
+                {t('ariaStudio.finishCard.tailorToJob')} <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
             {/* Only when a job WAS given at the start — otherwise there is nothing to
@@ -196,7 +208,7 @@ const FinishCard = ({
                 disabled={busy}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
               >
-                See how it matches · {scanCost ?? 10} cr
+                {t('ariaStudio.finishCard.seeHowItMatches', { cost: scanCost ?? 10 })}
               </button>
             )}
           </div>
@@ -207,7 +219,7 @@ const FinishCard = ({
             picker in the chat; choosing one is the CV Studio's job. */}
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
           <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Or grab it now
+            {t('ariaStudio.finishCard.orGrabItNow')}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button
@@ -217,7 +229,9 @@ const FinishCard = ({
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
               <FileDown className="w-3.5 h-3.5" />
-              {busy === 'pdf' ? 'Preparing…' : 'Download PDF'}
+              {busy === 'pdf'
+                ? t('ariaStudio.finishCard.preparing')
+                : t('ariaStudio.finishCard.downloadPdf')}
             </button>
             <button
               type="button"
@@ -226,24 +240,27 @@ const FinishCard = ({
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
               <FileText className="w-3.5 h-3.5" />
-              {busy === 'docx' ? 'Preparing…' : 'Download Word'}
+              {busy === 'docx'
+                ? t('ariaStudio.finishCard.preparing')
+                : t('ariaStudio.finishCard.downloadWord')}
             </button>
           </div>
           <p className="mt-2 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            Uses{' '}
-            <span className="font-semibold text-slate-700 dark:text-slate-200">
-              {template.name}
-            </span>
-            {template.isDefault ? ' — ATS-safe by default.' : '.'}{' '}
+            <Trans
+              i18nKey="ariaStudio.finishCard.usesTemplate"
+              values={{ name: template.name }}
+              components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-200" /> }}
+            />
+            {template.isDefault ? ` ${t('ariaStudio.finishCard.atsSafeByDefault')}` : '.'}{' '}
             {draftId && (
               <>
-                Want a different look?{' '}
+                {t('ariaStudio.finishCard.wantDifferentLook')}{' '}
                 <button
                   type="button"
                   onClick={onOpenEditor}
                   className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  Open in editor
+                  {t('ariaStudio.finishCard.openInEditor')}
                 </button>
                 .
               </>

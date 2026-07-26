@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { entryProgress, bulletCount } from '../../lib/studioFlow';
 
 // The role being built, pinned to the top of the conversation.
@@ -15,24 +16,25 @@ import { entryProgress, bulletCount } from '../../lib/studioFlow';
 
 // Per-section wording. The card is ONE component parameterised by section — forking it
 // per section would mean three copies of the pin/counter/expand logic drifting apart.
+// Keys, not text — resolved via t() at render so the runtime UI language decides.
 const COPY = {
   experience: {
-    label: 'Building',
-    blank: 'New role',
-    next: 'Next role',
-    done: 'Done with work history',
+    labelKey: 'ariaStudio.pinnedEntry.copy.experience.label',
+    blankKey: 'ariaStudio.pinnedEntry.copy.experience.blank',
+    nextKey: 'ariaStudio.pinnedEntry.copy.experience.next',
+    doneKey: 'ariaStudio.pinnedEntry.copy.experience.done',
   },
   project: {
-    label: 'Building',
-    blank: 'New project',
-    next: 'Next project',
-    done: 'Done with projects',
+    labelKey: 'ariaStudio.pinnedEntry.copy.project.label',
+    blankKey: 'ariaStudio.pinnedEntry.copy.project.blank',
+    nextKey: 'ariaStudio.pinnedEntry.copy.project.next',
+    doneKey: 'ariaStudio.pinnedEntry.copy.project.done',
   },
   education: {
-    label: 'Adding',
-    blank: 'New qualification',
-    next: 'Add another',
-    done: 'Done with education',
+    labelKey: 'ariaStudio.pinnedEntry.copy.education.label',
+    blankKey: 'ariaStudio.pinnedEntry.copy.education.blank',
+    nextKey: 'ariaStudio.pinnedEntry.copy.education.next',
+    doneKey: 'ariaStudio.pinnedEntry.copy.education.done',
   },
 };
 
@@ -49,6 +51,7 @@ const PinnedEntryCard = ({
   // would eat most of a 360px viewport before the conversation gets any.
   defaultExpanded = true,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultExpanded);
   if (!entry) return null;
 
@@ -61,16 +64,19 @@ const PinnedEntryCard = ({
 
   const heading =
     [entry.title || entry.degree, entry.company || entry.school].filter(Boolean).join(' · ') ||
-    copy.blank;
+    t(copy.blankKey);
 
   const dateValue = entry.startDate
-    ? `${entry.startDate} – ${entry.isCurrent ? 'Present' : entry.endDate || '?'}`
+    ? `${entry.startDate} – ${entry.isCurrent ? t('ariaStudio.pinnedEntry.present') : entry.endDate || '?'}`
     : '';
 
   const valueFor = (key) => {
     if (key === 'dates') return dateValue;
     if (key === 'type') return typeLabel || '';
-    if (key === 'achievements') return bulletCount(entry) ? `${bulletCount(entry)} added` : '';
+    if (key === 'achievements')
+      return bulletCount(entry)
+        ? t('ariaStudio.pinnedEntry.addedCount', { n: bulletCount(entry) })
+        : '';
     return entry[key] || '';
   };
 
@@ -83,7 +89,7 @@ const PinnedEntryCard = ({
         className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
       >
         <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {copy.label}
+          {t(copy.labelKey)}
         </span>
         <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">
           {heading}
@@ -110,7 +116,7 @@ const PinnedEntryCard = ({
               return (
                 <div key={f.key} className="flex items-baseline gap-2 min-w-0">
                   <dt className="shrink-0 w-24 font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                    {f.label}
+                    {t(f.labelKey)}
                   </dt>
                   <dd
                     className={`min-w-0 flex-1 truncate text-[12.5px] ${
@@ -119,7 +125,11 @@ const PinnedEntryCard = ({
                         : 'italic text-slate-400 dark:text-slate-500'
                     }`}
                   >
-                    {f.done && value ? value : f.optional ? 'optional' : 'not yet'}
+                    {f.done && value
+                      ? value
+                      : f.optional
+                        ? t('ariaStudio.pinnedEntry.optional')
+                        : t('ariaStudio.pinnedEntry.notYet')}
                   </dd>
                 </div>
               );
@@ -146,10 +156,10 @@ const PinnedEntryCard = ({
               type="button"
               onClick={onNextRole}
               disabled={busy || done < total}
-              title={done < total ? 'Finish this role first' : undefined}
+              title={done < total ? t('ariaStudio.pinnedEntry.finishFirst') : undefined}
               className="btn-primary px-3.5 py-1.5 text-xs disabled:opacity-40"
             >
-              {busy === 'next' ? 'Saving…' : copy.next}
+              {busy === 'next' ? t('ariaStudio.pinnedEntry.saving') : t(copy.nextKey)}
             </button>
             <button
               type="button"
@@ -157,7 +167,7 @@ const PinnedEntryCard = ({
               disabled={busy}
               className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
-              {busy === 'done' ? 'Finishing…' : copy.done}
+              {busy === 'done' ? t('ariaStudio.pinnedEntry.finishing') : t(copy.doneKey)}
             </button>
             {onEdit && (
               <button
@@ -166,7 +176,7 @@ const PinnedEntryCard = ({
                 disabled={busy}
                 className="text-[11px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
               >
-                ✎ Edit
+                ✎ {t('ariaStudio.pinnedEntry.edit')}
               </button>
             )}
           </div>

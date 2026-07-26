@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
@@ -46,7 +47,6 @@ import { useTranslation } from 'react-i18next';
 import FitScoreCard from '../components/FitScoreCard';
 import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import NextBestAction from '../components/NextBestAction';
-import DashboardTour from '../components/dashboard/DashboardTour';
 import MetricCaptureModal from '../components/MetricCaptureModal';
 import {
   getPrepId,
@@ -832,7 +832,7 @@ const Dashboard = () => {
         )}
 
         {/* Create Options Modal */}
-        {showCreateOptions && (
+        {showCreateOptions && createPortal(
           /* Bottom-sheet on mobile, centered card on desktop. Compact
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
@@ -905,7 +905,8 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* My Recent CVs widget was removed — /my-cvs is now the canonical
@@ -1841,9 +1842,6 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-
-      {/* New User Tour */}
-      <DashboardTour />
 
       <MetricCaptureModal
         isOpen={metricCapture.isOpen}

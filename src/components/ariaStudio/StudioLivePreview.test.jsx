@@ -2,6 +2,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import i18n from '../../i18n';
 import StudioLivePreview from './StudioLivePreview';
 
 // The component reads its CV from the Studio context — drive it through a mutable stub so
@@ -14,6 +15,7 @@ vi.mock('../../context/AriaStudioContext', () => ({
 // framer-motion's useReducedMotion reads matchMedia; jsdom lacks it. Return "not reduced"
 // so the pulse effect is allowed to run.
 beforeEach(() => {
+  i18n.changeLanguage('en');
   vi.stubGlobal('matchMedia', (q) => ({
     matches: false,
     media: q,

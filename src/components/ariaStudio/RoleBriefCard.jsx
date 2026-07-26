@@ -1,15 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
 // Human-facing labels for the inferred company type (the enum lives in the backend
-// Role Brief). Same map the coach panel's "Aria's read" strip uses.
-const COMPANY_TYPE_LABELS = {
-  startup: 'Startup',
-  enterprise: 'Big company',
-  agency: 'Agency',
-  nonprofit: 'Nonprofit',
-  government: 'Public sector',
-  smb: 'Small business',
+// Role Brief). Same map the coach panel's "Aria's read" strip uses — reuse the SAME
+// i18n keys (cvBuilder.askAria.companyType.*) rather than duplicating the translations.
+const COMPANY_TYPE_KEYS = {
+  startup: 'cvBuilder.askAria.companyType.startup',
+  enterprise: 'cvBuilder.askAria.companyType.enterprise',
+  agency: 'cvBuilder.askAria.companyType.agency',
+  nonprofit: 'cvBuilder.askAria.companyType.nonprofit',
+  government: 'cvBuilder.askAria.companyType.government',
+  smb: 'cvBuilder.askAria.companyType.smb',
 };
 
 // Aria's read of the job — role · company · type · seniority, plus the must-have
@@ -20,17 +22,18 @@ const COMPANY_TYPE_LABELS = {
 // if the AI was unavailable — the card degrades to the job title and still lets the
 // flow continue, because the clone already exists at this point.
 const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
+  const { t } = useTranslation();
   const mustHaves = (brief?.mustHaves || [])
     .map((k) => (typeof k === 'string' ? k : k?.name))
     .filter(Boolean)
     .slice(0, 8);
 
-  const typeLabel = brief?.companyType ? COMPANY_TYPE_LABELS[brief.companyType] : null;
+  const typeLabel = brief?.companyType ? t(COMPANY_TYPE_KEYS[brief.companyType]) : null;
   const line = [
     brief?.role || jobTitle,
     brief?.company,
     typeLabel,
-    brief?.seniority && `${brief.seniority} level`,
+    brief?.seniority && t('ariaStudio.roleBrief.seniorityLevel', { seniority: brief.seniority }),
   ]
     .filter(Boolean)
     .join(' · ');
@@ -39,23 +42,22 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
     <AriaCard cardKey="brief">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-500 bg-white dark:bg-slate-900 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-500 dark:text-indigo-400">
-          Aria&rsquo;s read
+          {t('ariaStudio.roleBrief.ariasRead')}
         </p>
         <p className="mt-1.5 font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
-          {line || jobTitle || 'This role'}
+          {line || jobTitle || t('ariaStudio.roleBrief.thisRole')}
         </p>
 
         {brief?.yearsRequired ? (
           <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400">
-            Looking for around {brief.yearsRequired} year
-            {brief.yearsRequired === 1 ? '' : 's'} of experience.
+            {t('ariaStudio.roleBrief.lookingForYears', { count: brief.yearsRequired })}
           </p>
         ) : null}
 
         {mustHaves.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
             <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-2">
-              What it keeps asking for
+              {t('ariaStudio.roleBrief.keepsAskingFor')}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {mustHaves.map((k) => (
@@ -77,8 +79,7 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
 
         {!brief && (
           <p className="mt-3 text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            I couldn&rsquo;t fully read the job just now — we can still carry on, and I&rsquo;ll
-            re-read it when I start tailoring.
+            {t('ariaStudio.roleBrief.couldntFullyRead')}
           </p>
         )}
 
@@ -88,14 +89,14 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
             onClick={() => onEdit?.()}
             className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
           >
-            ✎ Edit
+            ✎ {t('ariaStudio.pinnedEntry.edit')}
           </button>
           <button
             type="button"
             onClick={() => onConfirm?.()}
             className="btn-primary px-5 py-2 text-sm"
           >
-            Looks right →
+            {t('ariaStudio.contactConfirm.looksRight')} →
           </button>
         </div>
       </div>
