@@ -77,6 +77,13 @@ const ATSCleanTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER - Matches HTML template exactly */}
       <header className="text-center mb-8">
+        {userProfile?.photoUrl && (
+          <img
+            src={userProfile.photoUrl}
+            alt=""
+            className="w-[72px] h-[72px] rounded-full object-cover mx-auto mb-3 border border-[#e5e5e5]"
+          />
+        )}
         <h1
           className="text-[24pt] font-bold mb-2 uppercase tracking-[-0.02em] text-[#1a1a1a]"
           style={{ color: 'var(--cv-accent, #1a1a1a)' }}

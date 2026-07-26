@@ -86,6 +86,15 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER */}
       <header className="border-b-2 border-[#e5e5e5] pb-6 mb-6">
+        {userProfile?.photoUrl && (
+          <div className="flex justify-center mb-3">
+            <img
+              src={userProfile.photoUrl}
+              alt=""
+              className="w-[72px] h-[72px] rounded-full object-cover border border-[#e5e5e5]"
+            />
+          </div>
+        )}
         <h1
           className="text-[28pt] font-bold uppercase tracking-tight text-[#111111] mb-2"
           style={{ color: 'var(--cv-accent, #111111)' }}

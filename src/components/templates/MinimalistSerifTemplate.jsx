@@ -82,6 +82,13 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER - Classic Book Style */}
       <header className="text-center mb-14 border-b-2 border-slate-100 pb-10">
+        {userProfile?.photoUrl && (
+          <img
+            src={userProfile.photoUrl}
+            alt=""
+            className="w-[72px] h-[72px] rounded-full object-cover mx-auto mb-4 border border-slate-100"
+          />
+        )}
         <h1
           className="text-4xl font-bold text-slate-900 mb-4 tracking-tight"
           style={{ color: 'var(--cv-accent, #0f172a)' }}

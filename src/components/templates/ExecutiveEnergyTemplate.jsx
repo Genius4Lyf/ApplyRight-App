@@ -50,6 +50,15 @@ const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
       >
         <div className="flex justify-between items-end">
           <div>
+            {userProfile?.photoUrl && (
+              <div className="flex justify-center mb-3">
+                <img
+                  src={userProfile.photoUrl}
+                  alt=""
+                  className="w-[72px] h-[72px] rounded-full object-cover border border-[#e9ecef]"
+                />
+              </div>
+            )}
             <h1
               className="text-4xl font-['Oswald',sans-serif] font-bold uppercase tracking-wide leading-none mb-2"
               style={{ color: 'var(--cv-accent, #003366)' }}

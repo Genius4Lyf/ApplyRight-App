@@ -72,6 +72,13 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
     >
       {/* HEADER - Matches HTML template exactly */}
       <header className="text-center mb-6">
+        {userProfile?.photoUrl && (
+          <img
+            src={userProfile.photoUrl}
+            alt=""
+            className="w-[72px] h-[72px] rounded-full object-cover mx-auto mb-3 border border-[#e5e5e5]"
+          />
+        )}
         <h1 className="text-[24pt] font-bold mb-3 tracking-tight uppercase">{name}</h1>
 
         {contactItems.length > 0 && (

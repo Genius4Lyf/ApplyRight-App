@@ -52,6 +52,9 @@ import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
 import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
 import TechGoogleTemplate from '../components/templates/TechGoogleTemplate';
 import ExecutiveEnergyTemplate from '../components/templates/ExecutiveEnergyTemplate';
+import ApplyRightNavyTemplate from '../components/templates/ApplyRightNavyTemplate';
+import ApplyRightMonoTemplate from '../components/templates/ApplyRightMonoTemplate';
+import ApplyRightBandTemplate from '../components/templates/ApplyRightBandTemplate';
 import EnergySLBTemplate from '../components/templates/EnergySLBTemplate';
 import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
@@ -91,6 +94,14 @@ import {
 // Watch-ad-for-credits is native-only; web has no ads. Downloads on web are
 // gated by the server-side paywall (DownloadPaywallModal), not an ad.
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
+// Templates whose sidebar is a full-height design element: the colored/ruled
+// column must reach the page bottom even when the CV is short. Keyed by
+// templateId; width/side must match the sidebar div in each template file.
+const SIDEBAR_FILL = {
+  'applyright-navy': { side: 'left', width: '34%', className: 'bg-[#1c2b3a]' },
+  'applyright-mono': { side: 'left', width: '32%', className: 'border-r border-slate-200' },
+};
 
 const ResumeReview = () => {
   const { id } = useParams();
@@ -249,7 +260,7 @@ const ResumeReview = () => {
   };
 
   const [scale, setScale] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth < 1024 ? computeFitScale() : 1
+    typeof window !== 'undefined' && window.innerWidth < 1024 ? computeFitScale() : 0.8
   );
 
   // Re-fit when the viewport changes — only update if the user hasn't manually
@@ -284,9 +295,14 @@ const ResumeReview = () => {
   // allocated height, so the bottom is unreachable. Measure the rendered
   // content's actual height and scale that.
   const previewContentRef = useRef(null);
+  // Separate from previewContentRef (#resume-content, which carries a forced
+  // minHeight: paperHeight for the "always looks like a full page" visual). This
+  // ref sits on an inner wrapper with no forced height, so its offsetHeight
+  // reflects the CV's true rendered content height for page-count purposes.
+  const templateContentRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(null);
   useLayoutEffect(() => {
-    const el = previewContentRef.current;
+    const el = templateContentRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
     let cancelled = false;
     const update = () => {
@@ -789,6 +805,7 @@ const ResumeReview = () => {
         // LinkedIn & Website (CV Builder uses 'linkedin'/'website', Profile uses 'linkedinUrl'/'portfolioUrl')
         linkedinUrl: draftInfo.linkedin || userProfile.linkedinUrl,
         portfolioUrl: draftInfo.website || userProfile.portfolioUrl,
+        photoUrl: draftInfo.photoUrl || userProfile.photoUrl,
 
         // Name splitting if needed (Profile uses first/last, Draft uses fullName)
         firstName: draftInfo.fullName ? draftInfo.fullName.split(' ')[0] : userProfile.firstName,
@@ -1523,7 +1540,7 @@ const ResumeReview = () => {
             style={{
               width: `calc(${paperWidth} * ${scale})`,
               height: contentHeight
-                ? `${contentHeight * scale}px`
+                ? `${Math.max(contentHeight, pageHeightPx) * scale}px`
                 : `calc(${paperHeight} * ${scale})`,
             }}
           >
@@ -1568,8 +1585,26 @@ const ResumeReview = () => {
               {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
               <ScreenshotCover show={screenshotObscured} />
 
+              {/* Full-page sidebar fill — out-of-flow (absolute), so it contributes
+                  nothing to templateContentRef's offsetHeight and can't affect the
+                  LengthCoach page-count measurement. The template's own sidebar
+                  paints over this in the content region; below the content, only
+                  this layer shows, reaching the page bottom. */}
+              {activeTab === 'resume' && SIDEBAR_FILL[templateId] && (
+                <div
+                  aria-hidden="true"
+                  className={`absolute inset-y-0 ${SIDEBAR_FILL[templateId].className}`}
+                  style={{
+                    [SIDEBAR_FILL[templateId].side]: 0,
+                    width: SIDEBAR_FILL[templateId].width,
+                    zIndex: 0,
+                  }}
+                />
+              )}
+
               {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 
+              <div ref={templateContentRef} style={{ position: 'relative', zIndex: 1 }}>
               {activeTab === 'resume' ? (
                 /* RESUME TEMPLATE RENDER */
                 templateId === 'modern' ? (
@@ -1692,6 +1727,21 @@ const ResumeReview = () => {
                     markdown={localizedCV}
                     userProfile={mergedUserProfile || userProfile}
                   />
+                ) : templateId === 'applyright-navy' ? (
+                  <ApplyRightNavyTemplate
+                    markdown={localizedCV}
+                    userProfile={mergedUserProfile || userProfile}
+                  />
+                ) : templateId === 'applyright-mono' ? (
+                  <ApplyRightMonoTemplate
+                    markdown={localizedCV}
+                    userProfile={mergedUserProfile || userProfile}
+                  />
+                ) : templateId === 'applyright-band' ? (
+                  <ApplyRightBandTemplate
+                    markdown={localizedCV}
+                    userProfile={mergedUserProfile || userProfile}
+                  />
                 ) : templateId === 'energy-slb' ? (
                   <EnergySLBTemplate
                     markdown={localizedCV}
@@ -1783,6 +1833,7 @@ const ResumeReview = () => {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>

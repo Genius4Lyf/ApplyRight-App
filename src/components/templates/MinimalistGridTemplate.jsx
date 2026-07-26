@@ -41,7 +41,7 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-white mx-auto min-h-[1000px] text-slate-800 flex"
+      className="bg-white mx-auto text-slate-800 flex"
       style={{
         lineHeight: 'var(--cv-leading, 1.25)',
         fontFamily: "var(--cv-font, 'Inter', sans-serif)",
@@ -50,6 +50,15 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
       {/* Header / Sidebar (Left 30%) */}
       <div className="w-[30%] bg-slate-50 p-8 border-r border-slate-200">
         <div className="sticky top-8">
+          {userProfile?.photoUrl && (
+            <div className="flex justify-center mb-4">
+              <img
+                src={userProfile.photoUrl}
+                alt=""
+                className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200"
+              />
+            </div>
+          )}
           <h1 className="text-2xl font-bold tracking-tighter text-slate-900 leading-tight mb-2">
             {name}
           </h1>

@@ -82,6 +82,15 @@ const ModernCleanTemplate = ({ markdown, userProfile }) => {
 
       {/* HEADER */}
       <header className="mb-8 pb-6">
+        {userProfile?.photoUrl && (
+          <div className="flex justify-center mb-3">
+            <img
+              src={userProfile.photoUrl}
+              alt=""
+              className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200"
+            />
+          </div>
+        )}
         <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight leading-none">
           {name}
         </h1>

@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCVBuilder } from '../../context/CVContext';
-import { ArrowRight, ArrowLeft, Plus, X, Globe, Linkedin, Flag, MapPin } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowLeft,
+  Plus,
+  X,
+  Globe,
+  Linkedin,
+  Flag,
+  MapPin,
+  Image as ImageIcon,
+} from 'lucide-react';
 import SectionTips from '../../components/SectionTips';
 import StepHeader from '../../components/cv/StepHeader';
 
@@ -20,6 +30,7 @@ const Heading = () => {
     website: false,
     nationality: false,
     address: false,
+    photo: false,
   });
 
   // Populate the form ONCE, from the saved draft plus (for still-empty fields)
@@ -57,6 +68,7 @@ const Heading = () => {
       website: !!mergedData.website,
       nationality: !!mergedData.nationality,
       address: !!mergedData.address,
+      photo: !!mergedData.photoUrl,
     });
   };
 
@@ -100,8 +112,41 @@ const Heading = () => {
     // (and can't be restored from the draft on the next load).
     if (!willShow) {
       setStepDirty?.(true);
+      // The photo's data key (photoUrl) doesn't match its visibility flag (photo).
+      if (field === 'photo') {
+        setFormData((prev) => ({ ...prev, photoUrl: '' }));
+        return;
+      }
       setFormData((prev) => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    setStepDirty?.(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const SIZE = 320;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+        let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        if (dataUrl.length > 220_000) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        }
+        setFormData((prev) => ({ ...prev, photoUrl: dataUrl }));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const onSubmit = (e) => {
@@ -228,6 +273,12 @@ const Heading = () => {
           {!visibleFields.nationality && (
             <button type="button" onClick={() => toggleField('nationality')} className="btn-chip">
               {t('cvBuilder.heading.nationality')} <Plus className="w-3 h-3 ml-1" />
+            </button>
+          )}
+
+          {!visibleFields.photo && (
+            <button type="button" onClick={() => toggleField('photo')} className="btn-chip">
+              {t('cvBuilder.heading.chipPhoto')} <Plus className="w-3 h-3 ml-1" />
             </button>
           )}
         </div>
@@ -360,6 +411,46 @@ const Heading = () => {
                   className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
+            </div>
+          )}
+
+          {visibleFields.photo && (
+            <div className="relative group md:col-span-2">
+              <div className="flex justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t('cvBuilder.heading.photoLabel')}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => toggleField('photo')}
+                  className="p-2 -m-1 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-500"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                {formData.photoUrl ? (
+                  <img
+                    src={formData.photoUrl}
+                    alt=""
+                    className="w-16 h-16 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                )}
+                <input
+                  id="heading-photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200"
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                {t('cvBuilder.heading.photoHint')}
+              </p>
             </div>
           )}
         </div>

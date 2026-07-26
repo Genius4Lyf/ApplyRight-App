@@ -44,6 +44,15 @@ const ExecutiveCorporateTemplate = ({ markdown, userProfile }) => {
       <header style={{ padding: 'var(--cv-margin, 1.5rem 3rem)' }}>
         <div className="flex justify-between items-start">
           <div>
+            {userProfile?.photoUrl && (
+              <div className="flex justify-center mb-3">
+                <img
+                  src={userProfile.photoUrl}
+                  alt=""
+                  className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200"
+                />
+              </div>
+            )}
             <h1
               className="text-4xl font-extrabold tracking-tighter text-slate-900 mb-2 uppercase"
               style={{

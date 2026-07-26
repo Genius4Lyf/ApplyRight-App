@@ -1,5 +1,32 @@
 export const TEMPLATES = [
   {
+    id: 'applyright-navy',
+    name: 'ApplyRight Navy',
+    group: 'Simple',
+    isPro: false,
+    cost: 0,
+    description: 'Bold navy sidebar with photo, contact and skills — a confident, structured one-pager.',
+    thumbnail: 'bg-[#1c2b3a] border-2 border-slate-300',
+  },
+  {
+    id: 'applyright-band',
+    name: 'ApplyRight Band',
+    group: 'Simple',
+    isPro: false,
+    cost: 0,
+    description: 'Full-width photo header with a slim right-hand column for skills, links and languages.',
+    thumbnail: 'bg-white border-2 border-slate-200 border-t-4 border-t-slate-800',
+  },
+  {
+    id: 'applyright-mono',
+    name: 'ApplyRight Mono',
+    group: 'Simple',
+    isPro: false,
+    cost: 0,
+    description: 'Understated black-and-white sidebar layout — same structure without the color, for conservative industries.',
+    thumbnail: 'bg-white border-2 border-slate-400',
+  },
+  {
     id: 'ats-clean',
     name: 'ATS Clean',
     group: 'Simple',

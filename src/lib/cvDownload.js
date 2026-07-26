@@ -67,11 +67,34 @@ export function buildDownloadFilename(userProfile, kind, ext) {
  * paid PDF never contains them.
  *
  * @param {HTMLElement} element the live preview node (#resume-content)
- * @param {{ paperWidth: string, paperHeight: string, paper: string, isDarkTemplate: boolean }} opts
+ * @param {{ paperWidth: string, paperHeight: string, paper: string, isDarkTemplate: boolean, templateId: string }} opts
  * @returns {string} a complete HTML document
  */
-export function buildPrintHtml(element, { paperWidth, paperHeight, paper, isDarkTemplate }) {
+export function buildPrintHtml(element, { paperWidth, paperHeight, paper, isDarkTemplate, templateId }) {
   const clone = element.cloneNode(true);
+  const sidebar = clone.querySelector('[data-cv-sidebar]');
+  if (sidebar) {
+    // Real browser mechanism (verified against actual rendered PDF output), not a
+    // measured/guessed height: position:fixed elements in Chrome's print engine are
+    // anchored to the page box and repeat on every page automatically, unlike normal
+    // flow content which only ever sizes to itself. Reads the width DIRECTLY off the
+    // sidebar's own existing Tailwind class (e.g. `w-[34%]`) so this never drifts out
+    // of sync with the template and needs no per-template registration.
+    const widthMatch = sidebar.className.match(/\bw-\[([^\]]+)\]/);
+    const sidebarWidth = widthMatch ? widthMatch[1] : null;
+    if (sidebarWidth) {
+      sidebar.style.position = 'fixed';
+      sidebar.style.top = '0';
+      sidebar.style.left = '0';
+      sidebar.style.bottom = '0';
+      sidebar.style.width = sidebarWidth;
+      // The sidebar no longer takes up space in flow once fixed, so its sibling (the
+      // main content column) needs the same inset pushed back in, or it would expand
+      // to the full page width and sit underneath the fixed sidebar.
+      const mainCol = sidebar.nextElementSibling;
+      if (mainCol) mainCol.style.marginLeft = sidebarWidth;
+    }
+  }
   // Strip the on-screen preview watermark + any screenshot-guard blur so the
   // paid PDF is always clean.
   clone.querySelectorAll('[data-preview-watermark]').forEach((el) => el.remove());
@@ -80,7 +103,7 @@ export function buildPrintHtml(element, { paperWidth, paperHeight, paper, isDark
   clone.style.transformOrigin = 'top left';
   clone.style.width = paperWidth;
   clone.style.minWidth = paperWidth;
-  clone.style.minHeight = paperHeight;
+  clone.style.minHeight = 'auto'; // strips the inherited page-floor from #resume-content
   clone.style.margin = '0 auto';
 
   const contentHtml = clone.outerHTML;
@@ -202,6 +225,7 @@ export async function downloadPdf({
       paperHeight,
       paper,
       isDarkTemplate: templateId === 'luxury-royal',
+      templateId,
     });
 
     // The visible margin is the template's own padding (in the cloned DOM), so keep
