@@ -92,11 +92,7 @@
           try {
             stored = localStorage.getItem('applyright-theme');
           } catch (e) {}
-          var dark =
-            stored === 'dark' ||
-            (stored !== 'light' &&
-              window.matchMedia &&
-              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var dark = stored !== 'light'; // default dark; explicit 'light' choice opts out
           if (dark) document.documentElement.classList.add('dark');
         } catch (e) {}
       })();

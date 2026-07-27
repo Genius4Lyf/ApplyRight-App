@@ -228,9 +228,13 @@ export async function downloadPdf({
       templateId,
     });
 
-    // The visible margin is the template's own padding (in the cloned DOM), so keep
-    // the Puppeteer page margin small + fixed — otherwise it adds a third border.
-    const pdfMargin = '10px';
+    // The ONLY margin now: the template's own internal padding, plus the 5mm
+    // thead/tfoot spacer in the print-container (structurally required — it's what
+    // gives page 2+ of a multi-page CV a top margin at all, since a block's own
+    // padding only applies once at the very start/end of the whole flowing document,
+    // not per page break). Puppeteer's own page margin is removed entirely so nothing
+    // stacks on top of that.
+    const pdfMargin = '0px';
     const blob = await CVService.generatePdf(
       fullHtml,
       { margin: { top: pdfMargin, right: pdfMargin, bottom: pdfMargin, left: pdfMargin } },

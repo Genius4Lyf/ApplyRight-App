@@ -1,33 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { THEME_STORAGE_KEY } from '../utils/theme';
 
 const ThemeContext = createContext(null);
 
-const prefersDark = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia &&
-  window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-// Resolve the initial theme: an explicit stored choice wins; otherwise we follow
-// the OS preference. The actual `.dark` class is applied per-route by RootLayout
+// Resolve the initial theme: an explicit stored choice wins; otherwise the app
+// defaults to dark. The actual `.dark` class is applied per-route by RootLayout
 // (see src/utils/theme.js) — this provider only owns the preference *value*.
 const getInitialTheme = () => {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // localStorage unavailable (private mode / SSR) — fall through to system.
+    // localStorage unavailable (private mode / SSR) — fall through to default.
   }
-  return prefersDark() ? 'dark' : 'light';
-};
-
-const hasStoredChoice = () => {
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === 'light' || stored === 'dark';
-  } catch {
-    return false;
-  }
+  return 'dark'; // app default — explicit user choice (via setTheme) overrides this
 };
 
 export const ThemeProvider = ({ children }) => {
@@ -46,20 +32,6 @@ export const ThemeProvider = ({ children }) => {
   const toggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   }, [theme, setTheme]);
-
-  // While the user has NOT made an explicit choice, track OS theme changes live.
-  // Once they pick a value, this listener stops mattering (we read the stored
-  // choice guard each time the event fires).
-  useEffect(() => {
-    if (!window.matchMedia) return undefined;
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (e) => {
-      if (hasStoredChoice()) return;
-      setThemeState(e.matches ? 'dark' : 'light');
-    };
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>

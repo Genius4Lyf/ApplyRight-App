@@ -124,8 +124,8 @@ export default function NoteCard({
           <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 truncate">
             {eyebrow}
           </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h3 className="font-heading text-[22px] font-bold text-slate-900 dark:text-slate-100 leading-snug">
+          <div className="mt-1 flex flex-nowrap items-center gap-2">
+            <h3 className="font-heading text-[22px] font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-1 min-w-0 flex-1">
               {title}
             </h3>
             {chip && (

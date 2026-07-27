@@ -8,7 +8,6 @@ import useInterstitial from '../hooks/useInterstitial';
 import {
   Download,
   Printer,
-  ChevronLeft,
   LayoutTemplate,
   Share2,
   Sparkles,
@@ -1197,8 +1196,8 @@ const ResumeReview = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-500/15 rounded-full flex items-center justify-center mx-auto mb-5">
-              <MessageSquare className="w-8 h-8 text-indigo-600 dark:text-indigo-300" />
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-5">
+              <MessageSquare className="w-8 h-8 text-slate-700 dark:text-slate-300" />
             </div>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -1215,7 +1214,7 @@ const ResumeReview = () => {
                   setShowFeedbackPrompt(false);
                   window.open('/feedback', '_blank');
                 }}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-all rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" />
                 Give Feedback
@@ -1235,17 +1234,7 @@ const ResumeReview = () => {
 
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
-        <div className="relative h-14 flex items-center justify-between gap-3 px-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
-          {/* LEFT: back to edit */}
-          <button
-            type="button"
-            onClick={() => navigate(isDraftMode ? '/dashboard' : '/history')}
-            className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shrink-0"
-          >
-            <ChevronLeft size={18} />
-            <span className="hidden sm:inline">Back to edit</span>
-          </button>
-
+        <div className="relative h-14 flex items-center justify-end gap-3 px-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
           {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-9rem)] lg:max-w-[calc(100%-26rem)]">
             {isDraftMode ? (
@@ -2323,8 +2312,10 @@ const ResumeReview = () => {
                           {groupName}
                         </h4>
                         <div className="grid grid-cols-2 gap-3">
-                          {groupTemplates.map((t) => {
+                          {groupTemplates.map((t, i) => {
                             const locked = !isUnlocked(t.id);
+                            const isDanglingLast =
+                              i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
                             return (
                               <div
                                 key={t.id}
@@ -2332,19 +2323,15 @@ const ResumeReview = () => {
                                   setTemplateId(t.id);
                                   setMobileSidebarOpen(false);
                                 }}
-                                className={`cursor-pointer rounded-lg border overflow-hidden transition-all ${
+                                className={`${isDanglingLast ? 'col-span-2' : ''} cursor-pointer rounded-lg border overflow-hidden transition-all ${
                                   templateId === t.id
                                     ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
                                     : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                                 }`}
                               >
                                 {/* Live mini-render of the actual CV in this style. */}
-                                <div className="relative flex justify-center overflow-hidden bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
-                                  <TemplatePreviewThumb
-                                    templateId={t.id}
-                                    markdown={localizedCV}
-                                    userProfile={mergedUserProfile || userProfile}
-                                  />
+                                <div className="relative flex justify-center overflow-hidden bg-white border-b border-slate-200 dark:border-slate-800">
+                                  <TemplatePreviewThumb templateId={t.id} width={110} />
                                   {/* Faint dim on locked styles. */}
                                   {locked && (
                                     <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
