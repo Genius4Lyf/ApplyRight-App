@@ -125,7 +125,7 @@ export const VoiceStyleSelector = ({
       {/* Challenge level — how hard the panel pushes. Only shown when wired up. */}
       {onChallengeChange && (
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
             {t('interviewPrep.setup.challengeLevel')}
           </p>
           <div className="flex flex-wrap gap-1.5">

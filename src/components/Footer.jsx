@@ -26,6 +26,7 @@ const COLUMNS = [
       { key: 'footer.atsGuide', to: '/ats-guide' },
       { key: 'footer.cvBuilderGuide', to: '/cv-builder-guide' },
       { key: 'footer.cvHealth', to: '/cv-health' },
+      { key: 'footer.cvTips', to: '/cv-tips' },
       { key: 'footer.howAtsWorks', to: '/how-ats-recruiters-work' },
       { key: 'footer.howToAce', to: '/how-to-ace-your-interview' },
     ],

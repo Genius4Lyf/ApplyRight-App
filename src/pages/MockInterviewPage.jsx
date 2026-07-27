@@ -1690,34 +1690,24 @@ const MockInterviewPage = () => {
   const interviewerPane = (
     <div className="space-y-3">
       {panelReady && (
-        <div>
-          <InterviewerPanel
-            panel={setupPanel}
-            locked={!isPaidTier}
-            loading={panelLoading}
-            heading={
-              isPaidTier
-                ? t('interviewPrep.mock.setupScreen.chooseInterviewer')
-                : t('interviewPrep.interviewerPanel.heading')
-            }
-            onSelect={isPaidTier ? setChosenSeatIndex : null}
-            selectedIndex={isPaidTier ? chosenSeatIndex : -1}
-            lockedIndices={isPaidTier ? lockedIndices : []}
-            scores={isPaidTier ? seatScores : {}}
-            // Free tier sees the panel blurred behind a lock, so render it
-            // compactly — the per-seat detail is hidden anyway.
-            compact={!isPaidTier}
-          />
-          <p className="mt-1.5 text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
-            {isPaidTier
-              ? setupPanel[chosenSeatIndex]?.description ||
-                t('interviewPrep.mock.setupScreen.seatDescFallback')
-              : t('interviewPrep.mock.setupScreen.freePanelNote')}
-          </p>
-        </div>
+        <InterviewerPanel
+          panel={setupPanel}
+          locked={!isPaidTier}
+          loading={panelLoading}
+          heading={
+            isPaidTier
+              ? t('interviewPrep.mock.setupScreen.chooseInterviewer')
+              : t('interviewPrep.interviewerPanel.heading')
+          }
+          onSelect={isPaidTier ? setChosenSeatIndex : null}
+          selectedIndex={isPaidTier ? chosenSeatIndex : -1}
+          lockedIndices={isPaidTier ? lockedIndices : []}
+          scores={isPaidTier ? seatScores : {}}
+          // Free tier sees the panel blurred behind a lock, so render it
+          // compactly — the per-seat detail is hidden anyway.
+          compact={!isPaidTier}
+        />
       )}
-
-      {panelReady && <hr className="border-slate-100 dark:border-slate-800/80" />}
 
       <VoiceStyleSelector
         voice={voice}
@@ -1733,6 +1723,15 @@ const MockInterviewPage = () => {
         challenge={challenge}
         onChallengeChange={chooseChallenge}
       />
+
+      {panelReady && (
+        <p className="text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+          {isPaidTier
+            ? setupPanel[chosenSeatIndex]?.description ||
+              t('interviewPrep.mock.setupScreen.seatDescFallback')
+            : t('interviewPrep.mock.setupScreen.freePanelNote')}
+        </p>
+      )}
     </div>
   );
 
@@ -1914,9 +1913,7 @@ const MockInterviewPage = () => {
               {mode === 'conversational' ? (
                 <PreflightSteps
                   steps={preflightSteps}
-                  // Someone who has interviewed here before lands on Start;
-                  // steps 1 and 2 are one click away on the rail or a dot.
-                  initialStep={lastSession ? 2 : 0}
+                  initialStep={0}
                   onFinish={handleStartClick}
                   onCancel={() => setPhase('choose')}
                   finishLabel={t('interviewPrep.preflight.startInterview')}

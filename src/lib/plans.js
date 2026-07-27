@@ -183,6 +183,10 @@ export const AGENT_TIERS = [
 export const TOPUPS = [
   { id: 'topup_5', label: '5 min top-up', priceNgn: 1000, priceUsd: 1.5, minutes: 5 },
   { id: 'topup_15', label: '15 min top-up', priceNgn: 2500, priceUsd: 3.5, minutes: 15 },
+  { id: 'topup_30', label: '30 min top-up', priceNgn: 4500, priceUsd: 6, minutes: 30 },
+  { id: 'topup_60', label: '1 hr top-up', priceNgn: 8000, priceUsd: 10, minutes: 60 },
+  { id: 'topup_120', label: '2 hr top-up', priceNgn: 15000, priceUsd: 19, minutes: 120 },
+  { id: 'topup_300', label: '5 hr top-up', priceNgn: 34000, priceUsd: 42, minutes: 300, best: true },
 ];
 
 // Credit packs — buyable any time; added to the persistent wallet (never reset).
@@ -195,3 +199,15 @@ export const CREDIT_PACKS = [
 export const formatNgn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 export const formatUsd = (n) =>
   `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+
+// Friendly duration label for a top-up card — plain minutes under an hour,
+// "hr"/"hrs" at and above it. Takes `t` so it's a translated string like every
+// other user-facing label in this file (see the i18n note at the top of the file).
+export const formatMinutesLabel = (minutes, t) => {
+  if (minutes < 60) return { value: minutes, unit: t('billing.upgrade.minUnit') };
+  const hrs = minutes / 60;
+  return {
+    value: hrs,
+    unit: t(hrs === 1 ? 'billing.upgrade.hourUnit' : 'billing.upgrade.hoursUnit'),
+  };
+};

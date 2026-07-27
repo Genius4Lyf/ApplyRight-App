@@ -93,9 +93,7 @@ const BillingReturn = () => {
         setEntitlement(result.entitlement);
         setState('success');
         toast.success(
-          isDownloadReturn
-            ? t('billing.return.toastDownload')
-            : t('billing.return.toastPlan')
+          isDownloadReturn ? t('billing.return.toastDownload') : t('billing.return.toastPlan')
         );
         setTimeout(goToSuccess, isDownloadReturn ? 1400 : 2200);
       } else {
@@ -147,7 +145,7 @@ const BillingReturn = () => {
             </p>
             <button
               onClick={goToSuccess}
-              className="mt-6 w-full py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+              className="mt-6 w-full py-3 rounded-xl font-bold bg-slate-900 dark:bg-white dark:text-slate-900 text-white hover:opacity-90 transition-colors"
             >
               {isDownloadReturn
                 ? t('billing.return.ctaDownload')
@@ -171,7 +169,9 @@ const BillingReturn = () => {
               onClick={() => {
                 try {
                   localStorage.removeItem('arCheckoutOrigin');
-                } catch { /* non-fatal */ }
+                } catch {
+                  /* non-fatal */
+                }
                 navigate(failedReturnTo || '/upgrade');
               }}
               className="mt-6 w-full py-3 rounded-xl font-bold bg-slate-900 dark:bg-white dark:text-slate-900 text-white hover:opacity-90 transition-colors"

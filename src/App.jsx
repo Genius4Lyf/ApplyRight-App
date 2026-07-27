@@ -60,6 +60,7 @@ import Pricing from './pages/Pricing';
 import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
 import CVBuilderGuide from './pages/CVBuilderGuide';
 import CVHealth from './pages/CVHealth';
+import CVTips from './pages/CVTips';
 import HowToAceYourInterview from './pages/HowToAceYourInterview';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
@@ -319,6 +320,10 @@ const router = createBrowserRouter([
       {
         path: '/cv-health',
         element: <CVHealth />,
+      },
+      {
+        path: '/cv-tips',
+        element: <CVTips />,
       },
       {
         path: '/how-to-ace-your-interview',

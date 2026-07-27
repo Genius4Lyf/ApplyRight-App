@@ -6,7 +6,7 @@ import { Zap, Share2, X, Check, Play, ArrowRight, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
-import { TOPUPS, FREE_TASTE_MIN, formatNgn } from '../lib/plans';
+import { TOPUPS, FREE_TASTE_MIN, formatNgn, formatMinutesLabel } from '../lib/plans';
 import AdPlayer from '../components/AdPlayer';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import PaymentTrustModal from '../components/PaymentTrustModal';
@@ -371,10 +371,11 @@ const CreditStore = () => {
           {isPaid ? (
             <div className="grid sm:grid-cols-2 gap-4">
               {TOPUPS.map((p) => {
-                const best = p.id === 'topup_15';
+                const best = !!p.best;
                 const perMin = t('billing.upgrade.perMinNgn', {
                   n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
                 });
+                const { value, unit } = formatMinutesLabel(p.minutes, t);
                 return (
                   <button
                     key={p.id}
@@ -394,10 +395,8 @@ const CreditStore = () => {
                     )}
                     <div>
                       <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                        {p.minutes}{' '}
-                        <span className="text-base font-semibold">
-                          {t('billing.upgrade.minUnit')}
-                        </span>
+                        {value}{' '}
+                        <span className="text-base font-semibold">{unit}</span>
                       </p>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{perMin}</p>
                     </div>
