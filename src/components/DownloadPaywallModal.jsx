@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AriaLoader from './ui/AriaLoader';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Download, Crown, X, FileCheck2, ScanLine, Sparkles } from 'lucide-react';
+import { Download, Crown, X, FileCheck2, ScanLine, Sparkles, ShieldCheck } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
 
@@ -27,6 +27,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
       try {
         localStorage.setItem('arPostCheckout', window.location.pathname);
         localStorage.setItem('arCheckoutIntent', 'download');
+        localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       } catch {
         /* non-fatal — falls back to the dashboard */
       }
@@ -51,7 +52,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-300 mb-4">
+        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 mb-4">
           <Download className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
@@ -64,21 +65,21 @@ const DownloadPaywallModal = ({ open, onClose }) => {
 
         <ul className="space-y-2 mb-5">
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <ScanLine className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <ScanLine className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
               <span className="font-semibold">ATS-readable</span> — real selectable text the hiring
               software can actually parse (screenshots get auto-rejected).
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <FileCheck2 className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
               <span className="font-semibold">Pixel-perfect</span> — exact template formatting,
               crisp at any size, no cut-offs or fuzzy print.
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
+            <Sparkles className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
               <span className="font-semibold">Send-ready in one tap</span> — no retyping into
               another tool, no AI rebuild. Done in seconds.
@@ -89,7 +90,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
         <button
           onClick={buySingle}
           disabled={loading}
-          className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+          className="w-full py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {loading ? (
             <AriaLoader inline tone="mono" size={16} label="Starting checkout…" />
@@ -107,9 +108,17 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           <Crown className="w-5 h-5 text-amber-500" /> Go unlimited — see plans
         </button>
 
-        <p className="text-center text-[11px] text-slate-400 mt-4">
-          One-time payment via Flutterwave. After paying you’ll return here to download.
-        </p>
+        <div className="flex items-start gap-2 mt-4 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+          <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>
+            Paid securely via Flutterwave. You may see "Daniel Udofia" (ApplyRight's founder) as the
+            recipient on your bank statement or SMS — that's expected, and you'll get your download
+            exactly as paid for. Questions?{' '}
+            <a href="mailto:careers@applyright.com.ng" className="underline hover:no-underline">
+              careers@applyright.com.ng
+            </a>
+          </span>
+        </div>
       </div>
     </div>,
     document.body

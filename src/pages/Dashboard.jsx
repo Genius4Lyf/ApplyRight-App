@@ -25,7 +25,6 @@ import {
   Trash2,
   Eye,
   X,
-  Zap,
   PlayCircle,
   Mail,
   MessageSquare,
@@ -832,82 +831,83 @@ const Dashboard = () => {
         )}
 
         {/* Create Options Modal */}
-        {showCreateOptions && createPortal(
-          /* Bottom-sheet on mobile, centered card on desktop. Compact
+        {showCreateOptions &&
+          createPortal(
+            /* Bottom-sheet on mobile, centered card on desktop. Compact
              horizontal-row options on mobile (icon left, content right);
              stacked grid on desktop. */
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[env(safe-area-inset-bottom)] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => setShowCreateOptions(false)}
-                aria-label={t('common.close')}
-                className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-10"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
-                <h3 className="font-heading text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
-                  {t('dashboard.createModal.title')}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-center">
-                  {t('dashboard.createModal.subtitle')}
-                </p>
-              </div>
-
-              <div className="px-5 pb-5 sm:px-8 sm:pb-8 flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-6">
-                {/* Start from Scratch */}
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 pb-[env(safe-area-inset-bottom)] sm:p-4 sm:pb-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
                 <button
                   type="button"
-                  onClick={() => navigate('/cv-builder/new')}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
+                  onClick={() => setShowCreateOptions(false)}
+                  aria-label={t('common.close')}
+                  className="absolute top-3 right-3 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors z-10"
                 >
-                  <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
-                      {t('dashboard.createModal.scratchTitle')}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug">
-                      {t('dashboard.createModal.scratchBody')}
-                    </p>
-                  </div>
+                  <X className="w-4 h-4" />
                 </button>
 
-                {/* Upload Existing */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateOptions(false);
-                    setResume(null);
-                    setJob(null);
-                    setFitResult(null);
-                    setApplication(null);
-                    setWorkflowMode('create-upload');
-                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-                  }}
-                  className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
-                >
-                  <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
-                      <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
-                        {t('dashboard.createModal.uploadTitle')}
+                <div className="px-5 pt-7 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
+                  <h3 className="font-heading text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 sm:text-center">
+                    {t('dashboard.createModal.title')}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-center">
+                    {t('dashboard.createModal.subtitle')}
+                  </p>
+                </div>
+
+                <div className="px-5 pb-5 sm:px-8 sm:pb-8 flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-6">
+                  {/* Start from Scratch */}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/cv-builder/new')}
+                    className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
+                  >
+                    <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-2">
+                        {t('dashboard.createModal.scratchTitle')}
                       </h4>
-                      <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] uppercase tracking-[0.1em] rounded shrink-0">
-                        15 cr
-                      </span>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug">
+                        {t('dashboard.createModal.scratchBody')}
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug sm:mt-1">
-                      {t('dashboard.createModal.uploadBody')}
-                    </p>
-                  </div>
-                </button>
+                  </button>
+
+                  {/* Upload Existing */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateOptions(false);
+                      setResume(null);
+                      setJob(null);
+                      setFitResult(null);
+                      setApplication(null);
+                      setWorkflowMode('create-upload');
+                      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                    }}
+                    className="flex sm:flex-col items-center sm:items-center text-left sm:text-center gap-3 sm:gap-0 p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl transition-colors"
+                  >
+                    <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 sm:mb-3" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:items-center">
+                        <h4 className="font-heading font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base sm:mb-1">
+                          {t('dashboard.createModal.uploadTitle')}
+                        </h4>
+                        <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] uppercase tracking-[0.1em] rounded shrink-0">
+                          15 cr
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-snug sm:mt-1">
+                        {t('dashboard.createModal.uploadBody')}
+                      </p>
+                    </div>
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          )}
 
         {/* My Recent CVs widget was removed — /my-cvs is now the canonical
             home for CV listings (linked from the Navbar and mobile bottom
@@ -1797,8 +1797,8 @@ const Dashboard = () => {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-500/10 border border-amber-100/50 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center mx-auto mb-5">
-              <Zap className="w-5 h-5" />
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-5">
+              <AriaOrbit size={20} />
             </div>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 font-heading">
@@ -1821,7 +1821,7 @@ const Dashboard = () => {
                 onClick={() => navigate('/credits')}
                 className="w-full btn-primary py-3 rounded-xl text-sm gap-2"
               >
-                <Zap className="w-4 h-4" /> Get More A.I Credits
+                <AriaOrbit size={16} tone="mono" /> Get More A.I Credits
               </button>
 
               <div className="relative flex py-2 items-center">

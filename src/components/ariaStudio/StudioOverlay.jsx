@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
@@ -78,7 +79,7 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
 
   const isLeft = side === 'left';
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <div
@@ -100,7 +101,7 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
             tabIndex={-1}
             className={
               isLeft
-                ? 'absolute inset-y-0 left-0 w-[82vw] max-w-[300px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col'
+                ? 'absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col'
                 : 'absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]'
             }
             initial={reduce ? { opacity: 0 } : isLeft ? { x: '-100%' } : { y: '100%' }}
@@ -119,7 +120,8 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

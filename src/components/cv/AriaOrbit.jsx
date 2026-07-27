@@ -4,17 +4,18 @@ import React from 'react';
 // ring (she's drafting). Reuses the .aria-orbit keyframe from the focus bar; scaling
 // keeps the same three spans crisp at any size.
 //
-// `tone`: 'aria' (default) is indigo — Aria's colour. 'mono' inherits currentColor,
-// for placements where indigo can't be read: inside ink buttons, indigo-500 on a
-// slate-900 fill is nearly invisible. Colour lives here (not in a CSS override)
-// because these are Tailwind utilities and the .aria-* rules sit in @layer
-// components, which utilities would win against regardless of specificity.
+// `tone`: 'aria' (default) is ink — black in light mode, white in dark mode.
+// 'mono' inherits currentColor instead, for placements where a flat ink dot
+// can't be read against its own background: inside a slate-900 button in
+// light mode, default-tone black-on-near-black is nearly invisible, so those
+// spots use mono to pick up the button's own (already-contrasting) text
+// colour. Colour lives here (not in a CSS override) because these are
+// Tailwind utilities and the .aria-* rules sit in @layer components, which
+// utilities would win against regardless of specificity.
 export default function AriaOrbit({ size = 20, working = false, tone = 'aria', className = '' }) {
   const mono = tone === 'mono';
-  const ringTone = mono
-    ? 'border-current opacity-30'
-    : 'border-indigo-400/30 dark:border-indigo-400/25';
-  const dotTone = mono ? 'bg-current' : 'bg-indigo-500 dark:bg-indigo-400';
+  const ringTone = mono ? 'border-current opacity-30' : 'border-slate-900/30 dark:border-white/25';
+  const dotTone = mono ? 'bg-current' : 'bg-slate-900 dark:bg-white';
   const inner = (
     <span
       className={`relative grid place-items-center ${working ? 'aria-orbit-work' : ''}`}

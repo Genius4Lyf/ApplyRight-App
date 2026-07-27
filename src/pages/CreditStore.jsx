@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Share2, X, Check, Play, Crown, ArrowRight, Sparkles } from 'lucide-react';
+import { Zap, Share2, X, Check, Play, ArrowRight, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
-import { TIERS, formatNgn } from '../lib/plans';
+import { TOPUPS, FREE_TASTE_MIN, formatNgn } from '../lib/plans';
 import AdPlayer from '../components/AdPlayer';
+import AriaOrbit from '../components/cv/AriaOrbit';
+import PaymentTrustModal from '../components/PaymentTrustModal';
+import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
@@ -16,7 +19,7 @@ const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatf
 const SectionHeading = ({ eyebrow, title, subtitle }) => (
   <div className="mb-5">
     {eyebrow && (
-      <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
+      <p className="text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
         {eyebrow}
       </p>
     )}
@@ -46,6 +49,8 @@ const CreditStore = () => {
   const [config, setConfig] = useState(null); // Store system config
   const [entitlement, setEntitlement] = useState(null); // subscription tier + live minutes
   const [buyingPack, setBuyingPack] = useState(null); // catalog id mid-checkout
+  const [showTrustModal, setShowTrustModal] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState(null);
 
   // Buyable credit packs (must match the backend catalog ids/amounts).
   const CREDIT_PACKS = [
@@ -54,9 +59,10 @@ const CreditStore = () => {
   ];
 
   // Start a Flutterwave checkout for a credit pack and redirect to the hosted link.
-  const buyCredits = async (planId) => {
+  const proceedToCheckout = async (planId) => {
     try {
       setBuyingPack(planId);
+      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       const { link } = await billingService.checkout(planId, 'NGN');
       if (link) window.location.href = link;
       else setBuyingPack(null);
@@ -64,6 +70,23 @@ const CreditStore = () => {
       setBuyingPack(null);
       alert(error.response?.data?.message || t('billing.common.checkoutFailed'));
     }
+  };
+
+  const buyCredits = (planId) => {
+    if (!hasSeenPaymentNotice()) {
+      setPendingPlanId(planId);
+      setShowTrustModal(true);
+      return;
+    }
+    proceedToCheckout(planId);
+  };
+
+  const confirmTrustModal = () => {
+    markPaymentNoticeSeen();
+    setShowTrustModal(false);
+    const planId = pendingPlanId;
+    setPendingPlanId(null);
+    if (planId) proceedToCheckout(planId);
   };
 
   React.useEffect(() => {
@@ -204,8 +227,8 @@ const CreditStore = () => {
       <div className="max-w-5xl mx-auto space-y-12 relative z-10">
         {/* Header */}
         <div className="text-center space-y-3 pt-14 sm:pt-2">
-          <div className="inline-flex items-center justify-center p-3 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-2xl">
-            <Zap className="w-7 h-7 fill-indigo-600 dark:fill-indigo-300" />
+          <div className="inline-flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+            <AriaOrbit size={28} />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             {t('billing.creditStore.title')}
@@ -219,18 +242,48 @@ const CreditStore = () => {
             Anchors the page: how many credits you have + your current plan
             and live-interview minutes, all in one glance. */}
         {entitlement && (
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-700 p-6 sm:p-8 text-white shadow-xl">
-            <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="rounded-3xl bg-slate-900 p-6 sm:p-8 text-white shadow-xl">
+            {/* Top row: plan badge + manage/upgrade action, now separate from the stats */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold backdrop-blur">
+                {isPaid ? (
+                  <>
+                    <AriaOrbit size={16} tone="mono" />
+                    <span className="capitalize">
+                      {t('billing.creditStore.planLabel', {
+                        plan: entitlement.planId || entitlement.tier,
+                      })}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <AriaOrbit size={16} tone="mono" />
+                    <span>{t('nav.account.freePlan')}</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => navigate('/upgrade')}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                {isPaid
+                  ? t('billing.creditStore.managePlan')
+                  : t('billing.creditStore.seeAllPlans')}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Two equal-weight stats: credits and interview minutes */}
+            <div className="grid grid-cols-2 gap-6 sm:gap-10">
               <div>
-                <p className="text-xs uppercase tracking-wider font-bold text-indigo-200">
+                <p className="text-xs uppercase tracking-wider font-bold text-slate-400">
                   {t('billing.creditStore.yourCredits')}
                 </p>
-                <p className="font-heading text-5xl font-black leading-tight tabular-nums mt-1">
+                <p className="font-heading text-4xl sm:text-5xl font-black leading-tight tabular-nums mt-1">
                   {availableCredits}
                 </p>
                 {isPaid && (entitlement.planCredits ?? 0) >= 0 && (
-                  <p className="text-sm text-indigo-100/80 mt-1">
+                  <p className="text-sm text-slate-400 mt-1">
                     {t('billing.creditStore.fromPlanWallet', {
                       plan: entitlement.planCredits ?? 0,
                       wallet: entitlement.walletCredits ?? 0,
@@ -239,150 +292,28 @@ const CreditStore = () => {
                 )}
               </div>
 
-              {/* Plan + minutes status */}
-              <div className="sm:text-right">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold backdrop-blur">
-                  {isPaid ? (
-                    <>
-                      <Crown className="w-4 h-4 text-amber-300" />
-                      <span className="capitalize">
-                        {t('billing.creditStore.planLabel', {
-                          plan: entitlement.planId || entitlement.tier,
-                        })}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>{t('nav.account.freePlan')}</span>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-indigo-100/90 mt-2">
-                  {isPaid
-                    ? t('billing.creditStore.minutesLeftPaid', { n: entitlement.minutesRemaining })
-                    : t('billing.creditStore.minutesLeftFree', {
-                        n: Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60),
-                      })}
-                  {isPaid && entitlement.expiresAt
-                    ? ` ${t('billing.creditStore.untilDate', {
-                        date: new Date(entitlement.expiresAt).toLocaleDateString(),
-                      })}`
-                    : ''}
+              <div>
+                <p className="text-xs uppercase tracking-wider font-bold text-slate-400">
+                  {t('billing.creditStore.minutesEyebrow')}
                 </p>
-                <button
-                  onClick={() => navigate('/upgrade')}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition-colors"
-                >
-                  {isPaid ? t('billing.creditStore.managePlan') : t('billing.creditStore.seeAllPlans')}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <p className="font-heading text-4xl sm:text-5xl font-black leading-tight tabular-nums mt-1">
+                  {isPaid
+                    ? entitlement.minutesRemaining
+                    : Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)}
+                </p>
+                <p className="text-sm text-slate-400 mt-1">
+                  {isPaid && entitlement.expiresAt
+                    ? t('billing.creditStore.untilDate', {
+                        date: new Date(entitlement.expiresAt).toLocaleDateString(),
+                      })
+                    : !isPaid
+                      ? t('billing.creditStore.freeTasteLabel')
+                      : ''}
+                </p>
               </div>
             </div>
           </div>
         )}
-
-        {/* ══ ZONE 1 — Earn free credits ══════════════════════════════ */}
-        <section>
-          <SectionHeading
-            eyebrow={t('billing.creditStore.earnEyebrow')}
-            title={t('billing.creditStore.earnTitle')}
-            subtitle={t('billing.creditStore.earnSubtitle')}
-          />
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Watch ad — NATIVE ANDROID ONLY. Web has no ads; the earn-credits
-                surface on web is "Invite friends" + the paid top-up zones below. */}
-            {isAndroidNative() && (
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 dark:bg-indigo-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
-                <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
-                  <div className="flex items-start justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-md">
-                      <Play className="w-6 h-6 ml-0.5 fill-white" />
-                    </div>
-                    {adStats.streak > 0 && (
-                      <div className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                        🔥 {t('billing.creditStore.streakDays', { n: adStats.streak })}
-                      </div>
-                    )}
-                  </div>
-
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
-                    {t('billing.creditStore.watchTitle')}
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400 mt-1">
-                    <Trans
-                      i18nKey="billing.creditStore.watchBody"
-                      values={{ n: platformReward }}
-                      components={{
-                        b: <span className="font-bold text-indigo-600 dark:text-indigo-300" />,
-                      }}
-                    />
-                  </p>
-
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-green-500" />{' '}
-                      {t('billing.creditStore.instantReward')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-green-500" />{' '}
-                      {t('billing.creditStore.unlimitedDaily')}
-                    </span>
-                  </div>
-
-                  <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
-                    <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white font-bold hover:opacity-95 transition-opacity shadow-md">
-                      <Zap className="w-5 h-5 fill-white" />
-                      {t('billing.creditStore.watchCta', { n: platformReward })}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Invite friends */}
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50 dark:bg-blue-500/15 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
-              <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-300">
-                  <Share2 className="w-6 h-6" />
-                </div>
-
-                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
-                  {t('billing.creditStore.inviteTitle')}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
-                  <Trans
-                    i18nKey="billing.creditStore.inviteBody"
-                    values={{ n: referralBonus }}
-                    components={{
-                      b: <span className="font-bold text-blue-600 dark:text-blue-300" />,
-                    }}
-                  />
-                </p>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" />{' '}
-                    {t('billing.creditStore.noLimitInvites')}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-green-500" />{' '}
-                    {t('billing.creditStore.creditsNeverExpire')}
-                  </span>
-                </div>
-
-                <button onClick={() => setShowInviteModal(true)} className="mt-auto pt-6 w-full">
-                  <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                    <Share2 className="w-5 h-5" />
-                    {t('billing.creditStore.getInviteLink')}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ══ ZONE 2 — Top up instantly ═══════════════════════════════ */}
         <section>
@@ -400,12 +331,12 @@ const CreditStore = () => {
                 disabled={!!buyingPack}
                 className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
                   p.best
-                    ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
+                    ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800/50'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600'
                 }`}
               >
                 {p.best && (
-                  <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute -top-2.5 left-5 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
                     {t('billing.common.bestValue')}
                   </span>
                 )}
@@ -420,92 +351,219 @@ const CreditStore = () => {
                     {t('billing.creditStore.perCreditNgn', { n: (p.ngn / p.credits).toFixed(1) })}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
-                  {buyingPack === p.id ? t('billing.common.starting') : `₦${p.ngn.toLocaleString()}`}
+                <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
+                  {buyingPack === p.id
+                    ? t('billing.common.starting')
+                    : `₦${p.ngn.toLocaleString()}`}
                 </div>
               </button>
             ))}
           </div>
         </section>
 
-        {/* ══ ZONE 3 — Go unlimited (subscriptions) ═══════════════════ */}
+        {/* ══ ZONE 2b — Top up interview minutes ═══════════════════════ */}
         <section>
           <SectionHeading
-            eyebrow={t('billing.creditStore.goUnlimitedEyebrow')}
-            title={t('billing.creditStore.goUnlimitedTitle')}
-            subtitle={t('billing.creditStore.goUnlimitedSubtitle')}
+            eyebrow={t('billing.upgrade.minutesEyebrow')}
+            title={t('billing.upgrade.outOfMinutesTitle')}
+            subtitle={t('billing.upgrade.minutesSubtitle')}
           />
-          <div className="grid md:grid-cols-3 gap-4">
-            {TIERS.map((tier) => {
-              const featured = tier.featuredFor === 'NGN' || tier.highlight;
-              return (
-                <div
-                  key={tier.id}
-                  className={`relative flex flex-col rounded-2xl border p-6 transition-shadow hover:shadow-md ${
-                    featured
-                      ? 'border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-900 ring-1 ring-indigo-200 dark:ring-indigo-500/30'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
-                  }`}
-                >
-                  {tier.badgeKey && (
-                    <span className="absolute -top-2.5 left-6 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                      {t(tier.badgeKey)}
-                    </span>
-                  )}
-                  <p className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                    {t(tier.labelKey)}
-                  </p>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
-                      {formatNgn(tier.priceNgn)}
-                    </span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
-                      / {t(tier.periodKey)}
-                    </span>
+          {isPaid ? (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {TOPUPS.map((p) => {
+                const best = p.id === 'topup_15';
+                const perMin = t('billing.upgrade.perMinNgn', {
+                  n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
+                });
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => buyCredits(p.id)}
+                    disabled={!!buyingPack}
+                    className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
+                      best
+                        ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800/50'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600'
+                    }`}
+                  >
+                    {best && (
+                      <span className="absolute -top-2.5 left-5 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                        {t('billing.common.bestValue')}
+                      </span>
+                    )}
+                    <div>
+                      <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                        {p.minutes}{' '}
+                        <span className="text-base font-semibold">
+                          {t('billing.upgrade.minUnit')}
+                        </span>
+                      </p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{perMin}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
+                      {buyingPack === p.id ? t('billing.common.starting') : formatNgn(p.priceNgn)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center gap-5">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                <Lock className="w-6 h-6 text-slate-900 dark:text-slate-100" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  {t('billing.creditStore.topUpMinutesLockedTitle')}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  {t('billing.creditStore.topUpMinutesLockedBody', { n: FREE_TASTE_MIN })}
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/upgrade')}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
+              >
+                {t('billing.creditStore.topUpMinutesLockedCta')}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </section>
+
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500 max-w-lg mx-auto leading-relaxed">
+          <Trans
+            i18nKey="billing.common.paymentTrustNote"
+            components={{
+              mail: (
+                <a
+                  href="mailto:careers@applyright.com.ng"
+                  className="underline hover:no-underline"
+                />
+              ),
+            }}
+          />
+        </p>
+
+        {/* ══ ZONE 1 — Earn free credits ══════════════════════════════ */}
+        <section>
+          <SectionHeading
+            eyebrow={t('billing.creditStore.earnEyebrow')}
+            title={t('billing.creditStore.earnTitle')}
+            subtitle={t('billing.creditStore.earnSubtitle')}
+          />
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Watch ad — NATIVE ANDROID ONLY. Web has no ads; the earn-credits
+                surface on web is "Invite friends" + the paid top-up zones below. */}
+            {isAndroidNative() && (
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 dark:bg-slate-800/40 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
+                <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
+                  <div className="flex items-start justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-md">
+                      <Play className="w-6 h-6 ml-0.5 fill-white" />
+                    </div>
+                    {adStats.streak > 0 && (
+                      <div className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        🔥 {t('billing.creditStore.streakDays', { n: adStats.streak })}
+                      </div>
+                    )}
                   </div>
-                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
+                    {t('billing.creditStore.watchTitle')}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">
                     <Trans
-                      i18nKey="billing.creditStore.creditsPlusMinutes"
-                      values={{ credits: tier.credits.toLocaleString(), minutes: tier.minutes }}
+                      i18nKey="billing.creditStore.watchBody"
+                      values={{ n: platformReward }}
                       components={{
-                        b: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
+                        b: <span className="font-bold text-slate-900 dark:text-slate-100" />,
                       }}
                     />
                   </p>
-                  <button
-                    onClick={() => navigate('/upgrade')}
-                    className="mt-auto pt-6 w-full text-sm font-bold"
-                  >
-                    <span
-                      className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl transition-colors ${
-                        featured
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-                          : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {t('billing.common.choosePlan', { plan: t(tier.labelKey) })}
-                      <ArrowRight className="w-4 h-4" />
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-green-500" />{' '}
+                      {t('billing.creditStore.instantReward')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-green-500" />{' '}
+                      {t('billing.creditStore.unlimitedDaily')}
+                    </span>
+                  </div>
+
+                  <button onClick={handleWatchClick} className="mt-auto pt-6 w-full">
+                    <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors shadow-md">
+                      <Zap className="w-5 h-5 fill-white" />
+                      {t('billing.creditStore.watchCta', { n: platformReward })}
                     </span>
                   </button>
                 </div>
-              );
-            })}
-          </div>
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
-            {t('billing.creditStore.moreMinutesPrompt')}{' '}
-            <button
-              onClick={() => navigate('/upgrade')}
-              className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+              </div>
+            )}
+
+            {/* Invite friends */}
+            <div
+              className={`relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col ${!isAndroidNative() ? 'md:col-span-2' : ''}`}
             >
-              {t('billing.creditStore.seeMinuteTopups')}
-            </button>
-          </p>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 dark:bg-slate-800/40 rounded-full blur-3xl -mr-12 -mt-12 opacity-60" />
+              <div className="relative z-10 p-5 sm:p-7 flex flex-col flex-1">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100">
+                  <Share2 className="w-6 h-6" />
+                </div>
+
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5">
+                  {t('billing.creditStore.inviteTitle')}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                  <Trans
+                    i18nKey="billing.creditStore.inviteBody"
+                    values={{ n: referralBonus }}
+                    components={{
+                      b: <span className="font-bold text-slate-900 dark:text-slate-100" />,
+                    }}
+                  />
+                </p>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-sm text-slate-600 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" />{' '}
+                    {t('billing.creditStore.noLimitInvites')}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" />{' '}
+                    {t('billing.creditStore.creditsNeverExpire')}
+                  </span>
+                </div>
+
+                <button onClick={() => setShowInviteModal(true)} className="mt-auto pt-6 w-full">
+                  <span className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors">
+                    <Share2 className="w-5 h-5" />
+                    {t('billing.creditStore.getInviteLink')}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Info Footer */}
         <div className="text-center pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
           <p className="text-sm text-slate-400 dark:text-slate-500">
-            {t('billing.creditStore.support')}
+            <Trans
+              i18nKey="billing.creditStore.support"
+              components={{
+                mail: (
+                  <a
+                    href="mailto:careers@applyright.com.ng"
+                    className="underline hover:no-underline"
+                  />
+                ),
+              }}
+            />
           </p>
         </div>
       </div>
@@ -593,15 +651,15 @@ const CreditStore = () => {
                     <button
                       onClick={handleCopyLink}
                       disabled={loadingCode || !referralCode}
-                      className="w-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="text-sm text-indigo-600 dark:text-indigo-300 font-medium truncate">
+                      <div className="text-sm text-slate-700 dark:text-slate-300 font-medium truncate">
                         {loadingCode
                           ? t('billing.creditStore.linkLoading')
                           : `${window.location.origin}/register?ref=${referralCode}`}
                       </div>
                       <div
-                        className={`${copySuccess === 'Link Copied!' ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white'} px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap`}
+                        className={`${copySuccess === 'Link Copied!' ? 'bg-green-500 text-white' : 'bg-slate-900 text-white'} px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap`}
                       >
                         {copySuccess === 'Link Copied!'
                           ? t('billing.creditStore.linkCopied')
@@ -619,6 +677,12 @@ const CreditStore = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PaymentTrustModal
+        open={showTrustModal}
+        onConfirm={confirmTrustModal}
+        onClose={() => setShowTrustModal(false)}
+      />
     </div>
   );
 };

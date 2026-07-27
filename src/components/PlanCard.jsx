@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Crown,
-  Sparkles,
-  Mic,
-  Download,
-  CalendarClock,
-  ChevronRight,
-  ShieldCheck,
-} from 'lucide-react';
+import { Mic, Download, CalendarClock, ChevronRight, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { billingService } from '../services';
+import AriaOrbit from './cv/AriaOrbit';
 
 /**
  * "My Plan" entitlements card (Phase 1 of the Profile → Account Hub).
@@ -23,12 +16,8 @@ import { billingService } from '../services';
  */
 
 const TIER_BADGE = {
-  pro: {
-    label: 'PREMIUM',
-    icon: Crown,
-    classes: 'bg-amber-400/20 text-amber-300 border-amber-300/30',
-  },
-  plus: { label: 'PRO', icon: Crown, classes: 'bg-white/15 text-amber-300 border-white/15' },
+  pro: { label: 'PREMIUM' },
+  plus: { label: 'PRO' },
 };
 
 // "2026-06-29T..." -> "29 Jun 2026"
@@ -53,15 +42,15 @@ const daysUntil = (iso) => {
 };
 
 const EntitlementRow = ({ icon, iconClasses, label, value, sub, cta, onCta }) => {
-  // Assign to a capitalized local so JSX renders it as a component (and so the
-  // lint rule recognizes the usage — it doesn't mark renamed destructured params).
-  const Icon = icon;
+  const iconNode = React.isValidElement(icon)
+    ? icon
+    : React.createElement(icon, { className: 'w-4 h-4' });
   return (
     <div className="flex items-center gap-3 py-3">
       <div
         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconClasses}`}
       >
-        <Icon className="w-4 h-4" />
+        {iconNode}
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{label}</div>
@@ -73,7 +62,7 @@ const EntitlementRow = ({ icon, iconClasses, label, value, sub, cta, onCta }) =>
           <button
             type="button"
             onClick={onCta}
-            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+            className="text-xs font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             {cta}
           </button>
@@ -94,6 +83,7 @@ const PlanCard = () => {
   const buyDownloadPass = async () => {
     setBuyingPass(true);
     try {
+      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       const { link } = await billingService.checkout('download_single');
       if (!link) throw new Error('No checkout link');
       window.location.href = link;
@@ -138,7 +128,6 @@ const PlanCard = () => {
   const tier = ent?.tier || 'free';
   const isPaid = tier !== 'free';
   const badge = TIER_BADGE[tier];
-  const BadgeIcon = badge?.icon;
 
   const planName = isPaid ? ent?.planLabel || 'Active plan' : 'Free plan';
   const expiresAt = formatDate(ent?.expiresAt);
@@ -169,18 +158,15 @@ const PlanCard = () => {
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
       {/* Header — plan identity + expiry */}
-      <div className="relative bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-        <div className="relative z-10">
+      <div className="bg-slate-900 text-white p-6">
+        <div>
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-100">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Your plan
             </span>
             {badge && (
-              <span
-                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border ${badge.classes}`}
-              >
-                <BadgeIcon className="w-3 h-3" /> {badge.label}
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/15 text-white backdrop-blur">
+                <AriaOrbit size={12} tone="mono" /> {badge.label}
               </span>
             )}
           </div>
@@ -193,7 +179,7 @@ const PlanCard = () => {
             expiresAt && (
               <div
                 className={`flex items-center gap-1.5 mt-2 text-xs font-medium ${
-                  expiringSoon ? 'text-amber-200' : 'text-indigo-200'
+                  expiringSoon ? 'text-amber-200' : 'text-slate-400'
                 }`}
               >
                 <CalendarClock className="w-3.5 h-3.5" />
@@ -203,7 +189,7 @@ const PlanCard = () => {
               </div>
             )
           ) : (
-            <p className="text-xs text-indigo-200 mt-2">
+            <p className="text-xs text-slate-400 mt-2">
               Upgrade to unlock interview minutes, unlimited downloads & more credits.
             </p>
           )}
@@ -213,8 +199,8 @@ const PlanCard = () => {
       {/* Entitlement rows */}
       <div className="px-5 divide-y divide-slate-100 dark:divide-slate-800">
         <EntitlementRow
-          icon={Sparkles}
-          iconClasses="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
+          icon={<AriaOrbit size={18} />}
+          iconClasses="bg-slate-100 dark:bg-slate-800"
           label="AI credits"
           sub={creditsSub}
           value={credits}
@@ -223,7 +209,7 @@ const PlanCard = () => {
         />
         <EntitlementRow
           icon={Mic}
-          iconClasses="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400"
+          iconClasses="bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
           label="Interview minutes"
           sub={isPaid ? 'Live voice mock interviews' : 'One-time free taste'}
           value={minutesLabel}
@@ -246,7 +232,7 @@ const PlanCard = () => {
         <button
           type="button"
           onClick={() => navigate('/upgrade')}
-          className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none"
+          className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] bg-slate-900 hover:bg-slate-800 text-white shadow-lg dark:shadow-none"
         >
           {isPaid ? 'Manage plan' : 'Upgrade your plan'}
           <ChevronRight className="w-4 h-4" />

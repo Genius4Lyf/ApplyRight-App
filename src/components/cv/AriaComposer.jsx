@@ -18,7 +18,7 @@ import ChatThemePicker from './ChatThemePicker';
 //     float to the middle of a 3-line box instead of sitting on its bottom edge.
 //   · the focus treatment belongs to the CONTAINER via `focus-within`; a ring on the
 //     textarea would outline the text alone, not the box.
-// Indigo appears ONLY in that focus ring; everything else is ink.
+// Ink throughout, including the focus ring — no indigo anywhere in this component.
 //
 // Props:
 //   value/onChange(string)/onSend  the controlled input and its submit
@@ -59,7 +59,7 @@ const AriaComposer = ({
     <div className={className}>
       {note}
 
-      <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-1.5 py-1 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/40 transition-colors">
+      <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-1.5 py-1 focus-within:border-slate-900 dark:focus-within:border-slate-100 focus-within:ring-1 focus-within:ring-slate-900/20 dark:focus-within:ring-slate-100/20 transition-colors">
         {/* The model chip. Its menu drops UP — the composer is docked at the bottom of
             the viewport, so a downward menu would open off-screen. */}
         <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="left" compact />
@@ -105,7 +105,7 @@ const AriaComposer = ({
           } ${
             inert
               ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-              : 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-indigo-500/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40'
+              : 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-slate-100/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40'
           }`}
         >
           {sendLabel || <ArrowUp className="w-4 h-4" />}

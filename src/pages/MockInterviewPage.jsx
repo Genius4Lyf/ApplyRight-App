@@ -396,6 +396,7 @@ const MockInterviewPage = () => {
       // here (and auto-start the call) instead of dumping them on the dashboard —
       // the Flutterwave redirect wipes React state, so we stash it in localStorage.
       localStorage.setItem('arPostCheckout', window.location.pathname);
+      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       const { link } = await billingService.checkout('practice_pass', 'NGN');
       if (link) window.location.href = link;
       else {

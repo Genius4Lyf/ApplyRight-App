@@ -9,7 +9,7 @@ import { formatNgn, formatUsd } from '../../lib/plans';
  * (checkout vs. sign-up), so this component stays presentation-only.
  *
  * Layout follows the "Good / Better / Best" reference design: a clean white
- * card (the highlighted plan stays white but gains an indigo ring + pill, not a
+ * card (the highlighted plan stays white but gains an ink ring + pill, not a
  * dark background), the CTA sits above the feature checklist, and excluded
  * features render as greyed-out ✗ rows. `h-full` lets the parent grid/flex row
  * stretch every card to equal height.
@@ -44,12 +44,12 @@ const TierCard = ({
     <div
       className={`relative h-full w-full rounded-2xl p-7 flex flex-col bg-white dark:bg-slate-900 border transition-all duration-300 ease-out hover:-translate-y-1 ${
         highlight
-          ? 'border-indigo-500 ring-1 ring-indigo-500/40 shadow-md lg:scale-[1.03] z-10'
+          ? 'border-slate-900 dark:border-white ring-1 ring-slate-900/10 dark:ring-white/20 shadow-md lg:scale-[1.03] z-10'
           : 'border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md'
       }`}
     >
       {badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center px-3.5 py-1 bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider rounded-full shadow-md whitespace-nowrap">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center px-3.5 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold uppercase tracking-wider rounded-full shadow-md whitespace-nowrap">
           {badge}
         </span>
       )}
@@ -75,7 +75,9 @@ const TierCard = ({
           {priceLabel}
         </span>
         {!isFree && (
-          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">/ {t(tier.periodKey)}</span>
+          <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">
+            / {t(tier.periodKey)}
+          </span>
         )}
       </div>
       <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500 min-h-[16px]">
@@ -93,7 +95,7 @@ const TierCard = ({
         disabled={current || loading || disabled}
         className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
           highlight
-            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+            ? 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900'
             : 'border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
         }`}
       >

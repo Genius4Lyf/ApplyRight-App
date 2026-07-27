@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatRelative } from '../../lib/relativeDate';
-import { Plus, FilePlus2, Trash2 } from 'lucide-react';
+import { Plus, FilePlus2, Trash2, Home } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
@@ -11,7 +11,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 // almost always the one you want.
 //
 // Editorial, not pastel: rows carry no fill, separated by hairlines. The ACTIVE row is
-// marked by a 2px indigo left rule and ink-weight type — state carried by a rule and
+// marked by a 2px ink left rule and ink-weight type — state carried by a rule and
 // typography rather than a lavender wash, matching the flat/hairline language used
 // across the rest of the app.
 //
@@ -26,6 +26,7 @@ const SessionRail = ({
   onNewTailoring,
   onNewCv,
   onClose, // drawer only — absent inline
+  onBackHome, // drawer only — absent inline
 }) => {
   const { t } = useTranslation();
   return (
@@ -53,14 +54,14 @@ const SessionRail = ({
       <button
         type="button"
         onClick={onNewTailoring}
-        className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
       >
         <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
       </button>
       <button
         type="button"
         onClick={onNewCv}
-        className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
       >
         <FilePlus2 className="w-4 h-4" /> {t('ariaStudio.sessionRail.newCv')}
       </button>
@@ -106,14 +107,14 @@ const SessionRail = ({
               {active && (
                 <span
                   aria-hidden="true"
-                  className="absolute left-0 inset-y-0 w-0.5 bg-indigo-500"
+                  className="absolute left-0 inset-y-0 w-0.5 bg-slate-900 dark:bg-white"
                 />
               )}
               <button
                 type="button"
                 onClick={() => onSelect?.(s._id)}
                 aria-current={active ? 'true' : undefined}
-                className={`w-full text-left pl-4 pr-10 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400 ${
+                className={`w-full text-left pl-4 pr-10 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 ${
                   active ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
@@ -174,6 +175,18 @@ const SessionRail = ({
         })}
       </ul>
     </div>
+
+    {onBackHome && (
+      <div className="shrink-0 p-3 border-t border-slate-200 dark:border-slate-800">
+        <button
+          type="button"
+          onClick={onBackHome}
+          className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+        >
+          <Home className="w-4 h-4" /> {t('ariaStudio.sessionRail.backToHome')}
+        </button>
+      </div>
+    )}
   </div>
   );
 };

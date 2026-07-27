@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/logo/applyright-icon.png';
 
 const LAST_UPDATED = 'May 31, 2026';
-const SUPPORT_EMAIL = 'support@applyright.com.ng';
+const SUPPORT_EMAIL = 'careers@applyright.com.ng';
 
 const TermsOfService = () => {
   return (
@@ -245,7 +245,11 @@ const TermsOfService = () => {
               <h2 className="text-2xl font-bold text-slate-900 mb-4">14. Contact Us</h2>
               <p className="text-slate-600 leading-relaxed">
                 To resolve a complaint or request further information about the Service, contact us
-                at {SUPPORT_EMAIL}.
+                at{' '}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:no-underline">
+                  {SUPPORT_EMAIL}
+                </a>
+                .
               </p>
             </section>
           </div>

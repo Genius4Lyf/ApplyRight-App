@@ -589,6 +589,10 @@
       "creditsUnit": "credits",
       "choosePlan": "Choose {{plan}}",
       "checkoutFailed": "Could not start checkout. Please try again.",
+      "trustModalTitle": "Before you pay",
+      "trustModalBody": "ApplyRight is a growing, independent project. Payments are processed securely through Flutterwave under our founder's personal account — you'll see \"Daniel Udofia\" on your bank statement, SMS alert, or transfer instructions instead of \"ApplyRight\". Your purchase is completely legitimate, and you'll get exactly what you paid for. Questions or concerns? Reach us anytime at <mail>careers@applyright.com.ng</mail>.",
+      "trustModalContinue": "Continue to payment",
+      "paymentTrustNote": "Payments are processed via Flutterwave. You may see \"Daniel Udofia\" (ApplyRight's founder) as the recipient — that's expected, and you'll get exactly what you paid for. Questions? <mail>careers@applyright.com.ng</mail>",
       "currencyNgn": "₦ NGN",
       "currencyNgnRegion": "· Nigeria",
       "currencyUsd": "$ USD",
@@ -709,6 +713,11 @@
       "planLabel": "{{plan}} plan",
       "minutesLeftPaid": "{{n}} live interview min left",
       "minutesLeftFree": "{{n}} free interview min left",
+      "minutesEyebrow": "Live interview minutes",
+      "freeTasteLabel": "Free taste",
+      "topUpMinutesLockedTitle": "Top-ups are for paid plans",
+      "topUpMinutesLockedBody": "You get a one-time {{n}}-minute free taste to try live interviews. Upgrade to a paid plan to add more minutes anytime.",
+      "topUpMinutesLockedCta": "See plans",
       "untilDate": "· until {{date}}",
       "managePlan": "Manage plan",
       "seeAllPlans": "See all plans",
@@ -736,7 +745,7 @@
       "creditsPlusMinutes": "<b>{{credits}} credits</b> + {{minutes}} live interview min",
       "moreMinutesPrompt": "Need just a few more interview minutes?",
       "seeMinuteTopups": "See minute top-ups →",
-      "support": "Need help? Contact support@applyright.com.ng",
+      "support": "Need help? Contact <mail>careers@applyright.com.ng</mail>",
       "inviteModalTitle": "Invite Friends & Earn",
       "inviteModalBody": "Share your code with friends. When they sign up, <b>you get</b> <em>{{n}} A.I Credits</em>!",
       "yourReferralCode": "YOUR REFERRAL CODE",
@@ -766,10 +775,6 @@
       "minUnit": "min",
       "perMinNgn": "₦{{n}} / min",
       "perMinUsd": "${{n}} / min",
-      "moreCreditsTitle": "Need more AI credits?",
-      "creditsSubtitle": "Top up credits for CV tailoring, cover letters and written prep. Added to your wallet — they never expire.",
-      "perCreditNgn": "₦{{n}} per credit",
-      "perCreditUsd": "${{n}} per credit",
       "footerNote": "One-time payment via Flutterwave. No auto-renewal — buy again when you need it.",
       "paymentsUnavailable": "Payments are temporarily unavailable. Please try again shortly."
     },
@@ -798,7 +803,8 @@
       "ctaDashboard": "Go to dashboard",
       "failedTitle": "Payment not confirmed",
       "failedBody": "If you were charged, it will reflect shortly — check your plan on the pricing page. You were not charged for a cancelled payment.",
-      "backToPlans": "Back to plans"
+      "backToPlans": "Back to plans",
+      "backToOrigin": "Back to where you were"
     }
   },
   "cvBuilder": {
@@ -3387,7 +3393,8 @@
       "fromSource": "from {{source}}",
       "removeOrDeleteCv": "Remove or delete this CV",
       "deleteTailoring": "Delete this tailoring",
-      "deleteAria": "Delete {{heading}}"
+      "deleteAria": "Delete {{heading}}",
+      "backToHome": "Back to home"
     },
     "skillsBuild": {
       "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. You pick which ones go in.",

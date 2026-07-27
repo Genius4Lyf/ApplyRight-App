@@ -302,7 +302,7 @@ const TargetChat = ({
                   <button
                     type="button"
                     onClick={openForm}
-                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                    className="text-[11px] font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                   >
                     {t('cvBuilder.atsCoach.edit')}
                   </button>
@@ -325,7 +325,9 @@ const TargetChat = ({
                     onClick={() => setDescExpanded((v) => !v)}
                     className="mt-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                   >
-                    {descExpanded ? t('cvBuilder.atsCoach.showLess') : t('cvBuilder.atsCoach.readMore')}
+                    {descExpanded
+                      ? t('cvBuilder.atsCoach.showLess')
+                      : t('cvBuilder.atsCoach.readMore')}
                   </button>
                 )}
                 {kws.length > 0 && (
@@ -335,9 +337,7 @@ const TargetChat = ({
                         i18nKey="cvBuilder.atsCoach.leansOn"
                         values={{ kws: kws.join(', ') }}
                         components={{
-                          b: (
-                            <span className="font-semibold text-indigo-600 dark:text-indigo-400" />
-                          ),
+                          b: <span className="font-semibold text-slate-900 dark:text-slate-100" />,
                         }}
                       />
                     </p>
@@ -357,56 +357,66 @@ const TargetChat = ({
             </motion.div>
           )}
 
-          {/* (d) The role+description form — blooms from Aria's orbit. */}
+          {/* (d) The role+description form — blooms from Aria's orbit. Centered as a
+              proper modal (not pinned to the chat column's width) so there's real room
+              to paste a full job description; responsive from mobile up. */}
           <AnimatePresence>
             {formOpen && (
-              <motion.div
-                className="self-start max-w-[92%] flex items-start gap-2"
-                {...portalCard(reduce)}
-              >
-                <AriaOrbit size={16} className="mt-2" />
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md p-4 w-full min-w-[240px]">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    {t('cvBuilder.atsCoach.addYourTargetJob')}
-                  </p>
-                  <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                    {t('cvBuilder.atsCoach.jobTitleRole')}
-                  </label>
-                  <input
-                    value={roleInput}
-                    onChange={(e) => setRoleInput(e.target.value)}
-                    placeholder={t('cvBuilder.atsCoach.jobTitlePlaceholder')}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
-                  />
-                  <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                    {t('cvBuilder.atsCoach.jobDescription')}
-                  </label>
-                  <textarea
-                    value={jdInput}
-                    onChange={(e) => setJdInput(e.target.value)}
-                    rows={4}
-                    placeholder={t('cvBuilder.atsCoach.jobDescriptionPlaceholder')}
-                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] leading-relaxed outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors scrollbar-none"
-                  />
-                  <div className="mt-4 flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={closeForm}
-                      className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
-                    >
-                      {t('common.back')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={addJob}
-                      disabled={!canAdd}
-                      className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
-                    >
-                      {t('cvBuilder.atsCoach.add')}
-                    </button>
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <button
+                  type="button"
+                  aria-label={t('common.back')}
+                  className="absolute inset-0 cursor-default"
+                  onClick={closeForm}
+                />
+                <motion.div
+                  className="relative w-full max-w-lg flex items-start gap-2"
+                  {...portalCard(reduce)}
+                >
+                  <AriaOrbit size={16} className="mt-2 shrink-0" />
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md p-4 sm:p-5 w-full max-h-[85vh] overflow-y-auto">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      {t('cvBuilder.atsCoach.addYourTargetJob')}
+                    </p>
+                    <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      {t('cvBuilder.atsCoach.jobTitleRole')}
+                    </label>
+                    <input
+                      value={roleInput}
+                      onChange={(e) => setRoleInput(e.target.value)}
+                      placeholder={t('cvBuilder.atsCoach.jobTitlePlaceholder')}
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/20 dark:focus:ring-slate-100/20 transition-colors"
+                    />
+                    <label className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      {t('cvBuilder.atsCoach.jobDescription')}
+                    </label>
+                    <textarea
+                      value={jdInput}
+                      onChange={(e) => setJdInput(e.target.value)}
+                      rows={8}
+                      placeholder={t('cvBuilder.atsCoach.jobDescriptionPlaceholder')}
+                      className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] leading-relaxed outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/20 dark:focus:ring-slate-100/20 transition-colors scrollbar-none"
+                    />
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={closeForm}
+                        className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+                      >
+                        {t('common.back')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={addJob}
+                        disabled={!canAdd}
+                        className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+                      >
+                        {t('cvBuilder.atsCoach.add')}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
 
@@ -416,7 +426,7 @@ const TargetChat = ({
               <button
                 type="button"
                 onClick={openForm}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 {t('cvBuilder.atsCoach.addJobDescriptionPill')}
               </button>
@@ -557,7 +567,11 @@ const ATSCoachPanel = ({
               {
                 key: 'match',
                 label: t('cvBuilder.atsCoach.roleMatch'),
-                sub: match ? `${match.coverage}%` : hasJd ? '—' : t('cvBuilder.atsCoach.addJdShort'),
+                sub: match
+                  ? `${match.coverage}%`
+                  : hasJd
+                    ? '—'
+                    : t('cvBuilder.atsCoach.addJdShort'),
               },
             ].map((tab) => {
               const active = coachTab === tab.key;
@@ -584,7 +598,7 @@ const ATSCoachPanel = ({
                   <span
                     className={`font-mono text-[8px] uppercase tracking-wide tabular-nums ${
                       active
-                        ? 'text-indigo-500 dark:text-indigo-400'
+                        ? 'text-slate-900 dark:text-slate-100'
                         : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
@@ -612,7 +626,7 @@ const ATSCoachPanel = ({
       {coachTab === 'aria' && (
         <div className={`flex-1 min-h-0 flex flex-col aria-theme-${chatTheme}`}>
           {/* Focus MODE header — Aria is locked onto a specific role/project (bound via
-              "Ask Aria" from Work History / Projects). Pinned, with an indigo left-accent
+              "Ask Aria" from Work History / Projects). Pinned, with an ink left-accent
               to read as an active mode + a labeled Exit; height-collapses away on clear. */}
           <AnimatePresence>
             {focusedEntry && (
@@ -624,9 +638,9 @@ const ATSCoachPanel = ({
                 transition={{ duration: 0.28 }}
                 className="shrink-0 overflow-hidden"
               >
-                <div className="mx-4 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 px-3 py-2">
+                <div className="mx-4 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-slate-100 px-3 py-2">
                   <AriaOrbit size={16} />
-                  <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] font-bold text-slate-900 dark:text-slate-100">
                     {t('cvBuilder.common.focus')}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[12px]">
@@ -810,7 +824,9 @@ const ATSCoachPanel = ({
                     {t('cvBuilder.atsCoach.roleMatch')}
                   </p>
                   <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {[match.role, match.company].filter(Boolean).join(` ${t('cvBuilder.common.at')} `) ||
+                    {[match.role, match.company]
+                      .filter(Boolean)
+                      .join(` ${t('cvBuilder.common.at')} `) ||
                       t('cvBuilder.atsCoach.yourTargetRole')}
                   </p>
                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
+import AriaOrbit from '../../components/cv/AriaOrbit';
 
 const TargetJob = () => {
   const { t } = useTranslation();
@@ -59,12 +60,12 @@ const TargetJob = () => {
     <div className="flex flex-col items-center justify-center text-center py-16 sm:py-20 px-4 animate-in fade-in slide-in-from-right-8 duration-500">
       {/* Centered greeting with the coach avatar on top — the "is there a job?"
           question is answered in the coach chat on the right. */}
-      <span className="w-14 h-14 rounded-full border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center mb-4 shrink-0">
-        <span className="w-5 h-5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
-      </span>
+      <div className="mb-4">
+        <AriaOrbit size={56} working />
+      </div>
       {/* Aria's identity — name + what ARIA stands for (first impression on opening the builder) */}
       <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">Aria</h1>
-      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
+      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
         ApplyRight Intelligent Assistant
       </p>
 
@@ -72,7 +73,7 @@ const TargetJob = () => {
       <p className="mt-5 max-w-sm text-slate-600 dark:text-slate-300 leading-relaxed">
         {t('cvBuilder.targetJob.greetingLine1')}
         <br />
-        <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+        <span className="text-slate-900 dark:text-slate-100 font-semibold">
           {t('cvBuilder.targetJob.greetingLine2')}
         </span>
       </p>

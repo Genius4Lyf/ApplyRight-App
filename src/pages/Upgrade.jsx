@@ -4,17 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import Navbar from '../components/Navbar';
 import TierCard from '../components/pricing/TierCard';
+import PaymentTrustModal from '../components/PaymentTrustModal';
+import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
 import billingService from '../services/billing.service';
-import {
-  TIERS,
-  AGENT_TIERS,
-  FREE_TIER,
-  TOPUPS,
-  CREDIT_PACKS,
-  FREE_TASTE_MIN,
-  formatNgn,
-  formatUsd,
-} from '../lib/plans';
+import { TIERS, AGENT_TIERS, FREE_TIER, FREE_TASTE_MIN } from '../lib/plans';
 import { toast } from 'sonner';
 
 const Upgrade = () => {
@@ -23,6 +16,8 @@ const Upgrade = () => {
   const [entitlement, setEntitlement] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [currency, setCurrency] = useState('NGN');
+  const [showTrustModal, setShowTrustModal] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState(null);
   // Pricing is locked to the user's account type — CV agents see only agent
   // plans, job seekers see only job-seeker plans (no toggle). The seeker/agent
   // toggle belongs on the public pricing page, where the visitor has no account.
@@ -61,9 +56,10 @@ const Upgrade = () => {
       .catch(() => setEntitlement(null));
   }, []);
 
-  const startCheckout = async (planId) => {
+  const proceedToCheckout = async (planId) => {
     setLoadingId(planId);
     try {
+      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       const { link } = await billingService.checkout(planId, currency);
       if (!link) throw new Error('No payment link');
       // Hand off to Flutterwave's hosted checkout.
@@ -78,6 +74,23 @@ const Upgrade = () => {
       );
       setLoadingId(null);
     }
+  };
+
+  const startCheckout = (planId) => {
+    if (!hasSeenPaymentNotice()) {
+      setPendingPlanId(planId);
+      setShowTrustModal(true);
+      return;
+    }
+    proceedToCheckout(planId);
+  };
+
+  const confirmTrustModal = () => {
+    markPaymentNoticeSeen();
+    setShowTrustModal(false);
+    const planId = pendingPlanId;
+    setPendingPlanId(null);
+    if (planId) proceedToCheckout(planId);
   };
 
   const currentPlanId = entitlement?.tier !== 'free' ? entitlement?.planId : null;
@@ -155,7 +168,7 @@ const Upgrade = () => {
                 onClick={() => setCurrency('NGN')}
                 className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'NGN'
-                    ? 'bg-slate-900 text-white dark:bg-indigo-600 dark:text-white shadow-md'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
@@ -169,7 +182,7 @@ const Upgrade = () => {
                 onClick={() => setCurrency('USD')}
                 className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   currency === 'USD'
-                    ? 'bg-slate-900 text-white dark:bg-indigo-600 dark:text-white shadow-md'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
@@ -207,133 +220,28 @@ const Upgrade = () => {
             </div>
           )}
 
-          {/* Top-ups (interview minutes — job seekers only) */}
-          {audience === 'seeker' && (
-            <div className="mt-14 max-w-2xl mx-auto">
-              <div className="text-center mb-5">
-                <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
-                  {t('billing.upgrade.minutesEyebrow')}
-                </p>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                  {t('billing.upgrade.outOfMinutesTitle')}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">
-                  {t('billing.upgrade.minutesSubtitle')}
-                </p>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {TOPUPS.map((p) => {
-                  const best = p.id === 'topup_15';
-                  const priceLabel =
-                    currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
-                  const perMin =
-                    currency === 'NGN'
-                      ? t('billing.upgrade.perMinNgn', {
-                          n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
-                        })
-                      : t('billing.upgrade.perMinUsd', { n: (p.priceUsd / p.minutes).toFixed(2) });
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => startCheckout(p.id)}
-                      disabled={loadingId === p.id}
-                      className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
-                        best
-                          ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
-                      }`}
-                    >
-                      {best && (
-                        <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                          {t('billing.common.bestValue')}
-                        </span>
-                      )}
-                      <div>
-                        <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                          {p.minutes}{' '}
-                          <span className="text-base font-semibold">
-                            {t('billing.upgrade.minUnit')}
-                          </span>
-                        </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                          {perMin}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
-                        {loadingId === p.id ? t('billing.common.starting') : priceLabel}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Credit packs — top up AI credits any time (added to your wallet). */}
-          <div className="mt-14 max-w-2xl mx-auto">
-            <div className="text-center mb-5">
-              <p className="text-xs uppercase tracking-wider font-bold text-indigo-500 dark:text-indigo-400">
-                {t('billing.common.oneTimePurchase')}
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {t('billing.upgrade.moreCreditsTitle')}
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">
-                {t('billing.upgrade.creditsSubtitle')}
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {CREDIT_PACKS.map((p) => {
-                const best = p.id === 'credits_1000';
-                const priceLabel =
-                  currency === 'NGN' ? formatNgn(p.priceNgn) : formatUsd(p.priceUsd);
-                const perCredit =
-                  currency === 'NGN'
-                    ? t('billing.upgrade.perCreditNgn', { n: (p.priceNgn / p.credits).toFixed(1) })
-                    : t('billing.upgrade.perCreditUsd', { n: (p.priceUsd / p.credits).toFixed(2) });
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => startCheckout(p.id)}
-                    disabled={loadingId === p.id}
-                    className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
-                      best
-                        ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
-                    }`}
-                  >
-                    {best && (
-                      <span className="absolute -top-2.5 left-5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                        {t('billing.common.bestValue')}
-                      </span>
-                    )}
-                    <div>
-                      <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                        {p.credits}{' '}
-                        <span className="text-base font-semibold">
-                          {t('billing.common.creditsUnit')}
-                        </span>
-                      </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                        {perCredit}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">
-                      {loadingId === p.id ? t('billing.common.starting') : priceLabel}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 max-w-lg mx-auto leading-relaxed mt-4">
+            <Trans
+              i18nKey="billing.common.paymentTrustNote"
+              components={{
+                mail: (
+                  <a href="mailto:careers@applyright.com.ng" className="underline hover:no-underline" />
+                ),
+              }}
+            />
+          </p>
 
           <p className="text-center text-xs text-slate-400 mt-10">
             {t('billing.upgrade.footerNote')}
           </p>
         </div>
       </main>
+
+      <PaymentTrustModal
+        open={showTrustModal}
+        onConfirm={confirmTrustModal}
+        onClose={() => setShowTrustModal(false)}
+      />
     </div>
   );
 };

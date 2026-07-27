@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/logo/applyright-icon.png';
 
 const LAST_UPDATED = 'May 31, 2026';
-const SUPPORT_EMAIL = 'support@applyright.com.ng';
+const SUPPORT_EMAIL = 'careers@applyright.com.ng';
 
 const PrivacyPolicy = () => {
   return (
@@ -54,7 +54,11 @@ const PrivacyPolicy = () => {
                 (together, the "Service"). We are committed to protecting your personal information
                 and your right to privacy. This Privacy Policy explains what information we collect,
                 how we use it, who we share it with, and the choices you have. If you have any
-                questions, contact us at {SUPPORT_EMAIL}.
+                questions, contact us at{' '}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:no-underline">
+                  {SUPPORT_EMAIL}
+                </a>
+                .
               </p>
             </section>
 
@@ -236,7 +240,13 @@ const PrivacyPolicy = () => {
               </p>
               <ul className="list-disc pl-6 space-y-2 text-slate-600">
                 <li>Access and edit most of your data directly within your account.</li>
-                <li>Request account and data deletion by contacting {SUPPORT_EMAIL}.</li>
+                <li>
+                  Request account and data deletion by contacting{' '}
+                  <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:no-underline">
+                    {SUPPORT_EMAIL}
+                  </a>
+                  .
+                </li>
                 <li>Reset or limit your advertising ID through your device settings.</li>
                 <li>Opt out of promotional emails using the unsubscribe link.</li>
               </ul>
@@ -276,7 +286,11 @@ const PrivacyPolicy = () => {
               <h2 className="text-2xl font-bold text-slate-900 mb-4">12. Contact Us</h2>
               <p className="text-slate-600 leading-relaxed">
                 If you have questions or comments about this policy, or wish to exercise your
-                privacy rights, you may email us at {SUPPORT_EMAIL}.
+                privacy rights, you may email us at{' '}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:no-underline">
+                  {SUPPORT_EMAIL}
+                </a>
+                .
               </p>
             </section>
           </div>

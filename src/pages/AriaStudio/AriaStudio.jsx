@@ -404,7 +404,14 @@ const StudioDesk = () => {
         side="left"
         label={t('ariaStudio.desk.studioSessions')}
       >
-        <SessionRail {...railProps} onClose={() => layout.setRailOverlay(false)} />
+        <SessionRail
+          {...railProps}
+          onClose={() => layout.setRailOverlay(false)}
+          onBackHome={() => {
+            layout.setRailOverlay(false);
+            navigate('/dashboard');
+          }}
+        />
       </StudioOverlay>
 
       <StudioOverlay

@@ -10,7 +10,6 @@ import {
   Printer,
   LayoutTemplate,
   Share2,
-  Sparkles,
   Check,
   Mail,
   PenTool,
@@ -75,9 +74,9 @@ import SummaryTrim from '../components/cv/SummaryTrim';
 import { extractSummary, replaceSummaryInMarkdown } from '../lib/summaryMarkdown';
 import { localizeCvMarkdown } from '../lib/cvLabels';
 import CvLanguageToggle from '../components/cv/CvLanguageToggle';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import {
   Lock,
-  Zap,
   PlayCircle,
   X,
   Loader,
@@ -1033,7 +1032,7 @@ const ResumeReview = () => {
                 New Balance
               </span>
               <div className="flex items-center justify-center gap-2 font-heading text-3xl font-extrabold tabular-nums text-indigo-600 dark:text-indigo-300">
-                <Zap className="w-6 h-6 fill-indigo-600" />
+                <AriaOrbit size={24} />
                 {userProfile?.credits || 0}
               </div>
             </div>
@@ -1119,7 +1118,7 @@ const ResumeReview = () => {
                   <AriaLoader inline tone="mono" size={16} label="Unlocking…" />
                 ) : (
                   <>
-                    <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <AriaOrbit size={20} tone="mono" />
                     Unlock for {templateToUnlock.cost} A.I Credits
                   </>
                 )}
@@ -1162,7 +1161,7 @@ const ResumeReview = () => {
                     onClick={() => navigate('/credits')}
                     className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                   >
-                    <Sparkles className="w-5 h-5" />
+                    <AriaOrbit size={20} tone="mono" />
                     Get more credits
                   </button>
                   <button
@@ -1594,234 +1593,234 @@ const ResumeReview = () => {
               {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 
               <div ref={templateContentRef} style={{ position: 'relative', zIndex: 1 }}>
-              {activeTab === 'resume' ? (
-                /* RESUME TEMPLATE RENDER */
-                templateId === 'modern' ? (
-                  <ModernCleanTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'modern-professional' ? (
-                  <ModernProfessionalTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'ats-clean' ? (
-                  <ATSCleanTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'student-ats' ? (
-                  <StudentATSTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'minimal' ? (
-                  <MinimalistTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'minimal-serif' ? (
-                  <MinimalistSerifTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'minimal-grid' ? (
-                  <MinimalistGridTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'minimal-mono' ? (
-                  <MinimalistMonoTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'creative' ? (
-                  <CreativePortfolioTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'executive' ? (
-                  <ExecutiveLeadTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'tech' ? (
-                  <TechStackTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'swiss' ? (
-                  <SwissModernTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'luxury' ? (
-                  <ElegantLuxuryTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'luxury-royal' ? (
-                  <LuxuryRoyalTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'luxury-chic' ? (
-                  <LuxuryChicTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'luxury-classic' ? (
-                  <LuxuryClassicTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'luxury-gold' ? (
-                  <LuxuryGoldTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'executive-board' ? (
-                  <ExecutiveBoardTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'executive-strategy' ? (
-                  <ExecutiveStrategyTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'executive-corporate' ? (
-                  <ExecutiveCorporateTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'tech-devops' ? (
-                  <TechDevOpsTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'tech-silicon' ? (
-                  <TechSiliconTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'tech-google' ? (
-                  <TechGoogleTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'executive-energy' ? (
-                  <ExecutiveEnergyTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'applyright-navy' ? (
-                  <ApplyRightNavyTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'applyright-mono' ? (
-                  <ApplyRightMonoTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'applyright-band' ? (
-                  <ApplyRightBandTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'energy-slb' ? (
-                  <EnergySLBTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'energy-total' ? (
-                  <EnergyTotalTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'energy-seplat' ? (
-                  <EnergySeplatTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'energy-halliburton' ? (
-                  <EnergyHalliburtonTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : templateId === 'energy-nlng' ? (
-                  <EnergyNLNGTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                ) : (
-                  /* Unknown/legacy templateId → safe ATS-clean default so saved
+                {activeTab === 'resume' ? (
+                  /* RESUME TEMPLATE RENDER */
+                  templateId === 'modern' ? (
+                    <ModernCleanTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'modern-professional' ? (
+                    <ModernProfessionalTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'ats-clean' ? (
+                    <ATSCleanTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'student-ats' ? (
+                    <StudentATSTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'minimal' ? (
+                    <MinimalistTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'minimal-serif' ? (
+                    <MinimalistSerifTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'minimal-grid' ? (
+                    <MinimalistGridTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'minimal-mono' ? (
+                    <MinimalistMonoTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'creative' ? (
+                    <CreativePortfolioTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'executive' ? (
+                    <ExecutiveLeadTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'tech' ? (
+                    <TechStackTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'swiss' ? (
+                    <SwissModernTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'luxury' ? (
+                    <ElegantLuxuryTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'luxury-royal' ? (
+                    <LuxuryRoyalTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'luxury-chic' ? (
+                    <LuxuryChicTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'luxury-classic' ? (
+                    <LuxuryClassicTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'luxury-gold' ? (
+                    <LuxuryGoldTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'executive-board' ? (
+                    <ExecutiveBoardTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'executive-strategy' ? (
+                    <ExecutiveStrategyTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'executive-corporate' ? (
+                    <ExecutiveCorporateTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'tech-devops' ? (
+                    <TechDevOpsTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'tech-silicon' ? (
+                    <TechSiliconTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'tech-google' ? (
+                    <TechGoogleTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'executive-energy' ? (
+                    <ExecutiveEnergyTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'applyright-navy' ? (
+                    <ApplyRightNavyTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'applyright-mono' ? (
+                    <ApplyRightMonoTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'applyright-band' ? (
+                    <ApplyRightBandTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'energy-slb' ? (
+                    <EnergySLBTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'energy-total' ? (
+                    <EnergyTotalTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'energy-seplat' ? (
+                    <EnergySeplatTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'energy-halliburton' ? (
+                    <EnergyHalliburtonTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'energy-nlng' ? (
+                    <EnergyNLNGTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : (
+                    /* Unknown/legacy templateId → safe ATS-clean default so saved
                      CVs referencing a no-longer-offered template still render. */
-                  <ATSCleanTemplate
-                    markdown={localizedCV}
-                    userProfile={mergedUserProfile || userProfile}
-                  />
-                )
-              ) : (
-                /* COVER LETTER RENDER */
-                <div id="cover-letter-content" className="bg-white min-h-screen">
-                  <div className="p-12">
-                    <div className="mb-8 border-b border-slate-200 pb-6">
-                      {/* Simple Header for Cover Letter */}
-                      <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                        {mergedUserProfile?.firstName
-                          ? [
-                              mergedUserProfile.firstName,
-                              mergedUserProfile.otherName,
-                              mergedUserProfile.lastName,
-                            ]
-                              .filter(Boolean)
-                              .join(' ')
-                          : 'Your Name'}
-                      </h1>
-                      <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                        {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
-                        {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
+                    <ATSCleanTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  )
+                ) : (
+                  /* COVER LETTER RENDER */
+                  <div id="cover-letter-content" className="bg-white min-h-screen">
+                    <div className="p-12">
+                      <div className="mb-8 border-b border-slate-200 pb-6">
+                        {/* Simple Header for Cover Letter */}
+                        <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                          {mergedUserProfile?.firstName
+                            ? [
+                                mergedUserProfile.firstName,
+                                mergedUserProfile.otherName,
+                                mergedUserProfile.lastName,
+                              ]
+                                .filter(Boolean)
+                                .join(' ')
+                            : 'Your Name'}
+                        </h1>
+                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                          {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
+                          {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
+                        </div>
                       </div>
+                      {application.coverLetter ? (
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ node, ...props }) => (
+                              <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
+                                className="text-lg font-semibold mb-3 mt-4 text-slate-800"
+                                {...props}
+                              />
+                            ),
+                            p: ({ node, ...props }) => (
+                              <p
+                                className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif"
+                                {...props}
+                              />
+                            ),
+                          }}
+                        >
+                          {application.coverLetter}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                          <Mail className="w-10 h-10 mb-3 text-slate-300" />
+                          <p className="font-medium text-slate-500">
+                            Cover letter not yet generated.
+                          </p>
+                          <p className="text-sm mt-1">
+                            Generate one from the Dashboard to see it here.
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    {application.coverLetter ? (
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ node, ...props }) => (
-                            <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              className="text-lg font-semibold mb-3 mt-4 text-slate-800"
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p
-                              className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif"
-                              {...props}
-                            />
-                          ),
-                        }}
-                      >
-                        {application.coverLetter}
-                      </ReactMarkdown>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <Mail className="w-10 h-10 mb-3 text-slate-300" />
-                        <p className="font-medium text-slate-500">
-                          Cover letter not yet generated.
-                        </p>
-                        <p className="text-sm mt-1">
-                          Generate one from the Dashboard to see it here.
-                        </p>
-                      </div>
-                    )}
                   </div>
-                </div>
-              )}
+                )}
               </div>
             </div>
           </div>
@@ -2364,9 +2363,7 @@ const ResumeReview = () => {
                                 {/* Caption. */}
                                 <div
                                   className={`flex items-center gap-1.5 px-2 py-1.5 ${
-                                    templateId === t.id
-                                      ? 'bg-slate-100 dark:bg-slate-800'
-                                      : ''
+                                    templateId === t.id ? 'bg-slate-100 dark:bg-slate-800' : ''
                                   }`}
                                 >
                                   <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">

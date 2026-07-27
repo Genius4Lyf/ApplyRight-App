@@ -339,7 +339,7 @@ const Profile = () => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+            className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             Try Again
           </button>
@@ -374,7 +374,7 @@ const Profile = () => {
             </button>
             <button
               onClick={handleCancelExit}
-              className="px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 transition-all hover:shadow-indigo-300 transform active:scale-[0.98]"
+              className="px-4 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-lg transition-all transform active:scale-[0.98]"
             >
               Keep Editing
             </button>
@@ -384,7 +384,7 @@ const Profile = () => {
 
       <main className="flex-1 lg:min-h-0 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col">
         <div className="mb-6 flex items-center gap-3">
-          <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          <User className="w-8 h-8 text-slate-900 dark:text-slate-100" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your Account</h1>
             <p className="text-slate-500 dark:text-slate-400">
@@ -421,7 +421,7 @@ const Profile = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all lg:w-full ${
                       isActive
-                        ? 'bg-white/80 text-indigo-700 shadow-[0_1px_3px_rgba(15,23,42,0.10)] ring-1 ring-black/5 backdrop-blur-md dark:bg-white/10 dark:text-indigo-200 dark:ring-white/10'
+                        ? 'bg-white/80 text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.10)] ring-1 ring-black/5 backdrop-blur-md dark:bg-white/10 dark:text-slate-100 dark:ring-white/10'
                         : 'text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-slate-200'
                     }`}
                   >
@@ -465,7 +465,7 @@ const Profile = () => {
                       onClick={() => navigate('/interview-prep')}
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 flex items-center justify-center shrink-0">
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <div className="flex-1">
@@ -538,7 +538,7 @@ const Profile = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleChange}
-                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -554,7 +554,7 @@ const Profile = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -570,7 +570,7 @@ const Profile = () => {
                         name="otherName"
                         value={formData.otherName}
                         onChange={handleChange}
-                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         placeholder="Optional"
                       />
                     </div>
@@ -590,7 +590,7 @@ const Profile = () => {
                       value={formData.currentJobTitle}
                       onChange={handleChange}
                       placeholder="e.g. Full Stack Developer"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                       Displayed prominently on your CV header.
@@ -617,7 +617,7 @@ const Profile = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           placeholder="e.g. 09017134882"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>
                       <div>
@@ -635,7 +635,7 @@ const Profile = () => {
                           onChange={handleChange}
                           onBlur={handleUrlBlur}
                           placeholder="yourportfolio.com"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -653,7 +653,7 @@ const Profile = () => {
                           onChange={handleChange}
                           onBlur={handleUrlBlur}
                           placeholder="linkedin.com/in/yourprofile"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>
                     </div>
@@ -680,7 +680,7 @@ const Profile = () => {
 
                   <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6">
                     <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                      <BookOpen className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                       Education Context
                     </h3>
 
@@ -699,7 +699,7 @@ const Profile = () => {
                           value={formData.university}
                           onChange={handleChange}
                           placeholder="e.g. Stanford University"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>
                       <div>
@@ -716,7 +716,7 @@ const Profile = () => {
                           value={formData.discipline}
                           onChange={handleChange}
                           placeholder="e.g. Computer Science"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>
                       <div>
@@ -733,7 +733,7 @@ const Profile = () => {
                           value={formData.graduationYear}
                           onChange={handleChange}
                           placeholder="YYYY"
-                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                         <p className="text-[10px] text-amber-600 mt-1 font-medium">
                           Critical for "Context-Aware" AI.
@@ -747,7 +747,7 @@ const Profile = () => {
                   <div className="border-t border-slate-100 dark:border-slate-700 my-6 pt-6 space-y-5">
                     <div>
                       <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
-                        <Target className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                        <Target className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         Career Goals
                       </h3>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
@@ -762,7 +762,7 @@ const Profile = () => {
 
                     <div>
                       <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                        <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         Skills
                       </h3>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
@@ -806,7 +806,7 @@ const Profile = () => {
               <div className="max-w-3xl space-y-6 animate-in fade-in duration-200">
                 <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                   <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                    <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    <Moon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     Appearance
                   </h3>
                   <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
@@ -855,7 +855,7 @@ const Profile = () => {
 
                 <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                   <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     Automation Preferences
                   </h3>
                   <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
@@ -867,7 +867,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, autoGenerateAnalysis: e.target.checked })
                       }
-                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                      className="w-5 h-5 text-slate-900 dark:text-slate-100 rounded focus:ring-slate-900 dark:focus:ring-slate-100 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
                     />
                     <label htmlFor="autoGenerate" className="cursor-pointer flex-1">
                       <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -888,7 +888,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, showOnboardingTutorials: e.target.checked })
                       }
-                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                      className="w-5 h-5 text-slate-900 dark:text-slate-100 rounded focus:ring-slate-900 dark:focus:ring-slate-100 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
                     />
                     <label htmlFor="showTutorials" className="cursor-pointer flex-1">
                       <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -908,7 +908,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, hideSkillsAiPrompt: e.target.checked })
                       }
-                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                      className="w-5 h-5 text-slate-900 dark:text-slate-100 rounded focus:ring-slate-900 dark:focus:ring-slate-100 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
                     />
                     <label htmlFor="hideSkillsPrompt" className="cursor-pointer flex-1">
                       <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -951,7 +951,7 @@ const Profile = () => {
               <div className="max-w-3xl animate-in fade-in duration-200">
                 <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
                   <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    <Bell className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     Notifications
                   </h3>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
@@ -995,7 +995,7 @@ const Profile = () => {
                               notifications: { ...prev.notifications, [row.key]: e.target.checked },
                             }))
                           }
-                          className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
+                          className="w-5 h-5 text-slate-900 dark:text-slate-100 rounded focus:ring-slate-900 dark:focus:ring-slate-100 border-gray-300 dark:border-slate-600 dark:bg-slate-900"
                         />
                         <label htmlFor={`notif-${row.key}`} className="cursor-pointer flex-1">
                           <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">

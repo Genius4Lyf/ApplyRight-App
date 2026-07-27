@@ -585,6 +585,10 @@
       "creditsUnit": "crédits",
       "choosePlan": "Choisir {{plan}}",
       "checkoutFailed": "Impossible de lancer le paiement. Veuillez réessayer.",
+      "trustModalTitle": "Avant de payer",
+      "trustModalBody": "ApplyRight est un projet indépendant en pleine croissance. Les paiements sont traités en toute sécurité via Flutterwave sous le compte personnel de notre fondateur — vous verrez \"Daniel Udofia\" sur votre relevé bancaire, votre SMS ou vos instructions de virement, au lieu de \"ApplyRight\". Votre achat est entièrement légitime et vous recevrez exactement ce que vous avez payé. Des questions ? Contactez-nous à tout moment à <mail>careers@applyright.com.ng</mail>.",
+      "trustModalContinue": "Continuer vers le paiement",
+      "paymentTrustNote": "Les paiements sont traités via Flutterwave. Vous pourriez voir \"Daniel Udofia\" (fondateur d'ApplyRight) comme destinataire — c'est normal, et vous recevrez exactement ce que vous avez payé. Des questions ? <mail>careers@applyright.com.ng</mail>",
       "currencyNgn": "₦ NGN",
       "currencyNgnRegion": "· Nigéria",
       "currencyUsd": "$ USD",
@@ -705,6 +709,11 @@
       "planLabel": "Formule {{plan}}",
       "minutesLeftPaid": "{{n}} min d’entretien en direct restantes",
       "minutesLeftFree": "{{n}} min d’entretien gratuites restantes",
+      "minutesEyebrow": "Minutes d’entretien en direct",
+      "freeTasteLabel": "Essai gratuit",
+      "topUpMinutesLockedTitle": "Les recharges sont réservées aux formules payantes",
+      "topUpMinutesLockedBody": "Vous bénéficiez d’un essai gratuit unique de {{n}} minutes pour tester les entretiens en direct. Passez à une formule payante pour ajouter des minutes à tout moment.",
+      "topUpMinutesLockedCta": "Voir les formules",
       "untilDate": "· jusqu’au {{date}}",
       "managePlan": "Gérer ma formule",
       "seeAllPlans": "Voir toutes les formules",
@@ -732,7 +741,7 @@
       "creditsPlusMinutes": "<b>{{credits}} crédits</b> + {{minutes}} min d’entretien en direct",
       "moreMinutesPrompt": "Besoin de quelques minutes d’entretien supplémentaires ?",
       "seeMinuteTopups": "Voir les recharges de minutes →",
-      "support": "Besoin d’aide ? Écrivez à support@applyright.com.ng",
+      "support": "Besoin d’aide ? Écrivez à <mail>careers@applyright.com.ng</mail>",
       "inviteModalTitle": "Parrainez et gagnez",
       "inviteModalBody": "Partagez votre code avec vos amis. Lorsqu’ils s’inscrivent, <b>vous recevez</b> <em>{{n}} crédits IA</em> !",
       "yourReferralCode": "VOTRE CODE DE PARRAINAGE",
@@ -762,10 +771,6 @@
       "minUnit": "min",
       "perMinNgn": "{{n}} ₦ / min",
       "perMinUsd": "{{n}} $ / min",
-      "moreCreditsTitle": "Besoin de plus de crédits IA ?",
-      "creditsSubtitle": "Rechargez des crédits pour l’adaptation de CV, les lettres de motivation et la préparation écrite. Ajoutés à votre portefeuille — ils n’expirent jamais.",
-      "perCreditNgn": "{{n}} ₦ par crédit",
-      "perCreditUsd": "{{n}} $ par crédit",
       "footerNote": "Paiement unique via Flutterwave. Sans reconduction — rachetez quand vous en avez besoin.",
       "paymentsUnavailable": "Les paiements sont momentanément indisponibles. Veuillez réessayer sous peu."
     },
@@ -794,7 +799,8 @@
       "ctaDashboard": "Aller au tableau de bord",
       "failedTitle": "Paiement non confirmé",
       "failedBody": "Si vous avez été débité, cela apparaîtra sous peu — vérifiez votre formule sur la page des tarifs. Vous n’avez pas été débité pour un paiement annulé.",
-      "backToPlans": "Retour aux formules"
+      "backToPlans": "Retour aux formules",
+      "backToOrigin": "Retour à votre page précédente"
     }
   },
   "cvBuilder": {
@@ -3383,7 +3389,8 @@
       "fromSource": "de {{source}}",
       "removeOrDeleteCv": "Retirer ou supprimer ce CV",
       "deleteTailoring": "Supprimer cette adaptation",
-      "deleteAria": "Supprimer {{heading}}"
+      "deleteAria": "Supprimer {{heading}}",
+      "backToHome": "Retour à l'accueil"
     },
     "skillsBuild": {
       "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Vous choisissez lesquelles ajouter.",

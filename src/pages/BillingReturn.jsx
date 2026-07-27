@@ -37,6 +37,16 @@ const BillingReturn = () => {
     }
   });
   const isDownloadReturn = intent === 'download';
+  // Where to send the user after a FAILED/cancelled payment — the exact page the
+  // checkout was started from, stashed at every checkout call site. Separate from
+  // `returnTo` above (which is deliberately unset for some success flows). Read once.
+  const [failedReturnTo] = useState(() => {
+    try {
+      return localStorage.getItem('arCheckoutOrigin') || null;
+    } catch {
+      return null;
+    }
+  });
 
   const successPath = returnTo ? `${returnTo}?paid=1` : '/dashboard';
   const isInterviewReturn = !!returnTo && returnTo.includes('/mock');
@@ -44,6 +54,7 @@ const BillingReturn = () => {
     try {
       localStorage.removeItem('arPostCheckout');
       localStorage.removeItem('arCheckoutIntent');
+      localStorage.removeItem('arCheckoutOrigin');
     } catch {
       /* non-fatal */
     }
@@ -157,10 +168,15 @@ const BillingReturn = () => {
               {t('billing.return.failedBody')}
             </p>
             <button
-              onClick={() => navigate('/upgrade')}
-              className="mt-6 w-full py-3 rounded-xl font-bold bg-slate-900 dark:bg-indigo-600 text-white hover:opacity-90 transition-colors"
+              onClick={() => {
+                try {
+                  localStorage.removeItem('arCheckoutOrigin');
+                } catch { /* non-fatal */ }
+                navigate(failedReturnTo || '/upgrade');
+              }}
+              className="mt-6 w-full py-3 rounded-xl font-bold bg-slate-900 dark:bg-white dark:text-slate-900 text-white hover:opacity-90 transition-colors"
             >
-              {t('billing.return.backToPlans')}
+              {failedReturnTo ? t('billing.return.backToOrigin') : t('billing.return.backToPlans')}
             </button>
           </>
         )}

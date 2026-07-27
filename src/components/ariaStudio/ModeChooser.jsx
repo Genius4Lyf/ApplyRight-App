@@ -18,7 +18,7 @@ const ModeChooser = ({ onPick }) => {
         <button
           type="button"
           onClick={() => onPick('tailor')}
-          className="mt-3 w-full text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 bg-white dark:bg-slate-900 p-3.5 flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="mt-3 w-full text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-100 bg-white dark:bg-slate-900 p-3.5 flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
         >
           {/* Decorative — it illustrates the mode, it isn't an action. Neutral chip,
               matching the builder's entry cards (Education's GraduationCap). */}
@@ -38,7 +38,7 @@ const ModeChooser = ({ onPick }) => {
         <button
           type="button"
           onClick={() => onPick('build')}
-          className="mt-2 w-full text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 bg-white dark:bg-slate-900 p-3.5 flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="mt-2 w-full text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-100 bg-white dark:bg-slate-900 p-3.5 flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
         >
           <span className="shrink-0 mt-0.5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center">
             <FilePlus2 className="w-4 h-4" />

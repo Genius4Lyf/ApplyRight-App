@@ -2,19 +2,10 @@ import React, { useState } from 'react';
 import AriaLoader from './ui/AriaLoader';
 import { useNavigate } from 'react-router-dom';
 import { TEMPLATES } from '../data/templates';
-import {
-  CheckCircle,
-  Star,
-  FileText,
-  ArrowRight,
-  Lock,
-  PlayCircle,
-  Zap,
-  X,
-  Sparkles,
-} from 'lucide-react';
+import { CheckCircle, Star, FileText, ArrowRight, Lock, PlayCircle, X } from 'lucide-react';
 
 import TemplateThumbnail from './TemplateThumbnail';
+import AriaOrbit from './cv/AriaOrbit';
 import AdPlayer from './AdPlayer';
 import api from '../services/api';
 import { Capacitor } from '@capacitor/core';
@@ -180,7 +171,7 @@ const TemplateSelector = ({
                   <AriaLoader inline tone="mono" size={16} label="Unlocking…" />
                 ) : (
                   <>
-                    <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <AriaOrbit size={20} tone="mono" />
                     Unlock for {templateToUnlock.cost} A.I Credits
                   </>
                 )}
@@ -217,7 +208,7 @@ const TemplateSelector = ({
                         onClick={() => navigate('/credits')}
                         className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
                       >
-                        <Sparkles className="w-5 h-5" />
+                        <AriaOrbit size={20} tone="mono" />
                         Get more credits
                       </button>
                       <button

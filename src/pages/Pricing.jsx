@@ -37,7 +37,7 @@ const Pricing = () => {
       <main className="flex-grow pt-24 pb-12 sm:pt-28">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-6">
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500 mb-3">
               {t('billing.pricing.eyebrow')}
             </p>
             <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight text-slate-900 leading-tight">

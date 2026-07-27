@@ -38,9 +38,9 @@ const Sparkline = ({ points }) => {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-indigo-500 dark:text-indigo-400"
+        className="text-slate-900 dark:text-slate-100"
       />
-      <circle cx={xs[last]} cy={ys[last]} r="3" className="fill-indigo-500 dark:fill-indigo-400" />
+      <circle cx={xs[last]} cy={ys[last]} r="3" className="fill-slate-900 dark:fill-slate-100" />
     </svg>
   );
 };
@@ -112,7 +112,7 @@ const ActivityCard = () => {
   if (nothingYet) {
     return (
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm text-center">
-        <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
+        <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 flex items-center justify-center mx-auto mb-3">
           <TrendingUp className="w-5 h-5" />
         </div>
         <h3 className="text-md font-bold text-slate-900 dark:text-slate-100 mb-1">
@@ -124,7 +124,7 @@ const ActivityCard = () => {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-slate-900 hover:bg-slate-800 text-white transition-colors"
         >
           <Sparkles className="w-4 h-4" />
           Get started
@@ -136,7 +136,7 @@ const ActivityCard = () => {
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 flex items-center justify-center shrink-0">
           <TrendingUp className="w-4 h-4" />
         </div>
         <h3 className="text-md font-bold text-slate-900 dark:text-slate-100">Your activity</h3>
@@ -153,7 +153,7 @@ const ActivityCard = () => {
           icon={Briefcase}
           value={applicationsAnalyzed}
           label="Jobs analyzed"
-          accent="text-indigo-500"
+          accent="text-slate-900 dark:text-slate-100"
         />
         <StatTile
           icon={Mic}
@@ -171,7 +171,7 @@ const ActivityCard = () => {
               Match score trend
             </span>
             {typeof bestFitScore === 'number' && (
-              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 Best {bestFitScore}%
               </span>
             )}

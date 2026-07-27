@@ -26,6 +26,7 @@ const InterviewPaywallModal = ({ open, onClose }) => {
       // Stash this interview page so BillingReturn sends the buyer back here (and
       // auto-starts) rather than to the dashboard — the redirect wipes React state.
       localStorage.setItem('arPostCheckout', window.location.pathname);
+      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
       const { link } = await billingService.checkout('practice_pass', 'NGN');
       if (!link) throw new Error('No link');
       window.location.href = link; // hosted checkout; returns to /billing/return
