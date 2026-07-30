@@ -7,7 +7,7 @@ import TierCard from '../components/pricing/TierCard';
 import PaymentTrustModal from '../components/PaymentTrustModal';
 import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
 import billingService from '../services/billing.service';
-import { TIERS, AGENT_TIERS, FREE_TIER, FREE_TASTE_MIN } from '../lib/plans';
+import { TIERS, AGENT_TIERS, FREE_TIER, FREE_TASTE_MIN, detectDefaultCurrency } from '../lib/plans';
 import { toast } from 'sonner';
 
 const Upgrade = () => {
@@ -15,7 +15,7 @@ const Upgrade = () => {
   const { t } = useTranslation();
   const [entitlement, setEntitlement] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
-  const [currency, setCurrency] = useState('NGN');
+  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState(null);
   // Pricing is locked to the user's account type — CV agents see only agent

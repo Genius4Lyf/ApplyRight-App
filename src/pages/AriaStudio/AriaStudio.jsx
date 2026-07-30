@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
@@ -27,6 +27,7 @@ import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
 const StudioDesk = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     cvData,
     draftId,
@@ -68,6 +69,18 @@ const StudioDesk = () => {
   useEffect(() => {
     refreshSessions();
   }, [refreshSessions, draftId]);
+
+  // Arrived from an analysis with a source CV already decided — open a tailor
+  // session with it pre-selected, so Aria doesn't ask which CV to use. Consumed
+  // once (the state is cleared) so a refresh doesn't restart the session.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    const seed = location.state?.seedSource;
+    if (!seed?.id || seededRef.current) return;
+    seededRef.current = true;
+    window.history.replaceState({}, '');
+    newSession('tailor', seed);
+  }, [location.state, newSession]);
 
   // The unsaved tail of a conversation is the easiest thing in this design to lose —
   // the autosave is debounced, so a tab close mid-sentence would drop it.

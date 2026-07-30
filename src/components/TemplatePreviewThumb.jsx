@@ -14,6 +14,8 @@ import ExecutiveEnergyTemplate from './templates/ExecutiveEnergyTemplate';
 import ApplyRightNavyTemplate from './templates/ApplyRightNavyTemplate';
 import ApplyRightMonoTemplate from './templates/ApplyRightMonoTemplate';
 import ApplyRightBandTemplate from './templates/ApplyRightBandTemplate';
+import TheProfileTemplate from './templates/TheProfileTemplate';
+import TheAscentTemplate from './templates/TheAscentTemplate';
 
 const TEMPLATE_COMPONENTS = {
   'ats-clean': ATSCleanTemplate,
@@ -27,6 +29,8 @@ const TEMPLATE_COMPONENTS = {
   'applyright-navy': ApplyRightNavyTemplate,
   'applyright-mono': ApplyRightMonoTemplate,
   'applyright-band': ApplyRightBandTemplate,
+  'the-profile': TheProfileTemplate,
+  'the-ascent': TheAscentTemplate,
 };
 
 // A4 width in px at 96dpi (210mm). The inner page renders at this width and is

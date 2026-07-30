@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Lock, CheckCircle2 } from 'lucide-react';
+import { Users, Lock, CheckCircle2, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { initials } from '../../utils/avatar';
 
@@ -14,7 +14,7 @@ const SEAT_RING = 'ring-slate-200 dark:ring-slate-700';
 const SEAT_RING_ACTIVE = 'ring-offset-2 ring-offset-transparent ring-slate-900 dark:ring-slate-100';
 const SEAT_FALLBACK = 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
 
-const getAvatarUrl = (name = '') => {
+export const getAvatarUrl = (name = '') => {
   const clean = name.trim().toLowerCase();
   if (!clean) return '/avatars/female_1.png';
   if (clean === 'renee') return '/avatars/female_1.png';
@@ -116,6 +116,7 @@ const InterviewerPanel = ({
   lockedIndices = [], // chooser: indices the user hasn't unlocked yet
   scores = {}, // chooser: index -> score (shown as a badge on done seats)
   compact = false, // tighten card heights (free-tier locked teaser)
+  onShowInfo = null, // chooser: (index) => void — shows the info modal for that seat
 }) => {
   const { t } = useTranslation();
   const headingText = heading ?? t('interviewPrep.interviewerPanel.heading');
@@ -151,35 +152,50 @@ const InterviewerPanel = ({
               const locked = isLocked(i);
               const score = scores[i];
               return (
-                <button
-                  key={p.seat ?? i}
-                  type="button"
-                  disabled={locked}
-                  onClick={() => !locked && onSelect(i)}
-                  className={`relative rounded-2xl p-2.5 sm:p-3 transition-all ${
-                    locked
-                      ? 'cursor-not-allowed ring-1 ring-slate-200 dark:ring-slate-700 bg-slate-50 dark:bg-slate-800/40'
-                      : selectedIndex === i
-                        ? 'bg-slate-100 dark:bg-slate-800 ring-2 ring-slate-900 dark:ring-white shadow-sm'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 ring-1 ring-transparent'
-                  }`}
-                >
-                  {/* Dim only the avatar/name when locked — keep the requirement
-                      pill below at full contrast so it's clearly readable. */}
-                  <div className={locked ? 'opacity-45' : ''}>
-                    <InterviewerCard
-                      person={p}
-                      dark={dark}
-                      active={!locked && selectedIndex === i}
-                    />
-                  </div>
-                  {!locked && typeof score === 'number' && (
-                    <span className="absolute top-1 right-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-heading text-[9px] font-bold tabular-nums shadow-sm">
-                      <CheckCircle2 className="w-2.5 h-2.5" />
-                      {score}%
-                    </span>
+                <div key={p.seat ?? i} className="relative">
+                  <button
+                    type="button"
+                    disabled={locked}
+                    onClick={() => !locked && onSelect(i)}
+                    className={`relative rounded-2xl p-2.5 sm:p-3 transition-all w-full ${
+                      locked
+                        ? 'cursor-not-allowed ring-1 ring-slate-200 dark:ring-slate-700 bg-slate-50 dark:bg-slate-800/40'
+                        : selectedIndex === i
+                          ? 'bg-slate-100 dark:bg-slate-800 ring-2 ring-slate-900 dark:ring-white shadow-sm'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 ring-1 ring-transparent'
+                    }`}
+                  >
+                    {/* Dim only the avatar/name when locked — keep the requirement
+                        pill below at full contrast so it's clearly readable. */}
+                    <div className={locked ? 'opacity-45' : ''}>
+                      <InterviewerCard
+                        person={p}
+                        dark={dark}
+                        active={!locked && selectedIndex === i}
+                      />
+                    </div>
+                    {!locked && typeof score === 'number' && (
+                      <span className="absolute top-1 right-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-heading text-[9px] font-bold tabular-nums shadow-sm">
+                        <CheckCircle2 className="w-2.5 h-2.5" />
+                        {score}%
+                      </span>
+                    )}
+                  </button>
+
+                  {!locked && onShowInfo && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onShowInfo(i);
+                      }}
+                      aria-label={t('interviewPrep.interviewerPanel.aboutAria', { name: p.name })}
+                      className="absolute top-1 left-1 p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })
           ) : (

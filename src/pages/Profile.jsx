@@ -1110,7 +1110,7 @@ const Profile = () => {
                     setShowLogoutModal(false);
                     handleSignOut();
                   }}
-                  className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-rose-200"
+                  className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-rose-200 dark:shadow-none"
                 >
                   Sign Out
                 </button>

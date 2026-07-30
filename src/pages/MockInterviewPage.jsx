@@ -42,6 +42,7 @@ import {
 import InterviewReadinessChecklist from '../components/prep/InterviewReadinessChecklist';
 import { BreathingExercise } from '../components/prep/CalmKit';
 import InterviewerPanel from '../components/prep/InterviewerPanel';
+import InterviewerInfoModal from '../components/prep/InterviewerInfoModal';
 import RoomBrief from '../components/prep/RoomBrief';
 import PreflightSteps from '../components/prep/PreflightSteps';
 import MeetingStage from '../components/prep/MeetingStage';
@@ -298,6 +299,8 @@ const MockInterviewPage = () => {
     const p = Number(new URLSearchParams(window.location.search).get('interviewer'));
     return Number.isInteger(p) && p >= 0 ? p : 0;
   });
+  // Which seat's info modal is open (chooser only), or null when closed.
+  const [infoSeatIndex, setInfoSeatIndex] = useState(null);
   // Loop gating for the chooser: which seats are locked + each seat's best score.
   // A support-granted override unlocks everyone.
   const loopRounds = application?.interviewPrep?.rounds || [];
@@ -1706,6 +1709,7 @@ const MockInterviewPage = () => {
           // Free tier sees the panel blurred behind a lock, so render it
           // compactly — the per-seat detail is hidden anyway.
           compact={!isPaidTier}
+          onShowInfo={isPaidTier ? setInfoSeatIndex : null}
         />
       )}
 
@@ -1724,12 +1728,9 @@ const MockInterviewPage = () => {
         onChallengeChange={chooseChallenge}
       />
 
-      {panelReady && (
+      {panelReady && !isPaidTier && (
         <p className="text-center text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
-          {isPaidTier
-            ? setupPanel[chosenSeatIndex]?.description ||
-              t('interviewPrep.mock.setupScreen.seatDescFallback')
-            : t('interviewPrep.mock.setupScreen.freePanelNote')}
+          {t('interviewPrep.mock.setupScreen.freePanelNote')}
         </p>
       )}
     </div>
@@ -2103,6 +2104,11 @@ const MockInterviewPage = () => {
       <InterviewPaywallModal
         open={showInterviewPaywall}
         onClose={() => setShowInterviewPaywall(false)}
+      />
+
+      <InterviewerInfoModal
+        person={infoSeatIndex != null ? setupPanel[infoSeatIndex] : null}
+        onClose={() => setInfoSeatIndex(null)}
       />
     </div>
   );

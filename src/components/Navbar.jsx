@@ -677,7 +677,7 @@ const Navbar = () => {
                       setShowLogoutConfirm(false);
                       handleLogout();
                     }}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-red-200"
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-red-200 dark:shadow-none"
                   >
                     {t('nav.logout.confirm')}
                   </button>

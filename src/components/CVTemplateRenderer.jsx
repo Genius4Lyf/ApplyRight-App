@@ -31,6 +31,8 @@ import EnergyTotalTemplate from './templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from './templates/EnergySeplatTemplate';
 import EnergyHalliburtonTemplate from './templates/EnergyHalliburtonTemplate';
 import EnergyNLNGTemplate from './templates/EnergyNLNGTemplate';
+import TheProfileTemplate from './templates/TheProfileTemplate';
+import TheAscentTemplate from './templates/TheAscentTemplate';
 
 // Pure, read-only CV renderer. Takes an application (with `optimizedCV` markdown
 // and `templateId`) and renders it with the same template components used by the
@@ -65,6 +67,8 @@ const TEMPLATES = {
   'energy-seplat': EnergySeplatTemplate,
   'energy-halliburton': EnergyHalliburtonTemplate,
   'energy-nlng': EnergyNLNGTemplate,
+  'the-profile': TheProfileTemplate,
+  'the-ascent': TheAscentTemplate,
 };
 
 // Extract a minimal contact profile from the CV markdown (same heuristic as Preview).

@@ -53,6 +53,8 @@ import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
 import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburtonTemplate';
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
+import TheProfileTemplate from '../components/templates/TheProfileTemplate';
+import TheAscentTemplate from '../components/templates/TheAscentTemplate';
 
 const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -236,6 +238,12 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
         return <EnergyHalliburtonTemplate {...props} />;
       case 'energy-nlng':
         return <EnergyNLNGTemplate {...props} />;
+
+      // New directions
+      case 'the-profile':
+        return <TheProfileTemplate {...props} />;
+      case 'the-ascent':
+        return <TheAscentTemplate {...props} />;
 
       // Unknown/legacy templateId falls back to the safe, ATS-clean default so
       // saved CVs referencing a no-longer-offered template still render cleanly.

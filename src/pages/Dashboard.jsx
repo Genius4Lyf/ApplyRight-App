@@ -42,7 +42,7 @@ import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
 import { isMobile } from '../utils/platform';
 import { signalReady } from '../utils/splash';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import FitScoreCard from '../components/FitScoreCard';
 import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import NextBestAction from '../components/NextBestAction';
@@ -87,7 +87,9 @@ const Dashboard = () => {
   // Asset generation loading states
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCL, setGeneratingCL] = useState(false);
+  const [clFreeRemaining, setClFreeRemaining] = useState(0);
   const [generatingInterview, setGeneratingInterview] = useState(false);
+  const [openingStudio, setOpeningStudio] = useState(false);
   // Holds the asset that was *just* generated so NextBestAction can show a
   // dedicated completion card instead of immediately rotating to the next
   // action. User dismisses explicitly via View or Next.
@@ -182,6 +184,26 @@ const Dashboard = () => {
     currentUser.credits = newBalance;
     localStorage.setItem('user', JSON.stringify(currentUser));
   };
+
+  // Free-tier daily cover letter allowance — fetch once on mount so the
+  // toolkit button shows "Free today" immediately, without waiting on an
+  // unrelated generation to sync the balance first.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/billing/balance')
+      .then((res) => {
+        if (!cancelled && res.data?.coverLetterFreeRemaining !== undefined) {
+          setClFreeRemaining(res.data.coverLetterFreeRemaining);
+        }
+      })
+      .catch(() => {
+        // Non-critical — button falls back to the normal credit-cost display.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Auto-analyze when both resume and job are available AND setting is enabled.
   // Deliberately depends only on [resume, job] — we want a single auto-trigger
@@ -325,6 +347,9 @@ const Dashboard = () => {
           try {
             const bal = await api.get('/billing/balance');
             if (bal.data?.credits !== undefined) updateCredits(bal.data.credits);
+            if (bal.data?.coverLetterFreeRemaining !== undefined) {
+              setClFreeRemaining(bal.data.coverLetterFreeRemaining);
+            }
           } catch {
             // Non-critical — UI will still re-fetch credits on next interaction.
           }
@@ -417,6 +442,30 @@ const Dashboard = () => {
     startCVGeneration(undefined);
   };
 
+  // Open Aria Studio to tailor THIS application's CV. /analysis/:id/edit turns
+  // the application into a real DraftCV (idempotent — reuses one if it exists),
+  // which is what Aria Studio tailors FROM. Pre-selecting the source means the
+  // user isn't asked which CV to use.
+  const openInAriaStudio = async () => {
+    const applicationId = application?._id || application?.applicationId;
+    if (!applicationId || openingStudio) return;
+    setOpeningStudio(true);
+    try {
+      const res = await api.post(`/analysis/${applicationId}/edit`);
+      const draftId = res.data?.draftId;
+      if (!draftId) throw new Error('no draft returned');
+      navigate('/aria-studio', {
+        state: {
+          seedSource: { id: draftId, title: application?.jobTitle || application?.title || '' },
+        },
+      });
+    } catch (err) {
+      console.error('Open in Aria Studio failed', err);
+      toast.error(t('dashboard.toasts.studioOpenFailed'));
+      setOpeningStudio(false);
+    }
+  };
+
   // Bundle: kicks off the same async pipeline as CV but the backend will also
   // generate cover letter + interview prep before charging once at 18 credits.
   const handleGenerateBundle = async () => {
@@ -457,6 +506,9 @@ const Dashboard = () => {
       setApplication((prev) => ({ ...prev, ...res.data }));
       if (res.data.remainingCredits !== undefined) {
         updateCredits(res.data.remainingCredits);
+      }
+      if (res.data.coverLetterFreeRemaining !== undefined) {
+        setClFreeRemaining(res.data.coverLetterFreeRemaining);
       }
       const warnings = res.data.coverLetterWarnings || [];
       if (warnings.length > 0) {
@@ -726,7 +778,7 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label={t('dashboard.tailorCard.aria')}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 border-t-2 border-t-indigo-600 dark:border-t-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 border-t-2 border-t-indigo-600 dark:border-t-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
@@ -738,13 +790,18 @@ const Dashboard = () => {
                     {t('dashboard.tailorCard.title')}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
-                    {t('dashboard.tailorCard.body')}
+                    <Trans
+                      i18nKey="dashboard.tailorCard.body"
+                      components={{
+                        f: <span className="font-bold italic text-slate-700 dark:text-slate-200" />,
+                      }}
+                    />
                   </p>
                   <div className="mt-auto flex items-center justify-between gap-3">
                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
                       {t('dashboard.tailorCard.cta')} <ArrowRight className="w-4 h-4" />
                     </span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                       {t('dashboard.tailorCard.poweredBy')}
                     </span>
                   </div>
@@ -936,7 +993,7 @@ const Dashboard = () => {
             </button>
             {!fitResult && (
               <div className="mb-8">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                   {t('dashboard.tailorCard.poweredBy')}
                 </p>
                 <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -1384,14 +1441,33 @@ const Dashboard = () => {
                         </GhostButton>
                       </>
                     ) : (
-                      <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
-                        <InkButton
-                          onClick={handleGenerateCV}
-                          generating={generatingCV}
-                          disabled={generatingCV}
-                          cost={CREDIT_COSTS.GENERATE_CV}
-                        />
-                      </CreditGate>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={openInAriaStudio}
+                          disabled={openingStudio}
+                          className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors disabled:opacity-60"
+                        >
+                          <AriaOrbit size={14} tone="mono" />
+                          {openingStudio
+                            ? t('dashboard.toolkit.openingStudio')
+                            : t('dashboard.toolkit.workWithAria')}
+                        </button>
+                        <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                          <button
+                            type="button"
+                            onClick={handleGenerateCV}
+                            disabled={generatingCV}
+                            className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-60"
+                          >
+                            {generatingCV
+                              ? t('dashboard.toolkit.generating')
+                              : t('dashboard.toolkit.justGenerateIt', {
+                                  cost: CREDIT_COSTS.GENERATE_CV,
+                                })}
+                          </button>
+                        </CreditGate>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1441,12 +1517,15 @@ const Dashboard = () => {
                         </GhostButton>
                       </>
                     ) : (
-                      <CreditGate cost={CREDIT_COSTS.GENERATE_COVER_LETTER}>
+                      <CreditGate
+                        cost={clFreeRemaining > 0 ? 0 : CREDIT_COSTS.GENERATE_COVER_LETTER}
+                      >
                         <InkButton
                           onClick={handleGenerateCoverLetter}
                           generating={generatingCL}
                           disabled={generatingCL}
                           cost={CREDIT_COSTS.GENERATE_COVER_LETTER}
+                          freeLabel={clFreeRemaining > 0 ? t('dashboard.toolkit.freeToday') : null}
                         />
                       </CreditGate>
                     )}
@@ -1669,29 +1748,29 @@ const Dashboard = () => {
             }
           >
             {!application.optimizedCV ? (
-              <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleGenerateCV}
-                  disabled={generatingCV}
-                  className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-all ${
-                    generatingCV
-                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                      : 'btn-primary'
-                  }`}
+                  onClick={openInAriaStudio}
+                  disabled={openingStudio}
+                  className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary disabled:opacity-60"
                 >
-                  {generatingCV ? (
-                    <>
-                      <AriaLoader inline tone="mono" size={16} label="" />
-                      Generating…
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Generate tailored CV · {CREDIT_COSTS.GENERATE_CV} credits
-                    </>
-                  )}
+                  <AriaOrbit size={16} tone="mono" />
+                  {openingStudio
+                    ? t('dashboard.toolkit.openingStudio')
+                    : t('dashboard.toolkit.workWithAria')}
                 </button>
-              </CreditGate>
+                <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
+                  <button
+                    onClick={handleGenerateCV}
+                    disabled={generatingCV}
+                    className="w-full text-center text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 disabled:opacity-60"
+                  >
+                    {generatingCV
+                      ? t('dashboard.toolkit.generating')
+                      : t('dashboard.toolkit.justGenerateIt', { cost: CREDIT_COSTS.GENERATE_CV })}
+                  </button>
+                </CreditGate>
+              </div>
             ) : (
               <button
                 onClick={() =>

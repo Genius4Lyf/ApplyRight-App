@@ -29,7 +29,7 @@ export const GhostButton = ({ onClick, children }) => (
 
 // Ink / primary action (Generate). The cost rides along as a quiet mono badge;
 // the generating state swaps to a muted disabled pill with a spinner.
-export const InkButton = ({ onClick, disabled, generating, cost }) => {
+export const InkButton = ({ onClick, disabled, generating, cost, freeLabel = null }) => {
   const { t } = useTranslation();
   return (
     <button
@@ -51,7 +51,7 @@ export const InkButton = ({ onClick, disabled, generating, cost }) => {
         <>
           {t('dashboard.toolkit.generate')}
           <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/10">
-            {t('cvBuilder.common.creditChip', { n: cost })}
+            {freeLabel || t('cvBuilder.common.creditChip', { n: cost })}
           </span>
         </>
       )}

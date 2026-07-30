@@ -5,7 +5,7 @@ import { FileDown } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
 import TierCard from '../components/pricing/TierCard';
-import { TIERS, AGENT_TIERS, FREE_TIER } from '../lib/plans';
+import { TIERS, AGENT_TIERS, FREE_TIER, detectDefaultCurrency } from '../lib/plans';
 
 // Public, logged-out pricing page. This is the ONE place that keeps the
 // seeker/agent toggle — a visitor has no account yet, so they choose which
@@ -14,7 +14,7 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [audience, setAudience] = useState('seeker'); // 'seeker' | 'agent'
-  const [currency, setCurrency] = useState('NGN');
+  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
 
   const isAuthed = !!localStorage.getItem('token');
   // Job seekers get a Free card alongside the paid tiers; agents must subscribe.

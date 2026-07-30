@@ -43,8 +43,7 @@ import ScoreCard from './ScoreCard';
 import SectionBreakdownCard from './SectionBreakdownCard';
 import FinishCard from './FinishCard';
 import StudioPrintSurface from './StudioPrintSurface';
-import DownloadPaywallModal from '../DownloadPaywallModal';
-import { downloadPdf, downloadDocx, DEFAULT_TEMPLATE_ID } from '../../lib/cvDownload';
+import { DEFAULT_TEMPLATE_ID } from '../../lib/cvDownload';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import EntryPickerCard from './EntryPickerCard';
 import SectionCoach from './SectionCoach';
@@ -53,6 +52,7 @@ import SkillsFixCard from './SkillsFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
 import BuildRoadmapCard from './BuildRoadmapCard';
 import TargetJobAskCard from './TargetJobAskCard';
+import CareerStageAskCard from './CareerStageAskCard';
 import ContactConfirmCard from './ContactConfirmCard';
 import PinnedEntryCard from './PinnedEntryCard';
 import RoleCaptureCard from './RoleCaptureCard';
@@ -165,6 +165,9 @@ const StudioChat = ({ onPaywall }) => {
   const [working, setWorking] = useState(false); // tailor-start in flight
   const [reading, setReading] = useState(false); // keyword + brief-preview in flight
   const [scanning, setScanning] = useState(false); // scan or recompute in flight
+  // Generic "step confirmed, moving on" beat — hides the current/next card behind a
+  // short labeled thinking indicator instead of swapping cards instantly.
+  const [transitionLabel, setTransitionLabel] = useState(null);
   const [pickBusyId, setPickBusyId] = useState(null);
   // Set while re-opening the job form to Edit an already-captured job.
   const [editingJob, setEditingJob] = useState(false);
@@ -175,9 +178,6 @@ const StudioChat = ({ onPaywall }) => {
   const [summaryBusy, setSummaryBusy] = useState(false);
   const [summaryDraft, setSummaryDraft] = useState('');
   const [summaryWasReroll, setSummaryWasReroll] = useState(false);
-  // Download state. `downloadBusy` is 'pdf' | 'docx' | null so the right button spins.
-  const [downloadBusy, setDownloadBusy] = useState(null);
-  const [showDownloadPaywall, setShowDownloadPaywall] = useState(false);
   // Whether the build's job question has opened the capture form. Transient by design:
   // the ANSWER is a marker, so a refresh mid-typing returns to the question rather than
   // an empty form pretending to hold something.
@@ -199,7 +199,19 @@ const StudioChat = ({ onPaywall }) => {
   // One-shot guard for the localStorage → coachChats migration.
   const migratedRef = useRef(false);
 
-  useStickToBottom(chatRef, [messages, thinking, working, reading, phase, editingJob], reduce);
+  useStickToBottom(
+    chatRef,
+    [messages, thinking, working, reading, transitionLabel, phase, editingJob],
+    reduce
+  );
+
+  const advance = (fn, label, delay = 700) => {
+    setTransitionLabel(label);
+    setTimeout(() => {
+      setTransitionLabel(null);
+      fn();
+    }, delay);
+  };
 
   // Rehydrate the flow from the draft's saved thread once one is loaded from the
   // backend (a returning session). Only runs when we have a draft AND nothing local.
@@ -265,6 +277,21 @@ const StudioChat = ({ onPaywall }) => {
   // reads it from), so it resolves the same way the pin does.
   const pinnedType = pinnedEntry ? projectTypeFor(messages, pinnedEntry._sortId) : null;
   const pinnedStage = roleStage(pinnedEntry, pinnedSectionKey, { typePicked: !!pinnedType });
+
+  // Career stage — same "Where are you in your career?" question as the CV builder's
+  // build-with, picked once and carried across every role for this Studio session.
+  // Persisted on the draft (not local-only) so a reload/session-resume doesn't silently
+  // fall back to backend inference (which defaults to "experienced" once any real job
+  // title/company exists).
+  const careerStage = cvData?.careerStage || null;
+  const setCareerStage = (stage) => {
+    updateCvData({ careerStage: stage });
+    if (draftId) {
+      CVService.saveDraft({ _id: draftId, careerStage: stage }).catch((err) =>
+        console.error('Failed to save career stage', err)
+      );
+    }
+  };
 
   // Self-clear a pin whose entry has gone — deleted in the CV builder, or in another tab.
   // Without this the card would keep accepting answers for a role that no longer exists.
@@ -350,9 +377,7 @@ const StudioChat = ({ onPaywall }) => {
     push({ who: 'jobcard', jobTitle, jobDescription, keywords, brief });
     setPhase('brief');
     ariaSays(
-      brief
-        ? t('ariaStudio.chat.captureJobWithBrief')
-        : t('ariaStudio.chat.captureJobNoBrief')
+      brief ? t('ariaStudio.chat.captureJobWithBrief') : t('ariaStudio.chat.captureJobNoBrief')
     );
   };
 
@@ -417,18 +442,20 @@ const StudioChat = ({ onPaywall }) => {
 
   // ─── Step 3: confirm Aria's read ───
   const confirmBrief = () => {
-    push({ who: 'briefcard', confirmed: true });
-    setPhase('cv');
-    // Handed over from a finished build — the source is already decided, so skip the
-    // picker and say which CV is being used rather than asking a question with one
-    // obvious answer. The user can still pick another from the card if it's wrong.
-    const pre = preSourceRef.current;
-    if (pre?.id) {
-      ariaSays(t('ariaStudio.chat.confirmBriefWithSource', { title: pre.title }));
-      setTimeout(() => pickCv({ _id: pre.id, title: pre.title }), 700);
-      return;
-    }
-    ariaSays(t('ariaStudio.chat.confirmBriefNoSource'));
+    advance(() => {
+      push({ who: 'briefcard', confirmed: true });
+      setPhase('cv');
+      // Handed over from a finished build — the source is already decided, so skip the
+      // picker and say which CV is being used rather than asking a question with one
+      // obvious answer. The user can still pick another from the card if it's wrong.
+      const pre = preSourceRef.current;
+      if (pre?.id) {
+        ariaSays(t('ariaStudio.chat.confirmBriefWithSource', { title: pre.title }));
+        setTimeout(() => pickCv({ _id: pre.id, title: pre.title }), 700);
+        return;
+      }
+      ariaSays(t('ariaStudio.chat.confirmBriefNoSource'));
+    }, t('ariaStudio.chat.thinking.savingBrief'));
   };
 
   // Edit re-opens the job form so the JD can be corrected and re-previewed. Nothing has
@@ -560,11 +587,13 @@ const StudioChat = ({ onPaywall }) => {
   // The record REFERENCES the entry and what was applied — never the score, which
   // would go stale the moment the next recompute runs.
   const finishFix = async (result) => {
+    setScanning(true);
     const fix = openFix(messages);
     push({ who: 'fixend' });
 
     if (!result) {
       // Backed out without applying anything — nothing to re-score.
+      setScanning(false); // early exit — runRecompute() (which normally clears this) never runs
       setPhase('results');
       return;
     }
@@ -712,11 +741,8 @@ const StudioChat = ({ onPaywall }) => {
       }
     }
     setReading(false);
-    push(
-      { who: 'jobcard', jobTitle, jobDescription, keywords: [], brief },
-      { who: 'buildjobdone' }
-    );
-    setPhase('build:contact');
+    push({ who: 'jobcard', jobTitle, jobDescription, keywords: [], brief });
+    setPhase('build:brief');
     ariaSays(
       brief
         ? t('ariaStudio.chat.buildJobDoneWithBrief', { role: brief.role || jobTitle })
@@ -728,6 +754,21 @@ const StudioChat = ({ onPaywall }) => {
     push({ who: 'buildjobdone', skipped: true });
     setPhase('build:contact');
     ariaSays(t('ariaStudio.chat.buildSkipJob'));
+  };
+
+  // ─── Build track: confirm Aria's read of the target job ───
+  const confirmBuildBrief = () => {
+    advance(() => {
+      push({ who: 'buildjobdone' });
+      setPhase('build:contact');
+    }, t('ariaStudio.chat.thinking.savingBrief'));
+  };
+
+  // Edit re-opens the job form so the JD can be corrected and re-previewed.
+  const editBuildBrief = () => {
+    setEditingJob(true);
+    setBuildJobOpen(true);
+    setPhase('build:job');
   };
 
   const confirmContact = async (info) => {
@@ -754,9 +795,11 @@ const StudioChat = ({ onPaywall }) => {
           console.error('Failed to save contact details', err);
         }
       }
-      push({ who: 'contactdone' });
-      setPhase('build:sections');
-      ariaSays(t('ariaStudio.chat.confirmContactDone'));
+      advance(() => {
+        push({ who: 'contactdone' });
+        setPhase('build:sections');
+        ariaSays(t('ariaStudio.chat.confirmContactDone'));
+      }, t('ariaStudio.chat.thinking.contactSaved'));
     } finally {
       setApplyingFix(false);
     }
@@ -804,13 +847,13 @@ const StudioChat = ({ onPaywall }) => {
   // Projects are genuinely optional — plenty of experienced people have none worth
   // listing, and pressing them would produce filler. Skipping leaves NO entry behind.
   const skipSection = (section, marker) => {
-    push({ who: marker, skipped: true });
-    setPhase('build:sections');
-    ariaSays(
-      section === 'project'
-        ? t('ariaStudio.chat.skipProject')
-        : t('ariaStudio.chat.skipOther')
-    );
+    advance(() => {
+      push({ who: marker, skipped: true });
+      setPhase('build:sections');
+      ariaSays(
+        section === 'project' ? t('ariaStudio.chat.skipProject') : t('ariaStudio.chat.skipOther')
+      );
+    }, t('ariaStudio.chat.thinking.movingOn'));
   };
 
   // Each capture writes THROUGH to the draft, so the pinned card — which renders from the
@@ -861,24 +904,26 @@ const StudioChat = ({ onPaywall }) => {
   // File the finished entry into the stream as a record, then open a fresh one.
   const nextEntry = async () => {
     if (!pinnedEntry || roleBusy) return;
-    push(
-      {
-        who: 'rolerecord',
-        sortId: pinnedEntry._sortId,
-        section: pinnedSectionKey,
-      },
-      { who: 'unpinrole' }
-    );
-    const sortId = await startEntry(pinnedSectionKey);
-    if (sortId) {
-      ariaSays(
-        pinnedSectionKey === 'project'
-          ? t('ariaStudio.chat.nextEntry.project')
-          : pinnedSectionKey === 'education'
-            ? t('ariaStudio.chat.nextEntry.education')
-            : t('ariaStudio.chat.nextEntry.experience')
+    advance(async () => {
+      push(
+        {
+          who: 'rolerecord',
+          sortId: pinnedEntry._sortId,
+          section: pinnedSectionKey,
+        },
+        { who: 'unpinrole' }
       );
-    }
+      const sortId = await startEntry(pinnedSectionKey);
+      if (sortId) {
+        ariaSays(
+          pinnedSectionKey === 'project'
+            ? t('ariaStudio.chat.nextEntry.project')
+            : pinnedSectionKey === 'education'
+              ? t('ariaStudio.chat.nextEntry.education')
+              : t('ariaStudio.chat.nextEntry.experience')
+        );
+      }
+    }, t('ariaStudio.chat.thinking.settingUpNext'));
   };
 
   const DONE_MARKER = {
@@ -894,24 +939,27 @@ const StudioChat = ({ onPaywall }) => {
     // An untouched entry would otherwise sit in the CV as an empty row forever — and,
     // worse, tick its section in the completeness view.
     const isBlank = pinnedEntry && entryProgress(pinnedEntry, section).done === 0;
-    if (isBlank && draftId) {
-      const pruned = (cvData[list] || []).filter((e) => e._sortId !== pinnedEntry._sortId);
-      updateCvData({ [list]: pruned });
-      CVService.saveDraft({ _id: draftId, [list]: pruned }).catch((err) =>
-        console.error('Failed to prune the empty entry', err)
-      );
-    } else if (pinnedEntry) {
+    if (!isBlank && pinnedEntry) {
       push({ who: 'rolerecord', sortId: pinnedEntry._sortId, section });
     }
-    push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
-    setPhase('build:sections');
-    ariaSays(
-      section === 'experience'
-        ? t('ariaStudio.chat.finishSection.experience')
-        : section === 'project'
-          ? t('ariaStudio.chat.finishSection.project')
-          : t('ariaStudio.chat.finishSection.education')
-    );
+    advance(() => {
+      if (isBlank && draftId) {
+        const pruned = (cvData[list] || []).filter((e) => e._sortId !== pinnedEntry._sortId);
+        updateCvData({ [list]: pruned });
+        CVService.saveDraft({ _id: draftId, [list]: pruned }).catch((err) =>
+          console.error('Failed to prune the empty entry', err)
+        );
+      }
+      push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
+      setPhase('build:sections');
+      ariaSays(
+        section === 'experience'
+          ? t('ariaStudio.chat.finishSection.experience')
+          : section === 'project'
+            ? t('ariaStudio.chat.finishSection.project')
+            : t('ariaStudio.chat.finishSection.education')
+      );
+    }, t('ariaStudio.chat.thinking.sectionWrappedUp'));
   };
 
   // The project type — sent as an ordinary user turn, because that's where the backend's
@@ -962,12 +1010,12 @@ const StudioChat = ({ onPaywall }) => {
 
   const addPickedSkills = async (picked) => {
     const res = await applySkills(picked);
-    setSkillsData(null);
-    push({ who: 'skillsdone', n: res?.added ?? picked.length });
-    setPhase('build:sections');
-    ariaSays(
-      t('ariaStudio.chat.skillsInDone', { n: res?.added ?? picked.length })
-    );
+    advance(() => {
+      setSkillsData(null);
+      push({ who: 'skillsdone', n: res?.added ?? picked.length });
+      setPhase('build:sections');
+      ariaSays(t('ariaStudio.chat.skillsInDone', { n: res?.added ?? picked.length }));
+    }, t('ariaStudio.chat.thinking.skillsSaved'));
   };
 
   // Free manual entry — comma-separated, straight through applySkills. Nobody should
@@ -1015,10 +1063,12 @@ const StudioChat = ({ onPaywall }) => {
     setApplyingFix(true);
     try {
       await applySummary(text);
-      setSummaryDraft('');
-      push({ who: 'summarydone' });
-      setPhase('build:done');
-      ariaSays(t('ariaStudio.chat.buildSummaryDone'));
+      advance(() => {
+        setSummaryDraft('');
+        push({ who: 'summarydone' });
+        setPhase('build:done');
+        ariaSays(t('ariaStudio.chat.buildSummaryDone'));
+      }, t('ariaStudio.chat.thinking.summarySaved'));
     } finally {
       setApplyingFix(false);
     }
@@ -1078,53 +1128,6 @@ const StudioChat = ({ onPaywall }) => {
         outputLang: cvData.outputLang,
       }
     : null;
-
-  const runDownload = async (format) => {
-    if (downloadBusy || !draftId) return;
-    setDownloadBusy(format);
-    try {
-      const shared = {
-        applicationId: draftId,
-        isDraft: true, // a Studio session IS a DraftCV
-        templateId: printApplication?.templateId,
-        userProfile: cvData?.personalInfo,
-        kind: 'resume',
-      };
-
-      const result =
-        format === 'pdf'
-          ? await downloadPdf({
-              elementId: 'resume-content',
-              paperWidth: '210mm',
-              paperHeight: '297mm',
-              paper: 'a4',
-              ...shared,
-            })
-          : await downloadDocx({
-              markdown: printApplication?.optimizedCV,
-              outputLang: cvData?.outputLang,
-              ...shared,
-            });
-
-      if (result.needsPaywall) {
-        // Whatever the shared module reports — the entitlement rules themselves live
-        // server-side and are not second-guessed here.
-        setShowDownloadPaywall(true);
-        return;
-      }
-      if (!result.ok) {
-        toast.error(t('ariaStudio.chat.toast.downloadFailed'));
-        return;
-      }
-      toast.success(
-        format === 'pdf'
-          ? t('ariaStudio.chat.toast.pdfDownloaded')
-          : t('ariaStudio.chat.toast.wordDownloaded')
-      );
-    } finally {
-      setDownloadBusy(null);
-    }
-  };
 
   // Back out of a fix without applying anything. Closes the session so derivePhase
   // returns to the breakdown on a refresh too.
@@ -1225,7 +1228,15 @@ const StudioChat = ({ onPaywall }) => {
         cta: progress.status.experience
           ? t('ariaStudio.chat.sectionMenu.experienceCtaMore')
           : t('ariaStudio.chat.sectionMenu.experienceCtaFirst'),
-        start: () => enterSection('experience'),
+        start: () => {
+          advance(async () => {
+            if (careerStage) {
+              await enterSection('experience');
+            } else {
+              setPhase('build:career-stage');
+            }
+          }, t('ariaStudio.chat.thinking.openingWorkHistory'));
+        },
         // Only offer to close work history once something is actually in it.
         skip: progress.status.experience ? () => skipSection('experience', 'experiencedone') : null,
         skipLabel: t('ariaStudio.chat.sectionMenu.experienceSkipLabel'),
@@ -1294,7 +1305,7 @@ const StudioChat = ({ onPaywall }) => {
 
   // A card may own the stream only once nothing else does — no restore in flight, no
   // Aria turn mid-beat, no tailor-start or scan running.
-  const ready = !loading && !thinking && !working && !reading && !scanning;
+  const ready = !loading && !thinking && !working && !reading && !scanning && !transitionLabel;
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col p-4 aria-theme-${chatTheme}`}>
@@ -1357,42 +1368,10 @@ const StudioChat = ({ onPaywall }) => {
               );
             }
 
-            // The captured job — role + clamped JD + the keywords Aria noticed.
+            // Job data lives on this message (read via latestJob lookups elsewhere);
+            // RoleBriefCard is the sole visible confirmation of the captured job.
             if (m.who === 'jobcard') {
-              return (
-                <motion.div
-                  key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  <AriaOrbit size={16} className="mt-2" />
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      {t('ariaStudio.chat.theJob')}
-                    </p>
-                    <p className="mt-1.5 font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
-                      {m.jobTitle}
-                    </p>
-                    <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-wrap line-clamp-3">
-                      {m.jobDescription}
-                    </p>
-                    {m.keywords?.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-1.5">
-                        {m.keywords.map((k) => (
-                          <span
-                            key={k}
-                            // Neutral, same as RoleBriefCard and the artifact panel —
-                            // extracted job keywords are facts, not actions or state.
-                            className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                          >
-                            {k}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
+              return null;
             }
 
             // The CV that was picked as the source.
@@ -1487,7 +1466,10 @@ const StudioChat = ({ onPaywall }) => {
                       {ended
                         ? t('ariaStudio.chat.fixClosed')
                         : t('ariaStudio.chat.fixingSection', {
-                            section: m.entry?.title || m.sectionLabel || t('ariaStudio.chat.sectionFallback'),
+                            section:
+                              m.entry?.title ||
+                              m.sectionLabel ||
+                              t('ariaStudio.chat.sectionFallback'),
                           })}
                     </span>
                   </span>
@@ -1612,9 +1594,15 @@ const StudioChat = ({ onPaywall }) => {
           {working && (
             <AriaThinking variant="draft" label={t('ariaStudio.chat.thinking.settingUpCopy')} />
           )}
-          {reading && <AriaThinking variant="chat" label={t('ariaStudio.chat.thinking.readingJob')} />}
+          {reading && (
+            <AriaThinking variant="chat" label={t('ariaStudio.chat.thinking.readingJob')} />
+          )}
+          {transitionLabel && <AriaThinking variant="chat" label={transitionLabel} />}
           {scanning && (
-            <AriaThinking variant="draft" label={t('ariaStudio.chat.thinking.readingCvAgainstJob')} />
+            <AriaThinking
+              variant="draft"
+              label={t('ariaStudio.chat.thinking.readingCvAgainstJob')}
+            />
           )}
 
           {/* The live card — always the LAST item in the stream, blooming from Aria's
@@ -1633,6 +1621,17 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
 
+            {ready && phase === 'build:career-stage' && (
+              <CareerStageAskCard
+                key="careerstage"
+                onPick={(k) => {
+                  setCareerStage(k);
+                  enterSection('experience');
+                }}
+                onSkip={() => enterSection('experience')}
+              />
+            )}
+
             {ready && phase === 'build:job' && !buildJobOpen && (
               <TargetJobAskCard
                 key="jobask"
@@ -1645,11 +1644,31 @@ const StudioChat = ({ onPaywall }) => {
             {ready && phase === 'build:job' && buildJobOpen && (
               <JobCaptureCard
                 key="buildjob"
+                initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
+                initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
                 onSubmit={(job) => {
                   setBuildJobOpen(false);
                   buildCaptureJob(job);
                 }}
-                onCancel={() => setBuildJobOpen(false)}
+                onCancel={() => {
+                  if (editingJob) {
+                    setEditingJob(false);
+                    setBuildJobOpen(false);
+                    setPhase('build:brief');
+                  } else {
+                    setBuildJobOpen(false);
+                  }
+                }}
+              />
+            )}
+
+            {ready && phase === 'build:brief' && (
+              <RoleBriefCard
+                key="buildbrief"
+                brief={latestJob?.brief}
+                jobTitle={latestJob?.jobTitle}
+                onConfirm={confirmBuildBrief}
+                onEdit={editBuildBrief}
               />
             )}
 
@@ -1751,10 +1770,6 @@ const StudioChat = ({ onPaywall }) => {
                   skills: (cvData?.skills || []).length,
                 }}
                 draftId={draftId}
-                templateId={printApplication?.templateId}
-                busy={downloadBusy}
-                onDownloadPdf={() => runDownload('pdf')}
-                onDownloadDocx={() => runDownload('docx')}
                 onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
                 onTailor={tailorThisCv}
                 // Only offered when a job was actually supplied at build-start —
@@ -1772,11 +1787,13 @@ const StudioChat = ({ onPaywall }) => {
                 busy={roleBusy}
                 onAdd={addCertification}
                 onRemove={removeCertification}
-                onDone={() => {
-                  push({ who: 'certsdone' });
-                  setPhase('build:sections');
-                  ariaSays(t('ariaStudio.chat.certsDone'));
-                }}
+                onDone={() =>
+                  advance(() => {
+                    push({ who: 'certsdone' });
+                    setPhase('build:sections');
+                    ariaSays(t('ariaStudio.chat.certsDone'));
+                  }, t('ariaStudio.chat.thinking.certsSaved'))
+                }
               />
             )}
 
@@ -1921,10 +1938,6 @@ const StudioChat = ({ onPaywall }) => {
                 key="finish"
                 scan={{ ...scan, title: cvData?.title }}
                 draftId={draftId}
-                templateId={printApplication?.templateId}
-                busy={downloadBusy}
-                onDownloadPdf={() => runDownload('pdf')}
-                onDownloadDocx={() => runDownload('docx')}
                 onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
               />
             )}
@@ -1983,7 +1996,7 @@ const StudioChat = ({ onPaywall }) => {
               loop uses, pointed at this entry. One coaching path, not two: the free
               interview, the count picker, the credited generation and applyRoleBulletDiff
               all behave identically here. */}
-          {pinnedEntry && pinnedStage === 'achievements' && !thinking && !roleBusy && (
+          {pinnedEntry && pinnedStage === 'achievements' && !thinking && !roleBusy && !transitionLabel && (
             <SectionCoach
               key={`rolecoach-${pinnedEntry._sortId}`}
               draftId={draftId}
@@ -2002,20 +2015,33 @@ const StudioChat = ({ onPaywall }) => {
                 .slice(0, 4)}
               messages={messages}
               onPush={push}
-              onApply={(add, remove) =>
-                applyRoleBulletDiff(
-                  pinnedSectionKey === 'project' ? 'project' : 'experience',
-                  pinnedEntry._sortId,
-                  add,
-                  remove
-                )
-              }
-              onDone={(result) => {
-                if (result?.applied?.length) {
-                  push({ who: 'added', n: result.applied.length });
-                  ariaSays(t('ariaStudio.chat.achievementsLanded'));
+              onApply={async (add, remove) => {
+                setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
+                try {
+                  const res = await applyRoleBulletDiff(
+                    pinnedSectionKey === 'project' ? 'project' : 'experience',
+                    pinnedEntry._sortId,
+                    add,
+                    remove
+                  );
+                  if (!res?.ok) setTransitionLabel(null); // failed — onDone won't fire, clear now
+                  return res;
+                } catch (e) {
+                  setTransitionLabel(null);
+                  throw e;
                 }
               }}
+              onDone={(result) => {
+                setTimeout(() => {
+                  setTransitionLabel(null);
+                  if (result?.applied?.length) {
+                    push({ who: 'added', n: result.applied.length });
+                    ariaSays(t('ariaStudio.chat.achievementsLanded'));
+                  }
+                }, 500);
+              }}
+              careerStage={careerStage}
+              onPickCareerStage={setCareerStage}
             />
           )}
 
@@ -2043,6 +2069,8 @@ const StudioChat = ({ onPaywall }) => {
                   }
                 )
               }
+              careerStage={careerStage}
+              onPickCareerStage={setCareerStage}
             />
           )}
         </div>
@@ -2083,14 +2111,6 @@ const StudioChat = ({ onPaywall }) => {
       {phase === 'results' && scan && (
         <StudioPrintSurface application={printApplication} userProfile={cvData?.personalInfo} />
       )}
-
-      {/* The SAME paywall the editor uses. Web: one free lifetime download, then a pass
-          or a subscription. Native is exempt via the X-Client-Platform header in
-          api.js — none of that logic is re-implemented here. */}
-      <DownloadPaywallModal
-        open={showDownloadPaywall}
-        onClose={() => setShowDownloadPaywall(false)}
-      />
     </div>
   );
 };

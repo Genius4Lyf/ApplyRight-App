@@ -58,6 +58,8 @@ import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
 import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburtonTemplate';
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
+import TheProfileTemplate from '../components/templates/TheProfileTemplate';
+import TheAscentTemplate from '../components/templates/TheAscentTemplate';
 import { TEMPLATES } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
@@ -1752,6 +1754,16 @@ const ResumeReview = () => {
                     />
                   ) : templateId === 'energy-nlng' ? (
                     <EnergyNLNGTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'the-profile' ? (
+                    <TheProfileTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'the-ascent' ? (
+                    <TheAscentTemplate
                       markdown={localizedCV}
                       userProfile={mergedUserProfile || userProfile}
                     />

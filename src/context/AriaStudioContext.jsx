@@ -50,6 +50,11 @@ export const AriaStudioProvider = ({ children }) => {
   const creatingRef = useRef(null);
   // Same guard for build-start — see startBuild.
   const buildingRef = useRef(null);
+  // Bumped by every session-changing action (loadSession/newSession/startBuild). The
+  // mount-time restore below captures this at start and checks it before applying its
+  // result, so a fast "New CV"/session-switch click racing an in-flight restore fetch
+  // can never clobber the fresh session once that stale fetch finally resolves.
+  const sessionEpochRef = useRef(0);
 
   // Bumped whenever a writer mutates a role/project from outside a mounted editor.
   // Consumers that seed local form state ONCE from cvData watch this and re-seed.
@@ -113,17 +118,19 @@ export const AriaStudioProvider = ({ children }) => {
       }
     })();
     if (!remembered) return;
+    const myEpoch = sessionEpochRef.current;
     let alive = true;
     (async () => {
       try {
         const draft = await CVService.getDraftById(remembered);
-        if (alive && draft?._id) setCvData(draft);
-        else if (alive) setCvData(null);
+        if (!alive || sessionEpochRef.current !== myEpoch) return;
+        if (draft?._id) setCvData(draft);
+        else setCvData(null);
       } catch (error) {
         console.error('Failed to restore the Aria Studio draft', error);
-        if (alive) setCvData(null);
+        if (alive && sessionEpochRef.current === myEpoch) setCvData(null);
       } finally {
-        if (alive) setLoading(false);
+        if (alive && sessionEpochRef.current === myEpoch) setLoading(false);
       }
     })();
     return () => {
@@ -140,6 +147,7 @@ export const AriaStudioProvider = ({ children }) => {
   const loadSession = useCallback(
     async (id) => {
       if (!id || id === draftId) return null;
+      sessionEpochRef.current += 1;
       await flushChats(); // the last turns of the OUTGOING session
       setLoading(true);
       try {
@@ -165,6 +173,7 @@ export const AriaStudioProvider = ({ children }) => {
   // chat reads it and skips the mode chooser entirely.
   const newSession = useCallback(
     async (kind = 'tailor', source = null) => {
+      sessionEpochRef.current += 1;
       await flushChats(); // don't lose the outgoing session's last turns
       setCvData(null); // unbinds + clears ariaStudio:draftId
       try {
@@ -192,6 +201,7 @@ export const AriaStudioProvider = ({ children }) => {
       if (buildingRef.current) return buildingRef.current;
 
       buildingRef.current = (async () => {
+        sessionEpochRef.current += 1;
         await flushChats(); // same discipline as loadSession/newSession
         setLoading(true);
         try {

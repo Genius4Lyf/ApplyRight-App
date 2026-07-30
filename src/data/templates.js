@@ -76,6 +76,15 @@ export const TEMPLATES = [
     thumbnail: 'bg-gray-100 border-gray-400',
   },
   {
+    id: 'the-ascent',
+    name: 'The Ascent',
+    group: 'Professional',
+    isPro: true,
+    cost: 30,
+    description: 'A single accent spine traces your career climb — built for operators and GMs whose story is the shape of the last four roles.',
+    thumbnail: 'bg-[#fbfaf7] border-l-4 border-[#52602e]',
+  },
+  {
     id: 'minimal-serif',
     name: 'The Author',
     group: 'Editorial',
@@ -92,6 +101,15 @@ export const TEMPLATES = [
     cost: 30,
     description: 'Structured 2-column layout with clean, swiss alignment.',
     thumbnail: 'bg-stone-50 border-stone-200',
+  },
+  {
+    id: 'the-profile',
+    name: 'The Profile',
+    group: 'Editorial',
+    isPro: true,
+    cost: 30,
+    description: 'A magazine masthead treatment for brand, comms and creative leadership — serif byline, credits-line contact, summary set as a pulled quote.',
+    thumbnail: 'bg-[#faf8f4] border-2 border-[#6d3955]',
   },
   {
     id: 'executive-energy',

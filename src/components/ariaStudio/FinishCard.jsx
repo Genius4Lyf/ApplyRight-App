@@ -1,10 +1,9 @@
 import React from 'react';
-import { FileDown, FileText, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { finishSummary } from '../../lib/studioFlow';
-import { resolveDownloadTemplate } from '../../lib/cvDownload';
 import AriaCard from './AriaCard';
 
 // The end of a tailoring: what changed, and how to get the file out.
@@ -16,9 +15,6 @@ import AriaCard from './AriaCard';
 const FinishCard = ({
   scan,
   draftId,
-  templateId,
-  onDownloadPdf,
-  onDownloadDocx,
   onOpenEditor,
   busy,
   // ── Build mode ──
@@ -38,9 +34,6 @@ const FinishCard = ({
   const summary = finishSummary(scan);
   const score = scan?.fitScore;
   const band = bandOf(score);
-  // Resolved through the SAME helper the download uses, so the name shown is never a
-  // guess about what the file will contain.
-  const template = resolveDownloadTemplate(templateId);
 
   return (
     <AriaCard cardKey="finish">
@@ -150,9 +143,17 @@ const FinishCard = ({
           <Trans
             i18nKey="ariaStudio.finishCard.savedAs"
             values={{
-              title: scan?.title || t(isBuild ? 'ariaStudio.finishCard.yourNewCv' : 'ariaStudio.finishCard.yourTailoredCopy'),
+              title:
+                scan?.title ||
+                t(
+                  isBuild
+                    ? 'ariaStudio.finishCard.yourNewCv'
+                    : 'ariaStudio.finishCard.yourTailoredCopy'
+                ),
             }}
-            components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-200" /> }}
+            components={{
+              b: <span className="font-semibold text-slate-700 dark:text-slate-200" />,
+            }}
           />{' '}
           {isBuild
             ? t('ariaStudio.finishCard.masterNote')
@@ -213,60 +214,6 @@ const FinishCard = ({
             )}
           </div>
         )}
-
-        {/* SECONDARY — the direct download stays, deliberately quieter. Naming the
-            template turns a blind download into an informed one without putting a
-            picker in the chat; choosing one is the CV Studio's job. */}
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.finishCard.orGrabItNow')}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onDownloadPdf}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              {busy === 'pdf'
-                ? t('ariaStudio.finishCard.preparing')
-                : t('ariaStudio.finishCard.downloadPdf')}
-            </button>
-            <button
-              type="button"
-              onClick={onDownloadDocx}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              {busy === 'docx'
-                ? t('ariaStudio.finishCard.preparing')
-                : t('ariaStudio.finishCard.downloadWord')}
-            </button>
-          </div>
-          <p className="mt-2 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            <Trans
-              i18nKey="ariaStudio.finishCard.usesTemplate"
-              values={{ name: template.name }}
-              components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-200" /> }}
-            />
-            {template.isDefault ? ` ${t('ariaStudio.finishCard.atsSafeByDefault')}` : '.'}{' '}
-            {draftId && (
-              <>
-                {t('ariaStudio.finishCard.wantDifferentLook')}{' '}
-                <button
-                  type="button"
-                  onClick={onOpenEditor}
-                  className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  {t('ariaStudio.finishCard.openInEditor')}
-                </button>
-                .
-              </>
-            )}
-          </p>
-        </div>
       </div>
     </AriaCard>
   );

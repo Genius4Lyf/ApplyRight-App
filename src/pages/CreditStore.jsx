@@ -6,7 +6,15 @@ import { Zap, Share2, X, Check, Play, ArrowRight, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
-import { TOPUPS, FREE_TASTE_MIN, formatNgn, formatMinutesLabel } from '../lib/plans';
+import {
+  TOPUPS,
+  CREDIT_PACKS,
+  FREE_TASTE_MIN,
+  formatNgn,
+  formatUsd,
+  formatMinutesLabel,
+  detectDefaultCurrency,
+} from '../lib/plans';
 import AdPlayer from '../components/AdPlayer';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import PaymentTrustModal from '../components/PaymentTrustModal';
@@ -51,19 +59,14 @@ const CreditStore = () => {
   const [buyingPack, setBuyingPack] = useState(null); // catalog id mid-checkout
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState(null);
-
-  // Buyable credit packs (must match the backend catalog ids/amounts).
-  const CREDIT_PACKS = [
-    { id: 'credits_500', credits: 75, ngn: 500 },
-    { id: 'credits_1000', credits: 150, ngn: 1000, best: true },
-  ];
+  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
 
   // Start a Flutterwave checkout for a credit pack and redirect to the hosted link.
   const proceedToCheckout = async (planId) => {
     try {
       setBuyingPack(planId);
       localStorage.setItem('arCheckoutOrigin', window.location.pathname);
-      const { link } = await billingService.checkout(planId, 'NGN');
+      const { link } = await billingService.checkout(planId, currency);
       if (link) window.location.href = link;
       else setBuyingPack(null);
     } catch (error) {
@@ -238,6 +241,45 @@ const CreditStore = () => {
           </p>
         </div>
 
+        {/* Currency Switcher Tab */}
+        <div className="flex justify-center">
+          <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setCurrency('NGN')}
+              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                currency === 'NGN'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <span>{t('billing.common.currencyNgn')}</span>
+              <span className="opacity-60 font-normal">
+                {t('billing.common.currencyNgnRegion')}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrency('USD')}
+              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                currency === 'USD'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <span>{t('billing.common.currencyUsd')}</span>
+              <span className="opacity-60 font-normal">
+                {t('billing.common.currencyUsdRegion')}
+              </span>
+            </button>
+          </div>
+        </div>
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide -mt-8">
+          {currency === 'NGN'
+            ? t('billing.upgrade.currencyNoteNgn')
+            : t('billing.upgrade.currencyNoteUsd')}
+        </p>
+
         {/* ── Balance hero ──────────────────────────────────────────────
             Anchors the page: how many credits you have + your current plan
             and live-interview minutes, all in one glance. */}
@@ -348,13 +390,21 @@ const CreditStore = () => {
                     </span>
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    {t('billing.creditStore.perCreditNgn', { n: (p.ngn / p.credits).toFixed(1) })}
+                    {currency === 'USD'
+                      ? t('billing.creditStore.perCreditUsd', {
+                          n: (p.priceUsd / p.credits).toFixed(2),
+                        })
+                      : t('billing.creditStore.perCreditNgn', {
+                          n: (p.priceNgn / p.credits).toFixed(1),
+                        })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
                   {buyingPack === p.id
                     ? t('billing.common.starting')
-                    : `₦${p.ngn.toLocaleString()}`}
+                    : currency === 'USD'
+                      ? formatUsd(p.priceUsd)
+                      : formatNgn(p.priceNgn)}
                 </div>
               </button>
             ))}
@@ -372,9 +422,14 @@ const CreditStore = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               {TOPUPS.map((p) => {
                 const best = !!p.best;
-                const perMin = t('billing.upgrade.perMinNgn', {
-                  n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
-                });
+                const perMin =
+                  currency === 'USD'
+                    ? t('billing.upgrade.perMinUsd', {
+                        n: (p.priceUsd / p.minutes).toFixed(2),
+                      })
+                    : t('billing.upgrade.perMinNgn', {
+                        n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
+                      });
                 const { value, unit } = formatMinutesLabel(p.minutes, t);
                 return (
                   <button
@@ -401,7 +456,11 @@ const CreditStore = () => {
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{perMin}</p>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
-                      {buyingPack === p.id ? t('billing.common.starting') : formatNgn(p.priceNgn)}
+                      {buyingPack === p.id
+                        ? t('billing.common.starting')
+                        : currency === 'USD'
+                          ? formatUsd(p.priceUsd)
+                          : formatNgn(p.priceNgn)}
                     </div>
                   </button>
                 );

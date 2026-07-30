@@ -438,19 +438,19 @@
     "workspace": "Your workspace",
     "studio": {
       "kicker": "Aria Studio",
-      "title": "Tailor your CV to a job in minutes",
-      "body": "Bring Aria a job description. She reworks a copy of your CV against it, section by section, and shows you exactly what she changed — your original stays untouched.",
+      "title": "Build your CV with Aria",
+      "body": "Bring Aria a job description. She checks your fit, reworks a copy of your CV against it section by section, and shows you exactly what she changed — your original stays untouched.",
       "cta": "Open Aria Studio"
     },
     "pillarApplication": "Your application",
     "pillarInterview": "Interview practice",
     "tailorCard": {
-      "aria": "Tailor my CV to a job",
+      "aria": "Prepare me for a job",
       "chip": "Recommended",
-      "title": "Tailor my CV to a job",
-      "body": "Check whether you’re qualified for a role, then auto-tailor your CV to match what it asks for.",
+      "title": "Prepare me for a job",
+      "body": "Check whether you’re qualified for a role, then get a tailored <f>analysis</f>, <f>interview preparation</f>, and a <f>cover letter</f> — everything built around this job.",
       "cta": "Check your CV",
-      "poweredBy": "Powered by ApplyRight"
+      "poweredBy": "Powered by Aria"
     },
     "buildCard": {
       "aria": "Build a new CV",
@@ -508,6 +508,10 @@
       "ready": "Ready",
       "generating": "Generating…",
       "generate": "Generate",
+      "freeToday": "Free today",
+      "workWithAria": "Work on it with Aria",
+      "openingStudio": "Opening…",
+      "justGenerateIt": "Or just generate it · {{cost}} cr",
       "newAnalysis": "Generate New Analysis",
       "newAnalysisBody": "Same resume, different job",
       "prepReady": "Interview prep ready",
@@ -537,6 +541,7 @@
       "cvGenerated": "Optimized CV generated!",
       "cvGenerationFailed": "CV generation failed. You have not been charged.",
       "cvStartFailed": "Failed to start CV generation. Please try again.",
+      "studioOpenFailed": "Could not open Aria Studio. Please try again.",
       "bundleStartFailed": "Failed to start bundle generation. Please try again.",
       "coverLetterWarning_one": "Cover letter generated, but {{count}} claim may not be supported by your resume — verify before sending.",
       "coverLetterWarning_other": "Cover letter generated, but {{count}} claims may not be supported by your resume — verify before sending.",
@@ -740,6 +745,7 @@
       "topUpTitle": "Top up instantly",
       "topUpSubtitle": "Buy a credit pack with card or transfer. Added to your wallet, never expires.",
       "perCreditNgn": "{{n}} ₦ per credit",
+      "perCreditUsd": "${{n}} per credit",
       "goUnlimitedEyebrow": "Best for active job hunts",
       "goUnlimitedTitle": "Go unlimited with a plan",
       "goUnlimitedSubtitle": "Plans unlock unlimited AI writing, the sharper GPT-4o model, premium templates and live interview minutes.",
@@ -2437,7 +2443,8 @@
     },
     "interviewerPanel": {
       "heading": "Likely to interview you",
-      "paidPanel": "Paid plans are interviewed by this panel"
+      "paidPanel": "Paid plans are interviewed by this panel",
+      "aboutAria": "About {{name}}"
     },
     "audioPlayer": {
       "back10": "Back 10 seconds",
@@ -3583,7 +3590,18 @@
         "pickingUp": "Picking up where we left off…",
         "settingUpCopy": "Setting up your tailored copy…",
         "readingJob": "Reading the job…",
-        "readingCvAgainstJob": "Reading your CV against the job…"
+        "readingCvAgainstJob": "Reading your CV against the job…",
+        "savingBrief": "Job description approved… saving to memory",
+        "contactSaved": "Contact details saved…",
+        "notingThatDown": "Got it — noting that down…",
+        "settingUpNext": "Saved. Setting up the next one…",
+        "sectionWrappedUp": "Section wrapped up…",
+        "movingOn": "No problem — moving on…",
+        "skillsSaved": "Skills added…",
+        "summarySaved": "Summary saved…",
+        "certsSaved": "Saved…",
+        "bulletsSaved": "Saved — noting that down…",
+        "openingWorkHistory": "Getting your work history ready…"
       },
       "buildNewCvHeading": "Build a new CV",
       "buildNewCvBody": "Building one with you in chat is what I'm learning next. For now the builder is the fastest route — make your CV there, then come back and I'll tailor it to any job you like.",
@@ -3644,7 +3662,7 @@
       "newCv": "New CV",
       "title": "Aria Studio",
       "buildingWithAria": "Building a CV with Aria",
-      "tailorToJob": "Tailor a CV to a job",
+      "tailorToJob": "Prepare me for a job",
       "hideSessions": "Hide sessions",
       "showSessions": "Show sessions",
       "cvName": "CV name",

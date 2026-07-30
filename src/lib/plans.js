@@ -200,6 +200,27 @@ export const formatNgn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 export const formatUsd = (n) =>
   `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
+// Best-effort default currency for a first-time visitor: NGN only when the
+// browser's timezone/locale looks Nigerian, USD for everyone else (worldwide
+// pricing). This only seeds the toggle's initial state — the toggle itself is
+// unchanged, so a wrong guess (e.g. Nigerian diaspora on a US timezone) is one
+// tap to fix, never a dead end. Falls back to NGN on any detection failure,
+// matching today's behavior.
+export const detectDefaultCurrency = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz === 'Africa/Lagos') return 'NGN';
+    const langs =
+      navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language].filter(Boolean);
+    if (langs.some((l) => /-NG$/i.test(l))) return 'NGN';
+    return 'USD';
+  } catch {
+    return 'NGN';
+  }
+};
+
 // Friendly duration label for a top-up card — plain minutes under an hour,
 // "hr"/"hrs" at and above it. Takes `t` so it's a translated string like every
 // other user-facing label in this file (see the i18n note at the top of the file).

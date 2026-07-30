@@ -39,6 +39,11 @@ const SectionCoach = ({
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
   onDone, // () => void — fix finished, hand back to the breakdown
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
+  careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
+  // Kept for API symmetry with StudioChat's CareerStageAskCard, which now owns the
+  // pick; SectionCoach only reads `careerStage`.
+  // eslint-disable-next-line no-unused-vars
+  onPickCareerStage, // (k) => void — lifts the pick to the parent
 }) => {
   const { t } = useTranslation();
   const isProject = entry?.section === 'project';
@@ -96,6 +101,8 @@ const SectionCoach = ({
           .map((m) => ({ who: m.who, text: m.text })),
         focus: { section: entry.section, sortId: entry.sortId },
         buildTurns: buildTurnsRef.current,
+        // Ride the picked stage along (undefined → backend infers from the draft).
+        stage: careerStage,
       });
 
       onPush({ who: 'aria', text: r.reply });
