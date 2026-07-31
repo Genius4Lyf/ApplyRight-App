@@ -255,7 +255,7 @@ const ScoreCard = ({ scan, cost }) => {
                               </p>
                             )}
                             {e.fix && (
-                              <p className="mt-1 flex items-start gap-1.5 text-[12px] text-indigo-700 dark:text-indigo-300">
+                              <p className="mt-1 flex items-start gap-1.5 text-[12px] text-slate-700 dark:text-slate-300">
                                 <Wrench className="w-3 h-3 mt-0.5 shrink-0" />
                                 <span>{e.fix}</span>
                               </p>

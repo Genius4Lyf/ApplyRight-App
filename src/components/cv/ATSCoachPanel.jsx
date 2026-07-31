@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation, Trans } from 'react-i18next';
 import { BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { computeCvHealth, healthColor } from '../../utils/cvHealth';
 import { roleMatch } from '../../utils/roleMatch';
@@ -18,6 +19,7 @@ import AriaChat from './AriaChat';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
+import { CAREER_STAGES, CAREER_STAGE_PROMPT } from '../../lib/careerStages';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -75,6 +77,8 @@ const TargetChat = ({
   setAck,
   draftId,
   ensureDraft,
+  careerStage,
+  onPickCareerStage,
 }) => {
   const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
@@ -90,6 +94,7 @@ const TargetChat = ({
   const [qThinking, setQThinking] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState(false); // ensureDraft in-flight → pin "Setting up…"
   const [showChips, setShowChips] = useState(savedQa.length === 0);
+  const [savingCareerStage, setSavingCareerStage] = useState(false);
 
   // The Aria model for this CV — the inert row still offers the pick, so the choice is
   // reachable from the Target step like every other one.
@@ -118,6 +123,18 @@ const TargetChat = ({
     onSkip?.();
     setSkipAck(true);
     setTimeout(() => onAdvance?.(), 1200);
+  };
+
+  const pickCareerStage = async (stage) => {
+    if (savingCareerStage) return;
+    setSavingCareerStage(true);
+    try {
+      await onPickCareerStage?.(stage);
+    } catch {
+      toast.error(t('cvBuilder.askAria.couldntSave'));
+    } finally {
+      setSavingCareerStage(false);
+    }
   };
 
   const openForm = () => {
@@ -245,6 +262,35 @@ const TargetChat = ({
               {t('cvBuilder.atsCoach.greeting')}
             </span>
           </motion.div>
+
+          {/* Career stage belongs to the whole CV, so collect it once before the
+              target job and work-history steps begin — never while coaching a role. */}
+          {!careerStage && (
+            <motion.div
+              className="self-start max-w-[92%] flex items-start gap-2"
+              {...bubbleAnim('aria', reduce)}
+            >
+              <AriaOrbit size={16} className="mt-2" />
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md px-3.5 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  {CAREER_STAGE_PROMPT}
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {CAREER_STAGES.map((stage) => (
+                    <button
+                      key={stage.k}
+                      type="button"
+                      disabled={savingCareerStage}
+                      onClick={() => pickCareerStage(stage.k)}
+                      className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                      {stage.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* (a) Live starter-question Q&A. */}
           {qa.map((m, i) => {
@@ -698,6 +744,21 @@ const ATSCoachPanel = ({
                   }}
                   ack={aiByStep._targetAck}
                   setAck={(v) => setAiByStep((m) => ({ ...m, _targetAck: v }))}
+                  careerStage={cvData?.careerStage}
+                  onPickCareerStage={async (stage) => {
+                    updateCvData({ careerStage: stage });
+                    setAiByStep((m) => ({ ...m, _careerStage: stage }));
+                    try {
+                      const id = await ensureDraft();
+                      if (!id) throw new Error('draft unavailable');
+                      await CVService.saveDraft({ _id: id, careerStage: stage });
+                      updateCvData({ careerStage: stage });
+                    } catch (error) {
+                      updateCvData({ careerStage: '' });
+                      setAiByStep((m) => ({ ...m, _careerStage: '' }));
+                      throw error;
+                    }
+                  }}
                 />
               ) : currentStepId === 'history' || currentStepId === 'projects' ? (
                 // The unified build-with chat — general Q&A + focused build-with in ONE

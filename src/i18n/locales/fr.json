@@ -1089,7 +1089,7 @@
       "educationEntries": "Formation ({{n}} entrées)",
       "skillsListed": "Compétences ({{n}} listées)",
       "journeyIncomplete": "Parcours incomplet",
-      "journeyIncompleteBody": "Certaines sections de votre CV sont incomplètes. L’aperçu final et le téléchargement sont verrouillés tant que toutes les sections ne sont pas remplies.",
+      "journeyIncompleteBody": "Certaines sections obligatoires de votre CV sont incomplètes. L’aperçu final et le téléchargement se débloquent une fois ces sections remplies.",
       "editCv": "Modifier le CV",
       "previewApp": "Aperçu de ma candidature",
       "previewLocked": "Aperçu verrouillé",
@@ -1129,7 +1129,7 @@
     },
     "layout": {
       "livePreviewLocked": "Aperçu en direct verrouillé",
-      "completeToUnlock": "Complétez toutes les sections de votre parcours CV pour débloquer le rendu du modèle.",
+      "completeToUnlock": "Complétez les sections obligatoires de votre parcours CV pour débloquer le rendu du modèle.",
       "progress": "Progression",
       "completed": "{{done}} / {{total}} terminées",
       "fillIn": "Remplir →",
@@ -1241,6 +1241,15 @@
         "workLabel": "Travail / client",
         "workMsg": "C’était un projet professionnel / client."
       },
+      "experienceType": {
+        "heading": "De quel type d’expérience s’agissait-il ?",
+        "body": "Cela aide Aria à coacher ce poste de la bonne façon.",
+        "job": "Emploi",
+        "internship": "Stage",
+        "partTime": "Temps partiel / informel",
+        "volunteer": "Bénévolat / responsabilité sur le campus",
+        "coursework": "Cours"
+      },
       "starterFallback": "Une amorce à développer",
       "hideExample": "Masquer l’exemple",
       "showExample": "Montrez-moi un exemple",
@@ -1271,6 +1280,7 @@
       "thisRole": "ce poste",
       "focusOpenerRole": "Affinons {{title}}. Dites-moi une chose que vous y avez vraiment faite.",
       "focusOpenerRoleCompany": "Affinons {{title}} chez {{company}}. Dites-moi une chose que vous y avez vraiment faite.",
+      "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
       "anythingElse": "Autre chose que vous avez faite ici ? Je peux en rédiger un autre.",
       "couldntSave": "Je n’ai pas pu enregistrer cela — réessayez.",
       "notEnoughCredits": "Crédits insuffisants — gagnez-en plus ou passez à une formule payante.",
@@ -3097,6 +3107,7 @@
       },
       "fields": {
         "experience": {
+          "entryType": "Type d’expérience",
           "title": "Poste",
           "company": "Entreprise",
           "dates": "Dates",
@@ -3126,6 +3137,7 @@
       "whatKind": "De quel type de projet s'agit-il ?"
     },
     "pinnedEntry": {
+      "liveStatus": "Aria travaille activement sur cette entrée",
       "copy": {
         "experience": {
           "label": "En cours",
@@ -3153,7 +3165,11 @@
       "saving": "Enregistrement…",
       "finishing": "Finalisation…",
       "edit": "Modifier",
-      "addedCount": "{{n}} ajouté(s)"
+      "addedCount": "{{n}} ajouté(s)",
+      "savedBullets": "{{n}} puces enregistrées",
+      "bulletReceipt": "{{n}} puces ajoutées à {{title}}",
+      "openRoleToReview": "Ouvrir ce poste pour le vérifier",
+      "openProjectToReview": "Ouvrir ce projet pour le vérifier"
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Copie adaptée",
@@ -3346,7 +3362,7 @@
           "hint": "Une date prévue convient si vous étudiez encore."
         },
         "projectTitle": {
-          "q": "Comment s'appelle le projet ?",
+          "q": "Comment s'appelait le projet ?",
           "placeholder": "ex. Tableau de bord de télémétrie de plateforme",
           "hint": "Un nom court et simple — celui que vous utiliseriez à l'oral."
         }
@@ -3420,6 +3436,7 @@
       "applying": "Application…",
       "useThis": "Utiliser celui-ci",
       "whereAreYou": "Où en êtes-vous dans votre carrière ?",
+      "readyToWrite": "Prêt·e à rédiger votre résumé",
       "writing": "Rédaction…",
       "writeIt": "Rédiger",
       "stages": {
@@ -3493,7 +3510,17 @@
       "fixSavedNoMove": "{{section}} est enregistré. Le score n'a pas encore beaucoup bougé — ça prend généralement quelques entrées.",
       "nSkills": "{{n}} compétences",
       "aTailoredSummary": "un résumé adapté",
-      "beginBuild": "Parfait. Visez-vous un poste précis en ce moment ?",
+      "beginBuild": "Avant de commencer, j’ai besoin d’un peu de contexte sur votre expérience.",
+      "careerStage": {
+        "heading": "Où en êtes-vous dans votre carrière ?",
+        "body": "Cela aide Aria à vous coacher de la bonne façon dans tout votre CV.",
+        "skip": "Passer pour l’instant",
+        "options": {
+          "grad": "Étudiant·e / jeune diplômé·e",
+          "experienced": "Expérimenté·e",
+          "changer": "En reconversion"
+        }
+      },
       "cvForJob": "CV pour {{jobTitle}}",
       "buildJobDoneWithBrief": "Compris — {{role}}. Assurons-nous maintenant qu'on puisse vous joindre.",
       "buildJobDoneNoBrief": "Compris. Assurons-nous maintenant qu'on puisse vous joindre.",
@@ -3501,7 +3528,7 @@
       "firstNamesCv": "CV de {{first}}",
       "confirmContactDone": "Votre en-tête est fait. L'expérience professionnelle est la prochaine étape — c'est là que se joue le plus gros du poids, et c'est là que je passerai le plus de temps avec vous.",
       "sectionOpener": {
-        "experience": "Commençons par votre poste le plus récent. Comment s'appelait-il ?",
+        "experience": "Commençons par votre expérience la plus récente. D'abord, de quel type d'expérience s'agissait-il ?",
         "project": "Ajoutons un projet. D'abord — de quel type s'agit-il ?",
         "education": "Ajoutons votre formation. Qu'avez-vous étudié ?"
       },
@@ -3510,18 +3537,28 @@
       "itFallback": "il",
       "thisJobFallback": "ce poste",
       "nextLine": {
+        "roleTitle": "Très bien — comment s'appelait votre rôle ?",
         "company": "Compris. C'était où ?",
         "dates": "Et vous y étiez de quand à quand ?",
         "school": "Où l'avez-vous étudié ?",
         "graduationDate": "Et quand avez-vous terminé ?",
-        "achievementsProject": "Maintenant la partie intéressante — que fait {{title}} concrètement, et quel était votre rôle dedans ?",
-        "achievementsRole": "Maintenant ce qui compte vraiment — qu'avez-vous réellement fait chez {{company}} ? Dites-m'en une chose et je la façonnerai."
+        "achievementsProject": "Maintenant la partie intéressante — dites-moi ce que vous avez fait sur {{title}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une.",
+        "achievementsRole": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une."
+      },
+      "experienceType": {
+        "heading": "De quel type d’expérience s’agissait-il ?",
+        "body": "Cela aide Aria à poser les bonnes questions pour cette entrée.",
+        "job": "Emploi",
+        "internship": "Stage",
+        "partTime": "Temps partiel / informel",
+        "volunteer": "Bénévolat / leadership associatif",
+        "coursework": "Travaux de cours"
       },
       "educationNoBullets": "C'est tout pour celle-ci — la formation n'a pas besoin de puces.",
       "nextEntry": {
         "project": "Suivant — de quel type de projet s'agit-il ?",
         "education": "Qu'avez-vous étudié d'autre ?",
-        "experience": "Suivant — comment s'appelait ce poste ?"
+        "experience": "Suivant — de quel type d'expérience s'agissait-il ?"
       },
       "finishSection": {
         "experience": "L'expérience professionnelle est terminée. Les projets sont la suite quand vous êtes prêt·e — ils sont facultatifs, alors passez si vous préférez.",
@@ -3579,6 +3616,7 @@
       "addedBullets_other": "{{count}} puces ajoutées",
       "noSpecificJobYet": "Pas encore de poste précis",
       "untitledRole": "Poste sans titre",
+      "untitledProject": "Projet sans titre",
       "bulletsOnCv_one": "{{count}} puce sur votre CV",
       "bulletsOnCv_other": "{{count}} puces sur votre CV",
       "contactConfirmed": "Coordonnées confirmées",
@@ -3631,7 +3669,12 @@
       "send": "Envoyer",
       "draftCount": "Rédiger {{n}} · {{cr}} cr",
       "pickWhatsTrue": "Choisissez ce qui est vrai",
-      "tryAnotherAngle": "Essayer un autre angle"
+      "tryAnotherAngle": "Essayer un autre angle",
+      "activityPlaceholder": "Dites à Aria ce que vous avez fait…",
+      "generatingBullets": "Génération de vos puces…",
+      "readyForBullets": "D'accord, j'ai tout ce qu'il me faut pour créer vos puces.",
+      "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
+      "clickableImpact": "Façons de montrer l’impact — cliquez sur celle qui vous convient :"
     },
     "livePreview": {
       "heading": "Aperçu en direct",

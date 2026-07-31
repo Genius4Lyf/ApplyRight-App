@@ -22,7 +22,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
   if (stage === 'dates') {
     const canSave = !!start.trim();
     return (
-      <AriaCard cardKey="capture-dates">
+      <AriaCard cardKey="capture-dates" wide>
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.roleCapture.whenWereYouThere')}
@@ -39,7 +39,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             value={start}
             onChange={(e) => setStart(e.target.value)}
             placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
           />
           <div className="mt-1.5 flex flex-wrap gap-1">
             {RECENT_YEARS.map((y) => (
@@ -47,7 +47,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
                 key={y}
                 type="button"
                 onClick={() => setStart(y)}
-                className="text-[11px] font-semibold px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                className="text-[11px] font-semibold px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
               >
                 {y}
               </button>
@@ -59,7 +59,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               type="checkbox"
               checked={isCurrent}
               onChange={(e) => setIsCurrent(e.target.checked)}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+              className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:text-white dark:focus:ring-white"
             />
             <span className="text-[12.5px] text-slate-700 dark:text-slate-200">
               {t('ariaStudio.roleCapture.stillWorkHere')}
@@ -79,7 +79,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
                 placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
               />
             </>
           )}
@@ -142,7 +142,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
   const submit = () => canSave && onSubmit({ [stage]: text.trim() });
 
   return (
-    <AriaCard cardKey={`capture-${stage}`}>
+    <AriaCard cardKey={`capture-${stage}`} wide>
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {prompt.q}
@@ -152,7 +152,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder={prompt.placeholder}
-          className="mt-3 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+          className="mt-3 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
         />
         {prompt.hint && (
           <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">{prompt.hint}</p>

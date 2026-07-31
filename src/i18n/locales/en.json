@@ -1093,7 +1093,7 @@
       "educationEntries": "Education ({{n}} entries)",
       "skillsListed": "Skills ({{n}} listed)",
       "journeyIncomplete": "Journey Incomplete",
-      "journeyIncompleteBody": "You have incomplete sections in your CV journey. The final preview and download are locked until all sections are filled in.",
+      "journeyIncompleteBody": "You have incomplete required sections in your CV journey. The final preview and download unlock when those sections are filled in.",
       "editCv": "Edit CV",
       "previewApp": "Preview My Application",
       "previewLocked": "Preview Locked",
@@ -1133,7 +1133,7 @@
     },
     "layout": {
       "livePreviewLocked": "Live Preview Locked",
-      "completeToUnlock": "Complete all sections of your CV journey to unlock the template rendering.",
+      "completeToUnlock": "Complete the required sections of your CV journey to unlock the template rendering.",
       "progress": "Progress",
       "completed": "{{done}} / {{total}} Completed",
       "fillIn": "Fill In →",
@@ -1245,6 +1245,15 @@
         "workLabel": "Work / client",
         "workMsg": "This was a work / client project."
       },
+      "experienceType": {
+        "heading": "What kind of experience was this?",
+        "body": "This helps Aria coach this role in the right way.",
+        "job": "Job",
+        "internship": "Internship",
+        "partTime": "Part-time / informal",
+        "volunteer": "Volunteer / campus leadership",
+        "coursework": "Coursework"
+      },
       "starterFallback": "A starter to build on",
       "hideExample": "Hide example",
       "showExample": "Show me an example",
@@ -1275,6 +1284,7 @@
       "thisRole": "this role",
       "focusOpenerRole": "Let’s sharpen {{title}}. Tell me one thing you actually did there.",
       "focusOpenerRoleCompany": "Let’s sharpen {{title}} at {{company}}. Tell me one thing you actually did there.",
+      "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
       "anythingElse": "Anything else you did here? I can draft another.",
       "couldntSave": "Couldn’t save that — try again.",
       "notEnoughCredits": "Not enough credits — earn more or upgrade.",
@@ -3101,6 +3111,7 @@
       },
       "fields": {
         "experience": {
+          "entryType": "Experience type",
           "title": "Role",
           "company": "Company",
           "dates": "Dates",
@@ -3130,6 +3141,7 @@
       "whatKind": "What kind of project is it?"
     },
     "pinnedEntry": {
+      "liveStatus": "Aria is actively working on this entry",
       "copy": {
         "experience": {
           "label": "Building",
@@ -3157,7 +3169,11 @@
       "saving": "Saving…",
       "finishing": "Finishing…",
       "edit": "Edit",
-      "addedCount": "{{n}} added"
+      "addedCount": "{{n}} added",
+      "savedBullets": "{{n}} bullet points saved",
+      "bulletReceipt": "{{n}} bullet points added to {{title}}",
+      "openRoleToReview": "Open this role to review it",
+      "openProjectToReview": "Open this project to review it"
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Tailored copy",
@@ -3350,7 +3366,7 @@
           "hint": "An expected date is fine if you're still studying."
         },
         "projectTitle": {
-          "q": "What's the project called?",
+          "q": "What was the project called?",
           "placeholder": "e.g. Rig telemetry dashboard",
           "hint": "A short, plain name — what you'd call it out loud."
         }
@@ -3424,6 +3440,7 @@
       "applying": "Applying…",
       "useThis": "Use this",
       "whereAreYou": "Where are you in your career?",
+      "readyToWrite": "Ready to write your summary",
       "writing": "Writing…",
       "writeIt": "Write it",
       "stages": {
@@ -3497,7 +3514,17 @@
       "fixSavedNoMove": "{{section}} is saved. The score didn't move much yet — it usually takes a couple of entries.",
       "nSkills": "{{n}} skills",
       "aTailoredSummary": "a tailored summary",
-      "beginBuild": "Good. Are you going for a particular job right now?",
+      "beginBuild": "Before we begin, I need one quick bit of context about your experience.",
+      "careerStage": {
+        "heading": "Where are you in your career?",
+        "body": "This helps Aria coach you in the right way across your whole CV.",
+        "skip": "Skip for now",
+        "options": {
+          "grad": "Student / recent grad",
+          "experienced": "Experienced",
+          "changer": "Changing careers"
+        }
+      },
       "cvForJob": "CV for {{jobTitle}}",
       "buildJobDoneWithBrief": "Got it — {{role}}. Now let's make sure they can reach you.",
       "buildJobDoneNoBrief": "Got it. Now let's make sure they can reach you.",
@@ -3505,7 +3532,7 @@
       "firstNamesCv": "{{first}}'s CV",
       "confirmContactDone": "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you.",
       "sectionOpener": {
-        "experience": "Let's start with your most recent job. What was the role called?",
+        "experience": "Let's start with your most recent experience. First, what kind of experience was it?",
         "project": "Let's add a project. First — what kind is it?",
         "education": "Let's add your education. What did you study?"
       },
@@ -3514,18 +3541,28 @@
       "itFallback": "it",
       "thisJobFallback": "this job",
       "nextLine": {
+        "roleTitle": "Great — what was your role called?",
         "company": "Got it. Where was this?",
         "dates": "And when were you there?",
         "school": "Where did you study it?",
         "graduationDate": "And when did you finish?",
-        "achievementsProject": "Now the interesting part — what does {{title}} actually do, and what was your role in it?",
-        "achievementsRole": "Now the part that matters — what did you actually do at {{company}}? Tell me one thing and I'll shape it."
+        "achievementsProject": "Now the interesting part — tell me what you did on {{title}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time.",
+        "achievementsRole": "Now the part that matters — tell me what you actually did at {{company}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time."
+      },
+      "experienceType": {
+        "heading": "What kind of experience was this?",
+        "body": "This helps Aria ask the right questions for this entry.",
+        "job": "Job",
+        "internship": "Internship",
+        "partTime": "Part-time / informal",
+        "volunteer": "Volunteer / campus leadership",
+        "coursework": "Coursework"
       },
       "educationNoBullets": "That's it for that one — education doesn't need bullets.",
       "nextEntry": {
         "project": "Next one — what kind of project is it?",
         "education": "What else did you study?",
-        "experience": "Next one — what was that role called?"
+        "experience": "Next one — what kind of experience was this?"
       },
       "finishSection": {
         "experience": "Work history's done. Projects are next whenever you're ready — they're optional, so skip if you'd rather.",
@@ -3583,6 +3620,7 @@
       "addedBullets_other": "Added {{count}} bullets",
       "noSpecificJobYet": "No specific job yet",
       "untitledRole": "Untitled role",
+      "untitledProject": "Untitled project",
       "bulletsOnCv_one": "{{count}} bullet on your CV",
       "bulletsOnCv_other": "{{count}} bullets on your CV",
       "contactConfirmed": "Contact details confirmed",
@@ -3635,7 +3673,12 @@
       "send": "Send",
       "draftCount": "Draft {{n}} · {{cr}} cr",
       "pickWhatsTrue": "Pick what's true",
-      "tryAnotherAngle": "Try another angle"
+      "tryAnotherAngle": "Try another angle",
+      "activityPlaceholder": "Tell Aria what you did…",
+      "generatingBullets": "Generating your bullet points…",
+      "readyForBullets": "Okay, I have everything I need to create your bullet points.",
+      "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
+      "clickableImpact": "Ways to show the impact — click the one that sits well with you:"
     },
     "livePreview": {
       "heading": "Live preview",

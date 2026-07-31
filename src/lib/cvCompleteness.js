@@ -8,13 +8,19 @@ export const CV_SECTIONS = [
   { key: 'experience', label: 'Experience', check: (cv) => (cv?.experience?.length || 0) > 0 },
   { key: 'education', label: 'Education', check: (cv) => (cv?.education?.length || 0) > 0 },
   { key: 'skills', label: 'Skills', check: (cv) => (cv?.skills?.length || 0) > 0 },
-  { key: 'projects', label: 'Projects', check: (cv) => (cv?.projects?.length || 0) > 0 },
+  {
+    key: 'projects',
+    label: 'Projects',
+    optional: true,
+    check: (cv) => (cv?.projects?.length || 0) > 0,
+  },
 ];
 
 export function getCompletionStatus(cv) {
-  const completed = CV_SECTIONS.filter((s) => s.check(cv));
-  const missing = CV_SECTIONS.filter((s) => !s.check(cv));
-  const total = CV_SECTIONS.length;
+  const required = CV_SECTIONS.filter((s) => !s.optional);
+  const completed = required.filter((s) => s.check(cv));
+  const missing = required.filter((s) => !s.check(cv));
+  const total = required.length;
   return {
     completedCount: completed.length,
     totalCount: total,

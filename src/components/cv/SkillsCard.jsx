@@ -100,10 +100,10 @@ const SkillsCard = ({
       : Object.entries(grouped);
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 bg-white dark:bg-slate-900/60 overflow-hidden">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900/60 overflow-hidden">
       {/* Header + segmented control. */}
       <div className="p-3.5 border-b border-slate-100 dark:border-slate-800">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-slate-900 dark:text-white">
           {t('cvBuilder.skillsCard.eyebrow')}
         </span>
         <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 leading-snug">
@@ -159,7 +159,7 @@ const SkillsCard = ({
                       row.isAdded
                         ? 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                         : isSel
-                          ? 'border-transparent bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                          ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
                     }`}
                   >
@@ -172,13 +172,13 @@ const SkillsCard = ({
                       <span
                         className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
                           row.isAdded || isSel
-                            ? 'bg-indigo-500 border-indigo-500 text-white'
+                            ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900'
                             : 'border-slate-300 dark:border-slate-600'
                         }`}
                       >
                         {(row.isAdded || isSel) && <Check className="w-2.5 h-2.5" />}
                       </span>
-                      {row.isBest && <span className="text-indigo-500">★</span>}
+                      {row.isBest && <span className="text-current">★</span>}
                       {row.name}
                     </button>
 
@@ -187,7 +187,7 @@ const SkillsCard = ({
                         type="button"
                         onClick={() => setOpenDetail(openDetail === row.name ? null : row.name)}
                         title={t('cvBuilder.skillsCard.whyFits')}
-                        className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
+                        className="text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
                       >
                         <Info className="w-3 h-3" />
                       </button>
@@ -209,7 +209,7 @@ const SkillsCard = ({
                 const d = items.find((r) => r.name === openDetail)?.detail;
                 if (!d) return null;
                 return (
-                  <div className="mt-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 p-2.5 text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <div className="mt-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100/70 dark:bg-slate-800/60 p-2.5 text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed">
                     {d.talkingPoint && <p className="italic">"{d.talkingPoint}"</p>}
                     {Array.isArray(d.evidence) && d.evidence.length > 0 && (
                       <p className="mt-1 text-slate-500 dark:text-slate-400">

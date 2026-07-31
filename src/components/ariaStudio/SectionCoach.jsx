@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
@@ -11,6 +11,7 @@ import { CREDIT_COSTS } from '../../lib/credits';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaComposer from '../cv/AriaComposer';
+import AriaThinking from '../cv/AriaThinking';
 import AriaCard from './AriaCard';
 
 // The focused build-with, ported to the Studio. This is a COPY OF THE PROTOCOL from
@@ -22,9 +23,9 @@ import AriaCard from './AriaCard';
 //     → /coach/generate-bullets → results with per-bullet toggles
 //     → apply through the provider writer → free re-band
 //
-// The server converges the interview at INTERVIEW_TURN_CAP = 6, so buildTurns is
+// Studio allows enough turns to unpack several activities one at a time.
 // tracked here and sent with every turn.
-const TURN_CAP = 6;
+const TURN_CAP = 10;
 
 // The Studio's section names vs the builder step vocabulary /coach/chat expects.
 // Mapping rather than renaming keeps the existing section-specific prompts firing.
@@ -47,47 +48,95 @@ const SectionCoach = ({
 }) => {
   const { t } = useTranslation();
   const isProject = entry?.section === 'project';
+  const isGradCareer = careerStage === 'grad';
   const REC = isProject ? 3 : 5;
   const per = CREDIT_COSTS.GENERATE_BULLET ?? 1;
+  const { cvData, updateCvData } = useAriaStudio();
+  const restored =
+    cvData?.studioPending?.kind === 'bullets' &&
+    cvData.studioPending.section === entry?.section &&
+    cvData.studioPending.sortId === entry?.sortId
+      ? cvData.studioPending
+      : null;
 
-  const [phase, setPhase] = useState('chat'); // chat | picking | generating | results
+  const [phase, setPhase] = useState(restored ? 'results' : 'chat'); // chat | picking | generating | results
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
-  const [description, setDescription] = useState('');
-  const [count, setCount] = useState(REC);
-  const [bullets, setBullets] = useState([]);
-  const [selected, setSelected] = useState(new Set([0]));
+  const [description, setDescription] = useState(restored?.description || '');
+  const [count, setCount] = useState(restored?.count || REC);
+  const [bullets, setBullets] = useState(restored?.bullets || []);
+  const [selected, setSelected] = useState(
+    new Set((restored?.bullets || []).map((_, index) => index))
+  );
   const [applying, setApplying] = useState(false);
-  const [wasFree, setWasFree] = useState(false);
+  const [wasFree, setWasFree] = useState(!!restored?.wasFree);
   const [suggestions, setSuggestions] = useState([]);
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
-  const [suggestionsLabel, setSuggestionsLabel] = useState('');
 
   // The session's Aria model. The coach owns the docked composer while it drives, so its
   // picker has to write through to the same per-draft choice as StudioChat's.
-  const { cvData, updateCvData } = useAriaStudio();
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const inputRef = useRef(null);
+  const exampleRef = useRef(null);
   const buildTurnsRef = useRef(0);
+
+  useEffect(() => {
+    if (!exampleOpen) return undefined;
+    const frame = requestAnimationFrame(() => {
+      exampleRef.current?.scrollIntoView({
+        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+          ? 'auto'
+          : 'smooth',
+        block: 'nearest',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [exampleOpen]);
 
   // One free re-roll is granted per charged generation — the SERVER owns that via
   // genState, so this only tracks whether the last result claimed it.
   const rerollNote = wasFree ? t('ariaStudio.sectionCoach.rerollWasFree') : '';
 
+  const persistPending = async (pending) => {
+    updateCvData({ studioPending: pending });
+    try {
+      await CVService.saveDraft({ _id: draftId, studioPending: pending });
+      return true;
+    } catch (err) {
+      console.error('Failed to persist pending bullet generation', err);
+      toast.error(t('ariaStudio.chat.toast.saveFailed'));
+      return false;
+    }
+  };
+
   const send = async (text) => {
     const val = (text ?? input).trim();
     if (!val || thinking) return;
 
-    const next = [...messages, { who: 'user', text: val }];
+    // The visible Studio transcript spans every role. For coaching, start at the CURRENT
+    // pin so a finished role's Q&A cannot make a newly-added role look mid-conversation
+    // (or already ready to draft), which suppresses its fresh suggestions and example.
+    let pinIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.who === 'pinrole' || messages[i]?.who === 'unpinrole') {
+        pinIndex = i;
+        break;
+      }
+    }
+    const activePin = pinIndex >= 0 ? messages[pinIndex] : null;
+    const coachMessages =
+      activePin?.who === 'pinrole' && activePin.sortId === entry.sortId
+        ? messages.slice(pinIndex + 1)
+        : messages;
+    const next = [...coachMessages, { who: 'user', text: val }];
     onPush({ who: 'user', text: val });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setSuggestions([]);
     setExampleAnswer('');
     setExampleOpen(false);
-    setSuggestionsLabel('');
     setThinking(true);
     buildTurnsRef.current += 1;
 
@@ -101,14 +150,28 @@ const SectionCoach = ({
           .map((m) => ({ who: m.who, text: m.text })),
         focus: { section: entry.section, sortId: entry.sortId },
         buildTurns: buildTurnsRef.current,
+        studioInterview: true,
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
       });
 
-      onPush({ who: 'aria', text: r.reply });
-      setSuggestions(r.suggestions || []);
-      setExampleAnswer(r.exampleAnswer || '');
-      setSuggestionsLabel(r.suggestionsLabel || '');
+      // The selected career stage must win even if the provider slips back into its
+      // experienced-role framing. Keep students/recent grads away from invented or
+      // metric-shaped prompts at this final presentation boundary.
+      const metricPrompt = /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
+      const reply = r.readyToDraft
+        ? t('ariaStudio.sectionCoach.readyForBullets')
+        : isGradCareer && metricPrompt.test(r.reply || '')
+          ? t('ariaStudio.sectionCoach.gradFollowUp')
+          : r.reply;
+      const safeSuggestions = isGradCareer
+        ? (r.suggestions || []).filter((s) => !metricPrompt.test(s))
+        : r.suggestions || [];
+      const safeExample =
+        isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
+      onPush({ who: 'aria', text: reply });
+      setSuggestions(safeSuggestions);
+      setExampleAnswer(safeExample);
 
       if (r.readyToDraft) {
         const desc =
@@ -118,7 +181,8 @@ const SectionCoach = ({
             .map((m) => m.text)
             .join('. ');
         setDescription(desc);
-        setTimeout(() => setPhase('picking'), 900);
+        // Aria has enough truthful material; move directly to the bullet-count choice.
+        setPhase('picking');
       }
     } catch (e) {
       if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
@@ -151,6 +215,10 @@ const SectionCoach = ({
     });
   };
 
+  const toggleExample = () => {
+    setExampleOpen((open) => !open);
+  };
+
   const generate = async (reroll = false) => {
     setPhase('generating');
     try {
@@ -165,6 +233,15 @@ const SectionCoach = ({
       setBullets(res.bullets || []);
       setSelected(new Set((res.bullets || []).map((_, i) => i))); // all on by default
       setWasFree(!!res.wasFree);
+      await persistPending({
+        kind: 'bullets',
+        section: entry.section,
+        sortId: entry.sortId,
+        description: description.trim(),
+        count,
+        bullets: res.bullets || [],
+        wasFree: !!res.wasFree,
+      });
       if (res.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
       }
@@ -195,6 +272,7 @@ const SectionCoach = ({
     const res = await onApply(add, []);
     setApplying(false);
     if (res?.ok) {
+      if (!(await persistPending(null))) return;
       onDone?.({ entry, applied: add });
     } else if (res && !res.found) {
       toast.error(
@@ -220,7 +298,7 @@ const SectionCoach = ({
       onSend={send}
       disabled={thinking}
       busy={thinking}
-      placeholder={t('cvBuilder.askAria.typeAnswer')}
+      placeholder={t('ariaStudio.sectionCoach.activityPlaceholder')}
       sendLabel={t('ariaStudio.sectionCoach.send')}
       modelId={modelId}
       onSelectModel={selectModel}
@@ -254,12 +332,16 @@ const SectionCoach = ({
   // ─── The live card for whichever step of the build we're on ───
   return (
     <>
+      {/* A sent answer is already in the stream; make the model round-trip visible so
+          the composer never looks stalled while Aria is preparing her follow-up. */}
+      {phase === 'chat' && thinking && <AriaThinking variant="chat" />}
+
       {/* Answer scaffolds — role-aware starters + a sample, under Aria's follow-up.
           Only while she's actually asking something. */}
       {phase === 'chat' && !thinking && suggestions.length > 0 && (
         <div className="self-start pl-6 flex flex-col gap-1.5">
           <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {suggestionsLabel || t('cvBuilder.askAria.starterFallback')}
+            {t('ariaStudio.sectionCoach.clickableImpact')}
           </span>
           <div className="flex flex-wrap gap-1.5">
             {suggestions.map((s, i) => (
@@ -267,7 +349,7 @@ const SectionCoach = ({
                 key={i}
                 type="button"
                 onClick={() => insertStarter(s)}
-                className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
               >
                 {s}
               </button>
@@ -275,7 +357,7 @@ const SectionCoach = ({
             {exampleAnswer && (
               <button
                 type="button"
-                onClick={() => setExampleOpen((o) => !o)}
+                onClick={toggleExample}
                 className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 {exampleOpen
@@ -285,7 +367,10 @@ const SectionCoach = ({
             )}
           </div>
           {exampleOpen && exampleAnswer && (
-            <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic">
+            <div
+              ref={exampleRef}
+              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic"
+            >
               {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
             </div>
           )}
@@ -352,6 +437,10 @@ const SectionCoach = ({
               </div>
             </div>
           </AriaCard>
+        )}
+
+        {phase === 'generating' && (
+          <AriaThinking variant="draft" label={t('ariaStudio.sectionCoach.generatingBullets')} />
         )}
 
         {/* Results — per-bullet toggles, a free-re-roll offer, and Apply. */}

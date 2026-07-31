@@ -56,7 +56,7 @@ const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
                   className={`text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                     on
                       ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                      : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
+                      : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 dark:hover:border-white'
                   }`}
                 >
                   {on ? '✓ ' : '+ '}

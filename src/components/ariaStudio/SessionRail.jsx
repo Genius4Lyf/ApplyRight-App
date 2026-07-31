@@ -67,7 +67,11 @@ const SessionRail = ({
       </button>
     </div>
 
-    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none pb-3">
+    <div
+      className={`flex-1 min-h-0 overflow-y-auto scrollbar-none pb-3 ${
+        !loading && sessions.length === 0 ? 'flex items-center justify-center' : ''
+      }`}
+    >
       {loading && (
         <p className="px-4 py-3 text-[12px] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.sessionRail.loading')}
@@ -76,14 +80,17 @@ const SessionRail = ({
 
       {/* First run — an invitation, not an empty box. */}
       {!loading && sessions.length === 0 && (
-        <div className="px-4 py-6 text-center">
-          <AriaOrbit size={22} className="mx-auto" />
+        <div className="flex flex-col items-center px-4 text-center">
+          <span className="aria-orbit-slow inline-block">
+            <AriaOrbit size={44} working />
+          </span>
           <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
             {t('ariaStudio.sessionRail.noSessionsYet')}
           </p>
         </div>
       )}
 
+      {sessions.length > 0 && (
       <ul className="divide-y divide-slate-200 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
         {sessions.map((s) => {
           const active = s._id === activeId;
@@ -174,6 +181,7 @@ const SessionRail = ({
           );
         })}
       </ul>
+      )}
     </div>
 
     {onBackHome && (

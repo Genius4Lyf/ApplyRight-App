@@ -3,9 +3,9 @@
 // `k` maps 1:1 to the backend stage enum ('grad'|'experienced'|'changer'); the backend
 // forks its coaching on it (entry-level 'grad' is eased in — no metric pressure).
 export const CAREER_STAGES = [
-  { k: 'grad', label: 'Student / recent grad' },
-  { k: 'experienced', label: 'Experienced' },
-  { k: 'changer', label: 'Changing careers' },
+  { k: 'grad', label: 'Student / recent grad', labelKey: 'ariaStudio.chat.careerStage.options.grad' },
+  { k: 'experienced', label: 'Experienced', labelKey: 'ariaStudio.chat.careerStage.options.experienced' },
+  { k: 'changer', label: 'Changing careers', labelKey: 'ariaStudio.chat.careerStage.options.changer' },
 ];
 
 // One lightweight question shown once at the start of work-history build-with — a

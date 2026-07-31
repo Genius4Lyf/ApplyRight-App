@@ -34,7 +34,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
   // six empty rows. It shows the document's own health instead — the same
   // getCompletionStatus figure /my-cvs and the Dashboard use, derived live.
   const isBuild = cvData?.studioKind === 'build';
-  const progress = buildProgress(cvData);
+  const progress = buildProgress(cvData, cvData?.coachChats?.studio || []);
   const roles = cvData?.experience || [];
   const projects = cvData?.projects || [];
 

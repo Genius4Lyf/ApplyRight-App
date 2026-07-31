@@ -40,8 +40,8 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
 
   return (
     <AriaCard cardKey="brief">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-500 bg-white dark:bg-slate-900 p-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-500 dark:text-indigo-400">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900 p-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-900 dark:text-white">
           {t('ariaStudio.roleBrief.ariasRead')}
         </p>
         <p className="mt-1.5 font-heading text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -64,7 +64,7 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
                 <span
                   key={k}
                   // Neutral: these are extracted facts about the job, not actions and
-                  // not state. The card's indigo eyebrow + left border already mark the
+                  // not state. The card's eyebrow + left border already mark the
                   // whole thing as Aria's read; colouring the chips too made
                   // non-interactive labels out-shout the actual action below them.
                   // Matches StudioArtifactPanel's existing treatment of job keywords.

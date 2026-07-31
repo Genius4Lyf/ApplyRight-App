@@ -239,13 +239,22 @@ const CVService = {
   // Aria's UNIFIED turn — general Q&A + build-with in one thread. focus optional.
   // Smart per-message charging happens server-side (focused building = free, a
   // general question spends the daily allowance).
-  coachChat: async ({ draftId, currentStepId, messages, focus, buildTurns, stage }) => {
+  coachChat: async ({
+    draftId,
+    currentStepId,
+    messages,
+    focus,
+    buildTurns,
+    stage,
+    studioInterview,
+  }) => {
     const response = await api.post('/coach/chat', {
       draftId,
       currentStepId,
       messages,
       focus,
       buildTurns,
+      studioInterview,
       // Career stage ('grad'|'experienced'|'changer') forks the experience coaching:
       // entry-level is eased in (no metric pressure). Optional — the backend infers
       // from the draft when it's absent.

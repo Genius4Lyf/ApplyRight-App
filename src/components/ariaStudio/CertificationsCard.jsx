@@ -79,7 +79,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderCertification')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
@@ -95,7 +95,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setIssuer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderIssuer')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
@@ -111,7 +111,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setDate(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderYear')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
         </div>

@@ -408,6 +408,19 @@ const Navbar = () => {
     const handleCreditUpdate = (event) => {
       if (typeof event.detail === 'number') {
         setCredits(event.detail);
+        // Once entitlement has loaded, the navbar renders its availableCredits in
+        // preference to `credits`. Keep that preferred value live too, otherwise
+        // the dropdown shows the old balance until a reload after a deduction.
+        setEntitlement((current) =>
+          current ? { ...current, availableCredits: event.detail } : current
+        );
+        try {
+          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          storedUser.credits = event.detail;
+          localStorage.setItem('user', JSON.stringify(storedUser));
+        } catch {
+          /* localStorage unavailable — the live navbar state is still correct */
+        }
       } else {
         console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
       }

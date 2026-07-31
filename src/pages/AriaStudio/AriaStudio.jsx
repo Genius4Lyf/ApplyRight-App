@@ -401,7 +401,7 @@ const StudioDesk = () => {
             type="button"
             onClick={() => layout.setPanelView('insights')}
             aria-label={t('ariaStudio.desk.showPanel')}
-            className="shrink-0 self-center w-6 py-6 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="shrink-0 self-center w-6 py-6 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-950 dark:hover:text-white transition-colors"
           >
             <span className="block [writing-mode:vertical-rl] rotate-180 font-mono text-[9px] uppercase tracking-[0.16em]">
               {t('ariaStudio.desk.panel')}

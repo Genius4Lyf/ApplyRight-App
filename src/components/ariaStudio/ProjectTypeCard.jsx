@@ -21,7 +21,7 @@ const ProjectTypeCard = ({ onPick, busy }) => {
               type="button"
               disabled={busy}
               onClick={() => onPick?.(pt)}
-              className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 px-3 py-2.5 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white px-3 py-2.5 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
             >
               <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
                 {t(pt.labelKey)}

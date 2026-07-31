@@ -306,6 +306,7 @@ describe('sessionRow', () => {
 });
 
 describe('buildProgress — derived, never stored', () => {
+  const CONTACT_DONE = [{ who: 'contactdone' }];
   const FULL = {
     personalInfo: { fullName: 'Ernest Akibor' },
     professionalSummary: 'A summary.',
@@ -325,7 +326,7 @@ describe('buildProgress — derived, never stored', () => {
   });
 
   it('reports everything done for a complete CV', () => {
-    const p = buildProgress(FULL);
+    const p = buildProgress(FULL, CONTACT_DONE);
     expect(p.percent).toBe(100);
     expect(p.done).toBe(6);
     expect(p.isComplete).toBe(true);
@@ -335,7 +336,7 @@ describe('buildProgress — derived, never stored', () => {
   it('tracks the REAL document — emptying a section un-does it', () => {
     // The whole point of deriving: there's no stored flag that could keep claiming
     // "work history: done" after the last role is deleted.
-    const p = buildProgress({ ...FULL, experience: [] });
+    const p = buildProgress({ ...FULL, experience: [] }, CONTACT_DONE);
     expect(p.status.experience).toBe(false);
     expect(p.done).toBe(5);
     expect(p.isComplete).toBe(false);
@@ -343,28 +344,39 @@ describe('buildProgress — derived, never stored', () => {
 
   it('points at the first unfinished section in builder order', () => {
     expect(buildProgress({}).nextKey).toBe('contact');
-    expect(buildProgress({ personalInfo: { fullName: 'E' } }).nextKey).toBe('experience');
-    expect(buildProgress({ ...FULL, summary: undefined, professionalSummary: '' }).nextKey).toBe(
-      'summary'
+    expect(buildProgress({ personalInfo: { fullName: 'E' } }).nextKey).toBe('contact');
+    expect(buildProgress({ personalInfo: { fullName: 'E' } }, CONTACT_DONE).nextKey).toBe(
+      'experience'
     );
+    expect(
+      buildProgress(
+        { ...FULL, summary: undefined, professionalSummary: '' },
+        CONTACT_DONE
+      ).nextKey
+    ).toBe('summary');
   });
 
-  it('maps contact completeness to the name check, not to a filled-in phone', () => {
-    // cvCompleteness treats a CV as having contact once there's a name; matching that
-    // exactly is what keeps the Studio and /my-cvs agreeing.
-    expect(buildProgress({ personalInfo: { phone: '123' } }).status.contact).toBe(false);
-    expect(buildProgress({ personalInfo: { fullName: 'E' } }).status.contact).toBe(true);
+  it('marks contact complete only after valid data is confirmed in Studio', () => {
+    expect(buildProgress({ personalInfo: { phone: '123' } }, CONTACT_DONE).status.contact).toBe(
+      false
+    );
+    expect(buildProgress({ personalInfo: { fullName: 'E' } }).status.contact).toBe(false);
+    expect(
+      buildProgress({ personalInfo: { fullName: 'E' } }, CONTACT_DONE).status.contact
+    ).toBe(true);
   });
 
-  it('agrees with the canonical percent used by MyCVs and the Dashboard', () => {
-    // 3 of 6 canonical sections present → 50%.
+  it('counts confirmed contact in the Studio health percent', () => {
+    // The content has 3 of 6 sections, but Studio counts contact only after confirmation.
     const half = {
       personalInfo: { fullName: 'E' },
       professionalSummary: 'x',
       experience: [{ title: 'T' }],
     };
-    expect(buildProgress(half).percent).toBe(50);
-    expect(buildProgress(half).done).toBe(3);
+    expect(buildProgress(half).percent).toBe(33);
+    expect(buildProgress(half).done).toBe(2);
+    expect(buildProgress(half, CONTACT_DONE).percent).toBe(50);
+    expect(buildProgress(half, CONTACT_DONE).done).toBe(3);
   });
 
   it('covers all six builder sections and survives a null CV', () => {
@@ -387,7 +399,13 @@ describe('derivePhase — build track', () => {
 
   it('walks roadmap → job → contact → sections as markers land', () => {
     expect(derivePhase(build)).toBe('build:roadmap');
-    expect(derivePhase([...build, { who: 'buildstart' }])).toBe('build:job');
+    expect(derivePhase([...build, { who: 'buildstart' }])).toBe('build:career-stage');
+    expect(
+      derivePhase([...build, { who: 'buildstart' }, { who: 'careerstage', stage: 'grad' }])
+    ).toBe('build:job');
+    expect(derivePhase([...build, { who: 'buildstart' }], { careerStage: 'grad' })).toBe(
+      'build:job'
+    );
     expect(derivePhase([...build, { who: 'buildstart' }, { who: 'buildjobdone' }])).toBe(
       'build:contact'
     );
@@ -399,6 +417,17 @@ describe('derivePhase — build track', () => {
         { who: 'contactdone' },
       ])
     ).toBe('build:sections');
+  });
+
+  it('restores a captured build job to the Role Brief', () => {
+    expect(
+      derivePhase([
+        ...build,
+        { who: 'buildstart' },
+        { who: 'careerstage', stage: 'experienced' },
+        { who: 'jobcard', jobTitle: 'Operator', jobDescription: 'Description' },
+      ])
+    ).toBe('build:brief');
   });
 
   it('restores the build position after a refresh mid-sequence', () => {
@@ -437,32 +466,39 @@ describe('bulletCount', () => {
   });
 });
 
-describe('entryProgress — the n/4 counter', () => {
+describe('entryProgress — the n/5 counter', () => {
   const full = {
+    entryType: 'full-time',
     title: 'Operator',
     company: 'Baker',
     startDate: '2021',
     description: '• Ran pressure tests',
   };
 
-  it('is 0/4 for a freshly created entry', () => {
+  it('is 0/5 for a freshly created entry', () => {
     const p = entryProgress({ _sortId: 'a' });
     expect(p.done).toBe(0);
-    expect(p.total).toBe(4);
-    expect(p.fields.map((f) => f.key)).toEqual(['title', 'company', 'dates', 'achievements']);
+    expect(p.total).toBe(5);
+    expect(p.fields.map((f) => f.key)).toEqual([
+      'entryType',
+      'title',
+      'company',
+      'dates',
+      'achievements',
+    ]);
   });
 
   it('climbs as each field lands', () => {
-    expect(entryProgress({ title: 'Operator' }).done).toBe(1);
-    expect(entryProgress({ title: 'Operator', company: 'Baker' }).done).toBe(2);
-    expect(entryProgress({ ...full, description: '' }).done).toBe(3);
-    expect(entryProgress(full).done).toBe(4);
+    expect(entryProgress({ entryType: 'full-time' }).done).toBe(1);
+    expect(entryProgress({ entryType: 'full-time', title: 'Operator' }).done).toBe(2);
+    expect(entryProgress({ ...full, description: '' }).done).toBe(4);
+    expect(entryProgress(full).done).toBe(5);
   });
 
   it('counts a current role with no end date as dated', () => {
     // "2021 – Present" is complete; requiring an end date would block anyone still
     // in the job.
-    expect(entryProgress({ startDate: '2021', isCurrent: true }).fields[2].done).toBe(true);
+    expect(entryProgress({ startDate: '2021', isCurrent: true }).fields[3].done).toBe(true);
   });
 
   it('does not count whitespace as a filled field', () => {
@@ -472,10 +508,11 @@ describe('entryProgress — the n/4 counter', () => {
 
 describe('roleStage — derived, so a refresh resumes correctly', () => {
   it('asks for the first missing thing, in order', () => {
-    expect(roleStage({})).toBe('title');
-    expect(roleStage({ title: 'Operator' })).toBe('company');
-    expect(roleStage({ title: 'Operator', company: 'Baker' })).toBe('dates');
-    expect(roleStage({ title: 'Operator', company: 'Baker', startDate: '2021' })).toBe(
+    expect(roleStage({})).toBe('entryType');
+    expect(roleStage({ entryType: 'full-time' })).toBe('title');
+    expect(roleStage({ entryType: 'full-time', title: 'Operator' })).toBe('company');
+    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe('dates');
+    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker', startDate: '2021' })).toBe(
       'achievements'
     );
   });
@@ -484,6 +521,7 @@ describe('roleStage — derived, so a refresh resumes correctly', () => {
     expect(
       roleStage({
         title: 'Operator',
+        entryType: 'full-time',
         company: 'Baker',
         startDate: '2021',
         description: '• Did a thing',
@@ -494,7 +532,9 @@ describe('roleStage — derived, so a refresh resumes correctly', () => {
   it('does not re-ask for something filled in elsewhere', () => {
     // Someone edits the company in the CV builder mid-session; Aria must skip that
     // question rather than asking again from a stored step counter.
-    expect(roleStage({ title: 'Operator', company: 'Filled in elsewhere' })).toBe('dates');
+    expect(
+      roleStage({ entryType: 'full-time', title: 'Operator', company: 'Filled in elsewhere' })
+    ).toBe('dates');
   });
 
   it('is null with no entry', () => {
@@ -612,7 +652,7 @@ describe('derivePhase — a pinned role', () => {
       projects: [{}],
       skills: [{ name: 'a' }],
     };
-    const p = buildProgress(placeholders);
+    const p = buildProgress(placeholders, [{ who: 'contactdone' }]);
     expect(p.percent).toBeLessThan(100);
     expect(p.status.experience).toBe(false);
     expect(p.status.projects).toBe(false);
@@ -861,7 +901,7 @@ describe('build finish — health, never a fabricated match', () => {
   };
 
   it('reports real completeness for a finished build', () => {
-    const p = buildProgress(built);
+    const p = buildProgress(built, [{ who: 'contactdone' }]);
     expect(p.percent).toBe(100);
     expect(p.done).toBe(6);
     expect(p.isComplete).toBe(true);
@@ -870,7 +910,7 @@ describe('build finish — health, never a fabricated match', () => {
   it('reports honestly when sections were skipped', () => {
     // Skipping projects and summary must show as incomplete, not be papered over.
     const partial = { ...built, projects: [], professionalSummary: '' };
-    const p = buildProgress(partial);
+    const p = buildProgress(partial, [{ who: 'contactdone' }]);
     expect(p.percent).toBeLessThan(100);
     expect(p.status.projects).toBe(false);
     expect(p.status.summary).toBe(false);

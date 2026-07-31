@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
-import { CAREER_STAGES, CAREER_STAGE_PROMPT } from '../../lib/careerStages';
 import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
@@ -50,6 +49,10 @@ const AskAriaGenerate = ({
 
   const focused = !!focusedEntry;
   const isProject = focusedEntry?.section === 'project';
+  const focusedExperience =
+    focusedEntry?.section === 'experience'
+      ? (cvData?.experience || []).find((entry) => entry._sortId === focusedEntry.sortId)
+      : null;
 
   // Section-aware recommended count + per-bullet cost (shown before /auth/config
   // hydrates, thanks to the credits.js default).
@@ -114,6 +117,8 @@ const AskAriaGenerate = ({
   // For a focused PROJECT, ask the project type upfront (chips) before interviewing.
   // Dismissed once the user picks a chip OR types any answer; reset on focus change.
   const [projectTypePicked, setProjectTypePicked] = useState(false);
+  const [pickedEntryType, setPickedEntryType] = useState(focusedEntry?.entryType || '');
+  const [savingEntryType, setSavingEntryType] = useState(false);
   // The Aria model for this CV — same per-draft choice the Studio shows.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
@@ -172,8 +177,10 @@ const AskAriaGenerate = ({
   // stops pushing for metrics). Persisted per-CV in coachState so it's never re-asked;
   // if skipped, the backend infers it from the draft. `stageDismissed` hides the chips
   // for this focus once they type past them (chips aren't a gate).
-  const careerStage = aiByStep?._careerStage;
-  const [stageDismissed, setStageDismissed] = useState(false);
+  const careerStage = cvData?.careerStage || aiByStep?._careerStage;
+  const isGradCareer = careerStage === 'grad';
+  const entryType = pickedEntryType || focusedExperience?.entryType || focusedEntry?.entryType || '';
+  const needsEntryType = focusedEntry?.section === 'experience' && !entryType;
 
   // "Aria's read" — the Role Brief. Seeded from cvData if present, else fetched
   // once on mount (only when a target JD exists). Grounds every generation.
@@ -247,7 +254,7 @@ const AskAriaGenerate = ({
     // leaves bullets/phase/appliedSet/description intact so the record marker survives.
     if (cur) {
       setProjectTypePicked(false); // a newly-focused project asks its type again
-      setStageDismissed(false); // a newly-focused role may offer the stage chip again (until picked)
+      setPickedEntryType(focusedEntry.entryType || '');
       setPhase('chat');
       setBullets([]);
       setAppliedSet(new Set());
@@ -264,6 +271,30 @@ const AskAriaGenerate = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedEntry?.sortId]);
+
+  // The focused coach resolves its role fresh from the draft on every turn. Save the
+  // entry type before opening that exchange, while keeping an immediate local value so
+  // the card cannot race the first request.
+  const pickExperienceType = async (entryType) => {
+    if (!focusedEntry?.sortId || savingEntryType) return;
+    const experience = (cvData?.experience || []).map((entry) =>
+      entry._sortId === focusedEntry.sortId ? { ...entry, entryType } : entry
+    );
+    setPickedEntryType(entryType);
+    updateCvData({ experience });
+    setSavingEntryType(true);
+    try {
+      const id = await ensureDraft();
+      if (!id) throw new Error('draft unavailable');
+      await CVService.saveDraft({ _id: id, experience });
+    } catch {
+      setPickedEntryType('');
+      updateCvData({ experience: cvData?.experience || [] });
+      toast.error(t('cvBuilder.askAria.couldntSave'));
+    } finally {
+      setSavingEntryType(false);
+    }
+  };
 
   // Drop the "what research says" lecture card into the thread — no AI call, added
   // once, and it doesn't dismiss the other starter chips. The marker persists on the
@@ -286,14 +317,13 @@ const AskAriaGenerate = ({
   // on a focused 'ready' it hands back the description → the picker → credited draft.
   const send = async (text) => {
     const val = (text ?? input).trim();
-    if (!val || thinking) return;
+    if (!val || thinking || needsEntryType || savingEntryType) return;
     const next = [...messages, { who: 'user', text: val }];
     setMessages(next);
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setShowChips(false);
     setProjectTypePicked(true); // any send (chip or typed) dismisses the project-type chips
-    setStageDismissed(true); // typing past the career-stage chips hides them (not a gate)
     setSuggestions([]);
     setExampleAnswer('');
     setExampleOpen(false);
@@ -324,10 +354,23 @@ const AskAriaGenerate = ({
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
       });
-      setMessages((m) => [...m, { who: 'aria', text: r.reply }]);
+      // The builder has its own focused-coach surface. Enforce the recent-grad
+      // contract here too, so a stale/provider-missed stage can never put metric
+      // pressure in front of a student or recent graduate.
+      const metricPrompt = /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
+      const reply =
+        isGradCareer && metricPrompt.test(r.reply || '')
+          ? t('cvBuilder.askAria.gradFollowUp')
+          : r.reply;
+      const safeSuggestions = isGradCareer
+        ? (r.suggestions || []).filter((s) => !metricPrompt.test(s))
+        : r.suggestions || [];
+      const safeExample =
+        isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
+      setMessages((m) => [...m, { who: 'aria', text: reply }]);
       setFreeLeft(r.freeRemaining);
-      setSuggestions(r.suggestions || []);
-      setExampleAnswer(r.exampleAnswer || '');
+      setSuggestions(safeSuggestions);
+      setExampleAnswer(safeExample);
       setSuggestionsLabel(r.suggestionsLabel || '');
       if (r.readyToDraft && focused) {
         const desc =
@@ -761,23 +804,26 @@ const AskAriaGenerate = ({
           {focused &&
             !isProject &&
             focusedEntry?.section === 'experience' &&
-            !careerStage &&
-            !stageDismissed &&
+            (needsEntryType || savingEntryType) &&
             phase === 'chat' &&
             !thinking && (
               <div className="self-start pl-6 flex flex-col gap-1.5">
                 <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                  {CAREER_STAGE_PROMPT}
+                  {t('cvBuilder.askAria.experienceType.heading')}
                 </span>
+                <p className="text-[12px] text-slate-600 dark:text-slate-300">
+                  {t('cvBuilder.askAria.experienceType.body')}
+                </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {CAREER_STAGES.map((s) => (
+                  {['job', 'internship', 'partTime', 'volunteer', 'coursework'].map((type) => (
                     <button
-                      key={s.k}
+                      key={type}
                       type="button"
-                      onClick={() => setAiByStep?.((m) => ({ ...m, _careerStage: s.k }))}
-                      className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                      disabled={savingEntryType}
+                      onClick={() => pickExperienceType(type)}
+                      className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
                     >
-                      {s.label}
+                      {t(`cvBuilder.askAria.experienceType.${type}`)}
                     </button>
                   ))}
                 </div>
@@ -1071,7 +1117,7 @@ const AskAriaGenerate = ({
           value={input}
           onChange={setInput}
           onSend={send}
-          disabled={phase !== 'chat'}
+          disabled={phase !== 'chat' || needsEntryType || savingEntryType}
           busy={thinking}
           placeholder={
             focused

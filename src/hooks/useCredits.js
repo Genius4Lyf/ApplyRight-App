@@ -34,6 +34,7 @@ export function useCredits() {
     const handleCreditUpdate = (event) => {
       if (typeof event.detail === 'number') {
         setCredits(event.detail);
+        writeCreditsToLocalStorage(event.detail);
       } else {
         setCredits(readCredits());
       }

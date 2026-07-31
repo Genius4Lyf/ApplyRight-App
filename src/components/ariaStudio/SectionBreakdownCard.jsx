@@ -60,7 +60,7 @@ const SectionBreakdownCard = ({
                 <button
                   type="button"
                   onClick={() => onFix?.(s)}
-                  className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
                 >
                   {t('ariaStudio.sectionBreakdown.fix')}
                 </button>
@@ -91,7 +91,7 @@ const SectionBreakdownCard = ({
                 type="button"
                 onClick={() => onRescan()}
                 disabled={recomputing || rescanning}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {rescanning
                   ? t('ariaStudio.sectionBreakdown.rechecking')

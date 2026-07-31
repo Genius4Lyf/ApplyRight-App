@@ -68,7 +68,7 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
                   type="button"
                   disabled={!!busyId}
                   onClick={() => onPick?.(d)}
-                  className="relative overflow-hidden text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 bg-white dark:bg-slate-900 pl-4 pr-3 py-2.5 flex items-center gap-3 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  className="relative overflow-hidden text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white bg-white dark:bg-slate-900 pl-4 pr-3 py-2.5 flex items-center gap-3 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
                 >
                   <span className={`absolute left-0 inset-y-0 w-[3px] ${BAND_RULEBG[band]}`} />
                   <span className="min-w-0 flex-1">

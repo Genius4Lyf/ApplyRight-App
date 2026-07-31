@@ -36,9 +36,11 @@ const SummaryFixCard = ({
   generating,
   applying,
   wasReroll,
+  careerStage,
 }) => {
   const { t } = useTranslation();
-  const [stage, setStage] = useState(null);
+  const [stage, setStage] = useState(careerStage || null);
+  const effectiveStage = stage || careerStage || null;
   const cost = CREDIT_COSTS.GENERATE_SUMMARY ?? 3;
 
   // Second step — a draft came back; read it, use it, or try another angle.
@@ -57,7 +59,7 @@ const SummaryFixCard = ({
           <div className="mt-4 flex items-center justify-between gap-2">
             <button
               type="button"
-              onClick={() => onGenerate?.(stage, true)}
+              onClick={() => onGenerate?.(effectiveStage, true)}
               disabled={generating || applying}
               className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
@@ -85,16 +87,18 @@ const SummaryFixCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.summaryFix.whereAreYou')}
+            {careerStage
+              ? t('ariaStudio.summaryFix.readyToWrite')
+              : t('ariaStudio.summaryFix.whereAreYou')}
           </p>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr
           </span>
         </div>
 
-        <div className="mt-3 flex flex-col gap-2">
+        {!careerStage && <div className="mt-3 flex flex-col gap-2">
           {STAGES.map((s) => {
-            const on = stage === s.key;
+            const on = effectiveStage === s.key;
             return (
               <button
                 key={s.key}
@@ -102,8 +106,8 @@ const SummaryFixCard = ({
                 onClick={() => setStage(s.key)}
                 className={`text-left rounded-xl border px-3 py-2.5 transition-colors ${
                   on
-                    ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                    ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:border-white dark:ring-white dark:bg-white/10'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white'
                 }`}
               >
                 <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
@@ -115,7 +119,7 @@ const SummaryFixCard = ({
               </button>
             );
           })}
-        </div>
+        </div>}
 
         <div className="mt-4 flex items-center justify-between gap-2">
           <button
@@ -128,8 +132,8 @@ const SummaryFixCard = ({
           </button>
           <button
             type="button"
-            onClick={() => onGenerate?.(stage, false)}
-            disabled={!stage || generating}
+            onClick={() => onGenerate?.(effectiveStage, false)}
+            disabled={!effectiveStage || generating}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
             {generating ? t('ariaStudio.summaryFix.writing') : t('ariaStudio.summaryFix.writeIt')}

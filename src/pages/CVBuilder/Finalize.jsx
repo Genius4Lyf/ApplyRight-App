@@ -288,7 +288,7 @@ const Finalize = () => {
   }
 
   const isComplete = isStepComplete
-    ? ['heading', 'history', 'projects', 'education', 'skills', 'summary'].every((stepId) =>
+    ? ['heading', 'history', 'education', 'skills', 'summary'].every((stepId) =>
         isStepComplete(stepId)
       )
     : false;

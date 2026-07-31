@@ -424,7 +424,6 @@ const ResumeReview = () => {
             const isDraftComplete =
               !!draft.personalInfo?.fullName &&
               (draft.experience?.length || 0) > 0 &&
-              (draft.projects?.length || 0) > 0 &&
               (draft.education?.length || 0) > 0 &&
               (draft.skills?.length || 0) > 0 &&
               !!draft.professionalSummary?.trim();
@@ -925,8 +924,8 @@ const ResumeReview = () => {
               Preview & Download Locked
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-sm mx-auto font-medium">
-              You must complete all steps of your CV journey in the builder before you can view
-              templates or download the PDF.
+              You must complete all required steps of your CV journey in the builder before you
+              can view templates or download the PDF.
             </p>
 
             {/* Checklist of missing sections */}
@@ -940,7 +939,6 @@ const ResumeReview = () => {
                   label: 'Work History',
                   done: (application.rawDraft?.experience?.length || 0) > 0,
                 },
-                { label: 'Projects', done: (application.rawDraft?.projects?.length || 0) > 0 },
                 { label: 'Education', done: (application.rawDraft?.education?.length || 0) > 0 },
                 { label: 'Skills', done: (application.rawDraft?.skills?.length || 0) > 0 },
                 { label: 'Summary', done: !!application.rawDraft?.professionalSummary?.trim() },

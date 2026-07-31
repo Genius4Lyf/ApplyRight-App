@@ -97,13 +97,18 @@ export const AriaStudioProvider = ({ children }) => {
   // closure, evaluated later); the dep array is what breaks.
   const flushChats = useCallback(async () => {
     const pending = pendingChatsRef.current;
-    if (!pending) return;
-    pendingChatsRef.current = null;
-    lastSavedChatsRef.current = pending.serialized;
+    if (!pending) return true;
     try {
       await CVService.saveDraft({ _id: pending.draftId, coachChats: pending.chats });
+      if (pendingChatsRef.current?.serialized === pending.serialized) {
+        pendingChatsRef.current = null;
+      }
+      lastSavedChatsRef.current = pending.serialized;
+      return true;
     } catch (err) {
       console.error('Failed to flush Aria Studio chats before switching:', err);
+      toast.error("Couldn't sync the latest Aria messages. Try switching again.");
+      return false;
     }
   }, []);
 
@@ -147,8 +152,8 @@ export const AriaStudioProvider = ({ children }) => {
   const loadSession = useCallback(
     async (id) => {
       if (!id || id === draftId) return null;
+      if (!(await flushChats())) return null;
       sessionEpochRef.current += 1;
-      await flushChats(); // the last turns of the OUTGOING session
       setLoading(true);
       try {
         const draft = await CVService.getDraftById(id);
@@ -173,8 +178,8 @@ export const AriaStudioProvider = ({ children }) => {
   // chat reads it and skips the mode chooser entirely.
   const newSession = useCallback(
     async (kind = 'tailor', source = null) => {
+      if (!(await flushChats())) return false;
       sessionEpochRef.current += 1;
-      await flushChats(); // don't lose the outgoing session's last turns
       setCvData(null); // unbinds + clears ariaStudio:draftId
       try {
         localStorage.removeItem(PRECLONE_KEY);
@@ -185,6 +190,7 @@ export const AriaStudioProvider = ({ children }) => {
       setPendingSource(source);
       setSessionNonce((n) => n + 1);
       setLoading(false);
+      return true;
     },
     [flushChats, setCvData]
   );
@@ -201,8 +207,8 @@ export const AriaStudioProvider = ({ children }) => {
       if (buildingRef.current) return buildingRef.current;
 
       buildingRef.current = (async () => {
+        if (!(await flushChats())) return null;
         sessionEpochRef.current += 1;
-        await flushChats(); // same discipline as loadSession/newSession
         setLoading(true);
         try {
           const res = await CVService.studioBuildStart({ jobTitle, jobDescription });
@@ -250,7 +256,8 @@ export const AriaStudioProvider = ({ children }) => {
   const appendEntry = useCallback(
     async (key, entry) => {
       const sortId = newSortId();
-      const next = [...(cvData?.[key] || []), { ...entry, _sortId: sortId }];
+      const previous = cvData?.[key] || [];
+      const next = [...previous, { ...entry, _sortId: sortId }];
       const updated = { ...(cvData || {}), [key]: next };
       setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
       if (draftId) {
@@ -259,6 +266,7 @@ export const AriaStudioProvider = ({ children }) => {
           await CVService.saveDraft({ ...base, _id: draftId });
         } catch (error) {
           console.error(`Failed to persist new ${key} entry`, error);
+          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
           toast.error("Couldn't save that — try again.");
           return null;
         }
@@ -332,12 +340,15 @@ export const AriaStudioProvider = ({ children }) => {
     // Remember what's owed while the debounce is running, so a session switch can
     // FLUSH it instead of losing it (see flushChats).
     pendingChatsRef.current = { draftId, chats: cvData.coachChats, serialized };
-    const t = setTimeout(() => {
-      lastSavedChatsRef.current = serialized;
-      pendingChatsRef.current = null;
-      CVService.saveDraft({ _id: draftId, coachChats: cvData.coachChats }).catch((err) =>
-        console.error('Failed to autosave Aria Studio chats:', err)
-      );
+    const t = setTimeout(async () => {
+      try {
+        await CVService.saveDraft({ _id: draftId, coachChats: cvData.coachChats });
+        lastSavedChatsRef.current = serialized;
+        if (pendingChatsRef.current?.serialized === serialized) pendingChatsRef.current = null;
+      } catch (err) {
+        // Keep the payload pending so a later debounce or session-switch flush can retry it.
+        console.error('Failed to autosave Aria Studio chats:', err);
+      }
     }, 800);
     return () => clearTimeout(t);
   }, [cvData?.coachChats, draftId]);
@@ -363,7 +374,8 @@ export const AriaStudioProvider = ({ children }) => {
           return true;
         } catch (error) {
           console.error('Failed to save applied rewrite', error);
-          toast.error('Applied to your CV, but saving failed — try again.');
+          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: cvData[key] || [] }));
+          toast.error("Couldn't save that rewrite. Try again.");
           return false;
         }
       }
@@ -375,7 +387,7 @@ export const AriaStudioProvider = ({ children }) => {
   // Writer: set the professional summary (from Aria's in-chat draft) and save.
   const applySummary = useCallback(
     async (text) => {
-      if (!cvData) return;
+      if (!cvData) return { ok: false };
       const updated = { ...cvData, professionalSummary: text };
       setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
       setExternalEditNonce((n) => n + 1);
@@ -385,8 +397,12 @@ export const AriaStudioProvider = ({ children }) => {
           await CVService.saveDraft({ ...base, _id: draftId });
         } catch (error) {
           console.error('Failed to save applied summary', error);
+          setCvDataRaw((prev) => ({ ...(prev || {}), professionalSummary: cvData.professionalSummary }));
+          toast.error("Couldn't save that summary. Try again.");
+          return { ok: false };
         }
       }
+      return { ok: true };
     },
     [cvData, draftId]
   );
@@ -395,11 +411,11 @@ export const AriaStudioProvider = ({ children }) => {
   // on the CV) and save. Returns { added } so the chat can confirm.
   const applySkills = useCallback(
     async (newSkills) => {
-      if (!cvData) return { added: 0 };
+      if (!cvData) return { ok: false, added: 0 };
       const nameOf = (s) => (typeof s === 'string' ? s : s?.name || '').toLowerCase();
       const have = new Set((cvData.skills || []).map(nameOf));
       const additions = (newSkills || []).filter((s) => !have.has(nameOf(s)));
-      if (!additions.length) return { added: 0 };
+      if (!additions.length) return { ok: true, added: 0 };
       const updated = { ...cvData, skills: [...(cvData.skills || []), ...additions] };
       setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
       setExternalEditNonce((n) => n + 1);
@@ -409,9 +425,12 @@ export const AriaStudioProvider = ({ children }) => {
           await CVService.saveDraft({ ...base, _id: draftId });
         } catch (error) {
           console.error('Failed to save applied skills', error);
+          setCvDataRaw((prev) => ({ ...(prev || {}), skills: cvData.skills || [] }));
+          toast.error("Couldn't save those skills. Try again.");
+          return { ok: false, added: 0 };
         }
       }
-      return { added: additions.length };
+      return { ok: true, added: additions.length };
     },
     [cvData, draftId]
   );
@@ -458,6 +477,8 @@ export const AriaStudioProvider = ({ children }) => {
           return { ok: true, found: true };
         } catch (err) {
           console.error('applyRoleBulletDiff save failed', err);
+          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: cvData[key] || [] }));
+          toast.error("Couldn't save those bullets. Try again.");
           return { ok: false, found: true, saveFailed: true };
         }
       }

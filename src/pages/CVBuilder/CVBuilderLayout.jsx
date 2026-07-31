@@ -81,9 +81,10 @@ const ScaledCVPreview = ({ cvData }) => {
   const scaledWidth = 794 * scale;
 
   const journeySteps = steps.filter((s) => s.id !== 'finalize' && s.id !== 'target_job');
-  const isJourneyComplete = journeySteps.every((s) => isStepComplete(s.id));
-  const doneCount = journeySteps.filter((s) => isStepComplete(s.id)).length;
-  const totalCount = journeySteps.length;
+  const requiredJourneySteps = journeySteps.filter((s) => s.id !== 'projects');
+  const isJourneyComplete = requiredJourneySteps.every((s) => isStepComplete(s.id));
+  const doneCount = requiredJourneySteps.filter((s) => isStepComplete(s.id)).length;
+  const totalCount = requiredJourneySteps.length;
 
   if (!isJourneyComplete) {
     return (
@@ -124,7 +125,7 @@ const ScaledCVPreview = ({ cvData }) => {
 
           {/* Steps List */}
           <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs divide-y divide-slate-100 dark:divide-slate-800/40">
-            {journeySteps.map((step, idx) => {
+            {requiredJourneySteps.map((step, idx) => {
               const isStepDone = isStepComplete(step.id);
               const originalIndex = steps.findIndex((s) => s.id === step.id);
 
@@ -284,6 +285,7 @@ const CVBuilderInner = () => {
       sortId: entry._sortId,
       title: entry.title || '',
       company: entry.company || '',
+      entryType: entry.entryType || '',
     });
     setActiveTab('coach');
     setShowPreview(true); // ensure desktop rail open

@@ -171,8 +171,8 @@ const FinishCard = ({
               type="button"
               onClick={onOpenEditor}
               // Still the dominant action on the card — ink IS the system's dominant, so
-              // it loses no weight by dropping the indigo fill.
-              className="btn-primary w-full gap-2 px-4 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              // it loses no weight by dropping the accent fill.
+              className="btn-primary w-full gap-2 px-4 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
             >
               {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
             </button>
@@ -195,7 +195,7 @@ const FinishCard = ({
                 type="button"
                 onClick={onTailor}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {t('ariaStudio.finishCard.tailorToJob')} <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -207,7 +207,7 @@ const FinishCard = ({
                 type="button"
                 onClick={onScan}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {t('ariaStudio.finishCard.seeHowItMatches', { cost: scanCost ?? 10 })}
               </button>

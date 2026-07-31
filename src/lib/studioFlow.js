@@ -4,7 +4,7 @@
 // refresh restores the flow exactly, and the rules can be reasoned about (and tested)
 // without mounting a chat.
 
-import { CV_SECTIONS, getCompletionStatus } from './cvCompleteness';
+import { CV_SECTIONS } from './cvCompleteness';
 
 /**
  * The six sections a build session walks, in CV-builder order.
@@ -53,13 +53,14 @@ export function withoutBlankEntries(cv) {
  * Per-section done/not-done for a build session, plus the overall CV health.
  *
  * @param {object} cv a DraftCV
+ * @param {Array<object>} msgs persisted Studio transcript messages
  * @returns {{ status: Record<string,boolean>, percent: number, isComplete: boolean,
  *             nextKey: string|null, done: number, total: number }}
  */
-export function buildProgress(cv) {
+export function buildProgress(cv, msgs = []) {
   // Apply the canonical rules to a CLEANED view of the document.
   //
-  // getCompletionStatus asks only "is this list non-empty?", which is fine on /my-cvs
+  // The canonical list checks ask only "is this list non-empty?", which is fine on /my-cvs
   // where rows arrive filled. The Studio CREATES a blank row up front — addRole() has to
   // persist an entry before /coach can write bullets into it by _sortId — so the raw
   // document would read as 100% complete the instant work history begins, ticking every
@@ -68,23 +69,27 @@ export function buildProgress(cv) {
   // Stripping blank entries first keeps ONE set of rules (no forked definition of
   // "complete") while refusing to count a placeholder as work.
   const cleaned = withoutBlankEntries(cv);
-  const completion = getCompletionStatus(cleaned);
   const passed = new Set(CV_SECTIONS.filter((s) => s.check(cleaned)).map((s) => s.key));
+  // A profile name is copied into a new draft before the user reaches Contact. In Studio,
+  // that section is complete only after ContactConfirmCard validates and saves the form.
+  const contactConfirmed = msgs.some((m) => m?.who === 'contactdone');
 
   const status = {};
   BUILD_SECTIONS.forEach((s) => {
-    status[s.key] = passed.has(s.cvKey);
+    status[s.key] = passed.has(s.cvKey) && (s.key !== 'contact' || contactConfirmed);
   });
 
   // The first unfinished section, in builder order — what Aria should tackle next.
   const next = BUILD_SECTIONS.find((s) => !status[s.key]);
 
+  const done = BUILD_SECTIONS.filter((s) => status[s.key]).length;
+
   return {
     status,
-    percent: completion.percent,
-    isComplete: completion.isComplete,
+    percent: Math.round((done / BUILD_SECTIONS.length) * 100),
+    isComplete: done === BUILD_SECTIONS.length,
     nextKey: next ? next.key : null,
-    done: BUILD_SECTIONS.filter((s) => status[s.key]).length,
+    done,
     total: BUILD_SECTIONS.length,
   };
 }
@@ -133,6 +138,11 @@ export const bulletCount = (entry) =>
  */
 export const SECTION_FIELDS = {
   experience: [
+    {
+      key: 'entryType',
+      labelKey: 'ariaStudio.studioFlow.fields.experience.entryType',
+      done: (e) => !!e?.entryType,
+    },
     {
       key: 'title',
       labelKey: 'ariaStudio.studioFlow.fields.experience.title',
@@ -359,7 +369,7 @@ export function openFix(msgs = []) {
  * @param {Array<object>} msgs the studio transcript
  * @returns {string} one of: mode | job | brief | cv | scanoffer | results | fix:<mode>
  */
-export function derivePhase(msgs = []) {
+export function derivePhase(msgs = [], cvData = {}) {
   const has = (who) => msgs.some((m) => m?.who === who);
 
   const fix = openFix(msgs);
@@ -370,16 +380,24 @@ export function derivePhase(msgs = []) {
   //
   // A pinned role outranks the section list: mid-role is where the user actually is, and
   // a refresh must put them back on that card rather than at the top of the section menu.
-  if (pinnedSortId(msgs)) return `build:${pinnedSection(msgs)}`;
-  if (has('summarydone')) return 'build:done'; // everything captured → the finish card
-  if (has('skillsdone')) return 'build:sections';
-  if (has('certsdone')) return 'build:sections';
-  if (has('educationdone')) return 'build:sections';
-  if (has('projectsdone')) return 'build:sections';
-  if (has('experiencedone')) return 'build:sections'; // work history closed
-  if (has('contactdone')) return 'build:sections'; // contact confirmed → start sectioning
-  if (has('buildjobdone')) return 'build:contact'; // job answered → confirm details
-  if (has('buildstart')) return 'build:job'; // draft created → ask about the job
+  if (has('buildstart')) {
+    if (pinnedSortId(msgs)) return `build:${pinnedSection(msgs)}`;
+    if (cvData?.studioPending?.kind === 'summary' && cvData.studioPending.workflow === 'build')
+      return 'build:summary';
+    if (cvData?.studioPending?.kind === 'skills') return 'build:skills';
+    if (has('summarydone')) return 'build:done';
+    if (has('skillsdone')) return 'build:sections';
+    if (has('certsdone')) return 'build:sections';
+    if (has('educationdone')) return 'build:sections';
+    if (has('projectsdone')) return 'build:sections';
+    if (has('experiencedone')) return 'build:sections';
+    if (has('contactdone')) return 'build:sections';
+    if (has('buildjobdone')) return 'build:contact';
+    if (has('jobcard')) return 'build:brief';
+    // Older sessions can have the CV-wide value without the newer transcript marker.
+    if (has('careerstage') || cvData?.careerStage) return 'build:job';
+    return 'build:career-stage';
+  }
   if (has('buildintro')) return 'build:roadmap'; // kind chosen → show the plan
 
   // ── Tailor track.
