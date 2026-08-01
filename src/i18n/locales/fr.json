@@ -619,6 +619,18 @@
         "week": "semaine"
       }
     },
+    "downloadPaywall": {
+      "title": "Obtenez le PDF prêt pour les recruteurs",
+      "subtitle": "Une capture d'écran n'est qu'une image — les logiciels de suivi des candidatures ne peuvent pas la lire, et elle s'imprime floue. Pour {{price}}, obtenez le vrai document :",
+      "atsTitle": "Lisible par les ATS",
+      "atsBody": "— un vrai texte sélectionnable que les logiciels de recrutement peuvent réellement analyser (les captures d'écran sont automatiquement rejetées).",
+      "crispTitle": "Net au pixel près",
+      "crispBody": "— mise en page exacte du modèle, nette à toute taille, sans coupure ni flou à l'impression.",
+      "fastTitle": "Prêt à envoyer en un clic",
+      "fastBody": "— pas besoin de tout retaper dans un autre outil, ni de le reconstruire avec l'IA. Prêt en quelques secondes.",
+      "payCta": "Payer {{price}} — télécharger",
+      "unlimitedCta": "Passer à l'illimité — voir les formules"
+    },
     "plans": {
       "free": {
         "label": "Gratuit",
@@ -632,7 +644,7 @@
           "5": "Appliquez jusqu’à 3 suggestions de l’IA",
           "6": "Analyse standard CV/offre d’emploi (suggestions de l’IA)",
           "7": "Modèles de base uniquement",
-          "8": "Téléchargements de CV soignés à 750 ₦ l’unité"
+          "8": "Téléchargements de CV soignés à 1 000 ₦ l’unité"
         },
         "excluded": {
           "0": "Modèle IA premium (GPT-4o) pour une rédaction plus fine",
@@ -692,9 +704,9 @@
         "label": "Gros Volume",
         "tagline": "Un flux de clients régulier, tout le mois.",
         "badge": "Le plus populaire",
-        "subtitle": "1 200 crédits CV · pour vos clients",
+        "subtitle": "1 500 crédits CV · pour vos clients",
         "features": {
-          "0": "1 200 crédits IA pour tout le mois",
+          "0": "1 500 crédits IA pour tout le mois",
           "1": "Idéal pour un travail client régulier"
         }
       },
@@ -833,6 +845,8 @@
       "couldntSetup": "Hmm — je n’ai pas réussi à configurer votre CV. Actualisez et réessayez.",
       "couldntReach": "Je n’ai pas pu répondre à l’instant — réessayez.",
       "freeChatsUsed": "Vous avez épuisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
+      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Standard — il est gratuit — ou rechargez pour rester sur Pro.",
+      "buildLimitUsed": "Ça fait beaucoup de construction pour aujourd'hui — tout est sauvegardé. On continue demain.",
       "settingUp": "Préparation de votre CV…",
       "freeChatsLeft": "{{n}} échanges gratuits restants aujourd’hui",
       "freeChatsDone": "Échanges gratuits épuisés aujourd’hui · 1 crédit chacun",
@@ -1574,13 +1588,15 @@
     "roleTrim": {
       "eyebrow": "Raccourcir l’expérience",
       "title": "Raccourcir vos anciens postes",
-      "subtitle": "Vos postes restent sur le CV. J’ai sélectionné les points supplémentaires après les {{count}} premiers dans votre poste ancien le plus détaillé.",
+      "subtitle_one": "Vos postes restent sur le CV. J’ai sélectionné les points supplémentaires après le premier dans votre poste ancien le plus détaillé.",
+      "subtitle_other": "Vos postes restent sur le CV. J’ai sélectionné les points supplémentaires après les {{count}} premiers dans votre poste ancien le plus détaillé.",
       "loading": "Chargement de vos postes…",
       "untitledRole": "Poste sans titre",
       "unknownCompany": "Entreprise non renseignée",
       "unknownDate": "Date non renseignée",
       "present": "Aujourd’hui",
-      "nothingToTrim": "Aucun de vos postes ne contient plus de {{count}} points ; il n’y a donc rien à raccourcir ici.",
+      "nothingToTrim_one": "Aucun de vos postes ne contient plus d’un point ; il n’y a donc rien à raccourcir ici.",
+      "nothingToTrim_other": "Aucun de vos postes ne contient plus de {{count}} points ; il n’y a donc rien à raccourcir ici.",
       "remove_one": "Retirer 1 point",
       "remove_other": "Retirer {{count}} points",
       "removing": "Raccourcissement…",
@@ -1699,8 +1715,10 @@
         "certifications_other": "{{count}} ajoutés",
         "education_one": "{{count}} formation",
         "education_other": "{{count}} formations",
-        "skills": "{{count}} listées",
-        "summary": "{{count}} caractères"
+        "skills_one": "{{count}} listée",
+        "skills_other": "{{count}} listées",
+        "summary_one": "{{count}} caractère",
+        "summary_other": "{{count}} caractères"
       }
     },
     "coach": {
@@ -1716,12 +1734,12 @@
         "summary": "Résumé",
         "finalize": "CV"
       },
-      "genericTips": [
-        "Les verbes forts gagnent — Dirigé, Créé, Livré, Développé 💪",
-        "Les chiffres font ressortir vos points — essayez d’en ajouter un 📈",
-        "Reprenez le vocabulaire de l’offre d’emploi 🧩",
-        "Une réussite claire vaut mieux que trois tâches vagues ✨"
-      ],
+      "genericTips": {
+        "0": "Les verbes forts gagnent — Dirigé, Créé, Livré, Développé 💪",
+        "1": "Les chiffres font ressortir vos points — essayez d’en ajouter un 📈",
+        "2": "Reprenez le vocabulaire de l’offre d’emploi 🧩",
+        "3": "Une réussite claire vaut mieux que trois tâches vagues ✨"
+      },
       "steps": {
         "target_job": {
           "empty": {
@@ -1831,8 +1849,10 @@
           },
           "partial": {
             "title": "Bonne liste — ajoutez-en encore quelques-unes 💪",
-            "message_withKeywords": "Vous en avez listé {{count}}. Relisez une fois de plus le poste partagé pour repérer celles qui manquent — j’ai repéré {{kwList}} dedans. Plus de vraies correspondances, c’est plus de mots-clés cochés.",
-            "message_generic": "Vous en avez listé {{count}}. Quelques compétences pertinentes de plus signifient davantage de mots-clés de l’offre trouvés. Relisez la description pour celles qui manquent.",
+            "message_withKeywords_one": "Vous en avez listé une. Relisez une fois de plus le poste partagé pour repérer celles qui manquent — j’ai repéré {{kwList}} dedans. Plus de vraies correspondances, c’est plus de mots-clés cochés.",
+            "message_withKeywords_other": "Vous en avez listé {{count}}. Relisez une fois de plus le poste partagé pour repérer celles qui manquent — j’ai repéré {{kwList}} dedans. Plus de vraies correspondances, c’est plus de mots-clés cochés.",
+            "message_generic_one": "Vous en avez listé une. Quelques compétences pertinentes de plus signifient davantage de mots-clés de l’offre trouvés. Relisez la description pour celles qui manquent.",
+            "message_generic_other": "Vous en avez listé {{count}}. Quelques compétences pertinentes de plus signifient davantage de mots-clés de l’offre trouvés. Relisez la description pour celles qui manquent.",
             "tips": {
               "0": "Visez 8 à 12 compétences authentiques et pertinentes."
             }
@@ -4129,6 +4149,8 @@
       "buildSummaryDone": "Votre CV est construit. Voici où il en est.",
       "certsDone": "Votre section formation est complète.",
       "chatLimitReached": "Vous avez utilisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
+      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Standard — il est gratuit — ou rechargez pour rester sur Pro.",
+      "buildLimitReached": "Ça fait beaucoup de construction pour aujourd'hui — tout est sauvegardé. On continue demain.",
       "chatUnreachable": "Je n'ai pas pu vous joindre pour l'instant — réessayez.",
       "freeTypingResults": "Votre analyse est ci-dessus. Vous guider à travers chaque correction est ce que j'apprends à faire ensuite.",
       "freeTypingOther": "Utilisez la carte ci-dessus et je prendrai le relais à partir de là.",

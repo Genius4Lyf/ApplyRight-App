@@ -42,6 +42,9 @@ const opLabel = (op) => OP_LABELS[op] || op;
 // ₦ formatter for the estimated AI-spend view.
 const fmtNgn = (n) => `₦${Math.round(Number(n) || 0).toLocaleString('en-NG')}`;
 
+// Date formatter for the Build Guard card — null (never hit) reads as "—".
+const fmtDate = (d) => (d ? new Date(d).toLocaleString('en-NG') : '—');
+
 const AdminAnalytics = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -90,6 +93,7 @@ const AdminAnalytics = () => {
     subscriptions,
     aiTextCost,
     totalAiSpendNgn,
+    buildGuard,
   } = data;
   const maxCalls = Math.max(1, ...(featureAdoption || []).map((f) => f.calls));
 
@@ -371,6 +375,66 @@ const AdminAnalytics = () => {
             </p>
           )}
         </div>
+      </div>
+
+      {/* Build Guard — free build-with anti-abuse ceiling */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-slate-900">Build Guard</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            Aria's free build-with chat is never charged, but it's capped at {buildGuard?.cap ?? 60}{' '}
+            turns/user/day so a stuck or looping client can't run unlimited AI calls. This only
+            shows the ceiling firing — it's not a usage or revenue metric. Read it carefully: 1-2
+            hits spread across many different users usually means the cap is too tight for real use
+            and should be raised (
+            <code className="bg-slate-100 px-1 rounded">ARIA_BUILD_DAILY_CAP</code>); dozens of hits
+            piled on one account is the guard doing its job.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div>
+            <p className="text-lg font-bold text-slate-900">{buildGuard?.usersHit || 0}</p>
+            <p className="text-xs text-slate-500">Users who hit the ceiling</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{buildGuard?.totalHits || 0}</p>
+            <p className="text-xs text-slate-500">Total cap hits (lifetime)</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{fmtDate(buildGuard?.lastHitAt)}</p>
+            <p className="text-xs text-slate-500">Last hit</p>
+          </div>
+        </div>
+
+        {buildGuard?.usersHit > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 pr-4 font-medium">User</th>
+                  <th className="py-2 pr-4 font-medium text-right">Hits</th>
+                  <th className="py-2 font-medium text-right">Last hit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(buildGuard.top || []).map((u) => (
+                  <tr key={u.email} className="border-b border-slate-100 last:border-0">
+                    <td className="py-2 pr-4 font-medium text-slate-700">
+                      {u.name ? `${u.name} · ${u.email}` : u.email}
+                    </td>
+                    <td className="py-2 pr-4 text-right text-slate-600">{u.hits}</td>
+                    <td className="py-2 text-right text-slate-500">{fmtDate(u.lastAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center text-slate-400 text-sm py-4">
+            No one has hit the ceiling. Nothing to look at, which is the good outcome.
+          </p>
+        )}
       </div>
     </AdminLayout>
   );

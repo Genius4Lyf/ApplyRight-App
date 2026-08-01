@@ -383,8 +383,13 @@ const AskAriaGenerate = ({
         setTimeout(() => setPhase('picking'), 900); // → count picker → credited draft
       }
     } catch (e) {
-      if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
+      if (e?.response?.data?.code === 'INSUFFICIENT_CREDITS') {
+        // Pro model, no credits — the way out is switching back to Standard, not only topping up.
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.proNeedsCredits') }]);
+      } else if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
         setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.freeChatsUsed') }]);
+      } else if (e?.response?.data?.code === 'BUILD_LIMIT_REACHED') {
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.buildLimitUsed') }]);
       } else {
         toast.error(t('cvBuilder.common.couldntReach'));
       }

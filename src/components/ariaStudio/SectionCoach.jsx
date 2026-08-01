@@ -185,10 +185,21 @@ const SectionCoach = ({
         setPhase('picking');
       }
     } catch (e) {
-      if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
+      if (e?.response?.data?.code === 'INSUFFICIENT_CREDITS') {
+        // Pro model, no credits — the way out is switching back to Standard, not only topping up.
+        onPush({
+          who: 'aria',
+          text: t('ariaStudio.chat.proNeedsCredits'),
+        });
+      } else if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
         onPush({
           who: 'aria',
           text: t('ariaStudio.chat.chatLimitReached'),
+        });
+      } else if (e?.response?.data?.code === 'BUILD_LIMIT_REACHED') {
+        onPush({
+          who: 'aria',
+          text: t('ariaStudio.chat.buildLimitReached'),
         });
       } else {
         toast.error(t('ariaStudio.chat.chatUnreachable'));

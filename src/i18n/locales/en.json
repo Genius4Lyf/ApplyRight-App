@@ -623,6 +623,18 @@
         "week": "week"
       }
     },
+    "downloadPaywall": {
+      "title": "Get the recruiter-ready PDF",
+      "subtitle": "A screenshot is just a picture — applicant tracking systems can't read it, and it prints blurry. For {{price}} you get the real thing:",
+      "atsTitle": "ATS-readable",
+      "atsBody": "— real selectable text the hiring software can actually parse (screenshots get auto-rejected).",
+      "crispTitle": "Pixel-perfect",
+      "crispBody": "— exact template formatting, crisp at any size, no cut-offs or fuzzy print.",
+      "fastTitle": "Send-ready in one tap",
+      "fastBody": "— no retyping into another tool, no AI rebuild. Done in seconds.",
+      "payCta": "Pay {{price}} — download",
+      "unlimitedCta": "Go unlimited — see plans"
+    },
     "plans": {
       "free": {
         "label": "Free",
@@ -636,7 +648,7 @@
           "5": "Apply up to 3 AI suggestions",
           "6": "Standard CV-vs-job-description analysis (AI suggestions)",
           "7": "Basic templates only",
-          "8": "Clean CV downloads at ₦750 each"
+          "8": "Clean CV downloads at ₦1,000 each"
         },
         "excluded": {
           "0": "Premium AI model (GPT-4o) for sharper writing",
@@ -696,9 +708,9 @@
         "label": "Big Taker",
         "tagline": "Steady client work, all month long.",
         "badge": "Most popular",
-        "subtitle": "1,200 CV credits · build for clients",
+        "subtitle": "1,500 CV credits · build for clients",
         "features": {
-          "0": "1,200 AI credits all month",
+          "0": "1,500 AI credits all month",
           "1": "Best for steady client work"
         }
       },
@@ -837,6 +849,8 @@
       "couldntSetup": "Hmm — I couldn’t get your CV set up. Refresh and try again.",
       "couldntReach": "Couldn’t reach me just now — try again.",
       "freeChatsUsed": "You’ve used today’s free chats — top up credits or come back tomorrow.",
+      "proNeedsCredits": "The Pro model costs credits. Switch back to Standard — it’s free — or top up to stay on Pro.",
+      "buildLimitUsed": "That’s a lot of building for one day — everything’s saved. Let’s continue tomorrow.",
       "settingUp": "Setting up your CV draft…",
       "freeChatsLeft": "{{n}} free chats left today",
       "freeChatsDone": "Free chats done today · 1 credit each",
@@ -1578,13 +1592,15 @@
     "roleTrim": {
       "eyebrow": "Trim work history",
       "title": "Shorten your older roles",
-      "subtitle": "Your roles stay on the CV. I selected the extra bullets after the first {{count}} from your oldest bullet-heavy role.",
+      "subtitle_one": "Your roles stay on the CV. I selected the extra bullets after the first one from your oldest bullet-heavy role.",
+      "subtitle_other": "Your roles stay on the CV. I selected the extra bullets after the first {{count}} from your oldest bullet-heavy role.",
       "loading": "Loading your roles…",
       "untitledRole": "Untitled role",
       "unknownCompany": "Company not added",
       "unknownDate": "Date not added",
       "present": "Present",
-      "nothingToTrim": "None of your roles has more than {{count}} bullet points, so there is nothing to trim here.",
+      "nothingToTrim_one": "None of your roles has more than one bullet point, so there is nothing to trim here.",
+      "nothingToTrim_other": "None of your roles has more than {{count}} bullet points, so there is nothing to trim here.",
       "remove_one": "Remove 1 bullet",
       "remove_other": "Remove {{count}} bullets",
       "removing": "Trimming…",
@@ -1697,12 +1713,16 @@
         "contact": "{{met}}/4 details added",
         "history_one": "{{count}} role · {{bullets}} bullets, {{quantified}} with numbers",
         "history_other": "{{count}} roles · {{bullets}} bullets, {{quantified}} with numbers",
-        "projects": "{{count}} added",
-        "certifications": "{{count}} added",
+        "projects_one": "{{count}} added",
+        "projects_other": "{{count}} added",
+        "certifications_one": "{{count}} added",
+        "certifications_other": "{{count}} added",
         "education_one": "{{count}} entry",
         "education_other": "{{count}} entries",
-        "skills": "{{count}} listed",
-        "summary": "{{count}} characters"
+        "skills_one": "{{count}} listed",
+        "skills_other": "{{count}} listed",
+        "summary_one": "{{count}} character",
+        "summary_other": "{{count}} characters"
       }
     },
     "coach": {
@@ -1718,12 +1738,12 @@
         "summary": "Summary",
         "finalize": "CV"
       },
-      "genericTips": [
-        "Strong verbs win — Led, Built, Shipped, Grew 💪",
-        "Numbers make bullets pop — try adding one 📈",
-        "Mirror the wording in the job post 🧩",
-        "One clear win beats three vague duties ✨"
-      ],
+      "genericTips": {
+        "0": "Strong verbs win — Led, Built, Shipped, Grew 💪",
+        "1": "Numbers make bullets pop — try adding one 📈",
+        "2": "Mirror the wording in the job post 🧩",
+        "3": "One clear win beats three vague duties ✨"
+      },
       "steps": {
         "target_job": {
           "empty": {
@@ -1833,8 +1853,10 @@
           },
           "partial": {
             "title": "Good list — push for a few more 💪",
-            "message_withKeywords": "You've listed {{count}}. Scan the job you shared once more for any you missed — I spotted {{kwList}} in there. More real matches means more of its keywords ticked.",
-            "message_generic": "You've listed {{count}}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.",
+            "message_withKeywords_one": "You've listed one. Scan the job you shared once more for any you missed — I spotted {{kwList}} in there. More real matches means more of its keywords ticked.",
+            "message_withKeywords_other": "You've listed {{count}}. Scan the job you shared once more for any you missed — I spotted {{kwList}} in there. More real matches means more of its keywords ticked.",
+            "message_generic_one": "You've listed one. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.",
+            "message_generic_other": "You've listed {{count}}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.",
             "tips": {
               "0": "Aim for 8-12 genuine, relevant skills."
             }
@@ -4131,6 +4153,8 @@
       "buildSummaryDone": "That's your CV built. Here's where it stands.",
       "certsDone": "That's your education section complete.",
       "chatLimitReached": "You've used today's free chats — top up credits or come back tomorrow.",
+      "proNeedsCredits": "The Pro model costs credits. Switch back to Standard — it's free — or top up to stay on Pro.",
+      "buildLimitReached": "That's a lot of building for one day — everything's saved. Let's continue tomorrow.",
       "chatUnreachable": "Couldn't reach me just now — try again.",
       "freeTypingResults": "Your scan's above. Walking you through each fix is what I'm learning next.",
       "freeTypingOther": "Use the card above and I'll take it from there.",

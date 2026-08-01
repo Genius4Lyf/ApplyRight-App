@@ -405,7 +405,9 @@ const STEP_LABELS = {
 };
 
 // Tiny generic motivation pool, used only when the step has no state-aware tip
-// of its own. Short enough to fit the floating bubble.
+// of its own. Short enough to fit the floating bubble. English-only for the same
+// reason as STEP_LABELS above (only consumer is dead code); the translated copy
+// already exists at cvBuilder.coach.genericTips.{0..3} if getBotNudge is revived.
 const GENERIC_TIPS = [
   'Strong verbs win — Led, Built, Shipped, Grew 💪',
   'Numbers make bullets pop — try adding one 📈',

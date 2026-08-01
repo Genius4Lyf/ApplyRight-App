@@ -227,14 +227,18 @@ const TargetChat = ({
       });
       setQa((m) => [...m, { who: 'aria', text: rr.reply }]);
     } catch (e) {
+      const code = e?.response?.data?.code;
       setQa((m) => [
         ...m,
         {
           who: 'aria',
           text:
-            e?.response?.data?.code === 'CHAT_LIMIT_REACHED'
-              ? t('cvBuilder.common.freeChatsUsed')
-              : t('cvBuilder.common.couldntReach'),
+            // Pro model, no credits — switching back to Standard is free, so say that.
+            code === 'INSUFFICIENT_CREDITS'
+              ? t('cvBuilder.common.proNeedsCredits')
+              : code === 'CHAT_LIMIT_REACHED'
+                ? t('cvBuilder.common.freeChatsUsed')
+                : t('cvBuilder.common.couldntReach'),
         },
       ]);
     } finally {

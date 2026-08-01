@@ -1313,12 +1313,16 @@ const StudioChat = ({ onPaywall }) => {
         });
         push({ who: 'aria', text: r.reply });
       } catch (e) {
+        const code = e?.response?.data?.code;
         push({
           who: 'aria',
           text:
-            e?.response?.data?.code === 'CHAT_LIMIT_REACHED'
-              ? t('ariaStudio.chat.chatLimitReached')
-              : t('ariaStudio.chat.chatUnreachable'),
+            // Pro model, no credits — switching back to Standard is free, so say that.
+            code === 'INSUFFICIENT_CREDITS'
+              ? t('ariaStudio.chat.proNeedsCredits')
+              : code === 'CHAT_LIMIT_REACHED'
+                ? t('ariaStudio.chat.chatLimitReached')
+                : t('ariaStudio.chat.chatUnreachable'),
         });
       } finally {
         setThinking(false);

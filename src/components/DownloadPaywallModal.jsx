@@ -2,20 +2,27 @@ import React, { useState } from 'react';
 import AriaLoader from './ui/AriaLoader';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { Download, Crown, X, FileCheck2, ScanLine, Sparkles, ShieldCheck } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
+import { formatNgn, formatUsd, DOWNLOAD_PASS, detectDefaultCurrency } from '../lib/plans';
 
 // Shown when a download is blocked (no pass / not subscribed). Two ways forward:
-//   - one-time ₦750 single-download pass (Flutterwave hosted checkout)
+//   - one-time single-download pass (DOWNLOAD_PASS, Flutterwave hosted checkout)
 //   - any paid subscription (unlimited downloads)
 // The copy sells the real PDF over a screenshot: ATS-readable selectable text,
 // crisp print quality, exact template formatting.
 const DownloadPaywallModal = ({ open, onClose }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
 
   if (!open) return null;
+
+  const price =
+    currency === 'USD' ? formatUsd(DOWNLOAD_PASS.priceUsd) : formatNgn(DOWNLOAD_PASS.priceNgn);
 
   const buySingle = async () => {
     setLoading(true);
@@ -31,12 +38,12 @@ const DownloadPaywallModal = ({ open, onClose }) => {
       } catch {
         /* non-fatal — falls back to the dashboard */
       }
-      const { link } = await billingService.checkout('download_single');
+      const { link } = await billingService.checkout('download_single', currency);
       if (!link) throw new Error('No link');
       window.location.href = link; // hosted checkout; returns to /billing/return
     } catch (e) {
       console.error(e);
-      toast.error('Could not start checkout. Please try again.');
+      toast.error(t('billing.common.checkoutFailed'));
       setLoading(false);
     }
   };
@@ -47,7 +54,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
-          aria-label="Close"
+          aria-label={t('common.close')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -56,33 +63,57 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           <Download className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
-          Get the recruiter-ready PDF
+          {t('billing.downloadPaywall.title')}
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          A screenshot is just a picture — applicant tracking systems can’t read it, and it prints
-          blurry. For ₦750 you get the real thing:
+          {t('billing.downloadPaywall.subtitle', { price })}
         </p>
+
+        <div className="flex justify-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit mx-auto">
+          <button
+            type="button"
+            onClick={() => setCurrency('NGN')}
+            className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+              currency === 'NGN'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            {t('billing.common.currencyNgn')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrency('USD')}
+            className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+              currency === 'USD'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            {t('billing.common.currencyUsd')}
+          </button>
+        </div>
 
         <ul className="space-y-2 mb-5">
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <ScanLine className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">ATS-readable</span> — real selectable text the hiring
-              software can actually parse (screenshots get auto-rejected).
+              <span className="font-semibold">{t('billing.downloadPaywall.atsTitle')}</span>{' '}
+              {t('billing.downloadPaywall.atsBody')}
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <FileCheck2 className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">Pixel-perfect</span> — exact template formatting,
-              crisp at any size, no cut-offs or fuzzy print.
+              <span className="font-semibold">{t('billing.downloadPaywall.crispTitle')}</span>{' '}
+              {t('billing.downloadPaywall.crispBody')}
             </span>
           </li>
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <Sparkles className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             <span>
-              <span className="font-semibold">Send-ready in one tap</span> — no retyping into
-              another tool, no AI rebuild. Done in seconds.
+              <span className="font-semibold">{t('billing.downloadPaywall.fastTitle')}</span>{' '}
+              {t('billing.downloadPaywall.fastBody')}
             </span>
           </li>
         </ul>
@@ -93,10 +124,10 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           className="w-full py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {loading ? (
-            <AriaLoader inline tone="mono" size={16} label="Starting checkout…" />
+            <AriaLoader inline tone="mono" size={16} label={t('billing.common.starting')} />
           ) : (
             <>
-              <Download className="w-5 h-5" /> Pay ₦750 — download
+              <Download className="w-5 h-5" /> {t('billing.downloadPaywall.payCta', { price })}
             </>
           )}
         </button>
@@ -105,18 +136,23 @@ const DownloadPaywallModal = ({ open, onClose }) => {
           onClick={() => navigate('/upgrade')}
           className="mt-3 w-full py-3 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2"
         >
-          <Crown className="w-5 h-5 text-amber-500" /> Go unlimited — see plans
+          <Crown className="w-5 h-5 text-amber-500" /> {t('billing.downloadPaywall.unlimitedCta')}
         </button>
 
         <div className="flex items-start gap-2 mt-4 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
           <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>
-            Paid securely via Flutterwave. You may see "Daniel Udofia" (ApplyRight's founder) as the
-            recipient on your bank statement or SMS — that's expected, and you'll get your download
-            exactly as paid for. Questions?{' '}
-            <a href="mailto:careers@applyright.com.ng" className="underline hover:no-underline">
-              careers@applyright.com.ng
-            </a>
+            <Trans
+              i18nKey="billing.common.paymentTrustNote"
+              components={{
+                mail: (
+                  <a
+                    href="mailto:careers@applyright.com.ng"
+                    className="underline hover:no-underline"
+                  />
+                ),
+              }}
+            />
           </span>
         </div>
       </div>

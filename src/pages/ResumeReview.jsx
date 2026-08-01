@@ -867,7 +867,7 @@ const ResumeReview = () => {
   };
 
   // Auto-download after a successful CV-download purchase. When a free user pays
-  // for the ₦750 single-download pass, BillingReturn sends them back here with
+  // for the ₦1,000 single-download pass, BillingReturn sends them back here with
   // ?paid=1. The pass is now on their account, so we fire the download straight
   // away — a one-time pass should deliver the PDF, not dump them on a page to
   // hunt for the button again. The Download button stays visible as a fallback in

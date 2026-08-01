@@ -145,37 +145,19 @@ export const AGENT_TIERS = [
     id: 'agent_monthly',
     labelKey: 'billing.plans.agentMonthly.label',
     taglineKey: 'billing.plans.agentMonthly.tagline',
-    priceNgn: 10000,
-    priceUsd: 14,
+    priceNgn: 15000,
+    priceUsd: 20,
     period: 'month',
     periodKey: 'billing.common.periods.month',
     noMinutes: true,
     highlight: true,
     badgeKey: 'billing.plans.agentMonthly.badge',
-    credits: 1200,
+    credits: 1500,
     subtitleKey: 'billing.plans.agentMonthly.subtitle',
     featureKeys: [
       'billing.plans.agentMonthly.features.0',
       ...PAID_CV_FEATURE_KEYS,
       'billing.plans.agentMonthly.features.1',
-    ],
-  },
-  {
-    id: 'agent_yearly',
-    labelKey: 'billing.plans.agentYearly.label',
-    taglineKey: 'billing.plans.agentYearly.tagline',
-    priceNgn: 100000,
-    priceUsd: 140,
-    period: 'year',
-    periodKey: 'billing.common.periods.year',
-    noMinutes: true,
-    badgeKey: 'billing.plans.agentYearly.badge',
-    credits: 18000,
-    subtitleKey: 'billing.plans.agentYearly.subtitle',
-    featureKeys: [
-      'billing.plans.agentYearly.features.0',
-      ...PAID_CV_FEATURE_KEYS,
-      'billing.plans.agentYearly.features.1',
     ],
   },
 ];
@@ -195,6 +177,10 @@ export const CREDIT_PACKS = [
   { id: 'credits_500', label: '75 credits', priceNgn: 500, priceUsd: 0.75, credits: 75 },
   { id: 'credits_1000', label: '150 credits', priceNgn: 1000, priceUsd: 1.5, credits: 150 },
 ];
+
+// One-off clean CV download (after the free first one). Must match the backend
+// catalog (download_single).
+export const DOWNLOAD_PASS = { id: 'download_single', priceNgn: 1000, priceUsd: 1.5 };
 
 export const formatNgn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 export const formatUsd = (n) =>

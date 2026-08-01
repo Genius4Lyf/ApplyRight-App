@@ -104,6 +104,12 @@ describe('locale files', () => {
       'cvBuilder.chatThemePicker.themes.campus', // "Campus" — same word in French
       'cvBuilder.askAria.companyType.startup', // "Startup" — the loanword is standard in French
       'cvBuilder.skills.proBadge', // "Pro" — tier name, kept in English (see dashboard.interviewCard.chip)
+      'cvBuilder.heading.chipPhoto', // "Photo" — same word in French (its siblings ARE translated)
+      'cvBuilder.modelPicker.tierLight', // "Standard" — same word in French
+      'cvBuilder.modelPicker.tierFlagship', // "Pro" — tier name, kept in English (see cvBuilder.skills.proBadge)
+      'cvBuilder.cvHealth.sections.certifications.title', // "Certifications" — same word in French
+      'cvBuilder.coach.stepNames.finalize', // "CV" — same abbreviation in French
+      'cvBuilder.sectionResearch.heading.example', // a sample contact line — name, email and URLs only
       // Round 4 (Interview Prep) — genuinely language-neutral, not missed translations:
       'interviewPrep.preCallBrief.themes.leadership', // "Leadership" — the loanword is standard in French
       'interviewPrep.practice.star.situation', // "Situation" — identical STAR-method label in French
