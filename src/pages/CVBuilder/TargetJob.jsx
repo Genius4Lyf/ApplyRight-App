@@ -66,7 +66,7 @@ const TargetJob = () => {
       {/* Aria's identity — name + what ARIA stands for (first impression on opening the builder) */}
       <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">Aria</h1>
       <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-        ApplyRight Intelligent Assistant
+        {t('cvBuilder.targetJob.tagline')}
       </p>
 
       {/* Warm personal greeting */}

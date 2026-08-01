@@ -50,9 +50,11 @@ import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
 import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
 import TechGoogleTemplate from '../components/templates/TechGoogleTemplate';
 import ExecutiveEnergyTemplate from '../components/templates/ExecutiveEnergyTemplate';
+import OperationsBlueprintTemplate from '../components/templates/OperationsBlueprintTemplate';
 import ApplyRightNavyTemplate from '../components/templates/ApplyRightNavyTemplate';
 import ApplyRightMonoTemplate from '../components/templates/ApplyRightMonoTemplate';
 import ApplyRightBandTemplate from '../components/templates/ApplyRightBandTemplate';
+import ApplyRightBandTwinTemplate from '../components/templates/ApplyRightBandTwinTemplate';
 import EnergySLBTemplate from '../components/templates/EnergySLBTemplate';
 import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
@@ -60,6 +62,12 @@ import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburton
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import TheProfileTemplate from '../components/templates/TheProfileTemplate';
 import TheAscentTemplate from '../components/templates/TheAscentTemplate';
+import {
+  AngularCorporateTemplate,
+  NavyPortraitTemplate,
+  SalesSidebarTemplate,
+  SlateTimelineTemplate,
+} from '../components/templates/SignatureCollectionTemplates';
 import { TEMPLATES } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
@@ -67,16 +75,18 @@ import { useMinVisible } from '../hooks/useMinVisible';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingScreen from '../components/LoadingScreen'; // Full-screen loading overlay with rotating tips
-import PreviewWatermark from '../components/PreviewWatermark';
 import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import LengthCoach from '../components/cv/LengthCoach';
 import SummaryTrim from '../components/cv/SummaryTrim';
+import RoleTrim from '../components/cv/RoleTrim';
+import StudioBestChoices from '../components/cv/StudioBestChoices';
 import { extractSummary, replaceSummaryInMarkdown } from '../lib/summaryMarkdown';
 import { localizeCvMarkdown } from '../lib/cvLabels';
 import CvLanguageToggle from '../components/cv/CvLanguageToggle';
 import AriaOrbit from '../components/cv/AriaOrbit';
+import { useTranslation } from 'react-i18next';
 import {
   Lock,
   PlayCircle,
@@ -99,11 +109,26 @@ const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatf
 // column must reach the page bottom even when the CV is short. Keyed by
 // templateId; width/side must match the sidebar div in each template file.
 const SIDEBAR_FILL = {
-  'applyright-navy': { side: 'left', width: '34%', className: 'bg-[#1c2b3a]' },
-  'applyright-mono': { side: 'left', width: '32%', className: 'border-r border-slate-200' },
+  'applyright-navy': { side: 'left', width: '34%', className: 'bg-[#0c1627]' },
+  'applyright-mono': {
+    side: 'left',
+    width: '32%',
+    className: 'bg-[#f5f5f2] border-r-2 border-[#111318]',
+  },
+  'slate-timeline': { side: 'left', width: '35%', className: 'bg-[#343d4d]' },
+  'navy-portrait': { side: 'left', width: '36%', className: 'bg-[#193e57]' },
+  'sales-sidebar': { side: 'left', width: '38%', className: 'bg-[#d5dfe7]' },
+  'minimal-grid': {
+    side: 'left',
+    width: '30%',
+    className: 'bg-[#f2f1ed] border-r border-[#d7d5cf]',
+  },
 };
 
+const STUDIO_BEST_CHOICES_PREFERENCE_KEY = 'cvStudio:showBestChoices';
+
 const ResumeReview = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -147,6 +172,13 @@ const ResumeReview = () => {
   // Studio rail: collapsible insights strip + Templates/Design tab switch.
   const [insightsOpen, setInsightsOpen] = useState(true);
   const [railTab, setRailTab] = useState('templates'); // 'templates' | 'design'
+  const [showBestChoices, setShowBestChoices] = useState(
+    () => localStorage.getItem(STUDIO_BEST_CHOICES_PREFERENCE_KEY) !== 'false'
+  );
+  const updateBestChoicesPreference = (show) => {
+    localStorage.setItem(STUDIO_BEST_CHOICES_PREFERENCE_KEY, String(show));
+    setShowBestChoices(show);
+  };
   // Design tab controls — drive CSS vars on #resume-content. accent '' = each
   // template's own default. Margins are fully live (preview + PDF) this chunk;
   // accent + density set their vars now and go live when templates read them (2b).
@@ -350,6 +382,10 @@ const ResumeReview = () => {
 
   // Inline summary-trim modal (length-coach entry point).
   const [showSummaryTrim, setShowSummaryTrim] = useState(false);
+  const [showRoleTrim, setShowRoleTrim] = useState(false);
+  const [roleTrimDraft, setRoleTrimDraft] = useState(null);
+  const [roleTrimLoading, setRoleTrimLoading] = useState(false);
+  const [roleTrimSaving, setRoleTrimSaving] = useState(false);
   // The professional-summary section of the current CV markdown (drives the modal
   // + whether the coach offers the "Shorten your summary" jump-link).
   const currentSummary = useMemo(
@@ -359,6 +395,93 @@ const ResumeReview = () => {
   // The draft to edit roles in. In draft mode the URL `id` IS the draft; for a job
   // Application the linked draft is `application.draftCVId`.
   const builderId = isDraftMode ? id : application?.draftCVId;
+
+  const openRoleTrim = async () => {
+    if (!builderId) return;
+    setShowRoleTrim(true);
+
+    if (application?.rawDraft?._id === builderId) {
+      setRoleTrimDraft(application.rawDraft);
+      return;
+    }
+
+    setRoleTrimLoading(true);
+    try {
+      const draft = await CVService.getDraftById(builderId);
+      setRoleTrimDraft(draft);
+    } catch (err) {
+      console.error('Load roles for trimming failed:', err);
+      toast.error(t('cvBuilder.roleTrim.loadError'));
+      setShowRoleTrim(false);
+    } finally {
+      setRoleTrimLoading(false);
+    }
+  };
+
+  const syncTrimmedDraft = (draft) => {
+    const { optimizedCV } = generateMarkdownFromDraft(draft);
+    setRoleTrimDraft(draft);
+    setApplication((current) => ({
+      ...current,
+      optimizedCV,
+      rawDraft: draft,
+    }));
+  };
+
+  const restoreTrimmedRoles = async (draft) => {
+    try {
+      const saved = await CVService.saveDraft({ _id: builderId, experience: draft.experience });
+      syncTrimmedDraft({ ...draft, ...saved });
+      toast.success(t('cvBuilder.roleTrim.restored'));
+    } catch (err) {
+      console.error('Restore trimmed roles failed:', err);
+      toast.error(t('cvBuilder.roleTrim.restoreError'));
+    }
+  };
+
+  const applyRoleTrim = async (selectedKeys) => {
+    if (!builderId || !roleTrimDraft) return;
+    const previousDraft = roleTrimDraft;
+    const selected = new Set(selectedKeys);
+    let removedCount = 0;
+    const experience = (previousDraft.experience || []).map((role, roleIndex) => {
+      const key = role._sortId || `role-${roleIndex}`;
+      let removedFromRole = 0;
+      const lines = (role.description || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const kept = lines.filter((_, bulletIndex) => {
+        const remove = selected.has(`${key}::${bulletIndex}`);
+        if (remove) {
+          removedCount += 1;
+          removedFromRole += 1;
+        }
+        return !remove;
+      });
+      return removedFromRole ? { ...role, description: kept.join('\n') } : role;
+    });
+    if (!removedCount) return;
+
+    setRoleTrimSaving(true);
+    try {
+      const saved = await CVService.saveDraft({ _id: builderId, experience });
+      syncTrimmedDraft({ ...previousDraft, ...saved, experience });
+      setShowRoleTrim(false);
+      toast.success(t('cvBuilder.roleTrim.removed', { count: removedCount }), {
+        action: {
+          label: t('cvBuilder.roleTrim.undo'),
+          onClick: () => restoreTrimmedRoles(previousDraft),
+        },
+        duration: 8000,
+      });
+    } catch (err) {
+      console.error('Trim roles failed:', err);
+      toast.error(t('cvBuilder.roleTrim.saveError'));
+    } finally {
+      setRoleTrimSaving(false);
+    }
+  };
 
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
@@ -924,8 +1047,8 @@ const ResumeReview = () => {
               Preview & Download Locked
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-sm mx-auto font-medium">
-              You must complete all required steps of your CV journey in the builder before you
-              can view templates or download the PDF.
+              You must complete all required steps of your CV journey in the builder before you can
+              view templates or download the PDF.
             </p>
 
             {/* Checklist of missing sections */}
@@ -991,6 +1114,20 @@ const ResumeReview = () => {
         onApply={applySummary}
         onClose={() => setShowSummaryTrim(false)}
       />
+
+      {showRoleTrim && (
+        <RoleTrim
+          key={(roleTrimDraft?.experience || [])
+            .map((role, index) => role._sortId || `role-${index}`)
+            .join(':')}
+          open
+          roles={roleTrimDraft?.experience || []}
+          loading={roleTrimLoading}
+          saving={roleTrimSaving}
+          onApply={applyRoleTrim}
+          onClose={() => setShowRoleTrim(false)}
+        />
+      )}
 
       {downloadAdOpen && isAndroidNative() && (
         <AdPlayer
@@ -1261,7 +1398,11 @@ const ResumeReview = () => {
               activeTab={activeTab}
               onShortenSummary={() => setShowSummaryTrim(true)}
               canTrimSummary={!!currentSummary}
-              onTrimRoles={() => navigate(`/cv-builder/${builderId}/history?trim=1`)}
+              onTrimRoles={
+                isDraftMode
+                  ? openRoleTrim
+                  : () => navigate(`/cv-builder/${builderId}/history?trim=1`)
+              }
               canTrimRoles={!!builderId}
             />
             {/* The language this CV is written in. Only editable on a draft — an
@@ -1535,11 +1676,21 @@ const ResumeReview = () => {
             <div
               ref={previewContentRef}
               id="resume-content"
-              className="cv-template-container bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none"
+              className={`cv-template-container bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none ${
+                activeTab === 'resume' && SIDEBAR_FILL[templateId]
+                  ? 'cv-continuous-sidebar'
+                  : ''
+              }`}
               style={{
                 width: paperWidth,
                 minWidth: paperWidth,
                 minHeight: paperHeight,
+                backgroundColor:
+                  templateId === 'the-profile'
+                    ? '#faf8f4'
+                    : templateId === 'minimal-serif'
+                      ? '#fcfbf7'
+                      : '#ffffff',
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
@@ -1565,11 +1716,6 @@ const ResumeReview = () => {
               onCut={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
             >
-              {/* Faint anti-screenshot watermark — free users only; stripped from
-                  the PDF clone in performDownload, so downloads are always clean. */}
-              {userProfile?.plan !== 'paid' && (
-                <PreviewWatermark dark={templateId === 'luxury-royal'} />
-              )}
               {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
               <ScreenshotCover show={screenshotObscured} />
 
@@ -1715,6 +1861,11 @@ const ResumeReview = () => {
                       markdown={localizedCV}
                       userProfile={mergedUserProfile || userProfile}
                     />
+                  ) : templateId === 'operations-blueprint' ? (
+                    <OperationsBlueprintTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
                   ) : templateId === 'applyright-navy' ? (
                     <ApplyRightNavyTemplate
                       markdown={localizedCV}
@@ -1727,6 +1878,11 @@ const ResumeReview = () => {
                     />
                   ) : templateId === 'applyright-band' ? (
                     <ApplyRightBandTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'applyright-band-twin' ? (
+                    <ApplyRightBandTwinTemplate
                       markdown={localizedCV}
                       userProfile={mergedUserProfile || userProfile}
                     />
@@ -1762,6 +1918,26 @@ const ResumeReview = () => {
                     />
                   ) : templateId === 'the-ascent' ? (
                     <TheAscentTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'slate-timeline' ? (
+                    <SlateTimelineTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'navy-portrait' ? (
+                    <NavyPortraitTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'angular-corporate' ? (
+                    <AngularCorporateTemplate
+                      markdown={localizedCV}
+                      userProfile={mergedUserProfile || userProfile}
+                    />
+                  ) : templateId === 'sales-sidebar' ? (
+                    <SalesSidebarTemplate
                       markdown={localizedCV}
                       userProfile={mergedUserProfile || userProfile}
                     />
@@ -2312,87 +2488,106 @@ const ResumeReview = () => {
                 </div>
               ) : (
                 <div className="space-y-6 scrollbar-none">
-                  {['Simple', 'Professional', 'Editorial', 'Industry'].map((groupName) => {
-                    const groupTemplates = TEMPLATES.filter((t) => t.group === groupName);
-                    if (!groupTemplates.length) return null;
-                    return (
-                      <div key={groupName} className="space-y-2.5">
-                        <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                          {groupName}
-                        </h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          {groupTemplates.map((t, i) => {
-                            const locked = !isUnlocked(t.id);
-                            const isDanglingLast =
-                              i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
-                            return (
-                              <div
-                                key={t.id}
-                                onClick={() => {
-                                  setTemplateId(t.id);
-                                  setMobileSidebarOpen(false);
-                                }}
-                                className={`${isDanglingLast ? 'col-span-2' : ''} cursor-pointer rounded-lg border overflow-hidden transition-all ${
-                                  templateId === t.id
-                                    ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
-                                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                                }`}
-                              >
-                                {/* Live mini-render of the actual CV in this style. */}
-                                <div className="relative flex justify-center overflow-hidden bg-white border-b border-slate-200 dark:border-slate-800">
-                                  <TemplatePreviewThumb templateId={t.id} width={110} />
-                                  {/* Faint dim on locked styles. */}
-                                  {locked && (
-                                    <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
-                                  )}
-                                  {/* Recommended tag (kept from 1b). */}
-                                  {t.isRecommended && (
-                                    <span className="absolute top-1 left-1 font-mono text-[8px] uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-500/20 rounded px-1 py-0.5 leading-none">
-                                      Recommended
-                                    </span>
-                                  )}
-                                  {/* Lock icon on gated styles. */}
-                                  {locked && (
-                                    <div className="absolute top-1 right-1 p-0.5 bg-slate-800/90 rounded">
-                                      <Lock size={10} className="text-white" />
-                                    </div>
-                                  )}
-                                  {/* Tier badge — FREE / {cost} CR / PRO. */}
-                                  <div
-                                    className={`absolute bottom-1 right-1 px-1.5 py-0.5 text-[8px] font-bold rounded leading-none ${
-                                      t.cost === 0
-                                        ? 'bg-emerald-500 text-white'
-                                        : locked
-                                          ? 'bg-slate-800 text-white'
-                                          : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
-                                    }`}
-                                  >
-                                    {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
-                                  </div>
-                                </div>
-                                {/* Caption. */}
+                  {showBestChoices ? (
+                    <StudioBestChoices
+                      selectedTemplate={templateId}
+                      isUnlocked={isUnlocked}
+                      onSelect={(nextTemplateId) => {
+                        setTemplateId(nextTemplateId);
+                        setMobileSidebarOpen(false);
+                      }}
+                      onKeepShowing={() => updateBestChoicesPreference(true)}
+                      onHide={() => updateBestChoicesPreference(false)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => updateBestChoicesPreference(true)}
+                      className="flex w-full items-center justify-between border-b border-slate-200 pb-4 text-left text-xs font-semibold text-slate-600 transition-colors hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:text-white"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Crown className="h-4 w-4" /> {t('cvStudio.bestChoices.showAgain')}
+                      </span>
+                      <span aria-hidden="true">+</span>
+                    </button>
+                  )}
+                  {['Simple', 'ApplyRight', 'Sidebar', 'Professional', 'Editorial', 'Industry'].map(
+                    (groupName) => {
+                      const groupTemplates = TEMPLATES.filter((t) => t.group === groupName);
+                      if (!groupTemplates.length) return null;
+                      return (
+                        <div key={groupName} className="space-y-2.5">
+                          <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                            {groupName}
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            {groupTemplates.map((t, i) => {
+                              const locked = !isUnlocked(t.id);
+                              const isDanglingLast =
+                                i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
+                              return (
                                 <div
-                                  className={`flex items-center gap-1.5 px-2 py-1.5 ${
-                                    templateId === t.id ? 'bg-slate-100 dark:bg-slate-800' : ''
+                                  key={t.id}
+                                  onClick={() => {
+                                    setTemplateId(t.id);
+                                    setMobileSidebarOpen(false);
+                                  }}
+                                  className={`${isDanglingLast ? 'col-span-2' : ''} cursor-pointer rounded-lg border overflow-hidden transition-all ${
+                                    templateId === t.id
+                                      ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
+                                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                                   }`}
                                 >
-                                  <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
-                                    {t.name}
-                                  </span>
-                                  {templateId === t.id && (
-                                    <Check
-                                      size={13}
-                                      className="shrink-0 text-slate-900 dark:text-slate-100"
-                                    />
-                                  )}
+                                  {/* Live mini-render of the actual CV in this style. */}
+                                  <div className="relative flex justify-center overflow-hidden bg-white border-b border-slate-200 dark:border-slate-800">
+                                    <TemplatePreviewThumb templateId={t.id} width={110} />
+                                    {/* Faint dim on locked styles. */}
+                                    {locked && (
+                                      <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
+                                    )}
+                                    {/* Lock icon on gated styles. */}
+                                    {locked && (
+                                      <div className="absolute top-1 right-1 p-0.5 bg-slate-800/90 rounded">
+                                        <Lock size={10} className="text-white" />
+                                      </div>
+                                    )}
+                                    {/* Tier badge — FREE / {cost} CR / PRO. */}
+                                    <div
+                                      className={`absolute bottom-1 right-1 px-1.5 py-0.5 text-[8px] font-bold rounded leading-none ${
+                                        t.cost === 0
+                                          ? 'bg-emerald-500 text-white'
+                                          : locked
+                                            ? 'bg-slate-800 text-white'
+                                            : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                      }`}
+                                    >
+                                      {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
+                                    </div>
+                                  </div>
+                                  {/* Caption. */}
+                                  <div
+                                    className={`flex items-center gap-1.5 px-2 py-1.5 ${
+                                      templateId === t.id ? 'bg-slate-100 dark:bg-slate-800' : ''
+                                    }`}
+                                  >
+                                    <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                                      {t.name}
+                                    </span>
+                                    {templateId === t.id && (
+                                      <Check
+                                        size={13}
+                                        className="shrink-0 text-slate-900 dark:text-slate-100"
+                                      />
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    }
+                  )}
                 </div>
               )}
             </div>

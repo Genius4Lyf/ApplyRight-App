@@ -1,147 +1,165 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
+
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
 const ExecutiveEnergyTemplate = ({ markdown, userProfile }) => {
-  if (!markdown) return null;
+  if (!markdown || typeof markdown !== 'string') return null;
 
-  let name = 'YOUR NAME';
-  try {
-    const nameMatch = markdown.match(/^#\s+(.+)/m);
-    if (nameMatch) name = nameMatch[1];
-    else if (userProfile?.firstName)
-      name = [userProfile.firstName, userProfile.otherName, userProfile.lastName]
-        .filter(Boolean)
-        .join(' ')
-        .toUpperCase();
-  } catch (e) {}
-
+  const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const profileName = [userProfile?.firstName, userProfile?.otherName, userProfile?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    markdownName && !/your name|full name/i.test(markdownName)
+      ? markdownName
+      : profileName || 'Your Name';
   const roleTitle = userProfile?.currentJobTitle || '';
-  const contactItems = [];
-  if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-  if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-  if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-  if (userProfile?.linkedinUrl)
-    contactItems.push({
+  const contactItems = [
+    userProfile?.email && { icon: Mail, value: userProfile.email },
+    userProfile?.phone && { icon: Phone, value: userProfile.phone },
+    userProfile?.location && { icon: MapPin, value: userProfile.location },
+    userProfile?.linkedinUrl && {
       icon: Linkedin,
-      value: userProfile.linkedinUrl.replace(/^https?:\/\//, ''),
-    });
-  if (userProfile?.portfolioUrl)
-    contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
-
-  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
+      value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
+    },
+    userProfile?.portfolioUrl && {
+      icon: Globe,
+      value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
+    },
+  ].filter(Boolean);
+  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
 
   return (
     <div
-      className="bg-white mx-auto font-sans text-slate-800 shadow-lg border-t-8"
+      className="mx-auto bg-white text-[#303840]"
       style={{
-        lineHeight: 'var(--cv-leading, 1.625)',
-        borderColor: 'var(--cv-accent, #003366)',
+        lineHeight: 'var(--cv-leading, 1.48)',
+        fontFamily: "var(--cv-font, 'IBM Plex Sans', sans-serif)",
       }}
     >
-      <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;700&family=Open+Sans:wght@400;600;700&display=swap');
-            `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');`}</style>
 
-      {/* Header */}
-      <header
-        className="bg-[#f8f9fa] border-b border-[#e9ecef]"
-        style={{ padding: 'var(--cv-margin, 2rem 2.5rem)' }}
-      >
-        <div className="flex justify-between items-end">
-          <div>
-            {userProfile?.photoUrl && (
-              <div className="flex justify-center mb-3">
-                <img
-                  src={userProfile.photoUrl}
-                  alt=""
-                  className="w-[72px] h-[72px] rounded-full object-cover border border-[#e9ecef]"
-                />
-              </div>
-            )}
-            <h1
-              className="text-4xl font-['Oswald',sans-serif] font-bold uppercase tracking-wide leading-none mb-2"
-              style={{ color: 'var(--cv-accent, #003366)' }}
-            >
+      <header className="relative overflow-hidden bg-[#202a33] px-10 py-8 text-white">
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-2"
+          style={{ background: '#d68a00' }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute right-0 top-0 h-3 w-[35%] opacity-90"
+          style={{ background: '#d68a00' }}
+        />
+
+        <div className="relative flex items-start justify-between gap-9">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[27pt] font-bold uppercase leading-[0.98] tracking-[-0.025em] text-white">
               {name}
             </h1>
             {roleTitle && (
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-1 bg-[#cc0000]"></div>
-                <div
-                  className="text-sm font-bold text-[#495057] uppercase tracking-wider"
-                  style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}
-                >
-                  {roleTitle}
-                </div>
-              </div>
+              <p
+                className="mt-3 text-[10pt] font-semibold uppercase tracking-[0.12em]"
+                style={{ color: '#f1aa2c' }}
+              >
+                {roleTitle}
+              </p>
             )}
           </div>
 
-          <div
-            className="text-right text-xs font-semibold text-[#6c757d]"
-            style={{ fontFamily: "var(--cv-font, 'Open Sans', sans-serif)" }}
-          >
-            {contactItems.map((item, i) => (
-              <div
-                key={i}
-                className="mb-1 last:mb-0 hover:text-[color:var(--cv-accent,#003366)] transition-colors cursor-default flex items-center justify-end gap-2"
-              >
-                <span>{item.value}</span>
-                <item.icon size={14} style={{ color: 'var(--cv-accent, #003366)' }} />
+          {userProfile?.photoUrl && (
+            <img
+              src={userProfile.photoUrl}
+              alt=""
+              className="h-[78px] w-[68px] shrink-0 border-2 border-white/30 object-cover grayscale"
+            />
+          )}
+        </div>
+
+        {contactItems.length > 0 && (
+          <div className="relative mt-5 grid grid-cols-2 gap-x-8 gap-y-2 border-t border-white/20 pt-3 text-[8pt] text-white/75">
+            {contactItems.map((item) => (
+              <div key={item.value} className="flex min-w-0 items-center gap-2">
+                <item.icon size={10} className="shrink-0" style={{ color: '#f1aa2c' }} />
+                <span className="truncate">{item.value}</span>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Body */}
-      <div
-        style={{
-          fontFamily: "var(--cv-font, 'Open Sans', sans-serif)",
-          padding: 'var(--cv-margin, 2.5rem)',
-        }}
-      >
+      <main style={{ padding: 'var(--cv-margin, 2.4rem 3rem 3rem)' }}>
         <ReactMarkdown
           components={{
             h1: () => null,
-            h2: ({ node, ...props }) => (
+            h2: (props) => (
               <h2
-                className="text-xl font-['Oswald',sans-serif] font-medium mt-8 mb-4 border-b-2 border-[#cc0000] pb-1 uppercase inline-block pr-8"
-                style={{ color: 'var(--cv-accent, #003366)' }}
-                {...props}
-              />
+                className="mt-6 mb-3 flex items-center gap-3 text-[9pt] font-bold uppercase tracking-[0.16em] text-[#202a33] first:mt-0 after:h-px after:flex-1 after:bg-[#aeb6bc]"
+                {...elementProps(props)}
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-3 w-1.5 shrink-0"
+                  style={{ background: '#d68a00' }}
+                />
+                {props.children}
+              </h2>
             ),
-            h3: ({ node, ...props }) => (
-              <h3 className="text-base font-bold text-[#212529] mt-6 mb-1" {...props} />
+            h3: (props) => (
+              <h3
+                className="mt-4 mb-0.5 text-[10.5pt] font-bold text-[#202a33]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </h3>
             ),
-            h4: ({ node, ...props }) => (
-              <h4 className="text-sm font-bold text-[#6c757d] mb-2 uppercase" {...props} />
+            h4: (props) => (
+              <h4
+                className="mb-1.5 text-[8.6pt] font-semibold uppercase tracking-[0.045em] text-[#68737c]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </h4>
             ),
-            p: ({ node, ...props }) => (
-              <p className="mb-4 text-justify text-[10.5pt] leading-7 text-[#343a40]" {...props} />
+            p: (props) => (
+              <p className="mb-2.5 text-[9.5pt] text-[#4b555d]" {...elementProps(props)}>
+                {props.children}
+              </p>
             ),
-            ul: ({ node, ...props }) => (
+            ul: (props) => (
               <ul
-                className="list-square pl-5 mb-4 text-[10.5pt] leading-7 text-[#343a40] marker:text-[color:var(--cv-accent,#003366)]"
-                {...props}
-              />
+                className="mb-3 list-square space-y-1 pl-[1.15em] text-[9.5pt] text-[#4b555d] marker:text-[#d68a00]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </ul>
             ),
-            li: ({ node, ...props }) => <li {...props} />,
-            strong: ({ node, ...props }) => (
-              <strong className="font-bold text-[#212529]" {...props} />
+            li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+            strong: (props) => (
+              <strong className="font-bold text-[#202a33]" {...elementProps(props)}>
+                {props.children}
+              </strong>
             ),
-            a: ({ node, ...props }) => (
-              <a className="text-[#0056b3] font-bold hover:underline" {...props} />
+            a: (props) => (
+              <a
+                className="font-semibold underline decoration-[#aeb6bc] underline-offset-2"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </a>
             ),
-            hr: ({ node, ...props }) => <hr className="my-6 border-slate-200" {...props} />,
+            hr: (props) => <hr className="my-5 border-[#d8dde0]" {...elementProps(props)} />,
           }}
         >
           {bodyMarkdown}
         </ReactMarkdown>
-      </div>
-
-      {/* Footer Stripe */}
+      </main>
     </div>
   );
 };

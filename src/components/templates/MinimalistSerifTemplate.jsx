@@ -1,182 +1,166 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
+
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
 const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
-  // Defensive checks
   if (!markdown || typeof markdown !== 'string') {
     return (
       <div className="p-8 text-center text-slate-400">
         <p>No CV content available</p>
-        <p className="text-xs mt-2">Generate a CV from the dashboard to see it here.</p>
+        <p className="mt-2 text-xs">Generate a CV from the dashboard to see it here.</p>
       </div>
     );
   }
 
-  // Extract name from markdown (first H1) or use profile
-  let name = 'YOUR NAME';
-  try {
-    const nameMatch = markdown.match(/^#\s+(.+)/m);
-    const extractedName = nameMatch ? nameMatch[1] : null;
-    const isGeneric =
-      extractedName &&
-      (extractedName.includes('YOUR NAME') || extractedName.includes('[Full Name'));
-
-    if (extractedName && !isGeneric) {
-      name = extractedName;
-    } else if (userProfile?.firstName) {
-      const parts = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(
-        Boolean
-      );
-      name = parts.join(' ').toUpperCase();
-    }
-  } catch (error) {
-    console.error('Error extracting name:', error);
-  }
-
-  // Get role title from profile
+  const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const profileName = [userProfile?.firstName, userProfile?.otherName, userProfile?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    markdownName && !/your name|full name/i.test(markdownName)
+      ? markdownName
+      : profileName || 'Your Name';
   const roleTitle = userProfile?.currentJobTitle || '';
-
-  // Build contact info from profile
-  // Build contact info from profile
-  const contactItems = [];
-  try {
-    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-    if (userProfile?.portfolioUrl)
-      contactItems.push({
-        icon: Globe,
-        value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
-      });
-    if (userProfile?.linkedinUrl)
-      contactItems.push({
-        icon: Linkedin,
-        value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
-      });
-  } catch (error) {
-    console.error('Error building contact info:', error);
-  }
-
-  // Remove first H1 from markdown body
-  let bodyMarkdown = markdown;
-  try {
-    bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
-  } catch (error) {
-    console.error('Error processing markdown:', error);
-  }
+  const contactItems = [
+    userProfile?.email && { icon: Mail, value: userProfile.email },
+    userProfile?.phone && { icon: Phone, value: userProfile.phone },
+    userProfile?.location && { icon: MapPin, value: userProfile.location },
+    userProfile?.linkedinUrl && {
+      icon: Linkedin,
+      value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
+    },
+    userProfile?.portfolioUrl && {
+      icon: Globe,
+      value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
+    },
+  ].filter(Boolean);
+  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
 
   return (
     <div
-      className="bg-white mx-auto text-slate-800 text-[11pt]"
+      className="mx-auto bg-[#fcfbf7] text-[#292724]"
       style={{
-        lineHeight: 'var(--cv-leading, 1.625)',
-        fontFamily: "var(--cv-font, 'Merriweather', serif)",
-        padding: 'var(--cv-margin, 3rem)',
+        lineHeight: 'var(--cv-leading, 1.52)',
+        fontFamily: "var(--cv-font, 'Source Sans 3', sans-serif)",
+        padding: 'var(--cv-margin, 2.8rem 3.1rem)',
       }}
     >
-      {/* INJECT FONTS */}
-      <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
-            `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@400;500;600;700&display=swap');`}</style>
 
-      {/* HEADER - Classic Book Style */}
-      <header className="text-center mb-14 border-b-2 border-slate-100 pb-10">
-        {userProfile?.photoUrl && (
-          <img
-            src={userProfile.photoUrl}
-            alt=""
-            className="w-[72px] h-[72px] rounded-full object-cover mx-auto mb-4 border border-slate-100"
-          />
-        )}
-        <h1
-          className="text-4xl font-bold text-slate-900 mb-4 tracking-tight"
-          style={{ color: 'var(--cv-accent, #0f172a)' }}
-        >
-          {name}
-        </h1>
+      <header className="mb-7 pb-5">
+        <div className="flex items-start justify-between gap-8">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-[29pt] leading-[0.98] tracking-[-0.025em] text-[#211f1c]"
+              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+            >
+              {name}
+            </h1>
+            {roleTitle && (
+              <p className="mt-2 text-[10pt] font-medium italic text-[#625d56]">{roleTitle}</p>
+            )}
+          </div>
 
-        {roleTitle && (
-          <div className="text-sm italic text-slate-600 mb-6 font-light">{roleTitle}</div>
-        )}
+          {userProfile?.photoUrl && (
+            <img
+              src={userProfile.photoUrl}
+              alt=""
+              className="h-[76px] w-[64px] shrink-0 border border-[#bdb6aa] object-cover grayscale"
+            />
+          )}
+        </div>
 
         {contactItems.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-400 uppercase tracking-widest font-sans">
-            {contactItems.map((item, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-1 border-r border-slate-200 pr-3 last:border-0"
-              >
-                <item.icon size={11} className="text-slate-400" />
-                {item.value}
-              </span>
+          <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-1.5 text-[8pt] text-[#6b665f]">
+            {contactItems.map((item) => (
+              <div key={item.value} className="flex min-w-0 items-center gap-2">
+                <item.icon
+                  size={10}
+                  className="shrink-0"
+                  style={{ color: 'var(--cv-accent, #7b3f35)' }}
+                />
+                <span className="truncate">{item.value}</span>
+              </div>
             ))}
           </div>
         )}
       </header>
 
-      {/* BODY */}
-      <div className="cv-body space-y-6">
-        <ReactMarkdown
-          components={{
-            // H1 handled in header
-            h1: () => null,
-
-            // H2 = Section Headers - Big serif, elegant
-            h2: ({ node, ...props }) => (
-              <h2
-                className="text-xl font-bold text-slate-900 mt-10 mb-6 pb-2 border-b border-slate-100"
-                style={{ color: 'var(--cv-accent, #0f172a)' }}
-                {...props}
-              />
-            ),
-
-            // H3 = Job Titles - Serif bold
-            h3: ({ node, ...props }) => (
-              <h3 className="text-lg font-bold text-slate-800 mt-6 mb-1" {...props} />
-            ),
-
-            // H4 = Company/Date - Sans-serif for contrast
-            h4: ({ node, ...props }) => (
-              <h4
-                className="text-xs font-sans font-semibold uppercase tracking-wider text-slate-500 mb-3"
-                {...props}
-              />
-            ),
-
-            // Paragraphs - Book-like leading
-            p: ({ node, ...props }) => (
-              <p
-                className="text-[11pt] font-light leading-8 text-slate-700 mb-4 text-justify"
-                {...props}
-              />
-            ),
-
-            // Lists
-            ul: ({ node, ...props }) => (
-              <ul
-                className="list-disc pl-5 mb-6 space-y-2 text-[11pt] leading-8 text-slate-700"
-                {...props}
-              />
-            ),
-
-            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-
-            strong: ({ node, ...props }) => (
-              <strong className="font-bold text-slate-900" {...props} />
-            ),
-
-            a: ({ node, ...props }) => (
-              <a
-                className="text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-900 transition-all font-medium"
-                {...props}
-              />
-            ),
-          }}
-        >
-          {bodyMarkdown}
-        </ReactMarkdown>
-      </div>
+      <ReactMarkdown
+        components={{
+          h1: () => null,
+          h2: (props) => (
+            <h2
+              className="mt-6 mb-3 flex items-baseline gap-3 text-[13pt] text-[#26231f] first:mt-0 after:h-px after:flex-1 after:bg-[#c9c2b7]"
+              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+              {...elementProps(props)}
+            >
+              <span
+                aria-hidden="true"
+                className="text-[8pt] font-sans font-semibold tracking-[0.12em]"
+                style={{ color: 'var(--cv-accent, #7b3f35)' }}
+              >
+                §
+              </span>
+              {props.children}
+            </h2>
+          ),
+          h3: (props) => (
+            <h3
+              className="mt-4 mb-0.5 text-[11pt] text-[#292622]"
+              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h3>
+          ),
+          h4: (props) => (
+            <h4
+              className="mb-1.5 text-[8.4pt] font-semibold uppercase tracking-[0.07em] text-[#746e66]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h4>
+          ),
+          p: (props) => (
+            <p className="mb-2.5 text-[9.5pt] text-[#4d4943]" {...elementProps(props)}>
+              {props.children}
+            </p>
+          ),
+          ul: (props) => (
+            <ul
+              className="mb-3 list-disc space-y-1 pl-[1.15em] text-[9.5pt] text-[#4d4943] marker:text-[#7b3f35]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </ul>
+          ),
+          li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+          strong: (props) => (
+            <strong className="font-semibold text-[#292622]" {...elementProps(props)}>
+              {props.children}
+            </strong>
+          ),
+          a: (props) => (
+            <a
+              className="font-medium underline decoration-[#aaa297] underline-offset-2"
+              style={{ color: 'var(--cv-accent, #7b3f35)' }}
+              {...elementProps(props)}
+            >
+              {props.children}
+            </a>
+          ),
+        }}
+      >
+        {bodyMarkdown}
+      </ReactMarkdown>
     </div>
   );
 };

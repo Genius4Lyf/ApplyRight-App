@@ -1,180 +1,162 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
+
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
 const ModernCleanTemplate = ({ markdown, userProfile }) => {
-  // Defensive checks
   if (!markdown || typeof markdown !== 'string') {
     return (
       <div className="p-8 text-center text-slate-400">
         <p>No CV content available</p>
-        <p className="text-xs mt-2">Generate a CV from the dashboard to see it here.</p>
+        <p className="mt-2 text-xs">Generate a CV from the dashboard to see it here.</p>
       </div>
     );
   }
 
-  // Extract name from markdown (first H1) or use profile
-  let name = 'YOUR NAME';
-  try {
-    const nameMatch = markdown.match(/^#\s+(.+)/m);
-    const extractedName = nameMatch ? nameMatch[1] : null;
-    const isGeneric =
-      extractedName &&
-      (extractedName.includes('YOUR NAME') || extractedName.includes('[Full Name'));
-
-    if (extractedName && !isGeneric) {
-      name = extractedName;
-    } else if (userProfile?.firstName) {
-      const parts = [userProfile.firstName, userProfile.otherName, userProfile.lastName].filter(
-        Boolean
-      );
-      name = parts.join(' ').toUpperCase();
-    }
-  } catch (error) {
-    console.error('Error extracting name:', error);
-  }
-
-  // Get role title from profile
+  const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const profileName = [userProfile?.firstName, userProfile?.otherName, userProfile?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    markdownName && !/your name|full name/i.test(markdownName)
+      ? markdownName
+      : profileName || 'Your Name';
   const roleTitle = userProfile?.currentJobTitle || '';
-
-  // Build contact info from profile
-  // Build contact info from profile
-  const contactItems = [];
-  try {
-    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-    if (userProfile?.linkedinUrl)
-      contactItems.push({
-        icon: Linkedin,
-        value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
-      });
-    if (userProfile?.portfolioUrl)
-      contactItems.push({
-        icon: Globe,
-        value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
-      });
-  } catch (error) {
-    console.error('Error building contact info:', error);
-  }
-
-  // Remove first H1 from markdown body as we'll render it in the header
-  let bodyMarkdown = markdown;
-  try {
-    bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
-  } catch (error) {
-    console.error('Error processing markdown:', error);
-  }
+  const contactItems = [
+    userProfile?.email && { icon: Mail, value: userProfile.email },
+    userProfile?.phone && { icon: Phone, value: userProfile.phone },
+    userProfile?.location && { icon: MapPin, value: userProfile.location },
+    userProfile?.linkedinUrl && {
+      icon: Linkedin,
+      value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
+    },
+    userProfile?.portfolioUrl && {
+      icon: Globe,
+      value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
+    },
+  ].filter(Boolean);
+  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
 
   return (
     <div
-      className="bg-white mx-auto text-slate-900"
+      className="mx-auto bg-white text-[#24313b]"
       style={{
         lineHeight: 'var(--cv-leading, 1.5)',
-        fontFamily: "var(--cv-font, 'Inter', sans-serif)",
-        padding: 'var(--cv-margin, 2.5rem)',
+        fontFamily: "var(--cv-font, 'Manrope', sans-serif)",
       }}
     >
-      {/* INJECT FONTS */}
-      <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-            `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');`}</style>
+      <div className="h-2" style={{ background: 'var(--cv-accent, #0f766e)' }} />
 
-      {/* HEADER */}
-      <header className="mb-8 pb-6">
-        {userProfile?.photoUrl && (
-          <div className="flex justify-center mb-3">
+      <header className="px-10 pt-8 pb-0">
+        <div className="flex items-end justify-between gap-8">
+          <div className="min-w-0">
+            <h1 className="text-[27pt] font-extrabold leading-none tracking-[-0.045em] text-[#16232c]">
+              {name}
+            </h1>
+            {roleTitle && (
+              <p
+                className="mt-2 text-[10pt] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: 'var(--cv-accent, #0f766e)' }}
+              >
+                {roleTitle}
+              </p>
+            )}
+          </div>
+          {userProfile?.photoUrl && (
             <img
               src={userProfile.photoUrl}
               alt=""
-              className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200"
+              className="h-[68px] w-[68px] shrink-0 rounded-lg object-cover"
             />
-          </div>
-        )}
-        <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight leading-none">
-          {name}
-        </h1>
-
-        {roleTitle && (
-          <div
-            className="text-lg font-medium mb-3 uppercase tracking-wide"
-            style={{ color: 'var(--cv-accent, #4f46e5)' }}
-          >
-            {roleTitle}
-          </div>
-        )}
+          )}
+        </div>
 
         {contactItems.length > 0 && (
-          <div className="text-sm text-slate-600 flex flex-wrap gap-x-4 gap-y-2">
-            {contactItems.map((item, i) => (
-              <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-                <item.icon size={13} style={{ color: 'var(--cv-accent, #4f46e5)' }} />
-                <span>{item.value}</span>
-                {i < contactItems.length - 1 && <span className="text-slate-300 ml-2">|</span>}
+          <div className="mt-5 grid grid-cols-2 gap-x-7 gap-y-2 border-y border-[#dce3e5] bg-[#f4f7f7] px-4 py-3 text-[8.3pt] text-[#53616a]">
+            {contactItems.map((item) => (
+              <div key={item.value} className="flex items-center gap-2 min-w-0">
+                <item.icon
+                  size={10}
+                  className="shrink-0"
+                  style={{ color: 'var(--cv-accent, #0f766e)' }}
+                />
+                <span className="truncate">{item.value}</span>
               </div>
             ))}
           </div>
         )}
       </header>
 
-      {/* BODY */}
-      <div className="cv-body">
+      <main className="px-10 pt-5 pb-10">
         <ReactMarkdown
           components={{
-            // H1 = Handled in header
             h1: () => null,
-
-            // H2 = Section Headers
-            h2: ({ node, ...props }) => (
+            h2: (props) => (
               <h2
-                className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8 pb-2 border-b border-slate-200"
-                {...props}
-              />
+                className="mt-6 mb-3 border-b-2 pb-1.5 text-[9pt] font-extrabold uppercase tracking-[0.17em] text-[#22313a] first:mt-0"
+                style={{ borderColor: 'var(--cv-accent, #0f766e)' }}
+                {...elementProps(props)}
+              >
+                {props.children}
+              </h2>
             ),
-
-            // H3 = Job Titles / Project Names
-            h3: ({ node, ...props }) => (
-              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-1" {...props} />
+            h3: (props) => (
+              <h3
+                className="mt-4 mb-0.5 text-[10.5pt] font-bold text-[#17242d]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </h3>
             ),
-
-            // H4 = Company / Degrees
-            h4: ({ node, ...props }) => (
-              <h4 className="text-md font-semibold text-slate-700 mt-4 mb-1" {...props} />
+            h4: (props) => (
+              <h4
+                className="mb-1.5 text-[8.7pt] font-semibold text-[#69757c]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </h4>
             ),
-
-            // Paragraphs
-            p: ({ node, ...props }) => (
-              <p className="text-sm text-slate-600 leading-relaxed mb-3" {...props} />
+            p: (props) => (
+              <p className="mb-2.5 text-[9.4pt] text-[#4c5961]" {...elementProps(props)}>
+                {props.children}
+              </p>
             ),
-
-            // Lists
-            ul: ({ node, ...props }) => (
-              <ul className="list-disc pl-4 mb-4 space-y-1 text-sm text-slate-600" {...props} />
+            ul: (props) => (
+              <ul
+                className="mb-3 list-disc space-y-1 pl-[1.15em] text-[9.4pt] text-[#4c5961] marker:text-[#0f766e]"
+                {...elementProps(props)}
+              >
+                {props.children}
+              </ul>
             ),
-
-            li: ({ node, ...props }) => <li className="pl-1 leading-normal" {...props} />,
-
-            // Strong
-            strong: ({ node, ...props }) => (
-              <strong className="font-semibold text-slate-900" {...props} />
+            li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+            strong: (props) => (
+              <strong className="font-bold text-[#17242d]" {...elementProps(props)}>
+                {props.children}
+              </strong>
             ),
-
-            // Links
-            a: ({ node, ...props }) => (
+            a: (props) => (
               <a
-                className="underline underline-offset-2"
-                style={{ color: 'var(--cv-accent, #4f46e5)' }}
-                {...props}
-              />
+                className="font-semibold underline underline-offset-2"
+                style={{ color: 'var(--cv-accent, #0f766e)' }}
+                {...elementProps(props)}
+              >
+                {props.children}
+              </a>
             ),
-
-            // Horizontal rule
-            hr: ({ node, ...props }) => <hr className="my-6 border-slate-100" {...props} />,
+            hr: (props) => <hr className="my-5 border-[#dce3e5]" {...elementProps(props)} />,
           }}
         >
           {bodyMarkdown}
         </ReactMarkdown>
-      </div>
+      </main>
     </div>
   );
 };

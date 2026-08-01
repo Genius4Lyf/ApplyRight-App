@@ -19,7 +19,7 @@ import AriaChat from './AriaChat';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
-import { CAREER_STAGES, CAREER_STAGE_PROMPT } from '../../lib/careerStages';
+import { CAREER_STAGES } from '../../lib/careerStages';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -273,7 +273,7 @@ const TargetChat = ({
               <AriaOrbit size={16} className="mt-2" />
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-md px-3.5 py-3">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  {CAREER_STAGE_PROMPT}
+                  {t('cvBuilder.ariaChat.stagePrompt')}
                 </p>
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {CAREER_STAGES.map((stage) => (
@@ -284,7 +284,7 @@ const TargetChat = ({
                       onClick={() => pickCareerStage(stage.k)}
                       className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
                     >
-                      {stage.label}
+                      {t(stage.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -477,7 +477,7 @@ const TargetChat = ({
                 {t('cvBuilder.atsCoach.addJobDescriptionPill')}
               </button>
               {showChips &&
-                suggestionsFor('target_job').map((chip) => (
+                suggestionsFor(t, 'target_job').map((chip) => (
                   <button
                     key={chip}
                     type="button"
@@ -548,7 +548,7 @@ const ATSCoachPanel = ({
   const { t } = useTranslation();
   const { id: draftId } = useParams();
   const [chatTheme] = useChatTheme();
-  const health = useMemo(() => computeCvHealth(cvData), [cvData]);
+  const health = useMemo(() => computeCvHealth(t, cvData), [t, cvData]);
 
   // Coach conversation (per-step replies + interaction) is cached in the builder
   // context, so leaving the panel — e.g. closing the mobile coach bubble or flipping
@@ -612,7 +612,7 @@ const ATSCoachPanel = ({
               { key: 'health', label: t('cvBuilder.atsCoach.cvHealth'), sub: `${health.score}` },
               {
                 key: 'match',
-                label: t('cvBuilder.atsCoach.roleMatch'),
+                label: t('cvBuilder.atsCoach.roleMatchShort'),
                 sub: match
                   ? `${match.coverage}%`
                   : hasJd
@@ -626,14 +626,14 @@ const ATSCoachPanel = ({
                   key={tab.key}
                   type="button"
                   onClick={() => setCoachTab(tab.key)}
-                  className={`flex-1 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 transition-colors ${
+                  className={`flex-1 min-w-0 whitespace-nowrap overflow-hidden rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 transition-colors ${
                     active
                       ? 'bg-white dark:bg-slate-900 shadow-sm'
                       : 'hover:bg-white/50 dark:hover:bg-slate-900/40'
                   }`}
                 >
                   <span
-                    className={`text-[11px] font-bold ${
+                    className={`truncate text-[11px] font-bold ${
                       active
                         ? 'text-slate-900 dark:text-slate-100'
                         : 'text-slate-500 dark:text-slate-400'
@@ -642,7 +642,7 @@ const ATSCoachPanel = ({
                     {tab.label}
                   </span>
                   <span
-                    className={`font-mono text-[8px] uppercase tracking-wide tabular-nums ${
+                    className={`truncate shrink-0 font-mono text-[8px] uppercase tracking-wide tabular-nums ${
                       active
                         ? 'text-slate-900 dark:text-slate-100'
                         : 'text-slate-400 dark:text-slate-500'

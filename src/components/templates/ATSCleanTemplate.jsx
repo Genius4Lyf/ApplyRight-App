@@ -1,149 +1,129 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
 const ATSCleanTemplate = ({ markdown, userProfile }) => {
-  // Defensive checks
   if (!markdown || typeof markdown !== 'string') {
     return (
       <div className="p-8 text-center text-slate-400">
         <p>No CV content available</p>
-        <p className="text-xs mt-2">Generate a CV from the dashboard to see it here.</p>
+        <p className="mt-2 text-xs">Generate a CV from the dashboard to see it here.</p>
       </div>
     );
   }
 
-  // Extract name from markdown (first H1) or use profile
-  let name = 'YOUR NAME';
-  try {
-    const nameMatch = markdown.match(/^#\s+(.+)/m);
-    name = nameMatch
-      ? nameMatch[1]
-      : userProfile?.firstName && userProfile?.lastName
-        ? [userProfile.firstName, userProfile.otherName, userProfile.lastName]
-            .filter(Boolean)
-            .join(' ')
-            .toUpperCase()
-        : 'YOUR NAME';
-  } catch (error) {
-    console.error('Error extracting name:', error);
-  }
-
-  // Get role title from profile (safely)
+  const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const profileName = [userProfile?.firstName, userProfile?.otherName, userProfile?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    markdownName && !/your name|full name/i.test(markdownName)
+      ? markdownName
+      : profileName || 'Your Name';
   const roleTitle = userProfile?.currentJobTitle || '';
-
-  // Build contact info line from profile (safely)
-  // Build contact info from profile
-  const contactItems = [];
-  try {
-    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-    if (userProfile?.linkedinUrl)
-      contactItems.push({
-        icon: Linkedin,
-        value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
-      });
-    if (userProfile?.portfolioUrl)
-      contactItems.push({
-        icon: Globe,
-        value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
-      });
-  } catch (error) {
-    console.error('Error building contact info:', error);
-  }
-
-  // Remove first H1 from markdown body
-  let bodyMarkdown = markdown;
-  try {
-    bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
-  } catch (error) {
-    console.error('Error processing markdown:', error);
-  }
+  const contactItems = [
+    userProfile?.email,
+    userProfile?.phone,
+    userProfile?.location,
+    userProfile?.linkedinUrl?.replace(/^https?:\/\/(www\.)?/, ''),
+    userProfile?.portfolioUrl?.replace(/^https?:\/\//, ''),
+  ].filter(Boolean);
+  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
 
   return (
     <div
-      className="bg-white mx-auto text-[#1a1a1a] text-[11pt]"
+      className="mx-auto bg-white text-[#202124]"
       style={{
-        lineHeight: 'var(--cv-leading, 1.5)',
-        fontFamily: "var(--cv-font, 'Inter', system-ui, sans-serif)",
-        padding: 'var(--cv-margin, 2.5rem)',
+        lineHeight: 'var(--cv-leading, 1.48)',
+        fontFamily: "var(--cv-font, Arial, 'Helvetica Neue', sans-serif)",
+        padding: 'var(--cv-margin, 2.7rem 3rem)',
       }}
     >
-      {/* INJECT FONTS */}
-      <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            `}</style>
-
-      {/* HEADER - Matches HTML template exactly */}
-      <header className="text-center mb-8">
-        {userProfile?.photoUrl && (
-          <img
-            src={userProfile.photoUrl}
-            alt=""
-            className="w-[72px] h-[72px] rounded-full object-cover mx-auto mb-3 border border-[#e5e5e5]"
-          />
-        )}
-        <h1
-          className="text-[24pt] font-bold mb-2 uppercase tracking-[-0.02em] text-[#1a1a1a]"
-          style={{ color: 'var(--cv-accent, #1a1a1a)' }}
-        >
+      <header className="mb-7">
+        <h1 className="text-[25pt] font-bold uppercase leading-none tracking-[-0.025em] text-[#15171a]">
           {name}
         </h1>
-
         {roleTitle && (
-          <div className="text-[11pt] text-[#666666] mb-2 font-medium uppercase tracking-[0.05em]">
+          <p className="mt-2 text-[9.5pt] font-semibold uppercase tracking-[0.1em] text-[#555b62]">
             {roleTitle}
-          </div>
+          </p>
         )}
-
         {contactItems.length > 0 && (
-          <div className="text-[10pt] text-[#666666] flex justify-center flex-wrap gap-2">
-            {contactItems.map((item, i) => (
-              <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-                <item.icon size={11} className="text-[#666666] opacity-70" />
-                <span>{item.value}</span>
-                {i < contactItems.length - 1 && <span className="text-[#cccccc] ml-2">|</span>}
-              </div>
+          <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-[8.5pt] text-[#5e6369]">
+            {contactItems.map((item, index) => (
+              <React.Fragment key={item}>
+                <span>{item}</span>
+                {index < contactItems.length - 1 && (
+                  <span aria-hidden="true" className="text-[#a4a8ad]">
+                    •
+                  </span>
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}
       </header>
 
-      {/* BODY - Render markdown with exact HTML template styling */}
       <ReactMarkdown
         components={{
-          // H1 = Already handled in header, skip in body
           h1: () => null,
-
-          // H2 = Section Headers (uppercase, grey border) - EXACT match to HTML
-          h2: ({ node, ...props }) => (
+          h2: (props) => (
             <h2
-              className="text-[12pt] font-bold uppercase tracking-[0.05em] text-[#1a1a1a] border-b border-[#e5e5e5] pb-2 mb-4 mt-6 first:mt-0"
-              style={{ color: 'var(--cv-accent, #1a1a1a)' }}
-              {...props}
-            />
+              className="mt-6 mb-3 border-b border-[#202124] pb-1.5 text-[10pt] font-bold uppercase tracking-[0.1em] text-[#202124] first:mt-0"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h2>
           ),
-
-          // H3 = Job Titles / Entry Titles (bold, 11pt)
-          h3: ({ node, ...props }) => <h3 className="text-[11pt] font-bold mt-4 mb-1" {...props} />,
-
-          // H4 = Subtitles (company, institution - medium weight)
-          h4: ({ node, ...props }) => <h4 className="text-[11pt] font-medium mb-2" {...props} />,
-
-          // Paragraphs (11pt, grey)
-          p: ({ node, ...props }) => <p className="mb-2 text-[11pt]" {...props} />,
-
-          // Lists - disc bullets, proper spacing
-          ul: ({ node, ...props }) => <ul className="list-disc ml-5 mb-2" {...props} />,
-
-          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-
-          // Strong/Bold text
-          strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
-
-          // Links (grey, no underline for print)
-          a: ({ node, ...props }) => <a className="text-[#666666] no-underline" {...props} />,
+          h3: (props) => (
+            <h3
+              className="mt-4 mb-0.5 text-[10.5pt] font-bold text-[#202124]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h3>
+          ),
+          h4: (props) => (
+            <h4
+              className="mb-1.5 text-[8.7pt] font-semibold text-[#5e6369]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h4>
+          ),
+          p: (props) => (
+            <p className="mb-2.5 text-[9.5pt] text-[#3f4449]" {...elementProps(props)}>
+              {props.children}
+            </p>
+          ),
+          ul: (props) => (
+            <ul
+              className="mb-3 list-disc space-y-1 pl-[1.15em] text-[9.5pt] text-[#3f4449]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </ul>
+          ),
+          li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+          strong: (props) => (
+            <strong className="font-bold text-[#202124]" {...elementProps(props)}>
+              {props.children}
+            </strong>
+          ),
+          a: (props) => (
+            <a
+              className="text-[#202124] underline decoration-[#a4a8ad] underline-offset-2"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </a>
+          ),
         }}
       >
         {bodyMarkdown}

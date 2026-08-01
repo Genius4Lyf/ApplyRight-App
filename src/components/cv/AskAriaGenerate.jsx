@@ -60,7 +60,7 @@ const AskAriaGenerate = ({
   const per = CREDIT_COSTS.GENERATE_BULLET ?? 1;
 
   // Openers — general (per-step coaching) vs focused (role/project build-with).
-  const generalOpener = getStepCoaching(currentStepId, cvData).message;
+  const generalOpener = getStepCoaching(t, currentStepId, cvData).message;
   const focusOpener = (e) => {
     if (e.section === 'project') {
       return t('cvBuilder.askAria.focusOpenerProject', {
@@ -776,7 +776,7 @@ const AskAriaGenerate = ({
           {/* Starter questions — only on a fresh, unfocused section chat. */}
           {phase === 'chat' && showChips && !focused && (
             <div className="self-start flex flex-wrap gap-1.5 pl-6">
-              {suggestionsFor(currentStepId).map((chip) => (
+              {suggestionsFor(t, currentStepId).map((chip) => (
                 <button
                   key={chip}
                   type="button"

@@ -1,191 +1,153 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin } from 'lucide-react';
+import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
 
-// Matches the wrapper's left padding so H2 section labels can break back out
-// flush-left, past the accent spine.
-const SPINE_INDENT = 16;
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
-// Career-progression template for operators / general managers: a single
-// accent spine runs down the whole body with a small node at every entry
-// title, visually narrating the climb. Structural, not decorative — content
-// stays single-column and linear, so it reads fine for ATS either way.
 const TheAscentTemplate = ({ markdown, userProfile }) => {
   if (!markdown || typeof markdown !== 'string') {
     return (
       <div className="p-8 text-center text-slate-400">
         <p>No CV content available</p>
-        <p className="text-xs mt-2">Generate a CV from the dashboard to see it here.</p>
+        <p className="mt-2 text-xs">Generate a CV from the dashboard to see it here.</p>
       </div>
     );
   }
 
-  // Extract name from markdown (first H1) or use profile
-  let name = 'Your Name';
-  try {
-    const nameMatch = markdown.match(/^#\s+(.+)/m);
-    const extractedName = nameMatch ? nameMatch[1] : null;
-    const isGeneric =
-      extractedName &&
-      (extractedName.includes('YOUR NAME') || extractedName.includes('[Full Name'));
-    if (extractedName && !isGeneric) {
-      name = extractedName;
-    } else if (userProfile?.firstName) {
-      name = [userProfile.firstName, userProfile.otherName, userProfile.lastName]
-        .filter(Boolean)
-        .join(' ');
-    }
-  } catch (error) {
-    console.error('Error extracting name:', error);
-  }
-
+  const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const profileName = [userProfile?.firstName, userProfile?.otherName, userProfile?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    markdownName && !/your name|full name/i.test(markdownName)
+      ? markdownName
+      : profileName || 'Your Name';
   const roleTitle = userProfile?.currentJobTitle || '';
-
-  const contactItems = [];
-  try {
-    if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-    if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-    if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
-    if (userProfile?.linkedinUrl)
-      contactItems.push({
-        icon: Linkedin,
-        value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
-      });
-    if (userProfile?.portfolioUrl)
-      contactItems.push({
-        icon: Globe,
-        value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
-      });
-  } catch (error) {
-    console.error('Error building contact info:', error);
-  }
-
-  // Remove first H1 from markdown body
-  let bodyMarkdown = markdown;
-  try {
-    bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
-  } catch (error) {
-    console.error('Error processing markdown:', error);
-  }
+  const contactItems = [
+    userProfile?.email && { icon: Mail, value: userProfile.email },
+    userProfile?.phone && { icon: Phone, value: userProfile.phone },
+    userProfile?.location && { icon: MapPin, value: userProfile.location },
+    userProfile?.linkedinUrl && {
+      icon: Linkedin,
+      value: userProfile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''),
+    },
+    userProfile?.portfolioUrl && {
+      icon: Globe,
+      value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
+    },
+  ].filter(Boolean);
+  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
 
   return (
     <div
-      className="bg-[#fbfaf7] mx-auto text-[#1e1c17]"
+      className="mx-auto bg-white text-[#282725]"
       style={{
-        lineHeight: 'var(--cv-leading, 1.62)',
-        fontFamily: "var(--cv-font, 'Source Sans 3', system-ui, sans-serif)",
-        padding: 'var(--cv-margin, 2.9rem 3.1rem)',
+        lineHeight: 'var(--cv-leading, 1.52)',
+        fontFamily: "var(--cv-font, 'Source Sans 3', sans-serif)",
+        padding: 'var(--cv-margin, 2.7rem 3rem)',
       }}
     >
-      {/* INJECT FONTS */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Literata:wght@500;600&family=Source+Sans+3:wght@400;600&display=swap');
-      `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Literata:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap');`}</style>
 
-      {/* HEADER */}
-      <header className="mb-3">
-        {userProfile?.photoUrl && (
-          <img
-            src={userProfile.photoUrl}
-            alt=""
-            className="w-16 h-16 rounded-full object-cover mb-3 border border-[#e7e1d4]"
-          />
-        )}
+      <header className="relative mb-7 border-b border-[#d9d4ca] pb-6 pr-28">
         <h1
-          className="text-[20.5pt] leading-none mb-1"
-          style={{ fontFamily: "'Literata', serif", fontWeight: 600, letterSpacing: '-0.01em' }}
+          className="text-[27pt] font-semibold leading-[1.03] tracking-[-0.025em] text-[#272521]"
+          style={{ fontFamily: "'Literata', serif" }}
         >
           {name}
         </h1>
-
         {roleTitle && (
-          <div
-            className="text-[9.5pt] font-semibold mb-2"
-            style={{ fontFamily: "'Source Sans 3', sans-serif", color: 'var(--cv-accent, #52602e)' }}
+          <p
+            className="mt-2 text-[10pt] font-semibold"
+            style={{ color: 'var(--cv-accent, #9b5d30)' }}
           >
             {roleTitle}
-          </div>
+          </p>
         )}
 
+        <div aria-hidden="true" className="absolute right-0 top-1 flex items-end gap-1.5">
+          <span className="block h-4 w-5 bg-[#d8c4b3]" />
+          <span className="block h-8 w-5 bg-[#bd906d]" />
+          <span className="block h-12 w-5" style={{ background: 'var(--cv-accent, #9b5d30)' }} />
+        </div>
+
         {contactItems.length > 0 && (
-          <div
-            className="text-[8.4pt] flex flex-wrap"
-            style={{ color: '#6e675b', borderBottom: '1px solid #e7e1d4', paddingBottom: 9 }}
-          >
-            {contactItems.map((item, i) => (
-              <span key={i} className="flex items-center whitespace-nowrap">
-                <item.icon size={11} className="mr-1.5 opacity-70" />
-                {item.value}
-                {i < contactItems.length - 1 && (
-                  <span className="mx-2.5" style={{ color: '#c9c2b2' }}>
-                    ·
-                  </span>
-                )}
-              </span>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[8.2pt] text-[#6a655f]">
+            {contactItems.map((item) => (
+              <div key={item.value} className="flex items-center gap-1.5">
+                <item.icon size={10} style={{ color: 'var(--cv-accent, #9b5d30)' }} />
+                <span>{item.value}</span>
+              </div>
             ))}
           </div>
         )}
       </header>
 
-      {/* BODY — the accent spine runs down the whole column; H2 escapes it via
-          a matching negative margin so section labels stay flush-left. */}
-      <div style={{ borderLeft: '2px solid var(--cv-accent, #52602e)', paddingLeft: SPINE_INDENT }}>
-        <ReactMarkdown
-          components={{
-            h1: () => null,
-
-            h2: ({ node, ...props }) => (
-              <h2
-                className="text-[9.7pt] font-semibold mt-4 mb-2 first:mt-0"
-                style={{ fontFamily: "'Literata', serif", color: '#1e1c17', marginLeft: -SPINE_INDENT }}
-                {...props}
-              />
-            ),
-
-            // H3 = entry titles (role / degree / project) — each gets a small
-            // accent node sitting on the spine, marking a milestone.
-            h3: ({ node, children, ...props }) => (
-              <h3
-                className="relative text-[10.2pt] font-semibold mt-3 mb-0.5"
-                style={{ color: '#1e1c17' }}
-                {...props}
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute rounded-full"
-                  style={{
-                    left: -19,
-                    top: '0.55em',
-                    width: 7,
-                    height: 7,
-                    background: 'var(--cv-accent, #52602e)',
-                    boxShadow: '0 0 0 2px #fbfaf7',
-                  }}
-                />
-                {children}
-              </h3>
-            ),
-
-            h4: ({ node, ...props }) => (
-              <h4 className="text-[8.6pt] mb-1" style={{ color: '#6e675b' }} {...props} />
-            ),
-
-            p: ({ node, ...props }) => <p className="text-[9.8pt] mb-2" {...props} />,
-
-            ul: ({ node, ...props }) => <ul className="list-disc pl-[1.1em] mb-2" {...props} />,
-
-            li: ({ node, ...props }) => <li className="mb-1 text-[9.8pt]" {...props} />,
-
-            strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-
-            a: ({ node, ...props }) => (
-              <a className="underline" style={{ color: 'var(--cv-accent, #52602e)' }} {...props} />
-            ),
-          }}
-        >
-          {bodyMarkdown}
-        </ReactMarkdown>
-      </div>
+      <ReactMarkdown
+        components={{
+          h1: () => null,
+          h2: (props) => (
+            <h2
+              className="mt-6 mb-3 border-l-[5px] pl-3 text-[10pt] font-semibold uppercase tracking-[0.12em] text-[#302e2a] first:mt-0"
+              style={{ borderColor: 'var(--cv-accent, #9b5d30)', fontFamily: "'Literata', serif" }}
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h2>
+          ),
+          h3: (props) => (
+            <h3
+              className="relative mt-4 mb-0.5 pl-4 text-[10.5pt] font-bold text-[#292723] before:absolute before:left-0 before:top-[0.55em] before:h-2 before:w-2 before:rounded-full before:bg-[#9b5d30]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h3>
+          ),
+          h4: (props) => (
+            <h4
+              className="mb-1.5 pl-4 text-[8.7pt] font-semibold text-[#746e66]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </h4>
+          ),
+          p: (props) => (
+            <p className="mb-2.5 text-[9.5pt] text-[#4f4b46]" {...elementProps(props)}>
+              {props.children}
+            </p>
+          ),
+          ul: (props) => (
+            <ul
+              className="mb-3 list-disc space-y-1 pl-[1.2em] text-[9.5pt] text-[#4f4b46] marker:text-[#9b5d30]"
+              {...elementProps(props)}
+            >
+              {props.children}
+            </ul>
+          ),
+          li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+          strong: (props) => (
+            <strong className="font-bold text-[#292723]" {...elementProps(props)}>
+              {props.children}
+            </strong>
+          ),
+          a: (props) => (
+            <a
+              className="font-semibold underline underline-offset-2"
+              style={{ color: 'var(--cv-accent, #9b5d30)' }}
+              {...elementProps(props)}
+            >
+              {props.children}
+            </a>
+          ),
+        }}
+      >
+        {bodyMarkdown}
+      </ReactMarkdown>
     </div>
   );
 };

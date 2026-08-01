@@ -6,7 +6,6 @@ import { X, FileText, ArrowUpRight, Lock } from 'lucide-react';
 import ApplicationService from '../services/application.service';
 import api from '../services/api';
 import CVTemplateRenderer from './CVTemplateRenderer';
-import PreviewWatermark from './PreviewWatermark';
 import ScreenshotCover from './ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
@@ -222,8 +221,6 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
             onCut={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
-            {/* Faint anti-screenshot watermark — free users only. */}
-            {profile?.plan !== 'paid' && <PreviewWatermark />}
             {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
             <ScreenshotCover show={screenshotObscured} />
             <CVTemplateRenderer application={app} userProfile={profile} />

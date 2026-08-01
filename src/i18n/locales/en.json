@@ -42,7 +42,17 @@
       "termsOfService": "Terms of Service",
       "privacyPolicy": "Privacy Policy"
     },
-    "logoAlt": "ApplyRight Logo"
+    "logoAlt": "ApplyRight Logo",
+    "sortable": {
+      "collapse": "Collapse",
+      "edit": "Edit",
+      "dragToReorder": "Drag to reorder",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete",
+      "hideActions": "Hide actions",
+      "showActions": "Show actions"
+    }
   },
   "auth": {
     "shell": {
@@ -840,8 +850,97 @@
       "tipsForSection": "Tips for this section",
       "gotItHide": "Got it, hide"
     },
+    "inlineExample": {
+      "hideExample": "Hide example",
+      "showExample": "Show me an example",
+      "disclaimer": "These are examples for inspiration — write your own truthfully."
+    },
+    "examples": {
+      "bullet": {
+        "engineering": {
+          "0": "Built a real-time notification service in Node.js + Redis, cutting end-to-end delivery from 4s to 280ms across 12K daily active users.",
+          "1": "Led the migration of 8 services from EC2 to Kubernetes, reducing monthly infra spend by 38% and deploy time from 45 min to 6 min.",
+          "2": "Refactored the payment retry logic to fix a duplicate-charge bug affecting ~2% of transactions; recovered ~$140K in disputed revenue per quarter."
+        },
+        "data": {
+          "0": "Built a churn prediction model in Python (scikit-learn) achieving 0.87 AUC; rolled into product CRM, lifting at-risk save rate from 12% to 27%.",
+          "1": "Designed an experimentation framework adopted by 6 product teams; reduced time-to-test launch from 2 weeks to 3 days.",
+          "2": "Replaced a 4-hour daily ETL with a streaming Kafka pipeline; cut data latency to under 5 minutes for 22 downstream dashboards."
+        },
+        "product": {
+          "0": "Launched a self-serve onboarding flow that lifted day-7 activation from 31% to 49%, contributing $1.8M in incremental ARR over two quarters.",
+          "1": "Killed two underperforming product lines after 6 weeks of usage analysis; redirected the team to ship a single feature that grew DAU 22%.",
+          "2": "Ran weekly customer interviews with 40+ enterprise users; insights drove a roadmap pivot that closed two $250K+ deals."
+        },
+        "design": {
+          "0": "Redesigned the checkout flow based on session-replay analysis; cut cart abandonment from 38% to 24% within 6 weeks.",
+          "1": "Built a design system used across 4 product surfaces and 35 components; reduced new-screen design time from 3 days to 8 hours.",
+          "2": "Led usability testing with 18 participants per quarter; findings shaped the dashboard rebuild that lifted CSAT from 6.8 to 8.2."
+        },
+        "marketing": {
+          "0": "Built a content engine of 40+ SEO articles in 6 months; grew organic monthly visitors from 8K to 64K and contributed 22% of new signups.",
+          "1": "Owned paid social spend of $80K/month across Meta and TikTok; brought CAC down 31% while doubling lead volume.",
+          "2": "Launched a webinar series with 6 events and 2,400+ registrants; sourced $480K in pipeline within the first quarter."
+        },
+        "sales": {
+          "0": "Closed $1.4M in net-new ARR in FY24, 142% of quota; ranked #2 of 14 reps in the segment.",
+          "1": "Built and ran a 3-stage outbound cadence; lifted reply rate from 4% to 11% and booked 38 qualified meetings per quarter.",
+          "2": "Owned the migration of 22 legacy customers to the new platform; retained 97% with $620K in expanded contracts."
+        },
+        "operations": {
+          "0": "Mapped and rebuilt the order-fulfillment process across 3 warehouses; cut average fulfillment time from 38 hours to 14 hours.",
+          "1": "Negotiated 4 new vendor contracts saving $220K annually; introduced a quarterly review cadence to keep terms competitive.",
+          "2": "Led a cross-functional Kaizen sprint that cut returns rate from 7.4% to 4.1% in two quarters."
+        },
+        "finance": {
+          "0": "Built the rolling 18-month forecast model used in 3 board reviews; identified a $1.2M cost-saving opportunity in vendor consolidation.",
+          "1": "Automated the monthly close process with Power Query and Python; reduced close from 9 days to 4 days.",
+          "2": "Managed cash positioning across 6 currencies and 12 accounts; reduced FX losses by 28% YoY."
+        },
+        "hr": {
+          "0": "Rebuilt the engineering interview loop; raised offer-acceptance rate from 51% to 78% over two hiring cycles.",
+          "1": "Rolled out a peer-feedback program to 240 employees; engagement score on \"I get useful feedback\" rose from 6.1 to 7.9.",
+          "2": "Closed 22 senior hires in a single quarter, 30% of them from underrepresented groups."
+        },
+        "customer": {
+          "0": "Owned a portfolio of 38 enterprise accounts ($14M ARR); achieved 119% net revenue retention through targeted expansion plays.",
+          "1": "Reduced average ticket resolution time from 22h to 9h by rebuilding the macros library and routing logic.",
+          "2": "Drove 14 customer reference calls and 6 case studies, directly cited in $2.3M of closed-won deals."
+        },
+        "generic": {
+          "0": "Led a cross-functional initiative across 3 teams that delivered $X in measurable impact within Y months.",
+          "1": "Built and shipped Z, used by N people, that reduced [metric] from A to B.",
+          "2": "Owned [responsibility] end-to-end; surfaced findings that changed [decision] and saved [X hours / $Y]."
+        }
+      },
+      "project": {
+        "engineering": {
+          "0": "A weekend project: a Discord bot in Python that summarizes long threads using OpenAI; ~600 users across 12 servers.",
+          "1": "Open-source: a Tailwind component library (200+ stars on GitHub) used in two production apps."
+        },
+        "data": {
+          "0": "Kaggle: top 8% solution to the \"store sales forecasting\" challenge using LightGBM and feature engineering on holiday/promo signals.",
+          "1": "Personal: built a dashboard tracking my city's public transit reliability — 18 months of GTFS data, deployed on Streamlit."
+        },
+        "generic": {
+          "0": "A short, descriptive name + 1-2 lines on what it does, who uses it, and the most concrete outcome you can name."
+        }
+      },
+      "summary": {
+        "engineering": {
+          "0": "Senior engineer with 7 years building scalable backend systems in Go and Python. Led migrations affecting 30+ services and mentored a team of 5. Looking to ship infrastructure that scales gracefully and reduces on-call pain."
+        },
+        "product": {
+          "0": "Product manager with 5 years shipping B2B SaaS to mid-market customers. Took an internal tool from 0 to $4M ARR through three pricing iterations and a self-serve motion. Strongest at turning customer pain into shipped roadmap."
+        },
+        "generic": {
+          "0": "A 2-3 sentence summary of who you are professionally, what you've done that's most relevant to the role, and what you're looking for next. Specific > generic."
+        }
+      }
+    },
     "targetJob": {
       "loading": "Loading...",
+      "tagline": "ApplyRight Intelligent Assistant",
       "greetingLine1": "I’m your CV coach — let’s build a CV that gets you noticed.",
       "greetingLine2": "First — is there a job you’re aiming for?",
       "continue": "Continue",
@@ -1176,6 +1275,7 @@
       "inertSendLabel": "This step uses the buttons above",
       "cvHealth": "CV Health",
       "roleMatch": "Role Match",
+      "roleMatchShort": "Role Match",
       "tabAriaSub": "chat",
       "addJdShort": "add JD",
       "previewCv": "Preview your CV",
@@ -1190,6 +1290,20 @@
       "yourTargetRole": "Your target role",
       "matched": "Matched — you’ve got these",
       "missing": "Missing — weave these in if they’re true"
+    },
+    "modelPicker": {
+      "tierLight": "Standard",
+      "tierFlagship": "Pro",
+      "triggerTitle": "Choose the model powering Aria",
+      "ariaLabelModel": "AI model: {{tier}}",
+      "header": "Choose your AI",
+      "whatsDifference": "What's the difference?",
+      "close": "Close",
+      "standardBlurb": "Fast and efficient ({{standardLabel}}). Great for most CVs — solid bullets, summaries and tailoring. Cheapest on credits, and included free on paid plans.",
+      "flagshipBlurb": "The strongest models — sharper writing and better nuance on tough or senior roles, with tighter keyword tailoring. Costs more credits per action, and always metered (even on paid plans).",
+      "notSure": "Not sure? {{standardLabel}} is great for most CVs — reach for {{flagshipLabel}} when a role is competitive or you want the most polished result.",
+      "noModels": "No models available.",
+      "footnote": "{{flagshipLabel}} always uses credits. {{standardLabel}} is included on paid plans."
     },
     "ariaChat": {
       "outOfSummaryCredits": "You’re out of credits for this — a summary draft is {{n}} credits. Earn more or upgrade, then try again.",
@@ -1296,6 +1410,104 @@
     "researchCard": {
       "whatResearchSays": "What research says"
     },
+    "sectionResearch": {
+      "target_job": {
+        "eyebrow": "Target job",
+        "thesis": "Set the target and everything aims at it — tailoring is what beats the ATS.",
+        "points": {
+          "0": "The ATS matches the job's <b>exact keywords</b> — a set target lets Aria weave them in.",
+          "1": "Tailored CVs get read; generic ones get filtered out.",
+          "2": "Paste the real job description for the tightest match — or skip for a strong all-rounder."
+        },
+        "example": "With a target set, Aria shapes your bullets, skills & summary to fit that job.",
+        "source": "How tailoring + ATS keyword-matching work"
+      },
+      "heading": {
+        "eyebrow": "Your heading",
+        "thesis": "The first thing scanned — keep it clean, professional, and ATS-safe.",
+        "points": {
+          "0": "Name (biggest), one phone, a <b>professional email</b> (first.last@ — not a nickname).",
+          "1": "City + country is enough — <b>skip your full street address.</b>",
+          "2": "Add your LinkedIn (90%+ of recruiters check it) + a portfolio/GitHub if you have one.",
+          "3": "Plain text — no photo or icon labels; they confuse the ATS."
+        },
+        "example": "Ada Obi · Lagos, NG · ada.obi@email.com · linkedin.com/in/adaobi · github.com/adaobi",
+        "source": "How recruiters + ATS read your header"
+      },
+      "history": {
+        "eyebrow": "Work history",
+        "thesis": "Recruiters read this hardest — and reward achievements, not duties.",
+        "points": {
+          "0": "Lead with what you <b>achieved</b>, not what you were \"responsible for.\"",
+          "1": "Shape each line: <b>did [action] → [result] → [a number]</b> (the XYZ formula).",
+          "2": "Quantify — %, time, money, scale. No number? Use scale (\"across 40+ tickets a day\").",
+          "3": "3–5 lines per role, strongest first, aimed at the job you want."
+        },
+        "before": "\"Responsible for customer support.\"",
+        "after": "Cut response time ~30% by streamlining triage across 40+ daily tickets.",
+        "source": "How recruiters & ATS actually read CVs"
+      },
+      "projects": {
+        "eyebrow": "Projects",
+        "thesis": "A project says \"I chose to build this\" — so the why, your role & the tech matter most.",
+        "points": {
+          "0": "Say what it <b>does</b> and the problem it solves.",
+          "1": "Make <b>your part</b> clear — what you built vs. the team.",
+          "2": "Name the <b>tech & tools</b> — projects are where your skills show.",
+          "3": "Show the outcome (users, a grade, it shipped) + <b>add a link.</b>",
+          "4": "Course, personal, or work project? Each is framed a little differently."
+        },
+        "example": "Built a ride-matching app in React & Node for my capstone — cut match time to <2s, demoed to 200+ students.",
+        "source": "How strong project entries read"
+      },
+      "education": {
+        "eyebrow": "Education",
+        "thesis": "As a student, this does heavy lifting — give it detail, near the top.",
+        "points": {
+          "0": "Always: <b>degree, school, location, graduation date.</b>",
+          "1": "Add your GPA if it's <b>3.5+ and recent</b>; leave it off otherwise.",
+          "2": "Little work experience? List <b>2–4 relevant courses</b> that match the job.",
+          "3": "Include honors / Dean's List — they show consistency."
+        },
+        "example": "BSc Computer Science, University of Lagos — 2025 · GPA 3.7 · Dean's List · Relevant: Data Structures, Databases",
+        "source": "How new-grad education sections are read"
+      },
+      "skills": {
+        "eyebrow": "Skills",
+        "thesis": "Skills get you past the robot — match the job's words exactly, don't pad.",
+        "points": {
+          "0": "About <b>70% hard skills</b> (tools, tech), 30% soft — roughly 8–15 hard + 3–5 soft.",
+          "1": "Use the job's <b>exact words</b>: it says \"Salesforce\" → don't write \"CRM software\" (ATS won't match).",
+          "2": "List only what you've <b>actually used</b> — no buzzword padding.",
+          "3": "Prove soft skills in your experience bullets, not as adjectives here."
+        },
+        "example": "Python · React · SQL · AWS · Figma — the tools the job actually named.",
+        "source": "How ATS keyword-matching + recruiters read skills"
+      },
+      "summary": {
+        "eyebrow": "Summary",
+        "thesis": "A tight 2–4 line pitch: who you are, your best skills, one real win.",
+        "points": {
+          "0": "<b>2–4 sentences (~50–60 words)</b> — a snapshot, not a story.",
+          "1": "Lead with your strongest relevant skills + a <b>quantified achievement.</b>",
+          "2": "Tailor it — mirror the target job's keywords. Third person, no \"I\".",
+          "3": "Little experience? Lead with education + transferable skills."
+        },
+        "example": "Final-year CS student skilled in Python & React; built a ride-matching app used by 200+ students. Seeking a frontend internship.",
+        "source": "How strong summaries are written"
+      },
+      "finalize": {
+        "eyebrow": "Before you send",
+        "thesis": "A CV is ready when it's tailored, tight, and clean.",
+        "points": {
+          "0": "Every line tailored to <b>this</b> job — cut anything generic.",
+          "1": "Achievements quantified where you can; no \"responsible for.\"",
+          "2": "One page if you can; consistent formatting; <b>proofread</b> twice.",
+          "3": "Save as PDF so it looks the same everywhere."
+        },
+        "source": "How finished CVs are judged"
+      }
+    },
     "ariaThinking": {
       "draft": {
         "0": "Reading the role…",
@@ -1363,6 +1575,27 @@
       "keepMine": "Keep mine",
       "apply": "Apply"
     },
+    "roleTrim": {
+      "eyebrow": "Trim work history",
+      "title": "Shorten your older roles",
+      "subtitle": "Your roles stay on the CV. I selected the extra bullets after the first {{count}} from your oldest bullet-heavy role.",
+      "loading": "Loading your roles…",
+      "untitledRole": "Untitled role",
+      "unknownCompany": "Company not added",
+      "unknownDate": "Date not added",
+      "present": "Present",
+      "nothingToTrim": "None of your roles has more than {{count}} bullet points, so there is nothing to trim here.",
+      "remove_one": "Remove 1 bullet",
+      "remove_other": "Remove {{count}} bullets",
+      "removing": "Trimming…",
+      "removed_one": "1 bullet removed from your older role.",
+      "removed_other": "{{count}} bullets removed from your older roles.",
+      "undo": "Undo",
+      "restored": "The removed bullet points are back.",
+      "loadError": "Couldn’t load your work history. Please try again.",
+      "saveError": "Couldn’t trim those bullet points. Please try again.",
+      "restoreError": "Couldn’t restore those bullet points. Please try again."
+    },
     "tailorDiff": {
       "loading": "Loading comparison...",
       "whatChanged": "What Changed",
@@ -1407,6 +1640,316 @@
       "keywords": "Keywords",
       "minimize": "Minimize",
       "minimizeAria": "Minimize keyword helper"
+    },
+    "cvHealth": {
+      "sections": {
+        "contact": {
+          "title": "Contact Information",
+          "requirements": {
+            "0": { "label": "Full name" },
+            "1": { "label": "Email address" },
+            "2": { "label": "Phone number" },
+            "3": { "label": "LinkedIn URL" }
+          }
+        },
+        "history": {
+          "title": "Work History",
+          "requirements": {
+            "0": { "label": "Add at least 2 roles" },
+            "1": { "label": "2–3 bullet points per role" },
+            "2": { "label": "Quantify achievements with numbers" }
+          }
+        },
+        "projects": {
+          "title": "Projects",
+          "requirements": {
+            "0": { "label": "Add a project to showcase hands-on work" }
+          }
+        },
+        "education": {
+          "title": "Education",
+          "requirements": {
+            "0": { "label": "Add at least one qualification" }
+          }
+        },
+        "certifications": {
+          "title": "Certifications",
+          "requirements": {
+            "0": { "label": "Add any licences, certificates, or training" }
+          }
+        },
+        "skills": {
+          "title": "Skills",
+          "requirements": {
+            "0": { "label": "List at least 8 relevant skills" }
+          }
+        },
+        "summary": {
+          "title": "Professional Summary",
+          "requirements": {
+            "0": { "label": "A 3–4 sentence summary (100+ characters)" }
+          }
+        }
+      },
+      "detail": {
+        "notStarted": "Not started",
+        "noneYet": "None yet",
+        "contact": "{{met}}/4 details added",
+        "history_one": "{{count}} role · {{bullets}} bullets, {{quantified}} with numbers",
+        "history_other": "{{count}} roles · {{bullets}} bullets, {{quantified}} with numbers",
+        "projects": "{{count}} added",
+        "certifications": "{{count}} added",
+        "education_one": "{{count}} entry",
+        "education_other": "{{count}} entries",
+        "skills": "{{count}} listed",
+        "summary": "{{count}} characters"
+      }
+    },
+    "coach": {
+      "heyName": "Hey {{name}} — {{message}}",
+      "kwListJoin": "{{head}} and {{tail}}",
+      "stepNames": {
+        "target_job": "Target Job",
+        "heading": "Heading",
+        "history": "Work History",
+        "projects": "Projects",
+        "education": "Education",
+        "skills": "Skills",
+        "summary": "Summary",
+        "finalize": "CV"
+      },
+      "genericTips": [
+        "Strong verbs win — Led, Built, Shipped, Grew 💪",
+        "Numbers make bullets pop — try adding one 📈",
+        "Mirror the wording in the job post 🧩",
+        "One clear win beats three vague duties ✨"
+      ],
+      "steps": {
+        "target_job": {
+          "empty": {
+            "title": "Let's aim at a target 🎯",
+            "message": "Start by telling me the role you want. Paste the job description too — I'll use it to coach every other section toward exactly what this employer is scanning for.",
+            "tips": {
+              "0": "Use the real job title from the posting (e.g. \"Frontend Engineer\", not \"Coder\").",
+              "1": "Pasting the full description unlocks keyword matching later."
+            }
+          },
+          "titled": {
+            "title": "Aiming for {{title}} 👍",
+            "message": "Great choice. Now paste the job description — that's what lets me match your CV to the exact keywords recruiters and ATS look for.",
+            "tips": {
+              "0": "No description handy? You can still build a strong general CV and add one later."
+            }
+          },
+          "complete": {
+            "title": "Target locked in ✅",
+            "message": "Perfect — I've got the role and the description. From here, everything you write gets coached toward landing this specific job.",
+            "tips": {
+              "0": "Next: your heading. Let’s make you easy to reach."
+            }
+          }
+        },
+        "heading": {
+          "empty": {
+            "title": "First impressions count 👋",
+            "message": "The very top of your CV is the first thing a recruiter reads. Let’s make sure they can reach you in seconds.",
+            "tips": {
+              "0": "Name, email and phone are the essentials.",
+              "1": "Add your LinkedIn — recruiters almost always check it."
+            }
+          },
+          "partial": {
+            "title": "Looking reachable 📇",
+            "message": "Nice. A couple more details and recruiters will have every way they need to contact you.",
+            "tipPhone": "Add a phone number.",
+            "tipLinkedin": "Add your LinkedIn URL."
+          },
+          "complete": {
+            "title": "Contact details nailed ✅",
+            "message": "You’re easy to reach — exactly what a recruiter wants. On to your experience."
+          }
+        },
+        "history": {
+          "empty": {
+            "title": "This is the heart of your CV ❤️",
+            "message_targeted": "Your work experience carries the most weight — it's your best shot at proving you fit the role you shared. Add a role and let's make every bullet map to what that job's really after.",
+            "message_untargeted": "Your work experience carries the most weight. Add a role and let’s make each bullet earn its place — you’ve got real wins to show.",
+            "tips": {
+              "0": "Lead every bullet with a strong action verb: Led, Built, Grew, Shipped.",
+              "1": "Avoid \"Responsible for…\" — show the result, not the duty."
+            }
+          },
+          "needsNumbers": {
+            "title": "Strong start — now add numbers 📈",
+            "message_one": "You've got {{count}} role down. The single biggest upgrade now: put numbers on your wins. \"Grew signups 40%\" beats \"Grew signups\" every time.",
+            "message_other": "You've got {{count}} roles down. The single biggest upgrade now: put numbers on your wins. \"Grew signups 40%\" beats \"Grew signups\" every time.",
+            "tips": {
+              "0": "Quantify with %, ₦/$, time saved, or volume handled.",
+              "1": "Even rough numbers (\"~500 users\") beat none."
+            }
+          },
+          "complete": {
+            "title": "Now that’s a results CV 🔥",
+            "message": "Your bullets lead with action and back it with numbers — this is exactly what gets you shortlisted. Keep that standard for every role."
+          }
+        },
+        "projects": {
+          "empty": {
+            "title": "Projects prove you can do it 🛠️",
+            "message": "Projects are powerful — especially if your experience is still growing. They show initiative and real, hands-on skill.",
+            "tips": {
+              "0": "Name what you built and the impact or outcome.",
+              "1": "Link to it (GitHub, live demo) if you can."
+            }
+          },
+          "complete": {
+            "title": "Great — projects add proof ✅",
+            "message": "These show you don’t just talk about skills, you apply them. That builds real confidence with hiring teams."
+          }
+        },
+        "education": {
+          "empty": {
+            "title": "Add your qualifications 🎓",
+            "message": "Many ATS filter by degree before a human ever looks. List your education — and don’t worry if it’s not a perfect match for the role; it still counts.",
+            "tips": {
+              "0": "Include the school, qualification and year."
+            }
+          },
+          "complete": {
+            "title": "Education in place ✅",
+            "message": "Good — that clears a common automated filter. You’re building a complete picture."
+          }
+        },
+        "skills": {
+          "empty": {
+            "title": "Skills are the ATS’s matching ground 🧩",
+            "message_withKeywords": "This is where keyword matching happens — and I remember the job you shared leaned on {{kwList}}. List the ones you genuinely have here, then add the rest of your real tools (aim for 8+).",
+            "message_targeted": "This is where keyword matching happens. Pull the tools and skills straight from the job you shared — the ones you genuinely have — and aim for 8 or more.",
+            "message_generic": "This section is where keyword matching happens. List the tools and technologies from the job description that you genuinely have — aim for 8 or more.",
+            "tips": {
+              "0": "Mirror the wording in the job post (e.g. \"JavaScript\" if that’s what they wrote).",
+              "1": "Only list skills you can speak to in an interview."
+            }
+          },
+          "partial": {
+            "title": "Good list — push for a few more 💪",
+            "message_withKeywords": "You've listed {{count}}. Scan the job you shared once more for any you missed — I spotted {{kwList}} in there. More real matches means more of its keywords ticked.",
+            "message_generic": "You've listed {{count}}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.",
+            "tips": {
+              "0": "Aim for 8-12 genuine, relevant skills."
+            }
+          },
+          "complete": {
+            "title": "Skills section is strong ✅",
+            "message": "A rich, relevant skills list — that’s what gets you past keyword screening. Nicely done."
+          }
+        },
+        "summary": {
+          "empty": {
+            "title": "Your headline pitch 🎤",
+            "message_targeted": "Three or four punchy sentences: who you are, your strongest proof, and — since you're aiming for a specific role — a clear nod to that job so the fit lands in the very first line.",
+            "message_untargeted": "Three or four punchy sentences: who you are, your strongest proof, and what you’re aiming for. I’ll tell you the moment it’s strong enough.",
+            "tips": {
+              "0": "Open with your role and years of experience.",
+              "1": "Drop in one standout achievement."
+            }
+          },
+          "partial": {
+            "title": "Good — give it a little more 📝",
+            "message": "You’ve started your pitch. Expand it to 3-4 sentences so it gives recruiters (and the ATS) more to grab onto.",
+            "tips": {
+              "0": "Add what you’re aiming for and one proof point."
+            }
+          },
+          "complete": {
+            "title": "That’s a sharp summary ✅",
+            "message": "Strong, specific and the right length. You’ve done the hard part — head to Review to see it all come together."
+          }
+        },
+        "finalize": {
+          "complete": {
+            "title": "Your CV’s ready 🎉",
+            "message_withName": "{{name}}, everything’s complete and reads strong — your CV’s ready. Run an ATS Deep Scan to see how you match the role, or grab it from the Live Preview.",
+            "message_noName": "Everything’s complete and reads strong — your CV’s ready. Run an ATS Deep Scan to see how you match the role, or grab it from the Live Preview."
+          },
+          "progress": {
+            "title": "Almost at the finish line 🏁",
+            "message_withName": "{{name}}, you’re at {{score}}% — {{left}}. Finish that and you hit 100%, which unlocks your ATS Deep Scan and your full preview.",
+            "message_noName": "You’re at {{score}}% — {{left}}. Finish that and you hit 100%, which unlocks your ATS Deep Scan and your full preview.",
+            "left_one": "the one thing left is your {{section}} — {{need}}",
+            "left_other": "{{count}} sections to finish — start with your {{section}}: {{need}}"
+          }
+        },
+        "default": {
+          "title": "Let’s build a CV that lands interviews 🚀",
+          "message": "Work through each section and I’ll coach you as you go. Watch your CV Health climb — when every section’s done, a full preview is waiting at Review."
+        }
+      },
+      "finalize": {
+        "needs": {
+          "fallback": "a little more detail",
+          "contact": {
+            "0": "add your full name",
+            "1": "add your email address",
+            "2": "add your phone number",
+            "3": "add your LinkedIn URL"
+          },
+          "history": {
+            "0": "add at least 2 roles",
+            "1": "add 2–3 bullet points per role",
+            "2": "quantify your achievements with numbers"
+          },
+          "education": {
+            "0": "add at least one qualification"
+          },
+          "skills": {
+            "0": "list at least 8 relevant skills"
+          },
+          "summary": {
+            "0": "write a 3–4 sentence summary"
+          }
+        }
+      }
+    },
+    "suggestions": {
+      "target_job": {
+        "0": "Why does the target job matter?",
+        "1": "What if I don't have one?"
+      },
+      "heading": {
+        "0": "What goes in my heading?",
+        "1": "Do I need LinkedIn?"
+      },
+      "history": {
+        "0": "What goes here?",
+        "1": "Give me an example",
+        "2": "I'm stuck"
+      },
+      "projects": {
+        "0": "Should I add projects?",
+        "1": "What makes a good project bullet?"
+      },
+      "education": {
+        "0": "What if I didn't finish?",
+        "1": "How much detail?"
+      },
+      "skills": {
+        "0": "Which skills matter here?",
+        "1": "How many should I list?"
+      },
+      "summary": {
+        "0": "What makes a good summary?",
+        "1": "What should mine say?"
+      },
+      "finalize": {
+        "0": "Is my CV ready?",
+        "1": "What's still missing?"
+      },
+      "default": {
+        "0": "What goes here?",
+        "1": "Give me an example",
+        "2": "I'm stuck"
+      }
     }
   },
   "myCvs": {
@@ -3080,6 +3623,18 @@
       "q4A": "Yes. Run an interviewer as many times as you like — your scores and feedback are saved per interviewer in the Reviews tab, so you can watch yourself improve.",
       "q5Q": "Is this like a real interview?",
       "q5A": "Close. It's a live voice conversation that reacts to your answers, grounded in your CV and the specific job, with interviewers that stay in their lane — HR, hiring manager, or specialist. The main difference is it scores content only, where a real interview also weighs delivery."
+    }
+  },
+  "cvStudio": {
+    "bestChoices": {
+      "ariaLabel": "Best Choice CV templates",
+      "eyebrow": "Trending this week",
+      "title": "Best Choices",
+      "subtitle": "Pick one to see your CV change instantly. We curate these five every week.",
+      "available": "Available",
+      "keepShowing": "Keep showing me Best Choices",
+      "dontShow": "Don’t show me Best Choices",
+      "showAgain": "Show Best Choices again"
     }
   },
   "ariaStudio": {

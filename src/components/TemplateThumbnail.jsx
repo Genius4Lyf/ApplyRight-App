@@ -5,20 +5,40 @@ const TemplateThumbnail = ({ type, className = '' }) => {
   const cardBase = `w-full h-full bg-white shadow-sm border border-slate-200 relative overflow-hidden text-[0px] flex flex-col ${className}`;
 
   switch (type) {
+    case 'applyright-band-twin':
+      return (
+        <div className={`${cardBase} bg-white`}>
+          <div className="border-y-2 border-[#111318] bg-[#f5f5f2] px-2 py-2">
+            <div className="mb-1 h-2.5 w-3/4 bg-[#111318]" />
+            <div className="h-1 w-2/5 bg-[#777773]" />
+          </div>
+          <div className="flex flex-1 gap-2 p-2">
+            <div className="w-[68%] space-y-1">
+              <div className="h-1 w-2/5 bg-[#111318]" />
+              <div className="h-0.5 w-full bg-slate-300" />
+              <div className="h-0.5 w-5/6 bg-slate-300" />
+            </div>
+            <div className="flex-1 border-l border-slate-300 pl-1.5">
+              <div className="mb-1 h-1 w-3/4 bg-slate-500" />
+              <div className="h-0.5 w-full bg-slate-300" />
+            </div>
+          </div>
+        </div>
+      );
+
     case 'ats-clean':
       return (
         <div className={`${cardBase} p-2`}>
-          <div className="w-3/4 h-2 bg-slate-900 mb-2"></div>
-          <div className="w-full h-px bg-slate-200 mb-2"></div>
+          <div className="mb-1 h-2.5 w-3/4 bg-slate-900" />
+          <div className="mb-2 h-1 w-2/5 bg-slate-500" />
           <div className="space-y-1">
-            <div className="w-full h-1 bg-slate-300"></div>
-            <div className="w-5/6 h-1 bg-slate-300"></div>
-            <div className="w-full h-1 bg-slate-300"></div>
+            <div className="h-1 w-1/3 border-b border-slate-900 bg-slate-700" />
+            <div className="h-0.5 w-full bg-slate-300" />
+            <div className="h-0.5 w-5/6 bg-slate-300" />
           </div>
-          <div className="w-1/2 h-1.5 bg-slate-800 mt-3 mb-1"></div>
-          <div className="space-y-1">
-            <div className="w-full h-1 bg-slate-300"></div>
-            <div className="w-full h-1 bg-slate-300"></div>
+          <div className="mt-3 space-y-1">
+            <div className="h-1 w-1/3 border-b border-slate-900 bg-slate-700" />
+            <div className="h-0.5 w-full bg-slate-300" />
           </div>
         </div>
       );
@@ -26,42 +46,102 @@ const TemplateThumbnail = ({ type, className = '' }) => {
     case 'student-ats':
       return (
         <div className={`${cardBase} p-2`}>
-          <div className="text-center mb-2">
-            <div className="w-1/2 h-2 bg-slate-900 mx-auto"></div>
-            <div className="w-1/3 h-1 bg-slate-400 mx-auto mt-1"></div>
-          </div>
-          <div className="w-full h-px bg-slate-200 mb-2"></div>
-          {/* Education First */}
-          <div className="w-1/3 h-1.5 bg-slate-800 mb-1"></div>
-          <div className="w-full h-px bg-slate-200 mb-1"></div>
-          <div className="w-full h-1 bg-slate-300 mb-2"></div>
-          {/* Experience */}
-          <div className="w-1/3 h-1.5 bg-slate-800 mb-1"></div>
-          <div className="w-full h-px bg-slate-200 mb-1"></div>
-          <div className="w-full h-1 bg-slate-300"></div>
+          <div className="mb-1 h-2.5 w-2/3 bg-[#1d2c3d]" />
+          <div className="mb-2 h-1 w-2/5 bg-[#34495e]" />
+          <div className="mb-1 h-1 w-1/3 border-b border-[#34495e] bg-[#34495e]" />
+          <div className="mb-2 h-0.5 w-full bg-slate-300" />
+          <div className="mb-1 h-1 w-1/3 border-b border-[#34495e] bg-[#34495e]" />
+          <div className="h-0.5 w-5/6 bg-slate-300" />
         </div>
       );
 
     case 'modern-professional':
       return (
+        <div className={`${cardBase} bg-[#f7f6f2] p-2`}>
+          <div className="mb-2 border-l-2 border-[#9a6b3f] pl-1.5">
+            <div className="mb-1 h-2 w-3/4 bg-[#25282d]" />
+            <div className="h-1 w-2/5 bg-stone-500" />
+          </div>
+          <div className="mb-2 h-px w-full bg-stone-300" />
+          <div className="mb-1 flex items-center gap-1">
+            <div className="h-1 w-1/3 bg-[#34373c]" />
+            <div className="h-px flex-1 bg-stone-300" />
+          </div>
+          <div className="space-y-1">
+            <div className="h-0.5 w-full bg-stone-300" />
+            <div className="h-0.5 w-5/6 bg-stone-300" />
+          </div>
+        </div>
+      );
+
+    case 'slate-timeline':
+      return (
         <div className={`${cardBase} flex-row`}>
-          {/* Sidebar */}
-          <div className="w-1/3 bg-slate-100 h-full p-1 flex flex-col gap-1 border-r border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-slate-300 mb-1 mx-auto"></div>
-            <div className="flex-1 space-y-1">
-              <div className="w-full h-0.5 bg-slate-300"></div>
-              <div className="w-full h-0.5 bg-slate-300"></div>
+          <div className="h-full w-[35%] bg-[#343d4d] p-1.5">
+            <div className="mx-auto mb-3 mt-1 h-7 w-7 rounded-full bg-white/35" />
+            <div className="mb-1 h-1 w-full bg-white/70" />
+            <div className="h-0.5 w-4/5 bg-white/35" />
+          </div>
+          <div className="w-[65%] p-2">
+            <div className="mb-1 h-2 w-4/5 bg-[#343d4d]" />
+            <div className="mb-3 h-1 w-1/2 bg-slate-300" />
+            <div className="space-y-1 border-l border-[#343d4d] pl-1.5">
+              <div className="h-1 w-full bg-slate-300" />
+              <div className="h-1 w-5/6 bg-slate-300" />
             </div>
           </div>
-          {/* Main */}
-          <div className="w-2/3 p-1.5 flex flex-col gap-1.5">
-            <div className="w-3/4 h-2 bg-slate-800"></div>
-            <div className="w-1/2 h-1 bg-indigo-500"></div>
-            <div className="w-full h-0.5 bg-slate-200 my-0.5"></div>
-            <div className="space-y-0.5">
-              <div className="w-full h-1 bg-slate-300"></div>
-              <div className="w-full h-1 bg-slate-300"></div>
-              <div className="w-5/6 h-1 bg-slate-300"></div>
+        </div>
+      );
+
+    case 'navy-portrait':
+      return (
+        <div className={`${cardBase} flex-row`}>
+          <div className="h-full w-[36%] bg-[#193e57] p-1.5">
+            <div className="mx-auto mb-3 mt-1 h-8 w-8 rounded-full border border-white bg-white/35" />
+            <div className="mb-1 h-1 w-full bg-white/80" />
+            <div className="h-0.5 w-4/5 bg-white/35" />
+          </div>
+          <div className="w-[64%] p-2.5">
+            <div className="mb-1 h-3 w-4/5 bg-slate-900" />
+            <div className="mb-4 h-1 w-1/2 bg-slate-400" />
+            <div className="mb-1 h-1 w-1/3 bg-[#193e57]" />
+            <div className="h-0.5 w-full bg-slate-300" />
+          </div>
+        </div>
+      );
+
+    case 'angular-corporate':
+      return (
+        <div className={cardBase}>
+          <div className="relative h-10 overflow-hidden bg-[#314a60] p-2">
+            <div className="absolute inset-0 bg-[#294157] [clip-path:polygon(0_0,100%_0,100%_100%,0_45%)]" />
+            <div className="relative mb-1 h-2 w-2/3 bg-[#efd4a8]" />
+            <div className="relative h-1 w-1/3 bg-white/70" />
+          </div>
+          <div className="space-y-1 p-2">
+            <div className="h-1 w-1/3 bg-slate-800" />
+            <div className="h-0.5 w-full bg-slate-300" />
+            <div className="h-0.5 w-5/6 bg-slate-300" />
+          </div>
+        </div>
+      );
+
+    case 'sales-sidebar':
+      return (
+        <div className={cardBase}>
+          <div className="relative h-9 p-1.5 pl-[38%]">
+            <div className="absolute inset-y-1 left-[30%] right-0 bg-[#d5dfe7]" />
+            <div className="relative h-2 w-4/5 bg-[#4c5158]" />
+          </div>
+          <div className="flex flex-1">
+            <div className="h-full w-[38%] rounded-tr-xl bg-[#d5dfe7] p-1.5">
+              <div className="mb-1 h-0.5 w-full bg-[#747b82]" />
+              <div className="h-0.5 w-4/5 bg-[#8f98a3]" />
+            </div>
+            <div className="w-[62%] space-y-1 p-2">
+              <div className="h-1 w-1/2 bg-[#4c5158]" />
+              <div className="h-0.5 w-full bg-slate-300" />
+              <div className="h-0.5 w-5/6 bg-slate-300" />
             </div>
           </div>
         </div>
@@ -69,19 +149,17 @@ const TemplateThumbnail = ({ type, className = '' }) => {
 
     case 'modern':
       return (
-        <div className={`${cardBase}`}>
-          {/* Top Banner */}
-          <div className="w-full h-6 bg-indigo-600 mb-2"></div>
-          <div className="px-2">
-            <div className="w-1/2 h-2 bg-slate-900 mb-2"></div>
-            <div className="flex gap-1 mb-2">
-              <div className="w-1/3 h-1 bg-indigo-500"></div>
-              <div className="w-1/3 h-1 bg-slate-300"></div>
+        <div className={cardBase}>
+          <div className="h-1.5 w-full bg-[#0f766e]" />
+          <div className="p-2">
+            <div className="mb-1 h-2.5 w-3/4 bg-[#16232c]" />
+            <div className="mb-2 h-1 w-2/5 bg-[#0f766e]" />
+            <div className="mb-2 grid grid-cols-2 gap-1 bg-[#f4f7f7] p-1">
+              <div className="h-0.5 bg-slate-300" />
+              <div className="h-0.5 bg-slate-300" />
             </div>
-            <div className="space-y-1">
-              <div className="w-full h-1 bg-slate-300"></div>
-              <div className="w-full h-1 bg-slate-300"></div>
-            </div>
+            <div className="mb-1 h-1 w-1/3 border-b border-[#0f766e] bg-slate-700" />
+            <div className="h-0.5 w-full bg-slate-300" />
           </div>
         </div>
       );
@@ -103,15 +181,20 @@ const TemplateThumbnail = ({ type, className = '' }) => {
 
     case 'minimal-serif':
       return (
-        <div className={`${cardBase} p-3 items-center text-center`}>
-          {/* Serif header vibe */}
-          <div className="w-3/4 h-3 bg-slate-900 mb-2 font-serif"></div>
-          <div className="w-1/4 h-1 bg-slate-400 mb-4 italic"></div>
-          <div className="w-full space-y-1.5 text-justify">
-            <div className="w-full h-1 bg-slate-300"></div>
-            <div className="w-full h-1 bg-slate-300"></div>
-            <div className="w-5/6 h-1 bg-slate-300 mx-auto"></div>
-            <div className="w-full h-1 bg-slate-300 mt-2"></div>
+        <div className={`${cardBase} bg-[#fcfbf7] p-2`}>
+          <div className="mb-2 pb-1.5">
+            <div className="mb-1 h-2.5 w-3/4 bg-[#292622]" />
+            <div className="h-1 w-2/5 bg-stone-500" />
+          </div>
+          <div className="mb-1 flex items-center gap-1">
+            <div className="h-1 w-1 bg-[#7b3f35]" />
+            <div className="h-1.5 w-1/3 bg-[#292622]" />
+            <div className="h-px flex-1 bg-stone-300" />
+          </div>
+          <div className="space-y-1">
+            <div className="h-0.5 w-full bg-stone-300" />
+            <div className="h-0.5 w-5/6 bg-stone-300" />
+            <div className="mt-2 h-0.5 w-full bg-stone-300" />
           </div>
         </div>
       );
@@ -223,14 +306,43 @@ const TemplateThumbnail = ({ type, className = '' }) => {
     case 'executive-corporate':
       return (
         <div className={`${cardBase} bg-white p-2 text-[0px]`}>
-          <div className="border-b-2 border-slate-200 pb-2 mb-2">
-            <div className="w-1/2 h-2 bg-slate-900 mb-1"></div>
-            <div className="w-1/4 h-1 bg-slate-500"></div>
+          <div className="mb-2 flex">
+            <div className="w-3/5">
+              <div className="mb-1 h-2.5 w-full bg-[#1e2935]" />
+              <div className="h-1 w-1/2 bg-slate-500" />
+            </div>
+            <div className="ml-auto w-1/4 border-l border-slate-300 pl-1">
+              <div className="mb-1 h-0.5 w-full bg-slate-300" />
+              <div className="h-0.5 w-4/5 bg-slate-300" />
+            </div>
           </div>
           <div className="space-y-1">
-            <div className="w-1/3 h-1 bg-slate-800 mb-1 border-b border-slate-200"></div>
-            <div className="w-full h-1 bg-slate-300"></div>
-            <div className="w-full h-1 bg-slate-300"></div>
+            <div className="flex items-center gap-1">
+              <div className="h-1 w-1/3 bg-[#25364a]" />
+              <div className="h-px flex-1 bg-[#25364a]" />
+            </div>
+            <div className="h-0.5 w-full bg-slate-300" />
+            <div className="h-0.5 w-full bg-slate-300" />
+          </div>
+        </div>
+      );
+
+    case 'the-ascent':
+      return (
+        <div className={`${cardBase} bg-white p-2`}>
+          <div className="relative mb-2 border-b border-stone-300 pb-2 pr-9">
+            <div className="mb-1 h-2.5 w-full bg-[#282725]" />
+            <div className="h-1 w-1/2 bg-[#9b5d30]" />
+            <div className="absolute right-0 top-0 flex items-end gap-0.5">
+              <div className="h-2 w-1.5 bg-[#d8c4b3]" />
+              <div className="h-4 w-1.5 bg-[#bd906d]" />
+              <div className="h-6 w-1.5 bg-[#9b5d30]" />
+            </div>
+          </div>
+          <div className="mb-1 h-1 w-2/5 border-l-2 border-[#9b5d30] bg-stone-700 pl-1" />
+          <div className="space-y-1 pl-1">
+            <div className="h-0.5 w-full bg-stone-300" />
+            <div className="h-0.5 w-5/6 bg-stone-300" />
           </div>
         </div>
       );
@@ -410,17 +522,48 @@ const TemplateThumbnail = ({ type, className = '' }) => {
 
     case 'executive-energy':
       return (
-        <div className={`${cardBase} bg-white border-t-2 border-[#003366] text-[0px]`}>
-          <div className="p-2 border-b border-gray-200 bg-gray-50">
-            <div className="w-2/3 h-2 bg-[#003366] mb-1"></div>
-            <div className="w-1/3 h-0.5 bg-[#cc0000]"></div>
+        <div className={`${cardBase} bg-white text-[0px]`}>
+          <div className="relative bg-[#202a33] p-2 pl-3">
+            <div className="absolute inset-y-0 left-0 w-1 bg-[#d68a00]" />
+            <div className="absolute right-0 top-0 h-1 w-1/3 bg-[#d68a00]" />
+            <div className="mb-1 h-2.5 w-3/4 bg-white" />
+            <div className="h-1 w-2/5 bg-[#d68a00]" />
           </div>
-          <div className="p-2 space-y-1">
-            <div className="w-1/4 h-1 bg-[#003366] mb-1"></div>
-            <div className="w-full h-0.5 bg-slate-400"></div>
-            <div className="w-full h-0.5 bg-slate-400"></div>
+          <div className="space-y-1 p-2">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-1 bg-[#d68a00]" />
+              <div className="h-1 w-1/3 bg-[#202a33]" />
+              <div className="h-px flex-1 bg-slate-300" />
+            </div>
+            <div className="h-0.5 w-full bg-slate-300" />
+            <div className="h-0.5 w-5/6 bg-slate-300" />
           </div>
-          <div className="absolute bottom-0 w-full h-0.5 bg-[#cc0000]"></div>
+        </div>
+      );
+
+    case 'operations-blueprint':
+      return (
+        <div className={`${cardBase} bg-[#fbfaf7] text-[0px]`}>
+          <div className="grid grid-cols-[68%_32%] border-t-4 border-[#18232d]">
+            <div className="relative bg-[#18232d] p-2">
+              <div className="mb-1 h-2.5 w-4/5 bg-white" />
+              <div className="h-1 w-1/2 bg-[#ef8f22]" />
+              <div className="absolute bottom-0 right-0 h-3 w-3 bg-[#ef8f22]" />
+            </div>
+            <div className="space-y-1 border-l-2 border-[#ef8f22] bg-[#eef0ed] p-1.5">
+              <div className="h-0.5 w-full bg-slate-400" />
+              <div className="h-0.5 w-4/5 bg-slate-300" />
+              <div className="h-0.5 w-full bg-slate-400" />
+            </div>
+          </div>
+          <div className="space-y-1.5 p-2">
+            <div className="flex border-y border-slate-300">
+              <div className="w-1 bg-[#ef8f22]" />
+              <div className="m-1 h-1 w-1/3 bg-[#18232d]" />
+            </div>
+            <div className="h-0.5 w-full bg-slate-300" />
+            <div className="h-0.5 w-5/6 bg-slate-300" />
+          </div>
         </div>
       );
 

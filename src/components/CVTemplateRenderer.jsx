@@ -26,6 +26,11 @@ import TechDevOpsTemplate from './templates/TechDevOpsTemplate';
 import TechSiliconTemplate from './templates/TechSiliconTemplate';
 import TechGoogleTemplate from './templates/TechGoogleTemplate';
 import ExecutiveEnergyTemplate from './templates/ExecutiveEnergyTemplate';
+import OperationsBlueprintTemplate from './templates/OperationsBlueprintTemplate';
+import ApplyRightBandTemplate from './templates/ApplyRightBandTemplate';
+import ApplyRightBandTwinTemplate from './templates/ApplyRightBandTwinTemplate';
+import ApplyRightMonoTemplate from './templates/ApplyRightMonoTemplate';
+import ApplyRightNavyTemplate from './templates/ApplyRightNavyTemplate';
 import EnergySLBTemplate from './templates/EnergySLBTemplate';
 import EnergyTotalTemplate from './templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from './templates/EnergySeplatTemplate';
@@ -33,6 +38,12 @@ import EnergyHalliburtonTemplate from './templates/EnergyHalliburtonTemplate';
 import EnergyNLNGTemplate from './templates/EnergyNLNGTemplate';
 import TheProfileTemplate from './templates/TheProfileTemplate';
 import TheAscentTemplate from './templates/TheAscentTemplate';
+import {
+  AngularCorporateTemplate,
+  NavyPortraitTemplate,
+  SalesSidebarTemplate,
+  SlateTimelineTemplate,
+} from './templates/SignatureCollectionTemplates';
 
 // Pure, read-only CV renderer. Takes an application (with `optimizedCV` markdown
 // and `templateId`) and renders it with the same template components used by the
@@ -62,6 +73,11 @@ const TEMPLATES = {
   'executive-strategy': ExecutiveStrategyTemplate,
   'executive-corporate': ExecutiveCorporateTemplate,
   'executive-energy': ExecutiveEnergyTemplate,
+  'operations-blueprint': OperationsBlueprintTemplate,
+  'applyright-band': ApplyRightBandTemplate,
+  'applyright-band-twin': ApplyRightBandTwinTemplate,
+  'applyright-mono': ApplyRightMonoTemplate,
+  'applyright-navy': ApplyRightNavyTemplate,
   'energy-slb': EnergySLBTemplate,
   'energy-total': EnergyTotalTemplate,
   'energy-seplat': EnergySeplatTemplate,
@@ -69,6 +85,10 @@ const TEMPLATES = {
   'energy-nlng': EnergyNLNGTemplate,
   'the-profile': TheProfileTemplate,
   'the-ascent': TheAscentTemplate,
+  'slate-timeline': SlateTimelineTemplate,
+  'navy-portrait': NavyPortraitTemplate,
+  'angular-corporate': AngularCorporateTemplate,
+  'sales-sidebar': SalesSidebarTemplate,
 };
 
 // Extract a minimal contact profile from the CV markdown (same heuristic as Preview).

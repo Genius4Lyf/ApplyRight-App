@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Detect a coarse role family from the user's target job title (or any
@@ -42,93 +43,38 @@ export const detectRoleFamily = (targetTitle = '', fallbackTitle = '') => {
 };
 
 /**
- * Static example bank — short, realistic bullets organized by role family
- * and example "kind" (work bullet vs project description vs summary).
+ * Shape of the example bank — how many example strings exist per role family and
+ * "kind" (work bullet vs project description vs summary). The strings themselves
+ * live in the locale files under `cvBuilder.examples.<kind>.<family>.<index>` (this
+ * is real coaching content, not chrome, so it needs a genuine translation per
+ * locale — this module only tracks how many entries to look up).
  *
  * Goal: show users what "good" looks like with concrete numbers, action verbs,
  * and visible impact — without giving them text to copy verbatim.
  */
-const EXAMPLES = {
+const EXAMPLE_COUNTS = {
   bullet: {
-    engineering: [
-      'Built a real-time notification service in Node.js + Redis, cutting end-to-end delivery from 4s to 280ms across 12K daily active users.',
-      'Led the migration of 8 services from EC2 to Kubernetes, reducing monthly infra spend by 38% and deploy time from 45 min to 6 min.',
-      'Refactored the payment retry logic to fix a duplicate-charge bug affecting ~2% of transactions; recovered ~$140K in disputed revenue per quarter.',
-    ],
-    data: [
-      'Built a churn prediction model in Python (scikit-learn) achieving 0.87 AUC; rolled into product CRM, lifting at-risk save rate from 12% to 27%.',
-      'Designed an experimentation framework adopted by 6 product teams; reduced time-to-test launch from 2 weeks to 3 days.',
-      'Replaced a 4-hour daily ETL with a streaming Kafka pipeline; cut data latency to under 5 minutes for 22 downstream dashboards.',
-    ],
-    product: [
-      'Launched a self-serve onboarding flow that lifted day-7 activation from 31% to 49%, contributing $1.8M in incremental ARR over two quarters.',
-      'Killed two underperforming product lines after 6 weeks of usage analysis; redirected the team to ship a single feature that grew DAU 22%.',
-      'Ran weekly customer interviews with 40+ enterprise users; insights drove a roadmap pivot that closed two $250K+ deals.',
-    ],
-    design: [
-      'Redesigned the checkout flow based on session-replay analysis; cut cart abandonment from 38% to 24% within 6 weeks.',
-      'Built a design system used across 4 product surfaces and 35 components; reduced new-screen design time from 3 days to 8 hours.',
-      'Led usability testing with 18 participants per quarter; findings shaped the dashboard rebuild that lifted CSAT from 6.8 to 8.2.',
-    ],
-    marketing: [
-      'Built a content engine of 40+ SEO articles in 6 months; grew organic monthly visitors from 8K to 64K and contributed 22% of new signups.',
-      'Owned paid social spend of $80K/month across Meta and TikTok; brought CAC down 31% while doubling lead volume.',
-      'Launched a webinar series with 6 events and 2,400+ registrants; sourced $480K in pipeline within the first quarter.',
-    ],
-    sales: [
-      'Closed $1.4M in net-new ARR in FY24, 142% of quota; ranked #2 of 14 reps in the segment.',
-      'Built and ran a 3-stage outbound cadence; lifted reply rate from 4% to 11% and booked 38 qualified meetings per quarter.',
-      'Owned the migration of 22 legacy customers to the new platform; retained 97% with $620K in expanded contracts.',
-    ],
-    operations: [
-      'Mapped and rebuilt the order-fulfillment process across 3 warehouses; cut average fulfillment time from 38 hours to 14 hours.',
-      'Negotiated 4 new vendor contracts saving $220K annually; introduced a quarterly review cadence to keep terms competitive.',
-      'Led a cross-functional Kaizen sprint that cut returns rate from 7.4% to 4.1% in two quarters.',
-    ],
-    finance: [
-      'Built the rolling 18-month forecast model used in 3 board reviews; identified a $1.2M cost-saving opportunity in vendor consolidation.',
-      'Automated the monthly close process with Power Query and Python; reduced close from 9 days to 4 days.',
-      'Managed cash positioning across 6 currencies and 12 accounts; reduced FX losses by 28% YoY.',
-    ],
-    hr: [
-      'Rebuilt the engineering interview loop; raised offer-acceptance rate from 51% to 78% over two hiring cycles.',
-      'Rolled out a peer-feedback program to 240 employees; engagement score on "I get useful feedback" rose from 6.1 to 7.9.',
-      'Closed 22 senior hires in a single quarter, 30% of them from underrepresented groups.',
-    ],
-    customer: [
-      'Owned a portfolio of 38 enterprise accounts ($14M ARR); achieved 119% net revenue retention through targeted expansion plays.',
-      'Reduced average ticket resolution time from 22h to 9h by rebuilding the macros library and routing logic.',
-      'Drove 14 customer reference calls and 6 case studies, directly cited in $2.3M of closed-won deals.',
-    ],
-    generic: [
-      'Led a cross-functional initiative across 3 teams that delivered $X in measurable impact within Y months.',
-      'Built and shipped Z, used by N people, that reduced [metric] from A to B.',
-      'Owned [responsibility] end-to-end; surfaced findings that changed [decision] and saved [X hours / $Y].',
-    ],
+    engineering: 3,
+    data: 3,
+    product: 3,
+    design: 3,
+    marketing: 3,
+    sales: 3,
+    operations: 3,
+    finance: 3,
+    hr: 3,
+    customer: 3,
+    generic: 3,
   },
   project: {
-    engineering: [
-      'A weekend project: a Discord bot in Python that summarizes long threads using OpenAI; ~600 users across 12 servers.',
-      'Open-source: a Tailwind component library (200+ stars on GitHub) used in two production apps.',
-    ],
-    data: [
-      'Kaggle: top 8% solution to the "store sales forecasting" challenge using LightGBM and feature engineering on holiday/promo signals.',
-      "Personal: built a dashboard tracking my city's public transit reliability — 18 months of GTFS data, deployed on Streamlit.",
-    ],
-    generic: [
-      'A short, descriptive name + 1-2 lines on what it does, who uses it, and the most concrete outcome you can name.',
-    ],
+    engineering: 2,
+    data: 2,
+    generic: 1,
   },
   summary: {
-    engineering: [
-      'Senior engineer with 7 years building scalable backend systems in Go and Python. Led migrations affecting 30+ services and mentored a team of 5. Looking to ship infrastructure that scales gracefully and reduces on-call pain.',
-    ],
-    product: [
-      'Product manager with 5 years shipping B2B SaaS to mid-market customers. Took an internal tool from 0 to $4M ARR through three pricing iterations and a self-serve motion. Strongest at turning customer pain into shipped roadmap.',
-    ],
-    generic: [
-      "A 2-3 sentence summary of who you are professionally, what you've done that's most relevant to the role, and what you're looking for next. Specific > generic.",
-    ],
+    engineering: 1,
+    product: 1,
+    generic: 1,
   },
 };
 
@@ -145,10 +91,15 @@ const EXAMPLES = {
  *   label    - optional override for the toggle text
  */
 const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const family = role || detectRoleFamily(targetTitle || '');
-  const bank = EXAMPLES[kind] || {};
-  const candidates = bank[family] || bank.generic || [];
+  const bank = EXAMPLE_COUNTS[kind] || {};
+  const resolvedFamily = bank[family] ? family : 'generic';
+  const count = bank[resolvedFamily] || 0;
+  const candidates = Array.from({ length: count }, (_, i) =>
+    t(`cvBuilder.examples.${kind}.${resolvedFamily}.${i}`)
+  );
 
   if (candidates.length === 0) return null;
 
@@ -159,7 +110,10 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-colors"
       >
-        {label || (open ? 'Hide example' : 'Show me an example')}
+        {label ||
+          (open
+            ? t('cvBuilder.inlineExample.hideExample')
+            : t('cvBuilder.inlineExample.showExample'))}
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -188,7 +142,7 @@ const InlineExample = ({ kind = 'bullet', role, targetTitle, label }) => {
                 </p>
               ))}
               <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700 mt-2">
-                These are examples for inspiration — write your own truthfully.
+                {t('cvBuilder.inlineExample.disclaimer')}
               </p>
             </div>
           </motion.div>

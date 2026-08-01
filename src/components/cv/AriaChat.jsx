@@ -40,7 +40,7 @@ const AriaChat = ({
   // The opening is ALWAYS regenerated (never stored), so state-aware coaching stays
   // current; only the Q&A after it is persisted per step — ON the draft
   // (cvData.coachChats), so it survives navigation, refresh, and other devices.
-  const opening = getStepCoaching(currentStepId, cvData).message;
+  const opening = getStepCoaching(t, currentStepId, cvData).message;
   const savedQA = cvData?.coachChats?.[currentStepId] || [];
 
   const [messages, setMessages] = useState([
@@ -311,7 +311,7 @@ const AriaChat = ({
           {/* Ready-made questions — shown under the opening until the first send. */}
           {showChips && (
             <div className="flex flex-wrap gap-1.5">
-              {suggestionsFor(currentStepId).map((chip) => (
+              {suggestionsFor(t, currentStepId).map((chip) => (
                 <button
                   key={chip}
                   type="button"
@@ -385,7 +385,7 @@ const AriaChat = ({
                         onClick={() => generateSummary(s.k)}
                         className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                       >
-                        {s.label}
+                        {t(s.labelKey)}
                       </button>
                     ))}
                   </div>

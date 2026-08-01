@@ -17,10 +17,11 @@ const statusFor = (earned, total) =>
   earned >= total ? 'complete' : earned > 0 ? 'partial' : 'missing';
 
 /**
+ * @param {function} t - i18next translate function
  * @param {object} cvData - The CV Builder's live state (CVContext).
  * @returns {{ score:number, sections:Array, recommended:Array }}
  */
-export function computeCvHealth(cvData = {}) {
+export function computeCvHealth(t, cvData = {}) {
   const info = cvData.personalInfo || {};
   const exp = cvData.experience || [];
   const skills = (cvData.skills || []).map(skillName).filter(Boolean);
@@ -31,10 +32,10 @@ export function computeCvHealth(cvData = {}) {
   // Contact Information (15) — full name · email · phone · LinkedIn  (builder: Heading)
   const hasName = !!info.fullName && info.fullName !== 'Candidate';
   const contactReqs = [
-    { label: 'Full name', met: hasName },
-    { label: 'Email address', met: !!info.email },
-    { label: 'Phone number', met: !!info.phone },
-    { label: 'LinkedIn URL', met: !!info.linkedin },
+    { label: t('cvBuilder.cvHealth.sections.contact.requirements.0.label'), met: hasName },
+    { label: t('cvBuilder.cvHealth.sections.contact.requirements.1.label'), met: !!info.email },
+    { label: t('cvBuilder.cvHealth.sections.contact.requirements.2.label'), met: !!info.phone },
+    { label: t('cvBuilder.cvHealth.sections.contact.requirements.3.label'), met: !!info.linkedin },
   ];
   const contactMet = contactReqs.filter((r) => r.met).length;
   const contactEarned = Math.round((15 * contactMet) / 4);
@@ -44,11 +45,11 @@ export function computeCvHealth(cvData = {}) {
   });
   const contact = {
     id: 'contact',
-    title: 'Contact Information',
+    title: t('cvBuilder.cvHealth.sections.contact.title'),
     total: 15,
     earned: contactEarned,
     status: statusFor(contactEarned, 15),
-    detail: `${contactMet}/4 details added`,
+    detail: t('cvBuilder.cvHealth.detail.contact', { met: contactMet }),
     requirements: contactReqs,
   };
 
@@ -66,22 +67,30 @@ export function computeCvHealth(cvData = {}) {
   const workEarned = rolesEarned + bulletsEarned + quantEarned;
   const history = {
     id: 'history',
-    title: 'Work History',
+    title: t('cvBuilder.cvHealth.sections.history.title'),
     total: 30,
     earned: workEarned,
     status: statusFor(workEarned, 30),
     detail: exp.length
-      ? `${exp.length} role${exp.length > 1 ? 's' : ''} · ${allBullets.length} bullet${allBullets.length === 1 ? '' : 's'}, ${quantified} with numbers`
-      : 'Not started',
+      ? t('cvBuilder.cvHealth.detail.history', {
+          count: exp.length,
+          bullets: allBullets.length,
+          quantified,
+        })
+      : t('cvBuilder.cvHealth.detail.notStarted'),
     requirements: [
-      { label: 'Add at least 2 roles', met: exp.length >= 2, gain: Math.max(0, 12 - rolesEarned) },
       {
-        label: '2–3 bullet points per role',
+        label: t('cvBuilder.cvHealth.sections.history.requirements.0.label'),
+        met: exp.length >= 2,
+        gain: Math.max(0, 12 - rolesEarned),
+      },
+      {
+        label: t('cvBuilder.cvHealth.sections.history.requirements.1.label'),
         met: exp.length > 0 && rolesEnoughBullets === exp.length,
         gain: Math.max(0, 8 - bulletsEarned),
       },
       {
-        label: 'Quantify achievements with numbers',
+        label: t('cvBuilder.cvHealth.sections.history.requirements.2.label'),
         met: ratio >= 0.3,
         gain: Math.max(0, 10 - quantEarned),
       },
@@ -91,12 +100,18 @@ export function computeCvHealth(cvData = {}) {
   // Projects — recommended, NOT scored (a CV can hit 100% without it).
   const projectsSection = {
     id: 'projects',
-    title: 'Projects',
+    title: t('cvBuilder.cvHealth.sections.projects.title'),
     recommended: true,
     status: projects.length >= 1 ? 'complete' : 'missing',
-    detail: projects.length ? `${projects.length} added` : 'None yet',
+    detail: projects.length
+      ? t('cvBuilder.cvHealth.detail.projects', { count: projects.length })
+      : t('cvBuilder.cvHealth.detail.noneYet'),
     requirements: [
-      { label: 'Add a project to showcase hands-on work', met: projects.length >= 1, gain: 0 },
+      {
+        label: t('cvBuilder.cvHealth.sections.projects.requirements.0.label'),
+        met: projects.length >= 1,
+        gain: 0,
+      },
     ],
   };
 
@@ -107,12 +122,18 @@ export function computeCvHealth(cvData = {}) {
   );
   const certificationsSection = {
     id: 'certifications',
-    title: 'Certifications',
+    title: t('cvBuilder.cvHealth.sections.certifications.title'),
     recommended: true,
     status: certs.length >= 1 ? 'complete' : 'missing',
-    detail: certs.length ? `${certs.length} added` : 'None yet',
+    detail: certs.length
+      ? t('cvBuilder.cvHealth.detail.certifications', { count: certs.length })
+      : t('cvBuilder.cvHealth.detail.noneYet'),
     requirements: [
-      { label: 'Add any licences, certificates, or training', met: certs.length >= 1, gain: 0 },
+      {
+        label: t('cvBuilder.cvHealth.sections.certifications.requirements.0.label'),
+        met: certs.length >= 1,
+        gain: 0,
+      },
     ],
   };
 
@@ -120,13 +141,19 @@ export function computeCvHealth(cvData = {}) {
   const eduEarned = edu.length >= 1 ? 15 : 0;
   const education = {
     id: 'education',
-    title: 'Education',
+    title: t('cvBuilder.cvHealth.sections.education.title'),
     total: 15,
     earned: eduEarned,
     status: statusFor(eduEarned, 15),
-    detail: edu.length ? `${edu.length} ${edu.length > 1 ? 'entries' : 'entry'}` : 'Not started',
+    detail: edu.length
+      ? t('cvBuilder.cvHealth.detail.education', { count: edu.length })
+      : t('cvBuilder.cvHealth.detail.notStarted'),
     requirements: [
-      { label: 'Add at least one qualification', met: edu.length >= 1, gain: Math.max(0, 15 - eduEarned) },
+      {
+        label: t('cvBuilder.cvHealth.sections.education.requirements.0.label'),
+        met: edu.length >= 1,
+        gain: Math.max(0, 15 - eduEarned),
+      },
     ],
   };
 
@@ -135,13 +162,19 @@ export function computeCvHealth(cvData = {}) {
     skills.length >= 8 ? 25 : skills.length >= 4 ? 15 : skills.length >= 1 ? 6 : 0;
   const skillsSection = {
     id: 'skills',
-    title: 'Skills',
+    title: t('cvBuilder.cvHealth.sections.skills.title'),
     total: 25,
     earned: skillsEarned,
     status: statusFor(skillsEarned, 25),
-    detail: skills.length ? `${skills.length} listed` : 'Not started',
+    detail: skills.length
+      ? t('cvBuilder.cvHealth.detail.skills', { count: skills.length })
+      : t('cvBuilder.cvHealth.detail.notStarted'),
     requirements: [
-      { label: 'List at least 8 relevant skills', met: skills.length >= 8, gain: Math.max(0, 25 - skillsEarned) },
+      {
+        label: t('cvBuilder.cvHealth.sections.skills.requirements.0.label'),
+        met: skills.length >= 8,
+        gain: Math.max(0, 25 - skillsEarned),
+      },
     ],
   };
 
@@ -150,13 +183,19 @@ export function computeCvHealth(cvData = {}) {
   const summaryEarned = summaryMet ? 15 : summaryText.length > 0 ? 8 : 0;
   const summary = {
     id: 'summary',
-    title: 'Professional Summary',
+    title: t('cvBuilder.cvHealth.sections.summary.title'),
     total: 15,
     earned: summaryEarned,
     status: statusFor(summaryEarned, 15),
-    detail: summaryText.length ? `${summaryText.length} characters` : 'Not started',
+    detail: summaryText.length
+      ? t('cvBuilder.cvHealth.detail.summary', { count: summaryText.length })
+      : t('cvBuilder.cvHealth.detail.notStarted'),
     requirements: [
-      { label: 'A 3–4 sentence summary (100+ characters)', met: summaryMet, gain: Math.max(0, 15 - summaryEarned) },
+      {
+        label: t('cvBuilder.cvHealth.sections.summary.requirements.0.label'),
+        met: summaryMet,
+        gain: Math.max(0, 15 - summaryEarned),
+      },
     ],
   };
 

@@ -8,19 +8,48 @@ import { computeCvHealth } from './cvHealth';
 
 // The seven building steps (Review/finalize is excluded — there the panel
 // switches to a live preview). Used for the "sections complete" progress that
-// teases the preview waiting at Review.
+// teases the preview waiting at Review. `label` is a translation key, resolved by
+// callers via t() — this module has no i18next context of its own.
 const BUILDING_STEPS = [
-  { id: 'target_job', label: 'Target Job', done: (cv) => !!cv.targetJob?.title?.trim() },
-  { id: 'heading', label: 'Heading', done: (cv) => !!cv.personalInfo?.fullName },
-  { id: 'history', label: 'Work History', done: (cv) => (cv.experience?.length || 0) > 0 },
-  { id: 'projects', label: 'Projects', done: (cv) => (cv.projects?.length || 0) > 0 },
-  { id: 'education', label: 'Education', done: (cv) => (cv.education?.length || 0) > 0 },
-  { id: 'skills', label: 'Skills', done: (cv) => (cv.skills?.length || 0) > 0 },
-  { id: 'summary', label: 'Summary', done: (cv) => !!cv.professionalSummary?.trim() },
+  {
+    id: 'target_job',
+    labelKey: 'cvBuilder.coach.stepNames.target_job',
+    done: (cv) => !!cv.targetJob?.title?.trim(),
+  },
+  {
+    id: 'heading',
+    labelKey: 'cvBuilder.coach.stepNames.heading',
+    done: (cv) => !!cv.personalInfo?.fullName,
+  },
+  {
+    id: 'history',
+    labelKey: 'cvBuilder.coach.stepNames.history',
+    done: (cv) => (cv.experience?.length || 0) > 0,
+  },
+  {
+    id: 'projects',
+    labelKey: 'cvBuilder.coach.stepNames.projects',
+    done: (cv) => (cv.projects?.length || 0) > 0,
+  },
+  {
+    id: 'education',
+    labelKey: 'cvBuilder.coach.stepNames.education',
+    done: (cv) => (cv.education?.length || 0) > 0,
+  },
+  {
+    id: 'skills',
+    labelKey: 'cvBuilder.coach.stepNames.skills',
+    done: (cv) => (cv.skills?.length || 0) > 0,
+  },
+  {
+    id: 'summary',
+    labelKey: 'cvBuilder.coach.stepNames.summary',
+    done: (cv) => !!cv.professionalSummary?.trim(),
+  },
 ];
 
-export function getSectionProgress(cvData = {}) {
-  const remaining = BUILDING_STEPS.filter((s) => !s.done(cvData)).map((s) => s.label);
+export function getSectionProgress(t, cvData = {}) {
+  const remaining = BUILDING_STEPS.filter((s) => !s.done(cvData)).map((s) => t(s.labelKey));
   const done = BUILDING_STEPS.length - remaining.length;
   return { done, total: BUILDING_STEPS.length, remaining, allDone: remaining.length === 0 };
 }
@@ -45,15 +74,16 @@ export function firstNameOf(cvData = {}) {
  * first name so even the fallback feels like a real coach.
  * @returns {{ title, message, tips: string[], tone: 'start'|'progress'|'win' }}
  */
-export function getStepCoaching(stepId, cvData = {}) {
-  const base = baseStepCoaching(stepId, cvData);
+export function getStepCoaching(t, stepId, cvData = {}) {
+  const base = baseStepCoaching(t, stepId, cvData);
   const name = firstNameOf(cvData);
   if (!name || base.message.startsWith(name) || base.message.startsWith('Hey ')) return base;
-  return { ...base, message: `Hey ${name} — ${base.message}` };
+  return { ...base, message: t('cvBuilder.coach.heyName', { name, message: base.message }) };
 }
 
-function baseStepCoaching(stepId, cvData = {}) {
+function baseStepCoaching(t, stepId, cvData = {}) {
   const cv = cvData;
+  const S = 'cvBuilder.coach.steps';
   // What Aria "remembers" from the Target step — lets later steps reference the
   // specific role/keywords the student shared, so the coach reads as one
   // conversation. Guarded: if they skipped the JD these are empty and copy stays generic.
@@ -64,39 +94,34 @@ function baseStepCoaching(stepId, cvData = {}) {
       ? ''
       : targetKws.length === 1
         ? targetKws[0]
-        : `${targetKws.slice(0, -1).join(', ')} and ${targetKws[targetKws.length - 1]}`;
+        : t('cvBuilder.coach.kwListJoin', {
+            head: targetKws.slice(0, -1).join(', '),
+            tail: targetKws[targetKws.length - 1],
+          });
   switch (stepId) {
     case 'target_job': {
       const hasTitle = !!cv.targetJob?.title?.trim();
       const hasDesc = !!cv.targetJob?.description?.trim();
       if (!hasTitle) {
         return {
-          title: "Let's aim at a target 🎯",
-          message:
-            "Start by telling me the role you want. Paste the job description too — I'll use it to coach every other section toward exactly what this employer is scanning for.",
-          tips: [
-            'Use the real job title from the posting (e.g. "Frontend Engineer", not "Coder").',
-            'Pasting the full description unlocks keyword matching later.',
-          ],
+          title: t(`${S}.target_job.empty.title`),
+          message: t(`${S}.target_job.empty.message`),
+          tips: [t(`${S}.target_job.empty.tips.0`), t(`${S}.target_job.empty.tips.1`)],
           tone: 'start',
         };
       }
       if (!hasDesc) {
         return {
-          title: `Aiming for ${cv.targetJob.title} 👍`,
-          message:
-            "Great choice. Now paste the job description — that's what lets me match your CV to the exact keywords recruiters and ATS look for.",
-          tips: [
-            'No description handy? You can still build a strong general CV and add one later.',
-          ],
+          title: t(`${S}.target_job.titled.title`, { title: cv.targetJob.title }),
+          message: t(`${S}.target_job.titled.message`),
+          tips: [t(`${S}.target_job.titled.tips.0`)],
           tone: 'progress',
         };
       }
       return {
-        title: 'Target locked in ✅',
-        message:
-          "Perfect — I've got the role and the description. From here, everything you write gets coached toward landing this specific job.",
-        tips: ['Next: your heading. Let’s make you easy to reach.'],
+        title: t(`${S}.target_job.complete.title`),
+        message: t(`${S}.target_job.complete.message`),
+        tips: [t(`${S}.target_job.complete.tips.0`)],
         tone: 'win',
       };
     }
@@ -106,31 +131,26 @@ function baseStepCoaching(stepId, cvData = {}) {
       const have = ['fullName', 'email', 'phone', 'linkedin'].filter((k) => info[k]);
       if (have.length <= 1) {
         return {
-          title: 'First impressions count 👋',
-          message:
-            'The very top of your CV is the first thing a recruiter reads. Let’s make sure they can reach you in seconds.',
-          tips: [
-            'Name, email and phone are the essentials.',
-            'Add your LinkedIn — recruiters almost always check it.',
-          ],
+          title: t(`${S}.heading.empty.title`),
+          message: t(`${S}.heading.empty.message`),
+          tips: [t(`${S}.heading.empty.tips.0`), t(`${S}.heading.empty.tips.1`)],
           tone: 'start',
         };
       }
       if (have.length < 4) {
         return {
-          title: 'Looking reachable 📇',
-          message:
-            'Nice. A couple more details and recruiters will have every way they need to contact you.',
+          title: t(`${S}.heading.partial.title`),
+          message: t(`${S}.heading.partial.message`),
           tips: [
-            !info.phone && 'Add a phone number.',
-            !info.linkedin && 'Add your LinkedIn URL.',
+            !info.phone && t(`${S}.heading.partial.tipPhone`),
+            !info.linkedin && t(`${S}.heading.partial.tipLinkedin`),
           ].filter(Boolean),
           tone: 'progress',
         };
       }
       return {
-        title: 'Contact details nailed ✅',
-        message: 'You’re easy to reach — exactly what a recruiter wants. On to your experience.',
+        title: t(`${S}.heading.complete.title`),
+        message: t(`${S}.heading.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -141,32 +161,25 @@ function baseStepCoaching(stepId, cvData = {}) {
       const { count, quantified } = bulletStats(exp);
       if (exp.length === 0) {
         return {
-          title: 'This is the heart of your CV ❤️',
+          title: t(`${S}.history.empty.title`),
           message: hasTarget
-            ? "Your work experience carries the most weight — it's your best shot at proving you fit the role you shared. Add a role and let's make every bullet map to what that job's really after."
-            : 'Your work experience carries the most weight. Add a role and let’s make each bullet earn its place — you’ve got real wins to show.',
-          tips: [
-            'Lead every bullet with a strong action verb: Led, Built, Grew, Shipped.',
-            'Avoid "Responsible for…" — show the result, not the duty.',
-          ],
+            ? t(`${S}.history.empty.message_targeted`)
+            : t(`${S}.history.empty.message_untargeted`),
+          tips: [t(`${S}.history.empty.tips.0`), t(`${S}.history.empty.tips.1`)],
           tone: 'start',
         };
       }
       if (count > 0 && quantified / count < 0.3) {
         return {
-          title: 'Strong start — now add numbers 📈',
-          message: `You've got ${exp.length} role${exp.length > 1 ? 's' : ''} down. The single biggest upgrade now: put numbers on your wins. "Grew signups 40%" beats "Grew signups" every time.`,
-          tips: [
-            'Quantify with %, ₦/$, time saved, or volume handled.',
-            'Even rough numbers ("~500 users") beat none.',
-          ],
+          title: t(`${S}.history.needsNumbers.title`),
+          message: t(`${S}.history.needsNumbers.message`, { count: exp.length }),
+          tips: [t(`${S}.history.needsNumbers.tips.0`), t(`${S}.history.needsNumbers.tips.1`)],
           tone: 'progress',
         };
       }
       return {
-        title: 'Now that’s a results CV 🔥',
-        message:
-          'Your bullets lead with action and back it with numbers — this is exactly what gets you shortlisted. Keep that standard for every role.',
+        title: t(`${S}.history.complete.title`),
+        message: t(`${S}.history.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -176,20 +189,15 @@ function baseStepCoaching(stepId, cvData = {}) {
       const projects = cv.projects || [];
       if (projects.length === 0) {
         return {
-          title: 'Projects prove you can do it 🛠️',
-          message:
-            'Projects are powerful — especially if your experience is still growing. They show initiative and real, hands-on skill.',
-          tips: [
-            'Name what you built and the impact or outcome.',
-            'Link to it (GitHub, live demo) if you can.',
-          ],
+          title: t(`${S}.projects.empty.title`),
+          message: t(`${S}.projects.empty.message`),
+          tips: [t(`${S}.projects.empty.tips.0`), t(`${S}.projects.empty.tips.1`)],
           tone: 'start',
         };
       }
       return {
-        title: 'Great — projects add proof ✅',
-        message:
-          'These show you don’t just talk about skills, you apply them. That builds real confidence with hiring teams.',
+        title: t(`${S}.projects.complete.title`),
+        message: t(`${S}.projects.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -199,17 +207,15 @@ function baseStepCoaching(stepId, cvData = {}) {
       const edu = cv.education || [];
       if (edu.length === 0) {
         return {
-          title: 'Add your qualifications 🎓',
-          message:
-            'Many ATS filter by degree before a human ever looks. List your education — and don’t worry if it’s not a perfect match for the role; it still counts.',
-          tips: ['Include the school, qualification and year.'],
+          title: t(`${S}.education.empty.title`),
+          message: t(`${S}.education.empty.message`),
+          tips: [t(`${S}.education.empty.tips.0`)],
           tone: 'start',
         };
       }
       return {
-        title: 'Education in place ✅',
-        message:
-          'Good — that clears a common automated filter. You’re building a complete picture.',
+        title: t(`${S}.education.complete.title`),
+        message: t(`${S}.education.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -219,33 +225,29 @@ function baseStepCoaching(stepId, cvData = {}) {
       const skills = cv.skills || [];
       if (skills.length < 4) {
         return {
-          title: 'Skills are the ATS’s matching ground 🧩',
+          title: t(`${S}.skills.empty.title`),
           message: kwList
-            ? `This is where keyword matching happens — and I remember the job you shared leaned on ${kwList}. List the ones you genuinely have here, then add the rest of your real tools (aim for 8+).`
+            ? t(`${S}.skills.empty.message_withKeywords`, { kwList })
             : hasTarget
-              ? 'This is where keyword matching happens. Pull the tools and skills straight from the job you shared — the ones you genuinely have — and aim for 8 or more.'
-              : 'This section is where keyword matching happens. List the tools and technologies from the job description that you genuinely have — aim for 8 or more.',
-          tips: [
-            'Mirror the wording in the job post (e.g. "JavaScript" if that’s what they wrote).',
-            'Only list skills you can speak to in an interview.',
-          ],
+              ? t(`${S}.skills.empty.message_targeted`)
+              : t(`${S}.skills.empty.message_generic`),
+          tips: [t(`${S}.skills.empty.tips.0`), t(`${S}.skills.empty.tips.1`)],
           tone: 'start',
         };
       }
       if (skills.length < 8) {
         return {
-          title: 'Good list — push for a few more 💪',
+          title: t(`${S}.skills.partial.title`),
           message: kwList
-            ? `You've listed ${skills.length}. Scan the job you shared once more for any you missed — I spotted ${kwList} in there. More real matches means more of its keywords ticked.`
-            : `You've listed ${skills.length}. A handful more relevant skills means more of the job's keywords matched. Scan the description for any you missed.`,
-          tips: ['Aim for 8-12 genuine, relevant skills.'],
+            ? t(`${S}.skills.partial.message_withKeywords`, { count: skills.length, kwList })
+            : t(`${S}.skills.partial.message_generic`, { count: skills.length }),
+          tips: [t(`${S}.skills.partial.tips.0`)],
           tone: 'progress',
         };
       }
       return {
-        title: 'Skills section is strong ✅',
-        message:
-          'A rich, relevant skills list — that’s what gets you past keyword screening. Nicely done.',
+        title: t(`${S}.skills.complete.title`),
+        message: t(`${S}.skills.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -255,30 +257,25 @@ function baseStepCoaching(stepId, cvData = {}) {
       const summary = (cv.professionalSummary || '').trim();
       if (summary.length === 0) {
         return {
-          title: 'Your headline pitch 🎤',
+          title: t(`${S}.summary.empty.title`),
           message: hasTarget
-            ? "Three or four punchy sentences: who you are, your strongest proof, and — since you're aiming for a specific role — a clear nod to that job so the fit lands in the very first line."
-            : 'Three or four punchy sentences: who you are, your strongest proof, and what you’re aiming for. I’ll tell you the moment it’s strong enough.',
-          tips: [
-            'Open with your role and years of experience.',
-            'Drop in one standout achievement.',
-          ],
+            ? t(`${S}.summary.empty.message_targeted`)
+            : t(`${S}.summary.empty.message_untargeted`),
+          tips: [t(`${S}.summary.empty.tips.0`), t(`${S}.summary.empty.tips.1`)],
           tone: 'start',
         };
       }
       if (summary.length < 100) {
         return {
-          title: 'Good — give it a little more 📝',
-          message:
-            'You’ve started your pitch. Expand it to 3-4 sentences so it gives recruiters (and the ATS) more to grab onto.',
-          tips: ['Add what you’re aiming for and one proof point.'],
+          title: t(`${S}.summary.partial.title`),
+          message: t(`${S}.summary.partial.message`),
+          tips: [t(`${S}.summary.partial.tips.0`)],
           tone: 'progress',
         };
       }
       return {
-        title: 'That’s a sharp summary ✅',
-        message:
-          'Strong, specific and the right length. You’ve done the hard part — head to Review to see it all come together.',
+        title: t(`${S}.summary.complete.title`),
+        message: t(`${S}.summary.complete.message`),
         tips: [],
         tone: 'win',
       };
@@ -290,30 +287,38 @@ function baseStepCoaching(stepId, cvData = {}) {
     // requirement) so the user knows exactly what stands between them and done.
     // Deterministic from CV Health, so it updates live as they fix things.
     case 'finalize': {
-      const { score, sections } = computeCvHealth(cv);
+      const { score, sections } = computeCvHealth(t, cv);
       const first = (cv.personalInfo?.fullName || '').trim().split(/\s+/)[0];
-      const hi = first && first.toLowerCase() !== 'candidate' ? `${first}, ` : '';
+      const hasName = !!(first && first.toLowerCase() !== 'candidate');
       const incomplete = sections.filter((s) => !s.recommended && s.status !== 'complete');
 
       if (incomplete.length === 0) {
         return {
-          title: 'Your CV’s ready 🎉',
-          message: `${hi}everything’s complete and reads strong — your CV’s ready. Run an ATS Deep Scan to see how you match the role, or grab it from the Live Preview.`,
+          title: t(`${S}.finalize.complete.title`),
+          message: hasName
+            ? t(`${S}.finalize.complete.message_withName`, { name: first })
+            : t(`${S}.finalize.complete.message_noName`),
           tips: [],
           tone: 'win',
         };
       }
 
       const main = incomplete[0];
-      const unmet = (main.requirements || []).find((r) => !r.met);
-      const need = unmet ? unmet.label.toLowerCase() : 'a little more detail';
-      const left =
-        incomplete.length === 1
-          ? `the one thing left is your ${main.title} — ${need}`
-          : `${incomplete.length} sections to finish — start with your ${main.title}: ${need}`;
+      const unmetIdx = (main.requirements || []).findIndex((r) => !r.met);
+      const need =
+        unmetIdx >= 0
+          ? t(`cvBuilder.coach.finalize.needs.${main.id}.${unmetIdx}`)
+          : t('cvBuilder.coach.finalize.needs.fallback');
+      const left = t(`${S}.finalize.progress.left`, {
+        count: incomplete.length,
+        section: main.title,
+        need,
+      });
       return {
-        title: 'Almost at the finish line 🏁',
-        message: `${hi}you’re at ${score}% — ${left}. Finish that and you hit 100%, which unlocks your ATS Deep Scan and your full preview.`,
+        title: t(`${S}.finalize.progress.title`),
+        message: hasName
+          ? t(`${S}.finalize.progress.message_withName`, { name: first, score, left })
+          : t(`${S}.finalize.progress.message_noName`, { score, left }),
         tips: [],
         tone: 'progress',
       };
@@ -321,9 +326,8 @@ function baseStepCoaching(stepId, cvData = {}) {
 
     default:
       return {
-        title: 'Let’s build a CV that lands interviews 🚀',
-        message:
-          'Work through each section and I’ll coach you as you go. Watch your CV Health climb — when every section’s done, a full preview is waiting at Review.',
+        title: t(`${S}.default.title`),
+        message: t(`${S}.default.message`),
         tips: [],
         tone: 'start',
       };
@@ -347,6 +351,9 @@ const FEEDBACK_SECTIONS = {
  * is context the coach needs, so it gets a "have you got a JD?" hand-off; the
  * feedback-worthy sections get a "done — how's it look?" so the user can ask for
  * feedback on demand. Each returns a `signal` string the coach acknowledges.
+ *
+ * Currently unreferenced anywhere in the CV Builder — kept as-is (untranslated)
+ * until a caller resurfaces it.
  */
 export function getQuickReplies(stepId) {
   if (stepId === 'target_job') {
@@ -383,8 +390,17 @@ export function getQuickReplies(stepId) {
 }
 
 // Human label for the step the user is on (matches the coaching copy above).
+// NOTE: getBotNudge below (the only consumer) is dead code — grepped with no
+// callers anywhere in the frontend — so this stays as plain English rather than
+// threading a `t` this module doesn't otherwise need.
 const STEP_LABELS = {
-  ...Object.fromEntries(BUILDING_STEPS.map((s) => [s.id, s.label])),
+  target_job: 'Target Job',
+  heading: 'Heading',
+  history: 'Work History',
+  projects: 'Projects',
+  education: 'Education',
+  skills: 'Skills',
+  summary: 'Summary',
   finalize: 'CV',
 };
 
@@ -404,6 +420,10 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
  * the user lands on a step. Deterministic + client-side (no AI, no network), so
  * it's free for everyone. Adapts to whether the step's criteria are already met,
  * and sprinkles in a short motivation tip at random.
+ *
+ * Unreferenced anywhere in the CV Builder as of this audit — left untranslated
+ * (English-only) rather than spending translation effort on unreachable strings.
+ * If a caller resurfaces this, it'll need `getStepCoaching` updated to take `t`.
  *
  * @param {string} stepId       current builder step id
  * @param {object} cvData       live CV data (for the name + tip state-awareness)
@@ -426,7 +446,7 @@ export function getBotNudge(stepId, cvData = {}, { isComplete = false, firstTime
   // Roughly 1-in-3 nudges is a motivation tip rather than a review invite. Prefer
   // the step's own state-aware tip (already short + ordered by importance).
   if (Math.random() < 0.34) {
-    const stepTip = getStepCoaching(stepId, cvData)?.tips?.[0];
+    const stepTip = getStepCoaching(null, stepId, cvData)?.tips?.[0];
     return stepTip || pick(GENERIC_TIPS);
   }
 

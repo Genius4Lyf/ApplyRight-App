@@ -220,7 +220,7 @@ const PlanCard = () => {
           icon={downloadsUnlimited ? ShieldCheck : Download}
           iconClasses="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
           label="CV downloads"
-          sub={downloadsUnlimited ? 'Included with your plan' : 'Clean PDF, no watermark'}
+          sub={downloadsUnlimited ? 'Included with your plan' : 'Clean, ready-to-send PDF'}
           value={downloadsLabel}
           cta={downloadsUnlimited ? null : buyingPass ? 'Starting…' : 'Buy a pass'}
           onCta={buyDownloadPass}

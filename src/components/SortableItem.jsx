@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ChevronUp, ChevronDown, Trash2, Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 /**
  * SortableItem
@@ -25,6 +26,7 @@ const SortableItem = ({
   onToggleExpand,
   children,
 }) => {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
@@ -74,7 +76,7 @@ const SortableItem = ({
             }}
             className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
           >
-            {isExpanded ? 'Collapse' : 'Edit'}
+            {isExpanded ? t('common.sortable.collapse') : t('common.sortable.edit')}
           </button>
         )}
         <AnimatePresence initial={false}>
@@ -91,8 +93,8 @@ const SortableItem = ({
                 type="button"
                 {...attributes}
                 {...listeners}
-                aria-label="Drag to reorder"
-                title="Drag to reorder"
+                aria-label={t('common.sortable.dragToReorder')}
+                title={t('common.sortable.dragToReorder')}
                 className={`${btnBase} cursor-grab active:cursor-grabbing touch-none`}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -105,8 +107,8 @@ const SortableItem = ({
                   onMoveUp();
                 }}
                 disabled={isFirst}
-                aria-label="Move up"
-                title="Move up"
+                aria-label={t('common.sortable.moveUp')}
+                title={t('common.sortable.moveUp')}
                 className={btnBase}
               >
                 <ChevronUp className="w-3.5 h-3.5" />
@@ -118,8 +120,8 @@ const SortableItem = ({
                   onMoveDown();
                 }}
                 disabled={isLast}
-                aria-label="Move down"
-                title="Move down"
+                aria-label={t('common.sortable.moveDown')}
+                title={t('common.sortable.moveDown')}
                 className={btnBase}
               >
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -136,8 +138,8 @@ const SortableItem = ({
                       e.stopPropagation();
                       onDelete();
                     }}
-                    aria-label="Delete"
-                    title="Delete"
+                    aria-label={t('common.sortable.delete')}
+                    title={t('common.sortable.delete')}
                     className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -152,8 +154,8 @@ const SortableItem = ({
         <button
           type="button"
           onClick={handleToggle}
-          aria-label={isOpen ? 'Hide actions' : 'Show actions'}
-          title={isOpen ? 'Hide actions' : 'Show actions'}
+          aria-label={isOpen ? t('common.sortable.hideActions') : t('common.sortable.showActions')}
+          title={isOpen ? t('common.sortable.hideActions') : t('common.sortable.showActions')}
           className="min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
         >
           {isOpen ? <X className="w-3.5 h-3.5" /> : <Settings className="w-3.5 h-3.5" />}

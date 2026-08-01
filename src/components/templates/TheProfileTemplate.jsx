@@ -118,8 +118,6 @@ const TheProfileTemplate = ({ markdown, userProfile }) => {
             className="text-[8.2pt] flex flex-wrap"
             style={{
               color: '#79726a',
-              borderTop: '1px solid #e6e0d6',
-              borderBottom: '1px solid #e6e0d6',
               padding: '6px 0',
             }}
           >
@@ -147,7 +145,11 @@ const TheProfileTemplate = ({ markdown, userProfile }) => {
             <h2 className="inline-block mt-3.5 mb-2 first:mt-0" {...props}>
               <span
                 className="block text-[8.6pt] font-semibold uppercase"
-                style={{ fontFamily: "'Work Sans', sans-serif", letterSpacing: '0.13em', color: '#221f1c' }}
+                style={{
+                  fontFamily: "'Work Sans', sans-serif",
+                  letterSpacing: '0.13em',
+                  color: '#221f1c',
+                }}
               >
                 {children}
               </span>
@@ -171,7 +173,11 @@ const TheProfileTemplate = ({ markdown, userProfile }) => {
           h4: ({ node, ...props }) => (
             <h4
               className="text-[8.4pt] uppercase mb-1.5"
-              style={{ fontFamily: "'Work Sans', sans-serif", letterSpacing: '0.04em', color: '#79726a' }}
+              style={{
+                fontFamily: "'Work Sans', sans-serif",
+                letterSpacing: '0.04em',
+                color: '#79726a',
+              }}
               {...props}
             />
           ),

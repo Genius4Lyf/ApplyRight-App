@@ -133,7 +133,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
             type="button"
             onClick={handleTighten}
             disabled={loading || !trimmed}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white disabled:opacity-60 disabled:cursor-not-allowed text-sm font-semibold px-4 py-2.5 transition-colors"
           >
             {loading ? (
               <>
@@ -151,10 +151,10 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
           </button>
         </div>
 
-        {/* AI proposal — thin indigo left-accent, editable-on-accept */}
+        {/* AI proposal — thin neutral left-accent, editable-on-accept */}
         {proposal !== null && (
-          <div className="mt-4 border-l-2 border-indigo-500 pl-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
+          <div className="mt-4 border-l-2 border-slate-300 dark:border-slate-600 pl-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
               {t('cvBuilder.summaryTrim.suggestedRewrite')}
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
@@ -165,7 +165,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
                 type="button"
                 onClick={useProposal}
                 disabled={!proposal}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold px-3 py-1.5 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white disabled:opacity-60 text-xs font-semibold px-3 py-1.5 transition-colors"
               >
                 <Check className="w-3.5 h-3.5" /> {t('cvBuilder.summaryTrim.useThis')}
               </button>
@@ -193,7 +193,7 @@ const SummaryTrim = ({ open, currentSummary, onApply, onClose }) => {
             type="button"
             onClick={handleApply}
             disabled={applyDisabled}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white disabled:opacity-60 disabled:cursor-not-allowed text-sm font-semibold px-4 py-2 transition-colors"
           >
             {t('cvBuilder.summaryTrim.apply')} <ArrowRight className="w-4 h-4" />
           </button>

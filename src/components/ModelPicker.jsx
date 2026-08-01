@@ -5,11 +5,11 @@ import { createPortal } from 'react-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, ChevronDown, Info, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   AI_MODELS,
   MODEL_LABELS,
   PROVIDER_GLYPH,
-  TIER_LABEL,
   modelLabel,
   modelsByTier,
   costForActionTier,
@@ -50,6 +50,11 @@ const ModelPicker = ({
   drop = 'down',
   compact = false,
 }) => {
+  const { t } = useTranslation();
+  const tierLabel = (tier) =>
+    t(
+      tier === 'flagship' ? 'cvBuilder.modelPicker.tierFlagship' : 'cvBuilder.modelPicker.tierLight'
+    );
   const [open, setOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const reduce = useReducedMotion();
@@ -174,9 +179,7 @@ const ModelPicker = ({
           {PROVIDER_GLYPH[m.provider] || '•'}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-semibold leading-tight">
-            {TIER_LABEL[m.tier]}
-          </span>
+          <span className="block text-[13px] font-semibold leading-tight">{tierLabel(m.tier)}</span>
           <span
             className={`block text-[11px] leading-tight truncate ${
               selected ? 'opacity-70' : 'text-slate-400 dark:text-slate-500'
@@ -202,8 +205,8 @@ const ModelPicker = ({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={`AI model: ${TIER_LABEL[currentTier]}`}
-        title="Choose the model powering Aria"
+        aria-label={t('cvBuilder.modelPicker.ariaLabelModel', { tier: tierLabel(currentTier) })}
+        title={t('cvBuilder.modelPicker.triggerTitle')}
         // The compact chip keeps a ≥44px pointer target through the ::before overlay
         // rather than by growing the row — a 36px chip is what fits beside the input.
         className={`relative inline-flex items-center shrink-0 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 ${
@@ -216,7 +219,7 @@ const ModelPicker = ({
           {PROVIDER_GLYPH[rows.find((m) => m.id === current)?.provider] || '◇'}
         </span>
         <span aria-hidden="true" className="hidden sm:inline">
-          {TIER_LABEL[currentTier]}
+          {tierLabel(currentTier)}
         </span>
         <ChevronDown className="w-3.5 h-3.5 shrink-0" />
       </button>
@@ -249,12 +252,12 @@ const ModelPicker = ({
             {/* Header — title + an (i) that toggles the inline explainer (no separate modal). */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800">
               <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
-                Choose your AI
+                {t('cvBuilder.modelPicker.header')}
               </span>
               <button
                 type="button"
                 onClick={() => setShowInfo((s) => !s)}
-                aria-label="What's the difference?"
+                aria-label={t('cvBuilder.modelPicker.whatsDifference')}
                 aria-expanded={showInfo}
                 className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50"
               >
@@ -275,7 +278,7 @@ const ModelPicker = ({
                     <button
                       type="button"
                       onClick={() => setShowInfo(false)}
-                      aria-label="Close"
+                      aria-label={t('cvBuilder.modelPicker.close')}
                       className="w-5 h-5 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50"
                     >
                       <X className="w-3 h-3" />
@@ -284,22 +287,19 @@ const ModelPicker = ({
 
                   <div>
                     <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                      {TIER_LABEL.light}
+                      {tierLabel('light')}
                     </p>
                     <p className="mt-1 text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-                      Fast and efficient ({standardLabel}). Great for most CVs — solid bullets,
-                      summaries and tailoring. Cheapest on credits, and included free on paid plans.
+                      {t('cvBuilder.modelPicker.standardBlurb', { standardLabel })}
                     </p>
                   </div>
 
                   <div>
                     <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                      {TIER_LABEL.flagship}
+                      {tierLabel('flagship')}
                     </p>
                     <p className="mt-1 text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-                      The strongest models — sharper writing and better nuance on tough or senior
-                      roles, with tighter keyword tailoring. Costs more credits per action, and
-                      always metered (even on paid plans).
+                      {t('cvBuilder.modelPicker.flagshipBlurb')}
                     </p>
                     {proModels.some((m) => PRO_MODEL_BLURB[m.id]) && (
                       <ul className="mt-1.5 space-y-1">
@@ -321,9 +321,10 @@ const ModelPicker = ({
                   </div>
 
                   <p className="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500 italic">
-                    Not sure? {TIER_LABEL.light} is great for most CVs — reach for{' '}
-                    {TIER_LABEL.flagship} when a role is competitive or you want the most polished
-                    result.
+                    {t('cvBuilder.modelPicker.notSure', {
+                      standardLabel: tierLabel('light'),
+                      flagshipLabel: tierLabel('flagship'),
+                    })}
                   </p>
                 </motion.div>
               )}
@@ -331,13 +332,16 @@ const ModelPicker = ({
 
             {rows.length === 0 ? (
               <p className="px-3 py-3 text-[12px] text-slate-500 dark:text-slate-400">
-                No models available.
+                {t('cvBuilder.modelPicker.noModels')}
               </p>
             ) : (
               <>
                 <div className="py-1">{rows.map(renderRow)}</div>
                 <p className="px-3 py-2 text-[10px] leading-snug text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800">
-                  Pro always uses credits. Standard is included on paid plans.
+                  {t('cvBuilder.modelPicker.footnote', {
+                    standardLabel: tierLabel('light'),
+                    flagshipLabel: tierLabel('flagship'),
+                  })}
                 </p>
               </>
             )}

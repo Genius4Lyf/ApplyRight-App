@@ -1,12 +1,23 @@
 // Ready-made questions per step — most students don't know what to ask, so hand them good ones.
-export const suggestionsFor = (stepId) =>
-  ({
-    target_job: ['Why does the target job matter?', "What if I don't have one?"],
-    heading: ['What goes in my heading?', 'Do I need LinkedIn?'],
-    history: ['What goes here?', 'Give me an example', "I'm stuck"],
-    projects: ['Should I add projects?', 'What makes a good project bullet?'],
-    education: ["What if I didn't finish?", 'How much detail?'],
-    skills: ['Which skills matter here?', 'How many should I list?'],
-    summary: ['What makes a good summary?', 'What should mine say?'],
-    finalize: ['Is my CV ready?', "What's still missing?"],
-  })[stepId] || ['What goes here?', 'Give me an example', "I'm stuck"];
+const KEYS = {
+  target_job: ['cvBuilder.suggestions.target_job.0', 'cvBuilder.suggestions.target_job.1'],
+  heading: ['cvBuilder.suggestions.heading.0', 'cvBuilder.suggestions.heading.1'],
+  history: [
+    'cvBuilder.suggestions.history.0',
+    'cvBuilder.suggestions.history.1',
+    'cvBuilder.suggestions.history.2',
+  ],
+  projects: ['cvBuilder.suggestions.projects.0', 'cvBuilder.suggestions.projects.1'],
+  education: ['cvBuilder.suggestions.education.0', 'cvBuilder.suggestions.education.1'],
+  skills: ['cvBuilder.suggestions.skills.0', 'cvBuilder.suggestions.skills.1'],
+  summary: ['cvBuilder.suggestions.summary.0', 'cvBuilder.suggestions.summary.1'],
+  finalize: ['cvBuilder.suggestions.finalize.0', 'cvBuilder.suggestions.finalize.1'],
+};
+
+const DEFAULT_KEYS = [
+  'cvBuilder.suggestions.default.0',
+  'cvBuilder.suggestions.default.1',
+  'cvBuilder.suggestions.default.2',
+];
+
+export const suggestionsFor = (t, stepId) => (KEYS[stepId] || DEFAULT_KEYS).map((key) => t(key));

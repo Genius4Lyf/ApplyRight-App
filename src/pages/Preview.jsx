@@ -19,7 +19,6 @@ import { getJobQuestions, getQuestionsToAsk, hasInterviewPrep } from '../utils/i
 
 import Modal from '../components/Modal';
 import DownloadPaywallModal from '../components/DownloadPaywallModal';
-import PreviewWatermark from '../components/PreviewWatermark';
 import ScreenshotCover from '../components/ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
@@ -48,6 +47,11 @@ import TechDevOpsTemplate from '../components/templates/TechDevOpsTemplate';
 import TechSiliconTemplate from '../components/templates/TechSiliconTemplate';
 import TechGoogleTemplate from '../components/templates/TechGoogleTemplate';
 import ExecutiveEnergyTemplate from '../components/templates/ExecutiveEnergyTemplate';
+import OperationsBlueprintTemplate from '../components/templates/OperationsBlueprintTemplate';
+import ApplyRightBandTemplate from '../components/templates/ApplyRightBandTemplate';
+import ApplyRightBandTwinTemplate from '../components/templates/ApplyRightBandTwinTemplate';
+import ApplyRightMonoTemplate from '../components/templates/ApplyRightMonoTemplate';
+import ApplyRightNavyTemplate from '../components/templates/ApplyRightNavyTemplate';
 import EnergySLBTemplate from '../components/templates/EnergySLBTemplate';
 import EnergyTotalTemplate from '../components/templates/EnergyTotalTemplate';
 import EnergySeplatTemplate from '../components/templates/EnergySeplatTemplate';
@@ -55,6 +59,12 @@ import EnergyHalliburtonTemplate from '../components/templates/EnergyHalliburton
 import EnergyNLNGTemplate from '../components/templates/EnergyNLNGTemplate';
 import TheProfileTemplate from '../components/templates/TheProfileTemplate';
 import TheAscentTemplate from '../components/templates/TheAscentTemplate';
+import {
+  AngularCorporateTemplate,
+  NavyPortraitTemplate,
+  SalesSidebarTemplate,
+  SlateTimelineTemplate,
+} from '../components/templates/SignatureCollectionTemplates';
 
 const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -226,6 +236,18 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
         return <ExecutiveCorporateTemplate {...props} />;
       case 'executive-energy':
         return <ExecutiveEnergyTemplate {...props} />;
+      case 'operations-blueprint':
+        return <OperationsBlueprintTemplate {...props} />;
+
+      // ApplyRight
+      case 'applyright-band':
+        return <ApplyRightBandTemplate {...props} />;
+      case 'applyright-band-twin':
+        return <ApplyRightBandTwinTemplate {...props} />;
+      case 'applyright-mono':
+        return <ApplyRightMonoTemplate {...props} />;
+      case 'applyright-navy':
+        return <ApplyRightNavyTemplate {...props} />;
 
       // Energy
       case 'energy-slb':
@@ -244,6 +266,14 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
         return <TheProfileTemplate {...props} />;
       case 'the-ascent':
         return <TheAscentTemplate {...props} />;
+      case 'slate-timeline':
+        return <SlateTimelineTemplate {...props} />;
+      case 'navy-portrait':
+        return <NavyPortraitTemplate {...props} />;
+      case 'angular-corporate':
+        return <AngularCorporateTemplate {...props} />;
+      case 'sales-sidebar':
+        return <SalesSidebarTemplate {...props} />;
 
       // Unknown/legacy templateId falls back to the safe, ATS-clean default so
       // saved CVs referencing a no-longer-offered template still render cleanly.
@@ -560,9 +590,6 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
           onCut={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
         >
-          {/* Faint anti-screenshot watermark — free users only; stripped from the
-              PDF clone before download, so the file is always clean. */}
-          {isFreeUser && <PreviewWatermark />}
           {/* Blur + "Content hidden" cover while the tab is hidden/unfocused. */}
           <ScreenshotCover show={screenshotObscured} />
 

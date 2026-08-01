@@ -1,6 +1,13 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Linkedin } from 'lucide-react';
+
+const elementProps = (props) => {
+  const clean = { ...props };
+  delete clean.node;
+  delete clean.children;
+  return clean;
+};
 
 const MinimalistGridTemplate = ({ markdown, userProfile }) => {
   // Basic checks
@@ -13,26 +20,37 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
     const extractedName = nameMatch ? nameMatch[1] : null;
     if (extractedName && !extractedName.includes('YOUR NAME')) {
       name = extractedName;
-    } else if (userProfile?.firstName) {
-      name = [userProfile.firstName, userProfile.otherName, userProfile.lastName]
-        .filter(Boolean)
-        .join(' ')
-        .toUpperCase();
+    } else if (userProfile?.fullName || userProfile?.firstName) {
+      name =
+        userProfile.fullName ||
+        [userProfile.firstName, userProfile.otherName, userProfile.lastName]
+          .filter(Boolean)
+          .join(' ');
     }
-  } catch (e) {}
+  } catch {
+    name = 'YOUR NAME';
+  }
 
   const roleTitle = userProfile?.currentJobTitle || '';
 
   // Contact Info
   const contactItems = [];
-  if (userProfile?.email) contactItems.push({ icon: Mail, value: userProfile.email });
-  if (userProfile?.phone) contactItems.push({ icon: Phone, value: userProfile.phone });
-  if (userProfile?.location) contactItems.push({ icon: MapPin, value: userProfile.location });
+  if (userProfile?.email)
+    contactItems.push({ icon: Mail, label: 'Email', value: userProfile.email });
+  if (userProfile?.phone)
+    contactItems.push({ icon: Phone, label: 'Phone', value: userProfile.phone });
+  if (userProfile?.location)
+    contactItems.push({ icon: MapPin, label: 'Location', value: userProfile.location });
   if (userProfile?.portfolioUrl)
-    contactItems.push({ icon: Globe, value: userProfile.portfolioUrl.replace(/^https?:\/\//, '') });
+    contactItems.push({
+      icon: Globe,
+      label: 'Portfolio',
+      value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
+    });
   if (userProfile?.linkedinUrl)
     contactItems.push({
       icon: Linkedin,
+      label: 'LinkedIn',
       value: userProfile.linkedinUrl.replace(/^https?:\/\//, ''),
     });
 
@@ -43,50 +61,48 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
     <div
       className="bg-white mx-auto text-slate-800 flex"
       style={{
-        lineHeight: 'var(--cv-leading, 1.25)',
+        lineHeight: 'var(--cv-leading, 1.38)',
         fontFamily: "var(--cv-font, 'Inter', sans-serif)",
       }}
     >
       {/* Header / Sidebar (Left 30%) */}
-      <div className="w-[30%] bg-slate-50 p-8 border-r border-slate-200">
-        <div className="sticky top-8">
+      <aside data-cv-sidebar className="w-[30%] border-r border-[#d7d5cf] bg-[#f2f1ed] p-8">
+        <div>
           {userProfile?.photoUrl && (
             <div className="flex justify-center mb-4">
               <img
                 src={userProfile.photoUrl}
                 alt=""
-                className="w-[72px] h-[72px] rounded-full object-cover border border-slate-200"
+                className="h-[72px] w-[72px] rounded-none border border-[#b9b7b0] object-cover grayscale"
               />
             </div>
           )}
-          <h1 className="text-2xl font-bold tracking-tighter text-slate-900 leading-tight mb-2">
+          <div className="mb-5 h-1 w-10 bg-[#111318]" />
+          <h1 className="mb-2 text-[22pt] font-extrabold leading-[1.02] tracking-[-0.04em] text-[#111318]">
             {name}
           </h1>
           {roleTitle && (
-            <div
-              className="text-xs font-semibold uppercase tracking-widest mb-8"
-              style={{ color: 'var(--cv-accent, #4f46e5)' }}
-            >
+            <div className="mb-8 text-[8.5pt] font-semibold uppercase tracking-[0.18em] text-[#65645f]">
               {roleTitle}
             </div>
           )}
 
-          <div className="space-y-4 text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+          <div className="space-y-4 border-t border-[#cfcdc6] pt-5 text-[8pt] text-[#555650]">
             {contactItems.map((item, i) => (
               <div key={i} className="break-words">
-                <span className="block text-slate-300 text-[8px] mb-0.5 flex items-center gap-1">
-                  <item.icon size={8} className="text-slate-300" />
-                  Contact
+                <span className="mb-1 flex items-center gap-1.5 font-mono text-[7pt] font-semibold uppercase tracking-[0.14em] text-[#96958f]">
+                  <item.icon size={9} className="text-[#777771]" />
+                  {item.label}
                 </span>
-                {item.value}
+                <span className="leading-relaxed">{item.value}</span>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content (Right 70%) */}
-      <div
+      <main
         className="w-[70%]"
         style={{ padding: 'var(--cv-margin, 2.5rem)', paddingTop: 'var(--cv-margin, 2rem)' }}
       >
@@ -95,49 +111,64 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
             components={{
               h1: () => null,
               // H2: Clean section header with spacing
-              h2: ({ node, ...props }) => (
+              h2: (props) => (
                 <h2
-                  className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mt-8 mb-4 flex items-center gap-2"
-                  {...props}
-                />
+                  className="mb-4 mt-8 flex items-center gap-3 text-[9pt] font-bold uppercase tracking-[0.18em] text-[#111318] first:mt-0 after:h-px after:flex-1 after:bg-[#d7d5cf]"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </h2>
               ),
               // H3: Job Title - Bold
-              h3: ({ node, ...props }) => (
-                <h3 className="text-sm font-bold text-slate-900 mt-6 mb-0.5" {...props} />
+              h3: (props) => (
+                <h3
+                  className="mb-0.5 mt-5 text-[10.5pt] font-bold text-[#111318]"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </h3>
               ),
               // H4: Company/Date - Small
-              h4: ({ node, ...props }) => (
-                <h4 className="text-xs font-medium text-slate-500 mb-3" {...props} />
+              h4: (props) => (
+                <h4
+                  className="mb-2.5 text-[8.5pt] font-medium text-[#73746f]"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </h4>
               ),
               // Standard text
-              p: ({ node, ...props }) => (
-                <p className="text-[10pt] leading-6 text-slate-600 mb-3" {...props} />
+              p: (props) => (
+                <p
+                  className="mb-3 text-[9.4pt] leading-[1.55] text-[#555650]"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </p>
               ),
-              ul: ({ node, ...props }) => (
+              ul: (props) => (
                 <ul
-                  className="list-none mb-4 space-y-1.5 text-[10pt] leading-6 text-slate-600"
-                  {...props}
-                />
+                  className="mb-4 list-[square] space-y-1.5 pl-[1.15em] text-[9.4pt] leading-[1.5] text-[#555650] marker:text-[#111318]"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </ul>
               ),
-              li: ({ node, ...props }) => (
-                <li
-                  className="pl-4 border-l border-slate-200 hover:border-[color:var(--cv-accent,#4f46e5)] transition-colors"
-                  {...props}
-                />
-              ),
-              a: ({ node, ...props }) => (
+              li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+              a: (props) => (
                 <a
-                  className="font-medium hover:underline"
-                  style={{ color: 'var(--cv-accent, #4f46e5)' }}
-                  {...props}
-                />
+                  className="font-medium text-[#111318] underline decoration-[#a7a59e] underline-offset-2"
+                  {...elementProps(props)}
+                >
+                  {props.children}
+                </a>
               ),
             }}
           >
             {bodyMarkdown}
           </ReactMarkdown>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

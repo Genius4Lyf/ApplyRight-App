@@ -38,7 +38,17 @@
       "termsOfService": "Conditions d’utilisation",
       "privacyPolicy": "Politique de confidentialité"
     },
-    "logoAlt": "Logo ApplyRight"
+    "logoAlt": "Logo ApplyRight",
+    "sortable": {
+      "collapse": "Réduire",
+      "edit": "Modifier",
+      "dragToReorder": "Glisser pour réorganiser",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "delete": "Supprimer",
+      "hideActions": "Masquer les actions",
+      "showActions": "Afficher les actions"
+    }
   },
   "auth": {
     "shell": {
@@ -836,8 +846,97 @@
       "tipsForSection": "Conseils pour cette section",
       "gotItHide": "Compris, masquer"
     },
+    "inlineExample": {
+      "hideExample": "Masquer l’exemple",
+      "showExample": "Me montrer un exemple",
+      "disclaimer": "Ces exemples sont là pour vous inspirer — rédigez le vôtre en toute honnêteté."
+    },
+    "examples": {
+      "bullet": {
+        "engineering": {
+          "0": "Créé un service de notifications en temps réel en Node.js + Redis, réduisant le délai de bout en bout de 4s à 280ms pour 12 000 utilisateurs actifs quotidiens.",
+          "1": "Dirigé la migration de 8 services d’EC2 vers Kubernetes, réduisant les dépenses d’infrastructure mensuelles de 38 % et le temps de déploiement de 45 à 6 minutes.",
+          "2": "Réusiné la logique de nouvelle tentative de paiement pour corriger un bug de double débit affectant ~2 % des transactions ; récupéré ~140 000 $ de revenus contestés par trimestre."
+        },
+        "data": {
+          "0": "Créé un modèle de prédiction du taux de désabonnement en Python (scikit-learn) atteignant un AUC de 0,87 ; intégré au CRM produit, faisant passer le taux de rétention des clients à risque de 12 % à 27 %.",
+          "1": "Conçu un cadre d’expérimentation adopté par 6 équipes produit ; réduit le délai de lancement des tests de 2 semaines à 3 jours.",
+          "2": "Remplacé un ETL quotidien de 4 heures par un pipeline Kafka en streaming ; réduit la latence des données à moins de 5 minutes pour 22 tableaux de bord en aval."
+        },
+        "product": {
+          "0": "Lancé un parcours d’intégration en libre-service qui a fait passer l’activation à J7 de 31 % à 49 %, contribuant 1,8 M$ d’ARR supplémentaire sur deux trimestres.",
+          "1": "Supprimé deux lignes de produits peu performantes après 6 semaines d’analyse d’usage ; réorienté l’équipe vers une fonctionnalité unique qui a fait croître le DAU de 22 %.",
+          "2": "Mené des entretiens clients hebdomadaires avec plus de 40 grands comptes ; les enseignements ont motivé un pivot de feuille de route qui a permis de conclure deux contrats de plus de 250 000 $."
+        },
+        "design": {
+          "0": "Repensé le parcours de paiement à partir d’analyses de sessions ; réduit l’abandon de panier de 38 % à 24 % en 6 semaines.",
+          "1": "Créé un système de design utilisé sur 4 surfaces produit et 35 composants ; réduit le temps de conception d’un nouvel écran de 3 jours à 8 heures.",
+          "2": "Dirigé des tests d’utilisabilité avec 18 participants par trimestre ; les résultats ont orienté la refonte du tableau de bord qui a fait passer le CSAT de 6,8 à 8,2."
+        },
+        "marketing": {
+          "0": "Créé un moteur de contenu de plus de 40 articles SEO en 6 mois ; fait passer les visiteurs mensuels organiques de 8 000 à 64 000 et contribué à 22 % des nouvelles inscriptions.",
+          "1": "Géré un budget social payant de 80 000 $/mois sur Meta et TikTok ; réduit le CAC de 31 % tout en doublant le volume de leads.",
+          "2": "Lancé une série de webinaires de 6 événements avec plus de 2 400 inscrits ; généré 480 000 $ de pipeline dès le premier trimestre."
+        },
+        "sales": {
+          "0": "Conclu 1,4 M$ d’ARR net nouveau au cours de l’exercice 24, soit 142 % du quota ; classé 2e sur 14 commerciaux du segment.",
+          "1": "Créé et piloté une cadence de prospection sortante en 3 étapes ; fait passer le taux de réponse de 4 % à 11 % et réservé 38 rendez-vous qualifiés par trimestre.",
+          "2": "Piloté la migration de 22 clients historiques vers la nouvelle plateforme ; retenu 97 % d’entre eux avec 620 000 $ de contrats élargis."
+        },
+        "operations": {
+          "0": "Cartographié et refondu le processus d’exécution des commandes sur 3 entrepôts ; réduit le délai moyen d’exécution de 38 à 14 heures.",
+          "1": "Négocié 4 nouveaux contrats fournisseurs permettant d’économiser 220 000 $ par an ; instauré un cycle de revue trimestriel pour maintenir des conditions compétitives.",
+          "2": "Dirigé un sprint Kaizen transversal qui a réduit le taux de retours de 7,4 % à 4,1 % en deux trimestres."
+        },
+        "finance": {
+          "0": "Créé le modèle de prévision glissant sur 18 mois utilisé dans 3 revues de conseil d’administration ; identifié une opportunité d’économie de 1,2 M$ sur la consolidation des fournisseurs.",
+          "1": "Automatisé le processus de clôture mensuelle avec Power Query et Python ; réduit la clôture de 9 à 4 jours.",
+          "2": "Géré la position de trésorerie sur 6 devises et 12 comptes ; réduit les pertes de change de 28 % sur un an."
+        },
+        "hr": {
+          "0": "Reconstruit le processus d’entretien d’ingénierie ; fait passer le taux d’acceptation des offres de 51 % à 78 % sur deux cycles de recrutement.",
+          "1": "Déployé un programme de feedback entre pairs auprès de 240 employés ; le score d’engagement sur « je reçois un feedback utile » est passé de 6,1 à 7,9.",
+          "2": "Finalisé 22 recrutements seniors en un seul trimestre, dont 30 % issus de groupes sous-représentés."
+        },
+        "customer": {
+          "0": "Géré un portefeuille de 38 grands comptes (14 M$ d’ARR) ; atteint 119 % de rétention nette des revenus grâce à des actions d’expansion ciblées.",
+          "1": "Réduit le temps moyen de résolution des tickets de 22h à 9h en reconstruisant la bibliothèque de macros et la logique de routage.",
+          "2": "Mené 14 appels de référence clients et 6 études de cas, cités directement dans 2,3 M$ de contrats signés."
+        },
+        "generic": {
+          "0": "Dirigé une initiative transversale sur 3 équipes qui a généré X $ d’impact mesurable en Y mois.",
+          "1": "Créé et déployé Z, utilisé par N personnes, réduisant [indicateur] de A à B.",
+          "2": "Piloté [responsabilité] de bout en bout ; mis en évidence des constats qui ont fait évoluer [décision] et économisé [X heures / Y $]."
+        }
+      },
+      "project": {
+        "engineering": {
+          "0": "Projet de weekend : un bot Discord en Python qui résume les longs fils de discussion via OpenAI ; ~600 utilisateurs sur 12 serveurs.",
+          "1": "Open-source : une bibliothèque de composants Tailwind (plus de 200 étoiles sur GitHub) utilisée dans deux applications en production."
+        },
+        "data": {
+          "0": "Kaggle : solution dans le top 8 % du défi « prévision des ventes en magasin » avec LightGBM et un travail d’ingénierie de variables sur les signaux jours fériés/promotions.",
+          "1": "Personnel : création d’un tableau de bord suivant la fiabilité des transports publics de ma ville — 18 mois de données GTFS, déployé sur Streamlit."
+        },
+        "generic": {
+          "0": "Un nom court et descriptif + 1-2 lignes sur ce qu’il fait, qui l’utilise, et le résultat le plus concret que vous puissiez citer."
+        }
+      },
+      "summary": {
+        "engineering": {
+          "0": "Ingénieur senior avec 7 ans d’expérience dans la conception de systèmes backend évolutifs en Go et Python. A dirigé des migrations touchant plus de 30 services et encadré une équipe de 5 personnes. Recherche à livrer une infrastructure qui monte en charge sans heurts et réduit la charge d’astreinte."
+        },
+        "product": {
+          "0": "Chef de produit avec 5 ans d’expérience dans le déploiement de solutions SaaS B2B auprès de clients de taille intermédiaire. A fait passer un outil interne de 0 à 4 M$ d’ARR à travers trois itérations de tarification et une dynamique en libre-service. Excelle à transformer les points de friction clients en feuille de route livrée."
+        },
+        "generic": {
+          "0": "Un résumé de 2 à 3 phrases sur qui vous êtes professionnellement, ce que vous avez fait de plus pertinent pour le poste, et ce que vous recherchez ensuite. Le concret prime sur le générique."
+        }
+      }
+    },
     "targetJob": {
       "loading": "Chargement...",
+      "tagline": "Assistant intelligent ApplyRight",
       "greetingLine1": "Je suis votre coach CV — construisons un CV qui vous fait remarquer.",
       "greetingLine2": "D’abord — visez-vous un poste en particulier ?",
       "continue": "Continuer",
@@ -1172,8 +1271,9 @@
       "inertSendLabel": "Cette étape utilise les boutons ci-dessus",
       "cvHealth": "Santé du CV",
       "roleMatch": "Adéquation au poste",
+      "roleMatchShort": "Adéquation",
       "tabAriaSub": "discussion",
-      "addJdShort": "ajouter offre",
+      "addJdShort": "+ offre",
       "previewCv": "Aperçu de votre CV",
       "exit": "Quitter",
       "healthStandout": "Remarquable",
@@ -1186,6 +1286,20 @@
       "yourTargetRole": "Votre poste visé",
       "matched": "Présents — vous les avez",
       "missing": "Manquants — intégrez-les s’ils sont vrais"
+    },
+    "modelPicker": {
+      "tierLight": "Standard",
+      "tierFlagship": "Pro",
+      "triggerTitle": "Choisir le modèle qui anime Aria",
+      "ariaLabelModel": "Modèle IA : {{tier}}",
+      "header": "Choisissez votre IA",
+      "whatsDifference": "Quelle est la différence ?",
+      "close": "Fermer",
+      "standardBlurb": "Rapide et efficace ({{standardLabel}}). Idéal pour la plupart des CV — des points solides, des résumés et un ciblage bien fait. Le moins coûteux en crédits, et inclus gratuitement sur les formules payantes.",
+      "flagshipBlurb": "Les modèles les plus puissants — une écriture plus fine et plus nuancée pour les postes exigeants ou seniors, avec un ciblage de mots-clés plus précis. Coûte plus de crédits par action, et toujours facturé même sur les formules payantes.",
+      "notSure": "Un doute ? {{standardLabel}} convient très bien à la plupart des CV — passez à {{flagshipLabel}} pour un poste compétitif ou le résultat le plus abouti.",
+      "noModels": "Aucun modèle disponible.",
+      "footnote": "{{flagshipLabel}} utilise toujours des crédits. {{standardLabel}} est inclus sur les formules payantes."
     },
     "ariaChat": {
       "outOfSummaryCredits": "Vous n’avez plus de crédits pour cela — un résumé coûte {{n}} crédits. Gagnez-en plus ou passez à une formule payante, puis réessayez.",
@@ -1292,6 +1406,104 @@
     "researchCard": {
       "whatResearchSays": "Ce que dit la recherche"
     },
+    "sectionResearch": {
+      "target_job": {
+        "eyebrow": "Poste visé",
+        "thesis": "Fixez la cible et tout s’aligne dessus — c’est l’adaptation qui bat l’ATS.",
+        "points": {
+          "0": "L’ATS fait correspondre les <b>mots-clés exacts</b> du poste — une cible définie permet à Aria de les intégrer.",
+          "1": "Les CV adaptés sont lus ; les CV génériques sont filtrés.",
+          "2": "Collez la vraie description de poste pour la meilleure correspondance — ou passez pour un CV polyvalent solide."
+        },
+        "example": "Une fois la cible définie, Aria façonne vos points, compétences et résumé pour correspondre à ce poste.",
+        "source": "Comment fonctionnent l’adaptation et la correspondance de mots-clés ATS"
+      },
+      "heading": {
+        "eyebrow": "Vos coordonnées",
+        "thesis": "La première chose scannée — gardez-la nette, professionnelle et lisible par l’ATS.",
+        "points": {
+          "0": "Nom (le plus grand), un téléphone, une <b>adresse e-mail professionnelle</b> (prenom.nom@ — pas un surnom).",
+          "1": "Ville + pays suffisent — <b>évitez votre adresse postale complète.</b>",
+          "2": "Ajoutez votre LinkedIn (90 %+ des recruteurs le consultent) + un portfolio/GitHub si vous en avez un.",
+          "3": "Texte brut — pas de photo ni d’icônes ; elles perturbent l’ATS."
+        },
+        "example": "Ada Obi · Lagos, NG · ada.obi@email.com · linkedin.com/in/adaobi · github.com/adaobi",
+        "source": "Comment recruteurs et ATS lisent votre en-tête"
+      },
+      "history": {
+        "eyebrow": "Expérience professionnelle",
+        "thesis": "C’est ce que les recruteurs lisent le plus attentivement — et ils récompensent les réussites, pas les tâches.",
+        "points": {
+          "0": "Commencez par ce que vous avez <b>accompli</b>, pas par ce dont vous étiez « responsable ».",
+          "1": "Structurez chaque ligne : <b>action → résultat → un chiffre</b> (la formule XYZ).",
+          "2": "Quantifiez — %, temps, argent, échelle. Pas de chiffre ? Utilisez une échelle (« sur plus de 40 tickets par jour »).",
+          "3": "3 à 5 lignes par poste, la plus forte en premier, orientées vers le poste que vous visez."
+        },
+        "before": "« Responsable du support client. »",
+        "after": "Réduction du temps de réponse d’environ 30 % en optimisant le tri sur plus de 40 tickets par jour.",
+        "source": "Comment recruteurs et ATS lisent vraiment les CV"
+      },
+      "projects": {
+        "eyebrow": "Projets",
+        "thesis": "Un projet dit « j’ai choisi de créer ceci » — le pourquoi, votre rôle et la technologie comptent le plus.",
+        "points": {
+          "0": "Dites ce qu’il <b>fait</b> et le problème qu’il résout.",
+          "1": "Rendez <b>votre part</b> claire — ce que vous avez créé par rapport à l’équipe.",
+          "2": "Nommez la <b>technologie et les outils</b> — les projets sont là où vos compétences se montrent.",
+          "3": "Montrez le résultat (utilisateurs, une note, la mise en ligne) + <b>ajoutez un lien.</b>",
+          "4": "Projet de cours, personnel, ou professionnel ? Chacun se présente un peu différemment."
+        },
+        "example": "Créé une appli de mise en relation de covoiturage en React & Node pour mon projet de fin d’études — temps de mise en relation réduit à moins de 2s, présentée à plus de 200 étudiants.",
+        "source": "Comment lire de bons projets"
+      },
+      "education": {
+        "eyebrow": "Formation",
+        "thesis": "En tant qu’étudiant, cette section pèse lourd — donnez-lui du détail, près du haut.",
+        "points": {
+          "0": "Toujours : <b>diplôme, établissement, lieu, date d’obtention.</b>",
+          "1": "Ajoutez votre moyenne si elle est <b>excellente et récente</b> ; sinon, ne la mentionnez pas.",
+          "2": "Peu d’expérience professionnelle ? Listez <b>2 à 4 cours pertinents</b> en lien avec le poste.",
+          "3": "Incluez mentions / tableau d’honneur — cela montre de la constance."
+        },
+        "example": "Licence en informatique, Université de Lagos — 2025 · Moyenne 3.7/4 · Tableau d’honneur · Pertinent : Structures de données, Bases de données",
+        "source": "Comment sont lues les sections formation des jeunes diplômés"
+      },
+      "skills": {
+        "eyebrow": "Compétences",
+        "thesis": "Les compétences vous font passer le robot — reprenez exactement les mots du poste, ne gonflez pas la liste.",
+        "points": {
+          "0": "Environ <b>70 % de compétences techniques</b> (outils, technologies), 30 % de savoir-être — soit 8 à 15 techniques + 3 à 5 savoir-être.",
+          "1": "Utilisez les <b>mots exacts</b> du poste : s’il dit « Salesforce » → n’écrivez pas « logiciel CRM » (l’ATS ne fera pas la correspondance).",
+          "2": "Ne listez que ce que vous avez <b>réellement utilisé</b> — pas de mots à la mode pour gonfler la liste.",
+          "3": "Prouvez vos savoir-être dans vos points d’expérience, pas comme des adjectifs ici."
+        },
+        "example": "Python · React · SQL · AWS · Figma — les outils que le poste mentionne réellement.",
+        "source": "Comment l’ATS et les recruteurs lisent les compétences"
+      },
+      "summary": {
+        "eyebrow": "Résumé",
+        "thesis": "Un pitch net de 2 à 4 lignes : qui vous êtes, vos meilleures compétences, une vraie réussite.",
+        "points": {
+          "0": "<b>2 à 4 phrases (environ 50 à 60 mots)</b> — un aperçu, pas une histoire.",
+          "1": "Commencez par vos compétences les plus pertinentes + une <b>réussite chiffrée.</b>",
+          "2": "Adaptez-le — reprenez les mots-clés du poste visé. Troisième personne, pas de « je ».",
+          "3": "Peu d’expérience ? Mettez en avant votre formation et vos compétences transférables."
+        },
+        "example": "Étudiant en dernière année d’informatique, compétent en Python et React ; a créé une appli de mise en relation de covoiturage utilisée par plus de 200 étudiants. Recherche un stage frontend.",
+        "source": "Comment sont rédigés les bons résumés"
+      },
+      "finalize": {
+        "eyebrow": "Avant l’envoi",
+        "thesis": "Un CV est prêt quand il est adapté, concis et soigné.",
+        "points": {
+          "0": "Chaque ligne adaptée à <b>ce</b> poste — supprimez tout ce qui est générique.",
+          "1": "Réussites quantifiées autant que possible ; pas de « responsable de ».",
+          "2": "Une page si possible ; mise en forme cohérente ; <b>relisez</b> deux fois.",
+          "3": "Enregistrez en PDF pour que ça s’affiche pareil partout."
+        },
+        "source": "Comment les CV finis sont jugés"
+      }
+    },
     "ariaThinking": {
       "draft": {
         "0": "Lecture du poste…",
@@ -1359,6 +1571,27 @@
       "keepMine": "Garder le mien",
       "apply": "Appliquer"
     },
+    "roleTrim": {
+      "eyebrow": "Raccourcir l’expérience",
+      "title": "Raccourcir vos anciens postes",
+      "subtitle": "Vos postes restent sur le CV. J’ai sélectionné les points supplémentaires après les {{count}} premiers dans votre poste ancien le plus détaillé.",
+      "loading": "Chargement de vos postes…",
+      "untitledRole": "Poste sans titre",
+      "unknownCompany": "Entreprise non renseignée",
+      "unknownDate": "Date non renseignée",
+      "present": "Aujourd’hui",
+      "nothingToTrim": "Aucun de vos postes ne contient plus de {{count}} points ; il n’y a donc rien à raccourcir ici.",
+      "remove_one": "Retirer 1 point",
+      "remove_other": "Retirer {{count}} points",
+      "removing": "Raccourcissement…",
+      "removed_one": "1 point a été retiré de votre ancien poste.",
+      "removed_other": "{{count}} points ont été retirés de vos anciens postes.",
+      "undo": "Annuler",
+      "restored": "Les points retirés ont été restaurés.",
+      "loadError": "Impossible de charger votre expérience. Veuillez réessayer.",
+      "saveError": "Impossible de raccourcir ces points. Veuillez réessayer.",
+      "restoreError": "Impossible de restaurer ces points. Veuillez réessayer."
+    },
     "tailorDiff": {
       "loading": "Chargement de la comparaison...",
       "whatChanged": "Ce qui a changé",
@@ -1403,6 +1636,318 @@
       "keywords": "Mots-clés",
       "minimize": "Réduire",
       "minimizeAria": "Réduire l’aide aux mots-clés"
+    },
+    "cvHealth": {
+      "sections": {
+        "contact": {
+          "title": "Coordonnées",
+          "requirements": {
+            "0": { "label": "Nom complet" },
+            "1": { "label": "Adresse e-mail" },
+            "2": { "label": "Numéro de téléphone" },
+            "3": { "label": "URL LinkedIn" }
+          }
+        },
+        "history": {
+          "title": "Expérience professionnelle",
+          "requirements": {
+            "0": { "label": "Ajoutez au moins 2 postes" },
+            "1": { "label": "2 à 3 points par poste" },
+            "2": { "label": "Quantifiez vos résultats avec des chiffres" }
+          }
+        },
+        "projects": {
+          "title": "Projets",
+          "requirements": {
+            "0": { "label": "Ajoutez un projet pour illustrer votre pratique" }
+          }
+        },
+        "education": {
+          "title": "Formation",
+          "requirements": {
+            "0": { "label": "Ajoutez au moins un diplôme" }
+          }
+        },
+        "certifications": {
+          "title": "Certifications",
+          "requirements": {
+            "0": { "label": "Ajoutez vos licences, certificats ou formations" }
+          }
+        },
+        "skills": {
+          "title": "Compétences",
+          "requirements": {
+            "0": { "label": "Listez au moins 8 compétences pertinentes" }
+          }
+        },
+        "summary": {
+          "title": "Résumé professionnel",
+          "requirements": {
+            "0": { "label": "Un résumé de 3 à 4 phrases (100 caractères ou plus)" }
+          }
+        }
+      },
+      "detail": {
+        "notStarted": "Pas commencé",
+        "noneYet": "Aucun pour l’instant",
+        "contact": "{{met}}/4 informations ajoutées",
+        "history_one": "{{count}} poste · {{bullets}} points, {{quantified}} chiffrés",
+        "history_other": "{{count}} postes · {{bullets}} points, {{quantified}} chiffrés",
+        "projects_one": "{{count}} ajouté",
+        "projects_other": "{{count}} ajoutés",
+        "certifications_one": "{{count}} ajouté",
+        "certifications_other": "{{count}} ajoutés",
+        "education_one": "{{count}} formation",
+        "education_other": "{{count}} formations",
+        "skills": "{{count}} listées",
+        "summary": "{{count}} caractères"
+      }
+    },
+    "coach": {
+      "heyName": "Bonjour {{name}} — {{message}}",
+      "kwListJoin": "{{head}} et {{tail}}",
+      "stepNames": {
+        "target_job": "Poste visé",
+        "heading": "Coordonnées",
+        "history": "Expérience",
+        "projects": "Projets",
+        "education": "Formation",
+        "skills": "Compétences",
+        "summary": "Résumé",
+        "finalize": "CV"
+      },
+      "genericTips": [
+        "Les verbes forts gagnent — Dirigé, Créé, Livré, Développé 💪",
+        "Les chiffres font ressortir vos points — essayez d’en ajouter un 📈",
+        "Reprenez le vocabulaire de l’offre d’emploi 🧩",
+        "Une réussite claire vaut mieux que trois tâches vagues ✨"
+      ],
+      "steps": {
+        "target_job": {
+          "empty": {
+            "title": "Visons un poste précis 🎯",
+            "message": "Commencez par me dire quel poste vous visez. Collez aussi la description du poste — je m’en servirai pour orienter chaque autre section vers exactement ce que cet employeur recherche.",
+            "tips": {
+              "0": "Utilisez l’intitulé exact de l’offre (ex. « Ingénieur Frontend », pas « Développeur »).",
+              "1": "Coller la description complète débloque la correspondance de mots-clés plus tard."
+            }
+          },
+          "titled": {
+            "title": "Vous visez {{title}} 👍",
+            "message": "Excellent choix. Collez maintenant la description du poste — c’est ce qui me permet de faire correspondre votre CV aux mots-clés exacts que recruteurs et ATS recherchent.",
+            "tips": {
+              "0": "Pas de description sous la main ? Vous pouvez quand même construire un CV solide et généraliste, puis en ajouter une plus tard."
+            }
+          },
+          "complete": {
+            "title": "Poste visé enregistré ✅",
+            "message": "Parfait — j’ai le poste et la description. À partir de maintenant, tout ce que vous écrivez est orienté vers l’obtention de ce poste précis.",
+            "tips": {
+              "0": "Ensuite : vos coordonnées. Rendons-vous facile à joindre."
+            }
+          }
+        },
+        "heading": {
+          "empty": {
+            "title": "La première impression compte 👋",
+            "message": "Le tout début de votre CV est la première chose qu’un recruteur lit. Assurons-nous qu’il puisse vous joindre en quelques secondes.",
+            "tips": {
+              "0": "Nom, e-mail et téléphone sont les indispensables.",
+              "1": "Ajoutez votre LinkedIn — les recruteurs le consultent presque toujours."
+            }
+          },
+          "partial": {
+            "title": "Vous devenez joignable 📇",
+            "message": "Bien. Encore quelques détails et les recruteurs auront tous les moyens de vous contacter.",
+            "tipPhone": "Ajoutez un numéro de téléphone.",
+            "tipLinkedin": "Ajoutez votre URL LinkedIn."
+          },
+          "complete": {
+            "title": "Coordonnées complètes ✅",
+            "message": "Vous êtes facile à joindre — exactement ce qu’un recruteur veut. Passons à votre expérience."
+          }
+        },
+        "history": {
+          "empty": {
+            "title": "C’est le cœur de votre CV ❤️",
+            "message_targeted": "Votre expérience professionnelle pèse le plus lourd — c’est votre meilleure chance de prouver que vous correspondez au poste partagé. Ajoutez un poste et faisons en sorte que chaque point corresponde à ce que cet employeur recherche vraiment.",
+            "message_untargeted": "Votre expérience professionnelle pèse le plus lourd. Ajoutez un poste et faisons en sorte que chaque point mérite sa place — vous avez de vraies réussites à montrer.",
+            "tips": {
+              "0": "Commencez chaque point par un verbe d’action fort : Dirigé, Créé, Développé, Livré.",
+              "1": "Évitez « Responsable de… » — montrez le résultat, pas la tâche."
+            }
+          },
+          "needsNumbers": {
+            "title": "Bon début — ajoutez maintenant des chiffres 📈",
+            "message_one": "Vous avez {{count}} poste renseigné. La plus grande amélioration possible maintenant : mettez des chiffres sur vos réussites. « Inscriptions en hausse de 40 % » vaut toujours mieux que « Inscriptions en hausse ».",
+            "message_other": "Vous avez {{count}} postes renseignés. La plus grande amélioration possible maintenant : mettez des chiffres sur vos réussites. « Inscriptions en hausse de 40 % » vaut toujours mieux que « Inscriptions en hausse ».",
+            "tips": {
+              "0": "Quantifiez avec des %, des ₦/$, du temps gagné, ou un volume traité.",
+              "1": "Même des chiffres approximatifs (« ~500 utilisateurs ») valent mieux que rien."
+            }
+          },
+          "complete": {
+            "title": "Voilà un CV qui parle de résultats 🔥",
+            "message": "Vos points commencent par une action et l’appuient avec des chiffres — c’est exactement ce qui vous fait présélectionner. Gardez ce niveau pour chaque poste."
+          }
+        },
+        "projects": {
+          "empty": {
+            "title": "Les projets prouvent que vous savez faire 🛠️",
+            "message": "Les projets sont puissants — surtout si votre expérience est encore limitée. Ils montrent de l’initiative et un vrai savoir-faire concret.",
+            "tips": {
+              "0": "Nommez ce que vous avez créé et son impact ou résultat.",
+              "1": "Ajoutez un lien (GitHub, démo en ligne) si possible."
+            }
+          },
+          "complete": {
+            "title": "Parfait — les projets apportent une preuve ✅",
+            "message": "Ils montrent que vous ne faites pas que parler de vos compétences, vous les appliquez. Cela inspire une vraie confiance aux recruteurs."
+          }
+        },
+        "education": {
+          "empty": {
+            "title": "Ajoutez vos diplômes 🎓",
+            "message": "De nombreux ATS filtrent par diplôme avant même qu’un humain ne regarde. Listez votre formation — peu importe si elle ne correspond pas parfaitement au poste, elle compte quand même.",
+            "tips": {
+              "0": "Indiquez l’établissement, le diplôme et l’année."
+            }
+          },
+          "complete": {
+            "title": "Formation renseignée ✅",
+            "message": "Bien — cela lève un filtre automatique courant. Vous construisez une image complète."
+          }
+        },
+        "skills": {
+          "empty": {
+            "title": "Les compétences sont le terrain de jeu de l’ATS 🧩",
+            "message_withKeywords": "C’est ici que se joue la correspondance de mots-clés — et je me souviens que le poste partagé reposait sur {{kwList}}. Listez ici celles que vous possédez vraiment, puis ajoutez le reste de vos outils réels (visez 8 ou plus).",
+            "message_targeted": "C’est ici que se joue la correspondance de mots-clés. Reprenez les outils et compétences directement du poste partagé — ceux que vous possédez vraiment — et visez 8 ou plus.",
+            "message_generic": "Cette section est celle où se joue la correspondance de mots-clés. Listez les outils et technologies de la description de poste que vous possédez vraiment — visez 8 ou plus.",
+            "tips": {
+              "0": "Reprenez le vocabulaire de l’offre (ex. « JavaScript » si c’est ce qui est écrit).",
+              "1": "Ne listez que des compétences dont vous pouvez parler en entretien."
+            }
+          },
+          "partial": {
+            "title": "Bonne liste — ajoutez-en encore quelques-unes 💪",
+            "message_withKeywords": "Vous en avez listé {{count}}. Relisez une fois de plus le poste partagé pour repérer celles qui manquent — j’ai repéré {{kwList}} dedans. Plus de vraies correspondances, c’est plus de mots-clés cochés.",
+            "message_generic": "Vous en avez listé {{count}}. Quelques compétences pertinentes de plus signifient davantage de mots-clés de l’offre trouvés. Relisez la description pour celles qui manquent.",
+            "tips": {
+              "0": "Visez 8 à 12 compétences authentiques et pertinentes."
+            }
+          },
+          "complete": {
+            "title": "La section Compétences est solide ✅",
+            "message": "Une liste de compétences riche et pertinente — c’est ce qui vous fait passer le filtrage par mots-clés. Très bien joué."
+          }
+        },
+        "summary": {
+          "empty": {
+            "title": "Votre pitch d’ouverture 🎤",
+            "message_targeted": "Trois ou quatre phrases percutantes : qui vous êtes, votre meilleure preuve, et — puisque vous visez un poste précis — un clin d’œil clair à ce poste pour que l’adéquation se voie dès la première ligne.",
+            "message_untargeted": "Trois ou quatre phrases percutantes : qui vous êtes, votre meilleure preuve, et ce que vous visez. Je vous dirai dès qu’il sera assez solide.",
+            "tips": {
+              "0": "Ouvrez avec votre poste et vos années d’expérience.",
+              "1": "Glissez-y une réussite marquante."
+            }
+          },
+          "partial": {
+            "title": "Bien — développez encore un peu 📝",
+            "message": "Vous avez commencé votre pitch. Développez-le en 3-4 phrases pour donner plus de matière aux recruteurs (et à l’ATS).",
+            "tips": {
+              "0": "Ajoutez ce que vous visez et une preuve concrète."
+            }
+          },
+          "complete": {
+            "title": "Voilà un résumé percutant ✅",
+            "message": "Solide, précis et de la bonne longueur. Vous avez fait le plus dur — direction Revue pour voir tout se rassembler."
+          }
+        },
+        "finalize": {
+          "complete": {
+            "title": "Votre CV est prêt 🎉",
+            "message_withName": "{{name}}, tout est complet et bien écrit — votre CV est prêt. Lancez une analyse ATS approfondie pour voir votre adéquation au poste, ou récupérez-le depuis l’aperçu en direct.",
+            "message_noName": "Tout est complet et bien écrit — votre CV est prêt. Lancez une analyse ATS approfondie pour voir votre adéquation au poste, ou récupérez-le depuis l’aperçu en direct."
+          },
+          "progress": {
+            "title": "Presque à la ligne d’arrivée 🏁",
+            "message_withName": "{{name}}, vous êtes à {{score}} % — {{left}}. Terminez cela et vous atteindrez 100 %, ce qui débloque votre analyse ATS approfondie et votre aperçu complet.",
+            "message_noName": "Vous êtes à {{score}} % — {{left}}. Terminez cela et vous atteindrez 100 %, ce qui débloque votre analyse ATS approfondie et votre aperçu complet.",
+            "left_one": "il ne reste qu’une chose : votre section {{section}} — {{need}}",
+            "left_other": "{{count}} sections à terminer — commencez par votre section {{section}} : {{need}}"
+          }
+        },
+        "default": {
+          "title": "Construisons un CV qui décroche des entretiens 🚀",
+          "message": "Avancez section par section et je vous coacherai en chemin. Regardez votre Santé du CV progresser — une fois chaque section terminée, un aperçu complet vous attend à l’étape Revue."
+        }
+      },
+      "finalize": {
+        "needs": {
+          "fallback": "encore un peu de détail",
+          "contact": {
+            "0": "ajoutez votre nom complet",
+            "1": "ajoutez votre adresse e-mail",
+            "2": "ajoutez votre numéro de téléphone",
+            "3": "ajoutez votre URL LinkedIn"
+          },
+          "history": {
+            "0": "ajoutez au moins 2 postes",
+            "1": "ajoutez 2 à 3 points par poste",
+            "2": "quantifiez vos résultats avec des chiffres"
+          },
+          "education": {
+            "0": "ajoutez au moins un diplôme"
+          },
+          "skills": {
+            "0": "listez au moins 8 compétences pertinentes"
+          },
+          "summary": {
+            "0": "rédigez un résumé de 3 à 4 phrases"
+          }
+        }
+      }
+    },
+    "suggestions": {
+      "target_job": {
+        "0": "Pourquoi le poste visé compte-t-il ?",
+        "1": "Et si je n’en ai pas ?"
+      },
+      "heading": {
+        "0": "Que dois-je mettre dans mes coordonnées ?",
+        "1": "Ai-je besoin de LinkedIn ?"
+      },
+      "history": {
+        "0": "Qu’est-ce qui va ici ?",
+        "1": "Donnez-moi un exemple",
+        "2": "Je suis bloqué·e"
+      },
+      "projects": {
+        "0": "Dois-je ajouter des projets ?",
+        "1": "Qu’est-ce qui fait un bon point de projet ?"
+      },
+      "education": {
+        "0": "Et si je ne l’ai pas terminée ?",
+        "1": "Quel niveau de détail ?"
+      },
+      "skills": {
+        "0": "Quelles compétences comptent ici ?",
+        "1": "Combien dois-je en lister ?"
+      },
+      "summary": {
+        "0": "Qu’est-ce qui fait un bon résumé ?",
+        "1": "Que devrait dire le mien ?"
+      },
+      "finalize": {
+        "0": "Mon CV est-il prêt ?",
+        "1": "Que manque-t-il encore ?"
+      },
+      "default": {
+        "0": "Qu’est-ce qui va ici ?",
+        "1": "Donnez-moi un exemple",
+        "2": "Je suis bloqué·e"
+      }
     }
   },
   "myCvs": {
@@ -3076,6 +3621,18 @@
       "q4A": "Oui. Passez un recruteur autant de fois que vous le souhaitez — vos scores et retours sont enregistrés par recruteur dans l'onglet Évaluations, pour que vous puissiez suivre votre progression.",
       "q5Q": "Est-ce comparable à un vrai entretien ?",
       "q5A": "Presque. C'est une conversation vocale en direct qui réagit à vos réponses, ancrée dans votre CV et le poste précis, avec des recruteurs qui restent dans leur rôle — RH, responsable du recrutement, ou spécialiste. La principale différence est qu'il ne note que le contenu, alors qu'un vrai entretien évalue aussi la prestation."
+    }
+  },
+  "cvStudio": {
+    "bestChoices": {
+      "ariaLabel": "Meilleurs choix de modèles de CV",
+      "eyebrow": "Tendances de la semaine",
+      "title": "Meilleurs choix",
+      "subtitle": "Choisissez-en un pour voir votre CV changer instantanément. Nous sélectionnons ces cinq modèles chaque semaine.",
+      "available": "Disponible",
+      "keepShowing": "Continuer à afficher les meilleurs choix",
+      "dontShow": "Ne plus afficher les meilleurs choix",
+      "showAgain": "Afficher à nouveau les meilleurs choix"
     }
   },
   "ariaStudio": {

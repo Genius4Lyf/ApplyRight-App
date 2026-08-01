@@ -11,11 +11,19 @@ import MinimalistSerifTemplate from './templates/MinimalistSerifTemplate';
 import MinimalistGridTemplate from './templates/MinimalistGridTemplate';
 import ExecutiveCorporateTemplate from './templates/ExecutiveCorporateTemplate';
 import ExecutiveEnergyTemplate from './templates/ExecutiveEnergyTemplate';
+import OperationsBlueprintTemplate from './templates/OperationsBlueprintTemplate';
 import ApplyRightNavyTemplate from './templates/ApplyRightNavyTemplate';
 import ApplyRightMonoTemplate from './templates/ApplyRightMonoTemplate';
 import ApplyRightBandTemplate from './templates/ApplyRightBandTemplate';
+import ApplyRightBandTwinTemplate from './templates/ApplyRightBandTwinTemplate';
 import TheProfileTemplate from './templates/TheProfileTemplate';
 import TheAscentTemplate from './templates/TheAscentTemplate';
+import {
+  AngularCorporateTemplate,
+  NavyPortraitTemplate,
+  SalesSidebarTemplate,
+  SlateTimelineTemplate,
+} from './templates/SignatureCollectionTemplates';
 
 const TEMPLATE_COMPONENTS = {
   'ats-clean': ATSCleanTemplate,
@@ -26,11 +34,17 @@ const TEMPLATE_COMPONENTS = {
   'minimal-grid': MinimalistGridTemplate,
   'executive-corporate': ExecutiveCorporateTemplate,
   'executive-energy': ExecutiveEnergyTemplate,
+  'operations-blueprint': OperationsBlueprintTemplate,
   'applyright-navy': ApplyRightNavyTemplate,
   'applyright-mono': ApplyRightMonoTemplate,
   'applyright-band': ApplyRightBandTemplate,
+  'applyright-band-twin': ApplyRightBandTwinTemplate,
   'the-profile': TheProfileTemplate,
   'the-ascent': TheAscentTemplate,
+  'slate-timeline': SlateTimelineTemplate,
+  'navy-portrait': NavyPortraitTemplate,
+  'angular-corporate': AngularCorporateTemplate,
+  'sales-sidebar': SalesSidebarTemplate,
 };
 
 // A4 width in px at 96dpi (210mm). The inner page renders at this width and is
