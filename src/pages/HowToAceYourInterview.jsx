@@ -18,10 +18,10 @@ import {
   Trophy,
   ClipboardCheck,
   AlertTriangle,
-  Bot,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 
@@ -88,19 +88,19 @@ const HowToAceYourInterview = () => {
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-5">
               {t('howToAce.hero.kicker')}
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               {t('howToAce.hero.titleLead')}{' '}
-              <span className="text-indigo-600">{t('howToAce.hero.titleAccent')}</span>
+              <span className="italic">{t('howToAce.hero.titleAccent')}</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
               {t('howToAce.hero.subcopy')}
             </p>
             <button
               onClick={startInterview}
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-xl shadow-lg font-semibold transition-colors"
+              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-4 px-8 rounded-xl shadow-lg font-semibold transition-colors"
             >
               {t('howToAce.hero.cta')}
               <ArrowRight size={20} />
@@ -119,7 +119,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-10 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.listening.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -163,7 +163,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.star.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -188,7 +188,7 @@ const HowToAceYourInterview = () => {
               <motion.div key={idx} variants={fadeIn}>
                 <div
                   aria-hidden="true"
-                  className="font-heading text-5xl text-indigo-600 leading-none mb-4"
+                  className="font-heading text-5xl text-slate-900 leading-none mb-4"
                 >
                   {s.letter}
                 </div>
@@ -251,7 +251,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.questionTypes.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -278,7 +278,7 @@ const HowToAceYourInterview = () => {
                   <h3 className="text-lg font-bold text-slate-900 mb-1">
                     {t(`howToAce.questionTypes.q${q.n}Title`)}
                   </h3>
-                  <p className="text-sm text-indigo-600 mb-2">
+                  <p className="text-sm text-slate-900 mb-2">
                     {t(`howToAce.questionTypes.q${q.n}Example`)}
                   </p>
                   <p className="text-slate-600 leading-relaxed">
@@ -301,7 +301,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.checklist.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -317,7 +317,7 @@ const HowToAceYourInterview = () => {
               variants={fadeIn}
               className="rounded-xl border border-slate-200 bg-white p-8"
             >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-3">
                 {t('howToAce.checklist.beforeLabel')}
               </p>
               <h3 className="text-xl font-bold text-slate-900 mb-5">
@@ -340,7 +340,7 @@ const HowToAceYourInterview = () => {
               variants={fadeIn}
               className="rounded-xl border border-slate-200 bg-white p-8"
             >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-3">
                 {t('howToAce.checklist.duringLabel')}
               </p>
               <h3 className="text-xl font-bold text-slate-900 mb-5">
@@ -407,7 +407,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.rounds.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -427,7 +427,7 @@ const HowToAceYourInterview = () => {
               <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
                 <span
                   aria-hidden="true"
-                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
+                  className="font-heading text-5xl md:text-6xl text-slate-300 leading-none tabular-nums shrink-0"
                 >
                   {String(idx + 1).padStart(2, '0')}
                 </span>
@@ -467,7 +467,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-2">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-2">
               {t('howToAce.rubric.kicker')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
@@ -563,7 +563,7 @@ const HowToAceYourInterview = () => {
           >
             {[1, 2, 3, 4].map((n) => (
               <div key={n} className="flex items-start gap-3">
-                <CheckCircle className="text-indigo-400 shrink-0 mt-1" size={20} />
+                <CheckCircle className="text-slate-400 shrink-0 mt-1" size={20} />
                 <p className="leading-relaxed">
                   <span className="font-semibold text-white">
                     {t(`howToAce.rubric.fp${n}Bold`)}
@@ -586,7 +586,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.practice.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -619,7 +619,7 @@ const HowToAceYourInterview = () => {
                   variants={fadeIn}
                   className="rounded-xl border border-slate-200 p-7"
                 >
-                  <Icon size={22} className="text-indigo-600 mb-4" />
+                  <Icon size={22} className="text-slate-900 mb-4" />
                   <h3 className="text-lg font-bold text-slate-900 mb-2">
                     {t(`howToAce.practice.f${f.n}Title`)}
                   </h3>
@@ -633,7 +633,7 @@ const HowToAceYourInterview = () => {
         </div>
       </section>
 
-      {/* Primary CTA — flat ink band with a bare Bot on the right */}
+      {/* Primary CTA — flat ink band with Aria's orbit mark on the right */}
       <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
@@ -645,7 +645,7 @@ const HowToAceYourInterview = () => {
           >
             {/* Copy */}
             <div className="flex flex-col items-start">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-4">
                 {t('howToAce.finalCta.kicker')}
               </p>
               <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight text-white">
@@ -656,7 +656,7 @@ const HowToAceYourInterview = () => {
               </p>
               <button
                 onClick={startInterview}
-                className="inline-flex items-center gap-2 bg-white text-indigo-800 hover:bg-slate-100 hover:-translate-y-0.5 py-4 px-8 rounded-md shadow-sm font-bold text-lg transition-all"
+                className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 hover:-translate-y-0.5 py-4 px-8 rounded-md shadow-sm font-bold text-lg transition-all"
               >
                 {t('howToAce.hero.cta')}
                 <ArrowRight size={22} />
@@ -665,12 +665,8 @@ const HowToAceYourInterview = () => {
             </div>
 
             {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-            <div
-              aria-hidden="true"
-              className="hidden md:grid place-items-center text-indigo-300/90"
-              style={{ width: 'clamp(120px, 15vw, 190px)' }}
-            >
-              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            <div aria-hidden="true" className="hidden md:grid place-items-center text-slate-400">
+              <AriaOrbit size={160} tone="mono" />
             </div>
           </motion.div>
         </div>
@@ -686,7 +682,7 @@ const HowToAceYourInterview = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               {t('howToAce.faq.kicker')}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">

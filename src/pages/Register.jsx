@@ -48,7 +48,7 @@ const CARD_ACCENTS = {
     dot: 'border-white bg-white',
     dotInner: 'bg-slate-900',
   },
-  indigo: {
+  agent: {
     on: 'border-indigo-600 bg-indigo-600',
     text: 'text-white',
     icon: 'bg-white/15 text-white',
@@ -257,7 +257,7 @@ const Register = () => {
         leftHeading={t(isAgent ? 'auth.register.leftHeadingAgent' : 'auth.register.leftHeading')}
         leftSubcopy={t(isAgent ? 'auth.register.leftSubcopyAgent' : 'auth.register.leftSubcopy')}
         valueProps={isAgent ? AGENT_VALUE_PROPS : DEFAULT_VALUE_PROPS}
-        accent={isAgent ? 'indigo' : 'ink'}
+        accent={isAgent ? 'agent' : 'ink'}
         badge={
           isAgent
             ? { icon: <Briefcase className="w-3.5 h-3.5" />, label: t('auth.register.badgeAgent') }
@@ -322,7 +322,7 @@ const Register = () => {
               />
               <AccountTypeCard
                 selected={isAgent}
-                accent="indigo"
+                accent="agent"
                 icon={<Briefcase className="w-4 h-4" />}
                 title={t('auth.register.cvAgent')}
                 onClick={() => selectAudience(true)}

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, ArrowRight, Bot } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import { Link } from 'react-router-dom';
 
 const fadeIn = {
@@ -56,8 +57,8 @@ const HELPS = [
     body: 'Reads the exact job you’re applying to, finds the keywords recruiters search for, and reframes your real experience in their language — quantified, ATS-clean, and 100% truthful. Free AI suggestions to start; recruiter-grade ApplyRight ATS on a paid plan.',
   },
   {
-    title: 'The live ATS Coach',
-    body: 'As you build, it scores your CV Health 0–100 in real time. A Deep Scan reads the job description to surface matched vs. missing keywords and a concrete action plan.',
+    title: 'Aria, in the builder',
+    body: 'As you build, Aria’s panel scores your CV Health 0–100 in real time — free, always. Alongside it, Role Match reads the job description to surface matched vs. missing keywords and a concrete action plan, and you can ask Aria to rewrite any section with you.',
   },
   {
     title: 'Clean, ATS-friendly templates',
@@ -78,12 +79,12 @@ const ATSGuide = () => {
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-5">
               Ultimate Guide & Walkthrough
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               How to Beat the <br />
-              <span className="text-indigo-600">Resume Robots</span>
+              <span className="italic">Resume Robots</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
               Most companies use Applicant Tracking Systems (ATS), and recruiters search them by
@@ -104,7 +105,7 @@ const ATSGuide = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Inside the black hole
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -126,7 +127,7 @@ const ATSGuide = () => {
               <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
                 <span
                   aria-hidden="true"
-                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
+                  className="font-heading text-5xl md:text-6xl text-slate-300 leading-none tabular-nums shrink-0"
                 >
                   {String(idx + 1).padStart(2, '0')}
                 </span>
@@ -152,7 +153,7 @@ const ATSGuide = () => {
             variants={fadeIn}
             className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-2">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-2">
               The golden rules
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white">The Golden Rules</h2>
@@ -205,7 +206,7 @@ const ATSGuide = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               How ApplyRight helps
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -243,7 +244,7 @@ const ATSGuide = () => {
           >
             <Link
               to="/cv-builder-guide"
-              className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
+              className="inline-flex items-center gap-1.5 border-b-2 border-slate-900 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-slate-900"
             >
               See the full CV Builder walkthrough <ArrowRight size={16} />
             </Link>
@@ -251,7 +252,7 @@ const ATSGuide = () => {
         </div>
       </section>
 
-      {/* CTA — flat ink band with a bare Bot on the right */}
+      {/* CTA — flat ink band with Aria's orbit mark on the right */}
       <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
@@ -263,7 +264,7 @@ const ATSGuide = () => {
           >
             {/* Copy */}
             <div className="flex flex-col items-start">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-4">
                 Get past the filter
               </p>
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
@@ -274,19 +275,15 @@ const ATSGuide = () => {
               </p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 bg-white text-indigo-800 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
               >
                 Build My Resume Now <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
 
             {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-            <div
-              aria-hidden="true"
-              className="hidden md:grid place-items-center text-indigo-300/90"
-              style={{ width: 'clamp(120px, 15vw, 190px)' }}
-            >
-              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            <div aria-hidden="true" className="hidden md:grid place-items-center text-slate-400">
+              <AriaOrbit size={160} tone="mono" />
             </div>
           </motion.div>
         </div>

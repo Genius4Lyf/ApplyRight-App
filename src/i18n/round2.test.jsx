@@ -50,10 +50,14 @@ afterEach(cleanup);
 // A constant holding t() output freezes at import. These three hold translation
 // KEYS instead, so they must follow a LIVE language switch.
 describe('module-level constants follow a live language switch', () => {
+  // 20s: this renders the whole landing page TWICE (once per language) — four
+  // feature rows with their vignettes, the hero interview card and the ledger.
+  // It sits just over vitest's 5s default, and a timeout here leaves the page
+  // mounted, which then breaks the vignette test below with duplicate matches.
   it('LandingPage FEATURES (kicker/title/body/tags)', async () => {
     const { default: LandingPage } = await import('../pages/LandingPage');
     const { rerender } = wrap(<LandingPage />);
-    expect(screen.getByText(en.landing.features.star.title)).toBeTruthy();
+    expect(screen.getByText(en.landing.features.studio.title)).toBeTruthy();
 
     await setLang('fr');
     rerender(
@@ -61,12 +65,12 @@ describe('module-level constants follow a live language switch', () => {
         <LandingPage />
       </Shell>
     );
-    expect(screen.getByText(fr.landing.features.star.title)).toBeTruthy();
-    expect(screen.getByText(fr.landing.features.compare.title)).toBeTruthy();
+    expect(screen.getByText(fr.landing.features.studio.title)).toBeTruthy();
+    expect(screen.getByText(fr.landing.features.design.title)).toBeTruthy();
     // A tag inside the same constant.
-    expect(screen.getByText(fr.landing.features.star.tag1)).toBeTruthy();
-    expect(screen.queryByText(en.landing.features.star.title)).toBeNull();
-  });
+    expect(screen.getByText(fr.landing.features.studio.tag1)).toBeTruthy();
+    expect(screen.queryByText(en.landing.features.studio.title)).toBeNull();
+  }, 20000);
 
   it('RewriteLedger ROWS — including the bold span inside <Trans>', async () => {
     const { default: RewriteLedger } = await import('../components/landing/RewriteLedger');

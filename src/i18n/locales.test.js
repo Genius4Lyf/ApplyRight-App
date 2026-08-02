@@ -92,6 +92,7 @@ describe('locale files', () => {
       'dashboard.studio.kicker', // "Aria Studio" — product name
       'dashboard.interviewCard.chip', // "Pro" — tier name, kept in English
       'landing.vignettes.compareLabel', // "CV A vs CV B" — labels + a Latin abbreviation
+      'landing.vignettes.askTabAria', // "Aria" — product name (see dashboard.studio.kicker)
       // Round 2 (billing) — genuinely language-neutral, not missed translations:
       'billing.common.currencyNgn', // "₦ NGN" — currency symbol + ISO code
       'billing.common.currencyUsd', // "$ USD" — currency symbol + ISO code
@@ -166,6 +167,19 @@ describe('locale files', () => {
       'fitScoreCard.levels.principal', // "Principal" — same word in French
       'fitScoreCard.levels.manager', // "Manager" — same word in French
       'fitScoreCard.levels.vp', // "VP" — same abbreviation in French
+      // Landing-page word morph and CV demos — brand fragments, proper names, and technical names:
+      'landing.hero.introMorphApply',
+      'landing.hero.introMorphThe',
+      'landing.hero.introMorphRight',
+      'landing.hero.introMorphWay',
+      'landing.journey.roleCvs.customerService.name',
+      'landing.journey.roleCvs.sales.name',
+      'landing.journey.roleCvs.data.name',
+      'landing.journey.roleCvs.data.skills',
+      'landing.journey.roleCvs.data.certification',
+      'landing.journey.roleCvs.admin.name',
+      'landing.journey.roleCvs.finance.name',
+      'landing.journey.roleCvs.finance.certification',
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

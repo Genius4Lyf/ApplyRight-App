@@ -1,6 +1,6 @@
 import React from 'react';
 import AppParticles from '../components/AppParticles';
-import logo from '../assets/logo/applyright-icon.png';
+import logo from '../assets/logo/applyright-icon-black.png';
 
 const Maintenance = () => {
   return (

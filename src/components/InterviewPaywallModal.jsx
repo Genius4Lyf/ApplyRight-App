@@ -1,41 +1,20 @@
-import React, { useState } from 'react';
-import AriaLoader from './ui/AriaLoader';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Mic, Crown, X, ClipboardCheck, MessagesSquare, Sparkles } from 'lucide-react';
-import billingService from '../services/billing.service';
-import { toast } from 'sonner';
 import { useTranslation, Trans } from 'react-i18next';
 
 // Shown when a free user who's used their free taste taps "Start" again — the
-// peak "I want to practice NOW" moment. Two ways forward:
-//   - one-time ₦600 Practice Pass (5 min, a full scored solo run) — the impulse buy
-//   - any paid subscription (the 3-person panel, longer sessions, sharper voices)
-// Deliberately NOT shown on /upgrade: the Pass anchors low next to the plans and
-// would cannibalise subscriptions, so it only lives at high-intent flow moments.
+// peak "I want to practice NOW" moment. There is one way forward: a plan. The
+// one-off Practice Pass that used to anchor this modal is retired (it undercut
+// every minute top-up per minute and let free users reach the scorecard without
+// subscribing), so the free offer is exactly the 5-minute taste and everything
+// past it — minutes, the scored review, longer sessions — comes with a plan.
 const InterviewPaywallModal = ({ open, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
   if (!open) return null;
-
-  const buyPass = async () => {
-    setLoading(true);
-    try {
-      // Stash this interview page so BillingReturn sends the buyer back here (and
-      // auto-starts) rather than to the dashboard — the redirect wipes React state.
-      localStorage.setItem('arPostCheckout', window.location.pathname);
-      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
-      const { link } = await billingService.checkout('practice_pass', 'NGN');
-      if (!link) throw new Error('No link');
-      window.location.href = link; // hosted checkout; returns to /billing/return
-    } catch (e) {
-      console.error(e);
-      toast.error(t('interviewPrep.interviewPaywall.checkoutError'));
-      setLoading(false);
-    }
-  };
 
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -89,30 +68,17 @@ const InterviewPaywallModal = ({ open, onClose }) => {
         </ul>
 
         <button
-          onClick={buyPass}
-          disabled={loading}
-          className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+          onClick={() => navigate('/upgrade')}
+          className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-colors flex items-center justify-center gap-2"
         >
-          {loading ? (
-            <AriaLoader
-              inline
-              tone="mono"
-              size={16}
-              label={t('interviewPrep.interviewPaywall.startingCheckout')}
-            />
-          ) : (
-            <>
-              <Mic className="w-5 h-5" /> {t('interviewPrep.interviewPaywall.practiceNowPass')}
-            </>
-          )}
+          <Crown className="w-5 h-5" /> {t('interviewPrep.interviewPaywall.seePlans')}
         </button>
 
         <button
-          onClick={() => navigate('/upgrade')}
+          onClick={onClose}
           className="mt-3 w-full py-3 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2"
         >
-          <Crown className="w-5 h-5 text-amber-500" />{' '}
-          {t('interviewPrep.interviewPaywall.practiceOftenPlans')}
+          {t('interviewPrep.interviewPaywall.notNow')}
         </button>
 
         <p className="text-center text-[11px] text-slate-400 mt-4">

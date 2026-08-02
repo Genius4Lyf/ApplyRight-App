@@ -27,7 +27,8 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import AriaOrbit from './cv/AriaOrbit';
 
-import logo from '../assets/logo/applyright-icon.png';
+import logoBlack from '../assets/logo/applyright-icon-black.png';
+import logoWhite from '../assets/logo/applyright-icon-white.png';
 
 const PLAN_LABELS = {
   weekly_pro: '2-Week Pro',
@@ -476,7 +477,8 @@ const Navbar = () => {
             to={isAuthenticated ? homePath : '/'}
             className="flex items-center gap-2.5 z-50 shrink-0"
           >
-            <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
+            <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto dark:hidden" />
+            <img src={logoWhite} alt="" aria-hidden="true" className="hidden h-7 w-auto dark:block" />
             <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
               ApplyRight
             </span>

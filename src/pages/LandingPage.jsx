@@ -1,56 +1,514 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   FileText,
   Filter,
   XCircle,
-  Volume2,
-  BookOpen,
-  Printer,
-  GitCompare,
-  Bot,
 } from 'lucide-react';
 import Seo from '../components/Seo';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import { useTranslation, Trans } from 'react-i18next';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import axios from 'axios';
-import FeedbackCard from '../components/FeedbackCard';
 import Footer from '../components/Footer';
 import PublicNavbar from '../components/PublicNavbar';
-import LiveInterviewCard from '../components/landing/LiveInterviewCard';
-import RewriteLedger from '../components/landing/RewriteLedger';
-import {
-  StarStoryVignette,
-  VoiceInterviewVignette,
-  PreCallBriefVignette,
-  CvCompareVignette,
-} from '../components/landing/FeatureVignettes';
+import ProductJourneyReveal from '../components/landing/ProductJourneyReveal';
 
-// Advanced Features — alternating editorial rows.
-// Holds translation KEYS, not literals: this is a module constant, so literals
-// would freeze in whatever language was active at import and ignore a live
-// language switch. Same treatment as DEFAULT_VALUE_PROPS in round 1.
-const FEATURES = [
-  { icon: BookOpen, id: 'star', Vignette: StarStoryVignette },
-  { icon: Volume2, id: 'voice', Vignette: VoiceInterviewVignette },
-  { icon: Printer, id: 'brief', Vignette: PreCallBriefVignette },
-  { icon: GitCompare, id: 'compare', Vignette: CvCompareVignette },
-];
+const Motion = motion;
+
+const ProcessBeat = ({ progress, range, children, danger = false, muted = false }) => {
+  const opacity = useTransform(progress, range, [0, 1]);
+  const y = useTransform(progress, range, [42, 0]);
+  const scale = useTransform(progress, range, [0.96, 1]);
+
+  return (
+    <Motion.div
+      style={{ opacity, y, scale }}
+      className={`relative flex items-start gap-4 border-t py-5 first:border-t-0 ${
+        danger ? 'border-red-200' : 'border-slate-200'
+      } ${muted ? 'opacity-60' : ''}`}
+    >
+      {children}
+    </Motion.div>
+  );
+};
+
+const ProblemScrollStory = ({ t, reduce }) => {
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  });
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 26,
+    mass: 0.35,
+  });
+  const headingY = useTransform(progress, [0, 0.22, 0.34], [0, 0, -120]);
+  const headingScale = useTransform(progress, [0, 0.22, 0.34], [1, 1, 0.84]);
+  const headingOpacity = useTransform(progress, [0, 0.22, 0.34], [1, 1, 0]);
+  const storyOpacity = useTransform(progress, [0.34, 0.42], [0, 1]);
+  const storyY = useTransform(progress, [0.34, 0.42], [90, 0]);
+  const truthOpacity = useTransform(progress, [0.79, 0.9], [0, 1]);
+  const truthX = useTransform(progress, [0.79, 0.9], [70, 0]);
+
+  if (reduce) {
+    return (
+      <section id="education" className="border-t border-slate-200 py-20">
+        <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
+          <ProblemStoryContent t={t} />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section ref={sectionRef} id="education" className="relative h-[330svh] border-t border-slate-200 bg-[#f7f6f2]">
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-center px-5 sm:px-8 lg:px-12">
+          <Motion.div
+            style={{ y: headingY, scale: headingScale, opacity: headingOpacity }}
+            className="mx-auto max-w-[760px] origin-center text-center"
+          >
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+              {t('landing.problem.kicker')}
+            </p>
+            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">
+              {t('landing.problem.title')}
+            </h2>
+            <p className="mx-auto mt-5 max-w-[56ch] text-lg leading-relaxed text-slate-600">
+              {t('landing.problem.subcopy')}
+            </p>
+          </Motion.div>
+
+          <Motion.div
+            style={{ opacity: storyOpacity, y: storyY }}
+            className="absolute inset-x-5 bottom-6 top-[23%] mx-auto grid max-w-[1160px] gap-8 sm:inset-x-8 lg:inset-x-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16"
+          >
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.09)] sm:p-8">
+              <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-slate-400">
+                {t('landing.problem.typicalProcess')}
+              </p>
+
+              <ProcessBeat progress={progress} range={[0.41, 0.5]}>
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-slate-100 text-slate-500">
+                  <FileText size={18} />
+                </span>
+                <div>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '01' })}</p>
+                  <h3 className="font-semibold text-slate-800">{t('landing.problem.stage1Title')}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{t('landing.problem.stage1Body')}</p>
+                </div>
+              </ProcessBeat>
+
+              <ProcessBeat progress={progress} range={[0.53, 0.63]} danger>
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-red-50 text-red-600">
+                  <Filter size={18} />
+                </span>
+                <div>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">{t('landing.problem.stageLabel', { n: '02' })}</p>
+                  <h3 className="font-semibold text-red-700">{t('landing.problem.stage2Title')}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {t('landing.problem.stage2BodyLead')}{' '}
+                    <span className="font-semibold text-red-600">{t('landing.problem.stage2BodyStrong')}</span>{' '}
+                    {t('landing.problem.stage2BodyTail')}
+                  </p>
+                </div>
+              </ProcessBeat>
+
+              <ProcessBeat progress={progress} range={[0.66, 0.76]} muted>
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-slate-100 text-slate-400">
+                  <XCircle size={18} />
+                </span>
+                <div>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '03' })}</p>
+                  <h3 className="font-semibold text-slate-700">{t('landing.problem.stage3Title')}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{t('landing.problem.stage3Body')}</p>
+                </div>
+              </ProcessBeat>
+            </div>
+
+            <Motion.div style={{ opacity: truthOpacity, x: truthX }} className="hidden max-w-[560px] lg:block">
+              <p className="font-heading text-[clamp(2rem,3.3vw,3.7rem)] font-bold leading-[1.02] tracking-[-0.035em] text-slate-900">
+                {t('landing.problem.truthLead')}{' '}<span className="italic">{t('landing.problem.truthAccent')}</span>
+              </p>
+              <div className="mt-8 grid gap-6 border-t border-slate-300 pt-6 sm:grid-cols-2">
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-slate-900">{t('landing.problem.whatIsAtsTitle')}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    <Trans i18nKey="landing.problem.whatIsAtsBody" components={{ b: <b className="font-semibold text-slate-900" />, s: <span className="italic font-semibold text-slate-900" /> }} />
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-slate-900">{t('landing.problem.sprayTitle')}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{t('landing.problem.sprayBody')}</p>
+                </div>
+              </div>
+            </Motion.div>
+          </Motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ProblemStoryContent = ({ t }) => (
+  <div>
+    <p className="font-mono text-xs uppercase tracking-[0.18em] text-slate-500">{t('landing.problem.kicker')}</p>
+    <h2 className="mt-3 font-heading text-4xl font-bold text-slate-900">{t('landing.problem.title')}</h2>
+    <p className="mt-4 text-lg text-slate-600">{t('landing.problem.subcopy')}</p>
+  </div>
+);
+
+const TestimonialProof = ({ feedback, index, progress }) => {
+  const starts = [0.36, 0.51, 0.66];
+  const start = starts[index] ?? 0.66;
+  const opacity = useTransform(progress, [start, start + 0.1], [0, 1]);
+  const y = useTransform(progress, [start, start + 0.1], [90, 0]);
+  const rotate = useTransform(progress, [start, start + 0.1], [index % 2 === 0 ? -3 : 3, 0]);
+  const initials = `${feedback.user?.firstName?.[0] || ''}${feedback.user?.lastName?.[0] || ''}`;
+
+  return (
+    <Motion.article
+      style={{ opacity, y, rotate }}
+      className="flex min-h-[300px] flex-col justify-between border-t-2 border-slate-900 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8"
+    >
+      <div>
+        <span className="font-heading text-6xl leading-none text-slate-200">“</span>
+        <p className="-mt-4 font-heading text-xl font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
+      </div>
+      <div className="mt-8 flex items-center gap-3 border-t border-slate-100 pt-5">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <div>
+          <p className="font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+        </div>
+      </div>
+    </Motion.article>
+  );
+};
+
+const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
+  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 26, mass: 0.35 });
+  const headingY = useTransform(progress, [0, 0.22, 0.33], [0, 0, -120]);
+  const headingScale = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0.84]);
+  const headingOpacity = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0]);
+  const ctaOpacity = useTransform(progress, [0.8, 0.9], [0, 1]);
+  const visibleFeedbacks = feedbacks.slice(0, 3);
+
+  return (
+    <section ref={sectionRef} className={`${reduce ? 'py-20' : 'relative h-[300svh]'} border-t border-slate-200 bg-white`}>
+      <div className={reduce ? '' : 'sticky top-0 h-[100svh] overflow-hidden'}>
+        <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-center px-5 sm:px-8 lg:px-12">
+          <Motion.div style={reduce ? undefined : { y: headingY, scale: headingScale, opacity: headingOpacity }} className="mx-auto max-w-[760px] text-center">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
+            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
+            <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
+          </Motion.div>
+
+          <div className="absolute inset-x-5 bottom-16 top-[25%] mx-auto grid max-w-[1160px] content-center gap-5 sm:inset-x-8 md:grid-cols-3 lg:inset-x-12">
+            {visibleFeedbacks.map((feedback, index) => (
+              reduce ? (
+                <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={scrollYProgress} />
+              ) : (
+                <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
+              )
+            ))}
+          </div>
+
+          <Motion.div style={reduce ? undefined : { opacity: ctaOpacity }} className="absolute bottom-5 left-0 right-0 text-center">
+            <Link to="/feedback" className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900">
+              {t('landing.testimonials.cta')} <ArrowRight size={16} />
+            </Link>
+          </Motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const BrandIntro = () => {
+  const { t } = useTranslation();
+  const reduce = useReducedMotion();
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  });
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 28,
+    mass: 0.5,
+    restDelta: 0.001,
+  });
+
+  const blindOpacity = useTransform(smoothProgress, [0, 0.29, 0.56], [1, 1, 0]);
+  const blindClip = useTransform(
+    smoothProgress,
+    [0.3, 0.56],
+    ['inset(0 0% -18% 0)', 'inset(0 0% -18% 100%)']
+  );
+  const morphOpacity = useTransform(smoothProgress, [0.29, 0.33, 1], [0, 1, 1]);
+  const morphClip = useTransform(
+    smoothProgress,
+    [0.3, 0.56],
+    ['inset(0 100% 0 0)', 'inset(0 0% 0 0)']
+  );
+  const heroWayOpacity = useTransform(smoothProgress, [0.59, 0.635], [1, 0]);
+  const heroWayMaxWidth = useTransform(smoothProgress, [0.59, 0.65], ['4.5em', '0em']);
+  const heroTheOpacity = useTransform(smoothProgress, [0.67, 0.705], [1, 0]);
+  const heroTheMaxWidth = useTransform(smoothProgress, [0.67, 0.73], ['3em', '0em']);
+  const resolveOpacity = useTransform(smoothProgress, [0.78, 0.9], [0, 1]);
+  const resolveY = useTransform(smoothProgress, [0.78, 0.9], [14, 0]);
+  const orbitX = useTransform(
+    smoothProgress,
+    [0, 0.27, 0.31, 0.56, 0.6, 0.76, 0.84, 1],
+    ['0vw', '0vw', '-43vw', '43vw', '43vw', '-43vw', '0vw', '0vw']
+  );
+  const orbitY = useTransform(
+    smoothProgress,
+    [0, 0.27, 0.31, 0.76, 0.84, 1],
+    [-118, -118, 4, 4, -90, -90]
+  );
+  const orbitScale = useTransform(
+    smoothProgress,
+    [0, 0.31, 0.76, 0.84, 1],
+    [0.85, 0.95, 1.08, 1.35, 1.35]
+  );
+  const cueOpacity = useTransform(smoothProgress, [0, 0.12, 0.2], [1, 1, 0]);
+
+  return (
+    <section
+      ref={sectionRef}
+      aria-label={t('landing.hero.introAriaLabel')}
+      className={reduce ? 'relative min-h-[78svh]' : 'relative h-[230svh] sm:h-[280svh]'}
+    >
+      <div className="sticky top-0 flex h-[100svh] items-center justify-center overflow-hidden bg-[#f7f6f2] px-5 text-center">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-45"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(15,23,42,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.045) 1px, transparent 1px)',
+            backgroundSize: '72px 72px',
+            maskImage: 'radial-gradient(circle at center, black 0%, transparent 72%)',
+          }}
+        />
+
+        <Motion.div
+          aria-hidden="true"
+          style={reduce ? { x: 0, y: -78, scale: 1.35 } : { x: orbitX, y: orbitY, scale: orbitScale }}
+          className="absolute z-20"
+        >
+          <AriaOrbit size={52} working />
+        </Motion.div>
+
+        <motion.div
+          style={reduce ? { opacity: 0 } : { opacity: blindOpacity, clipPath: blindClip }}
+          className="absolute z-10 flex max-w-5xl flex-col items-center [will-change:clip-path,opacity]"
+        >
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-slate-500">
+            {t('landing.hero.introTruth')}
+          </p>
+          <h1 className="mt-5 flex max-w-[94vw] flex-wrap items-baseline justify-center gap-x-[0.18em] font-heading text-[clamp(3rem,8vw,7.8rem)] font-bold leading-[0.92] tracking-[-0.045em] text-slate-900">
+            <span className="inline-block -rotate-3 translate-y-[0.08em]">
+              {t('landing.hero.introBlindDont')}
+            </span>
+            <span className="inline-block rotate-2 -translate-y-[0.08em]">
+              {t('landing.hero.introBlindJust')}
+            </span>
+            <span className="inline-block -rotate-2 translate-y-[0.12em]">
+              {t('landing.hero.introBlindApply')}
+            </span>
+            <span className="inline-flex rotate-3 -translate-y-[0.05em]">
+              {Array.from(t('landing.hero.introBlindBlindly')).map((letter, index) => (
+                <span
+                  key={`${letter}-${index}`}
+                  className="inline-block"
+                  style={{
+                    transform: `translateY(${[-0.08, 0.06, -0.03, 0.1, -0.06][index % 5]}em) rotate(${[-3, 2, -1, 3, -2][index % 5]}deg)`,
+                  }}
+                >
+                  {letter}
+                </span>
+              ))}
+            </span>
+          </h1>
+        </motion.div>
+
+        <motion.div
+          style={
+            reduce
+              ? { opacity: 1, clipPath: 'inset(0 0% 0 0)' }
+              : { opacity: morphOpacity, clipPath: morphClip }
+          }
+          className="absolute z-10 flex max-w-[96vw] flex-col items-center [will-change:clip-path,opacity]"
+        >
+          <motion.p className="inline-flex items-baseline justify-center whitespace-nowrap font-brand text-[2.2rem] font-semibold leading-none tracking-[-0.055em] text-slate-950 sm:text-[clamp(3.2rem,9vw,9rem)]">
+            <span>{t('landing.hero.introMorphApply')}</span>
+            <motion.span
+              style={reduce ? { opacity: 0, maxWidth: '0em' } : { opacity: heroTheOpacity, maxWidth: heroTheMaxWidth }}
+              className="inline-block overflow-hidden whitespace-nowrap"
+            >
+              &nbsp;{t('landing.hero.introMorphThe')}&nbsp;
+            </motion.span>
+            <span>{t('landing.hero.introMorphRight')}</span>
+            <motion.span
+              style={reduce ? { opacity: 0, maxWidth: '0em' } : { opacity: heroWayOpacity, maxWidth: heroWayMaxWidth }}
+              className="inline-block overflow-hidden whitespace-nowrap"
+            >
+              &nbsp;{t('landing.hero.introMorphWay')}
+            </motion.span>
+          </motion.p>
+          <motion.p
+            style={reduce ? { opacity: 1, y: 0 } : { opacity: resolveOpacity, y: resolveY }}
+            className="mt-5 max-w-lg text-base leading-relaxed text-slate-600 sm:text-lg"
+          >
+            {t('landing.hero.introResolve')}
+          </motion.p>
+        </motion.div>
+
+        {!reduce && (
+          <motion.div
+            style={{ opacity: cueOpacity }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-slate-500"
+          >
+            {t('landing.hero.introScroll')}
+            <span className="mx-auto mt-3 block h-10 w-px bg-slate-400" />
+          </motion.div>
+        )}
+
+        <motion.div
+          aria-hidden="true"
+          style={{ scaleX: reduce ? 1 : smoothProgress }}
+          className="absolute inset-x-0 top-0 z-40 h-[3px] origin-left bg-slate-900"
+        />
+      </div>
+    </section>
+  );
+};
+
+const ClosingCtaStory = () => {
+  const { t } = useTranslation();
+  const reduce = useReducedMotion();
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  });
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 110,
+    damping: 28,
+    mass: 0.4,
+    restDelta: 0.001,
+  });
+
+  const guessingOpacity = useTransform(progress, [0, 0.05, 0.21, 0.27], [0, 1, 1, 0]);
+  // Lead each clip by one orbit radius so a letter disappears as soon as the
+  // front of the orbit touches it, rather than after the orbit has crossed it.
+  const guessingClip = useTransform(progress, [0.11, 0.236], ['inset(0 0 0 0)', 'inset(0 0 0 100%)']);
+  const blindlyOpacity = useTransform(progress, [0.24, 0.3, 0.42, 0.48], [0, 1, 1, 0]);
+  const blindlyClip = useTransform(progress, [0.344, 0.454], ['inset(0 0 0 0)', 'inset(0 100% 0 0)']);
+  const rightWayOpacity = useTransform(progress, [0.45, 0.52, 1], [0, 1, 1]);
+  const theOpacity = useTransform(progress, [0.585, 0.615], [1, 0]);
+  const theMaxWidth = useTransform(progress, [0.585, 0.63], ['3em', '0em']);
+  const wayOpacity = useTransform(progress, [0.645, 0.675], [1, 0]);
+  const wayMaxWidth = useTransform(progress, [0.645, 0.69], ['4.5em', '0em']);
+  const brandKickerOpacity = useTransform(progress, [0.72, 0.8], [0, 1]);
+  const actionOpacity = useTransform(progress, [0.82, 0.91], [0, 1]);
+  const actionY = useTransform(progress, [0.82, 0.91], [26, 0]);
+  const orbitX = useTransform(
+    progress,
+    [0, 0.1, 0.26, 0.34, 0.47, 0.55, 0.71, 0.78, 1],
+    ['0vw', '-42vw', '42vw', '42vw', '-42vw', '-42vw', '42vw', '0vw', '0vw']
+  );
+  const orbitY = useTransform(progress, [0, 0.08, 0.72, 0.8, 1], [-105, 0, 0, -112, -112]);
+  const orbitOpacity = useTransform(progress, [0, 0.06, 0.72, 0.78, 1], [0, 1, 1, 1, 1]);
+  const orbitScale = useTransform(progress, [0, 0.72, 0.82, 1], [0.9, 1.05, 1.35, 1.35]);
+
+  if (reduce) {
+    return (
+      <section className="grid min-h-[82svh] place-items-center bg-slate-950 px-5 py-20 text-center text-white">
+        <div className="flex max-w-3xl flex-col items-center">
+          <AriaOrbit size={72} tone="mono" className="text-white" />
+          <h2 className="mt-7 font-heading text-5xl font-bold tracking-tight sm:text-7xl">ApplyRight</h2>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">{t('landing.cta.subcopy')}</p>
+          <Link to="/register" className="mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950">
+            {t('landing.cta.buttonToday')} <ArrowRight size={17} />
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[clamp(3.1rem,8vw,7.8rem)] font-bold leading-[0.92] tracking-[-0.045em] text-white';
+
+  return (
+    <section ref={sectionRef} className="relative h-[360svh] bg-slate-950 text-white">
+      <div className="sticky top-0 grid h-[100svh] place-items-center overflow-hidden px-5 text-center">
+        <div aria-hidden="true" className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:radial-gradient(circle_at_center,black_0%,transparent_72%)]" />
+
+        <motion.div
+          aria-hidden="true"
+          style={{ x: orbitX, y: orbitY, opacity: orbitOpacity, scale: orbitScale }}
+          className="absolute z-30 text-white"
+        >
+          <AriaOrbit size={58} working tone="mono" />
+        </motion.div>
+
+        <motion.h2 style={{ opacity: guessingOpacity, clipPath: guessingClip }} className={`${phraseClass} z-10`}>
+          {t('landing.cta.stopGuessing')}
+        </motion.h2>
+
+        <motion.h2 style={{ opacity: blindlyOpacity, clipPath: blindlyClip }} className={`${phraseClass} z-10`}>
+          {t('landing.cta.stopBlindly')}
+        </motion.h2>
+
+        <motion.h2 style={{ opacity: rightWayOpacity }} className={`${phraseClass} z-10`}>
+          <span className="inline-flex items-baseline justify-center whitespace-nowrap">
+            <span>{t('landing.cta.applyWord')}</span>
+            <motion.span style={{ opacity: theOpacity, maxWidth: theMaxWidth }} className="inline-block overflow-hidden whitespace-nowrap">
+              &nbsp;{t('landing.cta.theWord')}&nbsp;
+            </motion.span>
+            <span>{t('landing.cta.rightWord')}</span>
+            <motion.span style={{ opacity: wayOpacity, maxWidth: wayMaxWidth }} className="inline-block overflow-hidden whitespace-nowrap">
+              &nbsp;{t('landing.cta.wayWord')}
+            </motion.span>
+          </span>
+        </motion.h2>
+
+        <motion.div style={{ opacity: brandKickerOpacity }} className="absolute z-20 -translate-y-28 sm:-translate-y-36">
+          <p className="font-mono text-[0.66rem] uppercase tracking-[0.22em] text-slate-400">{t('landing.cta.kicker')}</p>
+        </motion.div>
+
+        <motion.div style={{ opacity: actionOpacity, y: actionY }} className="absolute bottom-[10svh] z-40 flex flex-col items-center">
+          <p className="hidden max-w-xl text-base leading-relaxed text-slate-300 sm:block">{t('landing.cta.subcopy')}</p>
+          <Link
+            to="/register"
+            className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950 shadow-lg transition-transform hover:-translate-y-0.5"
+          >
+            {t('landing.cta.buttonToday')} <ArrowRight size={17} />
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
 
 const LandingPage = () => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-
   const [featuredFeedbacks, setFeaturedFeedbacks] = useState([]);
+  const [interviewFocused, setInterviewFocused] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
         const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/feedback/featured`);
-        if (data.success) {
-          setFeaturedFeedbacks(data.data);
-        }
+        if (data.success) setFeaturedFeedbacks(data.data);
       } catch (error) {
         console.error('Error fetching featured feedbacks:', error);
       }
@@ -58,502 +516,24 @@ const LandingPage = () => {
     fetchFeatured();
   }, []);
 
-  // Restrained staggered hero load.
-  const heroContainer = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.15, delayChildren: 0.05 } },
-  };
-  const heroItem = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.2, 0.7, 0.2, 1] } },
-  };
-
-  // Restrained scroll-in reveal shared by the restyled sections (matches RewriteLedger).
-  const revealUp = {
-    hidden: { opacity: 0, y: 22 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.2, 0.7, 0.2, 1] } },
-  };
-  const revealStagger = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.12 } },
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900"
+      className="min-h-screen font-sans text-slate-900 selection:bg-slate-200 selection:text-slate-900"
     >
       <Seo title={t('landing.seo.title')} description={t('landing.seo.description')} />
-
-      {/* Scrollable Content Layer */}
       <div className="relative z-10">
-        {/* Navigation */}
-        <PublicNavbar />
-
-        {/* Hero Section */}
-        <section className="px-5 pt-28 pb-16 sm:px-8 lg:px-12 lg:pt-32 lg:pb-20">
-          <div className="mx-auto grid max-w-[1160px] grid-cols-1 items-center gap-9 min-[900px]:grid-cols-[1.02fr_0.98fr] min-[900px]:gap-14">
-            {/* Copy */}
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              animate="visible"
-              variants={heroContainer}
-              className="flex flex-col gap-5"
-            >
-              <motion.p
-                variants={heroItem}
-                className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800"
-              >
-                {t('landing.hero.kicker')}
-              </motion.p>
-
-              <motion.h1
-                variants={heroItem}
-                className="font-heading text-[2.5rem] font-bold leading-[1.05] tracking-tight text-slate-900 text-balance sm:text-6xl lg:text-[4.3rem]"
-              >
-                {t('landing.hero.titleLead')}{' '}
-                <span className="relative whitespace-nowrap text-indigo-600">
-                  {t('landing.hero.titleAccent')}
-                  <motion.span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 bottom-[0.02em] block h-[3px] origin-left bg-indigo-600"
-                    initial={reduce ? false : { scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={
-                      reduce ? undefined : { duration: 0.5, ease: 'easeOut', delay: 0.75 }
-                    }
-                  />
-                </span>
-              </motion.h1>
-
-              <motion.p
-                variants={heroItem}
-                className="max-w-[52ch] text-lg leading-relaxed text-slate-600 lg:text-xl"
-              >
-                {t('landing.hero.subcopy')}
-              </motion.p>
-
-              <motion.div
-                variants={heroItem}
-                className="flex flex-wrap items-center gap-x-6 gap-y-4"
-              >
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 rounded-md border border-indigo-600 bg-indigo-600 px-5 py-2.5 font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-800 hover:bg-indigo-800"
-                >
-                  {t('common.startFree')}
-                </Link>
-                <Link
-                  to="/how-it-works"
-                  className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
-                >
-                  {t('landing.hero.ctaSecondary')} <ArrowRight size={16} />
-                </Link>
-              </motion.div>
-
-              <motion.p
-                variants={heroItem}
-                className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-600"
-              >
-                <b className="font-medium text-indigo-800">{t('landing.hero.freeNoteStrong')}</b> ·{' '}
-                {t('landing.hero.freeNoteRest')}
-              </motion.p>
-            </motion.div>
-
-            {/* Live interview panel */}
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduce ? undefined : { duration: 0.65, ease: [0.2, 0.7, 0.2, 1], delay: 0.5 }
-              }
-            >
-              <LiveInterviewCard />
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Rewrite Ledger — before / after */}
-        <RewriteLedger />
-
-        {/* EDUCATIONAL SECTION: The Problem — asymmetric funnel + editorial truth */}
-        <section id="education" className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.4 }}
-              variants={revealUp}
-              className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
-            >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                {t('landing.problem.kicker')}
-              </p>
-              <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                {t('landing.problem.title')}
-              </h2>
-              <p className="text-lg leading-relaxed text-slate-600">
-                {t('landing.problem.subcopy')}
-              </p>
-            </motion.div>
-
-            <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-14">
-              {/* The rejection funnel */}
-              <motion.div
-                initial={reduce ? false : 'hidden'}
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.25 }}
-                variants={revealUp}
-                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean sm:p-7"
-              >
-                <p className="mb-6 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-400">
-                  {t('landing.problem.typicalProcess')}
-                </p>
-
-                {/* Stage 01 — you apply */}
-                <div className="flex items-start gap-4">
-                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-400">
-                    <FileText size={18} />
-                  </span>
-                  <div className="pt-0.5">
-                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
-                      {t('landing.problem.stageLabel', { n: '01' })}
-                    </p>
-                    <h3 className="font-semibold text-slate-700">
-                      {t('landing.problem.stage1Title')}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-500">
-                      {t('landing.problem.stage1Body')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ml-[22px] h-6 w-px bg-slate-200" />
-
-                {/* Stage 02 — the ATS filter (the danger step: red-600 only here) */}
-                <div className="flex items-start gap-4 border-l-2 border-red-600 pl-4">
-                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-red-200 bg-red-50 text-red-600">
-                    <Filter size={18} />
-                  </span>
-                  <div className="pt-0.5">
-                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">
-                      {t('landing.problem.stageLabel', { n: '02' })}
-                    </p>
-                    <h3 className="font-semibold text-red-700">
-                      {t('landing.problem.stage2Title')}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {t('landing.problem.stage2BodyLead')}{' '}
-                      <span className="font-semibold text-red-600">
-                        {t('landing.problem.stage2BodyStrong')}
-                      </span>{' '}
-                      {t('landing.problem.stage2BodyTail')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ml-[22px] h-6 w-px bg-slate-200" />
-
-                {/* Stage 03 — human review that never happens */}
-                <div className="flex items-start gap-4 opacity-60">
-                  <span className="grid h-11 w-11 flex-none place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-400">
-                    <XCircle size={18} />
-                  </span>
-                  <div className="pt-0.5">
-                    <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
-                      {t('landing.problem.stageLabel', { n: '03' })}
-                    </p>
-                    <h3 className="font-semibold text-slate-700">
-                      {t('landing.problem.stage3Title')}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-500">
-                      {t('landing.problem.stage3Body')}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* The hard truth + the facts */}
-              <motion.div
-                initial={reduce ? false : 'hidden'}
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.25 }}
-                variants={revealStagger}
-                className="flex flex-col gap-8"
-              >
-                <motion.p
-                  variants={revealUp}
-                  className="font-heading text-2xl font-bold leading-snug text-slate-900 sm:text-[2rem] sm:leading-[1.2]"
-                >
-                  {t('landing.problem.truthLead')}{' '}
-                  <span className="text-indigo-600">{t('landing.problem.truthAccent')}</span>
-                </motion.p>
-
-                <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
-                  <h3 className="font-heading text-lg font-bold text-slate-900">
-                    {t('landing.problem.whatIsAtsTitle')}
-                  </h3>
-                  <p className="mt-2 leading-relaxed text-slate-600">
-                    <Trans
-                      i18nKey="landing.problem.whatIsAtsBody"
-                      components={{
-                        b: <b className="font-semibold text-indigo-800" />,
-                        s: <span className="font-semibold text-slate-900" />,
-                      }}
-                    />
-                  </p>
-                </motion.div>
-
-                <motion.div variants={revealUp} className="border-l-2 border-indigo-600 pl-5">
-                  <h3 className="font-heading text-lg font-bold text-slate-900">
-                    {t('landing.problem.sprayTitle')}
-                  </h3>
-                  <p className="mt-2 leading-relaxed text-slate-600">
-                    {t('landing.problem.sprayBody')}
-                  </p>
-                </motion.div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* SOLUTION SECTION: the fix — flat numbered sequence */}
-        <section className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.4 }}
-              variants={revealUp}
-              className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
-            >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                {t('landing.fix.kicker')}
-              </p>
-              <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                {t('landing.fix.title')}
-              </h2>
-              <p className="text-lg leading-relaxed text-slate-600">{t('landing.fix.subcopy')}</p>
-            </motion.div>
-
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={revealStagger}
-              className="grid gap-5 sm:gap-6 md:grid-cols-3"
-            >
-              <motion.div
-                variants={revealUp}
-                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
-              >
-                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">01</p>
-                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  {t('landing.fix.step1Title')}
-                </h3>
-                <p className="mt-2 leading-relaxed text-slate-600">{t('landing.fix.step1Body')}</p>
-              </motion.div>
-
-              <motion.div
-                variants={revealUp}
-                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
-              >
-                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">02</p>
-                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  {t('landing.fix.step2Title')}
-                </h3>
-                <p className="mt-2 leading-relaxed text-slate-600">
-                  <Trans i18nKey="landing.fix.step2Body" components={{ i: <em /> }} />
-                </p>
-              </motion.div>
-
-              <motion.div
-                variants={revealUp}
-                className="rounded-lg border border-slate-200 bg-white p-6 shadow-clean transition-colors hover:border-slate-300 sm:p-7"
-              >
-                <p className="font-mono text-sm font-bold tracking-[0.08em] text-indigo-600">03</p>
-                <h3 className="mt-3 font-heading text-xl font-bold text-slate-900">
-                  {t('landing.fix.step3Title')}
-                </h3>
-                <p className="mt-2 leading-relaxed text-slate-600">{t('landing.fix.step3Body')}</p>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ADVANCED FEATURES SECTION: alternating editorial rows */}
-        <section className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.4 }}
-              variants={revealUp}
-              className="mb-12 flex max-w-[54ch] flex-col gap-3 sm:mb-16"
-            >
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                {t('landing.features.kicker')}
-              </p>
-              <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                {t('landing.features.title')}
-              </h2>
-              <p className="text-lg leading-relaxed text-slate-600">
-                {t('landing.features.subcopy')}
-              </p>
-            </motion.div>
-
-            <div className="flex flex-col gap-16 sm:gap-20">
-              {FEATURES.map((f, i) => {
-                const Vignette = f.Vignette;
-                const Icon = f.icon;
-                const reverse = i % 2 === 1;
-                return (
-                  <motion.div
-                    key={f.id}
-                    initial={reduce ? false : 'hidden'}
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.3 }}
-                    variants={revealStagger}
-                    className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14"
-                  >
-                    {/* Copy */}
-                    <motion.div
-                      variants={revealUp}
-                      className={`flex flex-col gap-4 ${reverse ? 'lg:order-2' : ''}`}
-                    >
-                      <p className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-indigo-800">
-                        <Icon size={14} className="text-indigo-600" />
-                        {t(`landing.features.${f.id}.kicker`)}
-                      </p>
-                      <h3 className="font-heading text-2xl font-bold leading-snug text-slate-900 sm:text-[1.7rem]">
-                        {t(`landing.features.${f.id}.title`)}
-                      </h3>
-                      <p className="leading-relaxed text-slate-600">
-                        {t(`landing.features.${f.id}.body`)}
-                      </p>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {[1, 2, 3].map((num, ti) => (
-                          <span
-                            key={num}
-                            className={`rounded border px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-wide ${
-                              ti === 0
-                                ? 'border-indigo-200 bg-indigo-50 text-indigo-800'
-                                : 'border-slate-200 text-slate-500'
-                            }`}
-                          >
-                            {t(`landing.features.${f.id}.tag${num}`)}
-                          </span>
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Product vignette */}
-                    <motion.div variants={revealUp} className={reverse ? 'lg:order-1' : ''}>
-                      <Vignette />
-                    </motion.div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* What Users Say Section — restyled frame, shared FeedbackCard unchanged */}
-        {featuredFeedbacks.length >= 3 && (
-          <section className="border-t border-slate-200 py-16 sm:py-20 lg:py-24">
-            <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
-              <motion.div
-                initial={reduce ? false : 'hidden'}
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.4 }}
-                variants={revealUp}
-                className="mb-10 flex max-w-[54ch] flex-col gap-3 sm:mb-12"
-              >
-                <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-                  {t('landing.testimonials.kicker')}
-                </p>
-                <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.7rem]">
-                  {t('landing.testimonials.title')}
-                </h2>
-                <p className="text-lg leading-relaxed text-slate-600">
-                  {t('landing.testimonials.subcopy')}
-                </p>
-              </motion.div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {featuredFeedbacks.map((feedback, index) => (
-                  <FeedbackCard
-                    key={feedback._id}
-                    feedback={feedback}
-                    index={index}
-                    hideActions={true}
-                  />
-                ))}
-              </div>
-
-              <div className="mt-12 text-left">
-                <Link
-                  to="/feedback"
-                  className="inline-flex items-center gap-1.5 border-b-2 border-indigo-600 pb-0.5 font-semibold text-slate-900 transition-colors hover:text-indigo-800"
-                >
-                  {t('landing.testimonials.cta')} <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
-          </section>
+        <PublicNavbar hidden={interviewFocused} />
+        <BrandIntro />
+        <ProductJourneyReveal onInterviewFocusChange={setInterviewFocused} />
+        <ProblemScrollStory t={t} reduce={reduce} />
+        {featuredFeedbacks.length > 0 && (
+          <TestimonialsScrollStory feedbacks={featuredFeedbacks} t={t} reduce={reduce} />
         )}
-
-        {/* CTA Section — flat ink band */}
-        <section className="px-5 py-16 sm:px-8 sm:py-20 lg:px-12">
-          <div className="mx-auto max-w-[1160px]">
-            <motion.div
-              initial={reduce ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              variants={revealUp}
-              className="grid grid-cols-1 items-center gap-8 rounded-xl bg-slate-900 px-6 py-12 sm:px-12 sm:py-14 md:grid-cols-[1fr_auto] md:gap-12"
-            >
-              {/* Copy */}
-              <div className="flex flex-col items-start gap-5">
-                <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300">
-                  {t('landing.cta.kicker')}
-                </p>
-                <h2 className="max-w-[20ch] font-heading text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.7rem]">
-                  {t('landing.cta.title')}
-                </h2>
-                <p className="max-w-[52ch] text-lg leading-relaxed text-slate-400">
-                  {t('landing.cta.subcopy')}
-                </p>
-                <Link
-                  to="/register"
-                  className="mt-1 inline-flex items-center rounded-md bg-white px-5 py-2.5 font-semibold text-indigo-800 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-100"
-                >
-                  {t('landing.cta.button')}
-                </Link>
-                <p className="font-mono text-[0.72rem] tracking-[0.04em] text-slate-500">
-                  {t('landing.cta.note')}
-                </p>
-              </div>
-
-              {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-              <div
-                aria-hidden="true"
-                className="hidden place-items-center pr-2 text-indigo-300/90 md:grid"
-              >
-                <Bot
-                  strokeWidth={1.25}
-                  className="w-auto"
-                  style={{ height: 'clamp(120px, 15vw, 190px)' }}
-                />
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Footer */}
+        <ClosingCtaStory />
         <Footer />
       </div>
     </motion.div>

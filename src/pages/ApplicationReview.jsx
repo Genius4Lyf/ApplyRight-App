@@ -15,7 +15,8 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import logo from '../assets/logo/applyright-icon.png';
+import logoBlack from '../assets/logo/applyright-icon-black.png';
+import logoWhite from '../assets/logo/applyright-icon-white.png';
 
 const ApplicationReview = () => {
   const fadeInUp = {
@@ -136,7 +137,7 @@ const ApplicationReview = () => {
           className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}
         >
           <Link to="/" className="flex items-center gap-2 group">
-            <img src={logo} alt="ApplyRight Logo" className="h-8 w-auto object-contain" />
+            <img src={logoBlack} alt="ApplyRight Logo" className="h-8 w-auto object-contain" />
             <span className="text-xl font-bold font-brand text-slate-900">ApplyRight</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -168,7 +169,7 @@ const ApplicationReview = () => {
             transition={{ duration: 0.8 }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/55 border border-indigo-200 text-indigo-700 text-xs font-bold uppercase tracking-wide mb-6">
-              <img src={logo} alt="ApplyRight Logo" className="w-4 h-4 object-contain" />
+              <img src={logoBlack} alt="ApplyRight Logo" className="w-4 h-4 object-contain" />
               ApplyRight AI Co-Pilot
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight font-heading">
@@ -340,7 +341,7 @@ const ApplicationReview = () => {
 
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center mb-16">
           <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center border border-white/20 mx-auto mb-6">
-            <img src={logo} alt="ApplyRight Logo" className="w-full h-full object-contain" />
+            <img src={logoWhite} alt="ApplyRight Logo" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-indigo-400 font-bold tracking-widest uppercase text-sm mb-4">
             How ApplyRight AI Works

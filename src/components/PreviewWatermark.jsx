@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import logoUrl from '../assets/logo/applyright-icon.png';
+import logoUrl from '../assets/logo/applyright-icon-black.png';
 
 // ---------------------------------------------------------------------------
 // DETERRENT ONLY — this is NOT a screenshot block.

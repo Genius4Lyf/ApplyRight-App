@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Gauge, ShieldCheck, Zap, Check } from 'lucide-react';
-import logo from '../assets/logo/applyright-icon.png';
+import logoBlack from '../assets/logo/applyright-icon-black.png';
+import logoWhite from '../assets/logo/applyright-icon-white.png';
 
 /**
  * AuthShell
@@ -25,14 +26,14 @@ import logo from '../assets/logo/applyright-icon.png';
  *   trustSignals - array of strings rendered as small comma-separated
  *                  bullets under the form ("Free to start", etc.)
  *   accent       - brand accent for the page: 'ink' (default, neutral) or
- *                  'indigo' (the brand accent, for the CV-agent signup)
+ *                  'agent' (the CV-agent signup path)
  *   badge        - optional { icon, label } pill shown above the headings to
  *                  signal a special signup context (e.g. "CV Agent sign-up")
  *   children     - the actual form
  */
 // Full, static class strings per accent so Tailwind keeps them at build time.
-// The seeker path is INK/neutral. The CV-agent path uses the brand INDIGO as
-// its distinct accent (app-wide amber stays the paid-tier accent, untouched).
+// The seeker path is INK/neutral. The agent path uses a brighter ink treatment
+// as its distinct accent (app-wide amber stays the paid-tier accent, untouched).
 // On the dark left panel the touches are a right-edge hairline + a value-prop
 // icon tint; never a glow.
 const ACCENTS = {
@@ -42,11 +43,11 @@ const ACCENTS = {
     badgeDark: 'bg-white/10 border border-white/20 text-white',
     badgeLight: 'bg-transparent border border-slate-300 text-slate-900',
   },
-  indigo: {
-    hairline: 'via-indigo-400/40',
-    icon: 'text-indigo-300',
-    badgeDark: 'bg-indigo-500/15 border border-indigo-400/30 text-indigo-200',
-    badgeLight: 'bg-indigo-50 border border-indigo-200 text-indigo-700',
+  agent: {
+    hairline: 'via-white/25',
+    icon: 'text-slate-400',
+    badgeDark: 'bg-white/20 border border-white/30 text-white',
+    badgeLight: 'bg-slate-50 border border-slate-200 text-slate-800',
   },
 };
 
@@ -101,7 +102,7 @@ const AuthShell = ({
             to="/"
             className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity"
           >
-            <img src={logo} alt="ApplyRight" className="h-8 w-auto" />
+            <img src={logoWhite} alt="ApplyRight" className="h-8 w-auto" />
             <span className="text-lg font-brand font-semibold tracking-tight">ApplyRight</span>
           </Link>
 
@@ -161,7 +162,7 @@ const AuthShell = ({
             to="/"
             className="lg:hidden flex items-center justify-center gap-2.5 mb-6 hover:opacity-80 transition-opacity"
           >
-            <img src={logo} alt="ApplyRight" className="h-7 w-auto" />
+            <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto" />
             <span className="text-lg font-brand font-semibold tracking-tight text-slate-900">
               ApplyRight
             </span>

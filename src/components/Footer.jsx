@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo/applyright-icon.png';
+import logo from '../assets/logo/applyright-icon-black.png';
 import { useTranslation } from 'react-i18next';
 
 /**
  * Footer — shared site footer in the landing design language: flat, serif
  * wordmark, mono uppercase column headers, slate neutrals, hairline borders,
- * indigo hover. Reusable across the landing page, Pricing, and the guide pages.
+ * ink hover. Reusable across the landing page, Pricing, and the guide pages.
  */
 
 // Translation KEYS, not literals — a module constant would otherwise freeze in
@@ -60,14 +60,11 @@ const Footer = () => {
             <Link to="/" className="flex items-center gap-2">
               <img src={logo} alt={t('common.logoAlt')} className="h-7 w-auto" />
               <span className="font-brand text-xl font-bold tracking-tight text-slate-900">
-                Apply<span className="text-indigo-600">Right</span>
+                Apply<span className="text-slate-900">Right</span>
               </span>
             </Link>
             <p className="font-heading text-base italic text-slate-600">{t('footer.tagline')}</p>
-            <Link
-              to="/register"
-              className="mt-1 inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:border-indigo-800 hover:bg-indigo-800"
-            >
+            <Link to="/register" className="mt-1 btn-primary text-sm">
               {t('common.startFreeShort')}
             </Link>
           </div>
@@ -84,7 +81,7 @@ const Footer = () => {
                     <li key={link.to + link.key}>
                       <Link
                         to={link.to}
-                        className="text-sm text-slate-600 transition-colors hover:text-indigo-600"
+                        className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                       >
                         {t(link.key)}
                       </Link>

@@ -33,6 +33,8 @@ const SORT_OPTIONS = [
 
 const SORT_STORAGE_KEY = 'myCvsSort';
 
+const DECK_LIMIT = 10;
+
 // Momentum figures computed only from fields that exist on a draft. Every value
 // guards against missing fields and falls back to 0 rather than throwing.
 // `t` is passed in explicitly — this is a plain module-level function, not a
@@ -149,7 +151,7 @@ const MyCVs = () => {
     () =>
       [...drafts]
         .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
-        .slice(0, 10),
+        .slice(0, DECK_LIMIT),
     [drafts]
   );
 
@@ -420,7 +422,11 @@ const MyCVs = () => {
                   getKey={(d) => d._id}
                   renderItem={renderCvNote}
                   cardClassName={PAPER_CARD}
-                  label={t('myCvs.deckLabel')}
+                  label={
+                    drafts.length > DECK_LIMIT
+                      ? t('myCvs.deckLabelCapped', { shown: DECK_LIMIT, total: drafts.length })
+                      : t('myCvs.deckLabelAll')
+                  }
                 />
               ) : (
                 <div className="space-y-4 lg:flex lg:flex-col lg:h-full lg:min-h-0">

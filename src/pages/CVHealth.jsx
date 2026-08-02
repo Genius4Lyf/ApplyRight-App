@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle, Bot } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import { useNavigate, Link } from 'react-router-dom';
 
 const fadeIn = {
@@ -135,12 +136,12 @@ const CVHealth = () => {
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-5">
               CV Health
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
               What makes a <br />
-              <span className="text-indigo-600">healthy CV?</span>
+              <span className="italic">healthy CV?</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
               A strong CV is short, sharp, and provable — recruiters spend only seconds on a first
@@ -161,7 +162,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               The right length
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -205,7 +206,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mt-12 border-t border-slate-200 pt-10"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-4">
               Why length matters
             </p>
             <div className="space-y-4 text-lg text-slate-600 leading-relaxed max-w-[62ch]">
@@ -235,7 +236,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mb-12 md:mb-14 flex max-w-[54ch] flex-col gap-3"
           >
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-2">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-2">
               Beyond length
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
@@ -257,7 +258,7 @@ const CVHealth = () => {
               <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
                 <span
                   aria-hidden="true"
-                  className="font-heading text-5xl md:text-6xl text-indigo-400/40 leading-none tabular-nums shrink-0"
+                  className="font-heading text-5xl md:text-6xl text-slate-400/40 leading-none tabular-nums shrink-0"
                 >
                   {String(idx + 1).padStart(2, '0')}
                 </span>
@@ -277,17 +278,17 @@ const CVHealth = () => {
             className="mt-12 border-t border-slate-800 pt-8"
           >
             <p className="text-slate-300 leading-relaxed max-w-[62ch]">
-              You don’t have to eyeball all this. As you build, ApplyRight’s live{' '}
-              <span className="font-semibold text-white">ATS Coach</span> scores your CV Health, and
-              its <span className="font-semibold text-white">fit analysis</span> reads the actual
-              job description to check relevance, keywords, and proof — so you can see exactly where
-              yours stands.
+              You don’t have to eyeball all this. As you build,{' '}
+              <span className="font-semibold text-white">Aria’s panel</span> scores your CV Health
+              live, and its <span className="font-semibold text-white">fit analysis</span> reads the
+              actual job description to check relevance, keywords, and proof — so you can see
+              exactly where yours stands.
             </p>
             <Link
               to="/ats-guide"
-              className="mt-6 inline-flex items-center gap-1.5 border-b-2 border-indigo-400 pb-0.5 font-semibold text-white transition-colors hover:text-indigo-200"
+              className="mt-6 inline-flex items-center gap-1.5 border-b-2 border-white/25 pb-0.5 font-semibold text-white transition-colors hover:text-slate-300"
             >
-              See how the ATS Coach checks these <ArrowRight size={16} />
+              See how Aria checks these <ArrowRight size={16} />
             </Link>
           </motion.div>
         </div>
@@ -303,7 +304,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Match it to your career
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -328,7 +329,7 @@ const CVHealth = () => {
                   idx > 0 ? 'border-t border-slate-200' : ''
                 }`}
               >
-                <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 sm:pt-1">
+                <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 sm:pt-1">
                   {row.range}
                 </p>
                 <p className="text-slate-600 leading-relaxed">{row.guide}</p>
@@ -348,7 +349,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Cut it down
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">How to Trim a Page</h2>
@@ -388,7 +389,7 @@ const CVHealth = () => {
             variants={fadeIn}
             className="mb-10 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Don’t over-trim
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -419,7 +420,7 @@ const CVHealth = () => {
         </div>
       </section>
 
-      {/* CTA — flat ink band with a bare Bot on the right */}
+      {/* CTA — flat ink band with Aria's orbit mark on the right */}
       <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
@@ -431,7 +432,7 @@ const CVHealth = () => {
           >
             {/* Copy */}
             <div className="flex flex-col items-start">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-4">
                 Put it into practice
               </p>
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
@@ -444,19 +445,15 @@ const CVHealth = () => {
               </p>
               <button
                 onClick={buildCV}
-                className="inline-flex items-center gap-2 bg-white text-indigo-800 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold py-4 px-10 rounded-md hover:bg-slate-100 transition-all shadow-sm hover:-translate-y-0.5"
               >
                 Build My CV Now <ArrowRight className="w-5 h-5" />
               </button>
             </div>
 
             {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-            <div
-              aria-hidden="true"
-              className="hidden md:grid place-items-center text-indigo-300/90"
-              style={{ width: 'clamp(120px, 15vw, 190px)' }}
-            >
-              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            <div aria-hidden="true" className="hidden md:grid place-items-center text-slate-400">
+              <AriaOrbit size={160} tone="mono" />
             </div>
           </motion.div>
         </div>

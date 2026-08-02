@@ -111,9 +111,15 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
           <div className="relative mt-2 mb-3">
             <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800 flex items-center justify-center shadow-sm p-2">
               <img
-                src="/applyright-icon.png"
+                src="/applyright-icon-black.png"
                 alt="ApplyRight AI"
-                className="w-full h-full object-contain"
+                className="h-full w-full object-contain dark:hidden"
+              />
+              <img
+                src="/applyright-icon-white.png"
+                alt=""
+                aria-hidden="true"
+                className="hidden h-full w-full object-contain dark:block"
               />
             </div>
             <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute -top-1 -right-1 drop-shadow" />
@@ -160,9 +166,15 @@ const LastInterviewCard = ({ session, history, trend, onStart, gate }) => {
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ring-2 ring-slate-100 dark:ring-slate-800 flex items-center justify-center shrink-0 p-1.5">
             <img
-              src="/applyright-icon.png"
+              src="/applyright-icon-black.png"
               alt="ApplyRight AI"
-              className="w-full h-full object-contain"
+              className="h-full w-full object-contain dark:hidden"
+            />
+            <img
+              src="/applyright-icon-white.png"
+              alt=""
+              aria-hidden="true"
+              className="hidden h-full w-full object-contain dark:block"
             />
           </div>
           <div className="min-w-0 flex-1">

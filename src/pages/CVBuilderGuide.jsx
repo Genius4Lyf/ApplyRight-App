@@ -16,8 +16,8 @@ import {
   LayoutTemplate,
   PlayCircle,
   ArrowRight,
-  Bot,
 } from 'lucide-react';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import PublicNavbar from '../components/PublicNavbar';
 import Seo from '../components/Seo';
 import Footer from '../components/Footer';
@@ -56,7 +56,7 @@ const STEPS = [
     icon: Target,
     youtubeId: '', // ← paste this step's YouTube ID here, e.g. 'dQw4w9WgXcQ'
     title: 'Target Job',
-    body: 'Start here. Paste the job title, company, and the full job description. Everything downstream — the ATS Coach, keyword matching, and AI suggestions — is tailored to this role. Skipping it means generic advice, so always fill it in first.',
+    body: 'Start here. Paste the job title, company, and the full job description. Everything downstream — Aria’s coaching, Role Match keyword coverage, and AI suggestions — is tailored to this role. Skipping it means generic advice, so always fill it in first.',
   },
   {
     icon: User,
@@ -156,7 +156,7 @@ const CVBuilderGuide = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900">
       <Seo
         title="How to Get the Best of the ApplyRight CV Builder"
-        description="A complete guide and video tutorials for the ApplyRight CV Builder — the 8-step flow, the live ATS Coach, Deep Scan keyword matching, AI bullets and skills, templates, and pro tips."
+        description="A complete guide and video tutorials for the ApplyRight CV Builder — the 8-step flow, Aria's live coaching panel, Role Match keyword coverage, AI bullets and skills, templates, and pro tips."
       />
       <PublicNavbar />
 
@@ -164,11 +164,11 @@ const CVBuilderGuide = () => {
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-5">
               Your CV Builder playbook
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
-              Get the Best of the <span className="text-indigo-600">CV Builder</span>
+              Get the Best of the <span className="italic">CV Builder</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-4 leading-relaxed">
               Watch the video tutorials, follow the step-by-step guide, and learn how the live ATS
@@ -188,7 +188,7 @@ const CVBuilderGuide = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Step-by-step video tutorials
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -240,7 +240,7 @@ const CVBuilderGuide = () => {
                       <span className="font-mono text-sm tabular-nums text-slate-400">
                         {String(idx + 1).padStart(2, '0')}
                       </span>
-                      <Icon size={18} className="text-indigo-600 shrink-0" />
+                      <Icon size={18} className="text-slate-900 shrink-0" />
                       <h3 className="text-lg font-bold text-slate-900">{step.title}</h3>
                     </div>
                     <p className="text-slate-600 leading-relaxed">{step.body}</p>
@@ -252,7 +252,7 @@ const CVBuilderGuide = () => {
         </div>
       </section>
 
-      {/* ATS Coach — flat editorial cards */}
+      {/* Aria's builder panel — flat editorial cards */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
@@ -262,13 +262,13 @@ const CVBuilderGuide = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
-              The live ATS Coach
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
+              Aria, in the builder
             </p>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Your Live ATS Coach</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Ask Aria As You Build</h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              As you build, a coaching panel scores your CV in real time and tells you exactly what
-              to fix next.
+              A three-tab panel sits beside every step: chat with Aria, watch your CV Health score
+              move as you type, and see how well you match the role. The scores are free.
             </p>
           </motion.div>
 
@@ -285,7 +285,7 @@ const CVBuilderGuide = () => {
                 variants={fadeIn}
                 className="rounded-xl border border-slate-200 bg-white p-8"
               >
-                <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-indigo-800 mb-4">
+                <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-slate-900 mb-4">
                   {item.tag}
                 </p>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
@@ -308,7 +308,7 @@ const CVBuilderGuide = () => {
           >
             {/* Copy */}
             <div className="flex flex-col gap-3">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
                 Compare two CVs
               </p>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -334,11 +334,11 @@ const CVBuilderGuide = () => {
                   </p>
                   <p className="font-heading text-2xl font-bold tabular-nums text-slate-500">78</p>
                 </div>
-                <div className="rounded border border-indigo-200 bg-indigo-50 p-3 text-center">
-                  <p className="font-mono text-[0.55rem] uppercase tracking-wider text-indigo-800">
+                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-center">
+                  <p className="font-mono text-[0.55rem] uppercase tracking-wider text-slate-900">
                     CV B
                   </p>
-                  <p className="font-heading text-2xl font-bold tabular-nums text-indigo-800">91</p>
+                  <p className="font-heading text-2xl font-bold tabular-nums text-slate-900">91</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2.5">
@@ -350,11 +350,11 @@ const CVBuilderGuide = () => {
                   <div key={d.label}>
                     <div className="mb-1 flex justify-between font-mono text-[0.56rem] uppercase tracking-wide text-slate-400">
                       <span>{d.label}</span>
-                      <span className="text-indigo-800">{d.b}%</span>
+                      <span className="text-slate-900">{d.b}%</span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
                       <span
-                        className="block h-full rounded-full bg-indigo-600"
+                        className="block h-full rounded-full bg-slate-900"
                         style={{ width: `${d.b}%` }}
                       />
                     </div>
@@ -376,7 +376,7 @@ const CVBuilderGuide = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Pro tips
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Quick Wins</h2>
@@ -400,7 +400,7 @@ const CVBuilderGuide = () => {
                   variants={fadeIn}
                   className="rounded-xl border border-slate-200 bg-white p-8"
                 >
-                  <Icon size={20} className="text-indigo-600 mb-4" />
+                  <Icon size={20} className="text-slate-900 mb-4" />
                   <h3 className="text-xl font-bold text-slate-900 mb-3">{tip.title}</h3>
                   <p className="text-slate-600 leading-relaxed">{tip.body}</p>
                 </motion.div>
@@ -410,7 +410,7 @@ const CVBuilderGuide = () => {
         </div>
       </section>
 
-      {/* CTA — flat ink band with a bare Bot on the right */}
+      {/* CTA — flat ink band with Aria's orbit mark on the right */}
       <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
@@ -422,7 +422,7 @@ const CVBuilderGuide = () => {
           >
             {/* Copy */}
             <div className="flex flex-col items-start">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-4">
                 Put it into practice
               </p>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -434,7 +434,7 @@ const CVBuilderGuide = () => {
               </p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
               >
                 Start building free
                 <ArrowRight size={20} />
@@ -442,12 +442,8 @@ const CVBuilderGuide = () => {
             </div>
 
             {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-            <div
-              aria-hidden="true"
-              className="hidden md:grid place-items-center text-indigo-300/90"
-              style={{ width: 'clamp(120px, 15vw, 190px)' }}
-            >
-              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            <div aria-hidden="true" className="hidden md:grid place-items-center text-slate-400">
+              <AriaOrbit size={160} tone="mono" />
             </div>
           </motion.div>
         </div>

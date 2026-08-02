@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Scale, FileText, AlertCircle, Coins, Cpu, Ban, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo/applyright-icon.png';
+import logo from '../assets/logo/applyright-icon-black.png';
 
 const LAST_UPDATED = 'May 31, 2026';
 const SUPPORT_EMAIL = 'careers@applyright.com.ng';

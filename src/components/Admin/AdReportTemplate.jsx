@@ -7,7 +7,8 @@ import {
   FileText,
   Sparkles,
 } from 'lucide-react';
-import applyRightIcon from '../../assets/logo/applyright-icon.png';
+import applyRightIconBlack from '../../assets/logo/applyright-icon-black.png';
+import applyRightIconWhite from '../../assets/logo/applyright-icon-white.png';
 import { AD_TEMPLATES } from './adReportTemplates';
 
 const REPORT_SIZE = 1080;
@@ -111,7 +112,7 @@ const DesignSocialProof = forwardRef(({ stats, context }, ref) => {
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-            <img src={applyRightIcon} alt="" className="h-9 w-9 object-contain" />
+            <img src={applyRightIconWhite} alt="" className="h-9 w-9 object-contain" />
           </div>
           <div className="flex-1">
             <div className="font-brand text-[30px] font-bold tracking-tight text-white">
@@ -294,7 +295,7 @@ const DesignGrowthStory = forwardRef(({ stats, context }, ref) => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src={applyRightIcon} alt="" className="h-12 w-12 object-contain" />
+            <img src={applyRightIconBlack} alt="" className="h-12 w-12 object-contain" />
             <div>
               <div className="font-brand text-[30px] font-semibold tracking-tight text-slate-950">
                 ApplyRight
@@ -527,7 +528,7 @@ const DesignImpactReport = forwardRef(({ stats, context }, ref) => {
       <div className="relative z-10 flex w-[400px] flex-col justify-between p-10 text-white">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/12">
-            <img src={applyRightIcon} alt="" className="h-8 w-8 object-contain" />
+            <img src={applyRightIconWhite} alt="" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <div className="font-brand text-[28px] font-semibold tracking-tight">ApplyRight</div>

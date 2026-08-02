@@ -706,10 +706,11 @@ const Dashboard = () => {
 
         {/* Aria Studio — the hero launcher. Sits above the two pillars because it's the
             one place where Aria does the work FOR you rather than alongside you. Flat
-            hairline card, indigo = Aria/action. */}
+            hairline card; the left rule is ink, not indigo — indigo is reserved for
+            interactive accent (focus rings, links), never decoration. */}
         {!workflowMode && !initialLoading && (
           <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-600 dark:border-l-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5">
+            <div className="rounded-xl rounded-l-none border border-slate-200 dark:border-slate-800 border-l-[6px] border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900 shadow-card p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <AriaOrbit size={18} />
@@ -739,7 +740,7 @@ const Dashboard = () => {
 
         {/* Two intent pillars — "Your application" (tailor / build) and
             "Interview practice" (live mock). Flat editorial cards; the flagship
-            Tailor card carries a single indigo top-accent + "Recommended" chip.
+            Tailor card carries a single ink top-accent + "Recommended" chip.
             Consistent across web and the Android/Capacitor build — we're removing
             paralysis, not removing choice. */}
         {!workflowMode && !initialLoading && (
@@ -778,7 +779,7 @@ const Dashboard = () => {
                   role="button"
                   tabIndex={0}
                   aria-label={t('dashboard.tailorCard.aria')}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 border-t-2 border-t-indigo-600 dark:border-t-indigo-500 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  className="rounded-xl rounded-t-none border border-slate-200 dark:border-slate-800 border-t-[3px] border-t-slate-900 dark:border-t-white bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />

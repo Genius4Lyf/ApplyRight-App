@@ -385,32 +385,10 @@ const MockInterviewPage = () => {
     refreshEntitlement();
   }, [refreshEntitlement]);
 
-  // Buy a ₦600 Practice Pass (one scored solo run) via the hosted Flutterwave
-  // checkout. Returns to /billing/return, which grants the minutes; the user comes
-  // back with secondsRemaining > 0 and can run a scored session.
-  const [buyingPass, setBuyingPass] = useState(false);
   // Pre-interview paywall modal — shown when a free user out of taste taps Start.
+  // There's no one-off purchase to offer any more (the Practice Pass is retired), so
+  // both this modal and the locked scorecard route to /upgrade.
   const [showInterviewPaywall, setShowInterviewPaywall] = useState(false);
-  const buyPracticePass = async () => {
-    if (buyingPass) return;
-    setBuyingPass(true);
-    try {
-      // Remember this interview so BillingReturn can send the buyer straight back
-      // here (and auto-start the call) instead of dumping them on the dashboard —
-      // the Flutterwave redirect wipes React state, so we stash it in localStorage.
-      localStorage.setItem('arPostCheckout', window.location.pathname);
-      localStorage.setItem('arCheckoutOrigin', window.location.pathname);
-      const { link } = await billingService.checkout('practice_pass', 'NGN');
-      if (link) window.location.href = link;
-      else {
-        toast.error(t('interviewPrep.mock.toast.checkoutError'));
-        setBuyingPass(false);
-      }
-    } catch (e) {
-      toast.error(e.response?.data?.message || t('interviewPrep.mock.toast.checkoutError'));
-      setBuyingPass(false);
-    }
-  };
 
   // Fetch the interview panel for the setup screen (conversational/live mode) so
   // the user sees who's interviewing them before starting. Re-fetches when the
@@ -436,18 +414,17 @@ const MockInterviewPage = () => {
   }, [mode, phase, style, applicationId]);
 
   // Seconds of live interview the user can still start (paid minutes or free taste).
-  // Spend PURCHASED minutes first (subscription / top-up / ₦600 Practice Pass),
-  // then fall back to the lifetime free taste — mirrors the backend's reservation
-  // order, so a free-tier Practice Pass buyer can start a (scored) session.
+  // Spend PURCHASED minutes first (subscription plan or minute top-up), then fall
+  // back to the lifetime free taste — mirrors the backend's reservation order.
   const liveSecondsAvailable = entitlement
     ? (entitlement.secondsRemaining || 0) > 0
       ? entitlement.secondsRemaining
       : entitlement.freeTasteRemainingSec || 0
     : null; // null = unknown (entitlement not loaded yet)
 
-  // Tier still gates the PANEL experience (role selection, length slider, sharper
-  // model) — a Practice Pass buyer stays "free" tier and gets the solo interviewer,
-  // just with their scorecard unlocked. Paid plans remain the upgrade for the panel.
+  // Tier gates the PANEL experience (role selection, length slider, sharper model)
+  // independently of the minute balance, which is tier-agnostic. Paid plans are the
+  // only route to the panel.
   const isPaidTier = !!entitlement && entitlement.tier !== 'free';
 
   // Live-interview length control (paid only). Bounded by the per-tier cap and the
@@ -508,9 +485,7 @@ const MockInterviewPage = () => {
       .sort((a, b) => flowRank(a) - flowRank(b))
       .slice(0, 10);
     const hasGap = ordered.some((q) => (q.type || '').toLowerCase() === 'gap');
-    return hasGap
-      ? ordered
-      : [...ordered, { ...WEAKNESS_Q, question: t(WEAKNESS_Q.questionKey) }];
+    return hasGap ? ordered : [...ordered, { ...WEAKNESS_Q, question: t(WEAKNESS_Q.questionKey) }];
   }, [jobQuestions, t]);
 
   const plannedSec = useMemo(
@@ -904,9 +879,10 @@ const MockInterviewPage = () => {
     return beginTurnBasedConversation();
   };
 
-  // Returning from a Practice Pass purchase (BillingReturn sends ?paid=1): the
-  // minutes are now granted, so auto-start the live call instead of making the
-  // buyer hunt for "Start" again. Fires ONCE, and only when the page + entitlement
+  // Returning from a purchase that started here — a plan or a minute top-up
+  // (BillingReturn sends ?paid=1): the minutes are now granted, so auto-start the
+  // live call instead of making the buyer hunt for "Start" again. Fires ONCE, and
+  // only when the page + entitlement
   // have loaded, minutes are present, and the readiness gate is open — otherwise it
   // no-ops and the normal Start button stays (their purchased minutes aren't lost).
   const autoStartedRef = useRef(false);
@@ -921,7 +897,7 @@ const MockInterviewPage = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('paid');
     setSearchParams(next, { replace: true });
-    toast.success(t('interviewPrep.mock.toast.passActive'));
+    toast.success(t('interviewPrep.mock.toast.minutesActive'));
     setMode('conversational');
     beginConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2043,8 +2019,6 @@ const MockInterviewPage = () => {
               gradeError={gradeError && !assessment && !!gradingTranscript}
               analysisLocked={analysisLocked}
               onUpgrade={() => navigate('/upgrade')}
-              onBuyPracticePass={buyPracticePass}
-              buyingPass={buyingPass}
               onRetryAssessment={retryAssessment}
               onSave={saveSession}
               onPracticeWeak={() =>
@@ -2118,62 +2092,62 @@ const MockInterviewPage = () => {
 const ExitConfirmModal = ({ isLive, onLeave, onStay }) => {
   const { t } = useTranslation();
   return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onStay}
-      className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-    />
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 15 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 15 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
-    >
-      <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200/60 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
-          <AlertTriangle className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onStay}
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative z-10 text-slate-900 dark:text-slate-100"
+      >
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200/60 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {t('interviewPrep.mock.exitModal.title')}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              <Trans
+                i18nKey={
+                  isLive
+                    ? 'interviewPrep.mock.exitModal.bodyLive'
+                    : 'interviewPrep.mock.exitModal.bodyGuided'
+                }
+                components={{
+                  b: <span className="font-semibold text-slate-700 dark:text-slate-300" />,
+                }}
+              />
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
-            {t('interviewPrep.mock.exitModal.title')}
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-            <Trans
-              i18nKey={
-                isLive
-                  ? 'interviewPrep.mock.exitModal.bodyLive'
-                  : 'interviewPrep.mock.exitModal.bodyGuided'
-              }
-              components={{
-                b: <span className="font-semibold text-slate-700 dark:text-slate-300" />,
-              }}
-            />
-          </p>
-        </div>
-      </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
-        <button
-          type="button"
-          onClick={onStay}
-          className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
-        >
-          {t('interviewPrep.mock.exitModal.stay')}
-        </button>
-        <button
-          type="button"
-          onClick={onLeave}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
-        >
-          {t('interviewPrep.mock.exitModal.leave')}
-        </button>
-      </div>
-    </motion.div>
-  </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+          <button
+            type="button"
+            onClick={onStay}
+            className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
+          >
+            {t('interviewPrep.mock.exitModal.stay')}
+          </button>
+          <button
+            type="button"
+            onClick={onLeave}
+            className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 text-slate-655 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center hover:border-rose-350 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15"
+          >
+            {t('interviewPrep.mock.exitModal.leave')}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
@@ -2260,109 +2234,109 @@ const EndReviewConfirmModal = ({ elapsedSec = 0, minReviewSec = 480, onConfirm, 
 const ReadyCheckModal = ({ missing, readiness, onPrepare, onStartAnyway, onClose }) => {
   const { t } = useTranslation();
   return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-    />
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 15 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 15 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
-    >
-      <button
-        type="button"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-        aria-label={t('interviewPrep.mock.close')}
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden z-10 text-slate-900 dark:text-slate-100"
       >
-        <X className="w-4 h-4" />
-      </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+          aria-label={t('interviewPrep.mock.close')}
+        >
+          <X className="w-4 h-4" />
+        </button>
 
-      <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-250 dark:border-amber-500/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
-          <AlertTriangle className="w-5 h-5" />
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-250 dark:border-amber-500/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 pr-6">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {t('interviewPrep.mock.readyCheck.title')}
+            </h2>
+            <p className="text-xs text-slate-550 dark:text-slate-450 mt-0.5 font-normal">
+              {t('interviewPrep.mock.readyCheck.subtitle')}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0 pr-6">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
-            {t('interviewPrep.mock.readyCheck.title')}
-          </h2>
-          <p className="text-xs text-slate-550 dark:text-slate-450 mt-0.5 font-normal">
-            {t('interviewPrep.mock.readyCheck.subtitle')}
+
+        <div className="mt-5 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/80">
+          <div className="flex justify-between items-center text-xs mb-2">
+            <span className="font-semibold text-slate-650 dark:text-slate-350">
+              {t('interviewPrep.mock.readyCheck.readinessScore')}
+            </span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{readiness}%</span>
+          </div>
+          <div className="w-full h-2 bg-slate-200 dark:bg-slate-750 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-amber-500 rounded-full transition-all duration-500"
+              style={{ width: `${readiness}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
+            {t('interviewPrep.mock.readyCheck.todo')}
           </p>
+          <ul className="space-y-2.5">
+            {missing.map((m, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0 animate-pulse" />
+                <span className="leading-relaxed">
+                  <Trans
+                    i18nKey="interviewPrep.mock.readyCheck.prepare"
+                    values={{ item: m.replace('your ', '') }}
+                    components={{
+                      b: <span className="font-medium text-slate-900 dark:text-slate-100" />,
+                    }}
+                  />
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
 
-      <div className="mt-5 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/80">
-        <div className="flex justify-between items-center text-xs mb-2">
-          <span className="font-semibold text-slate-650 dark:text-slate-350">
-            {t('interviewPrep.mock.readyCheck.readinessScore')}
-          </span>
-          <span className="font-bold text-slate-900 dark:text-slate-100">{readiness}%</span>
-        </div>
-        <div className="w-full h-2 bg-slate-200 dark:bg-slate-750 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-amber-500 rounded-full transition-all duration-500"
-            style={{ width: `${readiness}%` }}
+        <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 mt-5 leading-relaxed">
+          <Trans
+            i18nKey="interviewPrep.mock.readyCheck.tip"
+            components={{ b: <span className="font-semibold text-slate-900 dark:text-white" /> }}
           />
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
-          {t('interviewPrep.mock.readyCheck.todo')}
         </p>
-        <ul className="space-y-2.5">
-          {missing.map((m, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0 animate-pulse" />
-              <span className="leading-relaxed">
-                <Trans
-                  i18nKey="interviewPrep.mock.readyCheck.prepare"
-                  values={{ item: m.replace('your ', '') }}
-                  components={{
-                    b: <span className="font-medium text-slate-900 dark:text-slate-100" />,
-                  }}
-                />
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3.5 mt-5 leading-relaxed">
-        <Trans
-          i18nKey="interviewPrep.mock.readyCheck.tip"
-          components={{ b: <span className="font-semibold text-slate-900 dark:text-white" /> }}
-        />
-      </p>
-
-      <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
-        <button
-          type="button"
-          onClick={onPrepare}
-          className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
-        >
-          {t('interviewPrep.mock.readyCheck.prepareFirst')}
-        </button>
-        <button
-          type="button"
-          onClick={onStartAnyway}
-          className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center"
-        >
-          {t('interviewPrep.mock.readyCheck.startAnyway')}
-        </button>
-      </div>
-    </motion.div>
-  </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+          <button
+            type="button"
+            onClick={onPrepare}
+            className="flex-1 order-1 sm:order-2 btn-primary px-4 py-2.5 rounded-xl text-sm select-none cursor-pointer text-center"
+          >
+            {t('interviewPrep.mock.readyCheck.prepareFirst')}
+          </button>
+          <button
+            type="button"
+            onClick={onStartAnyway}
+            className="flex-1 order-2 sm:order-1 px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-305 text-sm font-semibold transition-colors select-none cursor-pointer text-center"
+          >
+            {t('interviewPrep.mock.readyCheck.startAnyway')}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
@@ -2428,7 +2402,7 @@ const ConnectingView = ({
           }`}
         >
           <img
-            src="/applyright-icon.png"
+            src="/applyright-icon-black.png"
             alt="ApplyRight AI interviewer"
             className="w-full h-full object-contain"
           />
@@ -2523,34 +2497,34 @@ const ConnectingView = ({
 const GradingView = () => {
   const { t } = useTranslation();
   return (
-  <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
-    <div className="relative mb-6">
-      <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-2 ring-slate-900/10 dark:ring-white/20 flex items-center justify-center p-3 shadow-xl">
-        <img
-          src="/applyright-icon.png"
-          alt="ApplyRight AI"
-          className="w-full h-full object-contain"
+    <div className="flex flex-col items-center justify-center text-center h-[calc(100dvh-5.5rem)]">
+      <div className="relative mb-6">
+        <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-200 dark:border-white/20 ring-2 ring-slate-900/10 dark:ring-white/20 flex items-center justify-center p-3 shadow-xl">
+          <img
+            src="/applyright-icon-black.png"
+            alt="ApplyRight AI"
+            className="w-full h-full object-contain"
+          />
+        </div>
+      </div>
+      <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+        {t('interviewPrep.mock.grading.title')}
+      </h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+        {t('interviewPrep.mock.grading.body')}
+      </p>
+      <div className="mt-5 flex items-center gap-1.5" aria-hidden>
+        <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce" />
+        <span
+          className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
+          style={{ animationDelay: '0.15s' }}
+        />
+        <span
+          className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
+          style={{ animationDelay: '0.3s' }}
         />
       </div>
     </div>
-    <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-      {t('interviewPrep.mock.grading.title')}
-    </h2>
-    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-      {t('interviewPrep.mock.grading.body')}
-    </p>
-    <div className="mt-5 flex items-center gap-1.5" aria-hidden>
-      <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce" />
-      <span
-        className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
-        style={{ animationDelay: '0.15s' }}
-      />
-      <span
-        className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white animate-bounce"
-        style={{ animationDelay: '0.3s' }}
-      />
-    </div>
-  </div>
   );
 };
 
@@ -3133,7 +3107,7 @@ const RunningView = ({
               }`}
             >
               <img
-                src="/applyright-icon.png"
+                src="/applyright-icon-black.png"
                 alt="ApplyRight AI interviewer"
                 className="w-full h-full object-contain"
               />
@@ -3370,8 +3344,6 @@ const ReviewView = ({
   gradeError,
   analysisLocked,
   onUpgrade,
-  onBuyPracticePass,
-  buyingPass,
   onRetryAssessment,
   onSave,
   onPracticeWeak,
@@ -3482,25 +3454,14 @@ const ReviewView = ({
             <div className="mt-5 flex flex-col items-center gap-2.5">
               <button
                 type="button"
-                onClick={onBuyPracticePass}
-                disabled={buyingPass}
-                className="btn-primary gap-2 px-5 py-2.5 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed text-sm cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4" />
-                {buyingPass
-                  ? t('interviewPrep.interviewPaywall.startingCheckout')
-                  : t('interviewPrep.mock.review.buyPass')}
-              </button>
-              <button
-                type="button"
                 onClick={onUpgrade}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="btn-primary gap-2 px-5 py-2.5 rounded-xl text-sm cursor-pointer"
               >
-                {t('interviewPrep.mock.review.seeAllPlans')} <ArrowRight className="w-3.5 h-3.5" />
+                {t('interviewPrep.mock.review.seeAllPlans')} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
             <p className="mt-3 text-[11px] text-slate-450 dark:text-slate-500">
-              {t('interviewPrep.mock.review.oneScoredRun')}
+              {t('interviewPrep.mock.review.plansFootnote')}
             </p>
           </div>
         ) : assessment ? (
@@ -3790,7 +3751,9 @@ const ModeChooserView = ({ title, userTier, onPick, onCancel }) => {
           <Trans
             i18nKey="interviewPrep.mock.chooser.subtitle"
             values={{ title }}
-            components={{ b: <span className="font-semibold text-slate-700 dark:text-slate-300" /> }}
+            components={{
+              b: <span className="font-semibold text-slate-700 dark:text-slate-300" />,
+            }}
           />
         </p>
       </div>
@@ -3873,7 +3836,7 @@ const InterviewerTile = ({ voiceState, onReplay }) => {
             }`}
           >
             <img
-              src="/applyright-icon.png"
+              src="/applyright-icon-black.png"
               alt="ApplyRight AI interviewer"
               className="w-full h-full object-contain"
             />

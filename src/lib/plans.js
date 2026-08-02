@@ -44,16 +44,18 @@ export const FREE_TIER = {
   ],
 };
 
-// Paid CV feature set shared by every paid tier (job seeker + agent). These all
-// gate on isPaidActive in the backend, so they're identical across paid plans.
+// Paid CV feature set shared by every paid tier (job seeker + agent). Every line
+// here must correspond to something the backend ACTUALLY gates on isPaidActive —
+// premium templates (config/templates.js), downloads (consumeDownload), the
+// scorecard gate, the three requireTier("plus") grading routes, and the free
+// light-model chat in modelSelection.service. Model access itself is NOT a tier
+// perk any more: every model is pickable by everyone and priced in credits.
 const PAID_CV_FEATURE_KEYS = [
   'billing.plans.paidCvFeatures.0',
   'billing.plans.paidCvFeatures.1',
   'billing.plans.paidCvFeatures.2',
   'billing.plans.paidCvFeatures.3',
   'billing.plans.paidCvFeatures.4',
-  'billing.plans.paidCvFeatures.5',
-  'billing.plans.paidCvFeatures.6',
 ];
 
 export const TIERS = [
@@ -65,17 +67,17 @@ export const TIERS = [
     priceUsd: 4,
     period: '14 days',
     periodKey: 'billing.common.periods.day14',
-    minutes: 15,
+    minutes: 20,
     credits: 150,
-    model: 'Standard interviewer',
     // Spotlighted only in NGN — the cheap 2-week plan is the local sweet spot.
     featuredFor: 'NGN',
     badgeKey: 'billing.plans.weeklyPro.badge',
     featureKeys: [
       'billing.plans.weeklyPro.features.0',
       'billing.plans.weeklyPro.features.1',
-      ...PAID_CV_FEATURE_KEYS,
       'billing.plans.weeklyPro.features.2',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.weeklyPro.features.3',
     ],
   },
   {
@@ -86,17 +88,17 @@ export const TIERS = [
     priceUsd: 12,
     period: 'month',
     periodKey: 'billing.common.periods.month',
-    minutes: 50,
+    minutes: 60,
     credits: 500,
-    model: 'Standard interviewer',
     // Spotlighted only in USD — monthly is the better value for global users.
     featuredFor: 'USD',
     badgeKey: 'billing.plans.monthlyPro.badge',
     featureKeys: [
       'billing.plans.monthlyPro.features.0',
       'billing.plans.monthlyPro.features.1',
-      ...PAID_CV_FEATURE_KEYS,
       'billing.plans.monthlyPro.features.2',
+      ...PAID_CV_FEATURE_KEYS,
+      'billing.plans.monthlyPro.features.3',
     ],
   },
   {
@@ -107,15 +109,15 @@ export const TIERS = [
     priceUsd: 20,
     period: 'month',
     periodKey: 'billing.common.periods.month',
-    minutes: 45,
+    minutes: 90,
     credits: 1000,
-    model: 'Sharpest interviewer (premium AI)',
     featureKeys: [
       'billing.plans.monthlyPremium.features.0',
       'billing.plans.monthlyPremium.features.1',
-      ...PAID_CV_FEATURE_KEYS,
       'billing.plans.monthlyPremium.features.2',
+      ...PAID_CV_FEATURE_KEYS,
       'billing.plans.monthlyPremium.features.3',
+      'billing.plans.monthlyPremium.features.4',
     ],
   },
 ];
@@ -162,20 +164,27 @@ export const AGENT_TIERS = [
   },
 ];
 
+// Live-interview minute packs. The ladder starts at 10 min because a real
+// interview runs 10/20/30 minutes — anything shorter can't fund one. Price per
+// minute descends strictly down the list (₦180 → ₦160 → ₦150 → ₦133 → ₦125 →
+// ₦113), which is what makes `best` on the last row honest. CreditStore renders
+// the duration via formatMinutesLabel and the price from these numbers, so no
+// display label is needed (and a literal one would break the i18n rule above).
+// Must match the backend catalog. topup_5/topup_15 are retired there.
 export const TOPUPS = [
-  { id: 'topup_5', label: '5 min top-up', priceNgn: 1000, priceUsd: 1.5, minutes: 5 },
-  { id: 'topup_15', label: '15 min top-up', priceNgn: 2500, priceUsd: 3.5, minutes: 15 },
-  { id: 'topup_30', label: '30 min top-up', priceNgn: 4500, priceUsd: 6, minutes: 30 },
-  { id: 'topup_60', label: '1 hr top-up', priceNgn: 8000, priceUsd: 10, minutes: 60 },
-  { id: 'topup_120', label: '2 hr top-up', priceNgn: 15000, priceUsd: 19, minutes: 120 },
-  { id: 'topup_300', label: '5 hr top-up', priceNgn: 34000, priceUsd: 42, minutes: 300, best: true },
+  { id: 'topup_10', priceNgn: 1800, priceUsd: 2.5, minutes: 10 },
+  { id: 'topup_20', priceNgn: 3200, priceUsd: 4.5, minutes: 20 },
+  { id: 'topup_30', priceNgn: 4500, priceUsd: 6, minutes: 30 },
+  { id: 'topup_60', priceNgn: 8000, priceUsd: 10, minutes: 60 },
+  { id: 'topup_120', priceNgn: 15000, priceUsd: 19, minutes: 120 },
+  { id: 'topup_300', priceNgn: 34000, priceUsd: 42, minutes: 300, best: true },
 ];
 
 // Credit packs — buyable any time; added to the persistent wallet (never reset).
 // Must match the backend catalog (credits_500 / credits_1000).
 export const CREDIT_PACKS = [
-  { id: 'credits_500', label: '75 credits', priceNgn: 500, priceUsd: 0.75, credits: 75 },
-  { id: 'credits_1000', label: '150 credits', priceNgn: 1000, priceUsd: 1.5, credits: 150 },
+  { id: 'credits_500', priceNgn: 500, priceUsd: 0.75, credits: 75 },
+  { id: 'credits_1000', priceNgn: 1000, priceUsd: 1.5, credits: 150 },
 ];
 
 // One-off clean CV download (after the free first one). Must match the backend

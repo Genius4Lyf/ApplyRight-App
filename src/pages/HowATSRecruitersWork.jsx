@@ -10,10 +10,10 @@ import {
   BarChart3,
   ShieldCheck,
   ArrowRight,
-  Bot,
 } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
+import AriaOrbit from '../components/cv/AriaOrbit';
 import { Link } from 'react-router-dom';
 
 const fadeIn = {
@@ -103,11 +103,11 @@ const HowATSRecruitersWork = () => {
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-5">
+            <span className="block font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-5">
               The reality, minus the myths
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-tight">
-              How ATS &amp; Recruiters <span className="text-indigo-600">Actually Work</span>
+              How ATS &amp; Recruiters <span className="italic">Actually Work</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-4 leading-relaxed">
               The internet is full of scary “the robots rejected you” myths. Here’s what genuinely
@@ -128,7 +128,7 @@ const HowATSRecruitersWork = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               Myth vs reality
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Myth vs. Reality</h2>
@@ -160,7 +160,7 @@ const HowATSRecruitersWork = () => {
                     </p>
                   </div>
                   <div className="mt-3 flex items-start gap-2">
-                    <ArrowRight className="text-indigo-600 shrink-0 mt-1" size={16} />
+                    <ArrowRight className="text-slate-900 shrink-0 mt-1" size={16} />
                     <p className="text-slate-800 font-medium leading-relaxed">{item.reality}</p>
                   </div>
                 </div>
@@ -180,7 +180,7 @@ const HowATSRecruitersWork = () => {
             variants={fadeIn}
             className="mb-10 md:mb-12 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               What actually happens
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -202,7 +202,7 @@ const HowATSRecruitersWork = () => {
               <motion.div key={idx} variants={fadeIn} className="flex gap-5 md:gap-8">
                 <span
                   aria-hidden="true"
-                  className="font-heading text-5xl md:text-6xl text-indigo-200 leading-none tabular-nums shrink-0"
+                  className="font-heading text-5xl md:text-6xl text-slate-300 leading-none tabular-nums shrink-0"
                 >
                   {String(idx + 1).padStart(2, '0')}
                 </span>
@@ -226,7 +226,7 @@ const HowATSRecruitersWork = () => {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="border-l-4 border-indigo-600 pl-6 md:pl-8"
+            className="border-l-4 border-slate-900 pl-6 md:pl-8"
           >
             <p className="font-heading text-2xl md:text-3xl text-slate-900 leading-snug">
               “I don’t reject resumes for missing a buzzword. I search for the skills the role needs
@@ -249,7 +249,7 @@ const HowATSRecruitersWork = () => {
             variants={fadeIn}
             className="mb-12 md:mb-16 flex max-w-[54ch] flex-col gap-3"
           >
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900">
               The honest playbook
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -278,7 +278,7 @@ const HowATSRecruitersWork = () => {
                 >
                   {/* Copy */}
                   <div className={reverse ? 'md:order-2' : ''}>
-                    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-3">
+                    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-3">
                       Playbook · {String(idx + 1).padStart(2, '0')}
                     </p>
                     <h3 className="text-2xl font-bold text-slate-900 mb-3">{item.title}</h3>
@@ -288,15 +288,15 @@ const HowATSRecruitersWork = () => {
                   {/* Visual — flat bordered panel */}
                   <div className={reverse ? 'md:order-1' : ''}>
                     <div className="rounded-xl border border-slate-200 bg-white p-6">
-                      <Icon size={20} className="text-indigo-600 mb-4" />
+                      <Icon size={20} className="text-slate-900 mb-4" />
                       {idx === 0 && (
                         <div className="flex flex-col gap-3">
                           <p className="text-slate-400 italic line-through decoration-rose-400/70 decoration-2">
                             “Handled customer issues”
                           </p>
                           <div className="flex items-center gap-2">
-                            <ArrowRight className="text-indigo-600 shrink-0" size={16} />
-                            <p className="font-semibold text-indigo-800">
+                            <ArrowRight className="text-slate-900 shrink-0" size={16} />
+                            <p className="font-semibold text-slate-900">
                               “stakeholder management”
                             </p>
                           </div>
@@ -304,10 +304,10 @@ const HowATSRecruitersWork = () => {
                       )}
                       {idx === 1 && (
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="font-mono text-xl md:text-2xl font-bold tabular-nums text-indigo-800">
+                          <span className="font-mono text-xl md:text-2xl font-bold tabular-nums text-slate-900">
                             4.2s → 0.8s
                           </span>
-                          <span className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 font-mono text-sm font-bold text-indigo-800">
+                          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-sm font-bold text-slate-900">
                             ↑ 12%
                           </span>
                         </div>
@@ -335,7 +335,7 @@ const HowATSRecruitersWork = () => {
         </div>
       </section>
 
-      {/* CTA — flat ink band with a bare Bot on the right */}
+      {/* CTA — flat ink band with Aria's orbit mark on the right */}
       <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
@@ -347,7 +347,7 @@ const HowATSRecruitersWork = () => {
           >
             {/* Copy */}
             <div className="flex flex-col items-start">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-300 mb-4">
+              <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-400 mb-4">
                 ATS-ready, honestly
               </p>
               <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
@@ -361,7 +361,7 @@ const HowATSRecruitersWork = () => {
               </p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-4 px-8 rounded-md shadow-sm font-semibold transition-colors"
               >
                 Build an ATS-ready CV free
                 <ArrowRight size={20} />
@@ -369,12 +369,8 @@ const HowATSRecruitersWork = () => {
             </div>
 
             {/* ApplyRight AI bot — decorative balance, hidden on mobile */}
-            <div
-              aria-hidden="true"
-              className="hidden md:grid place-items-center text-indigo-300/90"
-              style={{ width: 'clamp(120px, 15vw, 190px)' }}
-            >
-              <Bot strokeWidth={1.5} className="w-full h-auto" />
+            <div aria-hidden="true" className="hidden md:grid place-items-center text-slate-400">
+              <AriaOrbit size={160} tone="mono" />
             </div>
           </motion.div>
         </div>

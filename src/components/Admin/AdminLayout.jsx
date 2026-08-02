@@ -14,7 +14,7 @@ import {
   Banknote,
   BarChart3,
 } from 'lucide-react';
-import applyRightIcon from '../../assets/logo/applyright-icon.png';
+import applyRightIcon from '../../assets/logo/applyright-icon-black.png';
 import GlobalBanner from '../GlobalBanner';
 
 const AdminLayout = ({ children }) => {

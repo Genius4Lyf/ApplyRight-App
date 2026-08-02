@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
-import logo from '../assets/logo/applyright-icon.png';
+import logo from '../assets/logo/applyright-icon-black.png';
 import { useTranslation } from 'react-i18next';
+
+const Motion = motion;
 
 /**
  * PublicNavbar — the floating pill navbar for logged-out marketing pages
  * (landing, pricing, guides). Transparent full-width at the top; animates into
  * a rounded, blurred pill once the page is scrolled past 50px.
  */
-const PublicNavbar = () => {
+const PublicNavbar = ({ hidden = false }) => {
   const { t } = useTranslation();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
@@ -19,47 +21,42 @@ const PublicNavbar = () => {
   });
 
   return (
-    <motion.nav
-      initial={{
-        width: '100%',
-        top: 0,
-        borderRadius: 0,
-        borderBottomWidth: 0,
-        borderBottomColor: 'rgba(241, 245, 249, 0)',
-        backgroundColor: 'rgba(255, 255, 255, 0)',
-        backdropFilter: 'blur(0px)',
-      }}
-      animate={
-        scrolled
-          ? {
-              width: '90%',
-              maxWidth: '1080px',
-              top: 20,
-              borderRadius: '100px',
-              borderBottomWidth: 1,
-              borderBottomColor: 'rgba(241, 245, 249, 1)', // visible border when floating
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-            }
-          : {
-              width: '100%',
-              maxWidth: '100%',
-              top: 0,
-              borderRadius: 0,
-              borderBottomWidth: 0,
-              borderBottomColor: 'rgba(241, 245, 249, 0)',
-              backgroundColor: 'rgba(255, 255, 255, 0)',
-              backdropFilter: 'blur(0px)',
-              boxShadow: 'none',
-            }
-      }
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={`fixed z-50 left-0 right-0 mx-auto overflow-hidden`}
-    >
-      <div
-        className={`mx-auto h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'px-4 md:px-6' : 'max-w-7xl px-6'}`}
+    <nav className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4">
+      <Motion.div
+        initial={false}
+        animate={
+          hidden
+            ? {
+                y: -96,
+                opacity: 0,
+                borderRadius: 100,
+                borderColor: 'rgba(226, 232, 240, 0)',
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+              }
+            : scrolled
+            ? {
+                y: 20,
+                opacity: 1,
+                borderRadius: 100,
+                borderColor: 'rgba(226, 232, 240, 1)',
+                backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                boxShadow:
+                  '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+              }
+            : {
+                y: 0,
+                opacity: 1,
+                borderRadius: 0,
+                borderColor: 'rgba(226, 232, 240, 0)',
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+              }
+        }
+        transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
+        className={`${hidden ? 'pointer-events-none' : 'pointer-events-auto'} mx-auto h-16 w-full max-w-[1080px] overflow-hidden border`}
       >
+        <div className="mx-auto flex h-full items-center justify-between px-4 md:px-6">
         <Link to="/" className="flex items-center gap-2 group">
           <img src={logo} alt={t('common.logoAlt')} className="h-8 w-auto" />
           <span className="font-brand text-xl font-semibold tracking-tight text-black dark:text-white">
@@ -79,15 +76,13 @@ const PublicNavbar = () => {
           >
             {t('common.signIn')}
           </Link>
-          <Link
-            to="/register"
-            className="inline-flex items-center rounded-md border border-indigo-600 bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:border-indigo-800 hover:bg-indigo-800"
-          >
+          <Link to="/register" className="btn-primary text-sm">
             {t('common.startFreeShort')}
           </Link>
         </div>
-      </div>
-    </motion.nav>
+        </div>
+      </Motion.div>
+    </nav>
   );
 };
 

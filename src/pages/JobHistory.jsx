@@ -68,6 +68,8 @@ const SORT_OPTIONS = [
   { id: 'score_asc', labelKey: 'jobHistory.sort.lowestMatch' },
 ];
 
+const DECK_LIMIT = 10;
+
 import FitScoreCard from '../components/FitScoreCard';
 import { ReadyChip, GhostButton, InkButton } from '../components/dashboard/ToolkitButtons';
 import CreditGate from '../components/CreditGate';
@@ -629,11 +631,11 @@ const JobHistory = () => {
     }
   };
 
-  // Deck shows the 10 most-recent applications, newest-first, independent of the
-  // list view's search/sort state.
+  // Deck shows the DECK_LIMIT most-recent applications, newest-first, independent
+  // of the list view's search/sort state.
   const recentApps = [...applications]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 10);
+    .slice(0, DECK_LIMIT);
 
   // A single application as a paper note for the deck — a thin wrapper over the
   // shared NoteCard (which owns the tap-vs-drag guard, spiral binding, stamp,
@@ -852,7 +854,11 @@ const JobHistory = () => {
                   getKey={(a) => a._id}
                   renderItem={renderNote}
                   cardClassName={PAPER_CARD}
-                  label={t('myCvs.deckLabel')}
+                  label={
+                    applications.length > DECK_LIMIT
+                      ? t('myCvs.deckLabelCapped', { shown: DECK_LIMIT, total: applications.length })
+                      : t('myCvs.deckLabelAll')
+                  }
                 />
               ) : (
                 /* List view — keeps search + sort */
