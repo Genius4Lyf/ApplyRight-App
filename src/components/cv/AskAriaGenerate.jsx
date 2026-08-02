@@ -304,10 +304,12 @@ const AskAriaGenerate = ({
   };
 
   // Drop the "what research says" lecture card into the thread — no AI call, added
-  // once, and it doesn't dismiss the other starter chips. The marker persists on the
-  // draft (the persist filter keeps it) and is ignored by the chat API.
+  // once, and dismisses the other starter chips like a real question would. The
+  // marker persists on the draft (the persist filter keeps it) and is ignored by the
+  // chat API.
   const injectResearch = () => {
     if (thinking) return;
+    setShowChips(false);
     setThinking(true);
     setTimeout(() => {
       setMessages((m) =>
@@ -787,7 +789,7 @@ const AskAriaGenerate = ({
                 {...bubbleAnim('aria', reduce)}
               >
                 <AriaOrbit size={16} className="mt-2" />
-                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>
               </motion.div>
@@ -802,7 +804,7 @@ const AskAriaGenerate = ({
                   key={chip}
                   type="button"
                   onClick={() => send(chip)}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
                 >
                   {chip}
                 </button>
@@ -810,7 +812,7 @@ const AskAriaGenerate = ({
               <button
                 type="button"
                 onClick={injectResearch}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
               >
                 📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>

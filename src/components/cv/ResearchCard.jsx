@@ -32,9 +32,9 @@ const ResearchCard = ({ section }) => {
       {...bubbleAnim('aria', reduce)}
     >
       <AriaOrbit size={16} className="mt-2" />
-      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-md px-3.5 py-3 flex flex-col gap-2.5">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-3 flex flex-col gap-2.5">
         {/* Eyebrow. */}
-        <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {shape.icon} {t('cvBuilder.researchCard.whatResearchSays')} · {eyebrow}
         </span>
 
@@ -47,7 +47,7 @@ const ResearchCard = ({ section }) => {
         <ul className="flex flex-col gap-1.5">
           {points.map((pt, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className="mt-[7px] shrink-0 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-500" />
+              <span className="mt-[7px] shrink-0 w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-500" />
               <span
                 className="text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300 [&_b]:font-semibold [&_b]:text-slate-800 dark:[&_b]:text-slate-100"
                 // Trusted static content from the locale files — enables <b>.
@@ -59,7 +59,7 @@ const ResearchCard = ({ section }) => {
 
         {/* Pull block — a before→after contrast, else a single positive example. */}
         {before || after ? (
-          <div className="rounded-xl bg-white/60 dark:bg-slate-900/40 px-3 py-2.5 flex flex-col gap-1.5">
+          <div className="rounded-xl bg-slate-100 dark:bg-slate-800/60 px-3 py-2.5 flex flex-col gap-1.5">
             {before && (
               <p className="flex items-start gap-2 text-[12px] leading-relaxed text-rose-600/90 dark:text-rose-400/90">
                 <span className="mt-px shrink-0 font-semibold">✗</span>
@@ -74,8 +74,8 @@ const ResearchCard = ({ section }) => {
             )}
           </div>
         ) : example ? (
-          <div className="rounded-xl bg-white/60 dark:bg-slate-900/40 px-3 py-2.5">
-            <p className="flex items-start gap-2 text-[12px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+          <div className="rounded-xl bg-slate-900 dark:bg-white px-3.5 py-3">
+            <p className="flex items-start gap-2 text-[12.5px] font-medium leading-relaxed text-white dark:text-slate-900">
               <span className="mt-px shrink-0 font-semibold">✓</span>
               <span>{example}</span>
             </p>

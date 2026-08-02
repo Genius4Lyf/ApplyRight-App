@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
-import { CAREER_STAGES } from '../../lib/careerStages';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
@@ -15,10 +14,6 @@ import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
-
-// Career-stage chips for the in-chat summary flow — the shared vocabulary (same
-// chips the work-history build-with uses). `k` maps 1:1 to the backend stage enum.
-const SUMMARY_STAGES = CAREER_STAGES;
 
 // The persistent Aria chat — replaces the old scripted CoachCard on every non-target
 // step. Opens with the step's coaching line, offers ready-made suggestion chips, and
@@ -58,7 +53,7 @@ const AriaChat = ({
   // (NOT stored in `messages`), so they never persist — only the final "Added ✓" is a
   // real message. Mirrors AskAriaGenerate's orbit-portal pattern.
   const isSummary = currentStepId === 'summary';
-  const [sPhase, setSPhase] = useState('idle'); // 'idle'|'stage'|'generating'|'card'
+  const [sPhase, setSPhase] = useState('idle'); // 'idle'|'generating'|'card'
   const [sText, setSText] = useState('');
   const [sStage, setSStage] = useState(null);
   const summaryCost = CREDIT_COSTS.GENERATE_SUMMARY ?? 3;
@@ -95,10 +90,12 @@ const AriaChat = ({
   }, [messages]);
 
   // Drop the "what research says" lecture card into the thread — no AI call, added
-  // once, and it doesn't dismiss the starter chips. The marker persists on the draft
-  // (the persist filter keeps it) and is ignored by /coach/ask (only q is sent).
+  // once, and dismisses the starter chips like a real question would. The marker
+  // persists on the draft (the persist filter keeps it) and is ignored by /coach/ask
+  // (only q is sent).
   const injectResearch = () => {
     if (thinking) return;
+    setShowChips(false);
     setThinking(true);
     setTimeout(() => {
       setMessages((m) =>
@@ -110,7 +107,7 @@ const AriaChat = ({
     }, 900);
   };
 
-  // Draft a summary for the chosen career stage — a credited generation (each call,
+  // Draft a summary using the CV-wide career stage captured at builder entry. Each call,
   // including a re-roll, charges GENERATE_SUMMARY). The result lands as an inline card
   // (sPhase 'card'); "Use it" writes it into the ProfessionalSummary textarea.
   const generateSummary = async (stage) => {
@@ -306,7 +303,7 @@ const AriaChat = ({
                 {...bubbleAnim('aria', reduce)}
               >
                 <AriaOrbit size={16} className="mt-2" />
-                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>
               </motion.div>
@@ -315,13 +312,13 @@ const AriaChat = ({
 
           {/* Ready-made questions — shown under the opening until the first send. */}
           {showChips && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 pl-6">
               {suggestionsFor(t, currentStepId).map((chip) => (
                 <button
                   key={chip}
                   type="button"
                   onClick={() => send(chip)}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
                 >
                   {chip}
                 </button>
@@ -329,7 +326,7 @@ const AriaChat = ({
               <button
                 type="button"
                 onClick={injectResearch}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
               >
                 📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>
@@ -337,7 +334,7 @@ const AriaChat = ({
               {isSummary && sPhase === 'idle' && (
                 <button
                   type="button"
-                  onClick={() => setSPhase('stage')}
+                  onClick={() => generateSummary(cvData?.careerStage)}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
                 >
                   {t('cvBuilder.ariaChat.draftSummaryChip', { n: sCost })}
@@ -362,42 +359,15 @@ const AriaChat = ({
           {isSkills && skPhase === 'idle' && !hasContent && (
             <div className="self-start max-w-[92%] flex items-start gap-2">
               <AriaOrbit size={16} className="mt-2" />
-              <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+              <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                 {t('cvBuilder.ariaChat.skillsEmpty')}
               </span>
             </div>
           )}
 
           {/* ── In-chat summary flow (orbit-portal cards, rendered from state — never
-                persisted). Stage picker → generating beat → the draft card. ── */}
+                persisted). The CV-wide stage is reused automatically. ── */}
           <AnimatePresence>
-            {isSummary && sPhase === 'stage' && (
-              <motion.div
-                key="s-stage"
-                className="self-start max-w-[92%] flex items-start gap-2"
-                {...portalCard(reduce)}
-              >
-                <AriaOrbit size={16} className="mt-2" />
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
-                  <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
-                    {t('cvBuilder.ariaChat.stagePrompt')}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {SUMMARY_STAGES.map((s) => (
-                      <button
-                        key={s.k}
-                        type="button"
-                        onClick={() => generateSummary(s.k)}
-                        className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        {t(s.labelKey)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
             {isSummary && sPhase === 'generating' && (
               <motion.div key="s-gen" {...portalCard(reduce)}>
                 <AriaThinking variant="draft" />
@@ -439,13 +409,6 @@ const AriaChat = ({
                       className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       {t('cvBuilder.ariaChat.reroll', { n: sCost })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSPhase('stage')}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      {t('cvBuilder.ariaChat.differentStage')}
                     </button>
                   </div>
                 </div>

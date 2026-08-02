@@ -215,6 +215,7 @@ const CVBuilderInner = () => {
     user,
     handleNext,
     handleBack,
+    ensureDraft,
     goToStep,
     registerStepData,
     flushDraft,
@@ -323,6 +324,7 @@ const CVBuilderInner = () => {
   const [titleDraft, setTitleDraft] = useState('');
   const titleInputRef = useRef(null);
   const skipTitleSave = useRef(false);
+  const workspaceScrollRef = useRef(null);
   useEffect(() => {
     if (editingTitle) {
       titleInputRef.current?.focus();
@@ -535,8 +537,19 @@ const CVBuilderInner = () => {
           <div className="flex-1 flex min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950">
             {/* Workspace — scrollable, no card. Bottom padding on mobile so the
                 form clears the resting coach drawer (≈ its peek height). */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-none pb-[280px] lg:pb-0">
-              <div className="max-w-3xl mx-auto w-full p-4 sm:p-6 lg:p-10">
+            <div
+              ref={workspaceScrollRef}
+              className={`flex-1 min-h-0 overflow-x-hidden scrollbar-none pb-[280px] lg:pb-0 ${
+                currentStepId === 'target_job'
+                  ? 'overflow-y-auto lg:overflow-hidden'
+                  : 'overflow-y-auto'
+              }`}
+            >
+              <div
+                className={`max-w-3xl mx-auto w-full p-4 sm:p-6 lg:p-10 ${
+                  currentStepId === 'target_job' ? 'lg:h-full' : ''
+                }`}
+              >
                 <Outlet
                   context={{
                     cvData,
@@ -545,6 +558,10 @@ const CVBuilderInner = () => {
                     saving,
                     user,
                     updateCvData,
+                    ensureDraft,
+                    resetWorkspaceScroll: () => {
+                      if (workspaceScrollRef.current) workspaceScrollRef.current.scrollTop = 0;
+                    },
                     setStepDirty,
                     registerStepData,
                     isStepComplete,
