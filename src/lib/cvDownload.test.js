@@ -182,7 +182,7 @@ describe('downloadPdf', () => {
     userProfile: { firstName: 'Ernest', lastName: 'Akibor' },
   };
 
-  it('calls the backend with the fixed 10px margin and passes provenance through', async () => {
+  it('sends a zero page margin so it does not stack with the spacer, and passes provenance through', async () => {
     mountCv();
     CVService.generatePdf.mockResolvedValue(new Blob(['pdf']));
 
@@ -191,11 +191,13 @@ describe('downloadPdf', () => {
     expect(res).toEqual({ ok: true });
     const [html, pdfOpts, meta] = CVService.generatePdf.mock.calls[0];
     expect(html).toContain('print-container');
-    // The template's own padding supplies the visible margin; the page margin stays
-    // small and fixed so it doesn't add a third border.
+    // The 5mm thead/tfoot spacer in the print-container supplies the per-page margin
+    // (it's what gives page 2+ a top margin at all), so Puppeteer's own page margin
+    // must be 0 or the two stack.
     expect(pdfOpts).toEqual({
-      margin: { top: '10px', right: '10px', bottom: '10px', left: '10px' },
+      margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
     });
+    expect(html).toContain('margin-spacer');
     expect(meta).toEqual({ templateId: 'modern', applicationId: 'app1', isDraft: false });
   });
 
