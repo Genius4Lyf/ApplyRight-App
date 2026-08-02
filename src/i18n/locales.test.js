@@ -100,7 +100,6 @@ describe('locale files', () => {
       // Round 3 (CV Builder) — genuinely language-neutral, not missed translations:
       'cvBuilder.common.creditChip', // "{{n}} cr" — "cr" is the same credit abbreviation in French
       'cvBuilder.heading.chipLinkedin', // "LinkedIn" — brand name
-      'cvBuilder.chatThemePicker.themes.studio', // "Studio" — same word in French
       'cvBuilder.chatThemePicker.themes.campus', // "Campus" — same word in French
       'cvBuilder.askAria.companyType.startup', // "Startup" — the loanword is standard in French
       'cvBuilder.skills.proBadge', // "Pro" — tier name, kept in English (see dashboard.interviewCard.chip)
@@ -147,6 +146,8 @@ describe('locale files', () => {
       'ariaStudio.studioArtifactPanel.sections', // "Sections" — same word in French
       'ariaStudio.common.outOf100', // "/ 100" — a number format, language-neutral
       'ariaStudio.certifications.fieldCertification', // "Certification" — same word in French
+      'ariaStudio.studioArtifactPanel.certifications', // "Certifications" — same word in French
+      'ariaStudio.livePreview.certifications', // "Certifications" — same word in French
       'ariaStudio.contactConfirm.fields.email.label', // "Email" — same word in French
       'ariaStudio.contactConfirm.fields.linkedin.label', // "LinkedIn" — brand name
       'ariaStudio.contactConfirm.fields.linkedin.placeholder', // "linkedin.com/in/…" — a URL format

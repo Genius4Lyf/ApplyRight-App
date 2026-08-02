@@ -854,6 +854,7 @@
       "settingUp": "Setting up your CV draft…",
       "freeChatsLeft": "{{n}} free chats left today",
       "freeChatsDone": "Free chats done today · 1 credit each",
+      "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
       "tailoredFor": "Tailored for {{title}} at {{company}}",
       "at": "at",
       "focus": "Focus",
@@ -1539,9 +1540,9 @@
     "chatThemePicker": {
       "chatBackground": "Chat background",
       "themes": {
-        "studio": "Studio",
-        "paper": "Paper",
-        "slate": "Slate",
+        "studio": "Library",
+        "paper": "Notebook",
+        "slate": "Chalkboard",
         "grid": "Grid",
         "ledger": "Ledger",
         "campus": "Campus"
@@ -3759,8 +3760,15 @@
       "cvHealth": "CV health",
       "sectionsDoneCount": "{{done}} of {{total}} sections done",
       "sections": "Sections",
+      "capturedSoFar": "Captured so far",
+      "complete": "Complete",
+      "inProgress": "In progress",
+      "notStarted": "Not started",
+      "nothingCapturedYet": "Nothing captured yet.",
+      "certifications": "Certifications",
       "srSectionLine": "{{label}}: {{status}}.",
       "srDone": "done",
+      "srInProgress": "in progress",
       "srNotStarted": "not started",
       "inYourCv": "In your CV",
       "untitledRole": "Untitled role",
@@ -3850,6 +3858,9 @@
         "address": {
           "label": "Location",
           "placeholder": "Lagos, Nigeria"
+        },
+        "photo": {
+          "label": "Profile photo"
         }
       },
       "howReachYou": "How can employers reach you?",
@@ -3857,7 +3868,22 @@
       "saving": "Saving…",
       "saveContinue": "Save & continue",
       "filledFromProfile": "I've filled these in from your profile",
-      "looksRight": "Looks right"
+      "looksRight": "Looks right",
+      "reviewDetails": "Review your contact details",
+      "missing": "Not added",
+      "addField": "Add",
+      "addMissing_one": "Add 1 essential detail",
+      "addMissing_other": "Add {{count}} essential details",
+      "addPhoto": "Add photo",
+      "replacePhoto": "Replace",
+      "removePhoto": "Remove",
+      "photoPreviewAlt": "Profile photo preview",
+      "photoGuidance": "Use a professional headshot only where photos are customary. Some ATS-focused applications are better without one.",
+      "importance": {
+        "essential": "Essential",
+        "recommended": "Recommended",
+        "optional": "Optional"
+      }
     },
     "cvPicker": {
       "whichCv": "Which CV should I work from?",
@@ -4204,6 +4230,7 @@
       "bulletsOnCv_other": "{{count}} bullets on your CV",
       "contactConfirmed": "Contact details confirmed",
       "thinking": {
+        "openingStudio": "Getting Aria ready…",
         "pickingUp": "Picking up where we left off…",
         "settingUpCopy": "Setting up your tailored copy…",
         "readingJob": "Reading the job…",
@@ -4247,6 +4274,7 @@
     "sectionCoach": {
       "rerollWasFree": "That re-roll was free.",
       "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
+      "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
       "backToSections": "Back to sections",
       "aimingAt": "aiming at {{keywords}}",
       "send": "Send",
@@ -4267,6 +4295,7 @@
       "yourName": "Your name",
       "noSummaryYet": "No summary yet.",
       "noSkillsYet": "No skills yet.",
+      "certifications": "Certifications",
       "verdict": {
         "ok": "Strong",
         "warn": "Needs work",

@@ -33,12 +33,20 @@ afterEach(() => {
 const withScan = (sections) => ({
   _id: 'd1',
   title: 'My CV',
-  personalInfo: { fullName: 'Ada Lovelace', email: 'ada@x.com' },
+  personalInfo: {
+    fullName: 'Ada Lovelace',
+    email: 'ada@x.com',
+    photoUrl: 'data:image/jpeg;base64,photo',
+  },
   professionalSummary: 'Analytical engine pioneer.',
-  experience: [{ _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' }],
+  experience: [
+    { _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' },
+    { _sortId: 'blank-role', title: '', company: '', description: '' },
+  ],
   projects: [],
   skills: ['Algorithms'],
   education: [],
+  certifications: [{ name: 'Cloud Fundamentals', issuer: 'ApplyRight', date: '2026' }],
   studioScan: { fitScore: 60, sections },
 });
 
@@ -63,6 +71,9 @@ describe('StudioLivePreview — section bands from the scan', () => {
     expect(screen.getByText('Ada Lovelace')).toBeTruthy();
     expect(screen.getByText('Analytical engine pioneer.')).toBeTruthy();
     expect(screen.getByText('Led the notes')).toBeTruthy();
+    expect(screen.getByAltText('Profile photo preview')).toBeTruthy();
+    expect(screen.getByText(/Cloud Fundamentals/)).toBeTruthy();
+    expect(screen.queryByText('Job title')).toBeNull();
 
     // Verdict chips reflect each section's band.
     expect(screen.getByText('Strong')).toBeTruthy(); // summary ok

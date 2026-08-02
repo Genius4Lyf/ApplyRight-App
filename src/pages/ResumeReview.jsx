@@ -133,11 +133,20 @@ const ResumeReview = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [checkoutTemplateId] = useState(() => {
+    if (searchParams.get('paid') !== '1') return null;
+    try {
+      const stored = localStorage.getItem('arCheckoutTemplateId');
+      return TEMPLATES.some((template) => template.id === stored) ? stored : null;
+    } catch {
+      return null;
+    }
+  });
   const { triggerInterstitial } = useInterstitial();
   const [atsReadiness, setAtsReadiness] = useState(location.state?.atsReadiness || null);
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [templateId, setTemplateId] = useState('ats-clean'); // Default to ATS Clean
+  const [templateId, setTemplateId] = useState(checkoutTemplateId || 'ats-clean');
   const [userProfile, setUserProfile] = useState(null);
   const [isDraftMode, setIsDraftMode] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'resume'); // 'resume' or 'cover-letter'
@@ -529,7 +538,7 @@ const ResumeReview = () => {
               }
             }
             setApplication(app);
-            if (app.templateId) setTemplateId(app.templateId);
+            if (!checkoutTemplateId && app.templateId) setTemplateId(app.templateId);
             return; // Found application, exit
           }
         } catch (e) {
@@ -541,6 +550,7 @@ const ResumeReview = () => {
           const draft = await CVService.getDraftById(id);
           if (draft) {
             setIsDraftMode(true);
+            if (!checkoutTemplateId && draft.templateId) setTemplateId(draft.templateId);
             // Convert draft to pseudo-application structure for the templates
             const { optimizedCV } = generateMarkdownFromDraft(draft);
 
@@ -594,16 +604,20 @@ const ResumeReview = () => {
       loadData();
       fetchUserProfile();
     }
-  }, [id, navigate]);
+  }, [id, navigate, checkoutTemplateId]);
 
-  // Auto-save template preference
+  // Auto-save template preference for both Applications and DraftCVs. Drafts used
+  // to skip this entirely, so reopening Studio always fell back to ATS Clean.
   useEffect(() => {
-    if (!application || isDraftMode || !templateId) return;
+    if (!application || !templateId) return;
 
     const saveTemplate = setTimeout(async () => {
       try {
-        // Only save if it's different (optional optimization, but backend check is fine)
-        await api.patch(`/applications/${application._id}/template`, { templateId });
+        if (isDraftMode) {
+          await CVService.saveDraft({ _id: application._id, templateId });
+        } else {
+          await api.patch(`/applications/${application._id}/template`, { templateId });
+        }
       } catch (error) {
         console.error('Failed to save template preference', error);
       }
@@ -878,7 +892,10 @@ const ResumeReview = () => {
     if (searchParams.get('paid') !== '1') return;
     // Wait until the application + preview are loaded so #resume-content exists
     // for serialization.
-    if (loading || !application) return;
+    if (loading || showLoader || !application || !userProfile) return;
+
+    const contentId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
+    if (!document.getElementById(contentId)) return;
 
     autoDownloadFiredRef.current = true;
 
@@ -888,13 +905,18 @@ const ResumeReview = () => {
     const qs = cleanParams.toString();
     navigate(`${location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
 
-    toast.success('Payment confirmed — starting your download…');
-    // Defer a tick so the preview DOM is painted before we serialize it.
+    // Let the visible Studio paint once before serialization. The final download
+    // result is the only notification shown for this paid handoff.
     setTimeout(() => {
       performDownload();
-    }, 400);
+    }, 600);
+    try {
+      localStorage.removeItem('arCheckoutTemplateId');
+    } catch {
+      /* non-fatal */
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, application, searchParams]);
+  }, [loading, showLoader, application, userProfile, activeTab, searchParams]);
 
   // The CV's DOCUMENT language. null/absent (every CV predating this feature)
   // means English, so existing CVs render exactly as they always did.
@@ -1106,6 +1128,7 @@ const ResumeReview = () => {
       <DownloadPaywallModal
         open={showDownloadPaywall}
         onClose={() => setShowDownloadPaywall(false)}
+        templateId={templateId}
       />
 
       <SummaryTrim
@@ -1247,8 +1270,8 @@ const ResumeReview = () => {
                 disabled={unlocking || (userProfile?.credits || 0) < templateToUnlock.cost}
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (userProfile?.credits || 0) >= templateToUnlock.cost
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 shadow-lg shadow-black/10 dark:shadow-black/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -1296,14 +1319,14 @@ const ResumeReview = () => {
                 <>
                   <button
                     onClick={() => navigate('/credits')}
-                    className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                    className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 transition-all shadow-lg shadow-black/10 dark:shadow-black/30"
                   >
                     <AriaOrbit size={20} tone="mono" />
                     Get more credits
                   </button>
                   <button
                     onClick={() => navigate('/upgrade')}
-                    className="w-full py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:underline"
+                    className="w-full py-2 text-sm font-semibold text-slate-900 hover:text-slate-600 dark:text-white dark:hover:text-slate-300 hover:underline"
                   >
                     Or go unlimited — unlock all premium templates →
                   </button>

@@ -612,6 +612,7 @@ const Preview = ({ application, templateId = 'ats-clean', isResumeModalOpen, onC
       <DownloadPaywallModal
         open={showDownloadPaywall}
         onClose={() => setShowDownloadPaywall(false)}
+        templateId={templateId}
       />
     </div>
   );

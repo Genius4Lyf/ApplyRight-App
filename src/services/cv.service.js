@@ -119,13 +119,14 @@ const CVService = {
 
   // Generate categorized skills. draftId lets the backend cache the result against
   // the profile inputs so re-opening the modal / re-clicking doesn't re-charge.
-  generateSkills: async (education, experience, projects, targetJob, draftId) => {
+  generateSkills: async (education, experience, projects, targetJob, draftId, model) => {
     const response = await api.post('/ai/generate-skills', {
       education,
       experience,
       projects,
       targetJob,
       draftId,
+      model,
     });
     return response.data; // { suggestions, bestForRole, isPaid, fromCache, remainingCredits }
   },
@@ -148,6 +149,7 @@ const CVService = {
     description,
     count,
     reroll = false,
+    model,
   }) => {
     const response = await api.post('/coach/generate-bullets', {
       draftId,
@@ -156,6 +158,7 @@ const CVService = {
       description,
       count,
       reroll,
+      model,
     });
     return response.data; // { bullets, wasFree, cost, remainingCredits }
   },
@@ -170,8 +173,8 @@ const CVService = {
 
   // Aria Studio — start a BUILD session: an empty CV prefilled with the user's contact
   // details, optionally aimed at a job. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
-  studioBuildStart: async ({ jobTitle, jobDescription } = {}) => {
-    const response = await api.post('/studio/build-start', { jobTitle, jobDescription });
+  studioBuildStart: async ({ jobTitle, jobDescription, model } = {}) => {
+    const response = await api.post('/studio/build-start', { jobTitle, jobDescription, model });
     return response.data; // { draftId, personalInfo, brief, draft }
   },
 
@@ -186,8 +189,8 @@ const CVService = {
   // Aria Studio — read a job with NO draft attached, so the user can confirm or correct
   // Aria's read before anything is created. Free (same policy as /coach/brief), and
   // nothing is persisted. Returns { brief: null } if the AI is unavailable.
-  studioBriefPreview: async ({ jobTitle, jobDescription }) => {
-    const response = await api.post('/studio/brief-preview', { jobTitle, jobDescription });
+  studioBriefPreview: async ({ jobTitle, jobDescription, model }) => {
+    const response = await api.post('/studio/brief-preview', { jobTitle, jobDescription, model });
     return response.data; // { brief }
   },
 
@@ -195,12 +198,13 @@ const CVService = {
   // bound to the target job. Pass the `brief` the user already confirmed at the preview
   // step and it's persisted as-is (no second AI extraction); omit it and one is built.
   // The source draft is never mutated. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
-  studioTailorStart: async ({ sourceDraftId, jobTitle, jobDescription, brief }) => {
+  studioTailorStart: async ({ sourceDraftId, jobTitle, jobDescription, brief, model }) => {
     const response = await api.post('/studio/tailor-start', {
       sourceDraftId,
       jobTitle,
       jobDescription,
       brief,
+      model,
     });
     return response.data; // { draftId, title, brief, tailoredFrom, draft }
   },
@@ -208,8 +212,8 @@ const CVService = {
   // Aria Studio — full scan: AI fit analysis of the tailored copy against its target
   // job, plus free deterministic per-section verdicts. CHARGES ANALYSIS (10cr), and
   // only after the AI succeeds. 403 { code:'INSUFFICIENT_CREDITS' } if the balance is short.
-  studioScan: async (draftId) => {
-    const response = await api.post('/studio/scan', { draftId });
+  studioScan: async (draftId, model) => {
+    const response = await api.post('/studio/scan', { draftId, model });
     return response.data; // { studioScan, remainingCredits }
   },
 
@@ -223,17 +227,17 @@ const CVService = {
 
   // Fetch (or build+cache) Aria's Role Brief for a draft — powers the "Aria's
   // read" strip. Cheap on repeat (same-JD cache hit); no target JD → { brief: null }.
-  getBrief: async (draftId) => {
-    const response = await api.post('/coach/brief', { draftId });
+  getBrief: async (draftId, model) => {
+    const response = await api.post('/coach/brief', { draftId, model });
     return response.data; // { brief }
   },
 
   // Aria's free-form coach chat. Shares one daily free pool with build-with, then
   // 1 credit each. A 402 { code:'CHAT_LIMIT_REACHED' } means out of free chats +
   // credits for today.
-  askAria: async (draftId, currentStepId, question) => {
-    const response = await api.post('/coach/ask', { draftId, currentStepId, question });
-    return response.data; // { answer, freeRemaining, charged }
+  askAria: async (draftId, currentStepId, question, model) => {
+    const response = await api.post('/coach/ask', { draftId, currentStepId, question, model });
+    return response.data; // { answer, freeRemaining, charged, remainingCredits|null }
   },
 
   // Aria's UNIFIED turn — general Q&A + build-with in one thread. focus optional.
@@ -247,6 +251,7 @@ const CVService = {
     buildTurns,
     stage,
     studioInterview,
+    model,
   }) => {
     const response = await api.post('/coach/chat', {
       draftId,
@@ -259,15 +264,17 @@ const CVService = {
       // entry-level is eased in (no metric pressure). Optional — the backend infers
       // from the draft when it's absent.
       stage,
+      model,
     });
-    return response.data; // { reply, intent, readyToDraft, description, freeRemaining, charged }
+    // remainingCredits is the post-charge balance, or null when the turn was free.
+    return response.data; // { reply, intent, readyToDraft, description, freeRemaining, charged, remainingCredits|null }
   },
 
   // Aria's career-stage-aware, JD-tailored professional summary. Charges
   // GENERATE_SUMMARY per draft (each re-roll charges again). stage is
   // 'grad'|'experienced'|'changer'. Returns { summary, cost, remainingCredits }.
-  coachSummary: async ({ draftId, stage }) => {
-    const { data } = await api.post('/coach/summary', { draftId, stage });
+  coachSummary: async ({ draftId, stage, model }) => {
+    const { data } = await api.post('/coach/summary', { draftId, stage, model });
     return data; // { summary, cost, remainingCredits }
   },
 

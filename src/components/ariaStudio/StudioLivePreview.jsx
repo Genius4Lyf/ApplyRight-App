@@ -14,6 +14,7 @@ import {
 import AriaOrbit from '../cv/AriaOrbit';
 import CvLanguageToggle from '../cv/CvLanguageToggle';
 import { cvLabel } from '../../lib/cvLabels';
+import { withoutBlankEntries } from '../../lib/studioFlow';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
 // (NOT the template markdown), so it updates the instant an edit lands. Each section
@@ -93,9 +94,11 @@ const StudioLivePreview = ({ onClose }) => {
   }, [JSON.stringify(bandsByKey(scan)), reduce]);
 
   const info = cvData?.personalInfo || {};
-  const experience = cvData?.experience || [];
-  const projects = cvData?.projects || [];
-  const education = cvData?.education || [];
+  const capturedCv = withoutBlankEntries(cvData);
+  const experience = capturedCv.experience || [];
+  const projects = capturedCv.projects || [];
+  const education = capturedCv.education || [];
+  const certifications = cvData?.certifications || [];
   const skills = cvData?.skills || [];
   const summary = (cvData?.professionalSummary || '').trim();
   const skillNames = skills.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
@@ -164,7 +167,7 @@ const StudioLivePreview = ({ onClose }) => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none p-4 sm:p-6">
+        <div className="h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none p-4 sm:p-6">
           {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
           <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
             {/* Contact header */}
@@ -173,14 +176,25 @@ const StudioLivePreview = ({ onClose }) => {
               band={bandOfKey('contact')}
               pulsing={pulsing.contact}
             >
-              <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
-              </p>
-              {contactLine && (
-                <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400 break-words">
-                  {contactLine}
-                </p>
-              )}
+              <div className="flex items-center gap-3">
+                {info.photoUrl && (
+                  <img
+                    src={info.photoUrl}
+                    alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
+                    className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+                  />
+                )}
+                <div className="min-w-0">
+                  <p className="text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
+                    {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
+                  </p>
+                  {contactLine && (
+                    <p className="mt-1 break-words text-[12px] text-slate-500 dark:text-slate-400">
+                      {contactLine}
+                    </p>
+                  )}
+                </div>
+              </div>
             </SectionBlock>
 
             {/* Body sections, in the CV's real order. */}
@@ -232,7 +246,9 @@ const StudioLivePreview = ({ onClose }) => {
                               <span className="shrink-0 font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                                 {r.startDate || ''}
                                 {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
-                                {r.isCurrent ? t('ariaStudio.pinnedEntry.present') : r.endDate || ''}
+                                {r.isCurrent
+                                  ? t('ariaStudio.pinnedEntry.present')
+                                  : r.endDate || ''}
                               </span>
                             )}
                           </div>
@@ -294,7 +310,8 @@ const StudioLivePreview = ({ onClose }) => {
                 );
               }
               if (key === 'education') {
-                if (!show('education', education.length > 0)) return null;
+                if (!show('education', education.length > 0 || certifications.length > 0))
+                  return null;
                 return (
                   <SectionBlock
                     key="education"
@@ -322,6 +339,25 @@ const StudioLivePreview = ({ onClose }) => {
                           <Bullets description={e.description} />
                         </div>
                       ))}
+                      {certifications.length > 0 && (
+                        <div className="pt-1">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                            {t('ariaStudio.livePreview.certifications')}
+                          </p>
+                          <div className="mt-1 space-y-1">
+                            {certifications.map((certificate, index) => (
+                              <p
+                                key={`${certificate.name}-${index}`}
+                                className="text-[12px] text-slate-600 dark:text-slate-300"
+                              >
+                                {certificate.name}
+                                {certificate.issuer ? ` · ${certificate.issuer}` : ''}
+                                {certificate.date ? ` · ${certificate.date}` : ''}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </SectionBlock>
                 );

@@ -102,7 +102,7 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
             className={
               isLeft
                 ? 'absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col'
-                : 'absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]'
+                : 'absolute inset-x-0 bottom-0 h-[80dvh] max-h-[80dvh] overflow-hidden rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]'
             }
             initial={reduce ? { opacity: 0 } : isLeft ? { x: '-100%' } : { y: '100%' }}
             animate={reduce ? { opacity: 1 } : isLeft ? { x: 0 } : { y: 0 }}

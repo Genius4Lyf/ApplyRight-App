@@ -163,8 +163,8 @@ const TemplateSelector = ({
                 disabled={unlocking || (user.credits || 0) < templateToUnlock.cost}
                 className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                   (user.credits || 0) >= templateToUnlock.cost
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 shadow-lg shadow-black/10 dark:shadow-black/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 {unlocking ? (
@@ -206,14 +206,14 @@ const TemplateSelector = ({
                     <div className="space-y-2">
                       <button
                         onClick={() => navigate('/credits')}
-                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                        className="w-full py-3 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10 dark:shadow-black/30"
                       >
                         <AriaOrbit size={20} tone="mono" />
                         Get more credits
                       </button>
                       <button
                         onClick={() => navigate('/upgrade')}
-                        className="w-full py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:underline"
+                        className="w-full py-2 text-sm font-semibold text-slate-900 hover:text-slate-600 dark:text-white dark:hover:text-slate-300 hover:underline"
                       >
                         Or go unlimited — unlock all premium templates →
                       </button>

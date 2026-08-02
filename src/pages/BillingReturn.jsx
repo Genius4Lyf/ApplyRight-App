@@ -91,11 +91,17 @@ const BillingReturn = () => {
           /* non-fatal */
         }
         setEntitlement(result.entitlement);
+
+        // A paid CV download returns straight to CV Studio. Studio owns the file
+        // handoff and waits for its rendered preview before starting the download.
+        if (isDownloadReturn) {
+          goToSuccess();
+          return;
+        }
+
         setState('success');
-        toast.success(
-          isDownloadReturn ? t('billing.return.toastDownload') : t('billing.return.toastPlan')
-        );
-        setTimeout(goToSuccess, isDownloadReturn ? 1400 : 2200);
+        toast.success(t('billing.return.toastPlan'));
+        setTimeout(goToSuccess, 2200);
       } else {
         setState('failed');
       }
@@ -169,6 +175,7 @@ const BillingReturn = () => {
               onClick={() => {
                 try {
                   localStorage.removeItem('arCheckoutOrigin');
+                  localStorage.removeItem('arCheckoutTemplateId');
                 } catch {
                   /* non-fatal */
                 }

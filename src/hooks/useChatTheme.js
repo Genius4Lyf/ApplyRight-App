@@ -7,10 +7,10 @@ const EVT = 'aria-chat-theme';
 
 export function useChatTheme() {
   const [theme, set] = useState(
-    () => (typeof localStorage !== 'undefined' && localStorage.getItem(KEY)) || 'studio'
+    () => (typeof localStorage !== 'undefined' && localStorage.getItem(KEY)) || 'campus'
   );
   useEffect(() => {
-    const on = () => set(localStorage.getItem(KEY) || 'studio');
+    const on = () => set(localStorage.getItem(KEY) || 'campus');
     window.addEventListener(EVT, on);
     window.addEventListener('storage', on);
     return () => {

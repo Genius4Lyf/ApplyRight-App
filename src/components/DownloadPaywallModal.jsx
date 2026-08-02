@@ -13,7 +13,7 @@ import { formatNgn, formatUsd, DOWNLOAD_PASS, detectDefaultCurrency } from '../l
 //   - any paid subscription (unlimited downloads)
 // The copy sells the real PDF over a screenshot: ATS-readable selectable text,
 // crisp print quality, exact template formatting.
-const DownloadPaywallModal = ({ open, onClose }) => {
+const DownloadPaywallModal = ({ open, onClose, templateId }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,7 @@ const DownloadPaywallModal = ({ open, onClose }) => {
         localStorage.setItem('arPostCheckout', window.location.pathname);
         localStorage.setItem('arCheckoutIntent', 'download');
         localStorage.setItem('arCheckoutOrigin', window.location.pathname);
+        if (templateId) localStorage.setItem('arCheckoutTemplateId', templateId);
       } catch {
         /* non-fatal — falls back to the dashboard */
       }

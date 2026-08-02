@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { CREDIT_COSTS } from '../../lib/credits';
+import { tierOf, costForActionTier } from '../../lib/models';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaComposer from '../cv/AriaComposer';
@@ -77,6 +78,8 @@ const SectionCoach = ({
   // The session's Aria model. The coach owns the docked composer while it drives, so its
   // picker has to write through to the same per-draft choice as StudioChat's.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  const isFlagship = tierOf(modelId) === 'flagship';
+  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
 
   const inputRef = useRef(null);
   const exampleRef = useRef(null);
@@ -151,6 +154,7 @@ const SectionCoach = ({
         focus: { section: entry.section, sortId: entry.sortId },
         buildTurns: buildTurnsRef.current,
         studioInterview: true,
+        model: modelId,
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
       });
@@ -172,6 +176,11 @@ const SectionCoach = ({
       onPush({ who: 'aria', text: reply });
       setSuggestions(safeSuggestions);
       setExampleAnswer(safeExample);
+      // A metered turn (flagship build-with, or general chat past the daily pool)
+      // returns the post-charge balance — keep the wallet pill live without a refresh.
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
 
       if (r.readyToDraft) {
         const desc =
@@ -240,6 +249,7 @@ const SectionCoach = ({
         description: description.trim(),
         count,
         reroll,
+        model: modelId,
       });
       setBullets(res.bullets || []);
       setSelected(new Set((res.bullets || []).map((_, i) => i))); // all on by default
@@ -314,9 +324,15 @@ const SectionCoach = ({
       modelId={modelId}
       onSelectModel={selectModel}
       note={
-        <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-          {t('ariaStudio.sectionCoach.freeBackAndForth')}
-        </p>
+        isFlagship ? (
+          <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            {t('ariaStudio.sectionCoach.proTurnCost', { n: perTurnCost })}
+          </p>
+        ) : (
+          <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            {t('ariaStudio.sectionCoach.freeBackAndForth')}
+          </p>
+        )
       }
       footer={
         <div className="mt-1.5 flex items-center justify-between gap-2">

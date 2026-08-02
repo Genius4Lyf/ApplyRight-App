@@ -123,7 +123,7 @@ const AriaChat = ({
         setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
         return;
       }
-      const r = await CVService.coachSummary({ draftId: id, stage });
+      const r = await CVService.coachSummary({ draftId: id, stage, model: modelId });
       setSText(r.summary);
       setSCost(r.cost ?? sCost);
       setSPhase('card');
@@ -157,7 +157,8 @@ const AriaChat = ({
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
-        id
+        id,
+        modelId
       );
       setSkData({ suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] });
       setSkSel([]);
@@ -212,9 +213,13 @@ const AriaChat = ({
       return;
     }
     try {
-      const r = await CVService.askAria(id, currentStepId, q);
+      const r = await CVService.askAria(id, currentStepId, q, modelId);
       setMessages((m) => [...m, { who: 'aria', text: r.answer }]);
       setFreeLeft(r.freeRemaining);
+      // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
       if (r.freeRemaining === 0 && !capNoted) {
         // One-time "offer to continue on credits" note.
         setCapNoted(true);

@@ -850,6 +850,7 @@
       "settingUp": "Préparation de votre CV…",
       "freeChatsLeft": "{{n}} échanges gratuits restants aujourd’hui",
       "freeChatsDone": "Échanges gratuits épuisés aujourd’hui · 1 crédit chacun",
+      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
       "tailoredFor": "Adapté pour {{title}} chez {{company}}",
       "at": "chez",
       "focus": "Ciblage",
@@ -1535,9 +1536,9 @@
     "chatThemePicker": {
       "chatBackground": "Fond de la discussion",
       "themes": {
-        "studio": "Studio",
-        "paper": "Papier",
-        "slate": "Ardoise",
+        "studio": "Bibliothèque",
+        "paper": "Cahier",
+        "slate": "Tableau noir",
         "grid": "Grille",
         "ledger": "Registre",
         "campus": "Campus"
@@ -3755,8 +3756,15 @@
       "cvHealth": "Santé du CV",
       "sectionsDoneCount": "{{done}} section(s) sur {{total}} terminée(s)",
       "sections": "Sections",
+      "capturedSoFar": "Informations enregistrées",
+      "complete": "Terminé",
+      "inProgress": "En cours",
+      "notStarted": "Pas commencé",
+      "nothingCapturedYet": "Aucune information enregistrée pour l'instant.",
+      "certifications": "Certifications",
       "srSectionLine": "{{label}} : {{status}}.",
       "srDone": "terminé",
+      "srInProgress": "en cours",
       "srNotStarted": "pas commencé",
       "inYourCv": "Dans votre CV",
       "untitledRole": "Poste sans titre",
@@ -3846,6 +3854,9 @@
         "address": {
           "label": "Localisation",
           "placeholder": "Abidjan, Côte d'Ivoire"
+        },
+        "photo": {
+          "label": "Photo de profil"
         }
       },
       "howReachYou": "Comment les employeurs peuvent-ils vous joindre ?",
@@ -3853,7 +3864,22 @@
       "saving": "Enregistrement…",
       "saveContinue": "Enregistrer et continuer",
       "filledFromProfile": "J'ai rempli ces champs à partir de votre profil",
-      "looksRight": "C'est bon"
+      "looksRight": "C'est bon",
+      "reviewDetails": "Vérifiez vos coordonnées",
+      "missing": "Non ajouté",
+      "addField": "Ajouter",
+      "addMissing_one": "Ajouter 1 coordonnée essentielle",
+      "addMissing_other": "Ajouter {{count}} coordonnées essentielles",
+      "addPhoto": "Ajouter une photo",
+      "replacePhoto": "Remplacer",
+      "removePhoto": "Supprimer",
+      "photoPreviewAlt": "Aperçu de la photo de profil",
+      "photoGuidance": "Utilisez une photo professionnelle uniquement lorsque cela est habituel. Certaines candidatures optimisées pour les ATS sont préférables sans photo.",
+      "importance": {
+        "essential": "Essentiel",
+        "recommended": "Recommandé",
+        "optional": "Facultatif"
+      }
     },
     "cvPicker": {
       "whichCv": "À partir de quel CV dois-je travailler ?",
@@ -4200,6 +4226,7 @@
       "bulletsOnCv_other": "{{count}} puces sur votre CV",
       "contactConfirmed": "Coordonnées confirmées",
       "thinking": {
+        "openingStudio": "Préparation d'Aria…",
         "pickingUp": "Reprise là où on s'était arrêté…",
         "settingUpCopy": "Préparation de votre copie adaptée…",
         "readingJob": "Lecture du poste…",
@@ -4243,6 +4270,7 @@
     "sectionCoach": {
       "rerollWasFree": "Cette relance était gratuite.",
       "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
+      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
       "backToSections": "Retour aux sections",
       "aimingAt": "vise {{keywords}}",
       "send": "Envoyer",
@@ -4263,6 +4291,7 @@
       "yourName": "Votre nom",
       "noSummaryYet": "Pas encore de résumé.",
       "noSkillsYet": "Pas encore de compétences.",
+      "certifications": "Certifications",
       "verdict": {
         "ok": "Solide",
         "warn": "À améliorer",

@@ -69,13 +69,15 @@ const SessionRail = ({
 
     <div
       className={`flex-1 min-h-0 overflow-y-auto scrollbar-none pb-3 ${
-        !loading && sessions.length === 0 ? 'flex items-center justify-center' : ''
+        loading || sessions.length === 0 ? 'flex items-center justify-center' : ''
       }`}
     >
       {loading && (
-        <p className="px-4 py-3 text-[12px] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.sessionRail.loading')}
-        </p>
+        <div role="status" aria-label={t('ariaStudio.sessionRail.loading')}>
+          <span className="aria-orbit-slow inline-block">
+            <AriaOrbit size={44} working />
+          </span>
+        </div>
       )}
 
       {/* First run — an invitation, not an empty box. */}

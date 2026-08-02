@@ -45,6 +45,15 @@ const fmtNgn = (n) => `₦${Math.round(Number(n) || 0).toLocaleString('en-NG')}`
 // Date formatter for the Build Guard card — null (never hit) reads as "—".
 const fmtDate = (d) => (d ? new Date(d).toLocaleString('en-NG') : '—');
 
+// Margin color bands for the Flagship Cost Check card — thin/negative margin should
+// jump out, not require reading the number.
+const marginColor = (pct) => {
+  if (pct === null || pct === undefined) return 'text-slate-400';
+  if (pct < 20) return 'text-rose-600';
+  if (pct < 50) return 'text-amber-600';
+  return 'text-emerald-600';
+};
+
 const AdminAnalytics = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +102,8 @@ const AdminAnalytics = () => {
     subscriptions,
     aiTextCost,
     totalAiSpendNgn,
+    flagshipCostCheck,
+    retailNgnPerCredit,
     buildGuard,
   } = data;
   const maxCalls = Math.max(1, ...(featureAdoption || []).map((f) => f.calls));
@@ -375,6 +386,88 @@ const AdminAnalytics = () => {
             </p>
           )}
         </div>
+      </div>
+
+      {/* Flagship Cost Check — is the 10cr/turn flagship price backed by real usage? */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+        <div className="mb-1">
+          <h3 className="text-lg font-bold text-slate-900">Flagship Cost Check</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            Self-updating evidence for whether flagship (Pro model) pricing is actually profitable,
+            built from real {flagshipCostCheck?.windowDays || 30}-day usage — list prices × tokens
+            we logged per call, same estimate basis as AI Spend above.
+          </p>
+        </div>
+
+        {flagshipCostCheck?.hasData ? (
+          <>
+            <div className="overflow-x-auto mt-5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                    <th className="py-2 pr-4 font-medium">Operation</th>
+                    <th className="py-2 pr-4 font-medium">Model</th>
+                    <th className="py-2 pr-4 font-medium text-right">Calls</th>
+                    <th className="py-2 pr-4 font-medium text-right">Avg tokens (in/out)</th>
+                    <th className="py-2 pr-4 font-medium text-right">Cached in</th>
+                    <th className="py-2 pr-4 font-medium text-right">Est. cost/call</th>
+                    <th className="py-2 pr-4 font-medium text-right">Credits charged</th>
+                    <th className="py-2 font-medium text-right">Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {flagshipCostCheck.rows.map((r) => (
+                    <tr
+                      key={`${r.operation}-${r.model}`}
+                      className="border-b border-slate-100 last:border-0"
+                    >
+                      <td className="py-2 pr-4 font-medium text-slate-700">
+                        {opLabel(r.operation)}
+                      </td>
+                      <td className="py-2 pr-4 text-slate-500">{r.model}</td>
+                      <td className="py-2 pr-4 text-right text-slate-600">{r.calls}</td>
+                      <td className="py-2 pr-4 text-right text-slate-500">
+                        {r.avgTokensIn}/{r.avgTokensOut}
+                      </td>
+                      <td
+                        className={`py-2 pr-4 text-right ${
+                          r.avgTokensCacheRead ? 'text-slate-500' : 'text-amber-600'
+                        }`}
+                        title={
+                          r.avgTokensCacheRead
+                            ? 'Avg cached input tokens read per call (billed at ~0.1x)'
+                            : 'No cache reads on this operation — every call pays full input price'
+                        }
+                      >
+                        {r.avgTokensCacheRead || '0'}
+                      </td>
+                      <td className="py-2 pr-4 text-right font-semibold text-slate-800">
+                        {r.estCostNgn != null ? `~${fmtNgn(r.estCostNgn)}` : '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-right text-slate-600">
+                        {r.creditsCharged ?? '—'}
+                      </td>
+                      <td className={`py-2 text-right font-bold ${marginColor(r.marginPct)}`}>
+                        {r.marginPct != null ? `${r.marginPct}%` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-slate-400 mt-3">
+              Estimated from list prices and logged tokens — not your actual invoice. Reference
+              retail is ₦{Number(retailNgnPerCredit || 0).toFixed(2)}/credit.
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-slate-500 mt-4">
+            No flagship (Pro model) usage in the last 30 days. Chat and build-with pricing (10
+            credits/turn) is currently based on an estimated token count, not measured ones — this
+            card will fill in automatically the first time someone actually uses Sonnet or another
+            Pro model.
+          </p>
+        )}
       </div>
 
       {/* Build Guard — free build-with anti-abuse ceiling */}

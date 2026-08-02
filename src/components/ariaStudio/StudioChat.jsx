@@ -149,6 +149,9 @@ const StudioChat = ({ onPaywall }) => {
     ...(pendingKind ? [] : loadSession()),
   ]);
   const [phase, setPhase] = useState(() => phaseForNewSession(pendingKind, loadSession()));
+  const [openingStudio, setOpeningStudio] = useState(
+    () => !loading && !draftId && loadSession().length === 0
+  );
 
   // A source handed over from a finished build ("now tailor it"). Kept in a ref because
   // the provider's copy is cleared immediately below — this session owns it from here.
@@ -161,6 +164,11 @@ const StudioChat = ({ onPaywall }) => {
     if (pendingSource) setPendingSource(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    if (!openingStudio) return undefined;
+    const timer = setTimeout(() => setOpeningStudio(false), reduce ? 300 : 2000);
+    return () => clearTimeout(timer);
+  }, [openingStudio, reduce]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [working, setWorking] = useState(false); // tailor-start in flight
@@ -251,7 +259,7 @@ const StudioChat = ({ onPaywall }) => {
       if (localPersisted.length) return prev; // local thread wins; nothing to restore
       migratedRef.current = true; // came FROM the backend — don't migrate back over it
       setPhase(derivePhase(saved, cvData));
-      return [{ who: 'aria', text: t(OPENER_KEY), _opening: true }, ...saved];
+      return saved;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftId]);
@@ -429,7 +437,11 @@ const StudioChat = ({ onPaywall }) => {
       })(),
       (async () => {
         try {
-          const res = await CVService.studioBriefPreview({ jobTitle, jobDescription });
+          const res = await CVService.studioBriefPreview({
+            jobTitle,
+            jobDescription,
+            model: modelId,
+          });
           return res?.brief || null;
         } catch (err) {
           console.error('brief-preview failed', err);
@@ -467,6 +479,7 @@ const StudioChat = ({ onPaywall }) => {
         // The read the user already confirmed — persisted as-is, so the backend
         // doesn't re-extract and any correction they made survives.
         brief: job.brief || undefined,
+        model: modelId,
       });
 
       // Bind the provider to the new copy — this is what makes `draftId` go live and
@@ -535,7 +548,7 @@ const StudioChat = ({ onPaywall }) => {
     if (scanning || !draftId) return;
     setScanning(true);
     try {
-      const res = await CVService.studioScan(draftId);
+      const res = await CVService.studioScan(draftId, modelId);
       // The snapshot lives on the draft; mirror it into context so every card and the
       // artifact panel read one source of truth.
       updateCvData({ studioScan: res.studioScan });
@@ -724,7 +737,7 @@ const StudioChat = ({ onPaywall }) => {
     if (!stage || !draftId) return;
     setSummaryBusy(true);
     try {
-      const res = await CVService.coachSummary({ draftId, stage });
+      const res = await CVService.coachSummary({ draftId, stage, model: modelId });
       const draft = res.summary || '';
       setSummaryDraft(draft);
       setSummaryWasReroll(!!isReroll);
@@ -770,7 +783,7 @@ const StudioChat = ({ onPaywall }) => {
     if (working) return;
     setWorking(true);
     try {
-      const res = await startBuild({});
+      const res = await startBuild({ model: modelId });
       if (res?.paywall) {
         onPaywall?.();
         return;
@@ -790,7 +803,11 @@ const StudioChat = ({ onPaywall }) => {
     setReading(true);
     let brief = null;
     try {
-      const res = await CVService.studioBriefPreview({ jobTitle, jobDescription });
+      const res = await CVService.studioBriefPreview({
+        jobTitle,
+        jobDescription,
+        model: modelId,
+      });
       brief = res?.brief || null;
     } catch (err) {
       console.error('brief-preview failed', err);
@@ -1004,7 +1021,7 @@ const StudioChat = ({ onPaywall }) => {
             ? t('ariaStudio.chat.nextLine.achievementsProject', {
                 title: updated.title || t('ariaStudio.chat.itFallback'),
               })
-              : t('ariaStudio.chat.nextLine.achievementsRole', {
+            : t('ariaStudio.chat.nextLine.achievementsRole', {
                 company: updated.company || t('ariaStudio.chat.thisJobFallback'),
               }),
         entryType: t('ariaStudio.chat.nextLine.roleTitle'),
@@ -1105,7 +1122,8 @@ const StudioChat = ({ onPaywall }) => {
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
-        draftId
+        draftId,
+        modelId
       );
       const data = { suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] };
       setSkillsData(data);
@@ -1165,7 +1183,7 @@ const StudioChat = ({ onPaywall }) => {
     if (!stage || !draftId) return;
     setSummaryBusy(true);
     try {
-      const res = await CVService.coachSummary({ draftId, stage });
+      const res = await CVService.coachSummary({ draftId, stage, model: modelId });
       const draft = res.summary || '';
       setSummaryDraft(draft);
       setSummaryWasReroll(!!isReroll);
@@ -1309,9 +1327,14 @@ const StudioChat = ({ onPaywall }) => {
           messages: next
             .filter((m) => m.who === 'aria' || m.who === 'user')
             .map((m) => ({ who: m.who, text: m.text })),
+          model: modelId,
           // no focus → a general answer, metered by the shared daily allowance
         });
         push({ who: 'aria', text: r.reply });
+        // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
+        if (r.remainingCredits != null) {
+          window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+        }
       } catch (e) {
         const code = e?.response?.data?.code;
         push({
@@ -1347,6 +1370,14 @@ const StudioChat = ({ onPaywall }) => {
   // Progress is DERIVED from the live document on every render — never stored — so the
   // roadmap and the panel can't claim a section is done when it's actually empty.
   const progress = buildProgress(cvData, messages);
+  const savedStudioThread = cvData?.coachChats?.studio;
+  const waitingForSavedThread =
+    !!draftId &&
+    Array.isArray(savedStudioThread) &&
+    savedStudioThread.length > 0 &&
+    messages.every((message) => message._opening);
+  const restoringSession = !working && (loading || waitingForSavedThread);
+  const studioTransition = restoringSession ? 'restore' : openingStudio ? 'opening' : null;
   // The fix session in play, read from the markers — so it survives a refresh exactly
   // the way the phase does.
   const activeFix = openFix(messages);
@@ -1365,7 +1396,13 @@ const StudioChat = ({ onPaywall }) => {
   // card), and after a scan. The tailor intake stays card-driven.
   const freeChatAllowed = phase === 'results' || phase.startsWith('build:');
   const inputDisabled =
-    working || reading || scanning || applyingFix || !!roleBusy || !freeChatAllowed;
+    !!studioTransition ||
+    working ||
+    reading ||
+    scanning ||
+    applyingFix ||
+    !!roleBusy ||
+    !freeChatAllowed;
   // What the section menu offers next. Driven by which DONE markers exist rather than by
   // buildProgress, because "I have no projects" is a legitimate finished state that
   // completeness can't represent — the section is closed, but it will never tick.
@@ -1382,7 +1419,11 @@ const StudioChat = ({ onPaywall }) => {
         cta: progress.status.experience
           ? t('ariaStudio.chat.sectionMenu.experienceCtaMore')
           : t('ariaStudio.chat.sectionMenu.experienceCtaFirst'),
-        start: () => advance(() => enterSection('experience'), t('ariaStudio.chat.thinking.openingWorkHistory')),
+        start: () =>
+          advance(
+            () => enterSection('experience'),
+            t('ariaStudio.chat.thinking.openingWorkHistory')
+          ),
         // Only offer to close work history once something is actually in it.
         skip: progress.status.experience ? () => skipSection('experience', 'experiencedone') : null,
         skipLabel: t('ariaStudio.chat.sectionMenu.experienceSkipLabel'),
@@ -1452,11 +1493,44 @@ const StudioChat = ({ onPaywall }) => {
   // A card may own the stream only once nothing else does — no restore in flight, no
   // Aria turn mid-beat, no tailor-start or scan running.
   const ready =
-    !loading && !thinking && !working && !reading && !scanning && !roleBusy && !transitionLabel;
+    !studioTransition &&
+    !thinking &&
+    !working &&
+    !reading &&
+    !scanning &&
+    !roleBusy &&
+    !transitionLabel;
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col p-4 aria-theme-${chatTheme}`}>
       <div className="flex-1 min-h-0 relative">
+        <AnimatePresence>
+          {studioTransition && (
+            <motion.div
+              key={`studio-${studioTransition}`}
+              className="absolute inset-0 z-30 flex items-center justify-center bg-white px-6 dark:bg-slate-900"
+              initial={reduce ? { opacity: 1 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduce ? 0 : 0.2 }}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="text-center">
+                <span className="aria-orbit-slow inline-block">
+                  <AriaOrbit size={studioTransition === 'opening' ? 56 : 48} working />
+                </span>
+                <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {t(
+                    studioTransition === 'opening'
+                      ? 'ariaStudio.chat.thinking.openingStudio'
+                      : 'ariaStudio.chat.thinking.pickingUp'
+                  )}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div
           ref={chatRef}
           className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
@@ -1478,9 +1552,7 @@ const StudioChat = ({ onPaywall }) => {
                   return found ? t(found.labelKey) : '';
                 })()}
                 busy={roleBusy}
-                messagePulse={
-                  pinMessage.sortId === pinnedEntry._sortId ? pinMessage.nonce : 0
-                }
+                messagePulse={pinMessage.sortId === pinnedEntry._sortId ? pinMessage.nonce : 0}
                 reviewHint={
                   reviewHint?.sortId === pinnedEntry._sortId
                     ? t(
@@ -1782,19 +1854,13 @@ const StudioChat = ({ onPaywall }) => {
                 {...bubbleAnim('aria', reduce)}
               >
                 <AriaOrbit size={16} className="mt-2" />
-                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>
               </motion.div>
             );
           })}
 
-          {/* `loading` also protects the initial draft creation; while this chat is
-              actively building, `working` supplies the accurate setup message below.
-              "Picking up" is reserved for restoring an existing remembered session. */}
-          {loading && !working && (
-            <AriaThinking variant="chat" label={t('ariaStudio.chat.thinking.pickingUp')} />
-          )}
           {thinking && <AriaThinking variant="chat" />}
           {working && (
             <AriaThinking variant="draft" label={t('ariaStudio.chat.thinking.settingUpCopy')} />
@@ -1920,12 +1986,15 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
 
-            {ready && pinnedEntry && pinnedSectionKey === 'experience' && pinnedStage === 'entryType' && (
-              <ExperienceTypeCard
-                busy={roleBusy}
-                onPick={(entryType) => captureRoleField({ entryType })}
-              />
-            )}
+            {ready &&
+              pinnedEntry &&
+              pinnedSectionKey === 'experience' &&
+              pinnedStage === 'entryType' && (
+                <ExperienceTypeCard
+                  busy={roleBusy}
+                  onPick={(entryType) => captureRoleField({ entryType })}
+                />
+              )}
 
             {/* Skills — the same consent → generate → SkillsCard → applySkills flow the
                 CV builder runs, grounded on the roles and projects just captured. */}
@@ -2226,65 +2295,69 @@ const StudioChat = ({ onPaywall }) => {
               loop uses, pointed at this entry. One coaching path, not two: the free
               interview, the count picker, the credited generation and applyRoleBulletDiff
               all behave identically here. */}
-          {pinnedEntry && pinnedStage === 'achievements' && !thinking && !roleBusy && !transitionLabel && (
-            <SectionCoach
-              key={`rolecoach-${pinnedEntry._sortId}`}
-              draftId={draftId}
-              dockNode={coachDock}
-              entry={{
-                // 'project' routes coachChatTurn to its project framing (type-aware,
-                // problem → role → tech → outcome → link) instead of the job one.
-                section: pinnedSectionKey === 'project' ? 'project' : 'experience',
-                sortId: pinnedEntry._sortId,
-                title: pinnedEntry.title,
-                company: pinnedEntry.company,
-              }}
-              missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
-                .map((k) => (typeof k === 'string' ? k : k?.name))
-                .filter(Boolean)
-                .slice(0, 4)}
-              messages={messages}
-              onPush={push}
-              onApply={async (add, remove) => {
-                setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
-                try {
-                  const res = await applyRoleBulletDiff(
-                    pinnedSectionKey === 'project' ? 'project' : 'experience',
-                    pinnedEntry._sortId,
-                    add,
-                    remove
-                  );
-                  if (!res?.ok) setTransitionLabel(null); // failed — onDone won't fire, clear now
-                  return res;
-                } catch (e) {
-                  setTransitionLabel(null);
-                  throw e;
-                }
-              }}
-              onDone={(result) => {
-                setTimeout(() => {
-                  setTransitionLabel(null);
-                  if (result?.applied?.length) {
-                    setAppliedReceipt({
-                      sortId: pinnedEntry._sortId,
-                      section: pinnedSectionKey,
-                      title:
-                        pinnedEntry.title ||
-                        t(
-                          pinnedSectionKey === 'project'
-                            ? 'ariaStudio.chat.untitledProject'
-                            : 'ariaStudio.chat.untitledRole'
-                        ),
-                      n: result.applied.length,
-                      nonce: Date.now(),
-                    });
+          {pinnedEntry &&
+            pinnedStage === 'achievements' &&
+            !thinking &&
+            !roleBusy &&
+            !transitionLabel && (
+              <SectionCoach
+                key={`rolecoach-${pinnedEntry._sortId}`}
+                draftId={draftId}
+                dockNode={coachDock}
+                entry={{
+                  // 'project' routes coachChatTurn to its project framing (type-aware,
+                  // problem → role → tech → outcome → link) instead of the job one.
+                  section: pinnedSectionKey === 'project' ? 'project' : 'experience',
+                  sortId: pinnedEntry._sortId,
+                  title: pinnedEntry.title,
+                  company: pinnedEntry.company,
+                }}
+                missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
+                  .map((k) => (typeof k === 'string' ? k : k?.name))
+                  .filter(Boolean)
+                  .slice(0, 4)}
+                messages={messages}
+                onPush={push}
+                onApply={async (add, remove) => {
+                  setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
+                  try {
+                    const res = await applyRoleBulletDiff(
+                      pinnedSectionKey === 'project' ? 'project' : 'experience',
+                      pinnedEntry._sortId,
+                      add,
+                      remove
+                    );
+                    if (!res?.ok) setTransitionLabel(null); // failed — onDone won't fire, clear now
+                    return res;
+                  } catch (e) {
+                    setTransitionLabel(null);
+                    throw e;
                   }
-                }, 500);
-              }}
-              careerStage={careerStage}
-              onPickCareerStage={setCareerStage}
-            />
-          )}
+                }}
+                onDone={(result) => {
+                  setTimeout(() => {
+                    setTransitionLabel(null);
+                    if (result?.applied?.length) {
+                      setAppliedReceipt({
+                        sortId: pinnedEntry._sortId,
+                        section: pinnedSectionKey,
+                        title:
+                          pinnedEntry.title ||
+                          t(
+                            pinnedSectionKey === 'project'
+                              ? 'ariaStudio.chat.untitledProject'
+                              : 'ariaStudio.chat.untitledRole'
+                          ),
+                        n: result.applied.length,
+                        nonce: Date.now(),
+                      });
+                    }
+                  }, 500);
+                }}
+                careerStage={careerStage}
+                onPickCareerStage={setCareerStage}
+              />
+            )}
 
           {/* The focused build-with. Renders INTO this stream (its turns are ordinary
               aria/user messages, so they persist with everything else) and brings its
@@ -2323,7 +2396,7 @@ const StudioChat = ({ onPaywall }) => {
           indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
       <AriaComposer
         className={`shrink-0 pt-3 pb-[env(safe-area-inset-bottom)] ${
-          coachOwnsInput ? 'hidden' : ''
+          coachOwnsInput || studioTransition ? 'hidden' : ''
         }`}
         inputRef={inputRef}
         value={input}

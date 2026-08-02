@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { CREDIT_COSTS } from '../../lib/credits';
+import { tierOf, costForActionTier } from '../../lib/models';
 import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
@@ -121,6 +122,11 @@ const AskAriaGenerate = ({
   const [savingEntryType, setSavingEntryType] = useState(false);
   // The Aria model for this CV — same per-draft choice the Studio shows.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  // Flagship NEVER rides the free daily pool — it meters every turn, build-with
+  // included. So the pool counter below is meaningless on Pro and the note has to
+  // say what's actually being spent (and that Standard is the free way back).
+  const isFlagship = tierOf(modelId) === 'flagship';
+  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
 
   const chatRef = useRef(null);
   const inputRef = useRef(null);
@@ -179,7 +185,8 @@ const AskAriaGenerate = ({
   // for this focus once they type past them (chips aren't a gate).
   const careerStage = cvData?.careerStage || aiByStep?._careerStage;
   const isGradCareer = careerStage === 'grad';
-  const entryType = pickedEntryType || focusedExperience?.entryType || focusedEntry?.entryType || '';
+  const entryType =
+    pickedEntryType || focusedExperience?.entryType || focusedEntry?.entryType || '';
   const needsEntryType = focusedEntry?.section === 'experience' && !entryType;
 
   // "Aria's read" — the Role Brief. Seeded from cvData if present, else fetched
@@ -189,7 +196,7 @@ const AskAriaGenerate = ({
   useEffect(() => {
     if (brief || !(cvData.targetJob?.description || '').trim()) return;
     let cancelled = false;
-    CVService.getBrief(draftId)
+    CVService.getBrief(draftId, modelId)
       .then((r) => {
         if (!cancelled) setBrief(r?.brief || null);
       })
@@ -353,11 +360,13 @@ const AskAriaGenerate = ({
         buildTurns: buildTurnsRef.current,
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
+        model: modelId,
       });
       // The builder has its own focused-coach surface. Enforce the recent-grad
       // contract here too, so a stale/provider-missed stage can never put metric
       // pressure in front of a student or recent graduate.
-      const metricPrompt = /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
+      const metricPrompt =
+        /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
       const reply =
         isGradCareer && metricPrompt.test(r.reply || '')
           ? t('cvBuilder.askAria.gradFollowUp')
@@ -369,6 +378,10 @@ const AskAriaGenerate = ({
         isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
       setMessages((m) => [...m, { who: 'aria', text: reply }]);
       setFreeLeft(r.freeRemaining);
+      // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
       setSuggestions(safeSuggestions);
       setExampleAnswer(safeExample);
       setSuggestionsLabel(r.suggestionsLabel || '');
@@ -400,7 +413,7 @@ const AskAriaGenerate = ({
 
   // Tap a starter → drop it into the box, editable (never auto-sent). Caret lands on
   // the "___" placeholder if present, else at the end, so they finish their own words.
-  const useStarter = (text) => {
+  const applyStarter = (text) => {
     setInput(text);
     requestAnimationFrame(() => {
       const el = inputRef.current;
@@ -431,6 +444,7 @@ const AskAriaGenerate = ({
         sortId: focusedEntry.sortId,
         description: description.trim(),
         count,
+        model: modelId,
       });
       setBullets(res.bullets || []);
       setAppliedSet(new Set());
@@ -465,6 +479,7 @@ const AskAriaGenerate = ({
         description: description.trim(),
         count,
         reroll: true,
+        model: modelId,
       });
       setBullets(res.bullets || []);
       setAppliedSet(new Set());
@@ -575,7 +590,8 @@ const AskAriaGenerate = ({
             {[
               brief.role,
               brief.company,
-              brief.seniority && t('cvBuilder.askAria.seniorityLevel', { seniority: brief.seniority }),
+              brief.seniority &&
+                t('cvBuilder.askAria.seniorityLevel', { seniority: brief.seniority }),
             ]
               .filter(Boolean)
               .join(' · ')}
@@ -881,7 +897,7 @@ const AskAriaGenerate = ({
                   <button
                     key={i}
                     type="button"
-                    onClick={() => useStarter(s)}
+                    onClick={() => applyStarter(s)}
                     className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                   >
                     {s}
@@ -1125,14 +1141,16 @@ const AskAriaGenerate = ({
           disabled={phase !== 'chat' || needsEntryType || savingEntryType}
           busy={thinking}
           placeholder={
-            focused
-              ? t('cvBuilder.askAria.typeAnswer')
-              : t('cvBuilder.ariaComposer.placeholder')
+            focused ? t('cvBuilder.askAria.typeAnswer') : t('cvBuilder.ariaComposer.placeholder')
           }
           modelId={modelId}
           onSelectModel={selectModel}
           note={
-            freeLeft != null ? (
+            isFlagship ? (
+              <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                {t('cvBuilder.common.proTurnCost', { n: perTurnCost })}
+              </p>
+            ) : freeLeft != null ? (
               <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 {freeLeft > 0
                   ? t('cvBuilder.common.freeChatsLeft', { n: freeLeft })

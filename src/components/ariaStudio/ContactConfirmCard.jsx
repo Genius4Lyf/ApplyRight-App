@@ -2,61 +2,96 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
-// The fields a CV's contact block needs. `address` is asked for but never prefilled —
-// User doesn't store one, so there's nothing honest to put there.
-// Keys, not text — resolved via t() at render so the runtime UI language decides.
 const FIELDS = [
   {
     key: 'fullName',
     labelKey: 'ariaStudio.contactConfirm.fields.fullName.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.fullName.placeholder',
     required: true,
+    importance: 'essential',
   },
   {
     key: 'email',
     labelKey: 'ariaStudio.contactConfirm.fields.email.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.email.placeholder',
     required: true,
+    importance: 'essential',
   },
   {
     key: 'phone',
     labelKey: 'ariaStudio.contactConfirm.fields.phone.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.phone.placeholder',
+    required: true,
+    importance: 'essential',
   },
   {
     key: 'linkedin',
     labelKey: 'ariaStudio.contactConfirm.fields.linkedin.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.linkedin.placeholder',
+    importance: 'recommended',
   },
   {
     key: 'website',
     labelKey: 'ariaStudio.contactConfirm.fields.website.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.website.placeholder',
+    importance: 'optional',
   },
   {
     key: 'address',
     labelKey: 'ariaStudio.contactConfirm.fields.address.label',
     placeholderKey: 'ariaStudio.contactConfirm.fields.address.placeholder',
+    importance: 'recommended',
   },
 ];
 
-// Confirm the contact block that build-start prefilled from the user's profile.
-//
-// Confirming beats silently accepting: a stale phone number or an old email is invisible
-// until an employer fails to reach you, and this is the one moment the user is looking
-// straight at it. When the profile is empty there's nothing to confirm, so the card opens
-// straight into the form rather than showing a row of blanks and asking "looks right?".
+// Confirm the complete CV contact block. Missing fields remain visible so users
+// understand what the CV still needs instead of mistaking an omitted row for a
+// finished section. Essential details block confirmation; optional ones do not.
 const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) => {
   const { t } = useTranslation();
-  const filled = FIELDS.filter((f) => (personalInfo[f.key] || '').trim());
+  const filled = FIELDS.filter((field) => (personalInfo[field.key] || '').trim());
   const isEmpty = filled.length === 0;
 
   const [editing, setEditing] = useState(isEmpty);
   const [form, setForm] = useState(() => ({ ...personalInfo }));
 
-  const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+  const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const requiredFields = FIELDS.filter((field) => field.required);
+  const missingRequired = requiredFields.filter((field) => !(personalInfo[field.key] || '').trim());
+  const canSave = requiredFields.every((field) => (form[field.key] || '').trim());
 
-  const canSave = !!(form.fullName || '').trim() && !!(form.email || '').trim();
+  const editField = (key) => {
+    setForm({ ...personalInfo });
+    setEditing(true);
+    requestAnimationFrame(() => document.getElementById(`studio-contact-${key}`)?.focus());
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new window.Image();
+      image.onload = () => {
+        const size = 320;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext('2d');
+        const side = Math.min(image.width, image.height);
+        const sourceX = (image.width - side) / 2;
+        const sourceY = (image.height - side) / 2;
+        context.drawImage(image, sourceX, sourceY, side, side, 0, 0, size, size);
+        let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        if (dataUrl.length > 220_000) dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        set('photoUrl', dataUrl);
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
 
   const save = () => {
     onChange?.(form);
@@ -67,32 +102,89 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   if (editing) {
     return (
       <AriaCard cardKey="contactedit" wide>
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {isEmpty
               ? t('ariaStudio.contactConfirm.howReachYou')
               : t('ariaStudio.contactConfirm.yourDetails')}
           </p>
 
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {FIELDS.map((f) => (
-              <div key={f.key} className="min-w-0">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {FIELDS.map((field) => (
+              <div key={field.key} className="min-w-0">
                 <label
-                  htmlFor={`studio-contact-${f.key}`}
-                  className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+                  htmlFor={`studio-contact-${field.key}`}
+                  className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300"
                 >
-                  {t(f.labelKey)}
-                  {f.required && <span className="text-rose-500"> *</span>}
+                  {t(field.labelKey)}
+                  <span
+                    className={`ml-1.5 font-mono text-[8px] uppercase tracking-[0.08em] ${
+                      field.required
+                        ? 'text-slate-900 dark:text-white'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    {t(`ariaStudio.contactConfirm.importance.${field.importance}`)}
+                  </span>
                 </label>
                 <input
-                  id={`studio-contact-${f.key}`}
-                  value={form[f.key] || ''}
-                  onChange={(e) => set(f.key, e.target.value)}
-                  placeholder={t(f.placeholderKey)}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+                  id={`studio-contact-${field.key}`}
+                  value={form[field.key] || ''}
+                  onChange={(event) => set(field.key, event.target.value)}
+                  placeholder={t(field.placeholderKey)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[13px] text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/20"
                 />
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {t('ariaStudio.contactConfirm.fields.photo.label')}
+                  <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                    {t('ariaStudio.contactConfirm.importance.optional')}
+                  </span>
+                </p>
+                <p className="mt-1 max-w-md text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
+                  {t('ariaStudio.contactConfirm.photoGuidance')}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {form.photoUrl && (
+                  <img
+                    src={form.photoUrl}
+                    alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
+                    className="h-12 w-12 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+                  />
+                )}
+                <label
+                  htmlFor="studio-contact-photoUrl"
+                  className="cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-[11px] font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-950 dark:border-slate-700 dark:text-slate-200 dark:hover:border-white dark:hover:text-white"
+                >
+                  {form.photoUrl
+                    ? t('ariaStudio.contactConfirm.replacePhoto')
+                    : t('ariaStudio.contactConfirm.addPhoto')}
+                </label>
+                <input
+                  id="studio-contact-photoUrl"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="sr-only"
+                />
+                {form.photoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => set('photoUrl', '')}
+                    className="text-[10px] font-semibold text-slate-400 underline underline-offset-2 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
+                  >
+                    {t('ariaStudio.contactConfirm.removePhoto')}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-2">
@@ -103,7 +195,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   setForm({ ...personalInfo });
                   setEditing(false);
                 }}
-                className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+                className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 {t('common.cancel')}
               </button>
@@ -114,7 +206,9 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
               disabled={!canSave || saving}
               className="btn-primary ml-auto px-5 py-2 text-sm disabled:opacity-50"
             >
-              {saving ? t('ariaStudio.contactConfirm.saving') : t('ariaStudio.contactConfirm.saveContinue')}
+              {saving
+                ? t('ariaStudio.contactConfirm.saving')
+                : t('ariaStudio.contactConfirm.saveContinue')}
             </button>
           </div>
         </div>
@@ -123,40 +217,112 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   }
 
   return (
-    <AriaCard cardKey="contactconfirm">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+    <AriaCard cardKey="contactconfirm" wide>
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.contactConfirm.filledFromProfile')}
+          {t('ariaStudio.contactConfirm.reviewDetails')}
         </p>
 
-        <dl className="mt-3 space-y-1.5">
-          {filled.map((f) => (
-            <div key={f.key} className="flex items-baseline gap-2 min-w-0">
-              <dt className="shrink-0 w-24 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                {t(f.labelKey)}
-              </dt>
-              <dd className="min-w-0 flex-1 truncate text-[13px] text-slate-800 dark:text-slate-100">
-                {personalInfo[f.key]}
-              </dd>
+        <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="grid min-w-0 grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-2 py-2">
+            <dt className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.contactConfirm.fields.photo.label')}
+            </dt>
+            <dd className="min-w-0">
+              {personalInfo.photoUrl ? (
+                <img
+                  src={personalInfo.photoUrl}
+                  alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
+                  className="h-9 w-9 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+                />
+              ) : (
+                <span className="text-[12px] italic text-slate-400 dark:text-slate-500">
+                  {t('ariaStudio.contactConfirm.missing')}
+                </span>
+              )}
+            </dd>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.contactConfirm.importance.optional')}
+              </span>
+              <button
+                type="button"
+                onClick={() => editField('photoUrl')}
+                className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+              >
+                {personalInfo.photoUrl
+                  ? t('ariaStudio.contactConfirm.replacePhoto')
+                  : t('ariaStudio.contactConfirm.addField')}
+              </button>
             </div>
-          ))}
+          </div>
+          {FIELDS.map((field) => {
+            const value = (personalInfo[field.key] || '').trim();
+            return (
+              <div
+                key={field.key}
+                className="grid min-w-0 grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-2 py-2"
+              >
+                <dt className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  {t(field.labelKey)}
+                </dt>
+                <dd
+                  className={`min-w-0 truncate text-[12px] ${
+                    value
+                      ? 'text-slate-800 dark:text-slate-100'
+                      : field.required
+                        ? 'font-semibold text-rose-600 dark:text-rose-400'
+                        : 'italic text-slate-400 dark:text-slate-500'
+                  }`}
+                >
+                  {value || t('ariaStudio.contactConfirm.missing')}
+                </dd>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`font-mono text-[8px] uppercase tracking-[0.08em] ${
+                      field.required && !value
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : field.required
+                          ? 'text-slate-700 dark:text-slate-300'
+                          : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    {t(`ariaStudio.contactConfirm.importance.${field.importance}`)}
+                  </span>
+                  {!value && (
+                    <button
+                      type="button"
+                      onClick={() => editField(field.key)}
+                      className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+                    >
+                      {t('ariaStudio.contactConfirm.addField')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </dl>
 
         <div className="mt-4 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+            className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
           >
             ✎ {t('ariaStudio.pinnedEntry.edit')}
           </button>
           <button
             type="button"
-            onClick={() => onConfirm?.(personalInfo)}
+            onClick={() =>
+              missingRequired.length ? editField(missingRequired[0].key) : onConfirm?.(personalInfo)
+            }
             disabled={saving}
             className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
           >
-            {t('ariaStudio.contactConfirm.looksRight')} →
+            {missingRequired.length
+              ? t('ariaStudio.contactConfirm.addMissing', { count: missingRequired.length })
+              : `${t('ariaStudio.contactConfirm.looksRight')} →`}
           </button>
         </div>
       </div>

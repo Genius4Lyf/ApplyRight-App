@@ -224,8 +224,13 @@ const TargetChat = ({
         currentStepId: 'target_job',
         messages: next,
         focus: undefined,
+        model: modelId,
       });
       setQa((m) => [...m, { who: 'aria', text: rr.reply }]);
+      // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
+      if (rr.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: rr.remainingCredits }));
+      }
     } catch (e) {
       const code = e?.response?.data?.code;
       setQa((m) => [
@@ -578,7 +583,7 @@ const ATSCoachPanel = ({
   useEffect(() => {
     if (brief || !(cvData.targetJob?.description || '').trim()) return;
     let off = false;
-    CVService.getBrief(draftId)
+    CVService.getBrief(draftId, cvData?.studioModelId)
       .then((r) => {
         if (!off) setBrief(r?.brief || null);
       })

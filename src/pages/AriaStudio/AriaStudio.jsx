@@ -43,6 +43,7 @@ const StudioDesk = () => {
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const layout = useStudioLayout();
+  const { closePreview, setPanelOverlay } = layout;
   const [sessions, setSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   // The session awaiting a delete confirm, and which action is in flight.
@@ -186,6 +187,19 @@ const StudioDesk = () => {
   const openPanel = () => selectView('insights');
 
   const isBuildSession = cvData?.studioKind === 'build';
+  const isTailorSession = cvData?.studioKind === 'tailor';
+  const panelView =
+    !isTailorSession && layout.panelView === 'preview' ? 'insights' : layout.panelView;
+
+  // Live Preview is an explicit tailoring surface. A remembered Preview preference
+  // must not appear before the user has chosen a path or inside a New CV build; return
+  // those states to CV Health and restore the rail as closing Preview normally would.
+  useEffect(() => {
+    if (isTailorSession || layout.panelView !== 'preview') return;
+    closePreview();
+    setPanelOverlay(false);
+  }, [isTailorSession, layout.panelView, closePreview, setPanelOverlay]);
+
   const headingTitle = isBuildSession
     ? cvData?.title || t('ariaStudio.desk.newCv')
     : cvData?.tailoredForJob?.title ||
@@ -238,13 +252,13 @@ const StudioDesk = () => {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-background">
       <Navbar />
 
       <main
         className="studio-main flex-1 min-h-0 w-full max-w-[1600px] mx-auto px-0 sm:px-4 sm:py-4 flex gap-4 min-w-0"
         {...studioMainAttrs({
-          panelView: layout.panelView,
+          panelView,
           panelInline: layout.panelInline,
           railInline: layout.railInline,
         })}
@@ -346,28 +360,30 @@ const StudioDesk = () => {
                 gets the neutral active-state (matching the other header toggles); the
                 score pill stays to their right. */}
             <div className="shrink-0 flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => selectView('preview')}
-                aria-pressed={layout.panelView === 'preview'}
-                aria-label={t('ariaStudio.livePreview.heading')}
-                className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                  layout.panelView === 'preview'
-                    ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
-                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Eye className="w-4 h-4" />
-                <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
-              </button>
+              {isTailorSession && (
+                <button
+                  type="button"
+                  onClick={() => selectView('preview')}
+                  aria-pressed={panelView === 'preview'}
+                  aria-label={t('ariaStudio.livePreview.heading')}
+                  className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                    panelView === 'preview'
+                      ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => selectView('insights')}
-                aria-pressed={layout.panelView === 'insights'}
+                aria-pressed={panelView === 'insights'}
                 aria-label={t('ariaStudio.desk.insights')}
                 title={t('ariaStudio.desk.sectionVerdicts')}
                 className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                  layout.panelView === 'insights'
+                  panelView === 'insights'
                     ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
@@ -385,7 +401,7 @@ const StudioDesk = () => {
         {/* Right panel — inline only at the widest layout. The WIDE Live preview shares
             the room with the chat (studio-col); the NARROW insights keeps its fixed width. */}
         {layout.panelInline &&
-          (layout.panelView === 'preview' ? (
+          (panelView === 'preview' ? (
             <div className="studio-col-panel min-h-0">
               <StudioLivePreview onClose={() => layout.closePreview()} />
             </div>
@@ -432,12 +448,12 @@ const StudioDesk = () => {
         onClose={() => layout.setPanelOverlay(false)}
         side="bottom"
         label={
-          layout.panelView === 'preview'
+          panelView === 'preview'
             ? t('ariaStudio.livePreview.heading')
             : t('ariaStudio.desk.tailoredCopy')
         }
       >
-        {layout.panelView === 'preview' ? (
+        {panelView === 'preview' ? (
           <StudioLivePreview onClose={() => layout.setPanelOverlay(false)} />
         ) : (
           <StudioArtifactPanel bare onClose={() => layout.setPanelOverlay(false)} />

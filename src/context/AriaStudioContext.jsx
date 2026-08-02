@@ -203,7 +203,7 @@ export const AriaStudioProvider = ({ children }) => {
   // create — the guard has to be a ref to be read synchronously. Concurrent callers
   // await the SAME create; it self-clears so a later session can build again.
   const startBuild = useCallback(
-    async ({ jobTitle, jobDescription } = {}) => {
+    async ({ jobTitle, jobDescription, model } = {}) => {
       if (buildingRef.current) return buildingRef.current;
 
       buildingRef.current = (async () => {
@@ -211,7 +211,7 @@ export const AriaStudioProvider = ({ children }) => {
         sessionEpochRef.current += 1;
         setLoading(true);
         try {
-          const res = await CVService.studioBuildStart({ jobTitle, jobDescription });
+          const res = await CVService.studioBuildStart({ jobTitle, jobDescription, model });
           if (!res?.draft?._id) throw new Error('build-start returned no draft');
           // Bind ONLY — deliberately no sessionNonce bump.
           //
