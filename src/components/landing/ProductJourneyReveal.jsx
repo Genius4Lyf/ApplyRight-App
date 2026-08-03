@@ -646,10 +646,10 @@ const CvCollectionTransition = ({ t, progress, outputLang }) => {
 };
 
 const InterviewBridge = ({ t, progress }) => {
-  const promiseOpacity = useTransform(progress, [0.85, 0.865, 0.885, 0.9], [0, 1, 1, 0]);
-  const promiseY = useTransform(progress, [0.85, 0.865, 0.885, 0.9], [24, 0, 0, -20]);
-  const connectingOpacity = useTransform(progress, [0.895, 0.91, 0.925, 0.935], [0, 1, 1, 0]);
-  const connectingScale = useTransform(progress, [0.895, 0.91, 0.925, 0.935], [0.9, 1, 1, 1.05]);
+  const promiseOpacity = useTransform(progress, [0.848, 0.86, 0.877, 0.888], [0, 1, 1, 0]);
+  const promiseY = useTransform(progress, [0.848, 0.86, 0.877, 0.888], [24, 0, 0, -20]);
+  const connectingOpacity = useTransform(progress, [0.884, 0.898, 0.922, 0.934], [0, 1, 1, 0]);
+  const connectingScale = useTransform(progress, [0.884, 0.898, 0.922, 0.934], [0.9, 1, 1, 1.05]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-50 grid place-items-center px-6 text-center text-white">
@@ -821,7 +821,7 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
 
   useMotionValueEvent(progress, 'change', (latest) => {
     onInterviewFocusChange?.(latest >= 0.84);
-    const shouldMountInterview = latest >= 0.9;
+    const shouldMountInterview = latest >= 0.926;
     if (shouldMountInterview !== interviewMountedRef.current) {
       interviewMountedRef.current = shouldMountInterview;
       setInterviewMounted(shouldMountInterview);
@@ -843,6 +843,8 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
   const collectionOpacity = useTransform(progress, [0.54, 0.6, 0.835, 0.855], [0, 1, 1, 0]);
   const collectionScale = useTransform(progress, [0.62, 0.835, 0.855], [0.98, 1, 0.96]);
   const interviewBackdropOpacity = useTransform(progress, [0.845, 0.865], [0, 1]);
+  const interviewRevealOpacity = useTransform(progress, [0.936, 0.956], [0, 1]);
+  const interviewRevealScale = useTransform(progress, [0.936, 0.962], [0.94, 1]);
   const headerOpacity = useTransform(progress, [0, 0.18, 0.24], [1, 1, 0]);
 
   if (reduce) {
@@ -960,9 +962,7 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
 
         {interviewMounted && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            style={{ opacity: interviewRevealOpacity, scale: interviewRevealScale }}
             className="absolute inset-0 z-40 mx-auto origin-center sm:inset-x-6 sm:bottom-auto sm:top-6"
           >
             <InterviewReveal t={t} />

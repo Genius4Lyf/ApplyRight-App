@@ -1787,7 +1787,11 @@ const MockInterviewPage = () => {
 
   return (
     <div
-      className={`min-h-screen flex flex-col ${
+      // overflow-x-hidden: the live control dock's hairline goes full-bleed via
+      // the w-screen/-ml-[50vw] trick below, and 100vw includes the scrollbar
+      // gutter on desktop — without this it opens a few stray pixels of
+      // horizontal scroll on every phase, not just the live one.
+      className={`min-h-screen flex flex-col overflow-x-hidden ${
         immersive
           ? 'bg-[#f6f6f3] text-slate-900 dark:bg-slate-950 dark:text-slate-100'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'
@@ -4108,38 +4112,45 @@ const RealtimeView = ({
       </div>
 
       {/* Control dock — on mobile the status line + Mute + End read as one unit
-          pinned above the safe area; desktop keeps its original two-button row. */}
-      <div className="shrink-0 mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-slate-200 dark:border-white/10">
-        {/* Compact status line (mobile only — the big block above is sm:+). */}
-        <p className="sm:hidden text-center text-base font-bold text-slate-900 dark:text-white mb-3">
-          {statusPrimary}
-        </p>
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onToggleMute}
-            className={`inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl border text-sm sm:text-xs font-bold transition-all cursor-pointer select-none ${
-              muted
-                ? 'border-rose-300 dark:border-rose-400/40 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300'
-                : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
-            }`}
-          >
-            {muted ? (
-              <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            ) : (
-              <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            )}
-            {muted
-              ? t('interviewPrep.mock.realtime.unmute')
-              : t('interviewPrep.mock.realtime.mute')}
-          </button>
-          <button
-            type="button"
-            onClick={onEnd}
-            className="btn-primary flex-1 sm:flex-none gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl text-sm sm:text-xs cursor-pointer select-none"
-          >
-            {t('interviewPrep.mock.endReview')}
-          </button>
+          pinned above the safe area; desktop keeps its original two-button row.
+          The hairline is full-bleed to the viewport edges, matching the header's
+          border-b: this div sits inside `main`'s max-w-3xl column, so without the
+          vw trick the line would stop at the column's edge instead of reaching
+          the page edge the way the header's does. Content stays in its own
+          max-w-3xl px-4 sm:px-6 wrapper so the buttons don't also go full-bleed. */}
+      <div className="shrink-0 relative left-1/2 w-screen -ml-[50vw] mt-4 pt-4 pb-[env(safe-area-inset-bottom)] border-t border-slate-200 dark:border-white/10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          {/* Compact status line (mobile only — the big block above is sm:+). */}
+          <p className="sm:hidden text-center text-base font-bold text-slate-900 dark:text-white mb-3">
+            {statusPrimary}
+          </p>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={onToggleMute}
+              className={`inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl border text-sm sm:text-xs font-bold transition-all cursor-pointer select-none ${
+                muted
+                  ? 'border-rose-300 dark:border-rose-400/40 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                  : 'border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
+              }`}
+            >
+              {muted ? (
+                <MicOff className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              ) : (
+                <Mic className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              )}
+              {muted
+                ? t('interviewPrep.mock.realtime.unmute')
+                : t('interviewPrep.mock.realtime.mute')}
+            </button>
+            <button
+              type="button"
+              onClick={onEnd}
+              className="btn-primary flex-1 sm:flex-none gap-1.5 px-5 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 rounded-xl text-sm sm:text-xs cursor-pointer select-none"
+            >
+              {t('interviewPrep.mock.endReview')}
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
