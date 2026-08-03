@@ -5,7 +5,8 @@ import { FileDown } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
 import TierCard from '../components/pricing/TierCard';
-import { TIERS, AGENT_TIERS, FREE_TIER, detectDefaultCurrency } from '../lib/plans';
+import { TIERS, AGENT_TIERS, FREE_TIER } from '../lib/plans';
+import useBillingRegion from '../hooks/useBillingRegion';
 
 // Public, logged-out pricing page. This is the ONE place that keeps the
 // seeker/agent toggle — a visitor has no account yet, so they choose which
@@ -14,7 +15,17 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [audience, setAudience] = useState('seeker'); // 'seeker' | 'agent'
-  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
+  const { currency: regionCurrency, showToggle, resolved, overrideToNigeria } = useBillingRegion();
+  // The user's explicit toggle pick, if any — takes priority over the resolved
+  // region. Derived (not effect-synced): null before resolve means TierCard
+  // renders a skeleton instead of a price that might snap currency mid-load.
+  const [manualCurrency, setManualCurrency] = useState(null);
+  const currency = manualCurrency ?? (resolved ? regionCurrency : null);
+
+  const handleNigeriaOverride = () => {
+    overrideToNigeria();
+    setManualCurrency('NGN');
+  };
 
   const isAuthed = !!localStorage.getItem('token');
   // Job seekers get a Free card alongside the paid tiers; agents must subscribe.
@@ -85,39 +96,53 @@ const Pricing = () => {
             </div>
           </div>
 
-          {/* Currency toggle */}
-          <div className="flex justify-center mb-10">
-            <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200">
+          {/* Currency toggle — NG or unresolved geo only; foreign visitors get
+              the quiet "Paying from Nigeria?" escape hatch instead. */}
+          {resolved && showToggle && (
+            <div className="flex justify-center mb-10">
+              <div className="bg-slate-100 p-1 rounded-full flex gap-1 border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setManualCurrency('NGN')}
+                  className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                    currency === 'NGN'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <span>{t('billing.common.currencyNgn')}</span>
+                  <span className="opacity-60 font-normal">
+                    {t('billing.common.currencyNgnRegion')}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualCurrency('USD')}
+                  className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                    currency === 'USD'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <span>{t('billing.common.currencyUsd')}</span>
+                  <span className="opacity-60 font-normal">
+                    {t('billing.common.currencyUsdRegion')}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+          {resolved && !showToggle && (
+            <div className="flex justify-center mb-10">
               <button
                 type="button"
-                onClick={() => setCurrency('NGN')}
-                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                  currency === 'NGN'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+                onClick={handleNigeriaOverride}
+                className="text-sm text-slate-500 hover:underline underline-offset-2"
               >
-                <span>{t('billing.common.currencyNgn')}</span>
-                <span className="opacity-60 font-normal">
-                  {t('billing.common.currencyNgnRegion')}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrency('USD')}
-                className={`px-5 py-2.5 text-sm min-h-[40px] font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                  currency === 'USD'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <span>{t('billing.common.currencyUsd')}</span>
-                <span className="opacity-60 font-normal">
-                  {t('billing.common.currencyUsdRegion')}
-                </span>
+                {t('billing.common.payingFromNigeria')}
               </button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Tiers — agents fit a 3-up grid (centered); job seekers (4 cards) become

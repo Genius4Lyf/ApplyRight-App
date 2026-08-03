@@ -201,6 +201,10 @@ export const formatUsd = (n) =>
 // unchanged, so a wrong guess (e.g. Nigerian diaspora on a US timezone) is one
 // tap to fix, never a dead end. Falls back to NGN on any detection failure,
 // matching today's behavior.
+//
+// Superseded as the PRIMARY signal by useBillingRegion (src/hooks/useBillingRegion.js),
+// which prefers the backend's IP-derived geo. This stays in use as ITS fallback
+// for the UNKNOWN case (geo lookup failed/blocked/local dev) — never delete it.
 export const detectDefaultCurrency = () => {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';

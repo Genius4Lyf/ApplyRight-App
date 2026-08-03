@@ -6,7 +6,8 @@ import { useTranslation, Trans } from 'react-i18next';
 import { Download, Crown, X, FileCheck2, ScanLine, Sparkles, ShieldCheck } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
-import { formatNgn, formatUsd, DOWNLOAD_PASS, detectDefaultCurrency } from '../lib/plans';
+import { formatNgn, formatUsd, DOWNLOAD_PASS } from '../lib/plans';
+import useBillingRegion from '../hooks/useBillingRegion';
 
 // Shown when a download is blocked (no pass / not subscribed). Two ways forward:
 //   - one-time single-download pass (DOWNLOAD_PASS, Flutterwave hosted checkout)
@@ -17,12 +18,26 @@ const DownloadPaywallModal = ({ open, onClose, templateId }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
+  const { currency: regionCurrency, showToggle, resolved, overrideToNigeria } = useBillingRegion();
+  // The user's explicit toggle pick, if any — takes priority over the resolved
+  // region. Derived (not effect-synced): null before resolve means the price
+  // renders as a skeleton instead of possibly snapping currency mid-load.
+  const [manualCurrency, setManualCurrency] = useState(null);
+  const currency = manualCurrency ?? (resolved ? regionCurrency : null);
+
+  const handleNigeriaOverride = () => {
+    overrideToNigeria();
+    setManualCurrency('NGN');
+  };
 
   if (!open) return null;
 
-  const price =
-    currency === 'USD' ? formatUsd(DOWNLOAD_PASS.priceUsd) : formatNgn(DOWNLOAD_PASS.priceNgn);
+  const priceReady = currency != null;
+  const price = !priceReady
+    ? null
+    : currency === 'USD'
+      ? formatUsd(DOWNLOAD_PASS.priceUsd)
+      : formatNgn(DOWNLOAD_PASS.priceNgn);
 
   const buySingle = async () => {
     setLoading(true);
@@ -67,33 +82,52 @@ const DownloadPaywallModal = ({ open, onClose, templateId }) => {
           {t('billing.downloadPaywall.title')}
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          {t('billing.downloadPaywall.subtitle', { price })}
+          {priceReady ? (
+            t('billing.downloadPaywall.subtitle', { price })
+          ) : (
+            <span className="inline-block h-4 w-40 rounded bg-slate-100 dark:bg-slate-800 animate-pulse align-middle" />
+          )}
         </p>
 
-        <div className="flex justify-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit mx-auto">
-          <button
-            type="button"
-            onClick={() => setCurrency('NGN')}
-            className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
-              currency === 'NGN'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {t('billing.common.currencyNgn')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrency('USD')}
-            className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
-              currency === 'USD'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {t('billing.common.currencyUsd')}
-          </button>
-        </div>
+        {/* Currency toggle — NG or unresolved geo only; foreign visitors get
+            the quiet "Paying from Nigeria?" escape hatch instead. */}
+        {resolved && showToggle && (
+          <div className="flex justify-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit mx-auto">
+            <button
+              type="button"
+              onClick={() => setManualCurrency('NGN')}
+              className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                currency === 'NGN'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {t('billing.common.currencyNgn')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setManualCurrency('USD')}
+              className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                currency === 'USD'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {t('billing.common.currencyUsd')}
+            </button>
+          </div>
+        )}
+        {resolved && !showToggle && (
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={handleNigeriaOverride}
+              className="text-sm text-slate-500 hover:underline underline-offset-2"
+            >
+              {t('billing.common.payingFromNigeria')}
+            </button>
+          </div>
+        )}
 
         <ul className="space-y-2 mb-5">
           <li className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
@@ -121,15 +155,17 @@ const DownloadPaywallModal = ({ open, onClose, templateId }) => {
 
         <button
           onClick={buySingle}
-          disabled={loading}
+          disabled={loading || !priceReady}
           className="w-full py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {loading ? (
             <AriaLoader inline tone="mono" size={16} label={t('billing.common.starting')} />
-          ) : (
+          ) : priceReady ? (
             <>
               <Download className="w-5 h-5" /> {t('billing.downloadPaywall.payCta', { price })}
             </>
+          ) : (
+            <AriaLoader inline tone="mono" size={16} label={t('billing.common.starting')} />
           )}
         </button>
 

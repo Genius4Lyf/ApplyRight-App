@@ -24,7 +24,15 @@ const TierCard = ({
   onCta,
 }) => {
   const { t } = useTranslation();
-  const priceLabel = currency === 'NGN' ? formatNgn(tier.priceNgn) : formatUsd(tier.priceUsd);
+  // currency is null for one beat while useBillingRegion resolves — render a
+  // placeholder rather than guess, so a visitor never sees a price snap to a
+  // different currency right after the page loads.
+  const priceReady = currency != null;
+  const priceLabel = !priceReady
+    ? null
+    : currency === 'NGN'
+      ? formatNgn(tier.priceNgn)
+      : formatUsd(tier.priceUsd);
   const isFree = !tier.priceNgn;
   const label = t(tier.labelKey);
   const taglineKey = tier.taglineKey || tier.subtitleKey;
@@ -71,22 +79,26 @@ const TierCard = ({
 
       {/* Price */}
       <div className="mt-4 flex items-end gap-1.5">
-        <span className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          {priceLabel}
-        </span>
-        {!isFree && (
+        {priceReady ? (
+          <span className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+            {priceLabel}
+          </span>
+        ) : (
+          <span className="h-9 w-24 rounded-md bg-slate-100 dark:bg-slate-800 animate-pulse" />
+        )}
+        {!isFree && priceReady && (
           <span className="pb-1.5 text-sm text-slate-400 dark:text-slate-500">
             / {t(tier.periodKey)}
           </span>
         )}
       </div>
       <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500 min-h-[16px]">
-        {!isFree && (
+        {!isFree && priceReady && (
           <span className="capitalize">
             {t('billing.tierCard.perPeriod', { period: t(tier.periodKey) })}{' '}
           </span>
         )}
-        {paySubline}
+        {priceReady && paySubline}
       </p>
 
       {/* CTA — sits above the checklist, like the reference */}

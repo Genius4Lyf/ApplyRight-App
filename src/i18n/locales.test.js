@@ -180,6 +180,15 @@ describe('locale files', () => {
       'landing.journey.roleCvs.admin.name',
       'landing.journey.roleCvs.finance.name',
       'landing.journey.roleCvs.finance.certification',
+      // The closing CTA repeats the hero's word morph: "the" and "way." expand in, so the
+      // resting state reads "ApplyRight" — the wordmark. Same case as introMorph* above,
+      // so the fragments stay English. (landing.cta.applyRightWay holds the translated
+      // full sentence; it is currently unrendered.)
+      'landing.cta.applyWord',
+      'landing.cta.theWord',
+      'landing.cta.rightWord',
+      'landing.cta.wayWord',
+      'landing.journey.interviewInterviewerName', // "Amaka Okafor" — a person's name
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

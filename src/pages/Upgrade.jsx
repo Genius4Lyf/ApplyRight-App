@@ -7,15 +7,21 @@ import TierCard from '../components/pricing/TierCard';
 import PaymentTrustModal from '../components/PaymentTrustModal';
 import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
 import billingService from '../services/billing.service';
-import { TIERS, AGENT_TIERS, FREE_TIER, FREE_TASTE_MIN, detectDefaultCurrency } from '../lib/plans';
+import { TIERS, AGENT_TIERS, FREE_TIER, FREE_TASTE_MIN } from '../lib/plans';
 import { toast } from 'sonner';
+import useBillingRegion from '../hooks/useBillingRegion';
 
 const Upgrade = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [entitlement, setEntitlement] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
-  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
+  const { currency: regionCurrency, showToggle, resolved, overrideToNigeria } = useBillingRegion();
+  // The user's explicit toggle pick, if any — takes priority over the resolved
+  // region. Derived (not effect-synced): null before resolve means prices
+  // render as a skeleton instead of possibly snapping currency mid-load.
+  const [manualCurrency, setManualCurrency] = useState(null);
+  const currency = manualCurrency ?? (resolved ? regionCurrency : null);
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState(null);
   // Pricing is locked to the user's account type — CV agents see only agent
@@ -55,6 +61,11 @@ const Upgrade = () => {
       .then(setEntitlement)
       .catch(() => setEntitlement(null));
   }, []);
+
+  const handleNigeriaOverride = () => {
+    overrideToNigeria();
+    setManualCurrency('NGN');
+  };
 
   const proceedToCheckout = async (planId) => {
     setLoadingId(planId);
@@ -160,44 +171,60 @@ const Upgrade = () => {
             </div>
           )}
 
-          {/* Currency Switcher Tab */}
-          <div className="flex justify-center mb-10">
-            <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+          {/* Currency Switcher Tab — NG or unresolved geo only; foreign
+              visitors get the quiet "Paying from Nigeria?" escape hatch instead. */}
+          {resolved && showToggle && (
+            <div className="flex justify-center mb-10">
+              <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setManualCurrency('NGN')}
+                  className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                    currency === 'NGN'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <span>{t('billing.common.currencyNgn')}</span>
+                  <span className="opacity-60 font-normal">
+                    {t('billing.common.currencyNgnRegion')}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualCurrency('USD')}
+                  className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                    currency === 'USD'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <span>{t('billing.common.currencyUsd')}</span>
+                  <span className="opacity-60 font-normal">
+                    {t('billing.common.currencyUsdRegion')}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+          {resolved && !showToggle && (
+            <div className="flex justify-center mb-10">
               <button
                 type="button"
-                onClick={() => setCurrency('NGN')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                  currency === 'NGN'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
+                onClick={handleNigeriaOverride}
+                className="text-sm text-slate-500 hover:underline underline-offset-2"
               >
-                <span>{t('billing.common.currencyNgn')}</span>
-                <span className="opacity-60 font-normal">
-                  {t('billing.common.currencyNgnRegion')}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrency('USD')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                  currency === 'USD'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                <span>{t('billing.common.currencyUsd')}</span>
-                <span className="opacity-60 font-normal">
-                  {t('billing.common.currencyUsdRegion')}
-                </span>
+                {t('billing.common.payingFromNigeria')}
               </button>
             </div>
-          </div>
-          <p className="text-center text-xs text-slate-400 dark:text-slate-500 -mt-8 mb-10 font-medium tracking-wide">
-            {currency === 'NGN'
-              ? t('billing.upgrade.currencyNoteNgn')
-              : t('billing.upgrade.currencyNoteUsd')}
-          </p>
+          )}
+          {currency && (
+            <p className="text-center text-xs text-slate-400 dark:text-slate-500 -mt-8 mb-10 font-medium tracking-wide">
+              {currency === 'NGN'
+                ? t('billing.upgrade.currencyNoteNgn')
+                : t('billing.upgrade.currencyNoteUsd')}
+            </p>
+          )}
 
           {/* Tiers — agents fit a 3-up grid; job seekers (4 cards) become a
               horizontal "peek" carousel so the next card hints you can scroll. */}

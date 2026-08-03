@@ -13,12 +13,12 @@ import {
   formatNgn,
   formatUsd,
   formatMinutesLabel,
-  detectDefaultCurrency,
 } from '../lib/plans';
 import AdPlayer from '../components/AdPlayer';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import PaymentTrustModal from '../components/PaymentTrustModal';
 import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
+import useBillingRegion from '../hooks/useBillingRegion';
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
@@ -59,7 +59,17 @@ const CreditStore = () => {
   const [buyingPack, setBuyingPack] = useState(null); // catalog id mid-checkout
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState(null);
-  const [currency, setCurrency] = useState(() => detectDefaultCurrency());
+  const { currency: regionCurrency, showToggle, resolved, overrideToNigeria } = useBillingRegion();
+  // The user's explicit toggle pick, if any — takes priority over the resolved
+  // region. Derived (not effect-synced): null before resolve means prices
+  // render as a skeleton instead of possibly snapping currency mid-load.
+  const [manualCurrency, setManualCurrency] = useState(null);
+  const currency = manualCurrency ?? (resolved ? regionCurrency : null);
+
+  const handleNigeriaOverride = () => {
+    overrideToNigeria();
+    setManualCurrency('NGN');
+  };
 
   // Start a Flutterwave checkout for a credit pack and redirect to the hosted link.
   const proceedToCheckout = async (planId) => {
@@ -241,44 +251,60 @@ const CreditStore = () => {
           </p>
         </div>
 
-        {/* Currency Switcher Tab */}
-        <div className="flex justify-center">
-          <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+        {/* Currency Switcher Tab — NG or unresolved geo only; foreign
+            visitors get the quiet "Paying from Nigeria?" escape hatch instead. */}
+        {resolved && showToggle && (
+          <div className="flex justify-center">
+            <div className="bg-slate-100 dark:bg-slate-900/80 p-1 rounded-full flex gap-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setManualCurrency('NGN')}
+                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                  currency === 'NGN'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                <span>{t('billing.common.currencyNgn')}</span>
+                <span className="opacity-60 font-normal">
+                  {t('billing.common.currencyNgnRegion')}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setManualCurrency('USD')}
+                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                  currency === 'USD'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                <span>{t('billing.common.currencyUsd')}</span>
+                <span className="opacity-60 font-normal">
+                  {t('billing.common.currencyUsdRegion')}
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+        {resolved && !showToggle && (
+          <div className="flex justify-center">
             <button
               type="button"
-              onClick={() => setCurrency('NGN')}
-              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                currency === 'NGN'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
+              onClick={handleNigeriaOverride}
+              className="text-sm text-slate-500 hover:underline underline-offset-2"
             >
-              <span>{t('billing.common.currencyNgn')}</span>
-              <span className="opacity-60 font-normal">
-                {t('billing.common.currencyNgnRegion')}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrency('USD')}
-              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 flex items-center gap-1.5 ${
-                currency === 'USD'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              <span>{t('billing.common.currencyUsd')}</span>
-              <span className="opacity-60 font-normal">
-                {t('billing.common.currencyUsdRegion')}
-              </span>
+              {t('billing.common.payingFromNigeria')}
             </button>
           </div>
-        </div>
-        <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide -mt-8">
-          {currency === 'NGN'
-            ? t('billing.upgrade.currencyNoteNgn')
-            : t('billing.upgrade.currencyNoteUsd')}
-        </p>
+        )}
+        {currency && (
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide -mt-8">
+            {currency === 'NGN'
+              ? t('billing.upgrade.currencyNoteNgn')
+              : t('billing.upgrade.currencyNoteUsd')}
+          </p>
+        )}
 
         {/* ── Balance hero ──────────────────────────────────────────────
             Anchors the page: how many credits you have + your current plan
@@ -370,7 +396,7 @@ const CreditStore = () => {
                 key={p.id}
                 type="button"
                 onClick={() => buyCredits(p.id)}
-                disabled={!!buyingPack}
+                disabled={!!buyingPack || !currency}
                 className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
                   p.best
                     ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800/50'
@@ -390,21 +416,29 @@ const CreditStore = () => {
                     </span>
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    {currency === 'USD'
-                      ? t('billing.creditStore.perCreditUsd', {
-                          n: (p.priceUsd / p.credits).toFixed(2),
-                        })
-                      : t('billing.creditStore.perCreditNgn', {
-                          n: (p.priceNgn / p.credits).toFixed(1),
-                        })}
+                    {!currency ? (
+                      <span className="inline-block h-3.5 w-20 rounded bg-slate-100 dark:bg-slate-800 animate-pulse align-middle" />
+                    ) : currency === 'USD' ? (
+                      t('billing.creditStore.perCreditUsd', {
+                        n: (p.priceUsd / p.credits).toFixed(2),
+                      })
+                    ) : (
+                      t('billing.creditStore.perCreditNgn', {
+                        n: (p.priceNgn / p.credits).toFixed(1),
+                      })
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
-                  {buyingPack === p.id
-                    ? t('billing.common.starting')
-                    : currency === 'USD'
-                      ? formatUsd(p.priceUsd)
-                      : formatNgn(p.priceNgn)}
+                  {!currency ? (
+                    <span className="inline-block h-4 w-14 rounded bg-white/20 animate-pulse" />
+                  ) : buyingPack === p.id ? (
+                    t('billing.common.starting')
+                  ) : currency === 'USD' ? (
+                    formatUsd(p.priceUsd)
+                  ) : (
+                    formatNgn(p.priceNgn)
+                  )}
                 </div>
               </button>
             ))}
@@ -422,8 +456,9 @@ const CreditStore = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               {TOPUPS.map((p) => {
                 const best = !!p.best;
-                const perMin =
-                  currency === 'USD'
+                const perMin = !currency
+                  ? null
+                  : currency === 'USD'
                     ? t('billing.upgrade.perMinUsd', {
                         n: (p.priceUsd / p.minutes).toFixed(2),
                       })
@@ -436,7 +471,7 @@ const CreditStore = () => {
                     key={p.id}
                     type="button"
                     onClick={() => buyCredits(p.id)}
-                    disabled={!!buyingPack}
+                    disabled={!!buyingPack || !currency}
                     className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
                       best
                         ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800/50'
@@ -453,14 +488,22 @@ const CreditStore = () => {
                         {value}{' '}
                         <span className="text-base font-semibold">{unit}</span>
                       </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{perMin}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        {perMin ?? (
+                          <span className="inline-block h-3.5 w-20 rounded bg-slate-100 dark:bg-slate-800 animate-pulse align-middle" />
+                        )}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
-                      {buyingPack === p.id
-                        ? t('billing.common.starting')
-                        : currency === 'USD'
-                          ? formatUsd(p.priceUsd)
-                          : formatNgn(p.priceNgn)}
+                      {!currency ? (
+                        <span className="inline-block h-4 w-14 rounded bg-white/20 animate-pulse" />
+                      ) : buyingPack === p.id ? (
+                        t('billing.common.starting')
+                      ) : currency === 'USD' ? (
+                        formatUsd(p.priceUsd)
+                      ) : (
+                        formatNgn(p.priceNgn)
+                      )}
                     </div>
                   </button>
                 );
