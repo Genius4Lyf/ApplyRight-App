@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AriaLoader from '../components/ui/AriaLoader';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   X,
   Volume2,
@@ -25,7 +25,6 @@ import {
   Send,
   Lock,
   MicOff,
-  Captions,
   Briefcase,
   Sparkles,
 } from 'lucide-react';
@@ -191,6 +190,9 @@ const MockInterviewPage = () => {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [muted, setMuted] = useState(false);
   const [micStream, setMicStream] = useState(null);
+  // The interviewer's own audio, so the stage waveform can be driven by the
+  // voice that's actually talking instead of a canned animation.
+  const [remoteStream, setRemoteStream] = useState(null);
   const [savedRecordingBlob, setSavedRecordingBlob] = useState(null);
   const [savedRecordingDuration, setSavedRecordingDuration] = useState(0);
   // AI assessment of a conversational interview (replaces self-rating). Null for
@@ -282,9 +284,10 @@ const MockInterviewPage = () => {
   const [challenge, setChallenge] = useState(
     () => localStorage.getItem('interview_challenge') || 'realistic'
   );
-  // Optional live captions of what the interviewer says (accessibility).
-  const [captionsOn, setCaptionsOn] = useState(false);
-  const [caption, setCaption] = useState('');
+  // NOTE: live captions were REMOVED from the live interview (2026-08-03) —
+  // rendered on the stage they flooded the room and clipped mid-sentence. The
+  // `onCaption` stream is still consumed below for speaker detection; if
+  // captions return they need a display approach that can't swamp the stage.
   // The 3-person interview panel (paid tiers) returned by createRealtimeSession;
   // shown on the connecting screen. Empty for free/solo interviews.
   const [panel, setPanel] = useState([]);
@@ -977,6 +980,7 @@ const MockInterviewPage = () => {
       realtimeRef.current?.stop();
       realtimeRef.current = null;
       setMicStream(null);
+      setRemoteStream(null);
       setPhase('intro');
       return;
     }
@@ -1050,6 +1054,7 @@ const MockInterviewPage = () => {
       if (state.wired || !state.local) return;
       state.wired = true;
       setMicStream(state.local);
+      setRemoteStream(state.remote);
       recorderRef.current = createMixedRecorder(state.local, state.remote);
     };
 
@@ -1099,7 +1104,8 @@ const MockInterviewPage = () => {
       },
       onCaption: (turn) => {
         if (!state.active || turn.role !== 'interviewer') return;
-        setCaption(turn.text);
+        // Nothing renders the caption text any more — this hook stays purely for
+        // speaker detection.
         // Reliable fallback for the highlight: detect a speaker change from what
         // the interviewer actually said (self-intro / hand-off), in case the model
         // didn't call the set_active_speaker tool.
@@ -1213,7 +1219,6 @@ const MockInterviewPage = () => {
     segmentIdxRef.current = nextIdx;
     const plan = segmentsRef.current[nextIdx] || {};
     setActiveSeat({ name: plan.name, role: plan.role });
-    setCaption('');
     setMuted(false);
     nudgedRef.current = false;
     setInGrace(false);
@@ -1250,7 +1255,7 @@ const MockInterviewPage = () => {
     resetSessionState();
     setMuted(false);
     setMicStream(null);
-    setCaption('');
+    setRemoteStream(null);
     nudgedRef.current = false;
     enterConnecting();
 
@@ -1403,6 +1408,7 @@ const MockInterviewPage = () => {
     nextCtlRef.current = null;
     prewarmingRef.current = false;
     setMicStream(null);
+    setRemoteStream(null);
     finishConversation(liveTranscript);
   };
 
@@ -1858,7 +1864,12 @@ const MockInterviewPage = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-2 sm:py-3.5">
+      {/* Centred on every size. `main` is flex-1 with no fixed height, so when
+          content is taller than the viewport it simply grows and the page
+          scrolls — centring only ever consumes genuinely spare room, it can't
+          push the top of a tall card out of reach. Mobile used to pin content to
+          the top, which left a dead half-screen under the preflight cards. */}
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3.5">
         <div className="w-full max-w-3xl transition-all duration-300">
           {phase === 'choose' &&
             (simQuestions.length === 0 ? (
@@ -1962,13 +1973,10 @@ const MockInterviewPage = () => {
           {phase === 'live' && (
             <RealtimeView
               voiceState={voiceState}
-              secondsLeft={secondsLeft}
               inGrace={inGrace}
               muted={muted}
               micStream={micStream}
-              captionsOn={captionsOn}
-              caption={caption}
-              onToggleCaptions={() => setCaptionsOn((v) => !v)}
+              remoteStream={remoteStream}
               onToggleMute={toggleRealtimeMute}
               onEnd={requestEndReview}
               activeSeat={panel.length >= 1 ? activeSeat : null}
@@ -2362,6 +2370,7 @@ const ConnectingView = ({
   isHandoff = false,
 }) => {
   const { t } = useTranslation();
+  const reduce = useReducedMotion();
   const hasPanel = Array.isArray(panel) && panel.length >= 2;
   const [step, setStep] = useState(0);
   useEffect(() => {
@@ -2377,34 +2386,36 @@ const ConnectingView = ({
       <div className="relative mb-8 flex items-center justify-center">
         {!connected && (
           <div className="absolute w-20 h-20 sm:w-24 sm:h-24" aria-hidden>
-            {[0, 1, 2].map((i) => (
+            {/* Reduced motion: one stilled ring instead of three expanding ones
+                (animate-sonar is a CSS animation, so it has to be left off). */}
+            {(reduce ? [0] : [0, 1, 2]).map((i) => (
               <span
                 key={i}
                 className={`absolute inset-0 rounded-full border ${
                   dark ? 'border-white/30' : 'border-slate-900/30'
-                } animate-sonar`}
-                style={{
-                  animationDelay: `${i * 0.8}s`,
-                }}
+                } ${reduce ? '' : 'animate-sonar'}`}
+                style={reduce ? undefined : { animationDelay: `${i * 0.8}s` }}
               />
             ))}
           </div>
         )}
+        {/* The mark floats bare on the ground — no tile — so the asset has to
+            follow the theme itself. */}
         <motion.div
           animate={connected ? { scale: [1, 1.12, 1] } : { scale: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white flex items-center justify-center p-3.5 shadow-xl transition-[box-shadow,border-color] duration-300 ${
-            connected
-              ? 'border border-emerald-300 ring-4 ring-emerald-400/40'
-              : dark
-                ? 'border border-white/20 ring-2 ring-white/20'
-                : 'border border-slate-200 ring-2 ring-slate-900/10'
+          className={`relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center transition-shadow duration-300 ${
+            connected ? 'rounded-full ring-4 ring-emerald-400/40' : ''
           }`}
         >
           <img
-            src="/applyright-icon-black.png"
+            src={dark ? '/applyright-icon-white.png' : '/applyright-icon-black.png'}
             alt="ApplyRight AI interviewer"
-            className="w-full h-full object-contain"
+            className={`w-full h-full object-contain ${
+              dark
+                ? 'drop-shadow-[0_10px_24px_rgba(255,255,255,.16)]'
+                : 'drop-shadow-[0_10px_24px_rgba(15,23,42,.16)]'
+            }`}
           />
         </motion.div>
       </div>
@@ -2433,7 +2444,11 @@ const ConnectingView = ({
         </span>
       )}
 
-      <h2 className={`mt-3 text-lg sm:text-xl font-bold ${dark ? 'text-white' : 'text-slate-900'}`}>
+      <h2
+        className={`mt-3 font-heading text-2xl sm:text-3xl font-bold ${
+          dark ? 'text-white' : 'text-slate-900'
+        }`}
+      >
         {connected
           ? t('interviewPrep.mock.connecting.connectedHeadline')
           : isHandoff && activeSeat
@@ -4010,15 +4025,13 @@ const ConversationView = ({ voiceState, turnLoading, onReplay, onSubmit, onEnd }
 const SOLO_SEAT = { name: 'ApplyRight AI', roleKey: 'interviewPrep.mock.yourInterviewer' };
 
 // ── Realtime (live voice) view — VOICE ONLY, no text, no question on screen ──
+// The countdown is deliberately absent here — the top app bar owns it.
 const RealtimeView = ({
   voiceState,
-  secondsLeft,
   inGrace,
   muted,
   micStream,
-  captionsOn,
-  caption,
-  onToggleCaptions,
+  remoteStream = null,
   onToggleMute,
   onEnd,
   activeSeat = null,
@@ -4062,47 +4075,9 @@ const RealtimeView = ({
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col h-[calc(100dvh-5.5rem)]"
     >
-      <div className="shrink-0 flex items-center justify-between mb-3 px-1">
-        <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
-            {t('interviewPrep.mock.realtime.liveVoice')}
-          </p>
-          {activeSeat && activeSeat.name && (
-            <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
-              {activeSeat.name}
-              {activeSeat.role ? ` · ${activeSeat.role}` : ''}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={onToggleCaptions}
-            title={t('interviewPrep.mock.realtime.toggleCaptions')}
-            aria-pressed={captionsOn}
-            className={`inline-flex items-center gap-1 py-2 px-2 -my-1 rounded-lg text-[11px] font-bold transition-colors ${
-              captionsOn
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-            }`}
-          >
-            <Captions className="w-3.5 h-3.5" /> CC
-          </button>
-          <span
-            className={`text-[11px] font-bold tabular-nums ${
-              inGrace
-                ? 'text-amber-600 dark:text-amber-300'
-                : secondsLeft <= 30
-                  ? 'text-rose-500 dark:text-rose-400'
-                  : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {inGrace
-              ? t('interviewPrep.mock.realtime.wrappingUpTime', { time: fmt(secondsLeft) })
-              : t('interviewPrep.mock.realtime.timeLeft', { time: fmt(secondsLeft) })}
-          </span>
-        </div>
-      </div>
+      {/* No chrome row above the stage: captions are gone, and the top app bar
+          already carries the live dot, the countdown and Exit. The interviewer
+          starts at the top of their own room. */}
 
       {/* Meet-style stage for everyone. Paid → real named panel; free/solo → the
           same stage with a single generic ApplyRight AI interviewer. */}
@@ -4113,6 +4088,7 @@ const RealtimeView = ({
         muted={muted}
         speaking={speaking}
         micStream={micStream}
+        remoteStream={remoteStream}
         handingOff={handingOff}
       />
 
@@ -4130,18 +4106,6 @@ const RealtimeView = ({
               : t('interviewPrep.mock.realtime.defaultSecondary')}
         </p>
       </div>
-
-      {/* Optional captions of what the interviewer just said (accessibility) */}
-      {captionsOn && (
-        <div className="shrink-0 mt-4 mx-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 min-h-[3rem]">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 mb-1">
-            {t('interviewPrep.mock.realtime.captionsLabel')}
-          </p>
-          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-            {caption || '…'}
-          </p>
-        </div>
-      )}
 
       {/* Control dock — on mobile the status line + Mute + End read as one unit
           pinned above the safe area; desktop keeps its original two-button row. */}

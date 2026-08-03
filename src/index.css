@@ -807,12 +807,6 @@
   content: '';
 }
 
-/* Make page wrappers transparent so the global background shows through */
-.min-h-screen.bg-slate-50,
-.min-h-screen.bg-background {
-  background-color: transparent !important;
-}
-
 /* ── Aria Studio · adaptive Live Preview workspace ──
    The chat and right-panel columns are flex siblings whose GROW ratio is driven by
    data-attrs on the main row (mirroring the approved mock's data-mode × data-sessions).

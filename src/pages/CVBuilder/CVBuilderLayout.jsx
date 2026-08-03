@@ -367,7 +367,7 @@ const CVBuilderInner = () => {
   }
 
   return (
-    <div className="h-dvh overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="h-dvh overflow-hidden bg-transparent flex flex-col">
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Main Content Area / Editor Panel */}
         <div className="flex-1 flex flex-col overflow-hidden relative min-h-0">

@@ -17,10 +17,10 @@ const Contact = () => {
           className="max-w-2xl mx-auto"
         >
           <div className="text-center mb-12">
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-indigo-800 mb-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-900 mb-4">
               Support · we reply within 24h
             </p>
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-indigo-600 text-white mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-900 text-white mb-6">
               <Mail size={40} />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Get in Touch</h1>
@@ -38,7 +38,7 @@ const Contact = () => {
 
             <a
               href="mailto:careers@applyright.com.ng"
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 sm:px-8 py-4 rounded-xl text-base sm:text-lg font-bold transition-colors break-all"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-slate-50 text-slate-900 hover:bg-slate-100 px-4 sm:px-8 py-4 rounded-xl text-base sm:text-lg font-bold transition-colors break-all"
             >
               <MessageSquare size={20} className="shrink-0" />
               careers@applyright.com.ng

@@ -14,7 +14,7 @@ const TermsOfService = () => {
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2 group text-slate-600 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-2 group text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft size={20} />
             <span className="font-medium">Back to Home</span>
@@ -35,7 +35,7 @@ const TermsOfService = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 text-slate-900 mb-6">
               <Scale size={32} />
             </div>
             <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4">Terms of Service</h1>
@@ -45,7 +45,7 @@ const TermsOfService = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-12 space-y-10">
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText className="text-indigo-500" size={24} />
+                <FileText className="text-slate-500" size={24} />
                 1. Agreement to Terms
               </h2>
               <p className="text-slate-600 leading-relaxed">
@@ -80,7 +80,7 @@ const TermsOfService = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Cpu className="text-indigo-500" size={24} />
+                <Cpu className="text-slate-500" size={24} />
                 3. The Service &amp; AI-Generated Content
               </h2>
               <p className="text-slate-600 leading-relaxed">
@@ -96,7 +96,7 @@ const TermsOfService = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Coins className="text-indigo-500" size={24} />
+                <Coins className="text-slate-500" size={24} />
                 4. Credits, Ads &amp; Purchases
               </h2>
               <ul className="list-disc pl-6 space-y-2 text-slate-600">
@@ -152,7 +152,7 @@ const TermsOfService = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Ban className="text-indigo-500" size={24} />
+                <Ban className="text-slate-500" size={24} />
                 7. Prohibited Activities
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">You agree not to:</p>
@@ -178,7 +178,7 @@ const TermsOfService = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <AlertCircle className="text-indigo-500" size={24} />
+                <AlertCircle className="text-slate-500" size={24} />
                 8. Disclaimers
               </h2>
               <p className="text-slate-600 leading-relaxed">

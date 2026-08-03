@@ -99,7 +99,7 @@ const Login = () => {
             </label>
             <Link
               to="/forgot-password"
-              className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline font-medium"
+              className="text-xs text-slate-900 hover:text-slate-900 hover:underline font-medium"
             >
               {t('auth.login.forgotPassword')}
             </Link>
@@ -150,7 +150,7 @@ const Login = () => {
           {t('auth.login.noAccount')}{' '}
           <Link
             to="/register"
-            className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+            className="font-semibold text-slate-900 hover:text-slate-900 hover:underline"
           >
             {t('auth.login.createAccount')}
           </Link>

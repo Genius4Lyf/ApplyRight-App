@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2 group text-slate-600 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-2 group text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft size={20} />
             <span className="font-medium">Back to Home</span>
@@ -35,7 +35,7 @@ const PrivacyPolicy = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 text-slate-900 mb-6">
               <Shield size={32} />
             </div>
             <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4">Privacy Policy</h1>
@@ -45,7 +45,7 @@ const PrivacyPolicy = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-12 space-y-10">
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText className="text-indigo-500" size={24} />
+                <FileText className="text-slate-500" size={24} />
                 1. Introduction
               </h2>
               <p className="text-slate-600 leading-relaxed">
@@ -64,7 +64,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Eye className="text-indigo-500" size={24} />
+                <Eye className="text-slate-500" size={24} />
                 2. Information We Collect
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">
@@ -107,7 +107,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Cpu className="text-indigo-500" size={24} />
+                <Cpu className="text-slate-500" size={24} />
                 3. How We Use Your Information
               </h2>
               <ul className="list-disc pl-6 space-y-2 text-slate-600">
@@ -132,7 +132,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Cpu className="text-indigo-500" size={24} />
+                <Cpu className="text-slate-500" size={24} />
                 4. AI Processing of Your Content
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">
@@ -154,7 +154,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Megaphone className="text-indigo-500" size={24} />
+                <Megaphone className="text-slate-500" size={24} />
                 5. Advertising &amp; Tracking Technologies
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">
@@ -186,7 +186,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Lock className="text-indigo-500" size={24} />
+                <Lock className="text-slate-500" size={24} />
                 6. How We Share Your Information
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">
@@ -230,7 +230,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <UserCheck className="text-indigo-500" size={24} />
+                <UserCheck className="text-slate-500" size={24} />
                 8. Your Rights &amp; Choices
               </h2>
               <p className="text-slate-600 leading-relaxed mb-4">

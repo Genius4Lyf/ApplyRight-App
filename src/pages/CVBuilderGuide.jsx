@@ -334,7 +334,7 @@ const CVBuilderGuide = () => {
                   </p>
                   <p className="font-heading text-2xl font-bold tabular-nums text-slate-500">78</p>
                 </div>
-                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-center">
+                <div className="rounded border border-slate-900 bg-slate-50 p-3 text-center">
                   <p className="font-mono text-[0.55rem] uppercase tracking-wider text-slate-900">
                     CV B
                   </p>

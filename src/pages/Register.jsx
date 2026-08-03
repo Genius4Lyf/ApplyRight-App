@@ -39,29 +39,10 @@ const AGENT_VALUE_PROPS = [
   },
 ];
 
-// Static accent class sets so Tailwind keeps them at build time.
-const CARD_ACCENTS = {
-  ink: {
-    on: 'border-slate-900 bg-slate-900',
-    text: 'text-white',
-    icon: 'bg-white/15 text-white',
-    dot: 'border-white bg-white',
-    dotInner: 'bg-slate-900',
-  },
-  agent: {
-    on: 'border-indigo-600 bg-indigo-600',
-    text: 'text-white',
-    icon: 'bg-white/15 text-white',
-    dot: 'border-white bg-white',
-    dotInner: 'bg-indigo-600',
-  },
-};
-
 // One compact option in the "I'm signing up as" selector: small icon, a label,
 // and a radio dot — a single short row. Selected = accent border, tint, filled
 // dot. (What each type means lives behind the "?" next to the heading.)
-const AccountTypeCard = ({ selected, accent, icon, title, onClick }) => {
-  const a = CARD_ACCENTS[accent] || CARD_ACCENTS.ink;
+const AccountTypeCard = ({ selected, icon, title, onClick }) => {
   return (
     <button
       type="button"
@@ -69,29 +50,29 @@ const AccountTypeCard = ({ selected, accent, icon, title, onClick }) => {
       aria-checked={selected}
       onClick={onClick}
       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400 ${
-        selected ? a.on : 'border-slate-200 bg-white hover:bg-slate-50'
+        selected ? 'border-slate-900 bg-slate-900' : 'border-slate-200 bg-white hover:bg-slate-50'
       }`}
     >
       <span
         className={`flex items-center justify-center w-7 h-7 rounded-md shrink-0 ${
-          selected ? a.icon : 'bg-slate-100 text-slate-500'
+          selected ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
         }`}
       >
         {icon}
       </span>
       <span
         className={`flex-1 min-w-0 text-sm font-semibold truncate ${
-          selected ? a.text || 'text-slate-800' : 'text-slate-800'
+          selected ? 'text-white' : 'text-slate-800'
         }`}
       >
         {title}
       </span>
       <span
         className={`flex items-center justify-center w-4 h-4 rounded-full border-2 shrink-0 ${
-          selected ? a.dot : 'border-slate-300'
+          selected ? 'border-white bg-white' : 'border-slate-300'
         }`}
       >
-        {selected && <span className={`w-1.5 h-1.5 rounded-full ${a.dotInner || 'bg-white'}`} />}
+        {selected && <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />}
       </span>
     </button>
   );
@@ -280,7 +261,7 @@ const Register = () => {
         <form className="space-y-5" onSubmit={onSubmit}>
           {/* Account-type selector — the first decision on the page so users
               know whether they're signing up to job-hunt or to build CVs for
-              clients. Selected card uses that audience's accent (ink vs indigo). */}
+              clients. Selected card uses the one selected style. */}
           <div role="radiogroup" aria-label={t('auth.register.accountTypeAria')}>
             <div ref={infoRef} className="relative flex items-center gap-1.5 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -304,7 +285,7 @@ const Register = () => {
                     — {t('auth.register.jobSeekerExplainer')}
                   </p>
                   <p>
-                    <span className="font-semibold text-indigo-700">
+                    <span className="font-semibold text-slate-800">
                       {t('auth.register.cvAgent')}
                     </span>{' '}
                     — {t('auth.register.cvAgentExplainer')}
@@ -315,14 +296,12 @@ const Register = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <AccountTypeCard
                 selected={!isAgent}
-                accent="ink"
                 icon={<User className="w-4 h-4" />}
                 title={t('auth.register.jobSeeker')}
                 onClick={() => selectAudience(false)}
               />
               <AccountTypeCard
                 selected={isAgent}
-                accent="agent"
                 icon={<Briefcase className="w-4 h-4" />}
                 title={t('auth.register.cvAgent')}
                 onClick={() => selectAudience(true)}
@@ -455,7 +434,7 @@ const Register = () => {
                 type="checkbox"
                 required
                 disabled={isLoading}
-                className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-indigo-500/20 accent-indigo-600 disabled:opacity-50"
+                className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-slate-900/20 accent-slate-900 disabled:opacity-50"
               />
             </div>
             <label htmlFor="terms" className="ml-2 text-xs text-slate-600 leading-relaxed">
@@ -463,7 +442,7 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => setActiveModal('terms')}
-                className="font-medium text-indigo-600 hover:underline"
+                className="font-medium text-slate-900 hover:underline"
               >
                 {t('common.legal.termsOfService')}
               </button>{' '}
@@ -471,7 +450,7 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => setActiveModal('privacy')}
-                className="font-medium text-indigo-600 hover:underline"
+                className="font-medium text-slate-900 hover:underline"
               >
                 {t('common.legal.privacyPolicy')}
               </button>
@@ -484,7 +463,7 @@ const Register = () => {
             disabled={isLoading}
             className={`w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed ${
               isAgent
-                ? 'py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors'
+                ? 'py-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-colors'
                 : 'btn-primary'
             }`}
           >
@@ -505,7 +484,7 @@ const Register = () => {
             {t('auth.register.haveAccount')}{' '}
             <Link
               to="/login"
-              className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+              className="font-semibold text-slate-900 hover:text-slate-900 hover:underline"
             >
               {t('common.signIn')}
             </Link>

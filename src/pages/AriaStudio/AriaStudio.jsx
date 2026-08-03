@@ -252,7 +252,7 @@ const StudioDesk = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-background">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-transparent">
       <Navbar />
 
       <main

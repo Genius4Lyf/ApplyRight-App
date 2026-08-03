@@ -17,6 +17,18 @@ import ProductJourneyReveal from '../components/landing/ProductJourneyReveal';
 
 const Motion = motion;
 
+const LightGridBackdrop = () => (
+  <div
+    aria-hidden="true"
+    className="pointer-events-none absolute inset-0 opacity-70 [background-size:52px_52px] sm:[background-size:72px_72px]"
+    style={{
+      backgroundImage:
+        'linear-gradient(rgba(15,23,42,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.055) 1px, transparent 1px)',
+      maskImage: 'radial-gradient(circle at center, black 0%, transparent 84%)',
+    }}
+  />
+);
+
 const ProcessBeat = ({ progress, range, children, danger = false, muted = false }) => {
   const opacity = useTransform(progress, range, [0, 1]);
   const y = useTransform(progress, range, [42, 0]);
@@ -33,6 +45,77 @@ const ProcessBeat = ({ progress, range, children, danger = false, muted = false 
     </Motion.div>
   );
 };
+
+const MobileProblemStory = ({ t, progress }) => {
+  const headingOpacity = useTransform(progress, [0, 0.16, 0.25], [1, 1, 0]);
+  const headingY = useTransform(progress, [0, 0.16, 0.25], [0, 0, -50]);
+  const processOpacity = useTransform(progress, [0.2, 0.28], [0, 1]);
+  const processY = useTransform(progress, [0.2, 0.28], [70, 0]);
+
+  return (
+    // No fixed height: the card sits in normal flow and sets the pinned box's height,
+    // so the gap to the truth copy below is constant on every viewport.
+    <div className="relative pb-4 lg:hidden">
+      <Motion.div style={{ opacity: headingOpacity, y: headingY }} className="absolute inset-x-5 top-10 text-center">
+        <p className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.problem.kicker')}</p>
+        <h2 className="mx-auto mt-4 max-w-[10ch] font-heading text-[2.75rem] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">
+          {t('landing.problem.title')}
+        </h2>
+        <p className="mx-auto mt-4 max-w-[34ch] text-sm leading-relaxed text-slate-600">{t('landing.problem.subcopy')}</p>
+      </Motion.div>
+
+      <Motion.div style={{ opacity: processOpacity, y: processY }} className="mx-4 mt-[9svh] rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.1)]">
+        <p className="mb-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{t('landing.problem.typicalProcess')}</p>
+        <ProcessBeat progress={progress} range={[0.3, 0.44]}>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-500"><FileText size={17} /></span>
+          <div>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '01' })}</p>
+            <h3 className="font-semibold text-slate-800">{t('landing.problem.stage1Title')}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('landing.problem.stage1Body')}</p>
+          </div>
+        </ProcessBeat>
+        <ProcessBeat progress={progress} range={[0.5, 0.64]} danger>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-600"><Filter size={17} /></span>
+          <div>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-red-500">{t('landing.problem.stageLabel', { n: '02' })}</p>
+            <h3 className="font-semibold text-red-700">{t('landing.problem.stage2Title')}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+              {t('landing.problem.stage2BodyLead')}{' '}<span className="font-semibold text-red-600">{t('landing.problem.stage2BodyStrong')}</span>{' '}{t('landing.problem.stage2BodyTail')}
+            </p>
+          </div>
+        </ProcessBeat>
+        <ProcessBeat progress={progress} range={[0.7, 0.86]} muted>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-400"><XCircle size={17} /></span>
+          <div>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '03' })}</p>
+            <h3 className="font-semibold text-slate-700">{t('landing.problem.stage3Title')}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('landing.problem.stage3Body')}</p>
+          </div>
+        </ProcessBeat>
+      </Motion.div>
+    </div>
+  );
+};
+
+const MobileProblemTruth = ({ t }) => (
+  <section className="bg-[#f7f6f2] px-5 pb-20 pt-4 lg:hidden">
+    <p className="font-heading text-[2.15rem] font-bold leading-[1.02] tracking-[-0.035em] text-slate-900">
+      {t('landing.problem.truthLead')}{' '}<span className="italic">{t('landing.problem.truthAccent')}</span>
+    </p>
+    <div className="mt-6 space-y-6 border-t border-slate-300 pt-5">
+      <div>
+        <h3 className="font-heading text-xl font-bold text-slate-900">{t('landing.problem.whatIsAtsTitle')}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <Trans i18nKey="landing.problem.whatIsAtsBody" components={{ b: <b className="font-semibold text-slate-900" />, s: <span className="italic font-semibold text-slate-900" /> }} />
+        </p>
+      </div>
+      <div className="border-t border-slate-200 pt-5">
+        <h3 className="font-heading text-xl font-bold text-slate-900">{t('landing.problem.sprayTitle')}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">{t('landing.problem.sprayBody')}</p>
+      </div>
+    </div>
+  </section>
+);
 
 const ProblemScrollStory = ({ t, reduce }) => {
   const sectionRef = useRef(null);
@@ -64,9 +147,12 @@ const ProblemScrollStory = ({ t, reduce }) => {
   }
 
   return (
-    <section ref={sectionRef} id="education" className="relative h-[330svh] border-t border-slate-200 bg-[#f7f6f2]">
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-center px-5 sm:px-8 lg:px-12">
+    <section ref={sectionRef} id="education" className="relative h-[240svh] border-t border-slate-200 bg-[#f7f6f2] lg:h-[330svh]">
+      {/* Mobile pins only as tall as the card, so the truth copy rides up right under it. */}
+      <div className="sticky top-0 overflow-hidden lg:h-[100svh]">
+        <LightGridBackdrop />
+        <MobileProblemStory t={t} progress={progress} />
+        <div className="mx-auto hidden h-full max-w-[1160px] flex-col justify-center px-5 sm:px-8 lg:flex lg:px-12">
           <Motion.div
             style={{ y: headingY, scale: headingScale, opacity: headingOpacity }}
             className="mx-auto max-w-[760px] origin-center text-center"
@@ -172,11 +258,11 @@ const TestimonialProof = ({ feedback, index, progress }) => {
   return (
     <Motion.article
       style={{ opacity, y, rotate }}
-      className="flex min-h-[300px] flex-col justify-between border-t-2 border-slate-900 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8"
+      className="flex h-full min-h-0 flex-col justify-between overflow-hidden border-t-2 border-slate-900 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] lg:p-8"
     >
       <div>
         <span className="font-heading text-6xl leading-none text-slate-200">“</span>
-        <p className="-mt-4 font-heading text-xl font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
+        <p className="-mt-4 font-heading text-[clamp(1rem,1.25vw,1.25rem)] font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
       </div>
       <div className="mt-8 flex items-center gap-3 border-t border-slate-100 pt-5">
         <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
@@ -189,37 +275,125 @@ const TestimonialProof = ({ feedback, index, progress }) => {
   );
 };
 
+const MobileTestimonialProof = ({ feedback, index, progress }) => {
+  const windows = [
+    [0.35, 0.41, 0.49, 0.54],
+    [0.52, 0.58, 0.67, 0.72],
+    [0.7, 0.76, 0.85, 0.9],
+  ];
+  const range = windows[index] || windows[2];
+  const opacity = useTransform(progress, range, [0, 1, 1, 0]);
+  const x = useTransform(progress, range, [70, 0, 0, -70]);
+  const scale = useTransform(progress, range, [0.96, 1, 1, 0.97]);
+  const initials = `${feedback.user?.firstName?.[0] || ''}${feedback.user?.lastName?.[0] || ''}`;
+
+  return (
+    <Motion.article
+      style={{ opacity, x, scale }}
+      className="absolute inset-0 flex flex-col justify-between overflow-hidden border-y-2 border-slate-900 bg-white px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.1)]"
+    >
+      <div>
+        <span className="font-heading text-5xl leading-none text-slate-200">“</span>
+        <p className="-mt-3 font-heading text-[clamp(0.92rem,4vw,1.15rem)] font-medium italic leading-[1.55] text-slate-800">{feedback.message}</p>
+      </div>
+      <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <div>
+          <p className="text-sm font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
+          <p className="font-mono text-[0.52rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+        </div>
+      </div>
+    </Motion.article>
+  );
+};
+
+const StaticTestimonialCard = ({ feedback }) => {
+  const initials = `${feedback.user?.firstName?.[0] || ''}${feedback.user?.lastName?.[0] || ''}`;
+  return (
+    <article className="flex min-h-[300px] flex-col justify-between border-t-2 border-slate-900 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8">
+      <div>
+        <span className="font-heading text-6xl leading-none text-slate-200">“</span>
+        <p className="-mt-4 font-heading text-xl font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
+      </div>
+      <div className="mt-8 flex items-center gap-3 border-t border-slate-100 pt-5">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <div>
+          <p className="font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+        </div>
+      </div>
+    </article>
+  );
+};
+
 const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 26, mass: 0.35 });
-  const headingY = useTransform(progress, [0, 0.22, 0.33], [0, 0, -120]);
-  const headingScale = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0.84]);
-  const headingOpacity = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0]);
+  // Heading travels from centred up to a fixed resting slot and stays there — kicker,
+  // title and subcopy all remain visible for the whole section.
+  const headingY = useTransform(progress, [0, 0.22, 0.33], ['22svh', '22svh', '2svh']);
+  const headingScale = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0.8]);
   const ctaOpacity = useTransform(progress, [0.8, 0.9], [0, 1]);
   const visibleFeedbacks = feedbacks.slice(0, 3);
 
+  if (reduce) {
+    // Plain flowing layout — no sticky pin, no absolutely-positioned children, so
+    // there's no percentage-of-collapsed-container math that can misplace anything.
+    return (
+      <section className="border-t border-slate-200 bg-white py-20">
+        <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
+          <div className="mx-auto max-w-[760px] text-center">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
+            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
+            <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {visibleFeedbacks.map((feedback) => (
+              <StaticTestimonialCard key={feedback._id} feedback={feedback} />
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/feedback" className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900">
+              {t('landing.testimonials.cta')} <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section ref={sectionRef} className={`${reduce ? 'py-20' : 'relative h-[300svh]'} border-t border-slate-200 bg-white`}>
-      <div className={reduce ? '' : 'sticky top-0 h-[100svh] overflow-hidden'}>
-        <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-center px-5 sm:px-8 lg:px-12">
-          <Motion.div style={reduce ? undefined : { y: headingY, scale: headingScale, opacity: headingOpacity }} className="mx-auto max-w-[760px] text-center">
+    <section ref={sectionRef} className="relative h-[300svh] border-t border-slate-200 bg-white">
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <LightGridBackdrop />
+        <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-start px-5 pt-[5svh] sm:px-8 lg:px-12">
+          <Motion.div style={{ y: headingY, scale: headingScale }} className="mx-auto max-w-[760px] origin-top text-center">
             <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
             <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
             <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
           </Motion.div>
 
-          <div className="absolute inset-x-5 bottom-16 top-[25%] mx-auto grid max-w-[1160px] content-center gap-5 sm:inset-x-8 md:grid-cols-3 lg:inset-x-12">
+          <div className="absolute inset-x-5 bottom-14 top-[30%] md:hidden">
             {visibleFeedbacks.map((feedback, index) => (
-              reduce ? (
-                <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={scrollYProgress} />
-              ) : (
-                <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
-              )
+              <MobileTestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
+            ))}
+            <div className="absolute inset-x-0 bottom-1 flex justify-center gap-2">
+              {visibleFeedbacks.map((feedback) => (
+                <span key={feedback._id} className="h-1.5 w-6 rounded-full bg-slate-300" />
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute inset-x-5 bottom-14 top-[34%] mx-auto hidden max-w-[1160px] items-stretch gap-5 sm:inset-x-8 md:grid md:grid-cols-3 lg:inset-x-12">
+            {visibleFeedbacks.map((feedback, index) => (
+              <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
             ))}
           </div>
 
-          <Motion.div style={reduce ? undefined : { opacity: ctaOpacity }} className="absolute bottom-5 left-0 right-0 text-center">
+          <Motion.div style={{ opacity: ctaOpacity }} className="absolute bottom-5 left-0 right-0 text-center">
             <Link to="/feedback" className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900">
               {t('landing.testimonials.cta')} <ArrowRight size={16} />
             </Link>
@@ -301,7 +475,7 @@ const BrandIntro = () => {
         <Motion.div
           aria-hidden="true"
           style={reduce ? { x: 0, y: -78, scale: 1.35 } : { x: orbitX, y: orbitY, scale: orbitScale }}
-          className="absolute z-20"
+          className="absolute z-20 sm:-mt-12"
         >
           <AriaOrbit size={52} working />
         </Motion.div>
@@ -425,7 +599,8 @@ const ClosingCtaStory = () => {
     [0, 0.1, 0.26, 0.34, 0.47, 0.55, 0.71, 0.78, 1],
     ['0vw', '-42vw', '42vw', '42vw', '-42vw', '-42vw', '42vw', '0vw', '0vw']
   );
-  const orbitY = useTransform(progress, [0, 0.08, 0.72, 0.8, 1], [-105, 0, 0, -112, -112]);
+  const orbitYMobile = useTransform(progress, [0, 0.08, 0.72, 0.8, 1], [-105, 0, 0, -112, -112]);
+  const orbitYDesktop = useTransform(progress, [0, 0.08, 0.72, 0.8, 1], [-105, 0, 0, -160, -160]);
   const orbitOpacity = useTransform(progress, [0, 0.06, 0.72, 0.78, 1], [0, 1, 1, 1, 1]);
   const orbitScale = useTransform(progress, [0, 0.72, 0.82, 1], [0.9, 1.05, 1.35, 1.35]);
 
@@ -444,7 +619,7 @@ const ClosingCtaStory = () => {
     );
   }
 
-  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[clamp(3.1rem,8vw,7.8rem)] font-bold leading-[0.92] tracking-[-0.045em] text-white';
+  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[clamp(3.1rem,8vw,7.8rem)] font-bold leading-[0.92] tracking-[-0.045em] text-white sm:-translate-y-2';
 
   return (
     <section ref={sectionRef} className="relative h-[360svh] bg-slate-950 text-white">
@@ -453,8 +628,16 @@ const ClosingCtaStory = () => {
 
         <motion.div
           aria-hidden="true"
-          style={{ x: orbitX, y: orbitY, opacity: orbitOpacity, scale: orbitScale }}
-          className="absolute z-30 text-white"
+          style={{ x: orbitX, y: orbitYMobile, opacity: orbitOpacity, scale: orbitScale }}
+          className="absolute z-30 text-white sm:hidden"
+        >
+          <AriaOrbit size={58} working tone="mono" />
+        </motion.div>
+
+        <motion.div
+          aria-hidden="true"
+          style={{ x: orbitX, y: orbitYDesktop, opacity: orbitOpacity, scale: orbitScale }}
+          className="absolute z-30 hidden text-white sm:block"
         >
           <AriaOrbit size={58} working tone="mono" />
         </motion.div>
@@ -480,12 +663,12 @@ const ClosingCtaStory = () => {
           </span>
         </motion.h2>
 
-        <motion.div style={{ opacity: brandKickerOpacity }} className="absolute z-20 -translate-y-28 sm:-translate-y-36">
+        <motion.div style={{ opacity: brandKickerOpacity }} className="absolute z-20 -translate-y-16 sm:-translate-y-24">
           <p className="font-mono text-[0.66rem] uppercase tracking-[0.22em] text-slate-400">{t('landing.cta.kicker')}</p>
         </motion.div>
 
-        <motion.div style={{ opacity: actionOpacity, y: actionY }} className="absolute bottom-[10svh] z-40 flex flex-col items-center">
-          <p className="hidden max-w-xl text-base leading-relaxed text-slate-300 sm:block">{t('landing.cta.subcopy')}</p>
+        <motion.div style={{ opacity: actionOpacity, y: actionY }} className="absolute top-[59%] z-40 flex flex-col items-center sm:bottom-[10svh] sm:top-auto">
+          <p className="max-w-[32ch] text-sm leading-relaxed text-slate-300 sm:max-w-xl sm:text-base">{t('landing.cta.subcopy')}</p>
           <Link
             to="/register"
             className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950 shadow-lg transition-transform hover:-translate-y-0.5"
@@ -530,6 +713,7 @@ const LandingPage = () => {
         <BrandIntro />
         <ProductJourneyReveal onInterviewFocusChange={setInterviewFocused} />
         <ProblemScrollStory t={t} reduce={reduce} />
+        <MobileProblemTruth t={t} />
         {featuredFeedbacks.length > 0 && (
           <TestimonialsScrollStory feedbacks={featuredFeedbacks} t={t} reduce={reduce} />
         )}

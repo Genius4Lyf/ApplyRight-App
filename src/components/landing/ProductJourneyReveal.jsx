@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Captions, Check, ChevronDown, Eye, FilePlus2, LayoutTemplate, Mic2, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import cvHeadshotLeinad from '../../assets/landing/cv-headshot-leinad.webp';
+import cvHeadshotSales from '../../assets/landing/cv-headshot-sales.webp';
 import applyRightLogo from '../../assets/logo/applyright-icon-white.png';
 import CVTemplateRenderer from '../CVTemplateRenderer';
 import FinishCard from '../ariaStudio/FinishCard';
@@ -12,14 +14,17 @@ import AriaThinking from '../cv/AriaThinking';
 const Motion = motion;
 
 const ROLE_CVS = [
-  { id: 'customerService', templateId: 'applyright-navy', template: 'ApplyRight Navy' },
-  { id: 'sales', templateId: 'sales-sidebar', template: 'Sales Sidebar' },
+  { id: 'customerService', templateId: 'applyright-navy', template: 'ApplyRight Navy', photoUrl: cvHeadshotLeinad },
+  { id: 'sales', templateId: 'sales-sidebar', template: 'Sales Sidebar', photoUrl: cvHeadshotSales },
   { id: 'data', templateId: 'angular-corporate', template: 'Angular Corporate' },
   { id: 'admin', templateId: 'the-ascent', template: 'The Ascent' },
-  { id: 'finance', templateId: 'applyright-mono', template: 'ApplyRight Mono' },
-  { id: 'customerServiceBand', contentId: 'customerService', templateId: 'applyright-band-twin', template: 'ApplyRight Band Twin' },
-  { id: 'adminTimeline', contentId: 'admin', templateId: 'slate-timeline', template: 'Slate Timeline' },
-  { id: 'salesPortrait', contentId: 'sales', templateId: 'navy-portrait', template: 'Navy Portrait' },
+  { id: 'adminTimeline', contentId: 'admin', templateId: 'slate-timeline', template: 'Slate Timeline', photoUrl: cvHeadshotSales },
+  { id: 'salesPortrait', contentId: 'sales', templateId: 'navy-portrait', template: 'Navy Portrait', photoUrl: cvHeadshotSales },
+  { id: 'adminProfile', contentId: 'admin', templateId: 'the-profile', template: 'The Profile', photoUrl: cvHeadshotSales },
+  { id: 'financeCorporate', contentId: 'finance', templateId: 'executive-corporate', template: 'Corporate Clean' },
+  { id: 'dataModern', contentId: 'data', templateId: 'modern', template: 'Modern Clean', photoUrl: cvHeadshotLeinad },
+  { id: 'dataEnergy', contentId: 'data', templateId: 'executive-energy', template: 'Energy / Industrial', photoUrl: cvHeadshotLeinad },
+  { id: 'adminOperations', contentId: 'admin', templateId: 'operations-blueprint', template: 'Operations Blueprint' },
 ];
 
 const roleCv = (t, item, outputLang = 'en') => {
@@ -81,6 +86,7 @@ ${t(`${key}.skills`)}
       phone: '0803 555 0142',
       location: 'Lagos, Nigeria',
       linkedinUrl: `linkedin.com/in/${name.toLowerCase().replace(/\s+/g, '-')}`,
+      photoUrl: item.photoUrl || '',
     },
   };
 };
@@ -252,6 +258,100 @@ const StudioDesktop = ({ t, progress }) => {
   );
 };
 
+const StudioMobile = ({ t, progress }) => {
+  const answerOpacity = useTransform(progress, [0.035, 0.085], [0, 1]);
+  const answerY = useTransform(progress, [0.035, 0.085], [16, 0]);
+  const followUpOpacity = useTransform(progress, [0.085, 0.12], [0, 1]);
+  const followUpY = useTransform(progress, [0.085, 0.12], [16, 0]);
+  const magicOpacity = useTransform(progress, [0.125, 0.165], [0, 1]);
+  const magicY = useTransform(progress, [0.125, 0.165], [18, 0]);
+  const applyScale = useTransform(progress, [0.165, 0.18, 0.195], [1, 0.9, 1]);
+  const healthOpacity = useTransform(progress, [0.195, 0.225], [0, 1]);
+  const healthY = useTransform(progress, [0.195, 0.225], [90, 0]);
+
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.16)]">
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+        <div className="flex items-center gap-2.5">
+          <AriaOrbit size={24} working />
+          <div>
+            <p className="text-sm font-bold text-slate-950">Aria Studio</p>
+            <p className="font-mono text-[6px] uppercase tracking-[0.18em] text-slate-400">{t('landing.journey.ariaDeskStrap')}</p>
+          </div>
+        </div>
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-900 text-white"><Check size={16} /></span>
+      </div>
+
+      <div className="relative h-[calc(100svh-265px)] min-h-[390px] max-h-[525px] overflow-hidden bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,.2)_1px,transparent_0)] bg-[size:22px_22px] px-3 py-4">
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <AriaOrbit size={18} />
+            <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-white px-3.5 py-3 text-[11px] leading-relaxed text-slate-700 shadow-sm">
+              {t('landing.journey.ariaQuestion')}
+            </div>
+          </div>
+
+          <motion.div style={{ opacity: answerOpacity, y: answerY }} className="flex justify-end">
+            <div className="max-w-[84%] rounded-2xl rounded-tr-sm bg-slate-900 px-3.5 py-3 text-[11px] leading-relaxed text-white">
+              {t('landing.journey.userAnswer')}
+            </div>
+          </motion.div>
+
+          <motion.div style={{ opacity: followUpOpacity, y: followUpY }} className="flex items-start gap-2">
+            <AriaOrbit size={18} working />
+            <div className="max-w-[90%] rounded-2xl rounded-tl-sm bg-white px-3.5 py-3 shadow-sm">
+              <p className="text-[11px] leading-relaxed text-slate-700">{t('landing.journey.ariaFollowUp')}</p>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {[1, 2, 3].map((item) => (
+                  <span key={item} className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[7px] font-semibold text-slate-700">
+                    {t(`landing.journey.prompt${item}`)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div style={{ opacity: magicOpacity, y: magicY }} className="absolute inset-x-3 bottom-3 ml-6 rounded-2xl border border-slate-300 bg-white p-3 shadow-[0_16px_36px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[7px] uppercase tracking-[.17em] text-slate-500">{t('landing.journey.magicBox')}</p>
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-[6px] font-bold text-slate-500">2 {t('landing.journey.bullets')}</span>
+            </div>
+            <div className="mt-1.5 space-y-1 text-[8px] leading-[1.45] text-slate-700">
+              <p>• {t('landing.journey.bulletExample1')}</p>
+              <p>• {t('landing.journey.bulletExample2')}</p>
+            </div>
+            <motion.div style={{ scale: applyScale }} className="mt-2 ml-auto w-fit rounded-lg bg-slate-900 px-3 py-1.5 text-[8px] font-bold text-white">
+              {t('landing.journey.applyToCv')}
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          style={{ opacity: healthOpacity, y: healthY }}
+          className="absolute inset-x-3 bottom-3 rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,.2)]"
+        >
+          <div className="flex items-end justify-between border-b border-slate-200 pb-3">
+            <div>
+              <p className="font-mono text-[7px] uppercase tracking-[.18em] text-slate-400">{t('landing.journey.cvHealth')}</p>
+              <p className="mt-1 text-sm font-bold">Leinad&apos;s CV</p>
+            </div>
+            <p className="font-heading text-4xl font-bold text-emerald-500">33<span className="ml-1 text-[9px] text-slate-400">%</span></p>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[9px] font-semibold text-slate-700">
+            {[['Contact', true], [t('landing.journey.workHistory'), true], [t('landing.journey.projects'), false], [t('landing.journey.education'), false]].map(([label, done]) => (
+              <div key={label} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5">
+                <span className={`h-2 w-2 rounded-full ${done ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span>{label}</span>
+                {done && <Check size={11} className="ml-auto text-emerald-500" />}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 const StudioPhone = ({ t, progress }) => {
   const setupOpacity = useTransform(progress, [0.275, 0.29, 0.315, 0.327], [0, 1, 1, 0]);
   const setupY = useTransform(progress, [0.275, 0.29, 0.315, 0.327], [18, 0, 0, -16]);
@@ -398,6 +498,53 @@ const CvStudio = ({ t, outputLang, previewOpacity }) => (
   </div>
 );
 
+const CvStudioMobile = ({ t, outputLang, previewOpacity }) => (
+  <div className="overflow-hidden rounded-[24px] border border-slate-300 bg-[#e9edf2] shadow-[0_28px_80px_rgba(15,23,42,0.18)]">
+    <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+      <div className="flex items-center gap-2.5">
+        <LayoutTemplate size={20} />
+        <div>
+          <p className="text-sm font-bold">CV Studio</p>
+          <p className="font-mono text-[6px] uppercase tracking-[0.16em] text-slate-400">{t('landing.journey.designYourCv')}</p>
+        </div>
+      </div>
+      <span className="rounded-lg bg-slate-900 px-3 py-2 text-[8px] font-semibold text-white">{t('landing.journey.download')}</span>
+    </div>
+
+    <div className="relative h-[calc(100svh-220px)] min-h-[420px] max-h-[540px] overflow-hidden px-4 pb-4 pt-16">
+      <div className="absolute inset-x-3 top-3 z-10 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
+        <div>
+          <p className="font-mono text-[6px] uppercase tracking-[.17em] text-slate-400">{t('landing.journey.lengthCoach')}</p>
+          <p className="mt-1 text-[9px] font-bold text-slate-800">{t('landing.journey.lengthGuidance')}</p>
+        </div>
+        <div className="text-right">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+          <p className="mt-1 text-[7px] text-emerald-600">✓ {t('landing.journey.fitsOnePage')}</p>
+        </div>
+      </div>
+
+      <motion.div style={previewOpacity ? { opacity: previewOpacity } : undefined} className="mx-auto mt-4 w-fit">
+        <RealCvPage item={ROLE_CVS[0]} t={t} outputLang={outputLang} scale={0.34} className="h-[382px] w-[270px] shadow-[0_24px_70px_rgba(15,23,42,0.18)]" />
+      </motion.div>
+
+      <div className="absolute inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur">
+        <div className="mb-2 flex items-center justify-between px-1">
+          <p className="font-mono text-[6px] uppercase tracking-[.17em] text-slate-400">{t('landing.journey.chooseTemplate')}</p>
+          <p className="text-[7px] font-semibold text-slate-500">{t('landing.journey.templates')} →</p>
+        </div>
+        <div className="flex gap-2 overflow-hidden">
+          {ROLE_CVS.slice(0, 4).map((item, index) => (
+            <div key={item.id} className={`w-[72px] flex-none rounded-lg border p-1.5 ${index === 0 ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'}`}>
+              <RealCvPage item={item} t={t} outputLang={outputLang} scale={0.075} className="h-[84px] w-full rounded-sm shadow-sm" />
+              <p className="mt-1 truncate text-[6px] font-semibold">{item.template}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const FinishedCvReveal = ({ t, outputLang }) => (
   <div className="grid place-items-center">
     <div className="mb-5 text-center">
@@ -436,10 +583,10 @@ const TemplateLineup = ({ t, progress, outputLang }) => {
 const CvCollectionRow = ({ t, progress, outputLang, mobile = false }) => {
   const rowX = useTransform(
     progress,
-    [0.62, 0.65, 0.68, 0.71, 0.74, 0.77, 0.8, 0.825],
+    [0.62, 0.65, 0.68, 0.71, 0.735, 0.76, 0.785, 0.81, 0.835],
     mobile
-      ? [-121, -121, -121, -121, -170, -580, -1120, -1850]
-      : [-14, -14, -141, -141, -420, -840, -1320, -1850],
+      ? [-121, -121, -121, -121, -240, -680, -1250, -1950, -2700]
+      : [-14, -14, -141, -141, -380, -800, -1350, -1950, -2700],
   );
   const rowY = useTransform(progress, [0.62, 0.65, 0.68, 0.71, 0.74], [20, 20, 0, 0, 62]);
   const leadScale = useTransform(
@@ -499,10 +646,10 @@ const CvCollectionTransition = ({ t, progress, outputLang }) => {
 };
 
 const InterviewBridge = ({ t, progress }) => {
-  const promiseOpacity = useTransform(progress, [0.79, 0.815, 0.865, 0.895], [0, 1, 1, 0]);
-  const promiseY = useTransform(progress, [0.79, 0.815, 0.865, 0.895], [24, 0, 0, -20]);
-  const connectingOpacity = useTransform(progress, [0.885, 0.905, 0.935, 0.945], [0, 1, 1, 0]);
-  const connectingScale = useTransform(progress, [0.885, 0.905, 0.935, 0.945], [0.9, 1, 1, 1.05]);
+  const promiseOpacity = useTransform(progress, [0.85, 0.865, 0.885, 0.9], [0, 1, 1, 0]);
+  const promiseY = useTransform(progress, [0.85, 0.865, 0.885, 0.9], [24, 0, 0, -20]);
+  const connectingOpacity = useTransform(progress, [0.895, 0.91, 0.925, 0.935], [0, 1, 1, 0]);
+  const connectingScale = useTransform(progress, [0.895, 0.91, 0.925, 0.935], [0.9, 1, 1, 1.05]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-50 grid place-items-center px-6 text-center text-white">
@@ -549,7 +696,7 @@ const InterviewReveal = ({ t }) => {
   const captionWords = interviewQuestion.split(/\s+/);
 
   return (
-    <div className="relative mx-auto h-[calc(100svh-48px)] min-h-[540px] max-h-[680px] max-w-[1240px] overflow-hidden rounded-[26px] bg-[#050a19] text-white shadow-[0_38px_110px_rgba(15,23,42,.38)]">
+    <div className="relative mx-auto h-[100svh] w-full overflow-hidden bg-[#050a19] text-white sm:h-[calc(100svh-48px)] sm:min-h-[540px] sm:max-h-[680px] sm:max-w-[1240px] sm:rounded-[26px] sm:shadow-[0_38px_110px_rgba(15,23,42,.38)]">
       <div className="flex h-[70px] items-center justify-between border-b border-white/10 px-5 sm:px-8">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/[.06]"><Mic2 size={17} /></span>
@@ -673,8 +820,8 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
   const progress = useSpring(scrollYProgress, { stiffness: 105, damping: 28, mass: 0.4, restDelta: 0.001 });
 
   useMotionValueEvent(progress, 'change', (latest) => {
-    onInterviewFocusChange?.(latest >= 0.78);
-    const shouldMountInterview = latest >= 0.945;
+    onInterviewFocusChange?.(latest >= 0.84);
+    const shouldMountInterview = latest >= 0.9;
     if (shouldMountInterview !== interviewMountedRef.current) {
       interviewMountedRef.current = shouldMountInterview;
       setInterviewMounted(shouldMountInterview);
@@ -684,30 +831,41 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
   const desktopOpacity = useTransform(progress, [0, 0.2, 0.27], [1, 1, 0]);
   const desktopScale = useTransform(progress, [0, 0.2, 0.27], [1, 1, 0.94]);
   const desktopY = useTransform(progress, [0, 0.2, 0.27], [0, 0, -35]);
-  const phoneOpacity = useTransform(progress, [0.22, 0.275, 0.42, 0.46], [0, 1, 1, 0]);
-  const phoneScale = useTransform(progress, [0.22, 0.275, 0.42, 0.46], [1.65, 1.65, 1, 0.86]);
-  const phoneY = useTransform(progress, [0.22, 0.275, 0.42, 0.46], [720, 80, 0, -45]);
+  const phoneOpacity = useTransform(progress, [0.245, 0.285, 0.42, 0.46], [0, 1, 1, 0]);
+  const phoneScale = useTransform(progress, [0.245, 0.285, 0.42, 0.46], [1.65, 1.65, 1, 0.86]);
+  const phoneY = useTransform(progress, [0.245, 0.285, 0.42, 0.46], [720, 80, 0, -45]);
   const studioOpacity = useTransform(progress, [0, 0.43, 0.52, 0.6], [1, 1, 1, 0]);
   const studioScale = useTransform(progress, [0, 0.43, 0.49, 0.52, 0.6], [0.96, 0.96, 1, 1, 0.98]);
   const studioY = useTransform(progress, [0, 0.43, 0.49, 0.52, 0.6], [900, 900, 0, 0, -90]);
   const studioPreviewOpacity = useTransform(progress, [0, 0.52, 0.6], [1, 1, 0]);
   const studioHeadingOpacity = useTransform(progress, [0.43, 0.48, 0.52, 0.6], [0, 1, 1, 0]);
   const studioHeadingY = useTransform(progress, [0.43, 0.48, 0.52, 0.6], [18, 0, 0, -24]);
-  const collectionOpacity = useTransform(progress, [0.54, 0.6, 0.78, 0.805], [0, 1, 1, 0]);
-  const collectionScale = useTransform(progress, [0.62, 0.78, 0.805], [0.98, 1, 0.96]);
-  const interviewBackdropOpacity = useTransform(progress, [0.78, 0.81], [0, 1]);
+  const collectionOpacity = useTransform(progress, [0.54, 0.6, 0.835, 0.855], [0, 1, 1, 0]);
+  const collectionScale = useTransform(progress, [0.62, 0.835, 0.855], [0.98, 1, 0.96]);
+  const interviewBackdropOpacity = useTransform(progress, [0.845, 0.865], [0, 1]);
   const headerOpacity = useTransform(progress, [0, 0.18, 0.24], [1, 1, 0]);
 
   if (reduce) {
     return (
-      <section className="border-t border-slate-200 bg-[#f7f6f2] px-5 py-20 sm:px-8">
-        <div className="mx-auto max-w-[1160px] space-y-16">
+      <section className="relative overflow-hidden border-t border-slate-200 bg-[#f7f6f2] px-5 py-20 sm:px-8">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-70 [background-size:52px_52px] sm:[background-size:72px_72px]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(15,23,42,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.055) 1px, transparent 1px)',
+            maskImage: 'radial-gradient(circle at center, black 0%, transparent 84%)',
+          }}
+        />
+        <div className="relative mx-auto max-w-[1160px] space-y-16">
           <div>
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.journey.kicker')}</p>
             <h2 className="mt-3 max-w-2xl font-heading text-4xl font-bold tracking-tight">{t('landing.journey.title')}</h2>
           </div>
-          <StudioDesktop t={t} progress={progress} />
-          <CvStudio t={t} outputLang={outputLang} />
+          <div className="hidden sm:block"><StudioDesktop t={t} progress={progress} /></div>
+          <div className="sm:hidden"><StudioMobile t={t} progress={progress} /></div>
+          <div className="hidden sm:block"><CvStudio t={t} outputLang={outputLang} /></div>
+          <div className="sm:hidden"><CvStudioMobile t={t} outputLang={outputLang} /></div>
           <FinishedCvReveal t={t} outputLang={outputLang} />
           <TemplateLineup t={t} progress={progress} outputLang={outputLang} />
           <InterviewReveal t={t} />
@@ -717,8 +875,17 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
   }
 
   return (
-    <section id="product-journey" ref={sectionRef} className="relative h-[1000svh] border-t border-slate-200 bg-[#f7f6f2]">
+    <section id="product-journey" ref={sectionRef} className="relative h-[1350svh] border-t border-slate-200 bg-[#f7f6f2]">
       <div className="sticky top-0 h-[100svh] overflow-hidden px-4 pt-24 sm:px-7 sm:pt-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-70 [background-size:52px_52px] sm:[background-size:72px_72px]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(15,23,42,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.055) 1px, transparent 1px)',
+            maskImage: 'radial-gradient(circle at center, black 0%, transparent 84%)',
+          }}
+        />
         <motion.div
           style={{ opacity: headerOpacity }}
           className="pointer-events-none absolute left-5 top-24 z-30 max-w-[30rem] sm:left-10 sm:max-w-[50rem] lg:left-14"
@@ -730,9 +897,16 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
 
         <motion.div
           style={{ opacity: desktopOpacity, scale: desktopScale, y: desktopY }}
-          className="absolute inset-x-4 top-[205px] mx-auto max-w-[1160px] origin-center sm:inset-x-8 sm:top-[195px]"
+          className="absolute inset-x-8 top-[195px] mx-auto hidden max-w-[1160px] origin-center sm:block"
         >
           <StudioDesktop t={t} progress={progress} />
+        </motion.div>
+
+        <motion.div
+          style={{ opacity: desktopOpacity, scale: desktopScale, y: desktopY }}
+          className="absolute inset-x-4 top-[195px] mx-auto origin-center sm:hidden"
+        >
+          <StudioMobile t={t} progress={progress} />
         </motion.div>
 
         <motion.div
@@ -745,7 +919,7 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
 
         <motion.div
           style={{ opacity: studioOpacity, scale: studioScale, y: studioY }}
-          className="absolute inset-x-4 top-[82px] mx-auto max-w-[1050px] origin-center sm:inset-x-8"
+          className="absolute inset-x-8 top-[82px] mx-auto hidden max-w-[1050px] origin-center sm:block"
         >
           <motion.div style={{ opacity: studioHeadingOpacity, y: studioHeadingY }} className="mb-4 text-center">
             <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-slate-500">
@@ -761,6 +935,21 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
           <CvStudio t={t} outputLang={outputLang} previewOpacity={studioPreviewOpacity} />
         </motion.div>
 
+        <motion.div
+          style={{ opacity: studioOpacity, scale: studioScale, y: studioY }}
+          className="absolute inset-x-4 top-[82px] mx-auto origin-center sm:hidden"
+        >
+          <motion.div style={{ opacity: studioHeadingOpacity, y: studioHeadingY }} className="mb-3 text-center">
+            <p className="font-mono text-[0.56rem] uppercase tracking-[0.2em] text-slate-500">
+              {t('landing.journey.studioKicker')}
+            </p>
+            <h3 className="mt-1.5 font-heading text-2xl font-bold text-slate-950">
+              {t('landing.journey.studioTitle')}
+            </h3>
+          </motion.div>
+          <CvStudioMobile t={t} outputLang={outputLang} previewOpacity={studioPreviewOpacity} />
+        </motion.div>
+
         <motion.div style={{ opacity: collectionOpacity, scale: collectionScale }} className="absolute inset-x-0 top-[95px] mx-auto origin-center">
           <CvCollectionTransition t={t} progress={progress} outputLang={outputLang} />
         </motion.div>
@@ -773,8 +962,8 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.65, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-3 top-6 z-40 mx-auto origin-center sm:inset-x-6"
+            transition={{ delay: 0.15, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 z-40 mx-auto origin-center sm:inset-x-6 sm:bottom-auto sm:top-6"
           >
             <InterviewReveal t={t} />
           </motion.div>

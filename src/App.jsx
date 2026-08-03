@@ -203,9 +203,6 @@ const RootLayout = () => {
     <SessionManager>
       <TopProgressBar />
 
-      {/* Global solid ground — warm off-white in light, deep navy in dark. */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none bg-[#f6f6f3] dark:bg-slate-950"></div>
-
       <div
         className={`relative z-0 ${
           showNav

@@ -1,34 +1,69 @@
 import React, { useEffect, useRef } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { Mic, MicOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const BAR_COUNT = 4;
+// One cinematic stage for a single interviewer: no card, no frame — the room IS
+// the interviewer's. Identity top-left, their voice as a wide waveform through
+// the middle, "you" as a small self-view tile pinned bottom-right. The visual
+// language mirrors the landing page's InterviewReveal, but every state here is
+// real (live audio, mute, turn-taking) rather than a canned timeline.
+const BAR_COUNT = 42;
 
-const MiniVoiceIndicator = ({ active, stream }) => {
+const StageWaveform = ({
+  stream,
+  animated,
+  bars = BAR_COUNT,
+  className = 'h-16 gap-[3px] sm:h-20',
+  barClassName = 'bg-slate-900/70 dark:bg-white/70',
+}) => {
   const barRefs = useRef([]);
-  const activeRef = useRef(active);
+  // The analysed stream now swaps every turn (interviewer ⇄ candidate), so the
+  // AudioContext is created once and reused — browsers cap how many a document
+  // may open, and churning one per turn burns through that budget.
+  const audioCtxRef = useRef(null);
+
+  useEffect(
+    () => () => {
+      try {
+        audioCtxRef.current && audioCtxRef.current.close();
+      } catch {
+        /* ignore */
+      }
+      audioCtxRef.current = null;
+    },
+    []
+  );
 
   useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-
-  useEffect(() => {
-    if (!stream || !active) {
+    if (!stream) {
+      // Park the bars at rest so a stopped/muted mic doesn't freeze mid-word —
+      // unless the canned bounce is running, which needs the inline transform
+      // cleared so its keyframes own the property.
+      barRefs.current.forEach((bar) => {
+        if (bar) bar.style.transform = animated ? '' : 'scaleY(0.12)';
+      });
       return undefined;
     }
 
-    let audioCtx = null;
     let analyser = null;
     let source = null;
     let raf = 0;
     let freq = null;
 
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioCtx();
+      if (!audioCtxRef.current) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioCtx();
+      }
+      const audioCtx = audioCtxRef.current;
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       source = audioCtx.createMediaStreamSource(stream);
       analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
+      // 512 → 256 bins (~94Hz each). The old fftSize of 64 gave just 16 usable
+      // bins across 42 bars, so bars came in identical triplets — a big part of
+      // why the waveform read as a solid block rather than a voice.
+      analyser.fftSize = 512;
       analyser.smoothingTimeConstant = 0.6;
       source.connect(analyser);
       freq = new Uint8Array(analyser.frequencyBinCount);
@@ -36,29 +71,62 @@ const MiniVoiceIndicator = ({ active, stream }) => {
       analyser = null;
     }
 
+    // Per-bar bin map, built once. Bars are MIRRORED around the centre and
+    // spaced LOGARITHMICALLY: centre bars read the low formants (where speech
+    // lives and moves most), outer bars the high end. A linear map wasted two
+    // thirds of the bars on near-silent high frequencies, which is why they all
+    // sat at the same height. The right half is offset by a bin so the two
+    // halves stay balanced without being pixel-identical.
+    const binIdx = new Int16Array(bars);
+    const amp = new Float32Array(bars);
+    if (analyser) {
+      const MIN_BIN = 2;
+      const MAX_BIN = Math.min(freq.length - 2, 96);
+      const half = (bars - 1) / 2;
+      for (let i = 0; i < bars; i++) {
+        const d = Math.abs(i - half) / half; // 0 = centre, 1 = outer edge
+        const b = Math.round(MIN_BIN * Math.pow(MAX_BIN / MIN_BIN, d));
+        binIdx[i] = Math.min(freq.length - 2, i > half ? b + 1 : b);
+        // Gentle centre emphasis so the voice reads as bursting from the middle.
+        amp[i] = 0.78 + 0.22 * (1 - d);
+      }
+    }
+
+    // Smoothed level per bar: fast attack, slow release. This is what makes a
+    // meter feel physical instead of jittery — bars leap onto a syllable and
+    // fall away from it.
+    const levels = new Float32Array(bars);
+    const ATTACK = 0.5;
+    const RELEASE = 0.12;
+    // Measured against a speech-like signal across a 3.3x loudness range: 1.6
+    // with the soft knee below gives the widest spread of bar heights with zero
+    // bars pinned to the ceiling. Raising it to 2.2 clipped 24 of 42 bars flat.
+    const GAIN = 1.6;
+    const KNEE = 0.75;
+
     const update = () => {
       raf = requestAnimationFrame(update);
       if (!analyser) return;
       analyser.getByteFrequencyData(freq);
 
-      // Voice energy sits in the low-mid bins. Raw per-bin levels are small, so
-      // the candidate's bars looked tiny next to the interviewers' lively canned
-      // animation. Average + amplify (GAIN) so normal speaking drives the bars to
-      // a comparable height, with per-bar variation so it isn't a flat block.
-      const GAIN = 3.4;
-      const bins = Math.min(freq.length, 16);
-      let sum = 0;
-      for (let k = 1; k <= bins; k++) sum += freq[k];
-      const energy = Math.min(1, (sum / bins / 255) * GAIN);
-
-      for (let i = 0; i < BAR_COUNT; i++) {
+      for (let i = 0; i < bars; i++) {
         const bar = barRefs.current[i];
-        if (bar) {
-          const idx = 1 + Math.floor((i / BAR_COUNT) * bins);
-          const local = Math.min(1, (freq[idx] / 255) * GAIN);
-          const scaleY = 0.2 + Math.max(energy * 0.6, local) * 0.8;
-          bar.style.transform = `scaleY(${scaleY})`;
-        }
+        if (!bar) continue;
+        const b = binIdx[i];
+        // Average the bin with its neighbour: one bin alone flickers.
+        const raw = (freq[b] + freq[b + 1]) / 2 / 255;
+        // No energy floor any more. The old code lifted every bar to 60% of the
+        // overall energy, which is precisely what flattened them into a wall —
+        // quiet bands are supposed to drop.
+        let v = raw * GAIN * amp[i];
+        // Soft knee rather than a hard clamp: a loud passage compresses toward
+        // the ceiling instead of a dozen bars hitting it dead flat. Flat tops
+        // are what made this read as a progress bar rather than a voice.
+        if (v > KNEE) v = KNEE + (1 - Math.exp(-(v - KNEE) * 2.2)) * (1 - KNEE);
+        const target = Math.min(1, v);
+        const prev = levels[i];
+        levels[i] = prev + (target - prev) * (target > prev ? ATTACK : RELEASE);
+        bar.style.transform = `scaleY(${0.12 + levels[i] * 0.88})`;
       }
     };
 
@@ -68,32 +136,40 @@ const MiniVoiceIndicator = ({ active, stream }) => {
       cancelAnimationFrame(raf);
       try {
         source && source.disconnect();
-        audioCtx && audioCtx.close();
+        analyser && analyser.disconnect();
       } catch {
         /* ignore */
       }
     };
-  }, [stream, active]);
+  }, [stream, animated, bars]);
 
-  if (!active) return null;
-
+  // No Tailwind scale-* on the bars: v4 compiles those to the standalone `scale`
+  // property, which MULTIPLIES with the `transform` the loop writes — a
+  // scale-y utility class pinned every bar to a fraction of the loop's own
+  // output (Tailwind emits `scale: var(--tw-scale-x) var(--tw-scale-y)`) and
+  // the waveform looked dead. JS owns the vertical scale outright.
+  const bounce = animated && !stream;
   return (
-    <div className="flex items-end gap-[3px] h-3.5 w-6 justify-center">
-      {[...Array(BAR_COUNT)].map((_, i) => {
-        const delay = `${i * 150}ms`;
-        return (
-          <span
-            key={i}
-            ref={(el) => {
-              barRefs.current[i] = el;
-            }}
-            className={`w-[3px] h-full bg-slate-400 dark:bg-slate-500 rounded-full origin-bottom will-change-transform ${
-              stream ? 'scale-y-[0.25] transition-transform duration-75' : 'animate-mini-bounce'
-            }`}
-            style={{ animationDelay: stream ? undefined : delay }}
-          />
-        );
-      })}
+    <div aria-hidden className={`flex items-center justify-center ${className}`}>
+      {[...Array(bars)].map((_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            barRefs.current[i] = el;
+          }}
+          // Capped width keeps the bars slim at any container size — stretched
+          // to ~14px on a wide stage they read as a progress bar, not a voice.
+          className={`min-w-[2px] max-w-[9px] flex-1 h-full rounded-full origin-center will-change-transform ${barClassName} ${
+            bounce ? 'animate-mini-bounce' : ''
+          }`}
+          style={{
+            // Start at rest so the bars never flash full-height before the
+            // first analyser frame.
+            transform: bounce ? undefined : 'scaleY(0.12)',
+            animationDelay: bounce ? `${(i % 7) * 90}ms` : undefined,
+          }}
+        />
+      ))}
     </div>
   );
 };
@@ -107,249 +183,6 @@ const initials = (name = '') =>
     .slice(0, 2)
     .toUpperCase() || '?';
 
-const InterviewerTile = ({ person, active, speaking, joining = false }) => {
-  const { t } = useTranslation();
-  return (
-    <div
-      className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
-        active
-          ? 'ring-2 ring-slate-900 dark:ring-white'
-          : 'ring-1 ring-slate-200 dark:ring-white/10'
-      } ${joining ? 'opacity-80' : ''}`}
-    >
-      <div className="relative">
-        {active && speaking && !joining ? (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
-            <MiniVoiceIndicator active={true} />
-          </div>
-        ) : (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-center text-lg font-extrabold">
-            {initials(person.name)}
-          </div>
-        )}
-        {/* pulse ring — emphatic while speaking, gentle while joining */}
-        {active && (speaking || joining) && (
-          <span
-            className={`absolute -inset-1.5 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 ${
-              joining ? 'animate-pulse' : 'animate-ping'
-            }`}
-            aria-hidden
-          />
-        )}
-      </div>
-
-      <div className="absolute bottom-2.5 left-2.5 right-2.5 text-left">
-        <p className="text-xs font-bold text-slate-900 dark:text-white truncate drop-shadow-sm dark:drop-shadow">
-          {person.name}
-        </p>
-        <p className="text-[10px] text-slate-500 dark:text-slate-300 truncate">{person.role}</p>
-      </div>
-
-      <div className="absolute top-2.5 right-2.5">
-        {active && (
-          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 dark:text-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-            {joining
-              ? t('interviewPrep.meetingStage.joining')
-              : speaking
-                ? t('interviewPrep.meetingStage.speaking')
-                : t('interviewPrep.meetingStage.onCall')}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const CandidateTile = ({ name, muted, listening, stream }) => {
-  const { t } = useTranslation();
-  return (
-  <div
-    className={`relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 w-full h-full min-h-0 flex flex-col items-center justify-center transition-all duration-300 ${
-      listening && !muted
-        ? 'ring-2 ring-slate-900 dark:ring-white'
-        : 'ring-1 ring-slate-200 dark:ring-white/10'
-    }`}
-  >
-    <div className="relative">
-      {listening && !muted ? (
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
-          <MiniVoiceIndicator active={true} stream={stream} />
-        </div>
-      ) : (
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/25 dark:text-sky-100 flex items-center justify-center text-lg font-extrabold">
-          {initials(name)}
-        </div>
-      )}
-      {/* speaking pulse ring around the avatar */}
-      {listening && !muted && (
-        <span
-          className="absolute -inset-1.5 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 animate-ping"
-          aria-hidden
-        />
-      )}
-    </div>
-
-    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
-      <p className="text-xs font-bold text-slate-900 dark:text-white truncate drop-shadow-sm dark:drop-shadow">
-        {t('interviewPrep.meetingStage.you')}
-      </p>
-      <span
-        className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-          muted
-            ? 'bg-rose-500/80 text-white'
-            : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
-        }`}
-      >
-        {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-      </span>
-    </div>
-  </div>
-  );
-};
-
-// ── Mobile call layout (< sm) ──────────────────────────────────────────────
-// A purpose-built phone-call surface instead of the shrunken desktop grid: the
-// active interviewer is a full-bleed hero tile, "You" is a picture-in-picture
-// self-view pinned to the corner, and a panel (>1 interviewer) gets a small
-// avatar filmstrip up top so the roster is still visible.
-const MobileCallStage = ({
-  seats,
-  activeName,
-  candidateName,
-  muted,
-  speaking,
-  micStream,
-  handingOff,
-}) => {
-  const { t } = useTranslation();
-  // Spotlight the speaker; fall back to the first seat when nobody is active
-  // (e.g. while the candidate is talking) so the hero never goes blank.
-  const heroSeat = seats.find((s) => s.name === activeName) || seats[0];
-  const heroActive = !!activeName && heroSeat?.name === activeName && (speaking || handingOff);
-  const youListening = !speaking && !handingOff && !muted;
-
-  return (
-    <div className="sm:hidden flex-grow min-h-0 flex flex-col gap-3">
-      {/* Panel filmstrip — only when there's more than one interviewer */}
-      {seats.length > 1 && (
-        <div className="shrink-0 flex flex-wrap items-center justify-center gap-2">
-          {seats.map((p, i) => {
-            const on = p.name === activeName;
-            return (
-              <div
-                key={p.seat ?? i}
-                className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 border transition-colors ${
-                  on
-                    ? 'border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800'
-                    : 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/5'
-                }`}
-              >
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
-                    on
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                      : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'
-                  }`}
-                >
-                  {initials(p.name)}
-                </span>
-                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 max-w-[80px] truncate">
-                  {p.name?.split(/\s+/)[0]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Hero interviewer — fills the remaining height */}
-      <div
-        className={`relative flex-grow min-h-0 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800/90 flex flex-col items-center justify-center px-4 text-center transition-all duration-300 ${
-          heroActive
-            ? 'ring-2 ring-slate-900 dark:ring-white'
-            : 'ring-1 ring-slate-200 dark:ring-white/10'
-        } ${handingOff ? 'opacity-90' : ''}`}
-      >
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 dark:text-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">
-          {handingOff
-            ? t('interviewPrep.meetingStage.joining')
-            : heroActive
-              ? t('interviewPrep.meetingStage.speaking')
-              : t('interviewPrep.meetingStage.onCall')}
-        </span>
-
-        <div className="relative">
-          {heroActive && !handingOff ? (
-            <div className="w-28 h-28 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
-              <div className="scale-[1.9]">
-                <MiniVoiceIndicator active={true} />
-              </div>
-            </div>
-          ) : (
-            <div className="w-28 h-28 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-center text-3xl font-extrabold">
-              {initials(heroSeat?.name)}
-            </div>
-          )}
-          {heroActive && (
-            <span
-              className={`absolute -inset-2 rounded-full ring-2 ring-slate-900/30 dark:ring-white/30 ${
-                handingOff ? 'animate-pulse' : 'animate-ping'
-              }`}
-              aria-hidden
-            />
-          )}
-        </div>
-
-        <div className="mt-5">
-          <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-            {heroSeat?.name}
-          </p>
-          {heroSeat?.role && (
-            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-300 leading-snug">
-              {heroSeat.role}
-            </p>
-          )}
-        </div>
-
-        {/* "You" picture-in-picture self-view */}
-        <div
-          className={`absolute bottom-3 right-3 w-[92px] h-28 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center transition-all duration-300 ${
-            youListening
-              ? 'ring-2 ring-slate-900 dark:ring-white'
-              : 'ring-1 ring-slate-200 dark:ring-white/15'
-          }`}
-        >
-          <div className="relative">
-            {youListening ? (
-              <div className="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center">
-                <MiniVoiceIndicator active={true} stream={micStream} />
-              </div>
-            ) : (
-              <div className="w-11 h-11 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/25 dark:text-sky-100 flex items-center justify-center text-sm font-extrabold">
-                {initials(candidateName)}
-              </div>
-            )}
-          </div>
-          <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">
-              {t('interviewPrep.meetingStage.you')}
-            </span>
-            <span
-              className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                muted
-                  ? 'bg-rose-500/80 text-white'
-                  : 'bg-slate-200 text-slate-600 dark:bg-white/15 dark:text-slate-200'
-              }`}
-            >
-              {muted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const MeetingStage = ({
   panel = [],
   activeSeat = null,
@@ -357,53 +190,127 @@ const MeetingStage = ({
   muted = false,
   speaking = false,
   micStream = null,
+  remoteStream = null,
   handingOff = false,
 }) => {
-  const seats = Array.isArray(panel) ? panel.filter((p) => p && p.role) : [];
-  if (seats.length < 1) return null;
-  const activeName = activeSeat?.name;
-  // Tiles = interviewers + the candidate. 1:1 (2 tiles) → one row; a panel (4
-  // tiles) → 2×2 grid.
-  const rowsClass = seats.length + 1 <= 2 ? 'grid-rows-1' : 'grid-rows-2';
-  // With 2 interviewers (3 tiles total) a plain 2×2 grid leaves a lopsided
-  // empty cell, so let the candidate span the full bottom row.
-  const candidateSpan = seats.length === 2 ? 'col-span-2' : '';
-  return (
-    <>
-      {/* Phones (< sm): dedicated call UI. */}
-      <MobileCallStage
-        seats={seats}
-        activeName={activeName}
-        candidateName={candidateName}
-        muted={muted}
-        speaking={speaking}
-        micStream={micStream}
-        handingOff={handingOff}
-      />
+  const { t } = useTranslation();
+  const reduce = useReducedMotion();
 
-      {/* Tablet / desktop (≥ sm): the original Meet-style grid, unchanged. */}
-      <div className={`hidden sm:grid flex-grow min-h-0 grid-cols-2 ${rowsClass} gap-3`}>
-        {seats.map((p, i) => (
-          <InterviewerTile
-            key={p.seat ?? i}
-            person={p}
-            active={activeName === p.name}
-            speaking={speaking && activeName === p.name}
-            joining={handingOff && activeName === p.name}
-          />
-        ))}
-        {/* While swapping interviewers the candidate isn't "live" yet — don't show
-            their tile as listening. */}
-        <div className={`min-h-0 ${candidateSpan}`}>
-          <CandidateTile
-            name={candidateName}
-            muted={muted}
-            listening={!speaking && !handingOff}
-            stream={micStream}
-          />
+  // Sessions are one interviewer now. `panel` stays in the contract (panels may
+  // return) but only the active seat is staged — falling back to the first seat
+  // so the stage never goes blank between turns.
+  const seats = Array.isArray(panel) ? panel.filter((p) => p && p.role) : [];
+  const seat = activeSeat || seats[0];
+  if (!seat) return null;
+
+  const interviewerSpeaking = speaking && !handingOff;
+  // Mid-swap the candidate isn't live yet — don't show them as listening.
+  const youListening = !speaking && !handingOff && !muted;
+
+  // The stage waveform is the INTERVIEWER's voice and nothing else — it moves
+  // when they talk and rests when they don't. The candidate's mic drives their
+  // own tile instead, so the room never appears to speak for you. The canned
+  // bounce is only a last resort, for when their stream hasn't arrived yet.
+  const waveStream = interviewerSpeaking ? remoteStream : null;
+  const waveAnimated = interviewerSpeaking && !remoteStream && !reduce;
+
+  return (
+    <div className="relative flex-grow min-h-0 overflow-hidden text-slate-900 dark:text-white">
+      {/* No card, no frame: the interviewer isn't a widget on the page, they own
+          it. MOBILE seats them dead centre — avatar, name and voice as one
+          stacked group with the room's space split above and below, like a phone
+          call. DESKTOP keeps the editorial arrangement: identity top-left, voice
+          taking the slack under it. The self-view is the one absolute element
+          and FLOATS over the room like any call's picture-in-picture. */}
+      <section className="relative flex h-full min-w-0 flex-col justify-center gap-7 px-1 pt-2 pb-0 sm:justify-start sm:gap-0 sm:px-2">
+        {/* Interviewer identity — the anchor of the room now that nothing frames
+            it. Speaking / joining state is owned by the page's status line. */}
+        <div className="flex shrink-0 items-start justify-center gap-3 sm:justify-start">
+          <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
+            {/* No pulsing halo — the waveform already carries "Renee is
+                speaking"; a second animated cue on her avatar was redundant. */}
+            <div
+              className={`grid h-20 w-20 shrink-0 place-items-center rounded-full border border-slate-200 bg-white font-heading text-2xl font-bold dark:border-white/15 dark:bg-white/[.06] sm:h-16 sm:w-16 sm:text-xl ${
+                handingOff ? 'opacity-70' : ''
+              }`}
+            >
+              {initials(seat.name)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-heading text-2xl font-bold">{seat.name}</p>
+              {seat.role && (
+                <p className="mt-1 truncate font-mono text-[9px] uppercase tracking-[.16em] text-slate-400 dark:text-slate-500 sm:text-[10px]">
+                  {seat.role}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </>
+
+        {/* The interviewer's voice — a real AnalyserNode on their audio, not a
+            fixed timer. At rest and faded while it's your turn: the room stays
+            quiet when they aren't the one talking. On mobile it sits in the
+            centred group under their name; from sm: it takes the slack so it
+            centres in the room on its own. */}
+        <div
+          className={`mx-auto grid min-h-0 w-full max-w-[820px] shrink-0 content-center transition-opacity duration-500 sm:flex-1 ${
+            interviewerSpeaking ? 'opacity-100' : 'opacity-30'
+          }`}
+        >
+          <StageWaveform stream={waveStream} animated={waveAnimated} />
+        </div>
+
+        {/* Candidate self-view — the only framed thing on screen, and that's the
+            point: the room is the interviewer's, you're the guest tile in it. */}
+        <aside
+          className={`absolute bottom-0 right-0 grid h-[96px] w-[126px] place-items-center rounded-2xl border bg-white shadow-[0_10px_30px_rgba(15,23,42,.10)] transition-colors duration-300 dark:bg-[#0d1424] dark:shadow-[0_18px_40px_rgba(2,6,23,.5)] sm:h-[112px] sm:w-[158px] ${
+            youListening
+              ? 'border-slate-300 dark:border-white/30'
+              : 'border-slate-200 dark:border-white/15'
+          }`}
+        >
+          <div className="text-center">
+            {/* No pulsing halo here any more — the mic badge and the level bars
+                below say "you're live" without a second animation competing. */}
+            <div className="mx-auto grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-slate-50 font-heading text-sm font-bold dark:border-white/25 dark:bg-white/10 sm:h-12 sm:w-12 sm:text-base">
+              {initials(candidateName)}
+            </div>
+            <div className="mt-2 flex items-center justify-center gap-1.5">
+              <p className="text-[10px] font-bold">{t('interviewPrep.meetingStage.you')}</p>
+              {/* Green = the floor is yours. Rose = muted. Neutral = they're
+                  talking, so it isn't your turn. */}
+              <span
+                className={`inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors duration-300 ${
+                  muted
+                    ? 'bg-rose-500/80 text-white'
+                    : youListening
+                      ? 'bg-emerald-500 text-white dark:bg-emerald-500'
+                      : 'bg-slate-100 text-slate-600 dark:bg-white/15 dark:text-slate-200'
+                }`}
+              >
+                {muted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+              </span>
+            </div>
+            {/* Your mic lives here, not on the main stage — this is where you
+                can see you're being picked up. */}
+            <div
+              className={`mx-auto mt-1.5 w-12 transition-opacity duration-300 ${
+                youListening ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <StageWaveform
+                stream={youListening ? micStream : null}
+                animated={false}
+                bars={7}
+                className="h-3 gap-[2px]"
+                barClassName="bg-slate-400 dark:bg-slate-300"
+              />
+              <span className="sr-only">{t('interviewPrep.meetingStage.speaking')}</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
   );
 };
 

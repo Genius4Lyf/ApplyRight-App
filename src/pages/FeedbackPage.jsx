@@ -70,8 +70,8 @@ const FeedbackPage = () => {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-24">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden p-8 border border-slate-100">
           <div className="text-center mb-8">
-            <div className="mx-auto w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 ring-1 ring-indigo-100">
-              <Handshake className="w-6 h-6 text-indigo-600" />
+            <div className="mx-auto w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 ring-1 ring-slate-200">
+              <Handshake className="w-6 h-6 text-slate-900" />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">We Value Your Feedback</h2>
             <p className="text-gray-500">Help us improve ApplyRight for everyone.</p>
@@ -103,7 +103,7 @@ const FeedbackPage = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
                 <p className="text-gray-600 mb-6">Your feedback has been submitted successfully.</p>
-                <Link to="/" className="text-indigo-600 hover:text-indigo-800 font-medium">
+                <Link to="/" className="text-slate-900 hover:text-slate-900 font-medium">
                   Return to Home
                 </Link>
               </motion.div>
@@ -140,7 +140,7 @@ const FeedbackPage = () => {
                       id="contact"
                       type="text"
                       required
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 placeholder-slate-400 bg-slate-50 focus:bg-white"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900/20 focus:border-slate-900 transition-all text-slate-900 placeholder-slate-400 bg-slate-50 focus:bg-white"
                       placeholder="Enter your registered email or phone"
                       value={contactValue}
                       onChange={(e) => setContactValue(e.target.value)}
@@ -166,7 +166,7 @@ const FeedbackPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-50 transition-colors"
                 >
                   {loading ? 'Checking...' : 'Continue'}
                 </button>
@@ -180,15 +180,15 @@ const FeedbackPage = () => {
               >
                 {userFound ? (
                   <form onSubmit={submitFeedback} className="space-y-6">
-                    <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900 font-bold">
                         {userData?.firstName?.[0] || 'U'}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-900">
                           Logged in as {userData?.firstName} {userData?.lastName}
                         </p>
-                        <p className="text-xs text-indigo-600">Verified User</p>
+                        <p className="text-xs text-slate-900">Verified User</p>
                       </div>
                     </div>
 
@@ -211,7 +211,7 @@ const FeedbackPage = () => {
                         rows={5}
                         required
                         maxLength={300}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 placeholder-slate-400 bg-slate-50 focus:bg-white resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900/20 focus:border-slate-900 transition-all text-slate-900 placeholder-slate-400 bg-slate-50 focus:bg-white resize-none"
                         placeholder="What's on your mind? We'd love to hear your thoughts..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
@@ -248,7 +248,7 @@ const FeedbackPage = () => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-indigo-200 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 transition-all transform hover:-translate-y-0.5"
+                        className="flex-1 flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-slate-200 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-70 transition-all transform hover:-translate-y-0.5"
                       >
                         {loading ? (
                           <>
@@ -292,7 +292,7 @@ const FeedbackPage = () => {
 
                     <Link
                       to="/register"
-                      className="block w-full py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-indigo-200 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 mb-4"
+                      className="block w-full py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-slate-200 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all transform hover:-translate-y-0.5 mb-4"
                     >
                       Sign Up Now
                     </Link>
