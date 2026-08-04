@@ -198,7 +198,13 @@
     "passwordNeedsUppercase": "Password must contain at least one uppercase letter",
     "passwordNeedsNumber": "Password must contain at least one number",
     "sendCodeFailed": "Failed to send reset code. Please try again.",
-    "resetPasswordFailed": "Failed to reset password"
+    "resetPasswordFailed": "Failed to reset password",
+    "startCv": {
+      "generic": "Couldn't start your CV. Try again.",
+      "rateLimited": "Too many requests just now. Wait a minute and try again.",
+      "sessionExpired": "Your session expired. Please sign in again.",
+      "aiUnavailable": "The AI service is unavailable right now. Try again shortly."
+    }
   },
   "landing": {
     "seo": {
@@ -4268,6 +4274,7 @@
     "sessionRail": {
       "sessions": "Sessions",
       "closeSessions": "Close sessions",
+      "recents": "Recents",
       "newTailoring": "New Tailoring",
       "newCv": "New CV",
       "loading": "Loading…",
@@ -4275,8 +4282,7 @@
       "fromSource": "from {{source}}",
       "removeOrDeleteCv": "Remove or delete this CV",
       "deleteTailoring": "Delete this tailoring",
-      "deleteAria": "Delete {{heading}}",
-      "backToHome": "Back to home"
+      "deleteAria": "Delete {{heading}}"
     },
     "skillsBuild": {
       "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. You pick which ones go in.",

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { toast } from 'sonner';
 import CVService from '../services/cv.service';
 import { newSortId } from '../lib/sortId';
+import { startCvErrorMessage } from '../lib/startCvError';
 
 // Aria Studio's state brain — a decoupled sibling of CVContext. It carries the SAME
 // CV-mutation invariants (functional coachChats merge, debounced chats autosave as the
@@ -230,8 +231,8 @@ export const AriaStudioProvider = ({ children }) => {
             // Surfaced to the page, which owns the router and can send them to /upgrade.
             return { paywall: true };
           }
-          console.error('startBuild failed', e);
-          toast.error("Couldn't start your CV. Try again.");
+          console.error('startBuild failed', e?.response?.status, e?.response?.data || e);
+          toast.error(startCvErrorMessage(e));
           return null;
         } finally {
           setLoading(false);
@@ -514,8 +515,8 @@ export const AriaStudioProvider = ({ children }) => {
         if (e?.response?.status === 402 && e?.response?.data?.code === 'NEED_AGENT_SUB') {
           toast.error('An active agent plan is required to create CVs.');
         } else {
-          console.error('ensureDraft failed', e);
-          toast.error("Couldn't start your CV. Try again.");
+          console.error('ensureDraft failed', e?.response?.status, e?.response?.data || e);
+          toast.error(startCvErrorMessage(e));
         }
         return null;
       } finally {

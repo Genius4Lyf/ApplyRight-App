@@ -6,7 +6,7 @@ import { SECTION_RESEARCH } from '../../lib/sectionResearch';
 import AriaOrbit from './AriaOrbit';
 
 // A chip-triggered "what research says" lecture — rendered as a NORMAL Aria message
-// (orbit + slate bubble), not a dropdown. Given a `section` id, it reads the curated
+// (orbit slot + slate bubble), not a dropdown. Given a `section` id, it reads the curated
 // entry from SECTION_RESEARCH and lays out the structured content inside the bubble:
 // eyebrow → thesis → research-backed rule bullets → a before→after (or example) pull
 // block → a source micro-line. Content is trusted static markup, so `points` render
@@ -28,10 +28,10 @@ const ResearchCard = ({ section }) => {
 
   return (
     <motion.div
-      className="self-start max-w-[92%] flex items-start gap-2"
+      className="aria-row self-start max-w-[92%] flex items-start gap-2"
       {...bubbleAnim('aria', reduce)}
     >
-      <AriaOrbit size={16} className="mt-2" />
+      <AriaOrbit size={16} className="aria-mark mt-2" />
       <div className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-3 flex flex-col gap-2.5">
         {/* Eyebrow. */}
         <span className="font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">

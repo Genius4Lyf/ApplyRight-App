@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import CVService from '../services/cv.service';
 import api from '../services/api';
+import { startCvErrorMessage } from '../lib/startCvError';
 
 const CVBuilderContext = createContext(null);
 
@@ -493,8 +494,8 @@ export const CVBuilderProvider = ({ children }) => {
       return await creatingRef.current;
     } catch (e) {
       if (!handleAgentPaywall(e)) {
-        console.error('ensureDraft failed', e);
-        toast.error("Couldn't start your CV. Try again.");
+        console.error('ensureDraft failed', e?.response?.status, e?.response?.data || e);
+        toast.error(startCvErrorMessage(e));
       }
       return null;
     } finally {

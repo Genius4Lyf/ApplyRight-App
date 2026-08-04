@@ -275,6 +275,24 @@ const CVBuilderInner = () => {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
+  // Past "peek" the drawer is effectively a full-screen chat — the CV form behind it
+  // is no longer a usable scroll target, so lock the document the same way
+  // AriaStudio's full-screen chat does. Restores whatever overflow value was there
+  // before (never blindly clears it — another surface may own the lock too).
+  const drawerExpanded =
+    !isDesktop && drawerH > (typeof window !== 'undefined' ? window.innerHeight * 0.5 : Infinity);
+  useEffect(() => {
+    if (!drawerExpanded) return;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [drawerExpanded]);
+
   // "Ask Aria" from a role/project: bind her focus + bring the coach forward. Flush
   // the draft to the DB first (fire-and-forget) so the role's _sortId exists server-
   // side — the build-with chat resolves the focused role by _sortId, and without this

@@ -1,22 +1,21 @@
 import React from 'react';
 import { formatRelative } from '../../lib/relativeDate';
-import { Plus, FilePlus2, Trash2, Home } from 'lucide-react';
+import { Plus, FilePlus2, Trash2, PanelLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import AriaOrbit from '../cv/AriaOrbit';
+import StudioSidebarNav from './StudioSidebarNav';
+import StudioSidebarProfile from './StudioSidebarProfile';
 
-// The session list. A Studio session IS a DraftCV, so these rows are just drafts the
-// user has worked on here — newest-touched first, because the one you were last in is
-// almost always the one you want.
+// The Studio sidebar, top to bottom: brand header, new-session actions, destinations +
+// wallet, the scrolling session list, and the pinned profile row. With the top navbar
+// gone from the Studio page, this single panel carries everything it used to —
+// Recents is the ONLY region that scrolls; everything else stays put.
 //
-// Editorial, not pastel: rows carry no fill, separated by hairlines. The ACTIVE row is
-// marked by a 2px ink left rule and ink-weight type — state carried by a rule and
-// typography rather than a lavender wash, matching the flat/hairline language used
-// across the rest of the app.
-//
-// Presentational only: it takes rows and callbacks, so the same component serves both
-// the inline rail (≥820px) and the mobile drawer without a second implementation.
+// Presentational only: it takes rows and callbacks (plus the stateful nav/profile
+// sub-components), so the same component serves both the inline rail (≥820px) and the
+// mobile drawer without a second implementation.
 const SessionRail = ({
   sessions = [],
   loading,
@@ -25,29 +24,30 @@ const SessionRail = ({
   onDelete,
   onNewTailoring,
   onNewCv,
-  onClose, // drawer only — absent inline
-  onBackHome, // drawer only — absent inline
+  onClose, // collapses the rail — drawer: dismiss overlay; inline: hide the rail
 }) => {
   const { t } = useTranslation();
   return (
   <div className="h-full min-h-0 flex flex-col">
-    <div className="shrink-0 p-3 space-y-2">
+    {/* Header — the wordmark now that the top navbar is gone from this page, plus the
+        collapse control. Fraunces serif, solid ink — no indigo, per the brand rule. */}
+    <div className="shrink-0 h-14 px-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+      <span className="font-brand text-[17px] font-semibold tracking-tight text-slate-900 dark:text-white">
+        ApplyRight
+      </span>
       {onClose && (
-        <div className="flex items-center justify-between pb-1">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.sessionRail.sessions')}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('ariaStudio.sessionRail.closeSessions')}
-            className="w-8 h-8 -mr-1 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('ariaStudio.sessionRail.closeSessions')}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <PanelLeft className="w-4 h-4" />
+        </button>
       )}
+    </div>
 
+    <div className="shrink-0 p-3 space-y-2">
       {/* The system's primary and secondary. Sizing is COMPOSED on top (w-full, compact
           padding, rail-scale text) rather than re-implementing the colours, so these
           stay in step with every other button in the app. */}
@@ -67,8 +67,18 @@ const SessionRail = ({
       </button>
     </div>
 
+    <StudioSidebarNav />
+
+    <div className="shrink-0 px-3 pb-1.5">
+      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+        {t('ariaStudio.sessionRail.recents')}
+      </span>
+    </div>
+
+    {/* Recents — the ONLY scrolling region. `chat-scroll` contains overscroll so
+        exhausting this list can't chain-scroll the page behind it. */}
     <div
-      className={`flex-1 min-h-0 overflow-y-auto scrollbar-none pb-3 ${
+      className={`flex-1 min-h-0 chat-scroll pb-3 ${
         loading || sessions.length === 0 ? 'flex items-center justify-center' : ''
       }`}
     >
@@ -186,17 +196,7 @@ const SessionRail = ({
       )}
     </div>
 
-    {onBackHome && (
-      <div className="shrink-0 p-3 border-t border-slate-200 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={onBackHome}
-          className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
-        >
-          <Home className="w-4 h-4" /> {t('ariaStudio.sessionRail.backToHome')}
-        </button>
-      </div>
-    )}
+    <StudioSidebarProfile />
   </div>
   );
 };

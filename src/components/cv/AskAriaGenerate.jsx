@@ -563,17 +563,17 @@ const AskAriaGenerate = ({
     }
   };
 
-  // Aria message bubble wrapper — her orbit mark to the left of a card/bubble body.
+  // Aria message bubble wrapper — her orbit slot to the left of a card/bubble body.
   // Optional `ref` forwards to the DOM node (framer-motion forwards refs) so a caller
   // can scroll a specific card into view.
   const ariaWrap = (key, body, ref) => (
     <motion.div
       ref={ref}
       key={key}
-      className="self-start max-w-[92%] flex items-start gap-2"
+      className="aria-row self-start max-w-[92%] flex items-start gap-2"
       {...portalCard(reduce)}
     >
-      <AriaOrbit size={16} className="mt-2" />
+      <AriaOrbit size={16} className="aria-mark mt-2" />
       {body}
     </motion.div>
   );
@@ -636,10 +636,7 @@ const AskAriaGenerate = ({
       {/* The conversation — ALWAYS mounted; picker/consent/generating/results bloom
           in as the last item in this same scroll stream (never a phase-swap). */}
       <div className="flex-1 min-h-0 relative">
-        <div
-          ref={chatRef}
-          className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
-        >
+        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
           {messages.map((m, i) => {
             // User turn — right-aligned ink bubble.
             if (m.who === 'user') {
@@ -711,10 +708,10 @@ const AskAriaGenerate = ({
               return (
                 <motion.div
                   key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="mt-2" />
+                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <div className="min-w-0">
                     <button
                       type="button"
@@ -781,14 +778,14 @@ const AskAriaGenerate = ({
             if (m.who === 'research') {
               return <ResearchCard key={i} section={m.section} />;
             }
-            // Aria turn — orbit + slate bubble.
+            // Aria turn — orbit slot + slate bubble.
             return (
               <motion.div
                 key={i}
-                className="self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex items-start gap-2"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>

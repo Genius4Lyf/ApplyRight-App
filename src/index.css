@@ -152,6 +152,10 @@
        sideways on mobile. `clip` (not `hidden`) avoids creating a scroll
        container, so the sticky navbar keeps working. */
     overflow-x: clip;
+    /* Kills document rubber-banding on mobile: without this, overscrolling past the
+       top/bottom of the page (or a scroll chained up from an exhausted inner
+       scroller — see .chat-scroll) bounces the whole viewport. */
+    overscroll-behavior-y: none;
   }
 
   h1:not(.cv-template-container *),
@@ -254,6 +258,38 @@
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Chat/message scroll containers (AriaChat, StudioChat, ATSCoachPanel/AskAriaGenerate,
+     and any future one). `overscroll-behavior: contain` stops scroll chaining: hitting
+     the top or bottom of the conversation no longer drags the document behind it on
+     mobile. Bundles the scrollbar-hide rules too, so a call site only needs this one
+     class in place of `overflow-y-auto scrollbar-none`. */
+  .chat-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .chat-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Aria's mark appears ONCE — on the LATEST Aria row, whatever that row happens to be
+     (a plain message, an action card, an applied-bullets record, or the thinking
+     indicator). Every Aria row still renders the mark in its own leading slot; the rows
+     that aren't last simply hide it.
+     `visibility: hidden` rather than `display: none` is deliberate: the slot keeps its
+     width, so every bubble in the thread stays on the same left margin instead of the
+     older ones sliding left. The selector reads "an .aria-row with no .aria-row after
+     it" — so the mark follows the conversation down automatically, with no state to
+     thread through and nothing to keep in sync. */
+  .aria-row .aria-mark {
+    visibility: hidden;
+  }
+  .aria-row:not(:has(~ .aria-row)) .aria-mark {
+    visibility: visible;
   }
 
   /* Aria one-shot apply-confirm ring (motion-spec 3.2) — a single emerald pulse

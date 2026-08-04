@@ -21,22 +21,16 @@ import {
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
-import { billingService } from '../services';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import AriaOrbit from './cv/AriaOrbit';
+import SignOutConfirm from './SignOutConfirm';
+import { useAccountWallet } from '../hooks/useAccountWallet';
+import { planLabelFor } from '../lib/planLabels';
 
 import logoBlack from '../assets/logo/applyright-icon-black.png';
 import logoWhite from '../assets/logo/applyright-icon-white.png';
-
-const PLAN_LABELS = {
-  weekly_pro: '2-Week Pro',
-  monthly_pro: 'Monthly Pro',
-  monthly_premium: 'Premium',
-};
-const planLabelFor = (ent) =>
-  ent?.planId ? PLAN_LABELS[ent.planId] || ent.planId : ent?.tier === 'pro' ? 'Premium' : 'Pro';
 
 // Account avatar + dropdown — self-contained (owns its open state, ref, and
 // outside-click/Escape handling) so it can be rendered independently in BOTH the
@@ -361,92 +355,8 @@ const Navbar = () => {
   const isAgent = user?.role === 'agent';
   const homePath = isAgent ? '/agent' : '/dashboard';
 
-  const [credits, setCredits] = useState(null);
-  const [entitlement, setEntitlement] = useState(null);
-
-  // Derived wallet view (plan tier + live-interview minutes). Free users see
-  // credits; paid users see their plan + remaining minutes.
-  const tier = entitlement?.tier || 'free';
-  const isPaid = tier !== 'free';
-  // Combined spendable credits (plan allowance + wallet). Paid users now have a
-  // finite balance instead of "unlimited", so show the real number.
-  const displayCredits = entitlement?.availableCredits ?? credits;
-  const minutesLeft = entitlement?.minutesRemaining ?? null;
-  const freeTasteMin = entitlement
-    ? Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)
-    : null;
-
-  React.useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchCredits = async () => {
-      try {
-        const data = await billingService.getBalance();
-        setCredits(data.credits);
-        // Mirror the authoritative balance into localStorage and broadcast it
-        // so every <CreditGate> (which reads from localStorage via useCredits)
-        // sees the same value as the navbar. Without this, out-of-band grants
-        // (referrals, admin top-ups, AdMob SSV callbacks, other tabs) would
-        // show the right number in the navbar but still trip the credit gates.
-        try {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          if (typeof data?.credits === 'number') {
-            user.credits = data.credits;
-            localStorage.setItem('user', JSON.stringify(user));
-            window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.credits }));
-          }
-        } catch {
-          // localStorage unavailable — non-fatal, navbar state still updates.
-        }
-      } catch (error) {
-        console.error('Failed to fetch credits', error);
-      }
-    };
-
-    fetchCredits();
-
-    // Listen for real-time updates from other components
-    const handleCreditUpdate = (event) => {
-      if (typeof event.detail === 'number') {
-        setCredits(event.detail);
-        // Once entitlement has loaded, the navbar renders its availableCredits in
-        // preference to `credits`. Keep that preferred value live too, otherwise
-        // the dropdown shows the old balance until a reload after a deduction.
-        setEntitlement((current) =>
-          current ? { ...current, availableCredits: event.detail } : current
-        );
-        try {
-          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-          storedUser.credits = event.detail;
-          localStorage.setItem('user', JSON.stringify(storedUser));
-        } catch {
-          /* localStorage unavailable — the live navbar state is still correct */
-        }
-      } else {
-        console.warn('⚠️ Navbar: Invalid credit value received:', event.detail);
-      }
-    };
-
-    window.addEventListener('credit_updated', handleCreditUpdate);
-    return () => {
-      window.removeEventListener('credit_updated', handleCreditUpdate);
-    };
-  }, [isAuthenticated]);
-
-  // Subscription/minute entitlement. Fetched on mount and refreshed whenever a
-  // purchase or interview fires 'entitlement_updated' (see BillingReturn /
-  // MockInterviewPage), so the wallet pill stays current without polling.
-  React.useEffect(() => {
-    if (!isAuthenticated) return;
-    const fetchEntitlement = () =>
-      billingService
-        .getEntitlement()
-        .then(setEntitlement)
-        .catch(() => {});
-    fetchEntitlement();
-    window.addEventListener('entitlement_updated', fetchEntitlement);
-    return () => window.removeEventListener('entitlement_updated', fetchEntitlement);
-  }, [isAuthenticated]);
+  const { entitlement, isPaid, displayCredits, minutesLeft, freeTasteMin } =
+    useAccountWallet(isAuthenticated);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -666,42 +576,14 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Logout Confirmation Modal — portaled to body to escape header's stacking context */}
-      {showLogoutConfirm &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
-                  <LogOut className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {t('nav.logout.title')}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">{t('nav.logout.body')}</p>
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded-lg font-medium transition-colors"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowLogoutConfirm(false);
-                      handleLogout();
-                    }}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-red-200 dark:shadow-none"
-                  >
-                    {t('nav.logout.confirm')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+      <SignOutConfirm
+        open={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          handleLogout();
+        }}
+      />
     </header>
   );
 };

@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
-import Navbar from '../../components/Navbar';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -70,6 +69,22 @@ const StudioDesk = () => {
   useEffect(() => {
     refreshSessions();
   }, [refreshSessions, draftId]);
+
+  // This page is `fixed inset-0` (own full-screen scroll region), but the document
+  // behind it is still scrollable — on mobile that's what let a chat's exhausted
+  // scroll chain drag the whole page along with it. Lock html+body while mounted,
+  // and restore whatever was there before (never blindly clear it: something else,
+  // e.g. a modal, may have locked it first and still owns the unlock).
+  useEffect(() => {
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
 
   // Arrived from an analysis with a source CV already decided — open a tailor
   // session with it pre-selected, so Aria doesn't ask which CV to use. Consumed
@@ -253,8 +268,6 @@ const StudioDesk = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-transparent">
-      <Navbar />
-
       <main
         className="studio-main flex-1 min-h-0 w-full max-w-[1600px] mx-auto px-0 sm:px-4 sm:py-4 flex gap-4 min-w-0"
         {...studioMainAttrs({
@@ -266,7 +279,7 @@ const StudioDesk = () => {
         {/* Sessions — inline only when there's room and the user hasn't collapsed it. */}
         {layout.railInline && (
           <div className="w-[248px] shrink-0 min-h-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <SessionRail {...railProps} />
+            <SessionRail {...railProps} onClose={() => layout.setRailOpen(false)} />
           </div>
         )}
 
@@ -433,14 +446,7 @@ const StudioDesk = () => {
         side="left"
         label={t('ariaStudio.desk.studioSessions')}
       >
-        <SessionRail
-          {...railProps}
-          onClose={() => layout.setRailOverlay(false)}
-          onBackHome={() => {
-            layout.setRailOverlay(false);
-            navigate('/dashboard');
-          }}
-        />
+        <SessionRail {...railProps} onClose={() => layout.setRailOverlay(false)} />
       </StudioOverlay>
 
       <StudioOverlay

@@ -34,8 +34,10 @@ export default function AriaThinking({ variant = 'chat', label }) {
         : t(DRAFT_WORD_KEYS[i])
       : t('cvBuilder.ariaThinking.thinking'));
   return (
-    <div className="self-start flex items-center gap-2">
-      <AriaOrbit size={16} working />
+    // `aria-row` so this owns Aria's mark while it's the last thing in the stream —
+    // which is exactly the turn where the mark should be spinning.
+    <div className="aria-row self-start flex items-center gap-2">
+      <AriaOrbit size={16} working className="aria-mark" />
       <span key={word} className="text-[12px] text-slate-400 dark:text-slate-500 aria-word-fade">
         {word}
       </span>

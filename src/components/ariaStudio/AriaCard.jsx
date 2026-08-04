@@ -11,6 +11,10 @@ import AriaOrbit from '../cv/AriaOrbit';
 // enter and collapses back into it on exit, so an action always reads as coming FROM
 // Aria — no phase-swap, everything inline in the chat stream.
 //
+// A card is always the LAST thing in the stream, so `aria-row` normally resolves the
+// mark to this card (see the .aria-row rules in index.css — only the final Aria row
+// shows its mark).
+//
 // Usage (Phase 1+), inside StudioChat's <AnimatePresence>:
 //   {phase === 'plan' && <AriaCard cardKey="plan"><TailorPlan …/></AriaCard>}
 //
@@ -25,10 +29,12 @@ const AriaCard = React.forwardRef(({ cardKey, children, wide = false }, ref) => 
     <motion.div
       ref={ref}
       key={cardKey}
-      className={`self-start flex items-start gap-2 ${wide ? 'w-full max-w-none' : 'max-w-[92%]'}`}
+      className={`aria-row self-start flex items-start gap-2 ${
+        wide ? 'w-full max-w-none' : 'max-w-[92%]'
+      }`}
       {...portalCard(reduce)}
     >
-      <AriaOrbit size={16} className="mt-2" />
+      <AriaOrbit size={16} className="aria-mark mt-2" />
       {children}
     </motion.div>
   );

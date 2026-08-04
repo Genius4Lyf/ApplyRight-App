@@ -72,7 +72,7 @@ const PublicNavbar = ({ hidden = false }) => {
           </Link>
           <Link
             to="/login"
-            className="inline-flex min-h-[44px] items-center text-sm text-slate-600 transition-colors hover:text-slate-900"
+            className="hidden min-h-[44px] items-center text-sm text-slate-600 transition-colors hover:text-slate-900 sm:inline-flex"
           >
             {t('common.signIn')}
           </Link>

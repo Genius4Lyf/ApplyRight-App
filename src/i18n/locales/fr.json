@@ -194,7 +194,13 @@
     "passwordNeedsUppercase": "Le mot de passe doit contenir au moins une majuscule",
     "passwordNeedsNumber": "Le mot de passe doit contenir au moins un chiffre",
     "sendCodeFailed": "Impossible d'envoyer le code. Veuillez réessayer.",
-    "resetPasswordFailed": "Impossible de réinitialiser le mot de passe"
+    "resetPasswordFailed": "Impossible de réinitialiser le mot de passe",
+    "startCv": {
+      "generic": "Impossible de démarrer votre CV. Réessayez.",
+      "rateLimited": "Trop de requêtes à l'instant. Patientez une minute puis réessayez.",
+      "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+      "aiUnavailable": "Le service IA est indisponible pour le moment. Réessayez bientôt."
+    }
   },
   "landing": {
     "seo": {
@@ -4264,6 +4270,7 @@
     "sessionRail": {
       "sessions": "Sessions",
       "closeSessions": "Fermer les sessions",
+      "recents": "Récents",
       "newTailoring": "Nouvelle adaptation",
       "newCv": "Nouveau CV",
       "loading": "Chargement…",
@@ -4271,8 +4278,7 @@
       "fromSource": "de {{source}}",
       "removeOrDeleteCv": "Retirer ou supprimer ce CV",
       "deleteTailoring": "Supprimer cette adaptation",
-      "deleteAria": "Supprimer {{heading}}",
-      "backToHome": "Retour à l'accueil"
+      "deleteAria": "Supprimer {{heading}}"
     },
     "skillsBuild": {
       "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Vous choisissez lesquelles ajouter.",

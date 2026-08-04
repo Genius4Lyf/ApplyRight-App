@@ -165,16 +165,13 @@ const TargetChat = ({
           the conversation, consistent with AriaChat. There's no chat textarea on this
           step: the job comes from the form, questions from the starter chips. */}
       <div className="flex-1 min-h-0 relative">
-        <div
-          ref={scrollRef}
-          className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
-        >
+        <div ref={scrollRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
           {/* Greeting */}
           <motion.div
-            className="self-start max-w-[92%] flex items-start gap-2"
+            className="aria-row self-start max-w-[92%] flex items-start gap-2"
             {...bubbleAnim('aria', reduce)}
           >
-            <AriaOrbit size={16} className="mt-2" />
+            <AriaOrbit size={16} className="aria-mark mt-2" />
             <span className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
               {t('cvBuilder.atsCoach.greeting')}
             </span>
@@ -194,10 +191,10 @@ const TargetChat = ({
             ) : (
               <motion.div
                 key={i}
-                className="self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex items-start gap-2"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <span className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
                   {m.text}
                 </span>

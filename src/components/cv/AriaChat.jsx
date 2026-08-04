@@ -245,10 +245,7 @@ const AriaChat = ({
       {/* Conversation — bottom-anchored, absolute scroll layer so it can only scroll,
           never stretch the fixed frame. */}
       <div className="flex-1 min-h-0 relative">
-        <div
-          ref={scrollRef}
-          className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
-        >
+        <div ref={scrollRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
           {messages.map((m, i) => {
             if (m.who === 'research') return <ResearchCard key={i} section={m.section} />;
             // Durable skills record — persisted, re-opens the SAME generation (no
@@ -257,10 +254,10 @@ const AriaChat = ({
               return (
                 <motion.div
                   key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="mt-2" />
+                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <button
                     type="button"
                     onClick={() => {
@@ -299,10 +296,10 @@ const AriaChat = ({
             ) : (
               <motion.div
                 key={i}
-                className="self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex items-start gap-2"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>
@@ -357,8 +354,8 @@ const AriaChat = ({
           {/* Skills empty-state: no work history/projects to ground skills → coach the
               user to add one first, instead of offering the (ungroundable) generation. */}
           {isSkills && skPhase === 'idle' && !hasContent && (
-            <div className="self-start max-w-[92%] flex items-start gap-2">
-              <AriaOrbit size={16} className="mt-2" />
+            <div className="aria-row self-start max-w-[92%] flex items-start gap-2">
+              <AriaOrbit size={16} className="aria-mark mt-2" />
               <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                 {t('cvBuilder.ariaChat.skillsEmpty')}
               </span>
@@ -377,10 +374,10 @@ const AriaChat = ({
             {isSummary && sPhase === 'card' && (
               <motion.div
                 key="s-card"
-                className="self-start max-w-[94%] flex items-start gap-2"
+                className="aria-row self-start max-w-[94%] flex items-start gap-2"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
                     {t('cvBuilder.ariaChat.yourSummary')}
@@ -422,10 +419,10 @@ const AriaChat = ({
             {isSkills && skPhase === 'consent' && (
               <motion.div
                 key="sk-consent"
-                className="self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex items-start gap-2"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
@@ -459,10 +456,10 @@ const AriaChat = ({
             {isSkills && skPhase === 'card' && skData && (
               <motion.div
                 key="sk-card"
-                className="self-start w-full max-w-[96%] flex items-start gap-2"
+                className="aria-row self-start w-full max-w-[96%] flex items-start gap-2"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="min-w-0 flex-1">
                   <SkillsCard
                     suggestions={skData.suggestions}

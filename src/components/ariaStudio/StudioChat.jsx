@@ -1531,10 +1531,7 @@ const StudioChat = ({ onPaywall }) => {
             </motion.div>
           )}
         </AnimatePresence>
-        <div
-          ref={chatRef}
-          className="absolute inset-0 overflow-y-auto scrollbar-none flex flex-col gap-2.5"
-        >
+        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft
               entry, so free chat, an Aria turn, or a refresh all leave it untouched.
@@ -1661,10 +1658,10 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <motion.div
                   key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="mt-2" />
+                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
                       ✓
@@ -1755,10 +1752,10 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <motion.div
                   key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="mt-2" />
+                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
                       ✓
@@ -1807,10 +1804,10 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <motion.div
                   key={i}
-                  className="self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="mt-2" />
+                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 bg-slate-50 dark:bg-slate-800/40 p-3 flex items-center gap-2.5">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
                       ✓
@@ -1846,14 +1843,17 @@ const StudioChat = ({ onPaywall }) => {
             // Aria turn and must never fall through into an empty speech bubble.
             if (!m.text) return null;
 
-            // Aria turn — orbit + slate bubble.
+            // Aria turn — orbit slot + slate bubble. The flex wrapper is load-bearing:
+            // it makes the bubble a flex ITEM (a block box), so its padding and
+            // background form one rounded shape. As a bare inline <span> the background
+            // paints per line-fragment and the bubble breaks apart across wrapped lines.
             return (
               <motion.div
                 key={i}
-                className="self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex items-start gap-2"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="mt-2" />
+                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
                   {m.text}
                 </span>
