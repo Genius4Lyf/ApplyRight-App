@@ -1,19 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
+// `motion` is used only via <motion.div> in JSX; this eslint config lacks
+// jsx-uses-vars so it reads as unused — suppress the false positive.
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
-import { CREDIT_COSTS } from '../../lib/credits';
+import { tierOf, costForActionTier } from '../../lib/models';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import { useGenerationModel } from '../../hooks/useGenerationModel';
 import CVService from '../../services/cv.service';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
+import GenerationModelRow from './GenerationModelRow';
 
 // The persistent Aria chat — replaces the old scripted CoachCard on every non-target
 // step. Opens with the step's coaching line, offers ready-made suggestion chips, and
@@ -49,6 +54,12 @@ const AriaChat = ({
   const [capNoted, setCapNoted] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState(false); // ensureDraft in-flight → pin "Setting up…"
 
+  // The Aria CHAT model for this CV — same per-draft choice the Studio shows.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  // The GENERATION model — independent of the chat model above. A per-user
+  // localStorage preference, defaulting to whatever the chat model is.
+  const { genModelId, setGenModelId } = useGenerationModel(modelId);
+
   // In-chat summary flow (SUMMARY step only). The phase cards are rendered from state
   // (NOT stored in `messages`), so they never persist — only the final "Added ✓" is a
   // real message. Mirrors AskAriaGenerate's orbit-portal pattern.
@@ -56,21 +67,19 @@ const AriaChat = ({
   const [sPhase, setSPhase] = useState('idle'); // 'idle'|'generating'|'card'
   const [sText, setSText] = useState('');
   const [sStage, setSStage] = useState(null);
-  const summaryCost = CREDIT_COSTS.GENERATE_SUMMARY ?? 3;
-  const [sCost, setSCost] = useState(summaryCost); // display fallback; overwritten by response.cost
+  // Priced at the GENERATION model's tier, not the chat model's. Derived, not state — a
+  // useState snapshot here would go stale the moment the user switches tiers mid-flow.
+  const summaryCost = costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3;
 
   // In-chat skills flow (SKILLS step only). Empty-state gated, grouped card, and a
   // PERSISTED record (who:'skillsRecord' round-trips so re-opening shows the same
   // generation — no re-charge — with already-added skills marked "on CV").
   const isSkills = currentStepId === 'skills';
   const hasContent = (cvData?.experience?.length || 0) > 0 || (cvData?.projects?.length || 0) > 0;
-  const skillsCost = CREDIT_COSTS.GENERATE_SKILLS ?? 10;
+  const skillsCost = costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10;
   const [skPhase, setSkPhase] = useState('idle'); // 'idle'|'consent'|'generating'|'card'
   const [skData, setSkData] = useState(null); // { suggestions, bestForRole }
   const [skSel, setSkSel] = useState([]); // initialSelected for a re-opened record
-
-  // The Aria model for this CV — same per-draft choice the Studio shows.
-  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -120,16 +129,15 @@ const AriaChat = ({
         setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
         return;
       }
-      const r = await CVService.coachSummary({ draftId: id, stage, model: modelId });
+      const r = await CVService.coachSummary({ draftId: id, stage, model: genModelId });
       setSText(r.summary);
-      setSCost(r.cost ?? sCost);
       setSPhase('card');
     } catch (e) {
       setSPhase('idle');
       if (e?.response?.status === 403 || e?.response?.status === 402) {
         setMessages((m) => [
           ...m,
-          { who: 'aria', text: t('cvBuilder.ariaChat.outOfSummaryCredits', { n: sCost }) },
+          { who: 'aria', text: t('cvBuilder.ariaChat.outOfSummaryCredits', { n: summaryCost }) },
         ]);
       } else {
         toast.error(t('cvBuilder.ariaChat.couldntDraft'));
@@ -155,7 +163,7 @@ const AriaChat = ({
         cvData.projects,
         cvData.targetJob?.description,
         id,
-        modelId
+        genModelId
       );
       setSkData({ suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] });
       setSkSel([]);
@@ -334,7 +342,7 @@ const AriaChat = ({
                   onClick={() => generateSummary(cvData?.careerStage)}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
                 >
-                  {t('cvBuilder.ariaChat.draftSummaryChip', { n: sCost })}
+                  {t('cvBuilder.ariaChat.draftSummaryChip', { n: summaryCost })}
                 </button>
               )}
               {/* Skills step: kick off Aria's in-chat skills search — only with content
@@ -385,6 +393,13 @@ const AriaChat = ({
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {sText}
                   </p>
+                  <GenerationModelRow
+                    action="summary"
+                    value={genModelId}
+                    onSelect={setGenModelId}
+                    chatTier={tierOf(modelId)}
+                    unit="flat"
+                  />
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <button
                       type="button"
@@ -405,7 +420,7 @@ const AriaChat = ({
                       onClick={() => generateSummary(sStage)}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      {t('cvBuilder.ariaChat.reroll', { n: sCost })}
+                      {t('cvBuilder.ariaChat.reroll', { n: summaryCost })}
                     </button>
                   </div>
                 </div>
@@ -427,6 +442,13 @@ const AriaChat = ({
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
                   </p>
+                  <GenerationModelRow
+                    action="skills"
+                    value={genModelId}
+                    onSelect={setGenModelId}
+                    chatTier={tierOf(modelId)}
+                    unit="flat"
+                  />
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"

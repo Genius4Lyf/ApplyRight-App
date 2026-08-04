@@ -55,6 +55,17 @@ export const PROVIDER_GLYPH = {
   moonshot: '☾',
 };
 
+// Engine names for flagship rows that list more than one Pro model side by side — the
+// PROVIDER, never the raw model id, so swapping which model backs a slot (e.g. gpt-5 →
+// a future GPT release) never breaks the label.
+export const PROVIDER_NAME = {
+  openai: 'ChatGPT',
+  anthropic: 'Claude',
+  gemini: 'Gemini',
+  deepseek: 'DeepSeek',
+  moonshot: 'Kimi',
+};
+
 // User-facing tier names: light = "Standard" (included on paid), flagship = "Pro" (metered).
 export const TIER_LABEL = { light: 'Standard', flagship: 'Pro' };
 

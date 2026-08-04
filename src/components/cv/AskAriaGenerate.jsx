@@ -1,19 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
+// `motion` is used only via <motion.div> in JSX; this eslint config lacks
+// jsx-uses-vars so it reads as unused — suppress the false positive.
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
-import { CREDIT_COSTS } from '../../lib/credits';
 import { tierOf, costForActionTier } from '../../lib/models';
 import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import { useGenerationModel } from '../../hooks/useGenerationModel';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
+import GenerationModelRow from './GenerationModelRow';
 
 // Human-facing labels for the inferred company type (the enum lives in the backend
 // Role Brief). Module-level → i18n KEYS resolved via t() at render. Drives the
@@ -55,10 +59,25 @@ const AskAriaGenerate = ({
       ? (cvData?.experience || []).find((entry) => entry._sortId === focusedEntry.sortId)
       : null;
 
+  // The Aria model for this CV — same per-draft choice the Studio shows. This is the
+  // CHAT model; hoisted above REC/per because the generation model (below) is priced
+  // off of it as the default before any per-user override.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  // Flagship NEVER rides the free daily pool — it meters every turn, build-with
+  // included. So the pool counter below is meaningless on Pro and the note has to
+  // say what's actually being spent (and that Standard is the free way back).
+  const isFlagship = tierOf(modelId) === 'flagship';
+  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
+
+  // The GENERATION model — independent of the chat model above. A per-user
+  // localStorage preference, defaulting to whatever the chat model is.
+  const { genModelId, setGenModelId } = useGenerationModel(modelId);
+
   // Section-aware recommended count + per-bullet cost (shown before /auth/config
-  // hydrates, thanks to the credits.js default).
+  // hydrates, thanks to the credits.js default). Priced at the GENERATION model's
+  // tier, not the chat model's — Pro must be quoted (and charged) the flagship rate.
   const REC = isProject ? 3 : 5;
-  const per = CREDIT_COSTS.GENERATE_BULLET ?? 1;
+  const per = costForActionTier('GENERATE_BULLET', tierOf(genModelId)) ?? 1;
 
   // Openers — general (per-step coaching) vs focused (role/project build-with).
   const generalOpener = getStepCoaching(t, currentStepId, cvData).message;
@@ -120,13 +139,6 @@ const AskAriaGenerate = ({
   const [projectTypePicked, setProjectTypePicked] = useState(false);
   const [pickedEntryType, setPickedEntryType] = useState(focusedEntry?.entryType || '');
   const [savingEntryType, setSavingEntryType] = useState(false);
-  // The Aria model for this CV — same per-draft choice the Studio shows.
-  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
-  // Flagship NEVER rides the free daily pool — it meters every turn, build-with
-  // included. So the pool counter below is meaningless on Pro and the note has to
-  // say what's actually being spent (and that Standard is the free way back).
-  const isFlagship = tierOf(modelId) === 'flagship';
-  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
 
   const chatRef = useRef(null);
   const inputRef = useRef(null);
@@ -446,7 +458,7 @@ const AskAriaGenerate = ({
         sortId: focusedEntry.sortId,
         description: description.trim(),
         count,
-        model: modelId,
+        model: genModelId,
       });
       setBullets(res.bullets || []);
       setAppliedSet(new Set());
@@ -481,7 +493,7 @@ const AskAriaGenerate = ({
         description: description.trim(),
         count,
         reroll: true,
-        model: modelId,
+        model: genModelId,
       });
       setBullets(res.bullets || []);
       setAppliedSet(new Set());
@@ -566,11 +578,11 @@ const AskAriaGenerate = ({
   // Aria message bubble wrapper — her orbit slot to the left of a card/bubble body.
   // Optional `ref` forwards to the DOM node (framer-motion forwards refs) so a caller
   // can scroll a specific card into view.
-  const ariaWrap = (key, body, ref) => (
+  const ariaWrap = (key, body, ref, wide = false) => (
     <motion.div
       ref={ref}
       key={key}
-      className="aria-row self-start max-w-[92%] flex items-start gap-2"
+      className={`aria-row self-start flex items-start gap-2 ${wide ? 'w-full max-w-none' : 'max-w-[92%]'}`}
       {...portalCard(reduce)}
     >
       <AriaOrbit size={16} className="aria-mark mt-2" />
@@ -934,7 +946,7 @@ const AskAriaGenerate = ({
             {phase === 'picking' &&
               ariaWrap(
                 'pick',
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <div className="min-w-0 flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {t('cvBuilder.askAria.howManyBullets')}
                   </p>
@@ -967,6 +979,15 @@ const AskAriaGenerate = ({
                       );
                     })}
                   </div>
+                  <div className="border-t border-slate-200 dark:border-slate-800 pt-3 mt-3">
+                    <GenerationModelRow
+                      action={isProject ? 'project' : 'experience'}
+                      value={genModelId}
+                      onSelect={setGenModelId}
+                      chatTier={tierOf(modelId)}
+                      unit="each"
+                    />
+                  </div>
                   <p className="mt-3 text-[12px] text-slate-500 dark:text-slate-400">
                     {pickerNote}
                   </p>
@@ -986,13 +1007,15 @@ const AskAriaGenerate = ({
                       {t('cvBuilder.askAria.generateBullets', { count, cr: count * per })}
                     </button>
                   </div>
-                </div>
+                </div>,
+                undefined,
+                true
               )}
 
             {phase === 'consent' &&
               ariaWrap(
                 'cons',
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <div className="min-w-0 flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                   <div className="flex items-start gap-2.5">
                     <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-300 text-[13px] font-bold">
                       ¢
@@ -1031,7 +1054,9 @@ const AskAriaGenerate = ({
                       </span>
                     </button>
                   </div>
-                </div>
+                </div>,
+                undefined,
+                true
               )}
 
             {phase === 'generating' && <AriaThinking key="gen" variant="draft" />}
@@ -1039,7 +1064,7 @@ const AskAriaGenerate = ({
             {phase === 'results' &&
               ariaWrap(
                 'res',
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-4">
+                <div className="min-w-0 flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                       {t('cvBuilder.askAria.ariaDrafted', { n: bullets.length })}
@@ -1123,7 +1148,8 @@ const AskAriaGenerate = ({
                     </button>
                   </div>
                 </div>,
-                resultsRef
+                resultsRef,
+                true
               )}
           </AnimatePresence>
         </div>

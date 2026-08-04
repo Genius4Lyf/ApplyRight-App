@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
-import { CREDIT_COSTS } from '../../lib/credits';
 import { tierOf, costForActionTier } from '../../lib/models';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaComposer from '../cv/AriaComposer';
 import AriaThinking from '../cv/AriaThinking';
 import AriaCard from './AriaCard';
+import GenerationModelRow from '../cv/GenerationModelRow';
 
 // The focused build-with, ported to the Studio. This is a COPY OF THE PROTOCOL from
 // the CV builder's AskAriaGenerate — not of the file, which is bound to CVContext and
@@ -50,8 +51,6 @@ const SectionCoach = ({
   const { t } = useTranslation();
   const isProject = entry?.section === 'project';
   const isGradCareer = careerStage === 'grad';
-  const REC = isProject ? 3 : 5;
-  const per = CREDIT_COSTS.GENERATE_BULLET ?? 1;
   const { cvData, updateCvData } = useAriaStudio();
   const restored =
     cvData?.studioPending?.kind === 'bullets' &&
@@ -59,6 +58,21 @@ const SectionCoach = ({
     cvData.studioPending.sortId === entry?.sortId
       ? cvData.studioPending
       : null;
+
+  // The session's Aria model. The coach owns the docked composer while it drives, so its
+  // picker has to write through to the same per-draft choice as StudioChat's.
+  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  const isFlagship = tierOf(modelId) === 'flagship';
+  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
+
+  // The GENERATION model — independent of the chat model above. A per-user
+  // localStorage preference, defaulting to whatever the chat model is.
+  const { genModelId, setGenModelId } = useGenerationModel(modelId);
+
+  const REC = isProject ? 3 : 5;
+  // Priced at the GENERATION model's tier, not the chat model's — Pro must be
+  // quoted (and charged) the flagship rate.
+  const per = costForActionTier('GENERATE_BULLET', tierOf(genModelId)) ?? 1;
 
   const [phase, setPhase] = useState(restored ? 'results' : 'chat'); // chat | picking | generating | results
   const [input, setInput] = useState('');
@@ -74,12 +88,6 @@ const SectionCoach = ({
   const [suggestions, setSuggestions] = useState([]);
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
-
-  // The session's Aria model. The coach owns the docked composer while it drives, so its
-  // picker has to write through to the same per-draft choice as StudioChat's.
-  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
-  const isFlagship = tierOf(modelId) === 'flagship';
-  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
 
   const inputRef = useRef(null);
   const exampleRef = useRef(null);
@@ -162,7 +170,8 @@ const SectionCoach = ({
       // The selected career stage must win even if the provider slips back into its
       // experienced-role framing. Keep students/recent grads away from invented or
       // metric-shaped prompts at this final presentation boundary.
-      const metricPrompt = /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
+      const metricPrompt =
+        /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
       const reply = r.readyToDraft
         ? t('ariaStudio.sectionCoach.readyForBullets')
         : isGradCareer && metricPrompt.test(r.reply || '')
@@ -249,7 +258,7 @@ const SectionCoach = ({
         description: description.trim(),
         count,
         reroll,
-        model: modelId,
+        model: genModelId,
       });
       setBullets(res.bullets || []);
       setSelected(new Set((res.bullets || []).map((_, i) => i))); // all on by default
@@ -345,7 +354,9 @@ const SectionCoach = ({
           </button>
           {missingKeywords.length > 0 && (
             <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-              {t('ariaStudio.sectionCoach.aimingAt', { keywords: missingKeywords.slice(0, 2).join(', ') })}
+              {t('ariaStudio.sectionCoach.aimingAt', {
+                keywords: missingKeywords.slice(0, 2).join(', '),
+              })}
             </span>
           )}
           <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
@@ -407,7 +418,7 @@ const SectionCoach = ({
       <AnimatePresence>
         {/* Count picker — the first point anything costs, priced before the click. */}
         {phase === 'picking' && (
-          <AriaCard cardKey="picking" key="picking">
+          <AriaCard cardKey="picking" key="picking" wide>
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('cvBuilder.askAria.howManyBullets')}
@@ -441,6 +452,15 @@ const SectionCoach = ({
                   );
                 })}
               </div>
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-3 mt-3">
+                <GenerationModelRow
+                  action={isProject ? 'project' : 'experience'}
+                  value={genModelId}
+                  onSelect={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                  unit="each"
+                />
+              </div>
               <p className="mt-3 text-[12px] text-slate-500 dark:text-slate-400">
                 {isProject
                   ? t('cvBuilder.askAria.pickerNoteProject')
@@ -472,7 +492,7 @@ const SectionCoach = ({
 
         {/* Results — per-bullet toggles, a free-re-roll offer, and Apply. */}
         {phase === 'results' && bullets.length > 0 && (
-          <AriaCard cardKey="results" key="results">
+          <AriaCard cardKey="results" key="results" wide>
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('ariaStudio.sectionCoach.pickWhatsTrue')}
@@ -493,14 +513,14 @@ const SectionCoach = ({
                         onClick={() => toggle(i)}
                         className={`w-full text-left flex items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
                           on
-                            ? 'border-emerald-400 bg-emerald-50/60 dark:bg-emerald-500/10'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                            ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         <span
                           className={`shrink-0 mt-0.5 w-4 h-4 rounded flex items-center justify-center text-[11px] font-bold ${
                             on
-                              ? 'bg-emerald-500 text-white'
+                              ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:text-slate-900'
                               : 'border border-slate-300 dark:border-slate-600 text-transparent'
                           }`}
                         >

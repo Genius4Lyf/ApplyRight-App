@@ -16,13 +16,6 @@ import {
 } from '../lib/models';
 import { SPRING } from '../lib/ariaMotion';
 
-// Per-model one-liners for the explainer's Pro list. Keyed by model id so the panel only
-// describes models that are actually exposed — an id without a blurb just shows its name.
-const PRO_MODEL_BLURB = {
-  'claude-sonnet-5': 'the most natural, human writing feel.',
-  'gpt-5': 'familiar and strong all-round.',
-};
-
 // The Aria model picker — choose which model powers chat / tailoring. A flat list of the
 // EXPOSED models: each row shows the TIER ("Standard" / "Pro") as the primary label with the
 // model name + per-message cost as a subtitle. The SELECTED row is inked (slate-900 / white),
@@ -55,6 +48,10 @@ const ModelPicker = ({
     t(
       tier === 'flagship' ? 'cvBuilder.modelPicker.tierFlagship' : 'cvBuilder.modelPicker.tierLight'
     );
+  // Per-model character line for the explainer's Pro list — i18n, not hardcoded, so it
+  // exists in every locale (see GenerationModelRow, which reads the same keys). A model
+  // id with no entry returns '' rather than a raw key, so it just shows the name alone.
+  const proBlurbFor = (id) => t(`cvBuilder.modelPicker.proBlurb.${id}`, { defaultValue: '' });
   const [open, setOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const reduce = useReducedMotion();
@@ -301,10 +298,10 @@ const ModelPicker = ({
                     <p className="mt-1 text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
                       {t('cvBuilder.modelPicker.flagshipBlurb')}
                     </p>
-                    {proModels.some((m) => PRO_MODEL_BLURB[m.id]) && (
+                    {proModels.some((m) => proBlurbFor(m.id)) && (
                       <ul className="mt-1.5 space-y-1">
                         {proModels
-                          .filter((m) => PRO_MODEL_BLURB[m.id])
+                          .filter((m) => proBlurbFor(m.id))
                           .map((m) => (
                             <li
                               key={m.id}
@@ -313,7 +310,7 @@ const ModelPicker = ({
                               <span className="font-semibold text-slate-700 dark:text-slate-200">
                                 {modelLabel(m.id)}
                               </span>{' '}
-                              — {PRO_MODEL_BLURB[m.id]}
+                              — {proBlurbFor(m.id)}
                             </li>
                           ))}
                       </ul>

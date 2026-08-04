@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CREDIT_COSTS } from '../../lib/credits';
+import GenerationModelRow from '../cv/GenerationModelRow';
 import AriaCard from './AriaCard';
 
 // Career stage drives the whole shape of a summary — a student leads with potential,
@@ -37,11 +37,14 @@ const SummaryFixCard = ({
   applying,
   wasReroll,
   careerStage,
+  cost, // resolved credit cost — priced by the caller off the GENERATION model's tier
+  genModelId,
+  onSelectGenModel,
+  chatTier,
 }) => {
   const { t } = useTranslation();
   const [stage, setStage] = useState(careerStage || null);
   const effectiveStage = stage || careerStage || null;
-  const cost = CREDIT_COSTS.GENERATE_SUMMARY ?? 3;
 
   // Second step — a draft came back; read it, use it, or try another angle.
   if (draft) {
@@ -96,30 +99,42 @@ const SummaryFixCard = ({
           </span>
         </div>
 
-        {!careerStage && <div className="mt-3 flex flex-col gap-2">
-          {STAGES.map((s) => {
-            const on = effectiveStage === s.key;
-            return (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setStage(s.key)}
-                className={`text-left rounded-xl border px-3 py-2.5 transition-colors ${
-                  on
-                    ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:border-white dark:ring-white dark:bg-white/10'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white'
-                }`}
-              >
-                <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                  {t(s.labelKey)}
-                </span>
-                <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                  {t(s.hintKey)}
-                </span>
-              </button>
-            );
-          })}
-        </div>}
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <GenerationModelRow
+            action="summary"
+            value={genModelId}
+            onSelect={onSelectGenModel}
+            chatTier={chatTier}
+            unit="flat"
+          />
+        </div>
+
+        {!careerStage && (
+          <div className="mt-3 flex flex-col gap-2">
+            {STAGES.map((s) => {
+              const on = effectiveStage === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setStage(s.key)}
+                  className={`text-left rounded-xl border px-3 py-2.5 transition-colors ${
+                    on
+                      ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:border-white dark:ring-white dark:bg-white/10'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white'
+                  }`}
+                >
+                  <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                    {t(s.labelKey)}
+                  </span>
+                  <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                    {t(s.hintKey)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between gap-2">
           <button

@@ -5,7 +5,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { bubbleAnim } from '../../lib/ariaMotion';
-import { CREDIT_COSTS } from '../../lib/credits';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
 import {
@@ -28,6 +27,7 @@ import {
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
@@ -127,9 +127,12 @@ const StudioChat = ({ onPaywall }) => {
     setPendingSource,
   } = useAriaStudio();
 
-  // The session's Aria model — the SAME per-draft choice the Studio header picker and
+  // The session's Aria CHAT model — the SAME per-draft choice the Studio header picker and
   // the builder's coach chat show; the composer's picker writes through this.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  // The GENERATION model — independent of the chat model above. A per-user
+  // localStorage preference, defaulting to whatever the chat model is.
+  const { genModelId, setGenModelId } = useGenerationModel(modelId);
 
   // The scan cost, priced at the SESSION's selected model tier (flagship scan costs more).
   const scanCost = costForActionTier('FIT_ANALYSIS', tierOf(cvData?.studioModelId)) ?? 10;
@@ -737,7 +740,7 @@ const StudioChat = ({ onPaywall }) => {
     if (!stage || !draftId) return;
     setSummaryBusy(true);
     try {
-      const res = await CVService.coachSummary({ draftId, stage, model: modelId });
+      const res = await CVService.coachSummary({ draftId, stage, model: genModelId });
       const draft = res.summary || '';
       setSummaryDraft(draft);
       setSummaryWasReroll(!!isReroll);
@@ -1123,7 +1126,7 @@ const StudioChat = ({ onPaywall }) => {
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        modelId
+        genModelId
       );
       const data = { suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] };
       setSkillsData(data);
@@ -1136,7 +1139,7 @@ const StudioChat = ({ onPaywall }) => {
         push({
           who: 'aria',
           text: t('ariaStudio.chat.skillsInsufficientCredits', {
-            cost: CREDIT_COSTS.GENERATE_SKILLS ?? 10,
+            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
           }),
         });
       } else {
@@ -1183,7 +1186,7 @@ const StudioChat = ({ onPaywall }) => {
     if (!stage || !draftId) return;
     setSummaryBusy(true);
     try {
-      const res = await CVService.coachSummary({ draftId, stage, model: modelId });
+      const res = await CVService.coachSummary({ draftId, stage, model: genModelId });
       const draft = res.summary || '';
       setSummaryDraft(draft);
       setSummaryWasReroll(!!isReroll);
@@ -2008,6 +2011,10 @@ const StudioChat = ({ onPaywall }) => {
                   typeof s === 'string' ? s : s.name
                 )}
                 busy={roleBusy === 'skills'}
+                cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
+                genModelId={genModelId}
+                onSelectGenModel={setGenModelId}
+                chatTier={tierOf(modelId)}
                 onGenerate={generateBuildSkills}
                 onAdd={addPickedSkills}
                 onManual={addManualSkills}
@@ -2033,6 +2040,10 @@ const StudioChat = ({ onPaywall }) => {
                   careerStage ||
                   (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
                 }
+                cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
+                genModelId={genModelId}
+                onSelectGenModel={setGenModelId}
+                chatTier={tierOf(modelId)}
                 onGenerate={generateBuildSummary}
                 onApply={applyBuildSummary}
                 onCancel={async () => {
@@ -2269,6 +2280,10 @@ const StudioChat = ({ onPaywall }) => {
                   careerStage ||
                   (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
                 }
+                cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
+                genModelId={genModelId}
+                onSelectGenModel={setGenModelId}
+                chatTier={tierOf(modelId)}
                 onGenerate={generateSummary}
                 onApply={applySummaryDraft}
                 onCancel={async () => {

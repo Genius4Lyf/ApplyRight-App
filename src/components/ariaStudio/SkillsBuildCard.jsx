@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CREDIT_COSTS } from '../../lib/credits';
 import SkillsCard from '../cv/SkillsCard';
+import GenerationModelRow from '../cv/GenerationModelRow';
 import AriaCard from './AriaCard';
 
 // Skills for a build session — the SAME flow the CV builder's AriaChat runs: consent →
@@ -16,6 +16,10 @@ const SkillsBuildCard = ({
   data, // { suggestions, bestForRole }
   existingSkills = [],
   hasJob,
+  cost, // resolved credit cost — priced by the caller off the GENERATION model's tier
+  genModelId,
+  onSelectGenModel,
+  chatTier,
   onGenerate,
   onAdd,
   onManual,
@@ -23,7 +27,6 @@ const SkillsBuildCard = ({
   busy,
 }) => {
   const { t } = useTranslation();
-  const cost = CREDIT_COSTS.GENERATE_SKILLS ?? 10;
   const [manual, setManual] = useState('');
 
   if (phase === 'card' && data) {
@@ -54,10 +57,18 @@ const SkillsBuildCard = ({
         </div>
 
         <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-          {hasJob
-            ? t('ariaStudio.skillsBuild.bodyWithJob')
-            : t('ariaStudio.skillsBuild.bodyNoJob')}
+          {hasJob ? t('ariaStudio.skillsBuild.bodyWithJob') : t('ariaStudio.skillsBuild.bodyNoJob')}
         </p>
+
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <GenerationModelRow
+            action="skills"
+            value={genModelId}
+            onSelect={onSelectGenModel}
+            chatTier={chatTier}
+            unit="flat"
+          />
+        </div>
 
         <button
           type="button"

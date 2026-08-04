@@ -1579,7 +1579,40 @@
       "flagshipBlurb": "The strongest models — sharper writing and better nuance on tough or senior roles, with tighter keyword tailoring. Costs more credits per action, and always metered (even on paid plans).",
       "notSure": "Not sure? {{standardLabel}} is great for most CVs — reach for {{flagshipLabel}} when a role is competitive or you want the most polished result.",
       "noModels": "No models available.",
-      "footnote": "{{flagshipLabel}} always uses credits. {{standardLabel}} is included on paid plans."
+      "footnote": "{{flagshipLabel}} always uses credits. {{standardLabel}} is included on paid plans.",
+      "proBlurb": {
+        "claude-sonnet-5": "The most natural, human writing feel.",
+        "gpt-5": "Familiar and strong all-round."
+      }
+    },
+    "genModel": {
+      "heading": {
+        "experience": "Write them with",
+        "summary": "Draft it with",
+        "skills": "Find them with"
+      },
+      "eachCost": "{{n}} cr each",
+      "flatCost": "{{n}} cr",
+      "sameCost": "Same price",
+      "chatNote": "Just for this draft — you're still chatting with {{tier}}.",
+      "blurb": {
+        "experience": {
+          "light": "Steady and accurate. Good for internships, part-time work and first jobs.",
+          "flagship": "Better at finding the number hiding in your story. Worth it for senior or competitive roles."
+        },
+        "project": {
+          "light": "Says what you built and why it mattered.",
+          "flagship": "Goes further on the technical detail and the outcome. Good when a project is your strongest card."
+        },
+        "summary": {
+          "light": "Clear and correct.",
+          "flagship": "Reads more like a person wrote it. Worth it when the summary is doing the selling."
+        },
+        "skills": {
+          "light": "Pulls the hard skills out of your history.",
+          "flagship": "Catches skills you never thought to write down."
+        }
+      }
     },
     "ariaChat": {
       "outOfSummaryCredits": "You’re out of credits for this — a summary draft is {{n}} credits. Earn more or upgrade, then try again.",

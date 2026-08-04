@@ -1575,7 +1575,40 @@
       "flagshipBlurb": "Les modèles les plus puissants — une écriture plus fine et plus nuancée pour les postes exigeants ou seniors, avec un ciblage de mots-clés plus précis. Coûte plus de crédits par action, et toujours facturé même sur les formules payantes.",
       "notSure": "Un doute ? {{standardLabel}} convient très bien à la plupart des CV — passez à {{flagshipLabel}} pour un poste compétitif ou le résultat le plus abouti.",
       "noModels": "Aucun modèle disponible.",
-      "footnote": "{{flagshipLabel}} utilise toujours des crédits. {{standardLabel}} est inclus sur les formules payantes."
+      "footnote": "{{flagshipLabel}} utilise toujours des crédits. {{standardLabel}} est inclus sur les formules payantes.",
+      "proBlurb": {
+        "claude-sonnet-5": "L'écriture la plus naturelle, la plus humaine.",
+        "gpt-5": "Familier et solide sur tous les plans."
+      }
+    },
+    "genModel": {
+      "heading": {
+        "experience": "Rédigez-les avec",
+        "summary": "Rédigez-le avec",
+        "skills": "Trouvez-les avec"
+      },
+      "eachCost": "{{n}} cr chacun",
+      "flatCost": "{{n}} cr",
+      "sameCost": "Même prix",
+      "chatNote": "Uniquement pour ce brouillon — vous discutez toujours avec {{tier}}.",
+      "blurb": {
+        "experience": {
+          "light": "Fiable et exact. Idéal pour les stages, les emplois à temps partiel et les premiers postes.",
+          "flagship": "Meilleur pour repérer le chiffre caché dans votre récit. Utile pour les postes seniors ou très disputés."
+        },
+        "project": {
+          "light": "Explique ce que vous avez construit et pourquoi cela comptait.",
+          "flagship": "Va plus loin sur les détails techniques et le résultat. Utile quand un projet est votre meilleur atout."
+        },
+        "summary": {
+          "light": "Clair et juste.",
+          "flagship": "On dirait vraiment qu'une personne l'a écrit. Utile quand le résumé doit convaincre."
+        },
+        "skills": {
+          "light": "Extrait les compétences techniques de votre parcours.",
+          "flagship": "Repère des compétences que vous n'auriez pas pensé à noter."
+        }
+      }
     },
     "ariaChat": {
       "outOfSummaryCredits": "Vous n’avez plus de crédits pour cela — un résumé coûte {{n}} crédits. Gagnez-en plus ou passez à une formule payante, puis réessayez.",

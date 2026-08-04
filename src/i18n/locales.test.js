@@ -100,6 +100,7 @@ describe('locale files', () => {
       'billing.upgrade.minUnit', // "min" — same abbreviation for minutes in French
       // Round 3 (CV Builder) — genuinely language-neutral, not missed translations:
       'cvBuilder.common.creditChip', // "{{n}} cr" — "cr" is the same credit abbreviation in French
+      'cvBuilder.genModel.flatCost', // "{{n}} cr" — same credit abbreviation (see cvBuilder.common.creditChip)
       'cvBuilder.heading.chipLinkedin', // "LinkedIn" — brand name
       'cvBuilder.chatThemePicker.themes.campus', // "Campus" — same word in French
       'cvBuilder.askAria.companyType.startup', // "Startup" — the loanword is standard in French
