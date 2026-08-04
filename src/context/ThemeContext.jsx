@@ -4,7 +4,7 @@ import { THEME_STORAGE_KEY } from '../utils/theme';
 const ThemeContext = createContext(null);
 
 // Resolve the initial theme: an explicit stored choice wins; otherwise the app
-// defaults to dark. The actual `.dark` class is applied per-route by RootLayout
+// defaults to light. The actual `.dark` class is applied per-route by RootLayout
 // (see src/utils/theme.js) — this provider only owns the preference *value*.
 const getInitialTheme = () => {
   try {
@@ -13,7 +13,7 @@ const getInitialTheme = () => {
   } catch {
     // localStorage unavailable (private mode / SSR) — fall through to default.
   }
-  return 'dark'; // app default — explicit user choice (via setTheme) overrides this
+  return 'light'; // app default — explicit user choice (via setTheme) overrides this
 };
 
 export const ThemeProvider = ({ children }) => {
