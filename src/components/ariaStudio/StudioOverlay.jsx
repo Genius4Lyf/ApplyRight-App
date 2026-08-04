@@ -101,7 +101,7 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
             tabIndex={-1}
             className={
               isLeft
-                ? 'absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col'
+                ? 'absolute inset-y-0 left-0 w-[85%] max-w-[320px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col'
                 : 'absolute inset-x-0 bottom-0 h-[80dvh] max-h-[80dvh] overflow-hidden rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]'
             }
             initial={reduce ? { opacity: 0 } : isLeft ? { x: '-100%' } : { y: '100%' }}
