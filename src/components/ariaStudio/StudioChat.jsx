@@ -1508,7 +1508,7 @@ const StudioChat = ({ onPaywall }) => {
           {studioTransition && (
             <motion.div
               key={`studio-${studioTransition}`}
-              className="absolute inset-0 z-30 flex items-center justify-center bg-white px-6 dark:bg-slate-900"
+              className={`absolute inset-0 z-30 flex items-center justify-center px-6 aria-theme-${chatTheme}`}
               initial={reduce ? { opacity: 1 } : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
