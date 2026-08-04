@@ -329,14 +329,12 @@ export const CVBuilderProvider = ({ children }) => {
       const list = (cvData[key] || []).map((e) =>
         e._sortId === sortId ? { ...e, description: newDescription } : e
       );
-      const updated = { ...cvData, [key]: list };
-      setCvData((prev) => ({ ...updated, coachChats: prev.coachChats }));
+      setCvData((prev) => ({ ...prev, [key]: list }));
       setExternalEditNonce((n) => n + 1);
 
       if (id && id !== 'new') {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: id });
+          await CVService.saveDraft({ _id: id, [key]: list });
           return true;
         } catch (error) {
           console.error('Failed to save applied rewrite', error);
@@ -354,19 +352,17 @@ export const CVBuilderProvider = ({ children }) => {
   // applyRoleEdit.
   const applySummary = useCallback(
     async (text) => {
-      const updated = { ...cvData, professionalSummary: text };
-      setCvData((prev) => ({ ...updated, coachChats: prev.coachChats }));
+      setCvData((prev) => ({ ...prev, professionalSummary: text }));
       setExternalEditNonce((n) => n + 1);
       if (id && id !== 'new') {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: id });
+          await CVService.saveDraft({ _id: id, professionalSummary: text });
         } catch (error) {
           console.error('Failed to save applied summary', error);
         }
       }
     },
-    [cvData, id]
+    [id]
   );
 
   // Coach writer: append Aria's chat-picked skills (case-insensitive dedupe vs what's
@@ -375,16 +371,16 @@ export const CVBuilderProvider = ({ children }) => {
   const applySkills = useCallback(
     async (newSkills) => {
       const nameOf = (s) => (typeof s === 'string' ? s : s?.name || '').toLowerCase();
-      const have = new Set((cvData.skills || []).map(nameOf));
+      const previous = cvData.skills || [];
+      const have = new Set(previous.map(nameOf));
       const additions = (newSkills || []).filter((s) => !have.has(nameOf(s)));
       if (!additions.length) return { added: 0 };
-      const updated = { ...cvData, skills: [...(cvData.skills || []), ...additions] };
-      setCvData((prev) => ({ ...updated, coachChats: prev.coachChats }));
+      const merged = [...previous, ...additions];
+      setCvData((prev) => ({ ...prev, skills: merged }));
       setExternalEditNonce((n) => n + 1);
       if (id && id !== 'new') {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: id });
+          await CVService.saveDraft({ _id: id, skills: merged });
         } catch (error) {
           console.error('Failed to save applied skills', error);
         }
@@ -425,14 +421,12 @@ export const CVBuilderProvider = ({ children }) => {
         };
       });
       if (!found) return { ok: false, found: false };
-      const updated = { ...cvData, [key]: list };
-      setCvData((prev) => ({ ...updated, coachChats: prev.coachChats }));
+      setCvData((prev) => ({ ...prev, [key]: list }));
       setExternalEditNonce((n) => n + 1);
       if (addTexts.length) setLastAiWriteSortId(sortId); // reveal only fires when she ADDS
       if (id && id !== 'new') {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: id });
+          await CVService.saveDraft({ _id: id, [key]: list });
           return { ok: true, found: true };
         } catch (err) {
           console.error('applyRoleBulletDiff save failed', err);

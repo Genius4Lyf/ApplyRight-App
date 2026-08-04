@@ -259,12 +259,10 @@ export const AriaStudioProvider = ({ children }) => {
       const sortId = newSortId();
       const previous = cvData?.[key] || [];
       const next = [...previous, { ...entry, _sortId: sortId }];
-      const updated = { ...(cvData || {}), [key]: next };
-      setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
+      setCvDataRaw((prev) => ({ ...(prev || {}), [key]: next }));
       if (draftId) {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: draftId });
+          await CVService.saveDraft({ _id: draftId, [key]: next });
         } catch (error) {
           console.error(`Failed to persist new ${key} entry`, error);
           setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
@@ -361,21 +359,20 @@ export const AriaStudioProvider = ({ children }) => {
     async (section, sortId, newDescription) => {
       if (!cvData) return false;
       const key = section === 'project' ? 'projects' : 'experience';
-      const list = (cvData[key] || []).map((e) =>
+      const previous = cvData[key] || [];
+      const list = previous.map((e) =>
         e._sortId === sortId ? { ...e, description: newDescription } : e
       );
-      const updated = { ...cvData, [key]: list };
-      setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
+      setCvDataRaw((prev) => ({ ...(prev || {}), [key]: list }));
       setExternalEditNonce((n) => n + 1);
 
       if (draftId) {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: draftId });
+          await CVService.saveDraft({ _id: draftId, [key]: list });
           return true;
         } catch (error) {
           console.error('Failed to save applied rewrite', error);
-          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: cvData[key] || [] }));
+          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
           toast.error("Couldn't save that rewrite. Try again.");
           return false;
         }
@@ -389,16 +386,15 @@ export const AriaStudioProvider = ({ children }) => {
   const applySummary = useCallback(
     async (text) => {
       if (!cvData) return { ok: false };
-      const updated = { ...cvData, professionalSummary: text };
-      setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
+      const previous = cvData.professionalSummary;
+      setCvDataRaw((prev) => ({ ...(prev || {}), professionalSummary: text }));
       setExternalEditNonce((n) => n + 1);
       if (draftId) {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: draftId });
+          await CVService.saveDraft({ _id: draftId, professionalSummary: text });
         } catch (error) {
           console.error('Failed to save applied summary', error);
-          setCvDataRaw((prev) => ({ ...(prev || {}), professionalSummary: cvData.professionalSummary }));
+          setCvDataRaw((prev) => ({ ...(prev || {}), professionalSummary: previous }));
           toast.error("Couldn't save that summary. Try again.");
           return { ok: false };
         }
@@ -414,19 +410,19 @@ export const AriaStudioProvider = ({ children }) => {
     async (newSkills) => {
       if (!cvData) return { ok: false, added: 0 };
       const nameOf = (s) => (typeof s === 'string' ? s : s?.name || '').toLowerCase();
-      const have = new Set((cvData.skills || []).map(nameOf));
+      const previous = cvData.skills || [];
+      const have = new Set(previous.map(nameOf));
       const additions = (newSkills || []).filter((s) => !have.has(nameOf(s)));
       if (!additions.length) return { ok: true, added: 0 };
-      const updated = { ...cvData, skills: [...(cvData.skills || []), ...additions] };
-      setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
+      const merged = [...previous, ...additions];
+      setCvDataRaw((prev) => ({ ...(prev || {}), skills: merged }));
       setExternalEditNonce((n) => n + 1);
       if (draftId) {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: draftId });
+          await CVService.saveDraft({ _id: draftId, skills: merged });
         } catch (error) {
           console.error('Failed to save applied skills', error);
-          setCvDataRaw((prev) => ({ ...(prev || {}), skills: cvData.skills || [] }));
+          setCvDataRaw((prev) => ({ ...(prev || {}), skills: previous }));
           toast.error("Couldn't save those skills. Try again.");
           return { ok: false, added: 0 };
         }
@@ -444,12 +440,13 @@ export const AriaStudioProvider = ({ children }) => {
     async (section, sortId, addTexts = [], removeTexts = []) => {
       if (!cvData) return { ok: false, found: false };
       const key = section === 'project' ? 'projects' : 'experience';
+      const previous = cvData[key] || [];
       const norm = (s) =>
         String(s)
           .replace(/^[•\-*\s]+/, '')
           .trim();
       let found = false;
-      const list = (cvData[key] || []).map((e) => {
+      const list = previous.map((e) => {
         if (e._sortId !== sortId) return e;
         found = true;
         const remove = new Set(removeTexts.map(norm));
@@ -467,18 +464,16 @@ export const AriaStudioProvider = ({ children }) => {
         };
       });
       if (!found) return { ok: false, found: false };
-      const updated = { ...cvData, [key]: list };
-      setCvDataRaw((prev) => ({ ...updated, coachChats: prev?.coachChats }));
+      setCvDataRaw((prev) => ({ ...(prev || {}), [key]: list }));
       setExternalEditNonce((n) => n + 1);
       if (addTexts.length) setLastAiWriteSortId(sortId); // reveal only fires when she ADDS
       if (draftId) {
         try {
-          const { coachChats: _omitChats, ...base } = updated;
-          await CVService.saveDraft({ ...base, _id: draftId });
+          await CVService.saveDraft({ _id: draftId, [key]: list });
           return { ok: true, found: true };
         } catch (err) {
           console.error('applyRoleBulletDiff save failed', err);
-          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: cvData[key] || [] }));
+          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
           toast.error("Couldn't save those bullets. Try again.");
           return { ok: false, found: true, saveFailed: true };
         }

@@ -20,7 +20,10 @@
       "Bash(adb -s RFCN101ZK7J logcat -c)",
       "Bash(adb -s RFCN101ZK7J logcat -d)",
       "Bash(Select-String -Pattern \"^commit|recommendedWorkflow|myDrafts.length\")",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(grep -n \"^const \\\\|^  const [A-Z_]\\\\{2,\\\\} =\" \"C:/Users/user/Desktop/ALPHA/ApplyRight/applyright-frontend/src/components/landing/ProductJourneyReveal.jsx\")",
+      "Bash(node -e ' *)",
+      "Bash(npx vitest *)"
     ]
   }
 }

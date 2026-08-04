@@ -4325,7 +4325,8 @@
       "typeYourselfFree": "Or type them yourself — free",
       "manualPlaceholder": "Python, pressure testing, HSE…",
       "commaSeparated": "Comma-separated.",
-      "skipForNow": "Skip skills for now"
+      "skipForNow": "Skip skills for now",
+      "doneNextSection": "Done — next section"
     },
     "summaryFix": {
       "anotherAngle": "Another angle",
@@ -4468,6 +4469,7 @@
       "skillsInsufficientCredits": "Finding your skills costs {{cost}} credits and you're short right now. You can type them in yourself for free instead.",
       "skillsInDone": "{{n}} skills in. Last one — the summary at the top of your CV.",
       "manualSkillsAdded": "Added {{n}}. Any more, or shall we move on?",
+      "manualSkillsAllDupes": "Those are already on your CV.",
       "buildSummaryDone": "That's your CV built. Here's where it stands.",
       "certsDone": "That's your education section complete.",
       "chatLimitReached": "You've used today's free chats — top up credits or come back tomorrow.",

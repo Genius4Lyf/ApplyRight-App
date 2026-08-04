@@ -24,6 +24,8 @@ const SkillsBuildCard = ({
   onAdd,
   onManual,
   onSkip,
+  onDone,
+  addedCount = 0,
   busy,
 }) => {
   const { t } = useTranslation();
@@ -123,14 +125,25 @@ const SkillsBuildCard = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onSkip}
-          disabled={busy}
-          className="w-full mt-3 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {t('ariaStudio.skillsBuild.skipForNow')}
-        </button>
+        {addedCount > 0 ? (
+          <button
+            type="button"
+            onClick={onDone}
+            disabled={busy}
+            className="btn-secondary w-full mt-3 py-2 text-sm disabled:opacity-50"
+          >
+            {t('ariaStudio.skillsBuild.doneNextSection')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={busy}
+            className="w-full mt-3 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {t('ariaStudio.skillsBuild.skipForNow')}
+          </button>
+        )}
       </div>
     </AriaCard>
   );

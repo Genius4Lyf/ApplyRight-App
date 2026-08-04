@@ -203,6 +203,9 @@ const StudioChat = ({ onPaywall }) => {
   // was added) lives on the CV, so a refresh returns to the consent card rather than
   // showing suggestions the user never paid attention to.
   const [skillsData, setSkillsData] = useState(null);
+  // Running total added via the free manual-entry loop this session. StudioChat
+  // remounts on sessionNonce, so this resets per session automatically.
+  const [manualSkillsAdded, setManualSkillsAdded] = useState(0);
 
   // Charged output must survive refresh until the user applies or explicitly discards it.
   const persistStudioPending = async (pending) => {
@@ -1173,10 +1176,29 @@ const StudioChat = ({ onPaywall }) => {
     setRoleBusy('skills');
     try {
       const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
-      if (res?.ok && res.added) ariaSays(t('ariaStudio.chat.manualSkillsAdded', { n: res.added }));
+      if (res?.ok) {
+        if (res.added) {
+          setManualSkillsAdded((n) => n + res.added);
+          ariaSays(t('ariaStudio.chat.manualSkillsAdded', { n: res.added }));
+        } else {
+          ariaSays(t('ariaStudio.chat.manualSkillsAllDupes'));
+        }
+      }
     } finally {
       setRoleBusy(null);
     }
+  };
+
+  // Close out the manual-entry loop with the SAME section-advance addPickedSkills
+  // runs. No persistStudioPending call — manual entry never creates a pending
+  // generation, so there's nothing to discard.
+  const finishManualSkills = () => {
+    advance(() => {
+      setSkillsData(null);
+      push({ who: 'skillsdone', n: manualSkillsAdded });
+      setPhase('build:sections');
+      ariaSays(t('ariaStudio.chat.skillsInDone', { n: manualSkillsAdded }));
+    }, t('ariaStudio.chat.thinking.skillsSaved'));
   };
 
   // ─── Summary ───
@@ -2018,6 +2040,8 @@ const StudioChat = ({ onPaywall }) => {
                 onGenerate={generateBuildSkills}
                 onAdd={addPickedSkills}
                 onManual={addManualSkills}
+                addedCount={manualSkillsAdded}
+                onDone={finishManualSkills}
                 onSkip={async () => {
                   if (skillsData && !(await persistStudioPending(null))) return;
                   setSkillsData(null);

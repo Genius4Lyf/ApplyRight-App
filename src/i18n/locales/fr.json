@@ -4321,7 +4321,8 @@
       "typeYourselfFree": "Ou saisissez-les vous-même — gratuit",
       "manualPlaceholder": "Python, tests sous pression, HSE…",
       "commaSeparated": "Séparées par des virgules.",
-      "skipForNow": "Passer les compétences pour l'instant"
+      "skipForNow": "Passer les compétences pour l'instant",
+      "doneNextSection": "Terminé — section suivante"
     },
     "summaryFix": {
       "anotherAngle": "Un autre angle",
@@ -4464,6 +4465,7 @@
       "skillsInsufficientCredits": "Trouver vos compétences coûte {{cost}} crédits et il vous en manque pour l'instant. Vous pouvez les saisir vous-même gratuitement à la place.",
       "skillsInDone": "{{n}} compétences ajoutées. Dernière étape — le résumé en haut de votre CV.",
       "manualSkillsAdded": "{{n}} ajoutée(s). D'autres, ou on passe à la suite ?",
+      "manualSkillsAllDupes": "Ces compétences sont déjà sur ton CV.",
       "buildSummaryDone": "Votre CV est construit. Voici où il en est.",
       "certsDone": "Votre section formation est complète.",
       "chatLimitReached": "Vous avez utilisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",

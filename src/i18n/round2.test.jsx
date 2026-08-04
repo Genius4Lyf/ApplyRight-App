@@ -41,6 +41,13 @@ const Shell = ({ children }) => (
 );
 const wrap = (ui) => render(<Shell>{ui}</Shell>);
 
+// The editorial landing markup splits copy across nested spans and renders
+// several blocks twice (a desktop and a mobile variant), so getByText's
+// single-text-node / single-match rules do not hold there. Normalise whitespace
+// (incl. &nbsp;) and look for the phrase in the rendered text instead.
+const norm = (s) => s.replace(/\s+/g, ' ').trim();
+const hasCopy = (container, copy) => norm(container.textContent).includes(norm(copy));
+
 beforeEach(async () => {
   await setLang('en');
 });
@@ -50,14 +57,22 @@ afterEach(cleanup);
 // A constant holding t() output freezes at import. These three hold translation
 // KEYS instead, so they must follow a LIVE language switch.
 describe('module-level constants follow a live language switch', () => {
-  // 20s: this renders the whole landing page TWICE (once per language) — four
-  // feature rows with their vignettes, the hero interview card and the ledger.
-  // It sits just over vitest's 5s default, and a timeout here leaves the page
-  // mounted, which then breaks the vignette test below with duplicate matches.
-  it('LandingPage FEATURES (kicker/title/body/tags)', async () => {
+  // The old landing.features.* rows were retired by the editorial redesign —
+  // ProductJourneyReveal took their place, so the page copy to check is
+  // landing.journey.*. Its ROLE_CVS constant is the module-level constant this
+  // round is about: it holds locale-key ids ('customerService', 'sales', …)
+  // that roleCv() resolves through t() at render, so the sample CVs must
+  // re-render in French too.
+  // 20s: this renders the whole landing page TWICE (once per language) — the
+  // journey reveal with its full sample CVs, the problem story and the closing
+  // CTA. It sits just over vitest's 5s default, and a timeout here leaves the
+  // page mounted, which then breaks the vignette test below with duplicate
+  // matches.
+  it('LandingPage journey copy + the ROLE_CVS constant', async () => {
     const { default: LandingPage } = await import('../pages/LandingPage');
-    const { rerender } = wrap(<LandingPage />);
-    expect(screen.getByText(en.landing.features.studio.title)).toBeTruthy();
+    const { container, rerender } = wrap(<LandingPage />);
+    expect(hasCopy(container, en.landing.journey.kicker)).toBe(true);
+    expect(hasCopy(container, en.landing.journey.studioTitle)).toBe(true);
 
     await setLang('fr');
     rerender(
@@ -65,11 +80,14 @@ describe('module-level constants follow a live language switch', () => {
         <LandingPage />
       </Shell>
     );
-    expect(screen.getByText(fr.landing.features.studio.title)).toBeTruthy();
-    expect(screen.getByText(fr.landing.features.design.title)).toBeTruthy();
-    // A tag inside the same constant.
-    expect(screen.getByText(fr.landing.features.studio.tag1)).toBeTruthy();
-    expect(screen.queryByText(en.landing.features.studio.title)).toBeNull();
+    expect(hasCopy(container, fr.landing.journey.title)).toBe(true);
+    expect(hasCopy(container, fr.landing.journey.studioTitle)).toBe(true);
+    expect(hasCopy(container, fr.landing.journey.studioBody)).toBe(true);
+    // Resolved through ROLE_CVS ids, not hard-coded in the component.
+    expect(hasCopy(container, fr.landing.journey.roleCvs.customerService.role)).toBe(true);
+    expect(hasCopy(container, fr.landing.journey.roleCvs.sales.role)).toBe(true);
+    expect(hasCopy(container, en.landing.journey.studioTitle)).toBe(false);
+    expect(hasCopy(container, en.landing.journey.roleCvs.customerService.role)).toBe(false);
   }, 20000);
 
   it('RewriteLedger ROWS — including the bold span inside <Trans>', async () => {
