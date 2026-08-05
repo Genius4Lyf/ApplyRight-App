@@ -432,40 +432,47 @@ const BrandIntro = () => {
     restDelta: 0.001,
   });
 
-  const blindOpacity = useTransform(smoothProgress, [0, 0.29, 0.56], [1, 1, 0]);
+  // Lead-in compressed so the orbit and the blind/morph text swap start moving almost
+  // immediately (was a ~0.3 dead zone before anything moved); later keyframes (0.56+)
+  // are untouched so the wipe/morph choreography keeps its shape.
+  const blindOpacity = useTransform(smoothProgress, [0, 0.12, 0.56], [1, 1, 0]);
   const blindClip = useTransform(
     smoothProgress,
-    [0.3, 0.56],
+    [0.13, 0.56],
     ['inset(0 0% -18% 0)', 'inset(0 0% -18% 100%)']
   );
-  const morphOpacity = useTransform(smoothProgress, [0.29, 0.33, 1], [0, 1, 1]);
+  const morphOpacity = useTransform(smoothProgress, [0.12, 0.16, 1], [0, 1, 1]);
   const morphClip = useTransform(
     smoothProgress,
-    [0.3, 0.56],
+    [0.13, 0.56],
     ['inset(0 100% 0 0)', 'inset(0 0% 0 0)']
   );
   const heroWayOpacity = useTransform(smoothProgress, [0.59, 0.635], [1, 0]);
   const heroWayMaxWidth = useTransform(smoothProgress, [0.59, 0.65], ['4.5em', '0em']);
   const heroTheOpacity = useTransform(smoothProgress, [0.67, 0.705], [1, 0]);
   const heroTheMaxWidth = useTransform(smoothProgress, [0.67, 0.73], ['3em', '0em']);
-  const resolveOpacity = useTransform(smoothProgress, [0.78, 0.9], [0, 1]);
-  const resolveY = useTransform(smoothProgress, [0.78, 0.9], [14, 0]);
+  // Tail pulled in from 0.9 -> 0.96 so the resolved state is reached with a brief hold
+  // before the section unpins, instead of a dead final 10% of the track.
+  const resolveOpacity = useTransform(smoothProgress, [0.78, 0.96], [0, 1]);
+  const resolveY = useTransform(smoothProgress, [0.78, 0.96], [14, 0]);
   const orbitX = useTransform(
     smoothProgress,
-    [0, 0.27, 0.31, 0.56, 0.6, 0.76, 0.84, 1],
+    [0, 0.1, 0.15, 0.56, 0.6, 0.76, 0.84, 1],
     ['0vw', '0vw', '-43vw', '43vw', '43vw', '-43vw', '0vw', '0vw']
   );
   const orbitY = useTransform(
     smoothProgress,
-    [0, 0.27, 0.31, 0.76, 0.84, 1],
+    [0, 0.1, 0.15, 0.76, 0.84, 1],
     [-118, -118, 4, 4, -90, -90]
   );
   const orbitScale = useTransform(
     smoothProgress,
-    [0, 0.31, 0.76, 0.84, 1],
+    [0, 0.15, 0.76, 0.84, 1],
     [0.85, 0.95, 1.08, 1.35, 1.35]
   );
-  const cueOpacity = useTransform(smoothProgress, [0, 0.12, 0.2], [1, 1, 0]);
+  // Cue must be gone before the orbit/text motion kicks in (~0.1-0.13) or it fades over
+  // an already-moving scene.
+  const cueOpacity = useTransform(smoothProgress, [0, 0.05, 0.09], [1, 1, 0]);
 
   return (
     <section
