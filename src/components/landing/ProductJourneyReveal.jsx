@@ -152,7 +152,7 @@ const StudioDesktop = ({ t, progress }) => {
         </button>
         <div className="mt-4 border-l-2 border-slate-900 bg-slate-50 p-3">
           <div className="flex items-center justify-between">
-            <p className="text-[9px] font-bold">Leinad&apos;s CV</p>
+            <p className="text-[9px] font-bold">Daniel&apos;s CV</p>
             <span className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[6px] uppercase">
               {t('landing.journey.newLabel')}
             </span>
@@ -224,7 +224,7 @@ const StudioDesktop = ({ t, progress }) => {
         <p className="font-mono text-[7px] uppercase tracking-[0.18em] text-slate-400">
           {t('landing.journey.tailoredCopy')}
         </p>
-        <p className="mt-1 text-sm font-bold">Leinad&apos;s CV</p>
+        <p className="mt-1 text-sm font-bold">Daniel&apos;s CV</p>
         <div className="mt-5 border-t border-slate-200 pt-4">
           <p className="font-mono text-[7px] uppercase tracking-[0.16em] text-slate-400">
             {t('landing.journey.cvHealth')}
@@ -311,7 +311,7 @@ const StudioMobile = ({ t, progress }) => {
             </div>
           </motion.div>
 
-          <motion.div style={{ opacity: magicOpacity, y: magicY }} className="absolute inset-x-3 bottom-3 ml-6 rounded-2xl border border-slate-300 bg-white p-3 shadow-[0_16px_36px_rgba(15,23,42,.12)]">
+          <motion.div style={{ opacity: magicOpacity, y: magicY }} className="ml-6 rounded-2xl border border-slate-300 bg-white p-3 shadow-[0_16px_36px_rgba(15,23,42,.12)]">
             <div className="flex items-center justify-between">
               <p className="font-mono text-[7px] uppercase tracking-[.17em] text-slate-500">{t('landing.journey.magicBox')}</p>
               <span className="rounded-full bg-slate-100 px-2 py-1 text-[6px] font-bold text-slate-500">2 {t('landing.journey.bullets')}</span>
@@ -333,7 +333,7 @@ const StudioMobile = ({ t, progress }) => {
           <div className="flex items-end justify-between border-b border-slate-200 pb-3">
             <div>
               <p className="font-mono text-[7px] uppercase tracking-[.18em] text-slate-400">{t('landing.journey.cvHealth')}</p>
-              <p className="mt-1 text-sm font-bold">Leinad&apos;s CV</p>
+              <p className="mt-1 text-sm font-bold">Daniel&apos;s CV</p>
             </div>
             <p className="font-heading text-4xl font-bold text-emerald-500">33<span className="ml-1 text-[9px] text-slate-400">%</span></p>
           </div>
@@ -380,7 +380,7 @@ const StudioPhone = ({ t, progress }) => {
             <AriaOrbit size={15} />
             <div className="rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[8px] leading-relaxed shadow-sm">{t('landing.journey.mobileSummaryPrompt')}</div>
           </div>
-          <div className="origin-top-left scale-[0.82] [&>div]:max-w-full">
+          <div className="origin-top-left scale-[0.82] w-[122%] [&>div]:max-w-full">
             <SummaryFixCard careerStage="experienced" onGenerate={() => {}} onCancel={() => {}} />
           </div>
         </motion.div>
@@ -394,7 +394,7 @@ const StudioPhone = ({ t, progress }) => {
             <AriaOrbit size={15} />
             <div className="rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[8px] leading-relaxed shadow-sm">{t('landing.journey.summaryDraftReady')}</div>
           </div>
-          <div className="origin-top-left scale-[0.82] [&>div]:max-w-full">
+          <div className="origin-top-left scale-[0.82] w-[122%] [&>div]:max-w-full">
             <SummaryFixCard
               careerStage="experienced"
               draft={t('landing.journey.summaryExample')}
@@ -404,15 +404,17 @@ const StudioPhone = ({ t, progress }) => {
           </div>
         </motion.div>
 
-        <motion.div style={{ opacity: finishOpacity, y: finishY }} className="pointer-events-none absolute inset-3 origin-top-left scale-[0.8] [&>div]:max-w-full">
-          <FinishCard
-            mode="build"
-            scan={{ title: "Leinad's CV" }}
-            progress={{ percent: 100, done: 6, total: 6 }}
-            contents={{ roles: 2, projects: 1, skills: 8 }}
-            draftId="landing-demo"
-            onOpenEditor={() => {}}
-          />
+        <motion.div style={{ opacity: finishOpacity, y: finishY }} className="pointer-events-none absolute inset-3">
+          <div className="origin-top-left scale-[0.8] w-[125%] [&>div]:max-w-full">
+            <FinishCard
+              mode="build"
+              scan={{ title: "Daniel's CV" }}
+              progress={{ percent: 100, done: 6, total: 6 }}
+              contents={{ roles: 2, projects: 1, skills: 8 }}
+              draftId="landing-demo"
+              onOpenEditor={() => {}}
+            />
+          </div>
         </motion.div>
       </div>
     </div>
@@ -792,7 +794,7 @@ const InterviewReveal = ({ t }) => {
               transition={turnCycle}
               className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-white/25 bg-white/10 font-heading text-base font-bold"
             >
-              LS
+              DU
             </motion.div>
             <p className="mt-2 text-[9px] font-bold">{t('landing.journey.interviewCandidateYou')}</p>
             <motion.p

@@ -64,7 +64,7 @@ const MobileProblemStory = ({ t, progress }) => {
         <p className="mx-auto mt-4 max-w-[34ch] text-sm leading-relaxed text-slate-600">{t('landing.problem.subcopy')}</p>
       </Motion.div>
 
-      <Motion.div style={{ opacity: processOpacity, y: processY }} className="mx-4 mt-[9svh] rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.1)]">
+      <Motion.div style={{ opacity: processOpacity, y: processY }} className="mx-4 mt-[9svh] rounded-[24px] border border-slate-200 bg-white p-5">
         <p className="mb-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{t('landing.problem.typicalProcess')}</p>
         <ProcessBeat progress={progress} range={[0.3, 0.44]}>
           <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-500"><FileText size={17} /></span>
@@ -326,6 +326,14 @@ const StaticTestimonialCard = ({ feedback }) => {
   );
 };
 
+const TestimonialsHeading = ({ t, style, className = '' }) => (
+  <Motion.div style={style} className={`mx-auto max-w-[760px] origin-top text-center ${className}`}>
+    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
+    <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
+    <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
+  </Motion.div>
+);
+
 const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
@@ -334,6 +342,10 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
   // title and subcopy all remain visible for the whole section.
   const headingY = useTransform(progress, [0, 0.22, 0.33], ['22svh', '22svh', '2svh']);
   const headingScale = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0.8]);
+  // Mobile-only: the heading has no desktop entrance (it's already painted when the
+  // section pins), so give it a fade/rise-in before the same 0.22->0.33 travel.
+  const headingYMobile = useTransform(progress, [0, 0.06, 0.22, 0.33], ['30svh', '22svh', '22svh', '2svh']);
+  const headingOpacityMobile = useTransform(progress, [0, 0.06], [0, 1]);
   const ctaOpacity = useTransform(progress, [0.8, 0.9], [0, 1]);
   const visibleFeedbacks = feedbacks.slice(0, 3);
 
@@ -370,11 +382,12 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <LightGridBackdrop />
         <div className="mx-auto flex h-full max-w-[1160px] flex-col justify-start px-5 pt-[5svh] sm:px-8 lg:px-12">
-          <Motion.div style={{ y: headingY, scale: headingScale }} className="mx-auto max-w-[760px] origin-top text-center">
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
-            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
-            <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
-          </Motion.div>
+          <TestimonialsHeading
+            t={t}
+            className="md:hidden"
+            style={{ y: headingYMobile, scale: headingScale, opacity: headingOpacityMobile }}
+          />
+          <TestimonialsHeading t={t} className="hidden md:block" style={{ y: headingY, scale: headingScale }} />
 
           <div className="absolute inset-x-5 bottom-14 top-[30%] md:hidden">
             {visibleFeedbacks.map((feedback, index) => (
@@ -619,7 +632,7 @@ const ClosingCtaStory = () => {
     );
   }
 
-  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[clamp(3.1rem,8vw,7.8rem)] font-bold leading-[0.92] tracking-[-0.045em] text-white sm:-translate-y-2';
+  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[2.2rem] font-bold leading-[0.92] tracking-[-0.045em] text-white sm:-translate-y-2 sm:text-[clamp(3.1rem,8vw,7.8rem)]';
 
   return (
     <section ref={sectionRef} className="relative h-[360svh] bg-slate-950 text-white">
