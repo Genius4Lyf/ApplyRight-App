@@ -880,6 +880,11 @@ const ProductJourneyReveal = ({ onInterviewFocusChange }) => {
 
   return (
     <section id="product-journey" ref={sectionRef} className="relative h-[1350svh] border-t border-slate-200 bg-[#f7f6f2]">
+      <motion.div
+        aria-hidden="true"
+        style={{ opacity: interviewBackdropOpacity }}
+        className="pointer-events-none absolute inset-0 z-0 bg-[#050a19]"
+      />
       <div className="sticky top-0 h-[100svh] overflow-hidden px-4 pt-24 sm:px-7 sm:pt-20">
         <div
           aria-hidden="true"
