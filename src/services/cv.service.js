@@ -194,17 +194,33 @@ const CVService = {
     return response.data; // { brief }
   },
 
+  // Aria Studio — draft a realistic, generic job posting from just a job title, for a
+  // user who knows the role they want but has no real posting to paste. Charges
+  // DRAFT_JD, only after a non-empty draft comes back. 403 { code:'INSUFFICIENT_CREDITS' }.
+  studioDraftJobDescription: async (jobTitle, model) => {
+    const response = await api.post('/studio/draft-jd', { jobTitle, model });
+    return response.data; // { jobDescription, cost, remainingCredits }
+  },
+
   // Aria Studio — start a tailor run. Clones the source CV's CONTENT into a new draft
   // bound to the target job. Pass the `brief` the user already confirmed at the preview
   // step and it's persisted as-is (no second AI extraction); omit it and one is built.
   // The source draft is never mutated. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
-  studioTailorStart: async ({ sourceDraftId, jobTitle, jobDescription, brief, model }) => {
+  studioTailorStart: async ({
+    sourceDraftId,
+    jobTitle,
+    jobDescription,
+    brief,
+    model,
+    jdSource,
+  }) => {
     const response = await api.post('/studio/tailor-start', {
       sourceDraftId,
       jobTitle,
       jobDescription,
       brief,
       model,
+      jdSource,
     });
     return response.data; // { draftId, title, brief, tailoredFrom, draft }
   },

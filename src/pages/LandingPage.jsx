@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  FileText,
-  Filter,
-  XCircle,
-} from 'lucide-react';
+import { ArrowRight, FileText, Filter, XCircle } from 'lucide-react';
 import Seo from '../components/Seo';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import { useTranslation, Trans } from 'react-i18next';
@@ -56,40 +51,72 @@ const MobileProblemStory = ({ t, progress }) => {
     // No fixed height: the card sits in normal flow and sets the pinned box's height,
     // so the gap to the truth copy below is constant on every viewport.
     <div className="relative pb-4 lg:hidden">
-      <Motion.div style={{ opacity: headingOpacity, y: headingY }} className="absolute inset-x-5 top-10 text-center">
-        <p className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.problem.kicker')}</p>
+      <Motion.div
+        style={{ opacity: headingOpacity, y: headingY }}
+        className="absolute inset-x-5 top-10 text-center"
+      >
+        <p className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-slate-500">
+          {t('landing.problem.kicker')}
+        </p>
         <h2 className="mx-auto mt-4 max-w-[10ch] font-heading text-[2.75rem] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">
           {t('landing.problem.title')}
         </h2>
-        <p className="mx-auto mt-4 max-w-[34ch] text-sm leading-relaxed text-slate-600">{t('landing.problem.subcopy')}</p>
+        <p className="mx-auto mt-4 max-w-[34ch] text-sm leading-relaxed text-slate-600">
+          {t('landing.problem.subcopy')}
+        </p>
       </Motion.div>
 
-      <Motion.div style={{ opacity: processOpacity, y: processY }} className="mx-4 mt-[9svh] rounded-[24px] border border-slate-200 bg-white p-5">
-        <p className="mb-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{t('landing.problem.typicalProcess')}</p>
+      <Motion.div
+        style={{ opacity: processOpacity, y: processY }}
+        className="mx-4 mt-[9svh] rounded-[24px] border border-slate-200 bg-white p-5"
+      >
+        <p className="mb-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">
+          {t('landing.problem.typicalProcess')}
+        </p>
         <ProcessBeat progress={progress} range={[0.3, 0.44]}>
-          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-500"><FileText size={17} /></span>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-500">
+            <FileText size={17} />
+          </span>
           <div>
-            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '01' })}</p>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">
+              {t('landing.problem.stageLabel', { n: '01' })}
+            </p>
             <h3 className="font-semibold text-slate-800">{t('landing.problem.stage1Title')}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('landing.problem.stage1Body')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              {t('landing.problem.stage1Body')}
+            </p>
           </div>
         </ProcessBeat>
         <ProcessBeat progress={progress} range={[0.5, 0.64]} danger>
-          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-600"><Filter size={17} /></span>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-600">
+            <Filter size={17} />
+          </span>
           <div>
-            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-red-500">{t('landing.problem.stageLabel', { n: '02' })}</p>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-red-500">
+              {t('landing.problem.stageLabel', { n: '02' })}
+            </p>
             <h3 className="font-semibold text-red-700">{t('landing.problem.stage2Title')}</h3>
             <p className="mt-1 text-xs leading-relaxed text-slate-600">
-              {t('landing.problem.stage2BodyLead')}{' '}<span className="font-semibold text-red-600">{t('landing.problem.stage2BodyStrong')}</span>{' '}{t('landing.problem.stage2BodyTail')}
+              {t('landing.problem.stage2BodyLead')}{' '}
+              <span className="font-semibold text-red-600">
+                {t('landing.problem.stage2BodyStrong')}
+              </span>{' '}
+              {t('landing.problem.stage2BodyTail')}
             </p>
           </div>
         </ProcessBeat>
         <ProcessBeat progress={progress} range={[0.7, 0.86]} muted>
-          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-400"><XCircle size={17} /></span>
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-slate-100 text-slate-400">
+            <XCircle size={17} />
+          </span>
           <div>
-            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '03' })}</p>
+            <p className="font-mono text-[0.54rem] uppercase tracking-[0.14em] text-slate-400">
+              {t('landing.problem.stageLabel', { n: '03' })}
+            </p>
             <h3 className="font-semibold text-slate-700">{t('landing.problem.stage3Title')}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('landing.problem.stage3Body')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              {t('landing.problem.stage3Body')}
+            </p>
           </div>
         </ProcessBeat>
       </Motion.div>
@@ -100,18 +127,31 @@ const MobileProblemStory = ({ t, progress }) => {
 const MobileProblemTruth = ({ t }) => (
   <section className="bg-[#f7f6f2] px-5 pb-20 pt-4 lg:hidden">
     <p className="font-heading text-[2.15rem] font-bold leading-[1.02] tracking-[-0.035em] text-slate-900">
-      {t('landing.problem.truthLead')}{' '}<span className="italic">{t('landing.problem.truthAccent')}</span>
+      {t('landing.problem.truthLead')}{' '}
+      <span className="italic">{t('landing.problem.truthAccent')}</span>
     </p>
     <div className="mt-6 space-y-6 border-t border-slate-300 pt-5">
       <div>
-        <h3 className="font-heading text-xl font-bold text-slate-900">{t('landing.problem.whatIsAtsTitle')}</h3>
+        <h3 className="font-heading text-xl font-bold text-slate-900">
+          {t('landing.problem.whatIsAtsTitle')}
+        </h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          <Trans i18nKey="landing.problem.whatIsAtsBody" components={{ b: <b className="font-semibold text-slate-900" />, s: <span className="italic font-semibold text-slate-900" /> }} />
+          <Trans
+            i18nKey="landing.problem.whatIsAtsBody"
+            components={{
+              b: <b className="font-semibold text-slate-900" />,
+              s: <span className="italic font-semibold text-slate-900" />,
+            }}
+          />
         </p>
       </div>
       <div className="border-t border-slate-200 pt-5">
-        <h3 className="font-heading text-xl font-bold text-slate-900">{t('landing.problem.sprayTitle')}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600">{t('landing.problem.sprayBody')}</p>
+        <h3 className="font-heading text-xl font-bold text-slate-900">
+          {t('landing.problem.sprayTitle')}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          {t('landing.problem.sprayBody')}
+        </p>
       </div>
     </div>
   </section>
@@ -147,7 +187,11 @@ const ProblemScrollStory = ({ t, reduce }) => {
   }
 
   return (
-    <section ref={sectionRef} id="education" className="relative h-[240svh] border-t border-slate-200 bg-[#f7f6f2] lg:h-[330svh]">
+    <section
+      ref={sectionRef}
+      id="education"
+      className="relative h-[240svh] border-t border-slate-200 bg-[#f7f6f2] lg:h-[330svh]"
+    >
       {/* Mobile pins only as tall as the card, so the truth copy rides up right under it. */}
       <div className="sticky top-0 overflow-hidden lg:h-[100svh]">
         <LightGridBackdrop />
@@ -182,9 +226,15 @@ const ProblemScrollStory = ({ t, reduce }) => {
                   <FileText size={18} />
                 </span>
                 <div>
-                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '01' })}</p>
-                  <h3 className="font-semibold text-slate-800">{t('landing.problem.stage1Title')}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{t('landing.problem.stage1Body')}</p>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+                    {t('landing.problem.stageLabel', { n: '01' })}
+                  </p>
+                  <h3 className="font-semibold text-slate-800">
+                    {t('landing.problem.stage1Title')}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                    {t('landing.problem.stage1Body')}
+                  </p>
                 </div>
               </ProcessBeat>
 
@@ -193,11 +243,15 @@ const ProblemScrollStory = ({ t, reduce }) => {
                   <Filter size={18} />
                 </span>
                 <div>
-                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">{t('landing.problem.stageLabel', { n: '02' })}</p>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-red-500">
+                    {t('landing.problem.stageLabel', { n: '02' })}
+                  </p>
                   <h3 className="font-semibold text-red-700">{t('landing.problem.stage2Title')}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600">
                     {t('landing.problem.stage2BodyLead')}{' '}
-                    <span className="font-semibold text-red-600">{t('landing.problem.stage2BodyStrong')}</span>{' '}
+                    <span className="font-semibold text-red-600">
+                      {t('landing.problem.stage2BodyStrong')}
+                    </span>{' '}
                     {t('landing.problem.stage2BodyTail')}
                   </p>
                 </div>
@@ -208,27 +262,49 @@ const ProblemScrollStory = ({ t, reduce }) => {
                   <XCircle size={18} />
                 </span>
                 <div>
-                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">{t('landing.problem.stageLabel', { n: '03' })}</p>
-                  <h3 className="font-semibold text-slate-700">{t('landing.problem.stage3Title')}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{t('landing.problem.stage3Body')}</p>
+                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+                    {t('landing.problem.stageLabel', { n: '03' })}
+                  </p>
+                  <h3 className="font-semibold text-slate-700">
+                    {t('landing.problem.stage3Title')}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                    {t('landing.problem.stage3Body')}
+                  </p>
                 </div>
               </ProcessBeat>
             </div>
 
-            <Motion.div style={{ opacity: truthOpacity, x: truthX }} className="hidden max-w-[560px] lg:block">
+            <Motion.div
+              style={{ opacity: truthOpacity, x: truthX }}
+              className="hidden max-w-[560px] lg:block"
+            >
               <p className="font-heading text-[clamp(2rem,3.3vw,3.7rem)] font-bold leading-[1.02] tracking-[-0.035em] text-slate-900">
-                {t('landing.problem.truthLead')}{' '}<span className="italic">{t('landing.problem.truthAccent')}</span>
+                {t('landing.problem.truthLead')}{' '}
+                <span className="italic">{t('landing.problem.truthAccent')}</span>
               </p>
               <div className="mt-8 grid gap-6 border-t border-slate-300 pt-6 sm:grid-cols-2">
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-slate-900">{t('landing.problem.whatIsAtsTitle')}</h3>
+                  <h3 className="font-heading text-lg font-bold text-slate-900">
+                    {t('landing.problem.whatIsAtsTitle')}
+                  </h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    <Trans i18nKey="landing.problem.whatIsAtsBody" components={{ b: <b className="font-semibold text-slate-900" />, s: <span className="italic font-semibold text-slate-900" /> }} />
+                    <Trans
+                      i18nKey="landing.problem.whatIsAtsBody"
+                      components={{
+                        b: <b className="font-semibold text-slate-900" />,
+                        s: <span className="italic font-semibold text-slate-900" />,
+                      }}
+                    />
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-slate-900">{t('landing.problem.sprayTitle')}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{t('landing.problem.sprayBody')}</p>
+                  <h3 className="font-heading text-lg font-bold text-slate-900">
+                    {t('landing.problem.sprayTitle')}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {t('landing.problem.sprayBody')}
+                  </p>
                 </div>
               </div>
             </Motion.div>
@@ -241,8 +317,12 @@ const ProblemScrollStory = ({ t, reduce }) => {
 
 const ProblemStoryContent = ({ t }) => (
   <div>
-    <p className="font-mono text-xs uppercase tracking-[0.18em] text-slate-500">{t('landing.problem.kicker')}</p>
-    <h2 className="mt-3 font-heading text-4xl font-bold text-slate-900">{t('landing.problem.title')}</h2>
+    <p className="font-mono text-xs uppercase tracking-[0.18em] text-slate-500">
+      {t('landing.problem.kicker')}
+    </p>
+    <h2 className="mt-3 font-heading text-4xl font-bold text-slate-900">
+      {t('landing.problem.title')}
+    </h2>
     <p className="mt-4 text-lg text-slate-600">{t('landing.problem.subcopy')}</p>
   </div>
 );
@@ -262,13 +342,21 @@ const TestimonialProof = ({ feedback, index, progress }) => {
     >
       <div>
         <span className="font-heading text-6xl leading-none text-slate-200">“</span>
-        <p className="-mt-4 font-heading text-[clamp(1rem,1.25vw,1.25rem)] font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
+        <p className="-mt-4 font-heading text-[clamp(1rem,1.25vw,1.25rem)] font-medium italic leading-relaxed text-slate-800">
+          {feedback.message}
+        </p>
       </div>
       <div className="mt-8 flex items-center gap-3 border-t border-slate-100 pt-5">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+          {initials}
+        </span>
         <div>
-          <p className="font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
-          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+          <p className="font-semibold text-slate-900">
+            {feedback.user?.firstName} {feedback.user?.lastName}
+          </p>
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+            Verified ApplyRight user
+          </p>
         </div>
       </div>
     </Motion.article>
@@ -294,13 +382,21 @@ const MobileTestimonialProof = ({ feedback, index, progress }) => {
     >
       <div>
         <span className="font-heading text-5xl leading-none text-slate-200">“</span>
-        <p className="-mt-3 font-heading text-[clamp(0.92rem,4vw,1.15rem)] font-medium italic leading-[1.55] text-slate-800">{feedback.message}</p>
+        <p className="-mt-3 font-heading text-[clamp(0.92rem,4vw,1.15rem)] font-medium italic leading-[1.55] text-slate-800">
+          {feedback.message}
+        </p>
       </div>
       <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+          {initials}
+        </span>
         <div>
-          <p className="text-sm font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
-          <p className="font-mono text-[0.52rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+          <p className="text-sm font-semibold text-slate-900">
+            {feedback.user?.firstName} {feedback.user?.lastName}
+          </p>
+          <p className="font-mono text-[0.52rem] uppercase tracking-[0.14em] text-slate-400">
+            Verified ApplyRight user
+          </p>
         </div>
       </div>
     </Motion.article>
@@ -313,13 +409,21 @@ const StaticTestimonialCard = ({ feedback }) => {
     <article className="flex min-h-[300px] flex-col justify-between border-t-2 border-slate-900 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8">
       <div>
         <span className="font-heading text-6xl leading-none text-slate-200">“</span>
-        <p className="-mt-4 font-heading text-xl font-medium italic leading-relaxed text-slate-800">{feedback.message}</p>
+        <p className="-mt-4 font-heading text-xl font-medium italic leading-relaxed text-slate-800">
+          {feedback.message}
+        </p>
       </div>
       <div className="mt-8 flex items-center gap-3 border-t border-slate-100 pt-5">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">{initials}</span>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+          {initials}
+        </span>
         <div>
-          <p className="font-semibold text-slate-900">{feedback.user?.firstName} {feedback.user?.lastName}</p>
-          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">Verified ApplyRight user</p>
+          <p className="font-semibold text-slate-900">
+            {feedback.user?.firstName} {feedback.user?.lastName}
+          </p>
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-slate-400">
+            Verified ApplyRight user
+          </p>
         </div>
       </div>
     </article>
@@ -328,9 +432,15 @@ const StaticTestimonialCard = ({ feedback }) => {
 
 const TestimonialsHeading = ({ t, style, className = '' }) => (
   <Motion.div style={style} className={`mx-auto max-w-[760px] origin-top text-center ${className}`}>
-    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
-    <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
-    <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
+    <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+      {t('landing.testimonials.kicker')}
+    </p>
+    <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">
+      {t('landing.testimonials.title')}
+    </h2>
+    <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">
+      {t('landing.testimonials.subcopy')}
+    </p>
   </Motion.div>
 );
 
@@ -344,7 +454,11 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
   const headingScale = useTransform(progress, [0, 0.22, 0.33], [1, 1, 0.8]);
   // Mobile-only: the heading has no desktop entrance (it's already painted when the
   // section pins), so give it a fade/rise-in before the same 0.22->0.33 travel.
-  const headingYMobile = useTransform(progress, [0, 0.06, 0.22, 0.33], ['30svh', '22svh', '22svh', '2svh']);
+  const headingYMobile = useTransform(
+    progress,
+    [0, 0.06, 0.22, 0.33],
+    ['30svh', '22svh', '22svh', '2svh']
+  );
   const headingOpacityMobile = useTransform(progress, [0, 0.06], [0, 1]);
   const ctaOpacity = useTransform(progress, [0.8, 0.9], [0, 1]);
   const visibleFeedbacks = feedbacks.slice(0, 3);
@@ -356,9 +470,15 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
       <section className="border-t border-slate-200 bg-white py-20">
         <div className="mx-auto max-w-[1160px] px-5 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-[760px] text-center">
-            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">{t('landing.testimonials.kicker')}</p>
-            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">{t('landing.testimonials.title')}</h2>
-            <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">{t('landing.testimonials.subcopy')}</p>
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+              {t('landing.testimonials.kicker')}
+            </p>
+            <h2 className="mt-4 font-heading text-[clamp(2.8rem,6vw,5.8rem)] font-bold leading-[0.94] tracking-[-0.045em] text-slate-900">
+              {t('landing.testimonials.title')}
+            </h2>
+            <p className="mx-auto mt-5 max-w-[54ch] text-lg leading-relaxed text-slate-600">
+              {t('landing.testimonials.subcopy')}
+            </p>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -368,7 +488,10 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
           </div>
 
           <div className="mt-10 text-center">
-            <Link to="/feedback" className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900">
+            <Link
+              to="/feedback"
+              className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900"
+            >
               {t('landing.testimonials.cta')} <ArrowRight size={16} />
             </Link>
           </div>
@@ -387,11 +510,20 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
             className="md:hidden"
             style={{ y: headingYMobile, scale: headingScale, opacity: headingOpacityMobile }}
           />
-          <TestimonialsHeading t={t} className="hidden md:block" style={{ y: headingY, scale: headingScale }} />
+          <TestimonialsHeading
+            t={t}
+            className="hidden md:block"
+            style={{ y: headingY, scale: headingScale }}
+          />
 
           <div className="absolute inset-x-5 bottom-14 top-[30%] md:hidden">
             {visibleFeedbacks.map((feedback, index) => (
-              <MobileTestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
+              <MobileTestimonialProof
+                key={feedback._id}
+                feedback={feedback}
+                index={index}
+                progress={progress}
+              />
             ))}
             <div className="absolute inset-x-0 bottom-1 flex justify-center gap-2">
               {visibleFeedbacks.map((feedback) => (
@@ -402,12 +534,23 @@ const TestimonialsScrollStory = ({ feedbacks, t, reduce }) => {
 
           <div className="absolute inset-x-5 bottom-14 top-[34%] mx-auto hidden max-w-[1160px] items-stretch gap-5 sm:inset-x-8 md:grid md:grid-cols-3 lg:inset-x-12">
             {visibleFeedbacks.map((feedback, index) => (
-              <TestimonialProof key={feedback._id} feedback={feedback} index={index} progress={progress} />
+              <TestimonialProof
+                key={feedback._id}
+                feedback={feedback}
+                index={index}
+                progress={progress}
+              />
             ))}
           </div>
 
-          <Motion.div style={{ opacity: ctaOpacity }} className="absolute bottom-5 left-0 right-0 text-center">
-            <Link to="/feedback" className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900">
+          <Motion.div
+            style={{ opacity: ctaOpacity }}
+            className="absolute bottom-5 left-0 right-0 text-center"
+          >
+            <Link
+              to="/feedback"
+              className="inline-flex items-center gap-2 border-b-2 border-slate-900 pb-1 font-semibold text-slate-900"
+            >
               {t('landing.testimonials.cta')} <ArrowRight size={16} />
             </Link>
           </Motion.div>
@@ -494,7 +637,9 @@ const BrandIntro = () => {
 
         <Motion.div
           aria-hidden="true"
-          style={reduce ? { x: 0, y: -78, scale: 1.35 } : { x: orbitX, y: orbitY, scale: orbitScale }}
+          style={
+            reduce ? { x: 0, y: -78, scale: 1.35 } : { x: orbitX, y: orbitY, scale: orbitScale }
+          }
           className="absolute z-20 sm:-mt-12"
         >
           <AriaOrbit size={52} working />
@@ -544,14 +689,22 @@ const BrandIntro = () => {
           <motion.p className="inline-flex items-baseline justify-center whitespace-nowrap font-brand text-[2.2rem] font-semibold leading-none tracking-[-0.055em] text-slate-950 sm:text-[clamp(3.2rem,9vw,9rem)]">
             <span>{t('landing.hero.introMorphApply')}</span>
             <motion.span
-              style={reduce ? { opacity: 0, maxWidth: '0em' } : { opacity: heroTheOpacity, maxWidth: heroTheMaxWidth }}
+              style={
+                reduce
+                  ? { opacity: 0, maxWidth: '0em' }
+                  : { opacity: heroTheOpacity, maxWidth: heroTheMaxWidth }
+              }
               className="inline-block overflow-hidden whitespace-nowrap"
             >
               &nbsp;{t('landing.hero.introMorphThe')}&nbsp;
             </motion.span>
             <span>{t('landing.hero.introMorphRight')}</span>
             <motion.span
-              style={reduce ? { opacity: 0, maxWidth: '0em' } : { opacity: heroWayOpacity, maxWidth: heroWayMaxWidth }}
+              style={
+                reduce
+                  ? { opacity: 0, maxWidth: '0em' }
+                  : { opacity: heroWayOpacity, maxWidth: heroWayMaxWidth }
+              }
               className="inline-block overflow-hidden whitespace-nowrap"
             >
               &nbsp;{t('landing.hero.introMorphWay')}
@@ -603,9 +756,17 @@ const ClosingCtaStory = () => {
   const guessingOpacity = useTransform(progress, [0, 0.05, 0.21, 0.27], [0, 1, 1, 0]);
   // Lead each clip by one orbit radius so a letter disappears as soon as the
   // front of the orbit touches it, rather than after the orbit has crossed it.
-  const guessingClip = useTransform(progress, [0.11, 0.236], ['inset(0 0 0 0)', 'inset(0 0 0 100%)']);
+  const guessingClip = useTransform(
+    progress,
+    [0.11, 0.236],
+    ['inset(0 0 0 0)', 'inset(0 0 0 100%)']
+  );
   const blindlyOpacity = useTransform(progress, [0.24, 0.3, 0.42, 0.48], [0, 1, 1, 0]);
-  const blindlyClip = useTransform(progress, [0.344, 0.454], ['inset(0 0 0 0)', 'inset(0 100% 0 0)']);
+  const blindlyClip = useTransform(
+    progress,
+    [0.344, 0.454],
+    ['inset(0 0 0 0)', 'inset(0 100% 0 0)']
+  );
   const rightWayOpacity = useTransform(progress, [0.45, 0.52, 1], [0, 1, 1]);
   const theOpacity = useTransform(progress, [0.585, 0.615], [1, 0]);
   const theMaxWidth = useTransform(progress, [0.585, 0.63], ['3em', '0em']);
@@ -629,9 +790,16 @@ const ClosingCtaStory = () => {
       <section className="grid min-h-[82svh] place-items-center bg-slate-950 px-5 py-20 text-center text-white">
         <div className="flex max-w-3xl flex-col items-center">
           <AriaOrbit size={72} tone="mono" className="text-white" />
-          <h2 className="mt-7 font-heading text-5xl font-bold tracking-tight sm:text-7xl">ApplyRight</h2>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">{t('landing.cta.subcopy')}</p>
-          <Link to="/register" className="mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950">
+          <h2 className="mt-7 font-heading text-5xl font-bold tracking-tight sm:text-7xl">
+            ApplyRight
+          </h2>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            {t('landing.cta.subcopy')}
+          </p>
+          <Link
+            to="/register"
+            className="mt-8 inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950"
+          >
             {t('landing.cta.buttonToday')} <ArrowRight size={17} />
           </Link>
         </div>
@@ -639,12 +807,16 @@ const ClosingCtaStory = () => {
     );
   }
 
-  const phraseClass = 'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[2.2rem] font-bold leading-[0.92] tracking-[-0.045em] text-white sm:-translate-y-2 sm:text-[clamp(3.1rem,8vw,7.8rem)]';
+  const phraseClass =
+    'absolute inset-x-5 mx-auto max-w-[1100px] text-center font-heading text-[2.2rem] font-bold leading-[0.92] tracking-[-0.045em] text-white sm:-translate-y-2 sm:text-[clamp(3.1rem,8vw,7.8rem)]';
 
   return (
     <section ref={sectionRef} className="relative h-[360svh] bg-slate-950 text-white">
       <div className="sticky top-0 grid h-[100svh] place-items-center overflow-hidden px-5 text-center">
-        <div aria-hidden="true" className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:radial-gradient(circle_at_center,black_0%,transparent_72%)]" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:radial-gradient(circle_at_center,black_0%,transparent_72%)]"
+        />
 
         <motion.div
           aria-hidden="true"
@@ -662,33 +834,55 @@ const ClosingCtaStory = () => {
           <AriaOrbit size={58} working tone="mono" />
         </motion.div>
 
-        <motion.h2 style={{ opacity: guessingOpacity, clipPath: guessingClip }} className={`${phraseClass} z-10`}>
+        <motion.h2
+          style={{ opacity: guessingOpacity, clipPath: guessingClip }}
+          className={`${phraseClass} z-10`}
+        >
           {t('landing.cta.stopGuessing')}
         </motion.h2>
 
-        <motion.h2 style={{ opacity: blindlyOpacity, clipPath: blindlyClip }} className={`${phraseClass} z-10`}>
+        <motion.h2
+          style={{ opacity: blindlyOpacity, clipPath: blindlyClip }}
+          className={`${phraseClass} z-10`}
+        >
           {t('landing.cta.stopBlindly')}
         </motion.h2>
 
         <motion.h2 style={{ opacity: rightWayOpacity }} className={`${phraseClass} z-10`}>
           <span className="inline-flex items-baseline justify-center whitespace-nowrap">
             <span>{t('landing.cta.applyWord')}</span>
-            <motion.span style={{ opacity: theOpacity, maxWidth: theMaxWidth }} className="inline-block overflow-hidden whitespace-nowrap">
+            <motion.span
+              style={{ opacity: theOpacity, maxWidth: theMaxWidth }}
+              className="inline-block overflow-hidden whitespace-nowrap"
+            >
               &nbsp;{t('landing.cta.theWord')}&nbsp;
             </motion.span>
             <span>{t('landing.cta.rightWord')}</span>
-            <motion.span style={{ opacity: wayOpacity, maxWidth: wayMaxWidth }} className="inline-block overflow-hidden whitespace-nowrap">
+            <motion.span
+              style={{ opacity: wayOpacity, maxWidth: wayMaxWidth }}
+              className="inline-block overflow-hidden whitespace-nowrap"
+            >
               &nbsp;{t('landing.cta.wayWord')}
             </motion.span>
           </span>
         </motion.h2>
 
-        <motion.div style={{ opacity: brandKickerOpacity }} className="absolute z-20 -translate-y-16 sm:-translate-y-24">
-          <p className="font-mono text-[0.66rem] uppercase tracking-[0.22em] text-slate-400">{t('landing.cta.kicker')}</p>
+        <motion.div
+          style={{ opacity: brandKickerOpacity }}
+          className="absolute z-20 -translate-y-16 sm:-translate-y-24"
+        >
+          <p className="font-mono text-[0.66rem] uppercase tracking-[0.22em] text-slate-400">
+            {t('landing.cta.kicker')}
+          </p>
         </motion.div>
 
-        <motion.div style={{ opacity: actionOpacity, y: actionY }} className="absolute top-[59%] z-40 flex flex-col items-center sm:bottom-[10svh] sm:top-auto">
-          <p className="max-w-[32ch] text-sm leading-relaxed text-slate-300 sm:max-w-xl sm:text-base">{t('landing.cta.subcopy')}</p>
+        <motion.div
+          style={{ opacity: actionOpacity, y: actionY }}
+          className="absolute top-[59%] z-40 flex flex-col items-center sm:bottom-[10svh] sm:top-auto"
+        >
+          <p className="max-w-[32ch] text-sm leading-relaxed text-slate-300 sm:max-w-xl sm:text-base">
+            {t('landing.cta.subcopy')}
+          </p>
           <Link
             to="/register"
             className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-md bg-white px-6 py-3 font-semibold text-slate-950 shadow-lg transition-transform hover:-translate-y-0.5"
@@ -745,3 +939,4 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+

@@ -4204,7 +4204,13 @@
     },
     "jobCapture": {
       "theJob": "Le poste que vous visez",
-      "add": "Ajouter"
+      "add": "Ajouter",
+      "draftAssist": "Pas de description de poste ? Aria peut en rédiger une type — {{cost}} cr",
+      "draftAssistNeedsTitle": "Entrez d'abord un intitulé de poste — Aria en a besoin pour rédiger une description",
+      "drafting": "Rédaction d'une description de poste type",
+      "draftedNote": "Ceci est une description type pour ce poste, pas une offre réelle — modifiez-la si vous avez l'offre exacte.",
+      "draftInsufficientCredits": "Crédits insuffisants pour rédiger une description.",
+      "draftFailed": "Impossible de rédiger une description pour cet intitulé de poste. Veuillez réessayer."
     },
     "modeChooser": {
       "whatAreWeDoing": "Que faisons-nous ?",

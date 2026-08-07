@@ -224,20 +224,20 @@
       "introMorphThe": "the",
       "introMorphRight": "Right",
       "introMorphWay": "way.",
-      "introResolve": "Build it. Tailor it. Rehearse it — with Aria beside you.",
-      "introScroll": "Scroll to meet Aria",
+      "introResolve": "Build it. Tailor it. Rehearse it — with ARIA beside you.",
+      "introScroll": "Scroll to meet ARIA",
       "kicker": "AI résumé · role match · live mock interview",
       "titleLead": "Win on paper. Then win",
       "titleAccent": "the room.",
-      "subcopy": "Build a real CV in about 20 minutes with Aria, tailor it to the exact job you want, then put yourself through a real-time AI interview — so you walk in already rehearsed.",
+      "subcopy": "Build a real CV in about 20 minutes with ARIA, tailor it to the exact job you want, then put yourself through a real-time AI interview — so you walk in already rehearsed.",
       "ctaSecondary": "Hear a sample interview",
       "freeNoteStrong": "1 free CV download",
       "freeNoteRest": "no card needed"
     },
     "journey": {
-      "kicker": "See ApplyRight at work",
+      "kicker": "See ARIA at work",
       "title": "From conversation to a CV you are ready to send.",
-      "subcopy": "Watch Aria collect the real story, keep the CV updated, and hand it straight into the design studio.",
+      "subcopy": "Watch ARIA collect the real story, keep the CV updated, and hand it straight into the design studio.",
       "ariaDeskStrap": "Build a CV with Aria",
       "livePreview": "Live preview",
       "newTailoring": "New tailoring",
@@ -250,13 +250,13 @@
       "prompt1": "Fewer booking errors",
       "prompt2": "Faster guest support",
       "prompt3": "Cleaner records",
-      "magicBox": "Aria’s bullet draft",
+      "magicBox": "ARIA’s bullet draft",
       "bullets": "bullets",
       "bulletExample1": "Coordinated booking and transaction workflows, reducing avoidable errors and improving response time.",
       "bulletExample2": "Maintained organised project records so the team could retrieve accurate information faster.",
       "applyToCv": "Apply to CV",
       "appliedToCv": "Applied to your CV",
-      "askPlaceholder": "Tell Aria what you did…",
+      "askPlaceholder": "Tell ARIA what you did…",
       "tailoredCopy": "Captured so far",
       "cvHealth": "CV health",
       "ofSixDone": "of 6 sections done",
@@ -383,7 +383,7 @@
           "skills": "Reconciliation · Reporting · Excel · Payables",
           "summary": "Detail-focused accounting professional experienced in reconciliations, reporting and transaction controls.",
           "company": "Accountant · Ibadan",
-          "bullet1": "Reconciled bank and ledger accounts and resolved variances promptly.",
+          "bullet1": "Reconciled bank and ledger accounts and resolved vARIAnces promptly.",
           "bullet2": "Prepared monthly reports and supported timely payment processing.",
           "bullet3": "Maintained complete supporting documents for audit and management review.",
           "previousCompany": "Accounts Assistant · Crestline Distribution, Ibadan",
@@ -416,7 +416,7 @@
       "interviewSignal3": "Scored review"
     },
     "interviewCard": {
-      "aria": "Live AI mock interview in progress",
+      "ARIA": "Live AI mock interview in progress",
       "live": "Live mock interview",
       "seat": "HR PANEL · SEAT 1/3",
       "interviewer": "Interviewer · ApplyRight AI",
@@ -475,9 +475,9 @@
       "title": "Go beyond the simple resume.",
       "subcopy": "ApplyRight gives you a full toolkit designed by career experts to make sure you dominate every step of the hiring pipeline, from the first draft to the final call.",
       "studio": {
-        "kicker": "Aria Studio · Tailor",
+        "kicker": "ARIA Studio · Tailor",
         "title": "Tailor Your CV To The Job, In A Conversation",
-        "body": "Paste the job description and Aria reworks a copy of your CV against it — your original is never touched. She marks every section strong, needs-tightening or missing, and a live preview beside the chat updates the instant a fix lands.",
+        "body": "Paste the job description and ARIA reworks a copy of your CV against it — your original is never touched. She marks every section strong, needs-tightening or missing, and a live preview beside the chat updates the instant a fix lands.",
         "tag1": "Per-Section Verdicts",
         "tag2": "Live Preview",
         "tag3": "Your Original Stays Safe"
@@ -491,9 +491,9 @@
         "tag3": "Scored Review"
       },
       "builder": {
-        "kicker": "CV Builder · Ask Aria",
+        "kicker": "CV Builder · Ask ARIA",
         "title": "A Coach Beside Every Step",
-        "body": "Aria sits next to the builder in a three-tab panel: chat with her to write a section together, watch your CV Health score move as you type, and see how well you match the role. Both scores run in your browser — free, every time, forever.",
+        "body": "ARIA sits next to the builder in a three-tab panel: chat with her to write a section together, watch your CV Health score move as you type, and see how well you match the role. Both scores run in your browser — free, every time, forever.",
         "tag1": "Build It Together",
         "tag2": "Live CV Health — Free",
         "tag3": "Role Match Coverage"
@@ -544,7 +544,7 @@
       "verdictStrong": "Strong",
       "verdictFix": "Tighten",
       "verdictGap": "Gap",
-      "askTabAria": "Aria",
+      "askTabAria": "ARIA",
       "askTabHealth": "CV Health",
       "askTabMatch": "Role Match",
       "askAriaMsg": "That bullet says what you did. What changed because you did it?",
@@ -687,10 +687,10 @@
     },
     "workspace": "Your workspace",
     "studio": {
-      "kicker": "Aria Studio",
-      "title": "Build your CV with Aria",
-      "body": "Bring Aria a job description. She checks your fit, reworks a copy of your CV against it section by section, and shows you exactly what she changed — your original stays untouched.",
-      "cta": "Open Aria Studio"
+      "kicker": "ARIA Studio",
+      "title": "Build your CV with ARIA",
+      "body": "Bring ARIA a job description. She checks your fit, reworks a copy of your CV against it section by section, and shows you exactly what she changed — your original stays untouched.",
+      "cta": "Open ARIA Studio"
     },
     "pillarApplication": "Your application",
     "pillarInterview": "Interview practice",
@@ -700,7 +700,7 @@
       "title": "Prepare me for a job",
       "body": "Check whether you’re qualified for a role, then get a tailored <f>analysis</f>, <f>interview preparation</f>, and a <f>cover letter</f> — everything built around this job.",
       "cta": "Check your CV",
-      "poweredBy": "Powered by Aria"
+      "poweredBy": "Powered by ARIA"
     },
     "buildCard": {
       "aria": "Build a new CV",
@@ -759,7 +759,7 @@
       "generating": "Generating…",
       "generate": "Generate",
       "freeToday": "Free today",
-      "workWithAria": "Work on it with Aria",
+      "workWithAria": "Work on it with ARIA",
       "openingStudio": "Opening…",
       "justGenerateIt": "Or just generate it · {{cost}} cr",
       "newAnalysis": "Generate New Analysis",
@@ -791,7 +791,7 @@
       "cvGenerated": "Optimized CV generated!",
       "cvGenerationFailed": "CV generation failed. You have not been charged.",
       "cvStartFailed": "Failed to start CV generation. Please try again.",
-      "studioOpenFailed": "Could not open Aria Studio. Please try again.",
+      "studioOpenFailed": "Could not open ARIA Studio. Please try again.",
       "bundleStartFailed": "Failed to start bundle generation. Please try again.",
       "coverLetterWarning_one": "Cover letter generated, but {{count}} claim may not be supported by your resume — verify before sending.",
       "coverLetterWarning_other": "Cover letter generated, but {{count}} claims may not be supported by your resume — verify before sending.",
@@ -882,8 +882,8 @@
         "tagline": "Build, share and prep — free forever.",
         "features": {
           "0": "5-minute live interview taste — practice only, no AI report",
-          "1": "Aria Studio — tailor your CV to any job description",
-          "2": "Ask Aria in the CV Builder — build it with her, section by section",
+          "1": "ARIA Studio — tailor your CV to any job description",
+          "2": "Ask ARIA in the CV Builder — build it with her, section by section",
           "3": "Live CV Health & Role Match — free, always",
           "4": "Pick any AI model: GPT-4o mini, GPT-5.6 or Claude Sonnet 5",
           "5": "CV Studio — design your CV: accent, spacing, fonts, length coach",
@@ -902,7 +902,7 @@
         "1": "Unlimited watermark-free CV downloads",
         "2": "Full AI scorecard after every live interview",
         "3": "AI answer grading, story grading & adaptive follow-ups",
-        "4": "Standard-model Aria chat free — credits only for the Pro models"
+        "4": "Standard-model ARIA chat free — credits only for the Pro models"
       },
       "weeklyPro": {
         "label": "Starter Pack",
@@ -1084,8 +1084,8 @@
     "common": {
       "saving": "Saving…",
       "done": "Done",
-      "askAria": "Ask Aria",
-      "ariaFilledIn": "◉ Aria filled this in",
+      "askAria": "Ask ARIA",
+      "ariaFilledIn": "◉ ARIA filled this in",
       "descriptionBullets": "Description / Bullets",
       "creditChip": "{{n}} cr",
       "couldntSetup": "Hmm — I couldn’t get your CV set up. Refresh and try again.",
@@ -1200,28 +1200,28 @@
       "tagline": "ApplyRight Intelligent Assistant",
       "greetingLine1": "I’m your CV coach — let’s build a CV that gets you noticed.",
       "careerQuestion": "First — where are you in your career?",
-      "careerHint": "This sets how Aria coaches every section of this CV.",
-      "settingContext": "Aria is setting your path…",
+      "careerHint": "This sets how ARIA coaches every section of this CV.",
+      "settingContext": "ARIA is setting your path…",
       "greetingLine2": "First — is there a job you’re aiming for?",
-      "jobChoiceHint": "Choose how you want Aria to shape this CV.",
+      "jobChoiceHint": "Choose how you want ARIA to shape this CV.",
       "tailorToJob": "Tailor to a job",
       "buildNormalCv": "Build a normal CV",
       "settingUpCv": "Let’s go get you hired.",
       "targetReady": "Your target job is ready — continue when you are.",
       "addTargetEyebrow": "Add your target job",
-      "letAriaRead": "Let Aria read it",
-      "readingTarget": "Aria is reading the role…",
-      "ariaReadTitle": "Aria read your target job",
+      "letAriaRead": "Let ARIA read it",
+      "readingTarget": "ARIA is reading the role…",
+      "ariaReadTitle": "ARIA read your target job",
       "ariaNoticed": "The role appears to lean on:",
-      "ariaReadSummary_one": "Aria captured {{count}} clear signal from this description.",
-      "ariaReadSummary_other": "Aria captured {{count}} clear signals from this description.",
+      "ariaReadSummary_one": "ARIA captured {{count}} clear signal from this description.",
+      "ariaReadSummary_other": "ARIA captured {{count}} clear signals from this description.",
       "coreRequirements": "Core requirements",
       "responsibilities": "What you’ll be expected to do",
       "alsoValued": "Also valued",
       "looksRight": "Looks right — continue",
       "continue": "Continue",
       "confirmTitle": "Continue without a target job?",
-      "confirmBody": "Aria tailors your CV to a specific role — you can still add one later.",
+      "confirmBody": "ARIA tailors your CV to a specific role — you can still add one later.",
       "continueAnyway": "Continue anyway"
     },
     "heading": {
@@ -1281,7 +1281,7 @@
           "1": "Start each bullet with a strong action verb (Built, Led, Reduced, Launched).",
           "2": "Use the format <strong>Action + Context + Result</strong> — what you did, where, what changed.",
           "3": "Add concrete numbers wherever you can: team size, %, $, users, time saved.",
-          "4": "Click ‘Ask Aria’ on any role and she’ll build or sharpen its bullets with you — drafted from what you actually did."
+          "4": "Click ‘Ask ARIA’ on any role and she’ll build or sharpen its bullets with you — drafted from what you actually did."
         }
       },
       "empty": "No work history added yet.",
@@ -1301,11 +1301,11 @@
       "phDescription": "• Achieved X by doing Y...",
       "tipPaid": "Tip: 3-5 bullets is the sweet spot. One per impact, not per task.",
       "tipFree": "Tip: 3-5 bullets is the sweet spot. {{used}}/{{limit}} used — upgrade for unlimited.",
-      "askAriaTitle": "Ask Aria to help with this role",
+      "askAriaTitle": "Ask ARIA to help with this role",
       "addTitleFirst": "Add the job title first",
-      "hintNoTitle": "Add the job title first — Aria won’t guess the role.",
+      "hintNoTitle": "Add the job title first — ARIA won’t guess the role.",
       "hintNoCompany": "Ready — add the company too and I’ll tailor even tighter.",
-      "hintReady": "Sends this role to Aria & focuses her here.",
+      "hintReady": "Sends this role to ARIA & focuses her here.",
       "addAnother": "Add Another Position",
       "nextProjects": "Next: Projects"
     },
@@ -1335,10 +1335,10 @@
       "phLink": "github.com/your-project",
       "phDescription": "• Developed a full-stack app using...",
       "tip": "Tip: 1-3 short bullets is enough. Lead with what it does, not how you built it.",
-      "askAriaTitle": "Ask Aria to help with this project",
+      "askAriaTitle": "Ask ARIA to help with this project",
       "addTitleFirst": "Add the project title first",
-      "hintNoTitle": "Add the project title first — Aria won’t guess it.",
-      "hintReady": "Sends this project to Aria & focuses her here.",
+      "hintNoTitle": "Add the project title first — ARIA won’t guess it.",
+      "hintReady": "Sends this project to ARIA & focuses her here.",
       "addAnother": "Add Another Project",
       "nextEducation": "Next: Education"
     },
@@ -1394,7 +1394,7 @@
           "4": "Aim for 15-25 total. Long lists dilute the strong ones."
         }
       },
-      "findSkillsHint": "Want skills you can back up? Open Aria → “Find my skills”.",
+      "findSkillsHint": "Want skills you can back up? Open ARIA → “Find my skills”.",
       "categoryName": "Category name",
       "newCategory": "New category…",
       "addSkillPlaceholder": "Add a skill…",
@@ -1449,7 +1449,7 @@
         }
       },
       "placeholder": "e.g. Innovative Software Engineer with 5+ years of experience in...",
-      "ariaTip": "<b>Tip:</b> Aria writes this from your Work History & Skills — and tailors it to your target job when you’ve set one. Open Aria and tap “Draft my summary”.",
+      "ariaTip": "<b>Tip:</b> ARIA writes this from your Work History & Skills — and tailors it to your target job when you’ve set one. Open ARIA and tap “Draft my summary”.",
       "reviewFinish": "Review & Finish"
     },
     "finalize": {
@@ -1520,8 +1520,8 @@
       "titleTodo": "Go to {{label}} — saves this section first",
       "unsavedTitle": "You have unsaved changes in this step",
       "unsaved": "Unsaved",
-      "hideAria": "Hide Aria",
-      "showAria": "Show Aria",
+      "hideAria": "Hide ARIA",
+      "showAria": "Show ARIA",
       "exitTitle": "Exit to My CVs (your completed steps are saved)",
       "exit": "Exit",
       "livePreview": "Live preview",
@@ -1529,7 +1529,7 @@
       "loadingCv": "Loading your CV…"
     },
     "atsCoach": {
-      "greeting": "Welcome to ApplyRight — I’m Aria, your CV coach. I’ll guide you section by section and help you turn your real experience into a strong, focused CV.",
+      "greeting": "Welcome to ApplyRight — I’m ARIA, your CV coach. I’ll guide you section by section and help you turn your real experience into a strong, focused CV.",
       "readingJob": "Reading the job…",
       "yourTargetJob": "Your target job",
       "edit": "✎ Edit",
@@ -1540,7 +1540,7 @@
       "continue": "Continue →",
       "addYourTargetJob": "Add your target job",
       "jobTitleRole": "Job title / role",
-      "jobTitlePlaceholder": "e.g. Wireline Field Operator",
+      "jobTitlePlaceholder": "e.g. Wireline Field Engineer",
       "jobDescription": "Job description",
       "jobDescriptionPlaceholder": "Paste the full job description…",
       "add": "Add",
@@ -1561,7 +1561,7 @@
       "healthComingTogether": "Coming together",
       "healthJustStarting": "Just starting",
       "noJobYet": "No job to match against yet",
-      "noJobBody": "Add a job description on the Target step and Aria will score your CV against exactly what this employer wants.",
+      "noJobBody": "Add a job description on the Target step and ARIA will score your CV against exactly what this employer wants.",
       "addJd": "Add a job description",
       "yourTargetRole": "Your target role",
       "matched": "Matched — you’ve got these",
@@ -1570,7 +1570,7 @@
     "modelPicker": {
       "tierLight": "Standard",
       "tierFlagship": "Pro",
-      "triggerTitle": "Choose the model powering Aria",
+      "triggerTitle": "Choose the model powering ARIA",
       "ariaLabelModel": "AI model: {{tier}}",
       "header": "Choose your AI",
       "whatsDifference": "What's the difference?",
@@ -1647,7 +1647,7 @@
         "smb": "Small business"
       },
       "companyFallback": "Company",
-      "ariasRead": "Aria’s read",
+      "ariasRead": "ARIA’s read",
       "seniorityLevel": "{{seniority}} level",
       "confirmed": "confirmed ✓",
       "confirmPrompt": "What kind of place is it? (I guessed — tap to confirm)",
@@ -1655,8 +1655,8 @@
       "focusExited": "Focus mode exited",
       "addedBullets_one": "✓ Added {{count}} bullet to your description",
       "addedBullets_other": "✓ Added {{count}} bullets to your description",
-      "recordWrote_one": "Aria wrote {{count}} bullet to this {{kind}}",
-      "recordWrote_other": "Aria wrote {{count}} bullets to this {{kind}}",
+      "recordWrote_one": "ARIA wrote {{count}} bullet to this {{kind}}",
+      "recordWrote_other": "ARIA wrote {{count}} bullets to this {{kind}}",
       "recordReview": "Tap to review, add or remove",
       "sharpenAnother": "Sharpen another",
       "doneWith": "Done with this {{kind}}",
@@ -1670,7 +1670,7 @@
       },
       "experienceType": {
         "heading": "What kind of experience was this?",
-        "body": "This helps Aria coach this role in the right way.",
+        "body": "This helps ARIA coach this role in the right way.",
         "job": "Job",
         "internship": "Internship",
         "partTime": "Part-time / informal",
@@ -1693,7 +1693,7 @@
       "justThisOnce": "Just this once",
       "alwaysAllow": "Always allow",
       "recommended": "Recommended",
-      "ariaDrafted": "Aria drafted {{n}}",
+      "ariaDrafted": "ARIA drafted {{n}}",
       "rerollFree": "· re-roll · free",
       "resultsHintOpened": "In your CV — check to add, uncheck to remove.",
       "resultsHintProject": "Here are a few ways to frame it — pick what fits. Add more than one if you like.",
@@ -1724,11 +1724,11 @@
         "eyebrow": "Target job",
         "thesis": "Set the target and everything aims at it — tailoring is what beats the ATS.",
         "points": {
-          "0": "The ATS matches the job's <b>exact keywords</b> — a set target lets Aria weave them in.",
+          "0": "The ATS matches the job's <b>exact keywords</b> — a set target lets ARIA weave them in.",
           "1": "Tailored CVs get read; generic ones get filtered out.",
           "2": "Paste the real job description for the tightest match — or skip for a strong all-rounder."
         },
-        "example": "With a target set, Aria shapes your bullets, skills & summary to fit that job.",
+        "example": "With a target set, ARIA shapes your bullets, skills & summary to fit that job.",
         "source": "How tailoring + ATS keyword-matching work"
       },
       "heading": {
@@ -1828,7 +1828,7 @@
       "thinking": "Thinking…"
     },
     "ariaComposer": {
-      "placeholder": "Ask Aria anything…",
+      "placeholder": "Ask ARIA anything…",
       "send": "Send"
     },
     "chatThemePicker": {
@@ -1844,7 +1844,7 @@
     },
     "cvLanguageToggle": {
       "title": "CV language",
-      "description": "The language this CV is written in — headings, bullets and summary. Separate from the app language, so Aria can keep coaching you in yours.",
+      "description": "The language this CV is written in — headings, bullets and summary. Separate from the app language, so ARIA can keep coaching you in yours.",
       "writeInTitle": "Write this CV in {{name}}",
       "compactTitle": "The language this CV is written in",
       "langSetToast": "CV language set to {{name}} — section headings updated. Your existing text stays as written.",
@@ -4011,7 +4011,7 @@
       "whatKind": "What kind of project is it?"
     },
     "pinnedEntry": {
-      "liveStatus": "Aria is actively working on this entry",
+      "liveStatus": "ARIA is actively working on this entry",
       "copy": {
         "experience": {
           "label": "Building",
@@ -4208,7 +4208,13 @@
     },
     "jobCapture": {
       "theJob": "The job you're going for",
-      "add": "Add"
+      "add": "Add",
+      "draftAssist": "No job description? ARIA can draft a typical one — {{cost}} cr",
+      "draftAssistNeedsTitle": "Enter a job title first — ARIA needs it to draft a description",
+      "drafting": "Drafting a typical job description",
+      "draftedNote": "This is a typical description for the role, not a real posting — edit it if you have the actual one.",
+      "draftInsufficientCredits": "Not enough credits to draft a description.",
+      "draftFailed": "Couldn't draft a description for that job title. Please try again."
     },
     "modeChooser": {
       "whatAreWeDoing": "What are we doing?",
@@ -4218,7 +4224,7 @@
       "buildBody": "I'll build it with you section by section — I ask, you answer, and I write it up as we go."
     },
     "roleBrief": {
-      "ariasRead": "Aria's read",
+      "ariasRead": "ARIA's read",
       "thisRole": "This role",
       "seniorityLevel": "{{seniority}} level",
       "lookingForYears_one": "Looking for around {{count}} year of experience.",
@@ -4383,7 +4389,7 @@
       "readFromCv": "Read from your CV"
     },
     "chat": {
-      "opener": "Hey — I'm Aria. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.",
+      "opener": "Hey — I'm ARIA. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.",
       "kindOpenerBuild": "Let's build your CV together. I'll ask, you answer, and I'll write it up as we go — here's how it'll run.",
       "kindOpenerTailor": "New tailoring. Paste the job you're going for and I'll read it properly.",
       "pickModeBuild": "Let's build it together. Here's how it'll run.",
@@ -4413,7 +4419,7 @@
       "beginBuild": "Before we begin, I need one quick bit of context about your experience.",
       "careerStage": {
         "heading": "Where are you in your career?",
-        "body": "This helps Aria coach you in the right way across your whole CV.",
+        "body": "This helps ARIA coach you in the right way across your whole CV.",
         "skip": "Skip for now",
         "options": {
           "grad": "Student / recent grad",
@@ -4447,7 +4453,7 @@
       },
       "experienceType": {
         "heading": "What kind of experience was this?",
-        "body": "This helps Aria ask the right questions for this entry.",
+        "body": "This helps ARIA ask the right questions for this entry.",
         "job": "Job",
         "internship": "Internship",
         "partTime": "Part-time / informal",
@@ -4524,7 +4530,7 @@
       "bulletsOnCv_other": "{{count}} bullets on your CV",
       "contactConfirmed": "Contact details confirmed",
       "thinking": {
-        "openingStudio": "Getting Aria ready…",
+        "openingStudio": "Getting ARIA ready…",
         "pickingUp": "Picking up where we left off…",
         "settingUpCopy": "Setting up your tailored copy…",
         "readingJob": "Reading the job…",
@@ -4575,7 +4581,7 @@
       "draftCount": "Draft {{n}} · {{cr}} cr",
       "pickWhatsTrue": "Pick what's true",
       "tryAnotherAngle": "Try another angle",
-      "activityPlaceholder": "Tell Aria what you did…",
+      "activityPlaceholder": "Tell ARIA what you did…",
       "generatingBullets": "Generating your bullet points…",
       "readyForBullets": "Okay, I have everything I need to create your bullet points.",
       "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
@@ -4605,8 +4611,8 @@
         "deleteFailed": "Couldn't delete that — try again."
       },
       "newCv": "New CV",
-      "title": "Aria Studio",
-      "buildingWithAria": "Building a CV with Aria",
+      "title": "ARIA Studio",
+      "buildingWithAria": "Building a CV with ARIA",
       "tailorToJob": "Prepare me for a job",
       "hideSessions": "Hide sessions",
       "showSessions": "Show sessions",

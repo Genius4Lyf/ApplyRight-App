@@ -418,7 +418,7 @@ const StudioChat = ({ onPaywall }) => {
   // Both reads run in parallel under one indicator: the free deterministic keyword pass
   // and the AI brief. Either can fail independently without blocking the other — the
   // keywords still give Aria something to say if the brief comes back null.
-  const captureJob = async ({ jobTitle, jobDescription }) => {
+  const captureJob = async ({ jobTitle, jobDescription, jdSource }) => {
     setEditingJob(false);
     setReading(true);
 
@@ -457,7 +457,7 @@ const StudioChat = ({ onPaywall }) => {
     ]);
 
     setReading(false);
-    push({ who: 'jobcard', jobTitle, jobDescription, keywords, brief });
+    push({ who: 'jobcard', jobTitle, jobDescription, keywords, brief, jdSource });
     setPhase('brief');
     ariaSays(
       brief ? t('ariaStudio.chat.captureJobWithBrief') : t('ariaStudio.chat.captureJobNoBrief')
@@ -486,6 +486,7 @@ const StudioChat = ({ onPaywall }) => {
         // doesn't re-extract and any correction they made survives.
         brief: job.brief || undefined,
         model: modelId,
+        jdSource: job.jdSource,
       });
 
       // Bind the provider to the new copy — this is what makes `draftId` go live and
@@ -1416,7 +1417,20 @@ const StudioChat = ({ onPaywall }) => {
   // entirely rather than sitting there disabled and competing for attention.
   // SectionCoach brings its own input whenever it's driving — the fix loop, or the
   // achievements stage of a pinned role.
-  const coachOwnsInput = phase === 'fix:coach' || (!!pinnedEntry && pinnedStage === 'achievements');
+  // A charged bullet generation still waiting on the PINNED entry.
+  //
+  // `roleStage` reports 'complete' the moment an entry holds any bullet line, so a
+  // pending card belonging to an entry that already has bullets (a second pass, or one
+  // partly applied elsewhere) would otherwise never mount — leaving output the user has
+  // already PAID FOR unreachable. Restoring it outranks the stage being nominally done.
+  const pendingBulletsForPin =
+    !!pinnedEntry &&
+    cvData?.studioPending?.kind === 'bullets' &&
+    cvData.studioPending.sortId === pinnedEntry._sortId;
+  const coachDrivesPin =
+    !!pinnedEntry &&
+    (pinnedStage === 'achievements' || (pendingBulletsForPin && pinnedStage === 'complete'));
+  const coachOwnsInput = phase === 'fix:coach' || coachDrivesPin;
   // Free chat is live throughout a build (asking a question must never be blocked by a
   // card), and after a scan. The tailor intake stays card-driven.
   const freeChatAllowed = phase === 'results' || phase.startsWith('build:');
@@ -1942,6 +1956,7 @@ const StudioChat = ({ onPaywall }) => {
                 key="buildjob"
                 initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
                 initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
+                model={genModelId}
                 onSubmit={(job) => {
                   setBuildJobOpen(false);
                   buildCaptureJob(job);
@@ -2184,6 +2199,7 @@ const StudioChat = ({ onPaywall }) => {
                 key="job"
                 initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
                 initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
+                model={genModelId}
                 onSubmit={captureJob}
                 onCancel={() => {
                   if (editingJob) {
@@ -2334,69 +2350,65 @@ const StudioChat = ({ onPaywall }) => {
               loop uses, pointed at this entry. One coaching path, not two: the free
               interview, the count picker, the credited generation and applyRoleBulletDiff
               all behave identically here. */}
-          {pinnedEntry &&
-            pinnedStage === 'achievements' &&
-            !thinking &&
-            !roleBusy &&
-            !transitionLabel && (
-              <SectionCoach
-                key={`rolecoach-${pinnedEntry._sortId}`}
-                draftId={draftId}
-                dockNode={coachDock}
-                entry={{
-                  // 'project' routes coachChatTurn to its project framing (type-aware,
-                  // problem → role → tech → outcome → link) instead of the job one.
-                  section: pinnedSectionKey === 'project' ? 'project' : 'experience',
-                  sortId: pinnedEntry._sortId,
-                  title: pinnedEntry.title,
-                  company: pinnedEntry.company,
-                }}
-                missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
-                  .map((k) => (typeof k === 'string' ? k : k?.name))
-                  .filter(Boolean)
-                  .slice(0, 4)}
-                messages={messages}
-                onPush={push}
-                onApply={async (add, remove) => {
-                  setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
-                  try {
-                    const res = await applyRoleBulletDiff(
-                      pinnedSectionKey === 'project' ? 'project' : 'experience',
-                      pinnedEntry._sortId,
-                      add,
-                      remove
-                    );
-                    if (!res?.ok) setTransitionLabel(null); // failed — onDone won't fire, clear now
-                    return res;
-                  } catch (e) {
-                    setTransitionLabel(null);
-                    throw e;
+          {coachDrivesPin && !studioTransition && !thinking && !roleBusy && !transitionLabel && (
+            <SectionCoach
+              key={`rolecoach-${pinnedEntry._sortId}`}
+              draftId={draftId}
+              dockNode={coachDock}
+              entry={{
+                // 'project' routes coachChatTurn to its project framing (type-aware,
+                // problem → role → tech → outcome → link) instead of the job one.
+                section: pinnedSectionKey === 'project' ? 'project' : 'experience',
+                sortId: pinnedEntry._sortId,
+                title: pinnedEntry.title,
+                company: pinnedEntry.company,
+              }}
+              missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
+                .map((k) => (typeof k === 'string' ? k : k?.name))
+                .filter(Boolean)
+                .slice(0, 4)}
+              messages={messages}
+              onPush={push}
+              onApply={async (add, remove) => {
+                setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
+                try {
+                  const res = await applyRoleBulletDiff(
+                    pinnedSectionKey === 'project' ? 'project' : 'experience',
+                    pinnedEntry._sortId,
+                    add,
+                    remove
+                  );
+                  if (!res?.ok) setTransitionLabel(null); // failed — onDone won't fire, clear now
+                  return res;
+                } catch (e) {
+                  setTransitionLabel(null);
+                  throw e;
+                }
+              }}
+              onDone={(result) => {
+                setTimeout(() => {
+                  setTransitionLabel(null);
+                  if (result?.applied?.length) {
+                    setAppliedReceipt({
+                      sortId: pinnedEntry._sortId,
+                      section: pinnedSectionKey,
+                      title:
+                        pinnedEntry.title ||
+                        t(
+                          pinnedSectionKey === 'project'
+                            ? 'ariaStudio.chat.untitledProject'
+                            : 'ariaStudio.chat.untitledRole'
+                        ),
+                      n: result.applied.length,
+                      nonce: Date.now(),
+                    });
                   }
-                }}
-                onDone={(result) => {
-                  setTimeout(() => {
-                    setTransitionLabel(null);
-                    if (result?.applied?.length) {
-                      setAppliedReceipt({
-                        sortId: pinnedEntry._sortId,
-                        section: pinnedSectionKey,
-                        title:
-                          pinnedEntry.title ||
-                          t(
-                            pinnedSectionKey === 'project'
-                              ? 'ariaStudio.chat.untitledProject'
-                              : 'ariaStudio.chat.untitledRole'
-                          ),
-                        n: result.applied.length,
-                        nonce: Date.now(),
-                      });
-                    }
-                  }, 500);
-                }}
-                careerStage={careerStage}
-                onPickCareerStage={setCareerStage}
-              />
-            )}
+                }, 500);
+              }}
+              careerStage={careerStage}
+              onPickCareerStage={setCareerStage}
+            />
+          )}
 
           {/* The focused build-with. Renders INTO this stream (its turns are ordinary
               aria/user messages, so they persist with everything else) and brings its

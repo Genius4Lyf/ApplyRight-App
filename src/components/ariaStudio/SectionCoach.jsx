@@ -37,7 +37,7 @@ const SectionCoach = ({
   draftId,
   entry, // { section: 'experience'|'project', sortId, title, company }
   missingKeywords = [],
-  messages, // the SHARED studio stream — coach turns persist with everything else
+  messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
   onDone, // () => void — fix finished, hand back to the breakdown
@@ -52,11 +52,14 @@ const SectionCoach = ({
   const isProject = entry?.section === 'project';
   const isGradCareer = careerStage === 'grad';
   const { cvData, updateCvData } = useAriaStudio();
+  // The charged generation still waiting on THIS entry, or null. One pending card is
+  // shared by the whole Studio session, so it's matched on section + sortId.
+  const pendingGeneration = cvData?.studioPending;
   const restored =
-    cvData?.studioPending?.kind === 'bullets' &&
-    cvData.studioPending.section === entry?.section &&
-    cvData.studioPending.sortId === entry?.sortId
-      ? cvData.studioPending
+    pendingGeneration?.kind === 'bullets' &&
+    pendingGeneration.section === entry?.section &&
+    pendingGeneration.sortId === entry?.sortId
+      ? pendingGeneration
       : null;
 
   // The session's Aria model. The coach owns the docked composer while it drives, so its
@@ -91,7 +94,62 @@ const SectionCoach = ({
 
   const inputRef = useRef(null);
   const exampleRef = useRef(null);
-  const buildTurnsRef = useRef(0);
+
+  // Re-sync when a pending generation lands AFTER this mounted.
+  //
+  // The initialisers above read `studioPending` exactly once, so they only catch it when
+  // the draft is already in context at mount. Often it isn't — the pin resolves from the
+  // transcript, StudioChat remounts wholesale on sessionNonce, and the draft arrives on
+  // its own fetch. On those orderings already-PAID-FOR bullets were dropped on the floor
+  // and the card fell back to a fresh interview. Mirrors the skills/summary re-sync
+  // StudioChat already runs for the same reason.
+  useEffect(() => {
+    if (!restored?.bullets?.length) return;
+    // Never stomp what's on screen: a live result, or a re-roll still in flight.
+    if (bullets.length || phase === 'generating') return;
+    setBullets(restored.bullets);
+    setSelected(new Set(restored.bullets.map((_, index) => index)));
+    setDescription(restored.description || '');
+    setCount(restored.count || REC);
+    setWasFree(!!restored.wasFree);
+    setPhase('results');
+  }, [restored, bullets.length, phase, REC]);
+
+  // The visible Studio transcript spans every role. For coaching, start at the CURRENT
+  // pin so a finished role's Q&A cannot make a newly-added role look mid-conversation
+  // (or already ready to draft), which suppresses its fresh suggestions and example.
+  const pinIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.who === 'pinrole' || messages[i]?.who === 'unpinrole') return i;
+    }
+    return -1;
+  })();
+  const activePin = pinIndex >= 0 ? messages[pinIndex] : null;
+  const coachMessages =
+    activePin?.who === 'pinrole' && activePin.sortId === entry?.sortId
+      ? messages.slice(pinIndex + 1)
+      : messages;
+
+  // Turns already spent on THIS coach session — DERIVED from the restored transcript
+  // rather than counted in a ref. The ref reset to 0 on every refresh, so Aria reopened
+  // the interview at turn one (and misreported the cap) even though the whole Q&A was
+  // sitting right there in the stream.
+  //
+  // Counted from the marker that OPENED this session — the entry's own `pinrole` in a
+  // build, or the `fixstart` that aimed the coach at it in the fix loop. Never from the
+  // whole transcript: that spans every other role, and the backend turns `buildTurns`
+  // into a hard "wrap this up now", so over-counting would end an interview on turn one.
+  const sessionStart = (() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m?.who === 'pinrole' && m.sortId === entry?.sortId) return i;
+      if (m?.who === 'fixstart' && m.mode === 'coach' && m.entry?.sortId === entry?.sortId)
+        return i;
+    }
+    return -1;
+  })();
+  const turnsTaken =
+    sessionStart >= 0 ? messages.slice(sessionStart + 1).filter((m) => m.who === 'user').length : 0;
 
   useEffect(() => {
     if (!exampleOpen) return undefined;
@@ -126,21 +184,6 @@ const SectionCoach = ({
     const val = (text ?? input).trim();
     if (!val || thinking) return;
 
-    // The visible Studio transcript spans every role. For coaching, start at the CURRENT
-    // pin so a finished role's Q&A cannot make a newly-added role look mid-conversation
-    // (or already ready to draft), which suppresses its fresh suggestions and example.
-    let pinIndex = -1;
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i]?.who === 'pinrole' || messages[i]?.who === 'unpinrole') {
-        pinIndex = i;
-        break;
-      }
-    }
-    const activePin = pinIndex >= 0 ? messages[pinIndex] : null;
-    const coachMessages =
-      activePin?.who === 'pinrole' && activePin.sortId === entry.sortId
-        ? messages.slice(pinIndex + 1)
-        : messages;
     const next = [...coachMessages, { who: 'user', text: val }];
     onPush({ who: 'user', text: val });
     setInput('');
@@ -149,7 +192,6 @@ const SectionCoach = ({
     setExampleAnswer('');
     setExampleOpen(false);
     setThinking(true);
-    buildTurnsRef.current += 1;
 
     try {
       const r = await CVService.coachChat({
@@ -160,7 +202,7 @@ const SectionCoach = ({
           .filter((m) => m.who === 'aria' || m.who === 'user')
           .map((m) => ({ who: m.who, text: m.text })),
         focus: { section: entry.section, sortId: entry.sortId },
-        buildTurns: buildTurnsRef.current,
+        buildTurns: turnsTaken + 1,
         studioInterview: true,
         model: modelId,
         // Ride the picked stage along (undefined → backend infers from the draft).
@@ -360,7 +402,7 @@ const SectionCoach = ({
             </span>
           )}
           <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {Math.min(buildTurnsRef.current, TURN_CAP)}/{TURN_CAP}
+            {Math.min(turnsTaken, TURN_CAP)}/{TURN_CAP}
           </span>
         </div>
       }
