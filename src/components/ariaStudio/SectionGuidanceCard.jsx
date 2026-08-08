@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
@@ -25,7 +25,11 @@ const GUIDANCE = {
   },
 };
 
-const SectionGuidanceCard = ({ section, draftId, note, onBack }) => {
+// `onRescore` is the way OUT of the loop the CTA creates: the link opens the builder in
+// a NEW TAB, so the honest user journey is "go and fix it over there, then come back" —
+// and Back alone returned to a breakdown still showing the old red band, with nothing to
+// tell the user how to make it catch up.
+const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescoring }) => {
   const { t } = useTranslation();
   const g = GUIDANCE[section];
   if (!g) return null;
@@ -52,24 +56,42 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack }) => {
           {t(g.bodyKey)}
         </p>
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => onBack?.()}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+            disabled={rescoring}
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {t('common.back')}
           </button>
-          {draftId && (
-            <a
-              href={`/cv-builder/${draftId}/${g.step}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
-            >
-              {t(g.ctaKey)} <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {draftId && (
+              <a
+                href={`/cv-builder/${draftId}/${g.step}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+              >
+                {t(g.ctaKey)} <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+            {/* Free, and therefore the PRIMARY action: the user has already done the work
+                in the other tab and only needs the score to catch up with it. */}
+            {onRescore && (
+              <button
+                type="button"
+                onClick={() => onRescore()}
+                disabled={rescoring}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                <RefreshCw className={`w-3 h-3 ${rescoring ? 'animate-spin' : ''}`} />
+                {rescoring
+                  ? t('ariaStudio.sectionBreakdown.rescoring')
+                  : t('ariaStudio.sectionGuidance.rescore')}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </AriaCard>

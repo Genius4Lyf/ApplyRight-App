@@ -289,8 +289,17 @@ const CVService = {
   // Aria's career-stage-aware, JD-tailored professional summary. Charges
   // GENERATE_SUMMARY per draft (each re-roll charges again). stage is
   // 'grad'|'experienced'|'changer'. Returns { summary, cost, remainingCredits }.
-  coachSummary: async ({ draftId, stage, model }) => {
-    const { data } = await api.post('/coach/summary', { draftId, stage, model });
+  // `missingKeywords` is the gap list from the Studio's section scan — the very terms
+  // the row the user tapped "Fix" on was complaining about. Passing them makes the
+  // rewrite obliged to close the gap it was opened to close, so the free recompute
+  // that follows can honestly report movement. Omitted on the build track (no scan).
+  coachSummary: async ({ draftId, stage, model, missingKeywords }) => {
+    const { data } = await api.post('/coach/summary', {
+      draftId,
+      stage,
+      model,
+      missingKeywords,
+    });
     return data; // { summary, cost, remainingCredits }
   },
 

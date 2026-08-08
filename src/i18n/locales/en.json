@@ -4203,6 +4203,7 @@
     "entryPicker": {
       "whichOne": "Which one should we sharpen?",
       "nothingHere": "There's nothing here yet — add an entry in the CV builder and I'll help you write it.",
+      "openBuilder": "Open the CV builder",
       "untitled": "Untitled",
       "noKeyword": "no {{keyword}}"
     },
@@ -4284,7 +4285,8 @@
         "title": "Contact details",
         "body": "Recruiters need more than one way to reach you. Full name, email, phone and a LinkedIn URL is the complete set — anything missing is a dead end.",
         "cta": "Edit contact details"
-      }
+      },
+      "rescore": "I've updated it — re-score"
     },
     "targetJobAsk": {
       "oneThingFirst": "One thing first",
@@ -4309,7 +4311,22 @@
       "rescoring": "Re-scoring…",
       "rescoreFree": "Re-score · free",
       "rechecking": "Re-checking…",
-      "recheckScore": "Re-check my score · {{cost}} cr"
+      "recheckScore": "Re-check my score · {{cost}} cr",
+      "notApplicable": "Doesn't apply to me",
+      "includeAgain": "Include this again"
+    },
+    "sectionNote": {
+      "complete": "Nothing missing here.",
+      "missing": "Not on your CV yet — add it.",
+      "incomplete": "There's more to add here.",
+      "thinAndMissing": "Thin, and it's missing {{keywords}}.",
+      "tooThin": "Too thin — this section needs real content.",
+      "needsSubstance": "Needs more substance, and it doesn't mention {{keywords}}.",
+      "solidStart": "Solid start, but it could be stronger.",
+      "wellBuiltButMissing": "Well built, but it doesn't mention {{keywords}}.",
+      "closeStillMissing": "Close — still missing {{keywords}}.",
+      "strong": "Strong, and it speaks to this job.",
+      "notApplicable": "You've said this one doesn't apply to you."
     },
     "sessionRail": {
       "recents": "Recents",
@@ -4402,9 +4419,12 @@
       "scanDone": "Here's where you stand. The red and amber sections are where the work is.",
       "scanInsufficientCredits": "You need {{required}} credits for a full scan and you have {{current}}. Top up and I'll run it.",
       "scanFailed": "I couldn't finish the scan just now — try again in a moment.",
-      "fixPickWithKeywords": "Let's fix {{section}}. This job leans on {{keywords}} — which one should we sharpen?",
-      "fixPickNoKeywords": "Let's fix {{section}}. Which one should we sharpen?",
+      "fixPickWithKeywords": "{{section}}: this job leans on {{keywords}} — which one should we sharpen?",
+      "fixPickNoKeywords": "{{section}}: which one should we sharpen?",
       "fixSkills": "Here's what the job asks for that your CV doesn't claim yet.",
+      "fixGuide": "{{section}}: this one's about completeness, not wording — here's what's missing and where to add it.",
+      "sectionDismissed": "Noted — I'll leave {{section}} out of your score. You can put it back any time.",
+      "sectionRestored": "{{section}} is back in your score.",
       "fixSummary": "I'll rewrite your summary around this job. First — where are you in your career?",
       "and": " and ",
       "pickEntryWithGaps": "Right — {{title}}. The job leans on {{gaps}}. Did you do either of those here? Tell me what you actually did.",
@@ -4576,6 +4596,7 @@
       "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
       "backToSections": "Back to sections",
       "aimingAt": "aiming at {{keywords}}",
+      "jobAsksFor": "job asks for {{keywords}}",
       "send": "Send",
       "draftCount": "Draft {{n}} · {{cr}} cr",
       "pickWhatsTrue": "Pick what's true",

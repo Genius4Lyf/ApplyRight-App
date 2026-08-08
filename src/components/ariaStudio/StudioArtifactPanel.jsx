@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
-import { buildProgress, BUILD_SECTIONS, withoutBlankEntries } from '../../lib/studioFlow';
+import {
+  buildProgress,
+  BUILD_SECTIONS,
+  sectionLabel,
+  withoutBlankEntries,
+} from '../../lib/studioFlow';
 import AriaOrbit from '../cv/AriaOrbit';
 
 // The right rail — a standing summary of where the tailored CV is right now: the role
@@ -435,7 +440,7 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
                     aria-hidden="true"
                   />
                   <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600 dark:text-slate-300">
-                    {s.label}
+                    {sectionLabel(t, s)}
                   </span>
                   <span className="shrink-0 font-mono text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
                     {s.score}
@@ -447,13 +452,20 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
               {sections
                 .map((s) =>
                   t('ariaStudio.studioArtifactPanel.srSectionLine', {
-                    label: s.label,
+                    label: sectionLabel(t, s),
                     status:
-                      s.band === 'ok'
-                        ? t('ariaStudio.studioArtifactPanel.srGood')
-                        : s.band === 'warn'
-                          ? t('ariaStudio.studioArtifactPanel.srNeedsWork')
-                          : t('ariaStudio.studioArtifactPanel.srPoor'),
+                      // 'neutral' is a DISMISSED section — unscored by the user's own
+                      // choice. It has to be named before the final else, which is the
+                      // 'bad' case: without this, the one section they marked
+                      // not-applicable was the one announced to a screen reader as
+                      // "poor" — the sighted row is muted slate and says the opposite.
+                      s.band === 'neutral'
+                        ? t('ariaStudio.sectionBreakdown.notApplicable')
+                        : s.band === 'ok'
+                          ? t('ariaStudio.studioArtifactPanel.srGood')
+                          : s.band === 'warn'
+                            ? t('ariaStudio.studioArtifactPanel.srNeedsWork')
+                            : t('ariaStudio.studioArtifactPanel.srPoor'),
                   })
                 )
                 .join(' ')}

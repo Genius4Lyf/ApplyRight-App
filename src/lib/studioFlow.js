@@ -30,9 +30,58 @@ export const BUILD_SECTIONS = [
   { key: 'summary', labelKey: 'ariaStudio.studioFlow.sections.summary', cvKey: 'summary' },
 ];
 
+/**
+ * The DISPLAY NAME of a scan section, in the user's language.
+ *
+ * `ariaStudio.studioFlow.sections.<key>` is the ONE source of truth for these six names —
+ * the same block BUILD_SECTIONS points at. The scan also ships a `label`, but it is
+ * hard-coded English on the server and is never rendered; it survives here only as the
+ * fallback for a section whose key we don't recognise.
+ *
+ * The locale text differs slightly from the server's ('education' is "Education &
+ * certifications" here, "Education" there). The locale wins: it is the string users
+ * already see everywhere else in the Studio, and internal consistency matters more than
+ * matching the wire.
+ *
+ * @param {Function} t react-i18next's t
+ * @param {{ key?: string, label?: string }} section
+ * @returns {string}
+ */
+export function sectionLabel(t, section = {}) {
+  const key = section?.key;
+  const fallback = section?.label || key || '';
+  if (!t || !key) return fallback;
+  const path = `ariaStudio.studioFlow.sections.${key}`;
+  const label = t(path);
+  // i18next hands back the key itself when nothing is registered under it.
+  return label && label !== path ? label : fallback;
+}
+
+/**
+ * The section's verdict line, in the user's language.
+ *
+ * The scan sends a KEY plus its params rather than a finished sentence, so the note is
+ * composed HERE — which is the whole point: a server-written English verdict cannot be
+ * translated after the fact, and it used to be rendered verbatim onto an otherwise
+ * fully French card.
+ *
+ * The `note` fallback is for scans persisted BEFORE that split: they carry prose and no
+ * noteKey. Showing that old line until the session's next free recompute is better than
+ * showing a blank verdict.
+ *
+ * @param {Function} t react-i18next's t
+ * @param {{ noteKey?: string, noteParams?: object, note?: string }} section
+ * @returns {string}
+ */
+export function sectionNote(t, section = {}) {
+  const noteKey = section?.noteKey;
+  if (noteKey) return t(`ariaStudio.sectionNote.${noteKey}`, section.noteParams);
+  return section?.note || '';
+}
+
 // An entry counts as REAL once it carries anything a reader would see. A row that exists
 // only because the Studio needed a _sortId to write into is a placeholder, not content.
-const hasSubstance = (e) =>
+export const hasSubstance = (e) =>
   !!(e && (e.title || e.company || e.degree || e.school || e.name || e.description || '').trim?.());
 
 /**
@@ -345,6 +394,47 @@ export const ENTRY_SOURCE = {
 export const STEP_FOR_FOCUS = { experience: 'history', project: 'projects' };
 
 /**
+ * Studio section key → the CV builder STEP that edits it. The wizard's step ids don't
+ * all match the scan's section keys ('experience' lives at 'history'), so the mapping
+ * has to be explicit.
+ */
+export const BUILDER_STEP_FOR_SECTION = {
+  experience: 'history',
+  projects: 'projects',
+};
+
+/**
+ * The URL of the builder step that edits a section. Named here rather than composed at
+ * each call site so every "open the builder" link in the Studio points at the same place.
+ *
+ * @param {string} draftId
+ * @param {string} section a scan section key
+ * @returns {string|null} null when there's no draft or no step for that section
+ */
+export const builderStepUrl = (draftId, section) => {
+  const step = BUILDER_STEP_FOR_SECTION[section];
+  return draftId && step ? `/cv-builder/${draftId}/${step}` : null;
+};
+
+/**
+ * Sections a user may mark NOT APPLICABLE — the ONE client-side source of truth, so
+ * "which rows offer a dismiss action" is never a literal 'projects' scattered across
+ * components.
+ *
+ * MIRRORS the server's whitelist (applyright-backend/src/config/sections.js), which is
+ * the one that actually decides: this list only governs which affordances are OFFERED.
+ * A key added here but not there would render a control whose save is silently ignored.
+ *
+ * Projects is the only genuinely optional section. A candidate with no side projects has
+ * not made a mistake, but every other section (summary, experience, skills, education,
+ * contact) is missing information a recruiter needs.
+ */
+export const DISMISSABLE_SECTIONS = ['projects'];
+
+/** Can this section be marked not-applicable? */
+export const isDismissable = (section) => DISMISSABLE_SECTIONS.includes(section);
+
+/**
  * The currently OPEN fix session, or null.
  *
  * A session is open when the most recent fix marker is a `fixstart` with no `fixend`
@@ -487,11 +577,16 @@ export function sessionRow(s = {}) {
  * scanned once and never improved has no journey to report, and inventing one (or
  * comparing a number against itself and calling it progress) would be a lie.
  *
+ * Section names are resolved through sectionLabel, so the card reads in the user's
+ * language rather than the server's. `t` is optional only so this stays callable from a
+ * non-React context; without it the names fall back to the scan's English labels.
+ *
  * @param {object} scan a studioScan snapshot
+ * @param {Function} [t] react-i18next's t
  * @returns {{from:number,to:number,moved:number,improved:boolean,
  *            newlyGreen:string[],stillWeak:string[]}|null}
  */
-export function finishSummary(scan) {
+export function finishSummary(scan, t) {
   if (!scan || scan.fitScore == null) return null;
   const base = scan.baseline;
   if (!base || base.fitScore == null) return null;
@@ -503,9 +598,15 @@ export function finishSummary(scan) {
   // green isn't an achievement of this session.
   const newlyGreen = sections
     .filter((s) => s.band === 'ok' && !wasOk.has(s.key))
-    .map((s) => s.label || s.key);
+    .map((s) => sectionLabel(t, s));
 
-  const stillWeak = sections.filter((s) => s.band !== 'ok').map((s) => s.label || s.key);
+  // NEUTRAL is not weak. A section the user marked not-applicable comes back from the
+  // scan banded 'neutral' with a null score, and `band !== 'ok'` would sweep it in here —
+  // telling someone their dismissed Projects section is still a problem, which is the
+  // exact nag dismissing it was meant to end. Only warn/bad are genuinely still weak.
+  const stillWeak = sections
+    .filter((s) => s.band !== 'ok' && s.band !== 'neutral')
+    .map((s) => sectionLabel(t, s));
 
   return {
     from: base.fitScore,

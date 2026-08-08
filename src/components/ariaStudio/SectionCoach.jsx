@@ -37,6 +37,14 @@ const SectionCoach = ({
   draftId,
   entry, // { section: 'experience'|'project', sortId, title, company }
   missingKeywords = [],
+  // Whether `missingKeywords` are MEASURED GAPS (the fix loop, straight off the section
+  // scan) or just the job's must-haves (the build track, where nothing has been scored
+  // yet). Only the first can honestly be called "aiming at": on the build track the
+  // entry may already cover every term listed, and claiming to aim at something the CV
+  // has had all along is the kind of small invented progress that teaches people to
+  // distrust the rest of the read. Defaults true — the fix loop is the caller that
+  // supplies real gaps.
+  keywordsAreGaps = true,
   messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
@@ -115,30 +123,10 @@ const SectionCoach = ({
     setPhase('results');
   }, [restored, bullets.length, phase, REC]);
 
-  // The visible Studio transcript spans every role. For coaching, start at the CURRENT
-  // pin so a finished role's Q&A cannot make a newly-added role look mid-conversation
-  // (or already ready to draft), which suppresses its fresh suggestions and example.
-  const pinIndex = (() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i]?.who === 'pinrole' || messages[i]?.who === 'unpinrole') return i;
-    }
-    return -1;
-  })();
-  const activePin = pinIndex >= 0 ? messages[pinIndex] : null;
-  const coachMessages =
-    activePin?.who === 'pinrole' && activePin.sortId === entry?.sortId
-      ? messages.slice(pinIndex + 1)
-      : messages;
-
-  // Turns already spent on THIS coach session — DERIVED from the restored transcript
-  // rather than counted in a ref. The ref reset to 0 on every refresh, so Aria reopened
-  // the interview at turn one (and misreported the cap) even though the whole Q&A was
-  // sitting right there in the stream.
-  //
-  // Counted from the marker that OPENED this session — the entry's own `pinrole` in a
-  // build, or the `fixstart` that aimed the coach at it in the fix loop. Never from the
-  // whole transcript: that spans every other role, and the backend turns `buildTurns`
-  // into a hard "wrap this up now", so over-counting would end an interview on turn one.
+  // The marker that OPENED this coach session — the entry's own `pinrole` in a build, or
+  // the `fixstart` that aimed the coach at it in the fix loop. BOTH tracks have to be
+  // matched here: the fix loop never writes a `pinrole`, so a pin-only search finds
+  // nothing on that path and every window derived from it silently spans everything.
   const sessionStart = (() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
@@ -148,6 +136,22 @@ const SectionCoach = ({
     }
     return -1;
   })();
+
+  // The visible Studio transcript spans every entry; the coach only ever sees THIS
+  // session. Scoped from the marker that started it, in either track.
+  //
+  // This is the payload POSTed to /coach/chat, so the window is not cosmetic: a wider one
+  // primes a PAID generation with another entry's answers, and the model duly attributes
+  // that entry's achievements to this one. (It also makes a fresh entry read as
+  // mid-conversation, suppressing its opening suggestions and example.)
+  const coachMessages = sessionStart >= 0 ? messages.slice(sessionStart + 1) : messages;
+
+  // Turns already spent on THIS coach session — DERIVED from the restored transcript
+  // rather than counted in a ref. The ref reset to 0 on every refresh, so Aria reopened
+  // the interview at turn one (and misreported the cap) even though the whole Q&A was
+  // sitting right there in the stream. Never counted from the whole transcript: the
+  // backend turns `buildTurns` into a hard "wrap this up now", so over-counting would end
+  // an interview on turn one.
   const turnsTaken =
     sessionStart >= 0 ? messages.slice(sessionStart + 1).filter((m) => m.who === 'user').length : 0;
 
@@ -396,9 +400,12 @@ const SectionCoach = ({
           </button>
           {missingKeywords.length > 0 && (
             <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-              {t('ariaStudio.sectionCoach.aimingAt', {
-                keywords: missingKeywords.slice(0, 2).join(', '),
-              })}
+              {t(
+                keywordsAreGaps
+                  ? 'ariaStudio.sectionCoach.aimingAt'
+                  : 'ariaStudio.sectionCoach.jobAsksFor',
+                { keywords: missingKeywords.slice(0, 2).join(', ') }
+              )}
             </span>
           )}
           <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">

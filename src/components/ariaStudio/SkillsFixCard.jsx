@@ -6,14 +6,22 @@ import AriaCard from './AriaCard';
 // keywords the CV doesn't claim — so this is a checklist, not an AI call, and it's FREE:
 // the user already paid for that list when they paid for the scan.
 //
+// `missingKeywords` is the SKILLS SECTION's own gap list, off the fix marker — the same
+// list the row the user tapped was reporting. Named for what it is: the CV-wide
+// scan.missingSkills is a different, differently-produced list, and feeding that in here
+// made the card offer gaps the row never mentioned (or claim nothing was missing directly
+// under a row naming three).
+//
 // The honesty guard matters more than the convenience: ticking a skill you don't have
 // is how people get caught in interviews, so the card says so plainly and starts with
 // NOTHING pre-checked.
-const SkillsFixCard = ({ missingSkills = [], onApply, onCancel, applying }) => {
+const SkillsFixCard = ({ missingKeywords = [], onApply, onCancel, applying }) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState(() => new Set());
 
-  const names = missingSkills.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
+  // ONE derived list: what renders, and what the "nothing missing" branch below tests.
+  // Keying that branch off a different list is how a card ends up claiming both.
+  const names = missingKeywords.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
 
   const toggle = (name) =>
     setSelected((prev) => {

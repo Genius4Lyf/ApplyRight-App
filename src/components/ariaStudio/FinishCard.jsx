@@ -31,7 +31,9 @@ const FinishCard = ({
 }) => {
   const { t } = useTranslation();
   const isBuild = mode === 'build';
-  const summary = finishSummary(scan);
+  // `t` is passed in so the newlyGreen / stillWeak section names come from the locale
+  // rather than the scan's hard-coded English labels.
+  const summary = finishSummary(scan, t);
   const score = scan?.fitScore;
   const band = bandOf(score);
 

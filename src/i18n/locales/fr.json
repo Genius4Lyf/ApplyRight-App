@@ -4199,6 +4199,7 @@
     "entryPicker": {
       "whichOne": "Lequel devrions-nous affiner ?",
       "nothingHere": "Il n'y a rien ici pour l'instant — ajoutez une entrée dans le générateur de CV et je vous aiderai à la rédiger.",
+      "openBuilder": "Ouvrir le générateur de CV",
       "untitled": "Sans titre",
       "noKeyword": "pas de {{keyword}}"
     },
@@ -4280,7 +4281,8 @@
         "title": "Coordonnées",
         "body": "Les recruteurs ont besoin de plusieurs façons de vous joindre. Nom complet, email, téléphone et une URL LinkedIn forment l'ensemble complet — tout élément manquant est une impasse.",
         "cta": "Modifier les coordonnées"
-      }
+      },
+      "rescore": "C'est mis à jour — recalculer"
     },
     "targetJobAsk": {
       "oneThingFirst": "Une chose avant tout",
@@ -4305,7 +4307,22 @@
       "rescoring": "Recalcul…",
       "rescoreFree": "Recalculer · gratuit",
       "rechecking": "Nouvelle vérification…",
-      "recheckScore": "Revérifier mon score · {{cost}} cr"
+      "recheckScore": "Revérifier mon score · {{cost}} cr",
+      "notApplicable": "Ne me concerne pas",
+      "includeAgain": "Réintégrer cette section"
+    },
+    "sectionNote": {
+      "complete": "Rien ne manque ici.",
+      "missing": "Absent de votre CV — à ajouter.",
+      "incomplete": "Il reste des éléments à ajouter ici.",
+      "thinAndMissing": "Trop court, et il manque {{keywords}}.",
+      "tooThin": "Trop court — cette section a besoin de vrai contenu.",
+      "needsSubstance": "Manque de substance, et ne mentionne pas {{keywords}}.",
+      "solidStart": "Bon début, mais ça peut être plus solide.",
+      "wellBuiltButMissing": "Bien construit, mais ne mentionne pas {{keywords}}.",
+      "closeStillMissing": "Presque — il manque encore {{keywords}}.",
+      "strong": "Solide, et en phase avec ce poste.",
+      "notApplicable": "Vous avez indiqué que cette section ne vous concerne pas."
     },
     "sessionRail": {
       "recents": "Récents",
@@ -4398,9 +4415,12 @@
       "scanDone": "Voici où vous en êtes. Les sections rouges et orange sont là où il y a du travail.",
       "scanInsufficientCredits": "Une analyse complète nécessite {{required}} crédits et vous en avez {{current}}. Rechargez et je la lancerai.",
       "scanFailed": "Je n'ai pas pu terminer l'analyse pour l'instant — réessayez dans un instant.",
-      "fixPickWithKeywords": "Corrigeons {{section}}. Ce poste s'appuie sur {{keywords}} — lequel devrions-nous affiner ?",
-      "fixPickNoKeywords": "Corrigeons {{section}}. Lequel devrions-nous affiner ?",
+      "fixPickWithKeywords": "{{section}} : ce poste s'appuie sur {{keywords}} — lequel devrions-nous affiner ?",
+      "fixPickNoKeywords": "{{section}} : lequel devrions-nous affiner ?",
       "fixSkills": "Voici ce que le poste demande et que votre CV ne mentionne pas encore.",
+      "fixGuide": "{{section}} : ici, c'est une question d'exhaustivité, pas de formulation — voici ce qui manque et où l'ajouter.",
+      "sectionDismissed": "Noté — je laisse {{section}} en dehors de votre score. Vous pouvez la réintégrer à tout moment.",
+      "sectionRestored": "{{section}} est de nouveau pris en compte dans votre score.",
       "fixSummary": "Je vais réécrire votre résumé autour de ce poste. D'abord — où en êtes-vous dans votre carrière ?",
       "and": " et ",
       "pickEntryWithGaps": "D'accord — {{title}}. Le poste s'appuie sur {{gaps}}. Avez-vous fait l'un ou l'autre ici ? Dites-moi ce que vous avez réellement fait.",
@@ -4470,7 +4490,7 @@
       "skillsInsufficientCredits": "Trouver vos compétences coûte {{cost}} crédits et il vous en manque pour l'instant. Vous pouvez les saisir vous-même gratuitement à la place.",
       "skillsInDone": "{{n}} compétences ajoutées. Dernière étape — le résumé en haut de votre CV.",
       "manualSkillsAdded": "{{n}} ajoutée(s). D'autres, ou on passe à la suite ?",
-      "manualSkillsAllDupes": "Ces compétences sont déjà sur ton CV.",
+      "manualSkillsAllDupes": "Ces compétences sont déjà sur votre CV.",
       "buildSummaryDone": "Votre CV est construit. Voici où il en est.",
       "certsDone": "Votre section formation est complète.",
       "chatLimitReached": "Vous avez utilisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
@@ -4572,6 +4592,7 @@
       "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
       "backToSections": "Retour aux sections",
       "aimingAt": "vise {{keywords}}",
+      "jobAsksFor": "le poste demande {{keywords}}",
       "send": "Envoyer",
       "draftCount": "Rédiger {{n}} · {{cr}} cr",
       "pickWhatsTrue": "Choisissez ce qui est vrai",

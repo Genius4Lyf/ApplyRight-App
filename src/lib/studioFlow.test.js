@@ -4,6 +4,7 @@ import {
   phaseForNewSession,
   sessionRow,
   finishSummary,
+  sectionNote,
   buildProgress,
   BUILD_SECTIONS,
   entryProgress,
@@ -21,6 +22,10 @@ import {
   ENTRY_SOURCE,
   STEP_FOR_FOCUS,
 } from './studioFlow';
+// The real locale bundles — sectionNote's whole job is turning a key into the string a
+// user sees, so asserting against anything else would test nothing.
+import en from '../i18n/locales/en.json';
+import fr from '../i18n/locales/fr.json';
 
 // A transcript is built by appending markers, exactly as StudioChat does — so these
 // tests exercise the real sequences a session produces, not hand-built fixtures.
@@ -349,10 +354,7 @@ describe('buildProgress — derived, never stored', () => {
       'experience'
     );
     expect(
-      buildProgress(
-        { ...FULL, summary: undefined, professionalSummary: '' },
-        CONTACT_DONE
-      ).nextKey
+      buildProgress({ ...FULL, summary: undefined, professionalSummary: '' }, CONTACT_DONE).nextKey
     ).toBe('summary');
   });
 
@@ -361,9 +363,9 @@ describe('buildProgress — derived, never stored', () => {
       false
     );
     expect(buildProgress({ personalInfo: { fullName: 'E' } }).status.contact).toBe(false);
-    expect(
-      buildProgress({ personalInfo: { fullName: 'E' } }, CONTACT_DONE).status.contact
-    ).toBe(true);
+    expect(buildProgress({ personalInfo: { fullName: 'E' } }, CONTACT_DONE).status.contact).toBe(
+      true
+    );
   });
 
   it('counts confirmed contact in the Studio health percent', () => {
@@ -511,10 +513,12 @@ describe('roleStage — derived, so a refresh resumes correctly', () => {
     expect(roleStage({})).toBe('entryType');
     expect(roleStage({ entryType: 'full-time' })).toBe('title');
     expect(roleStage({ entryType: 'full-time', title: 'Operator' })).toBe('company');
-    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe('dates');
-    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker', startDate: '2021' })).toBe(
-      'achievements'
+    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe(
+      'dates'
     );
+    expect(
+      roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker', startDate: '2021' })
+    ).toBe('achievements');
   });
 
   it('reports complete once all four are in', () => {
@@ -1014,6 +1018,84 @@ describe('finishSummary', () => {
       baseline: { fitScore: 50, sections: [] },
     });
     expect(s.newlyGreen).toEqual(['projects']);
+  });
+});
+
+describe('sectionNote', () => {
+  // A stand-in for react-i18next's t that resolves against the REAL locale files and
+  // interpolates {{params}}. A mock that returned its own argument would pass whether or
+  // not the string existed, which is exactly the failure this phase is about.
+  const translate = (bundle) => (path, params) => {
+    const value = path
+      .split('.')
+      .reduce((node, part) => (node == null ? node : node[part]), bundle);
+    if (typeof value !== 'string') return path; // i18next hands back the key when unregistered
+    return value.replace(/\{\{(\w+)\}\}/g, (_, name) => params?.[name] ?? '');
+  };
+  const t = translate(en);
+
+  // The ten branches noteFor can emit. If the server grows an eleventh, this list and
+  // both locales have to grow with it.
+  const NOTE_KEYS = [
+    'complete',
+    'missing',
+    'incomplete',
+    'thinAndMissing',
+    'tooThin',
+    'needsSubstance',
+    'solidStart',
+    'wellBuiltButMissing',
+    'closeStillMissing',
+    'strong',
+  ];
+
+  it('renders the keyed verdict, interpolating its params', () => {
+    const note = sectionNote(t, {
+      key: 'summary',
+      noteKey: 'wellBuiltButMissing',
+      noteParams: { keywords: 'Python, SQL' },
+    });
+    expect(note).toBe("Well built, but it doesn't mention Python, SQL.");
+  });
+
+  it('renders a param-free verdict', () => {
+    expect(sectionNote(t, { key: 'summary', noteKey: 'tooThin' })).toBe(
+      'Too thin — this section needs real content.'
+    );
+  });
+
+  it('resolves every branch the scan can emit, in both languages', () => {
+    [en, fr].forEach((bundle) => {
+      const translated = translate(bundle);
+      NOTE_KEYS.forEach((noteKey) => {
+        const note = sectionNote(translated, { noteKey, noteParams: { keywords: 'Python' } });
+        // Neither a leaked key path nor an unfilled placeholder ever reaches the card.
+        expect(note).not.toContain('ariaStudio.sectionNote');
+        expect(note).not.toContain('{{');
+        expect(note.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  it('falls back to the legacy prose on a scan persisted before the split', () => {
+    // An old snapshot carries `note` and no key. Showing yesterday's English line until
+    // the next free recompute beats showing a blank verdict.
+    expect(sectionNote(t, { key: 'skills', note: 'Solid start — add a bit more.' })).toBe(
+      'Solid start — add a bit more.'
+    );
+  });
+
+  it('prefers the key when a stale prose note rides alongside it', () => {
+    const note = sectionNote(t, {
+      noteKey: 'strong',
+      note: 'Strong — covers what the job asks for.',
+    });
+    expect(note).toBe(en.ariaStudio.sectionNote.strong);
+  });
+
+  it('is empty when the section carries neither', () => {
+    expect(sectionNote(t, {})).toBe('');
+    expect(sectionNote(t)).toBe('');
   });
 });
 

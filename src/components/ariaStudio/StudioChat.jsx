@@ -23,6 +23,11 @@ import {
   bulletCount,
   FIX_MODE,
   ENTRY_SOURCE,
+  sectionLabel,
+  sectionNote,
+  hasSubstance,
+  scoreDelta,
+  isDismissable,
 } from '../../lib/studioFlow';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
@@ -177,6 +182,11 @@ const StudioChat = ({ onPaywall }) => {
   const [working, setWorking] = useState(false); // tailor-start in flight
   const [reading, setReading] = useState(false); // keyword + brief-preview in flight
   const [scanning, setScanning] = useState(false); // scan or recompute in flight
+  // WHICH of the two is in flight — for the two busy LABELS only. `scanning` stays the
+  // "either is running" gate (ready, the composer, the thinking indicator), because both
+  // ops should lock the stream; this only decides which button gets to say it's working,
+  // so the FREE re-score can no longer make the PAID re-check look like it's running.
+  const [scanKind, setScanKind] = useState(null); // null | 'recompute' | 'rescan'
   // Generic "step confirmed, moving on" beat — hides the current/next card behind a
   // short labeled thinking indicator instead of swapping cards instantly.
   const [transitionLabel, setTransitionLabel] = useState(null);
@@ -554,6 +564,7 @@ const StudioChat = ({ onPaywall }) => {
   const runScan = async () => {
     if (scanning || !draftId) return;
     setScanning(true);
+    setScanKind('rescan');
     try {
       const res = await CVService.studioScan(draftId, modelId);
       // The snapshot lives on the draft; mirror it into context so every card and the
@@ -581,6 +592,7 @@ const StudioChat = ({ onPaywall }) => {
       }
     } finally {
       setScanning(false);
+      setScanKind(null);
     }
   };
 
@@ -589,6 +601,7 @@ const StudioChat = ({ onPaywall }) => {
   const runRecompute = async () => {
     if (!draftId) return null;
     setScanning(true);
+    setScanKind('recompute');
     try {
       const res = await CVService.studioRecompute(draftId);
       updateCvData({ studioScan: res.studioScan });
@@ -599,6 +612,7 @@ const StudioChat = ({ onPaywall }) => {
       return null;
     } finally {
       setScanning(false);
+      setScanKind(null);
     }
   };
 
@@ -619,20 +633,150 @@ const StudioChat = ({ onPaywall }) => {
     setPhase(`fix:${mode}`);
 
     if (mode === 'pick') {
+      // The TRANSLATED name, at its natural capitalisation. Lowercasing it was doing two
+      // kinds of damage: it forced an English label into a French sentence, and even
+      // once translated, French would need an article ("Corrigeons l'expérience
+      // professionnelle") that no generic template can supply. Both strings are now a
+      // colon construction — "{{section}}: this job leans on …" — which is article-free
+      // and reads correctly in both languages with the name left exactly as it is.
+      const name = sectionLabel(t, section);
       ariaSays(
         section.missingKeywords?.length
           ? t('ariaStudio.chat.fixPickWithKeywords', {
-              section: section.label.toLowerCase(),
+              section: name,
               keywords: section.missingKeywords.slice(0, 3).join(', '),
             })
-          : t('ariaStudio.chat.fixPickNoKeywords', { section: section.label.toLowerCase() })
+          : t('ariaStudio.chat.fixPickNoKeywords', { section: name })
       );
     } else if (mode === 'skills') {
       ariaSays(t('ariaStudio.chat.fixSkills'));
     } else if (mode === 'summary') {
       ariaSays(t('ariaStudio.chat.fixSummary'));
+    } else if (mode === 'guide') {
+      // Education and contact were the only two of the six sections where Aria said
+      // NOTHING: the divider and the card appeared, and she sat silent. Same TRANSLATED
+      // name, same colon construction as the 'pick' branch, for the same reason.
+      ariaSays(t('ariaStudio.chat.fixGuide', { section: sectionLabel(t, section) }));
     }
   };
+
+  // Pull the draft back from the DB. Needed when the edit happened somewhere this tab
+  // can't see — the guide CTA opens the CV builder in a NEW TAB, so by the time the user
+  // comes back, this tab's cvData is a stale snapshot of a document that has moved on.
+  // Overwriting the server's copy from it would silently undo the very edit being scored.
+  const refreshDraft = async () => {
+    if (!draftId) return null;
+    try {
+      const res = await CVService.getDraftById(draftId);
+      const fresh = res?.draft || res;
+      if (fresh?._id) setCvData(fresh);
+      return fresh;
+    } catch (err) {
+      console.error('studio draft refresh failed', err);
+      return null;
+    }
+  };
+
+  // Report what a section's score did. ONE implementation, shared by every path that
+  // re-scores — finishFix used to carry its own copy of this arithmetic, and a second
+  // copy in the guide flow would have made three places to keep in step.
+  const reportMovement = (before, after, sectionKey, storedLabel) => {
+    const delta = scoreDelta(before, after);
+    // Nothing honest to say without both ends of the comparison, and a section that has
+    // since been dismissed scores null — there is no movement to report on a section
+    // that is no longer being scored.
+    if (!delta || !Number.isFinite(delta.moved)) return;
+    // The marker stores the server's ENGLISH label; resolve it from its key at RENDER
+    // time so this line reads in the user's language and follows a live switch. A label
+    // resolved when the marker was written would freeze in whatever language was then
+    // active. The stored string stays as the fallback for a keyless old marker.
+    const sectionName = sectionLabel(t, { key: sectionKey, label: storedLabel });
+    const bandNote = delta.bandChanged
+      ? t(
+          before.band === 'bad'
+            ? 'ariaStudio.chat.outOfTheRedNote'
+            : 'ariaStudio.chat.intoTheGreenNote'
+        )
+      : '.';
+    push({
+      who: 'aria',
+      text:
+        delta.moved > 0
+          ? t('ariaStudio.chat.fixMovedScore', {
+              section: sectionName,
+              from: delta.from,
+              to: delta.to,
+              bandNote,
+            })
+          : t('ariaStudio.chat.fixSavedNoMove', { section: sectionName }),
+    });
+  };
+
+  // "I've updated it — re-score", from the education/contact guidance card. The work was
+  // done in the OTHER tab, so the order matters: refresh this tab's copy from the DB
+  // FIRST, then recompute. Recompute reads the DB either way, but leaving a stale cvData
+  // bound to the session would let any later save write the pre-edit document back.
+  const rescoreAfterGuide = async () => {
+    const fix = openFix(messages);
+    const before = cvData?.studioScan?.sections?.find((s) => s.key === fix?.sectionKey);
+    setScanning(true);
+    try {
+      push({ who: 'fixend' });
+      setPhase('results');
+      await refreshDraft();
+      const snap = await runRecompute();
+      reportMovement(
+        before,
+        snap?.sections?.find((s) => s.key === fix?.sectionKey),
+        fix?.sectionKey,
+        fix?.sectionLabel
+      );
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Mark a section not-applicable, or put it back. One top-level field, so the existing
+  // NARROW patch is exactly right — no new endpoint, and nothing else on the document is
+  // touched. The server keeps its own whitelist; this guard only stops us sending a key
+  // we know it will ignore.
+  const setSectionDismissed = async (section, dismissed) => {
+    if (!draftId || !isDismissable(section)) return;
+    const current = Array.isArray(cvData?.dismissedSections) ? cvData.dismissedSections : [];
+    if (current.includes(section) === dismissed) return;
+    const next = dismissed ? [...current, section] : current.filter((k) => k !== section);
+
+    setApplyingFix(true);
+    try {
+      // Dismissing from the empty entry picker happens INSIDE an open fix session; leave
+      // it open and derivePhase would drop the user back into a picker for a section
+      // that is no longer scored.
+      if (openFix(messages)) {
+        push({ who: 'fixend' });
+        setPhase('results');
+      }
+      updateCvData({ dismissedSections: next });
+      await CVService.saveDraft({ _id: draftId, dismissedSections: next });
+      // The section's points leave (or rejoin) BOTH ATS budgets, so the overall score and
+      // every band move with it. Free, so this always runs — a stale red row is exactly
+      // the dead end this feature exists to clear.
+      await runRecompute();
+      ariaSays(
+        t(dismissed ? 'ariaStudio.chat.sectionDismissed' : 'ariaStudio.chat.sectionRestored', {
+          section: sectionLabel(t, { key: section }),
+        })
+      );
+    } catch (err) {
+      console.error('dismiss section failed', err);
+      updateCvData({ dismissedSections: current });
+      toast.error(t('ariaStudio.chat.toast.saveFailed'));
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  const dismissSection = (section) => setSectionDismissed(section, true);
+  const restoreSection = (section) => setSectionDismissed(section, false);
 
   // An entry was chosen → open the focused build-with on it. The opener names the
   // gaps so Aria's first question is already targeted; the Role Brief on the tailored
@@ -673,53 +817,42 @@ const StudioChat = ({ onPaywall }) => {
   // would go stale the moment the next recompute runs.
   const finishFix = async (result) => {
     setScanning(true);
-    const fix = openFix(messages);
-    push({ who: 'fixend' });
+    // Whoever SETS the flag clears it. Leaning on runRecompute()'s own `finally` was not
+    // enough: it returns early when there's no draftId, BEFORE its try is entered, so on
+    // that path nothing ever cleared `scanning`. `ready` is derived from !scanning, so the
+    // Studio then rendered no card at all with the composer disabled — unrecoverable
+    // without a refresh. One owner, one finally; every exit below runs it.
+    try {
+      const fix = openFix(messages);
+      push({ who: 'fixend' });
 
-    if (!result) {
-      // Backed out without applying anything — nothing to re-score.
-      setScanning(false); // early exit — runRecompute() (which normally clears this) never runs
-      setPhase('results');
-      return;
-    }
+      if (!result) {
+        // Backed out without applying anything — nothing to re-score.
+        setPhase('results');
+        return;
+      }
 
-    const before = cvData?.studioScan?.sections?.find((s) => s.key === fix?.sectionKey);
-    push({
-      who: 'applied',
-      sectionKey: fix?.sectionKey,
-      sectionLabel: fix?.sectionLabel,
-      entry: result.entry || null,
-      applied: result.applied || [],
-      what: result.what || '',
-    });
-
-    const snap = await runRecompute();
-    const after = snap?.sections?.find((s) => s.key === fix?.sectionKey);
-
-    if (after && before) {
-      const moved = after.score - before.score;
-      const bandChanged = after.band !== before.band;
-      const bandNote = bandChanged
-        ? t(
-            before.band === 'bad'
-              ? 'ariaStudio.chat.outOfTheRedNote'
-              : 'ariaStudio.chat.intoTheGreenNote'
-          )
-        : '.';
+      const before = cvData?.studioScan?.sections?.find((s) => s.key === fix?.sectionKey);
       push({
-        who: 'aria',
-        text:
-          moved > 0
-            ? t('ariaStudio.chat.fixMovedScore', {
-                section: fix.sectionLabel,
-                from: before.score,
-                to: after.score,
-                bandNote,
-              })
-            : t('ariaStudio.chat.fixSavedNoMove', { section: fix.sectionLabel }),
+        who: 'applied',
+        sectionKey: fix?.sectionKey,
+        sectionLabel: fix?.sectionLabel,
+        entry: result.entry || null,
+        applied: result.applied || [],
+        what: result.what || '',
       });
+
+      const snap = await runRecompute();
+      reportMovement(
+        before,
+        snap?.sections?.find((s) => s.key === fix?.sectionKey),
+        fix?.sectionKey,
+        fix?.sectionLabel
+      );
+      setPhase('results');
+    } finally {
+      setScanning(false);
     }
-    setPhase('results');
   };
 
   // Skills come straight off the scan — no generation, no charge.
@@ -729,6 +862,15 @@ const StudioChat = ({ onPaywall }) => {
     try {
       const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
       if (!res?.ok) return;
+      // Every picked name was already on the CV. applySkills de-dupes case-insensitively
+      // and returns BEFORE saving, so nothing changed: finishing the fix here would land
+      // a green "Added 0 skills" receipt and spend a free recompute that can only report
+      // no movement. Say the true thing and stop — the card stays open, so a different
+      // pick (or Back) is still one tap away.
+      if (res.added === 0) {
+        ariaSays(t('ariaStudio.chat.manualSkillsAllDupes'));
+        return;
+      }
       await finishFix({
         what: t('ariaStudio.chat.nSkills', { n: res?.added ?? names.length }),
         applied: names,
@@ -743,8 +885,17 @@ const StudioChat = ({ onPaywall }) => {
   const generateSummary = async (stage, isReroll) => {
     if (!stage || !draftId) return;
     setSummaryBusy(true);
+    // Send the gaps off the open fix marker — the terms the summary row was flagged for.
+    // Without them the rewrite is generic, and the free recompute that follows re-scores
+    // an identical keyword set: the user pays a credit and watches the band not move.
+    const missingKeywords = openFix(messages)?.missingKeywords || [];
     try {
-      const res = await CVService.coachSummary({ draftId, stage, model: genModelId });
+      const res = await CVService.coachSummary({
+        draftId,
+        stage,
+        model: genModelId,
+        missingKeywords,
+      });
       const draft = res.summary || '';
       setSummaryDraft(draft);
       setSummaryWasReroll(!!isReroll);
@@ -835,11 +986,24 @@ const StudioChat = ({ onPaywall }) => {
       try {
         await CVService.saveDraft({
           _id: draftId,
-          targetJob: { title: jobTitle, description: jobDescription },
+          // DOT NOTATION, deliberately. saveDraft hands `data` straight to
+          // findByIdAndUpdate — an implicit $set — and $set on `targetJob` REPLACES the
+          // entire subdocument. Sending a bare { title, description } silently destroyed
+          // its siblings: the Role Brief buildStart had just written, the CACHED (already
+          // paid for) aiKeywords, and the `source` flag marking an AI-drafted JD, whose
+          // loss makes a score computed against a synthetic posting render as if it came
+          // from a real one. These two paths $set only themselves.
+          //
+          // Not a spread of the client's copy: that persists whatever this tab happens to
+          // hold and re-introduces the stale-snapshot lost update avoided elsewhere here.
+          'targetJob.title': jobTitle,
+          'targetJob.description': jobDescription,
           ...(autoTitle ? { title: autoTitle } : {}),
         });
       } catch (err) {
         console.error('Failed to save the build target job', err);
+        // Local-only rollback: the save failed, so the DB was never touched and the
+        // whole previous subdocument is exactly what this client held before.
         updateCvData({ targetJob: previousTargetJob, title: previousTitle });
         setReading(false);
         toast.error(t('ariaStudio.chat.toast.saveFailed'));
@@ -1407,12 +1571,17 @@ const StudioChat = ({ onPaywall }) => {
   // The fix session in play, read from the markers — so it survives a refresh exactly
   // the way the phase does.
   const activeFix = openFix(messages);
-  const fixEntries = (cvData?.[ENTRY_SOURCE[activeFix?.sectionKey]?.list] || []).map((e) => ({
-    sortId: e._sortId,
-    title: e.title,
-    company: e.company,
-    description: e.description,
-  }));
+  // Placeholder rows are excluded for the same reason completeness ignores them: a blank
+  // entry the Studio created to hold a _sortId is not something the user can choose to
+  // sharpen, and offering it as "Untitled" sends the coach at an empty document.
+  const fixEntries = (cvData?.[ENTRY_SOURCE[activeFix?.sectionKey]?.list] || [])
+    .filter(hasSubstance)
+    .map((e) => ({
+      sortId: e._sortId,
+      title: e.title,
+      company: e.company,
+      description: e.description,
+    }));
   // The coach brings its own input while a build-with is open, so the docked one hides
   // entirely rather than sitting there disabled and competing for attention.
   // SectionCoach brings its own input whenever it's driving — the fix loop, or the
@@ -1772,8 +1941,10 @@ const StudioChat = ({ onPaywall }) => {
                         ? t('ariaStudio.chat.fixClosed')
                         : t('ariaStudio.chat.fixingSection', {
                             section:
+                              // An entry title is the user's own content — never
+                              // translated. Only the section name is resolved.
                               m.entry?.title ||
-                              m.sectionLabel ||
+                              sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel }) ||
                               t('ariaStudio.chat.sectionFallback'),
                           })}
                     </span>
@@ -1806,7 +1977,8 @@ const StudioChat = ({ onPaywall }) => {
                           : t('ariaStudio.chat.addedBullets', { count: n })}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {m.entry?.title || m.sectionLabel}
+                        {m.entry?.title ||
+                          sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel })}
                       </span>
                     </span>
                   </div>
@@ -1834,12 +2006,34 @@ const StudioChat = ({ onPaywall }) => {
               );
             }
 
-            // A finished role, filed into the stream. References the entry by _sortId
+            // A finished entry, filed into the stream. References the entry by _sortId
             // rather than snapshotting its contents, so it always reflects the CV.
             if (m.who === 'rolerecord') {
-              const live = (cvData?.experience || []).find((e) => e._sortId === m.sortId);
+              // Resolve the list from the marker's own `section` — both producers write
+              // it ('experience' | 'project' | 'education', the SECTION_LIST keys).
+              // Looking only in `experience` meant EVERY project and education record
+              // resolved to null: the user finished a project, Aria said she'd wrapped it
+              // up, and no receipt card ever appeared — on every render and every refresh.
+              // Defaulting keeps markers written before `section` existed rendering.
+              const section = m.section || 'experience';
+              const live = (cvData?.[SECTION_LIST[section] || 'experience'] || []).find(
+                (e) => e._sortId === m.sortId
+              );
               if (!live) return null; // deleted since — don't show a ghost
               const n = bulletCount(live);
+              // Each section names its entries with DIFFERENT fields: education has a
+              // degree and a school rather than a title and a company, and a project has
+              // no second line at all. The subtitle renders only when its field actually
+              // exists, so a project can't trail a bare " · ".
+              const title =
+                (section === 'education' ? live.degree : live.title) ||
+                t(
+                  section === 'project'
+                    ? 'ariaStudio.chat.untitledProject'
+                    : 'ariaStudio.chat.untitledRole'
+                );
+              const subtitle =
+                section === 'education' ? live.school : section === 'project' ? '' : live.company;
               return (
                 <motion.div
                   key={i}
@@ -1853,8 +2047,8 @@ const StudioChat = ({ onPaywall }) => {
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                        {live.title || t('ariaStudio.chat.untitledRole')}
-                        {live.company ? ` · ${live.company}` : ''}
+                        {title}
+                        {subtitle ? ` · ${subtitle}` : ''}
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400">
                         {t('ariaStudio.chat.bulletsOnCv', { count: n })}
@@ -2272,10 +2466,16 @@ const StudioChat = ({ onPaywall }) => {
                 sections={scan.sections}
                 onFix={handleFix}
                 onRecompute={runRecompute}
-                recomputing={scanning}
+                // Which one is running drives only the LABELS; `busy` below is what
+                // disables them, so neither op can be started while the other is in
+                // flight and neither claims to be running when it isn't.
+                recomputing={scanKind === 'recompute'}
                 onRescan={runScan}
-                rescanning={scanning}
+                rescanning={scanKind === 'rescan'}
                 rescanCost={scanCost}
+                onDismissSection={dismissSection}
+                onRestoreSection={restoreSection}
+                busy={applyingFix || scanning}
               />
             )}
 
@@ -2298,16 +2498,25 @@ const StudioChat = ({ onPaywall }) => {
                 key="fixpick"
                 entries={fixEntries}
                 missingKeywords={activeFix?.missingKeywords || []}
+                section={activeFix?.sectionKey}
+                draftId={draftId}
                 onPick={pickEntry}
                 onCancel={cancelFix}
+                onDismissSection={dismissSection}
+                busy={applyingFix}
               />
             )}
 
-            {/* skills → free checklist straight off the scan */}
+            {/* skills → free checklist straight off the scan.
+
+                Fed from the FIX MARKER's section-scoped gaps, not scan.missingSkills:
+                that one is CV-wide and produced by a different engine depending on how
+                the scan ran (the AI on a full scan, scoringEngine on a free recompute),
+                so the card contradicted the very row the user tapped to open it. */}
             {ready && phase === 'fix:skills' && (
               <SkillsFixCard
                 key="fixskills"
-                missingSkills={scan?.missingSkills || []}
+                missingKeywords={activeFix?.missingKeywords || []}
                 onApply={applyScanSkills}
                 onCancel={cancelFix}
                 applying={applyingFix}
@@ -2346,8 +2555,13 @@ const StudioChat = ({ onPaywall }) => {
                 key="fixguide"
                 section={activeFix?.sectionKey}
                 draftId={draftId}
-                note={scan?.sections?.find((s) => s.key === activeFix?.sectionKey)?.note}
+                note={sectionNote(
+                  t,
+                  scan?.sections?.find((s) => s.key === activeFix?.sectionKey)
+                )}
                 onBack={cancelFix}
+                onRescore={rescoreAfterGuide}
+                rescoring={scanning}
               />
             )}
           </AnimatePresence>
@@ -2373,6 +2587,9 @@ const StudioChat = ({ onPaywall }) => {
                 .map((k) => (typeof k === 'string' ? k : k?.name))
                 .filter(Boolean)
                 .slice(0, 4)}
+              // The job's must-haves, NOT measured gaps: nothing has been scanned on the
+              // build track, and this entry may already cover every one of them.
+              keywordsAreGaps={false}
               messages={messages}
               onPush={push}
               onApply={async (add, remove) => {
