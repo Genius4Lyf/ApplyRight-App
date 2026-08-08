@@ -113,7 +113,12 @@ const JobCaptureCard = ({
           id="studio-job-description"
           value={jdInput}
           onChange={(e) => {
-            setJdInput(e.target.value);
+            const next = e.target.value;
+            setJdInput(next);
+            // A clear-and-replace means whatever comes next isn't Aria's draft anymore.
+            // A light edit of the draft still counts as ai_drafted, so only react to
+            // the textarea going empty, not to every keystroke.
+            if (wasDrafted && !next.trim()) setWasDrafted(false);
           }}
           placeholder={t('cvBuilder.atsCoach.jobDescriptionPlaceholder')}
           className="w-full resize-y min-h-[150px] sm:min-h-[190px] lg:min-h-[230px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 px-3.5 py-2 text-[13px] leading-relaxed outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"

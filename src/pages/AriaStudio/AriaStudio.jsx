@@ -279,7 +279,7 @@ const StudioDesk = () => {
         {/* Sessions — inline only when there's room and the user hasn't collapsed it. */}
         {layout.railInline && (
           <div className="w-[248px] shrink-0 min-h-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <SessionRail {...railProps} onClose={() => layout.setRailOpen(false)} />
+            <SessionRail {...railProps} />
           </div>
         )}
 
@@ -446,7 +446,7 @@ const StudioDesk = () => {
         side="left"
         label={t('ariaStudio.desk.studioSessions')}
       >
-        <SessionRail {...railProps} onClose={() => layout.setRailOverlay(false)} />
+        <SessionRail {...railProps} />
       </StudioOverlay>
 
       <StudioOverlay

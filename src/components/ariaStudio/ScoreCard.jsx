@@ -51,7 +51,7 @@ const BandRail = ({ score }) => {
 // disclosure — the full analysis (dimension bars, matched/missing skills, and the
 // evidence quotes with issue → fix). Collapsed by default: the number is the headline;
 // the reasoning is there when the user wants to argue with it.
-const ScoreCard = ({ scan, cost }) => {
+const ScoreCard = ({ scan, cost, isDrafted = false }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   if (!scan) return null;
@@ -100,6 +100,12 @@ const ScoreCard = ({ scan, cost }) => {
               {t('ariaStudio.scoreCard.costAnalysis', { price })}
             </span>
           </div>
+
+          {isDrafted && (
+            <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.jobCapture.draftedTag')}
+            </p>
+          )}
 
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className={`font-heading text-4xl font-bold tabular-nums ${BAND_TEXT[band]}`}>

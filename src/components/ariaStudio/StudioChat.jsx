@@ -2259,7 +2259,13 @@ const StudioChat = ({ onPaywall }) => {
 
             {/* Results — the verdict, then the section-by-section breakdown. Both read
                 the live snapshot, so a recompute refreshes them in place. */}
-            {ready && phase === 'results' && scan && <ScoreCard key="score" scan={scan} />}
+            {ready && phase === 'results' && scan && (
+              <ScoreCard
+                key="score"
+                scan={scan}
+                isDrafted={cvData?.targetJob?.source === 'ai_drafted'}
+              />
+            )}
             {ready && phase === 'results' && scan?.sections?.length > 0 && (
               <SectionBreakdownCard
                 key="sections"

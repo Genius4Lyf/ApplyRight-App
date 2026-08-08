@@ -257,6 +257,11 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
               {[brief?.role || targetJob?.title, brief?.company].filter(Boolean).join(' · ')}
             </p>
           )}
+          {targetJob?.source === 'ai_drafted' && (
+            <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500 truncate">
+              {t('ariaStudio.jobCapture.draftedTag')}
+            </p>
+          )}
         </div>
         {onClose && (
           <button

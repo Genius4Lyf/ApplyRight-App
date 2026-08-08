@@ -4209,6 +4209,7 @@
       "draftAssistNeedsTitle": "Entrez d'abord un intitulé de poste — Aria en a besoin pour rédiger une description",
       "drafting": "Rédaction d'une description de poste type",
       "draftedNote": "Ceci est une description type pour ce poste, pas une offre réelle — modifiez-la si vous avez l'offre exacte.",
+      "draftedTag": "Description de poste type, pas une offre réelle",
       "draftInsufficientCredits": "Crédits insuffisants pour rédiger une description.",
       "draftFailed": "Impossible de rédiger une description pour cet intitulé de poste. Veuillez réessayer."
     },
@@ -4307,8 +4308,6 @@
       "recheckScore": "Revérifier mon score · {{cost}} cr"
     },
     "sessionRail": {
-      "sessions": "Sessions",
-      "closeSessions": "Fermer les sessions",
       "recents": "Récents",
       "newTailoring": "Nouvelle adaptation",
       "newCv": "Nouveau CV",
