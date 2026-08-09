@@ -36,12 +36,16 @@ export const CREDIT_COSTS = {
   // Coach: AI-generate bullets from a described role/project (Aria build-with).
   // The count picker charges count × this.
   GENERATE_BULLET: 1,
+  REWRITE_ROLE: 1,
   // Coach: AI-generate one career-stage-aware, JD-tailored summary (each re-roll charges).
   GENERATE_SUMMARY: 3,
   // Aria Studio — draft a typical job description from just a job title. Always runs
   // on the Standard (light) model regardless of the user's gen-model pick (the backend
   // pins it), so this light cost is what's actually billed.
   DRAFT_JD: 1,
+  // Aria Studio — suggest up to 3 project ideas grounded in the user's own CV. Also
+  // server-pinned to the Standard (light) model, so this light cost is what's billed.
+  PROJECT_IDEAS: 1,
 };
 
 // The backend uses the canonical key ANALYSIS for what the frontend calls

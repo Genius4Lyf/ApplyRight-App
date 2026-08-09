@@ -82,6 +82,54 @@ describe('derivePhase — the fix loop', () => {
     expect(derivePhase(s)).toBe('fix:pick');
   });
 
+  it('narrows pick → rewrite while a paid before/after list is pending', () => {
+    // Picking a role in a TAILOR session opens the rewrite, not the interview. The rows
+    // are PAID output, so the pending is what survives a refresh — without this branch a
+    // reload drops back to the picker and the user pays for the same rewrite twice.
+    const s = [...scanned, { who: 'fixstart', mode: 'pick', sectionKey: 'experience' }];
+    expect(
+      derivePhase(s, {
+        studioPending: { kind: 'rewrite', section: 'experience', sortId: 'a', rows: [] },
+      })
+    ).toBe('fix:rewrite');
+  });
+
+  it('leaves the picker alone when the pending is some OTHER kind', () => {
+    const s = [...scanned, { who: 'fixstart', mode: 'pick', sectionKey: 'experience' }];
+    expect(derivePhase(s, { studioPending: { kind: 'skills', data: {} } })).toBe('fix:pick');
+  });
+
+  it('narrows pick → project-ideas while paid ideas are pending', () => {
+    // Same reasoning as the rewrite above: the three ideas cost a credit, so a refresh
+    // must not drop the user back on the empty projects picker and charge them twice.
+    const s = [...scanned, { who: 'fixstart', mode: 'pick', sectionKey: 'projects' }];
+    const pending = { studioPending: { kind: 'projectideas', ideas: [{ id: 'i1' }] } };
+    expect(derivePhase(s, pending)).toBe('fix:project-ideas');
+  });
+
+  it('an EXPLICIT coach marker outranks pending project ideas too', () => {
+    // "Build this with Aria" pushes the coach marker; the interview is the newer intent.
+    const s = [
+      ...scanned,
+      { who: 'fixstart', mode: 'pick', sectionKey: 'projects' },
+      { who: 'fixstart', mode: 'coach', sectionKey: 'projects', entry: { sortId: 'p1' } },
+    ];
+    expect(derivePhase(s, { studioPending: { kind: 'projectideas', ideas: [] } })).toBe(
+      'fix:coach'
+    );
+  });
+
+  it('an EXPLICIT coach marker outranks a stale rewrite pending', () => {
+    // "Interview me instead" pushes the coach marker; if a pending somehow lingers, the
+    // marker is the more recent statement of intent and must win.
+    const s = [
+      ...scanned,
+      { who: 'fixstart', mode: 'pick', sectionKey: 'experience' },
+      { who: 'fixstart', mode: 'coach', sectionKey: 'experience', entry: { sortId: 'a' } },
+    ];
+    expect(derivePhase(s, { studioPending: { kind: 'rewrite', sortId: 'a' } })).toBe('fix:coach');
+  });
+
   it('narrows pick → coach when an entry is chosen', () => {
     const s = [
       ...scanned,

@@ -463,6 +463,17 @@ export function derivePhase(msgs = [], cvData = {}) {
   const has = (who) => msgs.some((m) => m?.who === who);
 
   const fix = openFix(msgs);
+  // A pending role rewrite outranks the entry PICKER it was launched from: those
+  // before/after rows were PAID for, and dropping the user back on the picker after a
+  // refresh would make them buy the same rewrite twice. It does NOT outrank an interview
+  // already in progress ('coach') — that conversation is the newer, deliberate choice —
+  // and it is cleared on apply / interview-instead / back like every other pending.
+  if (fix?.mode === 'pick' && cvData?.studioPending?.kind === 'rewrite') return 'fix:rewrite';
+  // Pending project IDEAS are ranked exactly like the rewrite above, and for the same
+  // reason: they were PAID for, so a refresh must not drop the user back onto the empty
+  // picker and make them buy the same three ideas again.
+  if (fix?.mode === 'pick' && cvData?.studioPending?.kind === 'projectideas')
+    return 'fix:project-ideas';
   if (fix) return `fix:${fix.mode}`;
 
   // ── Build track. Checked before the tailor milestones because a build session's
@@ -475,6 +486,12 @@ export function derivePhase(msgs = [], cvData = {}) {
     if (cvData?.studioPending?.kind === 'summary' && cvData.studioPending.workflow === 'build')
       return 'build:summary';
     if (cvData?.studioPending?.kind === 'skills') return 'build:skills';
+    // Ranked BELOW the live pin above, same as every other pending kind: once a project
+    // is actually open, that interview is where the user is. But above the section hub,
+    // because these ideas cost a credit and re-deriving 'build:sections' would throw them
+    // away on a refresh.
+    if (cvData?.studioPending?.kind === 'projectideas') return 'build:project-ideas';
+
     if (has('summarydone')) return 'build:done';
     if (has('skillsdone')) return 'build:sections';
     if (has('certsdone')) return 'build:sections';

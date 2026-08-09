@@ -39,7 +39,10 @@ import CVService from '../../services/cv.service';
 import AriaComposer from '../cv/AriaComposer';
 import AriaOrbit from '../cv/AriaOrbit';
 import AriaThinking from '../cv/AriaThinking';
+import RewriteRoleCard from './RewriteRoleCard';
+import ProjectIdeasCard from './ProjectIdeasCard';
 import ModeChooser from './ModeChooser';
+
 import JobCaptureCard from './JobCaptureCard';
 import RoleBriefCard from './RoleBriefCard';
 import CvPickerCard from './CvPickerCard';
@@ -213,6 +216,18 @@ const StudioChat = ({ onPaywall }) => {
   // was added) lives on the CV, so a refresh returns to the consent card rather than
   // showing suggestions the user never paid attention to.
   const [skillsData, setSkillsData] = useState(null);
+  // The role whose bullets are being rewritten: { section, sortId, entry, rows }. Mirrors
+  // the persisted studioPending — the rows are PAID output, so the pending copy is what
+  // survives a refresh and this is just the render-time handle on it.
+  const [rewriteTarget, setRewriteTarget] = useState(null);
+  // Aria's project PROPOSALS, or null. Also PAID output, so the persisted studioPending
+  // is the copy of record and this is the render-time handle on it.
+  const [projectIdeas, setProjectIdeas] = useState(null);
+  const [ideasBusy, setIdeasBusy] = useState(false);
+  // One suggestion attempt per session for the FIX entry point, which fetches on mount.
+  // Without this, a fetch that came back empty (or 403) would re-fire on every render —
+  // a paid endpoint in a render loop.
+  const ideasAskedRef = useRef(false);
   // Running total added via the free manual-entry loop this session. StudioChat
   // remounts on sessionNonce, so this resets per session automatically.
   const [manualSkillsAdded, setManualSkillsAdded] = useState(0);
@@ -237,6 +252,15 @@ const StudioChat = ({ onPaywall }) => {
     if (pending?.kind === 'summary') {
       setSummaryDraft(pending.draft || '');
       setSummaryWasReroll(!!pending.wasReroll);
+    }
+    // Rewrite rows are a PAID result. Rehydrating them is what stops a refresh from
+    // charging the user a second time for the same before/after list.
+    if (pending?.kind === 'rewrite') setRewriteTarget(pending);
+    // Same reasoning for the ideas: they cost a credit, so a refresh must return the
+    // list the user already paid for rather than quietly buying it again.
+    if (pending?.kind === 'projectideas') {
+      setProjectIdeas(pending.ideas || []);
+      ideasAskedRef.current = true;
     }
   }, [draftId, cvData?.studioPending]);
 
@@ -778,13 +802,22 @@ const StudioChat = ({ onPaywall }) => {
   const dismissSection = (section) => setSectionDismissed(section, true);
   const restoreSection = (section) => setSectionDismissed(section, false);
 
-  // An entry was chosen → open the focused build-with on it. The opener names the
-  // gaps so Aria's first question is already targeted; the Role Brief on the tailored
-  // copy grounds the rest server-side, so the JD is never re-sent.
-  const pickEntry = (entry) => {
+  // An entry was chosen → open the focused build-with on it. The opener names the gaps so
+  // Aria's first question is already targeted; the Role Brief on the tailored copy grounds
+  // the rest server-side, so the JD is never re-sent.
+  //
+  // The marker the INTERVIEW path needs — factored out because two entry points now lead
+  // to it (picking an entry on a CV with no bullets, and escaping the rewrite card), and
+  // a second hand-rolled copy is how the pair drifts. finishFix reads this marker to
+  // close the loop, so both paths must push exactly the same one.
+  // `opener` overrides Aria's first line. The project-ideas path uses it so the interview
+  // opens on the IDEA being built rather than "tell me one thing you did there" — which
+  // would be asking about work that, by definition, hasn't happened yet.
+  const startInterview = (entry, opener) => {
     const fix = openFix(messages);
     const src = ENTRY_SOURCE[fix?.sectionKey] || ENTRY_SOURCE.experience;
     const gaps = fix?.missingKeywords || [];
+
     push(
       {
         who: 'fixstart',
@@ -801,20 +834,61 @@ const StudioChat = ({ onPaywall }) => {
       },
       {
         who: 'aria',
-        text: gaps.length
-          ? t('ariaStudio.chat.pickEntryWithGaps', {
-              title: entry.title,
-              gaps: gaps.slice(0, 2).join(t('ariaStudio.chat.and')),
-            })
-          : t('ariaStudio.chat.pickEntryNoGaps', { title: entry.title }),
+        text:
+          opener ||
+          (gaps.length
+            ? t('ariaStudio.chat.pickEntryWithGaps', {
+                title: entry.title,
+                gaps: gaps.slice(0, 2).join(t('ariaStudio.chat.and')),
+              })
+            : t('ariaStudio.chat.pickEntryNoGaps', { title: entry.title })),
       }
     );
     setPhase('fix:coach');
   };
 
+  // In a TAILOR session the bullets already exist, so the full build interview is the
+  // wrong tool: it re-asks for work the user already did, and it is the slowest step in
+  // the flow. Rewrite what's there instead, shown before → after. No fixstart is pushed
+  // here — the rewrite is not an interview, and marking one would send a refresh into
+  // SectionCoach. The interview stays one tap away as the escape.
+  const pickEntry = (entry) => {
+    const fix = openFix(messages);
+    const src = ENTRY_SOURCE[fix?.sectionKey] || ENTRY_SOURCE.experience;
+    const target = {
+      kind: 'rewrite',
+      section: src.focusSection,
+      sortId: entry.sortId,
+      entry: {
+        section: src.focusSection,
+        sortId: entry.sortId,
+        title: entry.title,
+        company: entry.company,
+      },
+      rows: null,
+    };
+    setRewriteTarget(target);
+    persistStudioPending(target);
+    setPhase('fix:rewrite');
+  };
+
+  // Leaving the rewrite always clears the pending rows — the same discipline the skills
+  // and summary pendings follow. Rows left behind would re-open a card the user closed.
+  const clearRewrite = () => {
+    setRewriteTarget(null);
+    persistStudioPending(null);
+  };
+
+  const rewriteInterviewInstead = () => {
+    const target = rewriteTarget;
+    clearRewrite();
+    if (target?.entry) startInterview({ ...target.entry, sortId: target.sortId });
+  };
+
   // Close a fix: land the applied record, re-band for free, and report the movement.
   // The record REFERENCES the entry and what was applied — never the score, which
   // would go stale the moment the next recompute runs.
+
   const finishFix = async (result) => {
     setScanning(true);
     // Whoever SETS the flag clears it. Leaning on runRecompute()'s own `finally` was not
@@ -852,6 +926,34 @@ const StudioChat = ({ onPaywall }) => {
       setPhase('results');
     } finally {
       setScanning(false);
+    }
+  };
+
+  // Accepted rewrites replace their originals: remove each `before`, append its `after`.
+  // applyRoleBulletDiff appends at the END, so a PARTIAL accept leaves the kept rewrites
+  // below the untouched originals. Accepted for v1 — preserving exact position would mean
+  // reworking the tested writer for a cosmetic gain.
+  //
+  // Ends in finishFix, exactly like the interview path, so the free recompute and the
+  // movement report still fire — the rewrite is a fix, not a side door around one.
+  const applyRewrite = async (afters, befores) => {
+    const target = rewriteTarget;
+    if (!target || !afters.length) return;
+    setApplyingFix(true);
+    try {
+      const res = await applyRoleBulletDiff(target.section, target.sortId, afters, befores);
+      if (!res?.ok) {
+        toast.error(t('cvBuilder.askAria.syncFailed'));
+        return;
+      }
+      clearRewrite();
+      await finishFix({
+        entry: target.entry,
+        applied: afters,
+        what: t('ariaStudio.chat.nBullets', { count: afters.length }),
+      });
+    } finally {
+      setApplyingFix(false);
     }
   };
 
@@ -1479,6 +1581,153 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('results');
   };
 
+  // ─── Project ideas ───
+  //
+  // The generative mirror of the entry picker: when the role wants a project and the CV
+  // has none, Aria proposes three she can defend from the user's OWN CV, and one tap
+  // starts the ordinary FREE focused interview on the chosen one.
+
+  // Enough material for a GROUNDED suggestion? Deliberately the same test the server
+  // runs, so the hopeless case doesn't even spend the round trip.
+  const cvGroundedForIdeas = () =>
+    (cvData?.experience || []).filter(hasSubstance).length > 0 ||
+    (cvData?.education || []).filter(hasSubstance).length > 0 ||
+    (cvData?.skills || []).filter(Boolean).length >= 3;
+
+  // Fetch + persist. EVERY failure returns [] rather than throwing, because the caller's
+  // contract is "fall through to the blank project" — a model outage must never leave
+  // the projects section unreachable.
+  const fetchProjectIdeas = async (context) => {
+    if (!draftId) return [];
+    ideasAskedRef.current = true;
+    setIdeasBusy(true);
+    try {
+      const res = await CVService.studioProjectIdeas({ draftId });
+      const ideas = Array.isArray(res?.ideas) ? res.ideas : [];
+      if (res?.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      if (ideas.length) {
+        setProjectIdeas(ideas);
+        // PAID output — persisted immediately, so a refresh returns the list the user
+        // already bought instead of quietly buying it again.
+        await persistStudioPending({ kind: 'projectideas', ideas, context });
+      }
+      return ideas;
+    } catch (err) {
+      // Insufficient credits is the one failure worth naming: the user can act on it,
+      // and silence would read as "Aria had no ideas" when she was never asked.
+      if ([402, 403].includes(err?.response?.status)) {
+        ariaSays(t('ariaStudio.projectIdeas.insufficientCredits'));
+      } else if (err?.response?.data?.code !== 'NOT_ENOUGH_CV') {
+        console.error('project ideas failed', err);
+      }
+      return [];
+    } finally {
+      setIdeasBusy(false);
+    }
+  };
+
+  // Build-track projects hub. Offer ideas first — but fall through to today's blank
+  // project on an ungrounded CV, a failed fetch or an empty result. That fallthrough is
+  // what lets this ship without touching the section it fronts.
+  const offerProjectIdeas = async () => {
+    if (roleBusy || ideasBusy) return;
+    if (!draftId || !cvGroundedForIdeas()) {
+      enterSection('project');
+      return;
+    }
+    const ideas = await fetchProjectIdeas('build');
+    if (!ideas.length) {
+      enterSection('project');
+      return;
+    }
+    setPhase('build:project-ideas');
+  };
+
+  // "Build this with Aria." Creates the project under the idea's title, replays the type
+  // pick as a REAL thread turn — the backend's project prompt reads the type from the
+  // thread, not from a parameter — and hands over to the normal interview. No new
+  // charging path and no new interview code.
+  //
+  // NOT named `useIdea`: rules-of-hooks reads any `useX` as a hook and rejects calling it
+  // from a JSX callback.
+  const buildFromIdea = async (idea, contextArg) => {
+    if (!idea || roleBusy) return;
+    const context = contextArg || cvData?.studioPending?.context || 'build';
+    setRoleBusy('next');
+    try {
+      const sortId = await addProject({ title: idea.title });
+      if (!sortId) return; // addProject already toasted
+      setProjectIdeas(null);
+      await persistStudioPending(null);
+
+      const typeDef = PROJECT_TYPES.find((pt) => pt.key === idea.type) || PROJECT_TYPES[0];
+      // pickProjectType's EXACT pair, so the type chip is skipped rather than re-asked.
+      const typeTurns = [
+        { who: 'user', text: t(typeDef.messageKey) },
+        { who: 'projecttype', sortId, type: typeDef.key, labelKey: typeDef.labelKey },
+      ];
+
+      if (context === 'fix') {
+        // A "Build this" from inside a FIX must land in the FIX loop, so finishFix still
+        // closes the session and re-scores. Same marker startInterview writes.
+        const fix = openFix(messages);
+        push(...typeTurns, {
+          who: 'fixstart',
+          mode: 'coach',
+          sectionKey: fix?.sectionKey || 'projects',
+          sectionLabel: fix?.sectionLabel,
+          missingKeywords: fix?.missingKeywords || [],
+          entry: { section: 'project', sortId, title: idea.title },
+        });
+        setPhase('fix:coach');
+      } else {
+        push(...typeTurns, { who: 'pinrole', sortId, section: 'project' });
+        setPhase('build:project');
+      }
+
+      // An ARIA turn, NOT a user one. The idea is a PROPOSAL: putting its one-liner in
+      // the user's mouth would have Aria claiming they'd already built it.
+      ariaSays(t('ariaStudio.chat.projectIdeaOpener', { title: idea.title }));
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  // "None of these" — exactly the blank project they'd have got without the card.
+  const startBlankProject = async (contextArg) => {
+    const context = contextArg || cvData?.studioPending?.context || 'build';
+    setProjectIdeas(null);
+    await persistStudioPending(null);
+    if (context !== 'fix') {
+      enterSection('project');
+      return;
+    }
+    if (roleBusy) return;
+    setRoleBusy('next');
+    try {
+      const sortId = await addProject();
+      if (!sortId) return;
+      startInterview(
+        { sortId, title: '' },
+        t('ariaStudio.chat.nextLine.achievementsProject', {
+          title: t('ariaStudio.chat.itFallback'),
+        })
+      );
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  const skipProjectIdeas = async (contextArg) => {
+    const context = contextArg || cvData?.studioPending?.context || 'build';
+    setProjectIdeas(null);
+    await persistStudioPending(null);
+    if (context === 'fix') cancelFix();
+    else skipSection('project', 'projectsdone');
+  };
+
   const send = async (raw) => {
     const text = (raw ?? input).trim();
     if (text.length < 2 || thinking) return;
@@ -1582,6 +1831,23 @@ const StudioChat = ({ onPaywall }) => {
       company: e.company,
       description: e.description,
     }));
+  // The projects FIX with nothing to sharpen. 1.2d gave that empty picker a builder link
+  // and a dismiss; PROPOSALS are the better first answer, so the card is swapped for
+  // ideas — and only while there are ideas (or a fetch in flight), so an empty result
+  // falls back to the picker's own empty state rather than spinning forever.
+  const fixWantsIdeas =
+    activeFix?.mode === 'pick' && activeFix?.sectionKey === 'projects' && fixEntries.length === 0;
+  const showFixIdeas = fixWantsIdeas && (ideasBusy || !!projectIdeas?.length);
+
+  // Mounting IS the ask on this path — there's no row to tap. `ideasAskedRef` is what
+  // keeps a PAID endpoint out of the render loop when it comes back empty (or 403).
+  useEffect(() => {
+    if (phase !== 'fix:pick' || !fixWantsIdeas) return;
+    if (ideasAskedRef.current || ideasBusy || projectIdeas) return;
+    fetchProjectIdeas('fix');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, fixWantsIdeas]);
+
   // The coach brings its own input while a build-with is open, so the docked one hides
   // entirely rather than sitting there disabled and competing for attention.
   // SectionCoach brings its own input whenever it's driving — the fix loop, or the
@@ -1642,8 +1908,11 @@ const StudioChat = ({ onPaywall }) => {
           eyebrow: t('ariaStudio.chat.sectionMenu.projectsEyebrow'),
           blurb: t('ariaStudio.chat.sectionMenu.projectsBlurb'),
           cta: t('ariaStudio.chat.sectionMenu.projectsCta'),
-          start: () => enterSection('project'),
+          // Ideas FIRST, blank project second — offerProjectIdeas falls through to
+          // exactly this section on an ungrounded CV, a failed fetch or no ideas.
+          start: () => offerProjectIdeas(),
           skip: () => skipSection('project', 'projectsdone'),
+
           skipLabel: t('ariaStudio.chat.sectionMenu.projectsSkipLabel'),
         }
       : !closed('educationdone')
@@ -2311,6 +2580,19 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
 
+            {/* Aria's three PROPOSALS, in front of the blank project. Reached only when
+                the fetch actually returned ideas — every other outcome already fell
+                through to enterSection('project'). */}
+            {ready && phase === 'build:project-ideas' && !!projectIdeas?.length && (
+              <ProjectIdeasCard
+                key="buildideas"
+                ideas={projectIdeas}
+                onUse={(idea) => buildFromIdea(idea, 'build')}
+                onStartBlank={() => startBlankProject('build')}
+                onSkip={() => skipProjectIdeas('build')}
+              />
+            )}
+
             {/* Certifications — a light sub-list of education. No AI, no credits. */}
             {ready && phase === 'build:certs' && (
               <CertificationsCard
@@ -2492,8 +2774,24 @@ const StudioChat = ({ onPaywall }) => {
 
             {/* ── The fix loop ── */}
 
+            {/* Projects, nothing to sharpen → PROPOSALS instead of an empty picker. A
+                "Build this" from here lands in the FIX loop, so finishFix still closes
+                the session and re-scores. Dismiss stays available: not everyone has
+                projects, and "not applicable" must not vanish because Aria had ideas. */}
+            {ready && phase === 'fix:pick' && showFixIdeas && (
+              <ProjectIdeasCard
+                key="fixideas"
+                ideas={projectIdeas || []}
+                busy={ideasBusy}
+                onUse={(idea) => buildFromIdea(idea, 'fix')}
+                onStartBlank={() => startBlankProject('fix')}
+                onSkip={() => skipProjectIdeas('fix')}
+                onDismissSection={dismissSection}
+              />
+            )}
+
             {/* experience / projects → pick the entry to sharpen */}
-            {ready && phase === 'fix:pick' && (
+            {ready && phase === 'fix:pick' && !showFixIdeas && (
               <EntryPickerCard
                 key="fixpick"
                 entries={fixEntries}
@@ -2504,6 +2802,30 @@ const StudioChat = ({ onPaywall }) => {
                 onCancel={cancelFix}
                 onDismissSection={dismissSection}
                 busy={applyingFix}
+              />
+            )}
+
+            {/* experience / projects → rewrite the entry's EXISTING bullets, before→after */}
+            {ready && phase === 'fix:rewrite' && rewriteTarget && (
+              <RewriteRoleCard
+                key={`rewrite-${rewriteTarget.sortId}`}
+                draftId={draftId}
+                section={rewriteTarget.section}
+                sortId={rewriteTarget.sortId}
+                model={genModelId}
+                rows={rewriteTarget.rows}
+                onLoaded={(rows) => {
+                  const next = { ...rewriteTarget, rows };
+                  setRewriteTarget(next);
+                  persistStudioPending(next);
+                }}
+                onApply={applyRewrite}
+                onInterview={rewriteInterviewInstead}
+                onBack={() => {
+                  clearRewrite();
+                  setPhase('fix:pick');
+                }}
+                applying={applyingFix}
               />
             )}
 

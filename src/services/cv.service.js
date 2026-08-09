@@ -241,6 +241,26 @@ const CVService = {
     return response.data; // { studioScan }
   },
 
+  // Aria Studio — rewrite ONE role's EXISTING bullets against the target job. Returns
+  // before/after rows the user accepts per bullet. CHARGES REWRITE_ROLE (1cr light /
+  // 2cr flagship) — but only when Aria actually changed something: an all-unchanged
+  // result comes back { charged:false } so 'already strong' costs nothing.
+  studioRewriteRole: async ({ draftId, section, sortId, model }) => {
+    const response = await api.post('/studio/rewrite-role', { draftId, section, sortId, model });
+    return response.data; // { rows, charged, cost, remainingCredits }
+  },
+
+  // Aria Studio — propose AT MOST 3 project ideas grounded in the user's OWN CV, so a
+  // role that wants a project doesn't dead-end at a blank form. CHARGES PROJECT_IDEAS
+  // (1cr, server-pinned light) ONLY on a non-empty result: { ideas: [] } comes back
+  // { charged:false } and the caller falls through to the blank-project path.
+  // 400 { code:'NOT_ENOUGH_CV' } when there's too little on the CV to ground an idea;
+  // 403 { code:'INSUFFICIENT_CREDITS' } before the AI call if the balance is short.
+  studioProjectIdeas: async ({ draftId }) => {
+    const response = await api.post('/studio/project-ideas', { draftId });
+    return response.data; // { ideas, charged, cost, remainingCredits }
+  },
+
   // Fetch (or build+cache) Aria's Role Brief for a draft — powers the "Aria's
   // read" strip. Cheap on repeat (same-JD cache hit); no target JD → { brief: null }.
   getBrief: async (draftId, model) => {

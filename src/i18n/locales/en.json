@@ -4350,6 +4350,34 @@
       "skipForNow": "Skip skills for now",
       "doneNextSection": "Done — next section"
     },
+    "projectIdeas": {
+      "suggest": "Suggest 3 that fit · {{cost}} cr",
+      "title": "Projects that would fit this role",
+      "intro": "These aren't on your CV yet — they're ideas built from what you already know, aimed at what this job asks for. Pick one and I'll interview you to write it up.",
+      "whyItFits": "Why it fits",
+      "fromYourCv": "Builds on",
+      "buildThis": "Build this with Aria",
+      "startBlank": "None of these — start from scratch",
+      "skip": "Skip projects for now",
+      "generating": "Thinking up projects that fit",
+      "none": "I couldn't shape a project idea from your CV yet — let's build one from scratch together.",
+      "insufficientCredits": "Not enough credits to suggest projects."
+    },
+    "rewriteRole": {
+      "title": "Sharper — same facts",
+      "intro": "I've tightened each bullet against what this job asks for. Nothing invented — pick the ones to keep.",
+      "nowLabel": "Now",
+      "sharperLabel": "Sharper",
+      "unchanged": "Already strong for this job",
+      "blocked": "Needs a detail from you: {{reason}}",
+      "addDetails": "Add the missing details with Aria",
+      "interviewInstead": "Interview me instead",
+      "tryAnother": "Try another angle · {{cost}} cr",
+      "generating": "Sharpening your bullets",
+      "nothingToImprove": "These already read well for this job — nothing to sharpen without inventing something.",
+      "applyN": "Keep {{n}}",
+      "applying": "Applying…"
+    },
     "summaryFix": {
       "anotherAngle": "Another angle",
       "yourTailoredSummary": "Your tailored summary",
@@ -4423,6 +4451,8 @@
       "fixPickNoKeywords": "{{section}}: which one should we sharpen?",
       "fixSkills": "Here's what the job asks for that your CV doesn't claim yet.",
       "fixGuide": "{{section}}: this one's about completeness, not wording — here's what's missing and where to add it.",
+      "projectIdeaOpener": "Let's build \"{{title}}\". To start — what does it do, or what problem does it solve?",
+      "projectIdeasNone": "Nothing came to mind from your CV just yet — let's shape a project together.",
       "sectionDismissed": "Noted — I'll leave {{section}} out of your score. You can put it back any time.",
       "sectionRestored": "{{section}} is back in your score.",
       "fixSummary": "I'll rewrite your summary around this job. First — where are you in your career?",

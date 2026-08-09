@@ -4346,6 +4346,34 @@
       "skipForNow": "Passer les compétences pour l'instant",
       "doneNextSection": "Terminé — section suivante"
     },
+    "projectIdeas": {
+      "suggest": "En proposer 3 adaptés · {{cost}} cr",
+      "title": "Des projets qui iraient pour ce poste",
+      "intro": "Ils ne sont pas encore sur votre CV — ce sont des idées bâties sur ce que vous savez déjà, visant ce que ce poste demande. Choisissez-en un et je vous interroge pour le rédiger.",
+      "whyItFits": "Pourquoi ça colle",
+      "fromYourCv": "S'appuie sur",
+      "buildThis": "Construire celui-ci avec Aria",
+      "startBlank": "Aucun de ceux-ci — partir de zéro",
+      "skip": "Ignorer les projets pour l'instant",
+      "generating": "Recherche de projets adaptés",
+      "none": "Je n'ai pas encore pu tirer d'idée de projet de votre CV — construisons-en un de zéro ensemble.",
+      "insufficientCredits": "Crédits insuffisants pour proposer des projets."
+    },
+    "rewriteRole": {
+      "title": "Plus net — mêmes faits",
+      "intro": "J'ai resserré chaque point selon ce que le poste demande. Rien d'inventé — choisissez ceux à garder.",
+      "nowLabel": "Actuel",
+      "sharperLabel": "Plus net",
+      "unchanged": "Déjà solide pour ce poste",
+      "blocked": "Il me faut un détail de votre part : {{reason}}",
+      "addDetails": "Ajouter les détails manquants avec Aria",
+      "interviewInstead": "Menez plutôt l'entretien",
+      "tryAnother": "Un autre angle · {{cost}} cr",
+      "generating": "Affinage de vos points",
+      "nothingToImprove": "Ces points sont déjà bons pour ce poste — rien à affiner sans rien inventer.",
+      "applyN": "Garder {{n}}",
+      "applying": "Application…"
+    },
     "summaryFix": {
       "anotherAngle": "Un autre angle",
       "yourTailoredSummary": "Votre résumé adapté",
@@ -4419,6 +4447,8 @@
       "fixPickNoKeywords": "{{section}} : lequel devrions-nous affiner ?",
       "fixSkills": "Voici ce que le poste demande et que votre CV ne mentionne pas encore.",
       "fixGuide": "{{section}} : ici, c'est une question d'exhaustivité, pas de formulation — voici ce qui manque et où l'ajouter.",
+      "projectIdeaOpener": "Construisons « {{title}} ». Pour commencer — que fait ce projet, ou quel problème résout-il ?",
+      "projectIdeasNone": "Rien ne m'est venu à partir de votre CV pour l'instant — façonnons un projet ensemble.",
       "sectionDismissed": "Noté — je laisse {{section}} en dehors de votre score. Vous pouvez la réintégrer à tout moment.",
       "sectionRestored": "{{section}} est de nouveau pris en compte dans votre score.",
       "fixSummary": "Je vais réécrire votre résumé autour de ce poste. D'abord — où en êtes-vous dans votre carrière ?",
