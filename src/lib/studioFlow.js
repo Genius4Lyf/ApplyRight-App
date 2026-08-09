@@ -320,6 +320,21 @@ export function projectTypeFor(msgs = [], sortId) {
 }
 
 /**
+ * The project type for one entry, resolved the way the coach sees it: the PERSISTED
+ * entry field first, then the transcript marker.
+ *
+ * The entry wins because it is the only source that survives the things the marker can't:
+ * a TAILORED project (cloned from the base CV, so it never had this thread's marker) and an
+ * "Edit with Aria" interview opened long after the picking turn. The marker stays as the
+ * fallback for sessions that only ever had one — a build flow mid-thread, or an entry saved
+ * before the type was written to the document — so nothing regresses. Use this, not
+ * projectTypeFor, wherever the question is "do we KNOW this project's type?".
+ */
+export function resolveProjectType(entry, msgs = [], sortId) {
+  return entry?.entryType || projectTypeFor(msgs, sortId);
+}
+
+/**
  * The _sortId of the role currently pinned, or null.
  *
  * The transcript records WHICH entry is open (a `pinrole` marker, closed by `unpinrole`);

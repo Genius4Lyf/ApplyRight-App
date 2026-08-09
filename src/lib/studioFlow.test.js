@@ -13,6 +13,7 @@ import {
   pinnedSortId,
   pinnedSection,
   projectTypeFor,
+  resolveProjectType,
   resolvePinnedEntry,
   withoutBlankEntries,
   openFix,
@@ -793,6 +794,34 @@ describe('projectTypeFor', () => {
 
   it('survives a refresh — it lives in the persisted transcript', () => {
     expect(projectTypeFor([], 'p1')).toBeNull();
+  });
+});
+
+// The resolver wraps the marker reader; it does not replace it. Two situations have no
+// marker to read at all — a TAILORED project (cloned from the base CV, so none of this
+// thread's messages are about it) and an "Edit with Aria" interview opened later — and in
+// both the type now lives on the entry, which is why the entry is consulted first.
+describe('resolveProjectType', () => {
+  const MARKERS = [{ who: 'projecttype', sortId: 'p1', type: 'work' }];
+
+  it('prefers the type PERSISTED on the entry', () => {
+    expect(resolveProjectType({ entryType: 'course' }, [], 'p1')).toBe('course');
+  });
+
+  it('falls back to the marker when the entry has none', () => {
+    // Mid-build sessions from before the field existed: the transcript is all there is.
+    expect(resolveProjectType({}, MARKERS, 'p1')).toBe('work');
+    expect(resolveProjectType(undefined, MARKERS, 'p1')).toBe('work');
+  });
+
+  it('the entry WINS over a stale marker for the same entry', () => {
+    // Same entry, two sources. The entry is the durable one, so it decides.
+    expect(resolveProjectType({ entryType: 'personal' }, MARKERS, 'p1')).toBe('personal');
+  });
+
+  it('is falsy when neither source knows — so the type card still gets asked', () => {
+    expect(resolveProjectType({}, [], 'p1')).toBeFalsy();
+    expect(resolveProjectType({ entryType: '' }, [], 'p1')).toBeFalsy();
   });
 });
 

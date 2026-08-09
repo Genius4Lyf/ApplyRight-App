@@ -15,7 +15,7 @@ import {
   resolvePinnedEntry,
   pinnedSortId,
   pinnedSection,
-  projectTypeFor,
+  resolveProjectType,
   SECTION_LIST,
   PROJECT_TYPES,
   roleStage,
@@ -122,6 +122,7 @@ const StudioChat = ({ onPaywall }) => {
     updateCvData,
     loading,
     applyRoleBulletDiff,
+    applyEntryEdit,
     applySummary,
     applySkills,
     startBuild,
@@ -133,6 +134,14 @@ const StudioChat = ({ onPaywall }) => {
     setPendingKind,
     pendingSource,
     setPendingSource,
+    // The delete/undo pair, and the command channel the Live Preview asks through.
+    removeEntry,
+    restoreEntry,
+    studioCommand,
+    clearStudioCommand,
+    // Focus mode runs the OTHER way down the same wire: this component publishes which
+    // entry Aria is working on, and the Live Preview marks + locks that row.
+    setActiveEntry,
   } = useAriaStudio();
 
   // The session's Aria CHAT model — the SAME per-draft choice the Studio header picker and
@@ -372,9 +381,14 @@ const StudioChat = ({ onPaywall }) => {
   // the card can never sit there collecting input that lands nowhere.
   const pinnedEntry = resolvePinnedEntry(messages, cvData);
   const pinnedSectionKey = pinnedSection(messages) || 'experience';
-  // The project type lives in the transcript (that's where the backend's project prompt
-  // reads it from), so it resolves the same way the pin does.
-  const pinnedType = pinnedEntry ? projectTypeFor(messages, pinnedEntry._sortId) : null;
+  // The project type: the PERSISTED entry field first, then this thread's marker. The
+  // entry is what a tailored project (cloned, so no marker) and an "Edit with Aria"
+  // interview have, and it's what the backend now reads too — so resolving it this way
+  // is what makes them skip the type chip instead of being asked something Aria knows.
+  const pinnedType = pinnedEntry
+    ? resolveProjectType(pinnedEntry, messages, pinnedEntry._sortId)
+    : null;
+
   const pinnedStage = roleStage(pinnedEntry, pinnedSectionKey, { typePicked: !!pinnedType });
 
   // Career stage — same "Where are you in your career?" question as the CV builder's
@@ -404,8 +418,123 @@ const StudioChat = ({ onPaywall }) => {
     return true;
   };
 
+  // ─── Commanded deletes (the Live Preview's Remove) ───
+  //
+  // The preview REQUESTS; this owns the consequences, because the ORDER is the whole
+  // point. Teardown markers are pushed BEFORE removeEntry mutates cvData, so by the time
+  // the self-heal effect below re-runs there is no pin left to heal and its `if (!sortId)
+  // return` short-circuits — no duplicate "pin cleared" line, and no race with the save.
+  //
+  // A deliberate delete and an entry that vanished from another tab are different events
+  // and read differently: this one is silent about the pin (the user just deleted the
+  // thing; being told it's gone is noise) and offers UNDO. The self-heal stays as the
+  // backstop for the genuinely surprising case.
+  //
+  // ─── Commanded "Edit with Aria" (the Live Preview's ✎ → Aria) ───
+  //
+  // Same channel, same discipline — the preview may not pin an entry or open an interview
+  // itself, because both are transcript/phase changes and this component owns those. The
+  // branch below is the TAIL of an existing entry point in each session kind: build
+  // reuses startEntry's pin-and-go (minus the create, since the entry exists), and tailor
+  // reuses startInterview. BOTH are the conversational route — Aria asks about the entry
+  // and only generates bullets at the end, once the user picks a count. "Edit with Aria"
+  // means the interview, so nothing here generates anything on arrival: the rewrite card
+  // stays where it was chosen deliberately, from Fix → pick an entry.
+  useEffect(() => {
+    if (!studioCommand) return;
+
+    if (studioCommand.type === 'editWithAria') {
+      const { section, sortId } = studioCommand;
+      // Education can't get here — the row doesn't offer the choice — but the guard is
+      // load-bearing anyway: ENTRY_SOURCE has no education key, so a pinrole/rewrite on a
+      // degree would strand the user on a phase with nothing behind it. No-op, but STILL
+      // clear, or the command sticks and blocks the next one.
+      if (!sortId || section === 'education') {
+        clearStudioCommand?.();
+        return;
+      }
+      // The entry is looked up for its LABELS only (Aria names the entry she's asking
+      // about); the sortId remains the identity everything else resolves by.
+      const list = section === 'project' ? cvData?.projects : cvData?.experience;
+      const entry = (list || []).find((e) => e._sortId === sortId);
+
+      if (cvData?.studioKind === 'build') {
+        // The tail of startEntry: this entry already exists, so pin it and drop into its
+        // field capture. Field-by-field, exactly as if Aria had just created it.
+        push({ who: 'pinrole', sortId, section });
+        setPhase(`build:${section}`);
+      } else {
+        // The INTERVIEW, not the rewrite. Aria asks about this entry — guided by its
+        // type and the session's career stage — and bullets are only generated at the
+        // end, once the user picks a count. Nothing is charged on arrival.
+        //
+        // `section` is the command's own token ('experience' | 'project'), already the
+        // focusSection vocabulary, and startInterview treats the caller's entry.section
+        // as authoritative — so a PROJECT is interviewed as a project even though no fix
+        // is open here to read the section off.
+        //
+        // Declared below, but only ever CALLED from an effect — by which point the whole
+        // component body has run, so the binding is initialised. Same shape as every
+        // other handler here; hoisting it above the effect would move ~40 lines of the
+        // fix loop away from the rest of it.
+        // eslint-disable-next-line no-use-before-define
+        startInterview({ section, sortId, title: entry?.title, company: entry?.company });
+      }
+      clearStudioCommand?.();
+      return;
+    }
+
+    if (studioCommand.type !== 'deleteEntry') return;
+    const { section, sortId } = studioCommand;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // 1. Tear down whatever is FOCUSED on this entry, first.
+        if (sortId && sortId === pinnedSortId(messages)) {
+          push({ who: 'unpinrole' });
+          // Only leave a build:<section> screen if it's THIS entry's — a pin can be open
+          // while the user is elsewhere, and yanking them to the hub would be wrong.
+          if (String(phase).startsWith('build:') && phase === `build:${pinnedSection(messages)}`) {
+            setPhase('build:sections');
+          }
+        } else if (sortId && openFix(messages)?.entry?.sortId === sortId) {
+          // An open coach session pointed at this entry: close it cleanly and go back to
+          // the breakdown. Its in-flight turn (if any) 404s — SectionCoach handles that.
+          push({ who: 'fixend' });
+          setPhase('results');
+        }
+
+        // 2. Then the delete itself, with the index so undo can put it back in place.
+        const { ok, removed, index } = (await removeEntry?.(section, sortId)) || {};
+        if (cancelled || !ok || !removed) return;
+
+        // 3. Undo is the safety net that lets the confirm stay lightweight. restoreEntry
+        //    keeps the original _sortId, so transcript markers still resolve afterwards.
+        toast(t('ariaStudio.livePreview.entryRemoved'), {
+          action: {
+            label: t('ariaStudio.livePreview.undo'),
+            onClick: () => restoreEntry?.(section, removed, index),
+          },
+        });
+      } finally {
+        // Always clear, even on a failed/rejected delete — a stuck command would block
+        // the next one (the effect is keyed on the payload, and a repeat of the same
+        // entry only differs by nonce).
+        if (!cancelled) clearStudioCommand?.();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studioCommand]);
+
   // Self-clear a pin whose entry has gone — deleted in the CV builder, or in another tab.
   // Without this the card would keep accepting answers for a role that no longer exists.
+  //
+  // NOT the path a preview delete takes: that one is commanded (above) and has already
+  // pushed its own unpinrole, so `pinnedSortId` is null here and this returns immediately.
   useEffect(() => {
     if (loading || !cvData) return;
     const sortId = pinnedSortId(messages);
@@ -813,20 +942,40 @@ const StudioChat = ({ onPaywall }) => {
   // `opener` overrides Aria's first line. The project-ideas path uses it so the interview
   // opens on the IDEA being built rather than "tell me one thing you did there" — which
   // would be asking about work that, by definition, hasn't happened yet.
+  //
+  // The CALLER's `entry.section` is AUTHORITATIVE. This used to read the section off the
+  // open fix — fine while every route in was "a fix is already open" (the picker, the
+  // rewrite escape), but "Edit with Aria" from the Live Preview arrives with NO fix open,
+  // and `ENTRY_SOURCE[undefined] || ENTRY_SOURCE.experience` would have filed a PROJECT as
+  // experience: wrong label on the marker, and the coach interviewing a project as if it
+  // were a job. The fix is still consulted as the FALLBACK, for the one caller that hands
+  // over a bare { sortId } from inside a projects fix (startBlankProject).
   const startInterview = (entry, opener) => {
     const fix = openFix(messages);
-    const src = ENTRY_SOURCE[fix?.sectionKey] || ENTRY_SOURCE.experience;
-    const gaps = fix?.missingKeywords || [];
+    const section = entry.section || ENTRY_SOURCE[fix?.sectionKey]?.focusSection || 'experience';
+    // finishFix re-scores BY SCAN KEY, which is the plural vocabulary — so map the
+    // singular focusSection back to it when there's no fix to read it off. Without a key
+    // the close-out has no section to compare, and the movement report goes silent.
+    const sectionKey =
+      fix?.sectionKey ??
+      (section === 'project' ? 'projects' : section === 'education' ? 'education' : 'experience');
+    // Same story for the gaps: off the open fix when there is one, otherwise straight off
+    // the live scan snapshot for that section — the terms the section was marked down for
+    // are what make Aria's first question targeted rather than generic.
+    const gaps =
+      fix?.missingKeywords ??
+      cvData?.studioScan?.sections?.find((s) => s.key === sectionKey)?.missingKeywords ??
+      [];
 
     push(
       {
         who: 'fixstart',
         mode: 'coach',
-        sectionKey: fix?.sectionKey,
+        sectionKey,
         sectionLabel: fix?.sectionLabel,
         missingKeywords: gaps,
         entry: {
-          section: src.focusSection,
+          section,
           sortId: entry.sortId,
           title: entry.title,
           company: entry.company,
@@ -1258,28 +1407,18 @@ const StudioChat = ({ onPaywall }) => {
   // entry, not from here — updates as a consequence rather than being told separately.
   const captureRoleField = async (patch) => {
     if (!pinnedEntry) return;
-    const list = SECTION_LIST[pinnedSection(messages)] || 'experience';
     // Updating the live entry changes `pinnedStage`, which would otherwise mount the
     // next capture card before Aria's acknowledgement starts. Keep that swap behind
     // the same short "noting this down" beat used by the other card transitions.
     setTransitionLabel(t('ariaStudio.chat.thinking.notingThatDown'));
     setRoleBusy('field');
     try {
-      const previous = cvData[list] || [];
-      const next = previous.map((e) =>
-        e._sortId === pinnedEntry._sortId ? { ...e, ...patch } : e
-      );
-      updateCvData({ [list]: next });
-      if (draftId) {
-        try {
-          await CVService.saveDraft({ _id: draftId, [list]: next });
-        } catch (err) {
-          console.error('Failed to save entry field', err);
-          updateCvData({ [list]: previous });
-          toast.error(t('ariaStudio.chat.toast.saveFailed'));
-          return;
-        }
-      }
+      // The context writer owns the persistence: optimistic local update, narrow
+      // { _id, <one list key> } save, rollback + toast if it fails. Doing it here as well
+      // was ~15 lines of the same optimistic-save code, and a second place for the
+      // narrow-patch invariant to drift.
+      const r = await applyEntryEdit(pinnedSectionKey, pinnedEntry._sortId, patch);
+      if (!r.ok) return; // applyEntryEdit already rolled back + toasted
       // Aria acknowledges and asks for the next missing thing. Reading the stage off the
       // UPDATED entry keeps the question in step with the document.
       const updated = { ...pinnedEntry, ...patch };
@@ -1373,7 +1512,16 @@ const StudioChat = ({ onPaywall }) => {
   // project prompt reads it from, plus a marker so the chips don't re-ask on refresh.
   const pickProjectType = (type) => {
     if (!pinnedEntry) return;
+    const sortId = pinnedEntry._sortId;
     advance(() => {
+      // PERSIST the type on the ENTRY as well as pushing the marker. The marker is what
+      // the build flow and refresh recovery read; the entry is what survives everything
+      // the marker cannot: a tailored COPY inherits it (projects clone), and an "Edit
+      // with Aria" interview opened later can still see it — exactly the way an
+      // experience entry carries its own entryType. Deliberately NOT awaited: the type
+      // is already in the thread, so the conversation must not block on a save, and
+      // applyEntryEdit owns its narrow patch, rollback and toast if it fails.
+      applyEntryEdit('project', sortId, { entryType: type.key });
       push(
         { who: 'user', text: t(type.messageKey) },
         { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, labelKey: type.labelKey }
@@ -1847,6 +1995,55 @@ const StudioChat = ({ onPaywall }) => {
     fetchProjectIdeas('fix');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, fixWantsIdeas]);
+
+  // ─── Focus mode: publish WHICH entry Aria is working on ───
+  //
+  // A derived MIRROR, not a second source of truth. The interview already lives in the
+  // phase and the markers; this restates it as the one thing the Live Preview needs —
+  // { section, sortId } — so it can MARK that row and lock its controls. Exactly three
+  // states count as "Aria is working on this entry":
+  //
+  //   build:<section> with a pin  → the field capture / achievements interview
+  //   fix:coach with an entry     → the tailor interview
+  //   fix:rewrite with a target   → the before → after rewrite
+  //
+  // Anything else is null, so the marker disappears the moment the interview closes —
+  // a fixend, an unpin, or simply moving back to results/build:sections.
+  //
+  // ONE effect, over primitives. Every branch is derived from state that already
+  // re-renders this component, so a single recompute is both cheaper and harder to get
+  // wrong than setting focus from inside each of the handlers that open one. The deps
+  // are the extracted section/sortId strings rather than the marker objects, which is
+  // what keeps this from re-firing on unrelated transcript pushes — and, because a
+  // useState setter is stable and the effect only runs when a dep actually changes,
+  // publishing a fresh object here cannot feed back into a loop.
+  const focusedPinSortId =
+    String(phase).startsWith('build:') && pinnedEntry ? pinnedEntry._sortId : null;
+  const focusedFix = phase === 'fix:coach' ? activeFix?.entry : null;
+  const focusedRewrite = phase === 'fix:rewrite' ? rewriteTarget?.entry : null;
+  const focusedFixSection = focusedFix?.section || null;
+  const focusedFixSortId = focusedFix?.sortId || null;
+  const focusedRewriteSection = focusedRewrite?.section || null;
+  const focusedRewriteSortId = focusedRewrite?.sortId || null;
+  useEffect(() => {
+    if (focusedPinSortId) {
+      setActiveEntry?.({ section: pinnedSectionKey, sortId: focusedPinSortId });
+    } else if (focusedFixSortId) {
+      setActiveEntry?.({ section: focusedFixSection, sortId: focusedFixSortId });
+    } else if (focusedRewriteSortId) {
+      setActiveEntry?.({ section: focusedRewriteSection, sortId: focusedRewriteSortId });
+    } else {
+      setActiveEntry?.(null);
+    }
+  }, [
+    focusedPinSortId,
+    pinnedSectionKey,
+    focusedFixSection,
+    focusedFixSortId,
+    focusedRewriteSection,
+    focusedRewriteSortId,
+    setActiveEntry,
+  ]);
 
   // The coach brings its own input while a build-with is open, so the docked one hides
   // entirely rather than sitting there disabled and competing for attention.

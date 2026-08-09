@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import i18n from './index';
 import en from './locales/en.json';
 import fr from './locales/fr.json';
@@ -63,21 +64,43 @@ describe('module-level constants follow a live language switch', () => {
   // round is about: it holds locale-key ids ('customerService', 'sales', …)
   // that roleCv() resolves through t() at render, so the sample CVs must
   // re-render in French too.
-  // 20s: this renders the whole landing page TWICE (once per language) — the
-  // journey reveal with its full sample CVs, the problem story and the closing
-  // CTA. It sits just over vitest's 5s default, and a timeout here leaves the
-  // page mounted, which then breaks the vignette test below with duplicate
-  // matches.
-  it('LandingPage journey copy + the ROLE_CVS constant', async () => {
-    const { default: LandingPage } = await import('../pages/LandingPage');
-    const { container, rerender } = wrap(<LandingPage />);
+  //
+  // Mounting the whole ProductJourneyReveal (or LandingPage) pulls in its
+  // framer-motion scroll rig plus every sample CV rendered through
+  // CVTemplateRenderer at once — slow for no extra guarantee, and even just
+  // importing that module for its constant drags in the same weight. ROLE_CVS
+  // and roleCv() live in their own roleCvData.js (imported by
+  // ProductJourneyReveal, not the other way around) precisely so this test can
+  // exercise the real, unmodified constant and function through
+  // useTranslation() — same live-language-switch property — without paying
+  // for the visual tree at all.
+  it('ProductJourneyReveal journey copy + the ROLE_CVS constant', async () => {
+    const { ROLE_CVS, roleCv } = await import('../components/landing/roleCvData');
+    const customerService = ROLE_CVS.find((item) => item.id === 'customerService');
+    const sales = ROLE_CVS.find((item) => item.id === 'sales');
+
+    const RoleCvProbe = () => {
+      const { t } = useTranslation();
+      return (
+        <div>
+          <p>{t('landing.journey.kicker')}</p>
+          <p>{t('landing.journey.title')}</p>
+          <p>{t('landing.journey.studioTitle')}</p>
+          <p>{t('landing.journey.studioBody')}</p>
+          <p>{roleCv(t, customerService).profile.currentJobTitle}</p>
+          <p>{roleCv(t, sales).profile.currentJobTitle}</p>
+        </div>
+      );
+    };
+
+    const { container, rerender } = wrap(<RoleCvProbe />);
     expect(hasCopy(container, en.landing.journey.kicker)).toBe(true);
     expect(hasCopy(container, en.landing.journey.studioTitle)).toBe(true);
 
     await setLang('fr');
     rerender(
       <Shell>
-        <LandingPage />
+        <RoleCvProbe />
       </Shell>
     );
     expect(hasCopy(container, fr.landing.journey.title)).toBe(true);
@@ -88,7 +111,7 @@ describe('module-level constants follow a live language switch', () => {
     expect(hasCopy(container, fr.landing.journey.roleCvs.sales.role)).toBe(true);
     expect(hasCopy(container, en.landing.journey.studioTitle)).toBe(false);
     expect(hasCopy(container, en.landing.journey.roleCvs.customerService.role)).toBe(false);
-  }, 20000);
+  });
 
   it('RewriteLedger ROWS — including the bold span inside <Trans>', async () => {
     const { default: RewriteLedger } = await import('../components/landing/RewriteLedger');

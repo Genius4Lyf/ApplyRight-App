@@ -265,6 +265,15 @@ const SectionCoach = ({
           who: 'aria',
           text: t('ariaStudio.chat.buildLimitReached'),
         });
+      } else if (e?.response?.status === 404) {
+        // The entry was deleted WHILE this turn was in flight — the Live Preview's Remove,
+        // or another tab. The backend answers 404 "that role is no longer in your CV" with
+        // no `code`, so it's matched on status. Say what happened and close cleanly:
+        // onDone(null) is the "backed out, nothing applied" contract, which early-returns
+        // before any recompute. A red toast would be wrong — nothing failed, and the
+        // deletion was almost certainly deliberate.
+        onPush({ who: 'aria', text: t('ariaStudio.sectionCoach.entryGone') });
+        onDone?.(null);
       } else {
         toast.error(t('ariaStudio.chat.chatUnreachable'));
       }

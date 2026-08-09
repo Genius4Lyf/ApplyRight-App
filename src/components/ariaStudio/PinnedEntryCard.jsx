@@ -45,6 +45,16 @@ const PinnedEntryCard = ({
   typeLabel,
   onNextRole,
   onDone,
+  // STILL UNWIRED, deliberately. StudioChat is this card's only caller and passes no
+  // onEdit, so the ✎ below never renders today.
+  //
+  // Hooking it to the Live Preview's inline manual editor (3c-i) isn't a matter of passing
+  // a callback: that editor is rendered BY THE SHEET, in the slot the entry occupies, and
+  // this card lives in the chat column where there is no such slot. Wiring it would mean
+  // giving StudioChat its own editing state and its own copy of the editor host — a second
+  // place that decides what "editing an entry" means, next to the pinned interview that is
+  // already writing into the same entry. That belongs with the manual-vs-Aria choice in
+  // 3c-ii, which has to answer the pinned-entry question anyway.
   onEdit,
   busy,
   messagePulse = 0,
@@ -189,78 +199,78 @@ const PinnedEntryCard = ({
         }`}
       >
         <div className="overflow-hidden">
-        <div className="px-3 pb-3 border-t border-slate-100 dark:border-slate-800 pt-2.5">
-          <dl className="space-y-1.5">
-            {fields.map((f) => {
-              const value = valueFor(f.key);
-              return (
-                <div key={f.key} className="flex items-baseline gap-2 min-w-0">
-                  <dt className="shrink-0 w-24 font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                    {t(f.labelKey)}
-                  </dt>
-                  <dd
-                    className={`min-w-0 flex-1 truncate text-[12.5px] ${
-                      f.done
-                        ? 'text-slate-800 dark:text-slate-100'
-                        : 'italic text-slate-400 dark:text-slate-500'
-                    }`}
+          <div className="px-3 pb-3 border-t border-slate-100 dark:border-slate-800 pt-2.5">
+            <dl className="space-y-1.5">
+              {fields.map((f) => {
+                const value = valueFor(f.key);
+                return (
+                  <div key={f.key} className="flex items-baseline gap-2 min-w-0">
+                    <dt className="shrink-0 w-24 font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      {t(f.labelKey)}
+                    </dt>
+                    <dd
+                      className={`min-w-0 flex-1 truncate text-[12.5px] ${
+                        f.done
+                          ? 'text-slate-800 dark:text-slate-100'
+                          : 'italic text-slate-400 dark:text-slate-500'
+                      }`}
+                    >
+                      {f.done && value
+                        ? value
+                        : f.optional
+                          ? t('ariaStudio.pinnedEntry.optional')
+                          : t('ariaStudio.pinnedEntry.notYet')}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+
+            {bullets.length > 0 && (
+              <ul className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                {bullets.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-1.5 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300"
                   >
-                    {f.done && value
-                      ? value
-                      : f.optional
-                        ? t('ariaStudio.pinnedEntry.optional')
-                        : t('ariaStudio.pinnedEntry.notYet')}
-                  </dd>
-                </div>
-              );
-            })}
-          </dl>
+                    {/* A list glyph — decoration, not Aria and not an action. */}
+                    <span className="shrink-0 text-slate-400 dark:text-slate-500">•</span>
+                    <span className="min-w-0">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {bullets.length > 0 && (
-            <ul className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
-              {bullets.map((b, i) => (
-                <li
-                  key={i}
-                  className="flex gap-1.5 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300"
-                >
-                  {/* A list glyph — decoration, not Aria and not an action. */}
-                  <span className="shrink-0 text-slate-400 dark:text-slate-500">•</span>
-                  <span className="min-w-0">{b}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onNextRole}
-              disabled={busy || done < total}
-              title={done < total ? t('ariaStudio.pinnedEntry.finishFirst') : undefined}
-              className="btn-primary px-3.5 py-1.5 text-xs disabled:opacity-40"
-            >
-              {busy === 'next' ? t('ariaStudio.pinnedEntry.saving') : t(copy.nextKey)}
-            </button>
-            <button
-              type="button"
-              onClick={onDone}
-              disabled={busy}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            >
-              {busy === 'done' ? t('ariaStudio.pinnedEntry.finishing') : t(copy.doneKey)}
-            </button>
-            {onEdit && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={onEdit}
-                disabled={busy}
-                className="text-[11px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                onClick={onNextRole}
+                disabled={busy || done < total}
+                title={done < total ? t('ariaStudio.pinnedEntry.finishFirst') : undefined}
+                className="btn-primary px-3.5 py-1.5 text-xs disabled:opacity-40"
               >
-                ✎ {t('ariaStudio.pinnedEntry.edit')}
+                {busy === 'next' ? t('ariaStudio.pinnedEntry.saving') : t(copy.nextKey)}
               </button>
-            )}
+              <button
+                type="button"
+                onClick={onDone}
+                disabled={busy}
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                {busy === 'done' ? t('ariaStudio.pinnedEntry.finishing') : t(copy.doneKey)}
+              </button>
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  disabled={busy}
+                  className="text-[11px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                >
+                  ✎ {t('ariaStudio.pinnedEntry.edit')}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

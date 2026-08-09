@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import CVService from '../services/cv.service';
 import { newSortId } from '../lib/sortId';
 import { startCvErrorMessage } from '../lib/startCvError';
+import { SECTION_LIST } from '../lib/studioFlow';
 
 // Aria Studio's state brain — a decoupled sibling of CVContext. It carries the SAME
 // CV-mutation invariants (functional coachChats merge, debounced chats autosave as the
@@ -25,6 +26,15 @@ export const AriaStudioProvider = ({ children }) => {
   // null until a CV is cloned (Phase 1). Every writer below is a no-op-safe read off
   // `cvData?.…` so the shell can mount before there's a document.
   const [cvData, setCvDataRaw] = useState(null);
+  // A LIVE mirror of cvData, for writers whose caller may be holding a closure older than
+  // the current state. The undo in a removal toast is exactly that: the callback is built
+  // BEFORE removeEntry's state change lands, so by the time it runs, the `cvData` captured
+  // in restoreEntry's closure is one delete behind. Splicing into that stale list put the
+  // entry back TWICE. Reads that must see the newest list go through this ref; the writes
+  // themselves still go through setCvDataRaw's functional updater.
+  const cvDataRef = useRef(null);
+  cvDataRef.current = cvData;
+
   const [saving, setSaving] = useState(false);
   // True while the remembered draft is being fetched on mount, so the chat waits for
   // its saved thread instead of briefly rendering an empty conversation.
@@ -60,6 +70,39 @@ export const AriaStudioProvider = ({ children }) => {
   // Bumped whenever a writer mutates a role/project from outside a mounted editor.
   // Consumers that seed local form state ONCE from cvData watch this and re-seed.
   const [externalEditNonce, setExternalEditNonce] = useState(0);
+  // ─── The studio command channel ───
+  //
+  // A REQUEST from a surface that can't own the consequences, to the one that can.
+  // The Live Preview can delete an entry, but deleting the entry Aria is mid-interview
+  // on has to be TORN DOWN in order: unpin (or close the open fix) BEFORE the entry
+  // leaves cvData, or StudioChat's self-heal fires its own "pin cleared" line and races
+  // the removeEntry save. So the preview asks, StudioChat performs, and the writers stay
+  // where they are — one owner of the teardown ordering instead of two.
+  //
+  // Same idiom as externalEditNonce, with one addition: the payload carries its own
+  // `nonce`, so commanding the SAME entry twice in a row is still two distinct commands
+  // (a bare { type, section, sortId } would be referentially equal on the retry and the
+  // consumer's effect would never re-fire).
+  const commandNonceRef = useRef(0);
+  const [studioCommand, setStudioCommand] = useState(null);
+  const requestStudioCommand = useCallback((type, section, sortId) => {
+    setStudioCommand({ type, section, sortId, nonce: commandNonceRef.current++ });
+  }, []);
+  const clearStudioCommand = useCallback(() => setStudioCommand(null), []);
+
+  // ─── Focus mode: WHICH entry Aria is working on ───
+  //
+  // { section, sortId } | null. The counterpart of the command channel, running the other
+  // way: StudioChat publishes the row its interview is on, the Live Preview reads it to
+  // MARK that row and lock its controls (an entry can't be reordered, hand-edited or
+  // deleted out from under a live interview).
+  //
+  // DERIVED, and deliberately NOT persisted. The interview itself already lives in the
+  // transcript (the pin / the open fix) and in the draft's studioPending, so a refresh
+  // re-derives this from the same markers the phase does. Saving it would add a second
+  // copy of a fact the document already holds — one that could then disagree with it.
+  const [activeEntry, setActiveEntry] = useState(null);
+
   // The _sortId of the entry Aria most recently WROTE bullets into — drives the
   // "Aria filled this in" reveal on the matching card.
   const [lastAiWriteSortId, setLastAiWriteSortId] = useState(null);
@@ -352,34 +395,182 @@ export const AriaStudioProvider = ({ children }) => {
     return () => clearTimeout(t);
   }, [cvData?.coachChats, draftId]);
 
+  // ─── Entry writers ───
+  //
+  // Every one of these follows the SAME four beats as applyRoleEdit below: capture
+  // `previous`, apply the new list optimistically, bump externalEditNonce so mounted
+  // editors re-seed, then persist a NARROW patch and roll back on failure.
+  //
+  // The narrow patch is load-bearing. saveDraft lands as findByIdAndUpdate, an implicit
+  // $set — so a payload carrying more than { _id, <one list key> } would write stale
+  // sibling fields back over whatever else the session has changed since this closure
+  // captured cvData. One key per writer, always.
+  //
+  // `section` is the SECTION_LIST vocabulary ('experience' | 'project' | 'education'),
+  // the same words the pin markers and every caller already speak — resolved through the
+  // shared map rather than a private copy that could drift from it.
+  const listKeyFor = (section) => SECTION_LIST[section] || 'experience';
+
+  // Persist ONE list key with rollback. The shared tail of every writer below: they
+  // differ only in how they compute `next`, so the optimistic-save mechanics live here
+  // once instead of five times.
+  const commitList = useCallback(
+    async (key, next, previous, failMessage) => {
+      setCvDataRaw((prev) => ({ ...(prev || {}), [key]: next }));
+      setExternalEditNonce((n) => n + 1);
+      if (!draftId) return true; // no document yet — local-only, same as every other writer
+      try {
+        await CVService.saveDraft({ _id: draftId, [key]: next });
+        return true;
+      } catch (error) {
+        console.error(`Failed to save ${key}`, error);
+        setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
+        toast.error(failMessage);
+        return false;
+      }
+    },
+    [draftId]
+  );
+
+  // The GENERAL entry writer: shallow-merge `patch` onto the entry with this _sortId.
+  // applyRoleEdit (description only) and the chat's field capture are both this call
+  // with a narrower patch, which is why they now delegate here.
+  const applyEntryEdit = useCallback(
+    async (section, sortId, patch) => {
+      if (!cvData) return { ok: false, found: false };
+      const key = listKeyFor(section);
+      const previous = cvData[key] || [];
+      // Resolve BEFORE writing anything: a sortId that isn't in the list means the entry
+      // was deleted (another tab, or the builder), and saving an unchanged list would be
+      // a pointless write that also reports success for an edit that landed nowhere.
+      if (!previous.some((e) => e._sortId === sortId)) return { ok: false, found: false };
+      const next = previous.map((e) => (e._sortId === sortId ? { ...e, ...patch } : e));
+      const ok = await commitList(key, next, previous, "Couldn't save that change. Try again.");
+      return ok ? { ok: true, found: true } : { ok: false, found: true, saveFailed: true };
+    },
+    [cvData, commitList]
+  );
+
+  // Re-order one list to match `orderedSortIds`.
+  //
+  // Entries NOT named in the order are APPENDED, in their original relative order —
+  // never dropped. That's what protects the blank placeholder rows: the preview hides
+  // them (withoutBlankEntries) so they're absent from any drag list the UI builds, and
+  // treating "absent from the order" as "delete" would silently destroy the entry an
+  // interview is mid-way through writing into. An id in the order that isn't in the list
+  // is simply ignored — a stale drag payload is not an error worth failing a reorder for.
+  const reorderEntries = useCallback(
+    async (section, orderedSortIds = []) => {
+      if (!cvData) return { ok: false };
+      const key = listKeyFor(section);
+      const previous = cvData[key] || [];
+      const byId = new Map();
+      previous.forEach((e) => {
+        if (e?._sortId != null && !byId.has(e._sortId)) byId.set(e._sortId, e);
+      });
+      const taken = new Set();
+      const ordered = [];
+      orderedSortIds.forEach((id) => {
+        const entry = byId.get(id);
+        if (entry && !taken.has(id)) {
+          taken.add(id);
+          ordered.push(entry);
+        }
+      });
+      const next = [...ordered, ...previous.filter((e) => !taken.has(e?._sortId))];
+      // Already in this order — short-circuit rather than spend a write on a no-op.
+      const unchanged = next.length === previous.length && next.every((e, i) => e === previous[i]);
+      if (unchanged) return { ok: true };
+      const ok = await commitList(key, next, previous, "Couldn't save that new order. Try again.");
+      return { ok };
+    },
+    [cvData, commitList]
+  );
+
+  // Remove one entry, reporting the entry AND its index so a caller can offer undo —
+  // restoreEntry(section, removed, index) puts it back exactly where it was.
+  const removeEntry = useCallback(
+    async (section, sortId) => {
+      if (!cvData) return { ok: false, removed: null, index: -1 };
+      const key = listKeyFor(section);
+      const previous = cvData[key] || [];
+      const index = previous.findIndex((e) => e._sortId === sortId);
+      if (index === -1) return { ok: false, removed: null, index: -1 };
+      const removed = previous[index];
+      const next = previous.filter((_, i) => i !== index);
+      const ok = await commitList(key, next, previous, "Couldn't delete that. Try again.");
+      return ok ? { ok: true, removed, index } : { ok: false, removed, index, saveFailed: true };
+    },
+    [cvData, commitList]
+  );
+
+  // The undo partner of removeEntry: splice `entry` back in at `index`.
+  //
+  // The entry goes back with its ORIGINAL _sortId untouched — that id is what the
+  // transcript's rolerecord/projecttype/projectidea markers point at, so minting a fresh
+  // one would restore the content while orphaning every marker that referenced it.
+  //
+  // Reads the list from cvDataRef, NOT from the `cvData` in this closure. The caller here
+  // is a toast's undo button, and that callback was created BEFORE removeEntry's state
+  // change landed — so the closure's cvData still CONTAINS the deleted entry, and
+  // splicing into it put the entry back twice. The ref is always the current list.
+  const restoreEntry = useCallback(
+    async (section, entry, index) => {
+      const current = cvDataRef.current;
+      if (!current || !entry) return { ok: false };
+      const key = listKeyFor(section);
+      const previous = current[key] || [];
+      // Idempotent: a double-tapped undo (or one racing a re-render) must not duplicate
+      // the entry. _sortId is preserved on restore, so it's a reliable identity check.
+      if (entry._sortId != null && previous.some((e) => e?._sortId === entry._sortId)) {
+        return { ok: true };
+      }
+      // Clamp: the list may have shrunk (or grown) between the delete and the undo, and
+      // a splice at an out-of-range index would silently land somewhere unintended.
+      const at = Math.max(0, Math.min(index ?? previous.length, previous.length));
+      const next = [...previous.slice(0, at), entry, ...previous.slice(at)];
+      const ok = await commitList(key, next, previous, "Couldn't restore that. Try again.");
+      return { ok };
+    },
+    [commitList]
+  );
+
+  // Replace the WHOLE skills array.
+  //
+  // Skills carry no _sortId, so position IS identity — there's nothing to address a
+  // single one by. Reorder, rename and delete therefore all reduce to "the UI owns the
+  // array and hands back the final one", which this writes atomically. Distinct from
+  // applySkills, which MERGES Aria's suggestions into what's already there.
+  const replaceSkills = useCallback(
+    async (nextSkills) => {
+      if (!cvData) return { ok: false };
+      const previous = cvData.skills || [];
+      const next = nextSkills || [];
+      const ok = await commitList(
+        'skills',
+        next,
+        previous,
+        "Couldn't save those skills. Try again."
+      );
+      return { ok };
+    },
+    [cvData, commitList]
+  );
+
   // Apply a coach-generated bullet rewrite to ONE role/project in place: replace that
   // entry's `description`, persist immediately (so a follow-up recheck reads the new
   // bullets server-side), and bump externalEditNonce. `section` is 'experience' | 'project'.
+  //
+  // A thin wrapper over applyEntryEdit — the description is just one patch key. It keeps
+  // its BOOLEAN return because existing callers (SectionCoach apply, the rewrite apply)
+  // branch on it directly; `found: false` collapses into false, which is what those
+  // callers already treat a failed apply as.
   const applyRoleEdit = useCallback(
     async (section, sortId, newDescription) => {
-      if (!cvData) return false;
-      const key = section === 'project' ? 'projects' : 'experience';
-      const previous = cvData[key] || [];
-      const list = previous.map((e) =>
-        e._sortId === sortId ? { ...e, description: newDescription } : e
-      );
-      setCvDataRaw((prev) => ({ ...(prev || {}), [key]: list }));
-      setExternalEditNonce((n) => n + 1);
-
-      if (draftId) {
-        try {
-          await CVService.saveDraft({ _id: draftId, [key]: list });
-          return true;
-        } catch (error) {
-          console.error('Failed to save applied rewrite', error);
-          setCvDataRaw((prev) => ({ ...(prev || {}), [key]: previous }));
-          toast.error("Couldn't save that rewrite. Try again.");
-          return false;
-        }
-      }
-      return true;
+      const r = await applyEntryEdit(section, sortId, { description: newDescription });
+      return r.ok;
     },
-    [cvData, draftId]
+    [applyEntryEdit]
   );
 
   // Writer: set the professional summary (from Aria's in-chat draft) and save.
@@ -555,6 +746,13 @@ export const AriaStudioProvider = ({ children }) => {
     applyRoleBulletDiff,
     applySummary,
     applySkills,
+    // Entry writers — the general edit plus the reorder/delete/undo set the entry
+    // management UI drives. All narrow-patch, all rollback-on-failure.
+    applyEntryEdit,
+    reorderEntries,
+    removeEntry,
+    restoreEntry,
+    replaceSkills,
     externalEditNonce,
     lastAiWriteSortId,
     saving,
@@ -573,6 +771,14 @@ export const AriaStudioProvider = ({ children }) => {
     setPendingKind,
     pendingSource,
     setPendingSource,
+    // Command channel
+    studioCommand,
+    requestStudioCommand,
+    clearStudioCommand,
+    // Focus mode — the entry Aria is working on right now, published by StudioChat and
+    // read by the Live Preview. Plain state, no persistence: it's derived UI focus.
+    activeEntry,
+    setActiveEntry,
   };
 
   return <AriaStudioContext.Provider value={value}>{children}</AriaStudioContext.Provider>;

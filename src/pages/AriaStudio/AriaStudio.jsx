@@ -202,18 +202,21 @@ const StudioDesk = () => {
   const openPanel = () => selectView('insights');
 
   const isBuildSession = cvData?.studioKind === 'build';
-  const isTailorSession = cvData?.studioKind === 'tailor';
-  const panelView =
-    !isTailorSession && layout.panelView === 'preview' ? 'insights' : layout.panelView;
+  // The Preview toggle appears once a draft is bound (build OR tailor). Before that it
+  // stays hidden — the mode chooser has no bound document to preview. This replaces the
+  // old isTailorSession gate, whose only three uses were the ones below; a tailor session
+  // always has an _id, so that path is unchanged.
+  const canPreview = !!cvData?._id;
+  const panelView = !canPreview && layout.panelView === 'preview' ? 'insights' : layout.panelView;
 
-  // Live Preview is an explicit tailoring surface. A remembered Preview preference
-  // must not appear before the user has chosen a path or inside a New CV build; return
-  // those states to CV Health and restore the rail as closing Preview normally would.
+  // A remembered Preview preference must not leak into a session that can't show it yet.
+  // Once canPreview is true (cvData._id exists) the effect short-circuits and the panel
+  // preference can be 'preview' for both build and tailor.
   useEffect(() => {
-    if (isTailorSession || layout.panelView !== 'preview') return;
+    if (canPreview || layout.panelView !== 'preview') return;
     closePreview();
     setPanelOverlay(false);
-  }, [isTailorSession, layout.panelView, closePreview, setPanelOverlay]);
+  }, [canPreview, layout.panelView, closePreview, setPanelOverlay]);
 
   const headingTitle = isBuildSession
     ? cvData?.title || t('ariaStudio.desk.newCv')
@@ -373,7 +376,7 @@ const StudioDesk = () => {
                 gets the neutral active-state (matching the other header toggles); the
                 score pill stays to their right. */}
             <div className="shrink-0 flex items-center gap-1">
-              {isTailorSession && (
+              {canPreview && (
                 <button
                   type="button"
                   onClick={() => selectView('preview')}
@@ -416,7 +419,10 @@ const StudioDesk = () => {
         {layout.panelInline &&
           (panelView === 'preview' ? (
             <div className="studio-col-panel min-h-0">
-              <StudioLivePreview onClose={() => layout.closePreview()} />
+              <StudioLivePreview
+                onClose={() => layout.closePreview()}
+                isSheet={layout.panelUsesSheet}
+              />
             </div>
           ) : (
             <div className="w-[320px] shrink-0 min-h-0">
@@ -460,7 +466,10 @@ const StudioDesk = () => {
         }
       >
         {panelView === 'preview' ? (
-          <StudioLivePreview onClose={() => layout.setPanelOverlay(false)} />
+          <StudioLivePreview
+            onClose={() => layout.setPanelOverlay(false)}
+            isSheet={layout.panelUsesSheet}
+          />
         ) : (
           <StudioArtifactPanel bare onClose={() => layout.setPanelOverlay(false)} />
         )}
