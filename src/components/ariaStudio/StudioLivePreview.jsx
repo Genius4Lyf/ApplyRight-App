@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Eye, PencilLine } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -30,6 +31,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 import CvLanguageToggle from '../cv/CvLanguageToggle';
 import PreviewEntryRow from './PreviewEntryRow';
 import PreviewEntryEditor from './PreviewEntryEditor';
+import StudioTemplatePreview from './StudioTemplatePreview';
 import { cvLabel } from '../../lib/cvLabels';
 import { withoutBlankEntries } from '../../lib/studioFlow';
 
@@ -236,6 +238,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // single value is enough to address any entry in any of the three lists.
   const [editingSortId, setEditingSortId] = useState(null);
   const closeEdit = () => setEditingSortId(null);
+  const [viewMode, setViewMode] = useState('edit');
 
   // The lock outranks the manual editor. If Aria takes over the entry that was mid-edit,
   // drop the form and let the row show the marker instead — an entry she just began
@@ -321,6 +324,38 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
             {cvData?.title || t('ariaStudio.livePreview.yourCv')}
           </p>
         </div>
+        <div
+          className="shrink-0 inline-flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
+          aria-label={t('ariaStudio.livePreview.viewMode')}
+        >
+          <button
+            type="button"
+            onClick={() => setViewMode('edit')}
+            aria-pressed={viewMode === 'edit'}
+            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] ${
+              viewMode === 'edit'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+            }`}
+          >
+            <PencilLine className="h-3 w-3" aria-hidden="true" />
+            {t('ariaStudio.livePreview.editMode')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('preview')}
+            disabled={!hasAnything || !!editingSortId}
+            aria-pressed={viewMode === 'preview'}
+            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] disabled:cursor-not-allowed disabled:opacity-40 ${
+              viewMode === 'preview'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+            }`}
+          >
+            <Eye className="h-3 w-3" aria-hidden="true" />
+            {t('ariaStudio.livePreview.previewMode')}
+          </button>
+        </div>
         {/* The language this CV is WRITTEN in — drives Aria's writing and the
             section labels on the downloaded document. */}
         {cvData?._id && (
@@ -358,239 +393,247 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
           </div>
         </div>
       ) : (
-        <div className="h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none p-4 sm:p-6">
-          {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
-          <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
-            {/* Contact header */}
-            <SectionBlock
-              label={label('Contact')}
-              band={bandOfKey('contact')}
-              pulsing={pulsing.contact}
-            >
-              <div className="flex items-center gap-3">
-                {info.photoUrl && (
-                  <img
-                    src={info.photoUrl}
-                    alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
-                    className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover dark:border-slate-700"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
-                    {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
-                  </p>
-                  {contactLine && (
-                    <p className="mt-1 break-words text-[12px] text-slate-500 dark:text-slate-400">
-                      {contactLine}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </SectionBlock>
-
-            {/* Body sections, in the CV's real order. */}
-            {PREVIEW_ORDER.filter((k) => k !== 'contact').map((key) => {
-              if (key === 'summary') {
-                if (!show('summary', !!summary)) return null;
-                return (
-                  <SectionBlock
-                    key="summary"
-                    label={label('Summary')}
-                    band={bandOfKey('summary')}
-                    pulsing={pulsing.summary}
-                  >
-                    {summary ? (
-                      <p className="text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-                        {summary}
-                      </p>
-                    ) : (
-                      <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                        {t('ariaStudio.livePreview.noSummaryYet')}
-                      </p>
+        <div className="h-0 flex-1 min-h-0">
+          {viewMode === 'edit' ? (
+            <div className="h-full overflow-y-auto overscroll-contain scrollbar-none p-4 sm:p-6">
+              {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
+              <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
+                {/* Contact header */}
+                <SectionBlock
+                  label={label('Contact')}
+                  band={bandOfKey('contact')}
+                  pulsing={pulsing.contact}
+                >
+                  <div className="flex items-center gap-3">
+                    {info.photoUrl && (
+                      <img
+                        src={info.photoUrl}
+                        alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
+                        className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+                      />
                     )}
-                  </SectionBlock>
-                );
-              }
-              if (key === 'experience') {
-                if (!show('experience', experience.length > 0)) return null;
-                return (
-                  <SectionBlock
-                    key="experience"
-                    label={label('Experience')}
-                    band={bandOfKey('experience')}
-                    pulsing={pulsing.experience}
-                  >
-                    <ReorderableList
-                      section="experience"
-                      entries={experience}
-                      className="space-y-3"
-                      editingSortId={editingSortId}
-                      onEdit={setEditingSortId}
-                      onCloseEdit={closeEdit}
-                      canEditWithAria
-                      onEditWithAria={editWithAria}
-                    >
-                      {(r) => (
-                        <>
-                          <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                              {r.title || t('ariaStudio.studioFlow.fields.experience.title')}
-                              {r.company ? (
-                                <span className="font-normal text-slate-500 dark:text-slate-400">
-                                  {' '}
-                                  · {r.company}
-                                </span>
-                              ) : null}
-                            </p>
-                            {(r.startDate || r.endDate || r.isCurrent) && (
-                              <span className="shrink-0 font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
-                                {r.startDate || ''}
-                                {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
-                                {r.isCurrent
-                                  ? t('ariaStudio.pinnedEntry.present')
-                                  : r.endDate || ''}
-                              </span>
-                            )}
-                          </div>
-                          <Bullets description={r.description} />
-                        </>
-                      )}
-                    </ReorderableList>
-                  </SectionBlock>
-                );
-              }
-              if (key === 'projects') {
-                if (!show('projects', projects.length > 0)) return null;
-                return (
-                  <SectionBlock
-                    key="projects"
-                    label={label('Projects')}
-                    band={bandOfKey('projects')}
-                    pulsing={pulsing.projects}
-                  >
-                    {/* 'project', SINGULAR — the SECTION_LIST key. 'projects' would
-                        resolve to no list and no-op silently. */}
-                    <ReorderableList
-                      section="project"
-                      entries={projects}
-                      className="space-y-3"
-                      editingSortId={editingSortId}
-                      onEdit={setEditingSortId}
-                      onCloseEdit={closeEdit}
-                      canEditWithAria
-                      onEditWithAria={editWithAria}
-                    >
-                      {(p) => (
-                        <>
-                          <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                            {p.title || t('ariaStudio.studioFlow.fields.project.title')}
-                          </p>
-                          <Bullets description={p.description} />
-                        </>
-                      )}
-                    </ReorderableList>
-                  </SectionBlock>
-                );
-              }
-              if (key === 'skills') {
-                if (!show('skills', skillNames.length > 0)) return null;
-                return (
-                  <SectionBlock
-                    key="skills"
-                    label={label('Skills')}
-                    band={bandOfKey('skills')}
-                    pulsing={pulsing.skills}
-                  >
-                    {skillNames.length ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {skillNames.map((s, i) => (
-                          <span
-                            key={`${s}-${i}`}
-                            className="text-[11.5px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                        {t('ariaStudio.livePreview.noSkillsYet')}
+                    <div className="min-w-0">
+                      <p className="text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
+                        {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
                       </p>
-                    )}
-                  </SectionBlock>
-                );
-              }
-              if (key === 'education') {
-                if (!show('education', education.length > 0 || certifications.length > 0))
-                  return null;
-                return (
-                  <SectionBlock
-                    key="education"
-                    label={label('Education')}
-                    band={bandOfKey('education')}
-                    pulsing={pulsing.education}
-                  >
-                    <div className="space-y-2">
-                      <ReorderableList
-                        section="education"
-                        entries={education}
-                        className="space-y-2"
-                        editingSortId={editingSortId}
-                        onEdit={setEditingSortId}
-                        onCloseEdit={closeEdit}
-                        // Explicitly FALSE, not merely omitted: education has no entry
-                        // interview to hand a degree to (ENTRY_SOURCE covers experience
-                        // and projects only), so its ✎ is the manual editor, full stop.
-                        canEditWithAria={false}
-                      >
-                        {(e) => (
-                          <>
-                            <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                              {e.degree || t('ariaStudio.studioFlow.fields.education.degree')}
-                              {e.school ? (
-                                <span className="font-normal text-slate-500 dark:text-slate-400">
-                                  {' '}
-                                  · {e.school}
-                                </span>
-                              ) : null}
-                            </p>
-                            {e.graduationDate && (
-                              <p className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
-                                {e.graduationDate}
-                              </p>
-                            )}
-                            <Bullets description={e.description} />
-                          </>
-                        )}
-                      </ReorderableList>
-                      {/* Certifications are NOT reorderable this slice — they carry no
-                          _sortId, so there's nothing to address one by. */}
-                      {certifications.length > 0 && (
-                        <div className="pt-1">
-                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-                            {t('ariaStudio.livePreview.certifications')}
-                          </p>
-                          <div className="mt-1 space-y-1">
-                            {certifications.map((certificate, index) => (
-                              <p
-                                key={`${certificate.name}-${index}`}
-                                className="text-[12px] text-slate-600 dark:text-slate-300"
-                              >
-                                {certificate.name}
-                                {certificate.issuer ? ` · ${certificate.issuer}` : ''}
-                                {certificate.date ? ` · ${certificate.date}` : ''}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
+                      {contactLine && (
+                        <p className="mt-1 break-words text-[12px] text-slate-500 dark:text-slate-400">
+                          {contactLine}
+                        </p>
                       )}
                     </div>
-                  </SectionBlock>
-                );
-              }
-              return null;
-            })}
-          </div>
+                  </div>
+                </SectionBlock>
+
+                {/* Body sections, in the CV's real order. */}
+                {PREVIEW_ORDER.filter((k) => k !== 'contact').map((key) => {
+                  if (key === 'summary') {
+                    if (!show('summary', !!summary)) return null;
+                    return (
+                      <SectionBlock
+                        key="summary"
+                        label={label('Summary')}
+                        band={bandOfKey('summary')}
+                        pulsing={pulsing.summary}
+                      >
+                        {summary ? (
+                          <p className="text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                            {summary}
+                          </p>
+                        ) : (
+                          <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
+                            {t('ariaStudio.livePreview.noSummaryYet')}
+                          </p>
+                        )}
+                      </SectionBlock>
+                    );
+                  }
+                  if (key === 'experience') {
+                    if (!show('experience', experience.length > 0)) return null;
+                    return (
+                      <SectionBlock
+                        key="experience"
+                        label={label('Experience')}
+                        band={bandOfKey('experience')}
+                        pulsing={pulsing.experience}
+                      >
+                        <ReorderableList
+                          section="experience"
+                          entries={experience}
+                          className="space-y-3"
+                          editingSortId={editingSortId}
+                          onEdit={setEditingSortId}
+                          onCloseEdit={closeEdit}
+                          canEditWithAria
+                          onEditWithAria={editWithAria}
+                        >
+                          {(r) => (
+                            <>
+                              <div className="flex items-baseline justify-between gap-3">
+                                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                                  {r.title || t('ariaStudio.studioFlow.fields.experience.title')}
+                                  {r.company ? (
+                                    <span className="font-normal text-slate-500 dark:text-slate-400">
+                                      {' '}
+                                      · {r.company}
+                                    </span>
+                                  ) : null}
+                                </p>
+                                {(r.startDate || r.endDate || r.isCurrent) && (
+                                  <span className="shrink-0 font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                                    {r.startDate || ''}
+                                    {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
+                                    {r.isCurrent
+                                      ? t('ariaStudio.pinnedEntry.present')
+                                      : r.endDate || ''}
+                                  </span>
+                                )}
+                              </div>
+                              <Bullets description={r.description} />
+                            </>
+                          )}
+                        </ReorderableList>
+                      </SectionBlock>
+                    );
+                  }
+                  if (key === 'projects') {
+                    if (!show('projects', projects.length > 0)) return null;
+                    return (
+                      <SectionBlock
+                        key="projects"
+                        label={label('Projects')}
+                        band={bandOfKey('projects')}
+                        pulsing={pulsing.projects}
+                      >
+                        {/* 'project', SINGULAR — the SECTION_LIST key. 'projects' would
+                        resolve to no list and no-op silently. */}
+                        <ReorderableList
+                          section="project"
+                          entries={projects}
+                          className="space-y-3"
+                          editingSortId={editingSortId}
+                          onEdit={setEditingSortId}
+                          onCloseEdit={closeEdit}
+                          canEditWithAria
+                          onEditWithAria={editWithAria}
+                        >
+                          {(p) => (
+                            <>
+                              <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                                {p.title || t('ariaStudio.studioFlow.fields.project.title')}
+                              </p>
+                              <Bullets description={p.description} />
+                            </>
+                          )}
+                        </ReorderableList>
+                      </SectionBlock>
+                    );
+                  }
+                  if (key === 'skills') {
+                    if (!show('skills', skillNames.length > 0)) return null;
+                    return (
+                      <SectionBlock
+                        key="skills"
+                        label={label('Skills')}
+                        band={bandOfKey('skills')}
+                        pulsing={pulsing.skills}
+                      >
+                        {skillNames.length ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {skillNames.map((s, i) => (
+                              <span
+                                key={`${s}-${i}`}
+                                className="text-[11.5px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                              >
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
+                            {t('ariaStudio.livePreview.noSkillsYet')}
+                          </p>
+                        )}
+                      </SectionBlock>
+                    );
+                  }
+                  if (key === 'education') {
+                    if (!show('education', education.length > 0 || certifications.length > 0))
+                      return null;
+                    return (
+                      <SectionBlock
+                        key="education"
+                        label={label('Education')}
+                        band={bandOfKey('education')}
+                        pulsing={pulsing.education}
+                      >
+                        <div className="space-y-2">
+                          <ReorderableList
+                            section="education"
+                            entries={education}
+                            className="space-y-2"
+                            editingSortId={editingSortId}
+                            onEdit={setEditingSortId}
+                            onCloseEdit={closeEdit}
+                            // Explicitly FALSE, not merely omitted: education has no entry
+                            // interview to hand a degree to (ENTRY_SOURCE covers experience
+                            // and projects only), so its ✎ is the manual editor, full stop.
+                            canEditWithAria={false}
+                          >
+                            {(e) => (
+                              <>
+                                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                                  {e.degree || t('ariaStudio.studioFlow.fields.education.degree')}
+                                  {e.school ? (
+                                    <span className="font-normal text-slate-500 dark:text-slate-400">
+                                      {' '}
+                                      · {e.school}
+                                    </span>
+                                  ) : null}
+                                </p>
+                                {e.graduationDate && (
+                                  <p className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                                    {e.graduationDate}
+                                  </p>
+                                )}
+                                <Bullets description={e.description} />
+                              </>
+                            )}
+                          </ReorderableList>
+                          {/* Certifications are NOT reorderable this slice — they carry no
+                          _sortId, so there's nothing to address one by. */}
+                          {certifications.length > 0 && (
+                            <div className="pt-1">
+                              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                                {t('ariaStudio.livePreview.certifications')}
+                              </p>
+                              <div className="mt-1 space-y-1">
+                                {certifications.map((certificate, index) => (
+                                  <p
+                                    key={`${certificate.name}-${index}`}
+                                    className="text-[12px] text-slate-600 dark:text-slate-300"
+                                  >
+                                    {certificate.name}
+                                    {certificate.issuer ? ` · ${certificate.issuer}` : ''}
+                                    {certificate.date ? ` · ${certificate.date}` : ''}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </SectionBlock>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full min-h-0">
+              <StudioTemplatePreview />
+            </div>
+          )}
         </div>
       )}
     </aside>

@@ -363,6 +363,30 @@ export const AriaStudioProvider = ({ children }) => {
     });
   }, []);
 
+  // Template choice is a document preference, not a transient preview preference.
+  // Keep it on the draft so Studio's final preview, PDF download and CV Studio all
+  // open on the same design. This is deliberately a narrow write: changing a template
+  // must never carry a stale copy of the CV content back to the server.
+  const selectTemplate = useCallback(
+    async (templateId) => {
+      if (!templateId) return { ok: false };
+      const previous = cvDataRef.current?.templateId;
+      if (templateId === previous) return { ok: true };
+      setCvDataRaw((prev) => (prev ? { ...prev, templateId } : prev));
+      if (!draftId) return { ok: true };
+      try {
+        await CVService.saveDraft({ _id: draftId, templateId });
+        return { ok: true };
+      } catch (error) {
+        console.error('Failed to save Studio template', error);
+        setCvDataRaw((prev) => (prev ? { ...prev, templateId: previous } : prev));
+        toast.error("Couldn't save that template. Try again.");
+        return { ok: false };
+      }
+    },
+    [draftId]
+  );
+
   // Debounced backend autosave for Aria's conversation. Chatting never goes through a
   // step save, so persist coachChats on its own timer — a partial { _id, coachChats }
   // $set that touches nothing else on the draft. The ref guard skips the loaded value
@@ -740,6 +764,7 @@ export const AriaStudioProvider = ({ children }) => {
     setCvData,
     draftId,
     updateCvData,
+    selectTemplate,
     renameCv,
     ensureDraft,
     applyRoleEdit,

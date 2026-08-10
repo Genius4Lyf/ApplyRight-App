@@ -100,6 +100,27 @@ describe('derivePhase — the fix loop', () => {
     expect(derivePhase(s, { studioPending: { kind: 'skills', data: {} } })).toBe('fix:pick');
   });
 
+  it('routes a FIX-workflow skills pending to fix:skills', () => {
+    // Skills suggestions are PAID, exactly like the rewrite above, so the pending has to
+    // survive a refresh — and `workflow` is the only thing separating this from the build
+    // generation, since both write kind:'skills'.
+    const s = [...scanned, { who: 'fixstart', mode: 'skills', sectionKey: 'skills' }];
+    const pending = { studioPending: { kind: 'skills', workflow: 'fix', data: {} } };
+    expect(derivePhase(s, pending)).toBe('fix:skills');
+  });
+
+  it('keeps a BUILD skills pending on build:skills', () => {
+    // Regression guard for the branch above: a build session that scanned mid-way has
+    // both markers, and claiming its pending for the fix would hand the user the wrong
+    // card — and the wrong close-out — for suggestions bought during the build.
+    const s = [{ who: 'buildstart' }];
+    expect(derivePhase(s, { studioPending: { kind: 'skills', workflow: 'build', data: {} } })).toBe(
+      'build:skills'
+    );
+    // Pendings persisted before `workflow` existed carry no flag at all; they are builds.
+    expect(derivePhase(s, { studioPending: { kind: 'skills', data: {} } })).toBe('build:skills');
+  });
+
   it('narrows pick → project-ideas while paid ideas are pending', () => {
     // Same reasoning as the rewrite above: the three ideas cost a credit, so a refresh
     // must not drop the user back on the empty projects picker and charge them twice.

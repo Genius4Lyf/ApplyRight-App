@@ -489,6 +489,13 @@ export function derivePhase(msgs = [], cvData = {}) {
   // picker and make them buy the same three ideas again.
   if (fix?.mode === 'pick' && cvData?.studioPending?.kind === 'projectideas')
     return 'fix:project-ideas';
+  // Skills suggestions bought inside a FIX. Ranked here for the same reason as the two
+  // above — the generation was PAID for — and `workflow` is what tells it apart from the
+  // BUILD one further down: both write kind:'skills', and without the flag a fix pending
+  // would re-derive as 'build:skills' and hand the user the wrong card (and the wrong
+  // close-out) for suggestions they already own.
+  if (cvData?.studioPending?.kind === 'skills' && cvData.studioPending.workflow === 'fix')
+    return 'fix:skills';
   if (fix) return `fix:${fix.mode}`;
 
   // ── Build track. Checked before the tailor milestones because a build session's
@@ -500,7 +507,12 @@ export function derivePhase(msgs = [], cvData = {}) {
     if (pinnedSortId(msgs)) return `build:${pinnedSection(msgs)}`;
     if (cvData?.studioPending?.kind === 'summary' && cvData.studioPending.workflow === 'build')
       return 'build:summary';
-    if (cvData?.studioPending?.kind === 'skills') return 'build:skills';
+    // Bare (pre-`workflow`) and workflow:'build' pendings are build ones; a fix pending
+    // was already routed to fix:skills above and must not be claimed here — a build
+    // session that scanned and then opened a skills fix has BOTH buildstart and the fix.
+    if (cvData?.studioPending?.kind === 'skills' && cvData.studioPending.workflow !== 'fix')
+      return 'build:skills';
+
     // Ranked BELOW the live pin above, same as every other pending kind: once a project
     // is actually open, that interview is where the user is. But above the section hub,
     // because these ideas cost a credit and re-deriving 'build:sections' would throw them

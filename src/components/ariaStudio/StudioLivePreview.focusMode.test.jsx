@@ -77,10 +77,7 @@ const marks = () => screen.queryAllByText(MARKER());
 const activeRow = () => screen.getByText(MARKER()).closest('.group');
 
 const grips = () => screen.queryAllByLabelText(i18n.t('common.sortable.dragToReorder'));
-const ups = () => screen.queryAllByLabelText(i18n.t('common.sortable.moveUp'));
-const downs = () => screen.queryAllByLabelText(i18n.t('common.sortable.moveDown'));
 const pencils = () => screen.queryAllByLabelText(i18n.t('ariaStudio.livePreview.editEntry'));
-const trashes = () => screen.queryAllByLabelText(i18n.t('ariaStudio.livePreview.removeEntry'));
 
 describe('StudioLivePreview — marking the entry Aria is on', () => {
   it('marks NOTHING when no interview is open', () => {
@@ -90,7 +87,6 @@ describe('StudioLivePreview — marking the entry Aria is on', () => {
     expect(marks()).toHaveLength(0);
     // Every row is fully operable: three entries, three ✎ / trash.
     expect(pencils()).toHaveLength(3);
-    expect(trashes()).toHaveLength(3);
   });
 
   it('marks exactly the matching row', () => {
@@ -151,15 +147,15 @@ describe('StudioLivePreview — locking the active row', () => {
     // One of the two experience rows keeps its reorder controls; both remaining entries
     // keep their ✎ and trash.
     expect(grips()).toHaveLength(1);
-    expect(ups()).toHaveLength(1);
-    expect(downs()).toHaveLength(1);
     expect(pencils()).toHaveLength(2);
-    expect(trashes()).toHaveLength(2);
 
     // And the sibling is still fully operable — its ✎ opens, not a locked no-op.
     fireEvent.click(pencils()[0]);
     expect(
       screen.queryByRole('menuitem', { name: i18n.t('ariaStudio.livePreview.editManually') })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('menuitem', { name: i18n.t('ariaStudio.livePreview.removeEntry') })
     ).toBeTruthy();
   });
 
@@ -174,7 +170,6 @@ describe('StudioLivePreview — locking the active row', () => {
 
     expect(marks()).toHaveLength(0);
     expect(pencils()).toHaveLength(3);
-    expect(trashes()).toHaveLength(3);
     expect(grips()).toHaveLength(2);
   });
 });

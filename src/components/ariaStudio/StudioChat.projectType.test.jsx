@@ -74,6 +74,7 @@ const markersOf = (who) => transcript().filter((m) => m.who === who);
 const COURSE = PROJECT_TYPES.find((pt) => pt.key === 'course');
 const ask = () => i18n.t('ariaStudio.projectType.whatKind');
 const courseLabel = () => i18n.t(COURSE.labelKey);
+const courseMessage = () => i18n.t(COURSE.messageKey);
 
 // A build session parked on a pinned PROJECT — the state the type question is asked from.
 const pinnedProjectDraft = (project, extraMarkers = []) => ({
@@ -143,6 +144,9 @@ describe('StudioChat — picking a project type persists it on the entry', () =>
     // backend's project prompt reads the type off the conversation turn beside it.
     const marker = markersOf('projecttype').at(-1);
     expect(marker).toMatchObject({ sortId: 'p1', type: 'course' });
+    expect(transcript().find((m) => m.who === 'user' && m.text === courseMessage())).toMatchObject({
+      selected: true,
+    });
   });
 
   it('saves through the NARROW patch — only { _id, projects }', async () => {

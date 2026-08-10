@@ -58,7 +58,6 @@ import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import EntryPickerCard from './EntryPickerCard';
 import SectionCoach from './SectionCoach';
 import SummaryFixCard from './SummaryFixCard';
-import SkillsFixCard from './SkillsFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
 import BuildRoadmapCard from './BuildRoadmapCard';
 import TargetJobAskCard from './TargetJobAskCard';
@@ -70,6 +69,11 @@ import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
 import CertificationsCard from './CertificationsCard';
 import SkillsBuildCard from './SkillsBuildCard';
+import {
+  SelectedAnswerBubble,
+  StudioPhaseDivider,
+  StudioReceipt,
+} from './StudioTranscriptEvent';
 
 // Aria's opening line in the Studio. Flagged `_opening` so it's regenerated on every
 // mount and never persisted — same contract as the coach panel's step openers.
@@ -262,6 +266,13 @@ const StudioChat = ({ onPaywall }) => {
   // Running total added via the free manual-entry loop this session. StudioChat
   // remounts on sessionNonce, so this resets per session automatically.
   const [manualSkillsAdded, setManualSkillsAdded] = useState(0);
+  // The SAME two pieces of state again, for the FIX path. A session is only ever on one
+  // phase at a time, so one pair could technically serve both — but the two flows CLOSE
+  // differently (build advances to the section hub, a fix runs finishFix), and sharing the
+  // counters is how a leftover build total ends up in a fix's receipt. Parallel and
+  // explicitly separate: `skillsData`/`manualSkillsAdded` are build's, these are the fix's.
+  const [fixSkillsData, setFixSkillsData] = useState(null);
+  const [fixSkillsAdded, setFixSkillsAdded] = useState(0);
 
   // Charged output must survive refresh until the user applies or explicitly discards it.
   const persistStudioPending = async (pending) => {
@@ -279,7 +290,15 @@ const StudioChat = ({ onPaywall }) => {
 
   useEffect(() => {
     const pending = cvData?.studioPending;
-    if (pending?.kind === 'skills') setSkillsData(pending.data || null);
+    // Skills generation is PAID on both tracks, so both rehydrate — into their OWN state,
+    // routed by the same `workflow` flag derivePhase reads. Restoring into the wrong one
+    // would put the user back on a consent card offering to sell them what they just
+    // bought. A pending written before `workflow` existed is a build one.
+    if (pending?.kind === 'skills') {
+      if (pending.workflow === 'fix') setFixSkillsData(pending.data || null);
+      else setSkillsData(pending.data || null);
+    }
+
     if (pending?.kind === 'summary') {
       setSummaryDraft(pending.draft || '');
       setSummaryWasReroll(!!pending.wasReroll);
@@ -907,7 +926,13 @@ const StudioChat = ({ onPaywall }) => {
           : t('ariaStudio.chat.fixPickNoKeywords', { section: name })
       );
     } else if (mode === 'skills') {
-      ariaSays(t('ariaStudio.chat.fixSkills'));
+      // Reset BOTH pieces of fix-skills state on the way in. A previous skills fix in the
+      // same session leaves its suggestions and its running count behind, and either one
+      // would open this fix mid-flow: the card straight on 'card' phase showing paid
+      // output from the last visit, or Done landing a receipt for skills added earlier.
+      setFixSkillsData(null);
+      setFixSkillsAdded(0);
+      ariaSays(t('ariaStudio.chat.fixSkillsIntro'));
     } else if (mode === 'summary') {
       ariaSays(t('ariaStudio.chat.fixSummary'));
     } else if (mode === 'guide') {
@@ -1211,31 +1236,6 @@ const StudioChat = ({ onPaywall }) => {
     }
   };
 
-  // Skills come straight off the scan — no generation, no charge.
-  const applyScanSkills = async (names) => {
-    if (!names?.length) return;
-    setApplyingFix(true);
-    try {
-      const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
-      if (!res?.ok) return;
-      // Every picked name was already on the CV. applySkills de-dupes case-insensitively
-      // and returns BEFORE saving, so nothing changed: finishing the fix here would land
-      // a green "Added 0 skills" receipt and spend a free recompute that can only report
-      // no movement. Say the true thing and stop — the card stays open, so a different
-      // pick (or Back) is still one tap away.
-      if (res.added === 0) {
-        ariaSays(t('ariaStudio.chat.manualSkillsAllDupes'));
-        return;
-      }
-      await finishFix({
-        what: t('ariaStudio.chat.nSkills', { n: res?.added ?? names.length }),
-        applied: names,
-      });
-    } finally {
-      setApplyingFix(false);
-    }
-  };
-
   // Summary: one credited generation per attempt (each re-roll charges again — the
   // server owns that), then apply through the provider writer.
   const generateSummary = async (stage, isReroll) => {
@@ -1287,6 +1287,118 @@ const StudioChat = ({ onPaywall }) => {
     } finally {
       setApplyingFix(false);
     }
+  };
+
+  // ─── Skills, the FIX path ───
+  //
+  // The same grounded generation the BUILD track runs — model-picked skills, in real
+  // categories, drawn from this CV's own roles/projects/education and the JD. It replaces
+  // a checklist of raw JD requirement SENTENCES ("Previous experience in a hospitality
+  // role"), which were never skills and landed on the CV uncategorized.
+  //
+  // Everything below mirrors the build handlers except how it CLOSES: a fix ends in
+  // finishFix (applied record + free recompute + movement report), not the section hub.
+  const generateFixSkills = async () => {
+    if (!draftId) return;
+    setRoleBusy('skills');
+    try {
+      const r = await CVService.generateSkills(
+        cvData.education,
+        cvData.experience,
+        cvData.projects,
+        cvData.targetJob?.description,
+        draftId,
+        genModelId
+      );
+      const data = { suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] };
+      setFixSkillsData(data);
+      // PAID output, so persisting is load-bearing: a refresh must return the suggestions
+      // the user already bought rather than charging for them twice. `workflow` is what
+      // sends derivePhase back to fix:skills instead of build:skills.
+      await persistStudioPending({ kind: 'skills', workflow: 'fix', data });
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+    } catch (e) {
+      if ([402, 403].includes(e?.response?.status)) {
+        push({
+          who: 'aria',
+          text: t('ariaStudio.chat.skillsInsufficientCredits', {
+            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
+          }),
+        });
+      } else {
+        toast.error(t('ariaStudio.chat.toast.skillsPullFailed'));
+      }
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  // The picks carry their REAL categories from the generation — which is what ends the
+  // "Uncategorized" wall the old checklist produced.
+  const addPickedFixSkills = async (picked) => {
+    setApplyingFix(true);
+    try {
+      const res = await applySkills(picked);
+      if (!res?.ok) return;
+      // Every pick was already on the CV. applySkills de-dupes case-insensitively and
+      // returns BEFORE saving, so nothing changed: finishing here would land a green
+      // "Added 0 skills" receipt and spend a recompute that can only report no movement.
+      if (res.added === 0) {
+        ariaSays(t('ariaStudio.chat.manualSkillsAllDupes'));
+        return;
+      }
+      if (!(await persistStudioPending(null))) return;
+      setFixSkillsData(null);
+      await finishFix({
+        what: t('ariaStudio.chat.nSkills', { n: res.added }),
+        applied: picked,
+      });
+    } finally {
+      setApplyingFix(false);
+    }
+  };
+
+  // Free manual entry — comma-separated, and NOT a fix close: the user keeps typing and
+  // presses Done when they're finished. 'Other' rather than 'Uncategorized' because the
+  // blanket label is half of what made the old flow read as a flat wall.
+  const addManualFixSkills = async (text) => {
+    const names = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!names.length) return;
+    setRoleBusy('skills');
+    try {
+      const res = await applySkills(names.map((name) => ({ name, category: 'Other' })));
+      if (res?.ok) {
+        if (res.added) {
+          setFixSkillsAdded((n) => n + res.added);
+          ariaSays(t('ariaStudio.chat.manualSkillsAdded', { n: res.added }));
+        } else {
+          ariaSays(t('ariaStudio.chat.manualSkillsAllDupes'));
+        }
+      }
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
+  // Done. Nothing added → just close: no receipt, and no recompute that could only report
+  // a score standing still.
+  const finishFixSkills = async () => {
+    setFixSkillsData(null);
+    if (!fixSkillsAdded) {
+      // Declared below with the rest of the fix-loop exits, but only ever CALLED from a
+      // card callback — by which point the whole component body has run. Same pattern as
+      // startInterview above; hoisting it would split the fix loop in two.
+      // eslint-disable-next-line no-use-before-define
+      cancelFix();
+      return;
+    }
+
+    await finishFix({ what: t('ariaStudio.chat.nSkills', { n: fixSkillsAdded }), applied: [] });
   };
 
   // ─── Build track ───
@@ -1524,6 +1636,13 @@ const StudioChat = ({ onPaywall }) => {
       // narrow-patch invariant to drift.
       const r = await applyEntryEdit(pinnedSectionKey, pinnedEntry._sortId, patch);
       if (!r.ok) return; // applyEntryEdit already rolled back + toasted
+      if (patch.entryType) {
+        push({
+          who: 'user',
+          text: t(`ariaStudio.chat.experienceType.${patch.entryType}`),
+          selected: true,
+        });
+      }
       // Aria acknowledges and asks for the next missing thing. Reading the stage off the
       // UPDATED entry keeps the question in step with the document.
       const updated = { ...pinnedEntry, ...patch };
@@ -1628,7 +1747,7 @@ const StudioChat = ({ onPaywall }) => {
       // applyEntryEdit owns its narrow patch, rollback and toast if it fails.
       applyEntryEdit('project', sortId, { entryType: type.key });
       push(
-        { who: 'user', text: t(type.messageKey) },
+        { who: 'user', text: t(type.messageKey), selected: true },
         { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, labelKey: type.labelKey }
       );
       ariaSays(t('ariaStudio.chat.pickProjectType'));
@@ -1918,7 +2037,7 @@ const StudioChat = ({ onPaywall }) => {
       const typeDef = PROJECT_TYPES.find((pt) => pt.key === idea.type) || PROJECT_TYPES[0];
       // pickProjectType's EXACT pair, so the type chip is skipped rather than re-asked.
       const typeTurns = [
-        { who: 'user', text: t(typeDef.messageKey) },
+        { who: 'user', text: t(typeDef.messageKey), selected: true },
         { who: 'projecttype', sortId, type: typeDef.key, labelKey: typeDef.labelKey },
       ];
 
@@ -2383,8 +2502,16 @@ const StudioChat = ({ onPaywall }) => {
           </AnimatePresence>
 
           {messages.map((m, i) => {
-            // User turn — right-aligned ink bubble.
+            // Typed messages keep the strong ink bubble. Guided choices use the quieter
+            // selected-answer treatment so a returning user can read how they steered Aria.
             if (m.who === 'user') {
+              if (m.selected) {
+                return (
+                  <SelectedAnswerBubble key={i} reduce={reduce}>
+                    {m.text}
+                  </SelectedAnswerBubble>
+                );
+              }
               return (
                 <motion.div
                   key={i}
@@ -2398,18 +2525,14 @@ const StudioChat = ({ onPaywall }) => {
 
             // ── Persisted markers — each one re-renders a completed step from history ──
 
-            // Mode pick — a compact user-side echo of the fork taken.
+            // Mode pick — a durable user-side echo of the fork taken.
             if (m.who === 'modepick') {
               return (
-                <motion.div
-                  key={i}
-                  className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
-                  {...bubbleAnim('user', reduce)}
-                >
+                <SelectedAnswerBubble key={i} reduce={reduce}>
                   {m.mode === 'build'
                     ? t('ariaStudio.modeChooser.buildTitle')
                     : t('ariaStudio.modeChooser.tailorTitle')}
-                </motion.div>
+                </SelectedAnswerBubble>
               );
             }
 
@@ -2422,67 +2545,42 @@ const StudioChat = ({ onPaywall }) => {
             // The CV that was picked as the source.
             if (m.who === 'cvpick') {
               return (
-                <motion.div
-                  key={i}
-                  className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] font-semibold"
-                  {...bubbleAnim('user', reduce)}
-                >
+                <SelectedAnswerBubble key={i} reduce={reduce}>
                   {m.sourceTitle}
-                </motion.div>
+                </SelectedAnswerBubble>
               );
             }
 
-            // The tailored copy landed — a durable emerald record of the clone.
+            // The tailored copy landed — a compact action receipt for the clone.
             if (m.who === 'tailored') {
               return (
-                <motion.div
+                <StudioReceipt
                   key={i}
-                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  <AriaOrbit size={16} className="aria-mark mt-2" />
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
-                      ✓
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        {t('ariaStudio.chat.tailoredCopyCreated')}
-                      </span>
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {m.title}
-                      </span>
-                    </span>
-                  </div>
-                </motion.div>
+                  reduce={reduce}
+                  title={t('ariaStudio.chat.tailoredCopyCreated')}
+                  detail={m.title}
+                />
               );
             }
 
-            // Brief confirmed — a centered emerald chip, same vocabulary as "Added".
+            // The user's confirmation is an answer, not an Aria success notification.
             if (m.who === 'briefcard') {
               return (
-                <motion.div
-                  key={i}
-                  className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  ✓ {t('ariaStudio.chat.readConfirmed')}
-                </motion.div>
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {t('ariaStudio.chat.jobDetailsCorrect')}
+                </SelectedAnswerBubble>
               );
             }
 
-            // A scan happened — a centered chip. The RESULT itself isn't stored in the
+            // A scan happened — mark the phase change without adding another bubble. The
+            // RESULT itself isn't stored in the
             // transcript: the cards below render the live studioScan snapshot, so a
             // free recompute updates them without rewriting history.
             if (m.who === 'scan') {
               return (
-                <motion.div
-                  key={i}
-                  className="self-center rounded-full border border-slate-900/35 bg-slate-900/[0.08] text-slate-900 dark:border-white/35 dark:bg-white/10 dark:text-white px-3 py-1 text-[12px] font-semibold"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  ✓ {t('ariaStudio.chat.scannedAgainstJob')}
-                </motion.div>
+                <StudioPhaseDivider key={i} reduce={reduce}>
+                  {t('ariaStudio.chat.fitScanComplete')}
+                </StudioPhaseDivider>
               );
             }
 
@@ -2531,29 +2629,19 @@ const StudioChat = ({ onPaywall }) => {
             if (m.who === 'applied') {
               const n = m.applied?.length ?? 0;
               return (
-                <motion.div
+                <StudioReceipt
                   key={i}
-                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  <AriaOrbit size={16} className="aria-mark mt-2" />
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-slate-50 dark:bg-slate-800/40 p-3.5 flex items-center gap-2.5">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
-                      ✓
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        {m.what
-                          ? t('ariaStudio.chat.addedWhat', { what: m.what })
-                          : t('ariaStudio.chat.addedBullets', { count: n })}
-                      </span>
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {m.entry?.title ||
-                          sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel })}
-                      </span>
-                    </span>
-                  </div>
-                </motion.div>
+                  reduce={reduce}
+                  title={
+                    m.what
+                      ? t('ariaStudio.chat.addedWhat', { what: m.what })
+                      : t('ariaStudio.chat.addedBullets', { count: n })
+                  }
+                  detail={
+                    m.entry?.title ||
+                    sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel })
+                  }
+                />
               );
             }
 
@@ -2562,18 +2650,25 @@ const StudioChat = ({ onPaywall }) => {
             // nothing; the conversation around them already tells that story.
             if (m.who === 'buildintro' || m.who === 'buildstart') return null;
 
+            if (m.who === 'careerstage') {
+              return (
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {m.skipped
+                    ? t('ariaStudio.chat.careerStage.skip')
+                    : t(`ariaStudio.chat.careerStage.options.${m.stage}`)}
+                </SelectedAnswerBubble>
+              );
+            }
+
             // The job answer, including "not yet" — worth showing, because a CV built
             // without a target is a deliberate choice the user should see recorded.
             if (m.who === 'buildjobdone') {
-              if (!m.skipped) return null; // the jobcard above already shows the job
               return (
-                <motion.div
-                  key={i}
-                  className="self-end rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3.5 py-1.5 text-[12px] font-semibold"
-                  {...bubbleAnim('user', reduce)}
-                >
-                  {t('ariaStudio.chat.noSpecificJobYet')}
-                </motion.div>
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {m.skipped
+                    ? t('ariaStudio.chat.noSpecificJobYet')
+                    : t('ariaStudio.chat.jobDetailsCorrect')}
+                </SelectedAnswerBubble>
               );
             }
 
@@ -2606,39 +2701,20 @@ const StudioChat = ({ onPaywall }) => {
               const subtitle =
                 section === 'education' ? live.school : section === 'project' ? '' : live.company;
               return (
-                <motion.div
+                <StudioReceipt
                   key={i}
-                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  <AriaOrbit size={16} className="aria-mark mt-2" />
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 bg-slate-50 dark:bg-slate-800/40 p-3 flex items-center gap-2.5">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[13px] font-bold">
-                      ✓
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                        {title}
-                        {subtitle ? ` · ${subtitle}` : ''}
-                      </span>
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        {t('ariaStudio.chat.bulletsOnCv', { count: n })}
-                      </span>
-                    </span>
-                  </div>
-                </motion.div>
+                  reduce={reduce}
+                  title={`${title}${subtitle ? ` · ${subtitle}` : ''}`}
+                  detail={t('ariaStudio.chat.bulletsOnCv', { count: n })}
+                />
               );
             }
 
             if (m.who === 'contactdone') {
               return (
-                <motion.div
-                  key={i}
-                  className="self-center rounded-full border border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-600 dark:text-emerald-400 px-3 py-1 text-[12px] font-semibold"
-                  {...bubbleAnim('aria', reduce)}
-                >
-                  ✓ {t('ariaStudio.chat.contactConfirmed')}
-                </motion.div>
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {t('ariaStudio.chat.contactDetailsCorrect')}
+                </SelectedAnswerBubble>
               );
             }
 
@@ -3131,19 +3207,33 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
 
-            {/* skills → free checklist straight off the scan.
+            {/* skills → the SAME grounded card the build track uses.
 
-                Fed from the FIX MARKER's section-scoped gaps, not scan.missingSkills:
-                that one is CV-wide and produced by a different engine depending on how
-                the scan ran (the AI on a full scan, scoringEngine on a free recompute),
-                so the card contradicted the very row the user tapped to open it. */}
+                It replaces a checklist built from the scan's raw JD terms, which put
+                requirement SENTENCES ("Previous experience in a hospitality role") on the
+                CV as uncategorized "skills" — not skills, and not something an ATS reads
+                as one. Aria picks from THIS CV's own history instead, in real categories,
+                and the free "type your own" input sits right beside her paid button. */}
             {ready && phase === 'fix:skills' && (
-              <SkillsFixCard
+              <SkillsBuildCard
                 key="fixskills"
-                missingKeywords={activeFix?.missingKeywords || []}
-                onApply={applyScanSkills}
-                onCancel={cancelFix}
-                applying={applyingFix}
+                phase={fixSkillsData ? 'card' : 'consent'}
+                data={fixSkillsData}
+                hasJob={!!cvData?.targetJob?.description}
+                existingSkills={(cvData?.skills || []).map((s) =>
+                  typeof s === 'string' ? s : s.name
+                )}
+                busy={roleBusy === 'skills' || applyingFix}
+                cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
+                genModelId={genModelId}
+                onSelectGenModel={setGenModelId}
+                chatTier={tierOf(modelId)}
+                onGenerate={generateFixSkills}
+                onAdd={addPickedFixSkills}
+                onManual={addManualFixSkills}
+                addedCount={fixSkillsAdded}
+                onDone={finishFixSkills}
+                onSkip={cancelFix}
               />
             )}
 

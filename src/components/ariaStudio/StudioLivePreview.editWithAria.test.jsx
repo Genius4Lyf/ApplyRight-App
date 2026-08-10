@@ -111,6 +111,7 @@ describe('StudioLivePreview — the ✎ two-choice popover', () => {
     mockCvData = oneOfEach;
     render(<StudioLivePreview />);
     fireEvent.click(editBtns()[EDUCATION_ROW]);
+    fireEvent.click(manualChoice());
 
     // Straight into the editor, on the education fields.
     await waitFor(() => expect(screen.getByLabelText('Qualification')).toBeTruthy());

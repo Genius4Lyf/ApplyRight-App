@@ -14,6 +14,7 @@ let mockCvData = null;
 let mockReorderEntries;
 let mockRequestStudioCommand;
 let mockRemoveEntry;
+let mockSelectTemplate;
 vi.mock('../../context/AriaStudioContext', () => ({
   useAriaStudio: () => ({
     cvData: mockCvData,
@@ -22,7 +23,16 @@ vi.mock('../../context/AriaStudioContext', () => ({
     // test below can prove the preview never reaches for it.
     requestStudioCommand: mockRequestStudioCommand,
     removeEntry: mockRemoveEntry,
+    selectTemplate: mockSelectTemplate,
   }),
+}));
+vi.mock('../TemplatePreviewThumb', () => ({
+  default: ({ templateId }) => <span data-testid={`template-thumb-${templateId}`} />,
+}));
+vi.mock('../CVTemplateRenderer', () => ({
+  default: ({ application }) => (
+    <div data-testid="production-template">{application.templateId}</div>
+  ),
 }));
 
 // framer-motion's useReducedMotion reads matchMedia; jsdom lacks it. Return "not reduced"
@@ -32,6 +42,7 @@ beforeEach(() => {
   mockReorderEntries = vi.fn().mockResolvedValue({ ok: true });
   mockRequestStudioCommand = vi.fn();
   mockRemoveEntry = vi.fn();
+  mockSelectTemplate = vi.fn().mockResolvedValue({ ok: true });
   vi.stubGlobal('matchMedia', (q) => ({
     matches: false,
     media: q,
@@ -64,6 +75,31 @@ const withScan = (sections) => ({
   education: [],
   certifications: [{ name: 'Cloud Fundamentals', issuer: 'ApplyRight', date: '2026' }],
   studioScan: { fitScore: 60, sections },
+});
+
+describe('StudioLivePreview — Edit / Preview modes', () => {
+  it('opens the production template view and routes template choices through the draft writer', () => {
+    mockCvData = {
+      _id: 'd1',
+      title: 'My CV',
+      templateId: 'ats-clean',
+      personalInfo: { fullName: 'Ada Lovelace' },
+      experience: [{ _sortId: 'e1', title: 'Analyst', company: 'RSA' }],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+
+    const editMode = screen
+      .getAllByRole('button', { name: 'Edit' })
+      .find((button) => button.hasAttribute('aria-pressed'));
+    expect(editMode?.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+
+    expect(screen.getByText('Choose a template')).toBeTruthy();
+    expect(screen.getByTestId('production-template').textContent).toBe('ats-clean');
+    fireEvent.click(screen.getByRole('option', { name: 'Student ATS' }));
+    expect(mockSelectTemplate).toHaveBeenCalledWith('student-ats');
+  });
 });
 
 describe('StudioLivePreview — empty state', () => {
@@ -241,12 +277,16 @@ describe('StudioLivePreview — reorder entries', () => {
     ],
     studioScan: null,
   };
+  const chooseAction = (name, row = 0) => {
+    fireEvent.click(screen.getAllByLabelText('Edit')[row]);
+    fireEvent.click(screen.getByRole('menuitem', { name }));
+  };
 
   it('moves an experience entry DOWN and sends the new order to reorderEntries', () => {
     mockCvData = threeRoles;
     render(<StudioLivePreview />);
     // Row order matches list order, so the first "Move down" belongs to entry `a`.
-    fireEvent.click(screen.getAllByLabelText('Move down')[0]);
+    chooseAction('Move down');
     expect(mockReorderEntries).toHaveBeenCalledTimes(1);
     expect(mockReorderEntries).toHaveBeenCalledWith('experience', ['b', 'a', 'c']);
   });
@@ -255,8 +295,7 @@ describe('StudioLivePreview — reorder entries', () => {
     mockCvData = threeRoles;
     render(<StudioLivePreview />);
     // Up on the LAST row: c swaps with b.
-    const ups = screen.getAllByLabelText('Move up');
-    fireEvent.click(ups[ups.length - 1]);
+    chooseAction('Move up', 2);
     expect(mockReorderEntries).toHaveBeenCalledWith('experience', ['a', 'c', 'b']);
   });
 
@@ -275,7 +314,7 @@ describe('StudioLivePreview — reorder entries', () => {
       studioScan: null,
     };
     render(<StudioLivePreview />);
-    fireEvent.click(screen.getAllByLabelText('Move down')[0]);
+    chooseAction('Move down');
     expect(mockReorderEntries).toHaveBeenCalledWith('project', ['p2', 'p1', 'p3']);
     expect(mockReorderEntries.mock.calls[0][0]).toBe('project'); // NOT 'projects'
   });
@@ -292,7 +331,7 @@ describe('StudioLivePreview — reorder entries', () => {
       studioScan: null,
     };
     render(<StudioLivePreview />);
-    fireEvent.click(screen.getAllByLabelText('Move down')[0]);
+    chooseAction('Move down');
     expect(mockReorderEntries).toHaveBeenCalledWith('education', ['edu-b', 'edu-a']);
   });
 
@@ -304,7 +343,7 @@ describe('StudioLivePreview — reorder entries', () => {
       experience: [...threeRoles.experience, { _sortId: 'blank', title: '', company: '' }],
     };
     render(<StudioLivePreview />);
-    fireEvent.click(screen.getAllByLabelText('Move down')[0]);
+    chooseAction('Move down');
     expect(mockReorderEntries).toHaveBeenCalledWith('experience', ['b', 'a', 'c']);
   });
 
@@ -326,19 +365,20 @@ describe('StudioLivePreview — reorder entries', () => {
   it('disables Up on the first row and Down on the last', () => {
     mockCvData = threeRoles;
     render(<StudioLivePreview />);
-    const ups = screen.getAllByLabelText('Move up');
-    const downs = screen.getAllByLabelText('Move down');
-    expect(ups[0].disabled).toBe(true);
-    expect(ups[1].disabled).toBe(false);
-    expect(downs[downs.length - 1].disabled).toBe(true);
-    expect(downs[0].disabled).toBe(false);
+    fireEvent.click(screen.getAllByLabelText('Edit')[0]);
+    expect(screen.getByRole('menuitem', { name: 'Move up' }).disabled).toBe(true);
+    expect(screen.getByRole('menuitem', { name: 'Move down' }).disabled).toBe(false);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getAllByLabelText('Edit')[2]);
+    expect(screen.getByRole('menuitem', { name: 'Move up' }).disabled).toBe(false);
+    expect(screen.getByRole('menuitem', { name: 'Move down' }).disabled).toBe(true);
   });
 
   it('leaves SKILLS alone — index-keyed pills are out of scope this slice', () => {
     mockCvData = { ...threeRoles, skills: ['Algorithms', 'Analysis'] };
     render(<StudioLivePreview />);
     // Exactly one control cluster per experience row (3), and none for the two skills.
-    expect(screen.getAllByLabelText('Move down')).toHaveLength(3);
+    expect(screen.getAllByLabelText('Edit')).toHaveLength(3);
     expect(screen.getByText('Algorithms')).toBeTruthy();
     expect(screen.getByText('Analysis')).toBeTruthy();
   });
@@ -389,9 +429,13 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
   // icons share one accessible name ("Remove") by design — same action, same word — so
   // every assertion below reads inside the confirm strip rather than across the sheet.
   const confirmStrip = () => within(screen.getByText('Remove this?').parentElement);
+  const armRemove = (i = 0) => {
+    fireEvent.click(screen.getAllByLabelText('Edit')[i]);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
+  };
   // Arm the confirm on row `i`, then press its Remove.
   const removeRow = (i = 0) => {
-    fireEvent.click(screen.getAllByLabelText('Remove')[i]);
+    armRemove(i);
     fireEvent.click(confirmStrip().getByRole('button', { name: 'Remove' }));
   };
 
@@ -399,10 +443,10 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
     mockCvData = threeRoles;
     render(<StudioLivePreview />);
     // Three entries → three Remove controls (before any is tapped).
-    expect(screen.getAllByLabelText('Remove')).toHaveLength(3);
+    expect(screen.getAllByLabelText('Edit')).toHaveLength(3);
     expect(screen.queryByText('Remove this?')).toBeNull();
 
-    fireEvent.click(screen.getAllByLabelText('Remove')[0]);
+    armRemove(0);
 
     // The trash is now a two-state confirm ON THE ROW (no modal, no dialog).
     expect(screen.getByText('Remove this?')).toBeTruthy();
@@ -412,19 +456,19 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
     // Only the armed row confirms — the other two are untouched.
     expect(screen.getAllByText('Remove this?')).toHaveLength(1);
     // And that row's own trash is gone while it's armed (3 → 2).
-    expect(screen.getAllByLabelText('Remove')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Edit')).toHaveLength(2);
   });
 
   it('Cancel returns the row to the idle trash — no command sent', () => {
     mockCvData = threeRoles;
     render(<StudioLivePreview />);
-    fireEvent.click(screen.getAllByLabelText('Remove')[0]);
+    armRemove(0);
     expect(screen.getByText('Remove this?')).toBeTruthy();
 
     fireEvent.click(confirmStrip().getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByText('Remove this?')).toBeNull();
-    expect(screen.getAllByLabelText('Remove')).toHaveLength(3); // back to idle
+    expect(screen.getAllByLabelText('Edit')).toHaveLength(3); // back to idle
     expect(mockRequestStudioCommand).not.toHaveBeenCalled();
   });
 
