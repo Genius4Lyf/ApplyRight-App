@@ -4450,6 +4450,7 @@
       "fixPickWithKeywords": "{{section}}: this job leans on {{keywords}} — which one should we sharpen?",
       "fixPickNoKeywords": "{{section}}: which one should we sharpen?",
       "fixSkills": "Here's what the job asks for that your CV doesn't claim yet.",
+      "fixSkillsIntro": "Let's get your skills right for this job — I can suggest ones grounded in your CV, or you add your own. You choose what actually fits.",
       "fixGuide": "{{section}}: this one's about completeness, not wording — here's what's missing and where to add it.",
       "projectIdeaOpener": "Let's build \"{{title}}\". To start — what does it do, or what problem does it solve?",
       "projectIdeasNone": "Nothing came to mind from your CV just yet — let's shape a project together.",

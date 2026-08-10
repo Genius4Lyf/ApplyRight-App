@@ -650,6 +650,55 @@ export function finishSummary(scan, t) {
   };
 }
 
+// Field separators for the signature below. Control characters, so they can never
+// collide with anything a user could type into a CV field.
+const FIELD_SEP = '\u001f';
+const ENTRY_SEP = '\u001e';
+const SECTION_SEP = '\u001d';
+
+// One entry's scan-relevant text, in a fixed field order.
+const entrySig = (entry, fields) => fields.map((f) => entry?.[f] || '').join(FIELD_SEP);
+
+// A list's text with entries SORTED BY _sortId, so the signature is order-independent.
+// _sortId is stable identity, never re-minted on reorder (or on an undo), which is what
+// makes this the right sort key: the same set of entries always folds to the same string.
+const listSig = (list, fields) =>
+  [...(list || [])]
+    .sort((a, b) => String(a?._sortId ?? '').localeCompare(String(b?._sortId ?? '')))
+    .map((e) => entrySig(e, fields))
+    .join(ENTRY_SEP);
+
+/**
+ * A fingerprint of everything the fit scan actually READS, and nothing else.
+ *
+ * This is what tells a CONTENT change apart from a REORDER. The scan joins each
+ * section's entry text and measures keyword coverage over the result, so a reorder is
+ * score-neutral by construction — and sorting by _sortId here reproduces that property
+ * exactly: dragging a role produces the SAME signature, so nothing needs re-scoring,
+ * while an edit, a delete or an add produces a different one.
+ *
+ * Mirrors sectionScan.service's sectionText field-for-field (title/company/description
+ * for experience, title/description for projects, degree/field/school/description for
+ * education, skill names, the summary). entryType rides along because it steers how an
+ * entry is coached and is persisted on the entry itself.
+ *
+ * Deliberately NOT included: personalInfo and certifications. Neither is reachable from
+ * the Live Preview's edit/delete controls (certifications carry no _sortId to address),
+ * so watching them would only add noise.
+ *
+ * @param {object} cv a DraftCV
+ * @returns {string}
+ */
+export function scoreSignature(cv = {}) {
+  return [
+    listSig(cv?.experience, ['entryType', 'title', 'company', 'description']),
+    listSig(cv?.projects, ['entryType', 'title', 'description']),
+    listSig(cv?.education, ['degree', 'field', 'school', 'description']),
+    (cv?.skills || []).map((s) => (typeof s === 'string' ? s : s?.name || '')).join(','),
+    cv?.professionalSummary || '',
+  ].join(SECTION_SEP);
+}
+
 /**
  * The score movement to report after a fix. Returns null when there's nothing honest to
  * say — a missing before/after means we don't know, and inventing a delta would be worse

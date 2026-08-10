@@ -27,8 +27,10 @@ import {
   sectionNote,
   hasSubstance,
   scoreDelta,
+  scoreSignature,
   isDismissable,
 } from '../../lib/studioFlow';
+
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -78,6 +80,11 @@ const OPENER_KEY = 'ariaStudio.chat.opener';
 // Phase-0 transcript home. Retired the moment a draft exists: the array migrates into
 // `cvData.coachChats.studio` (identical shape) and the context autosave takes over.
 const LS_KEY = 'ariaStudio:session';
+
+// How long to wait after a CONTENT change before the automatic re-score. Long enough
+// that a drag, a delete and a field edit in the same burst coalesce into ONE call;
+// short enough that the score is current by the time anyone looks at it.
+const AUTO_RESCORE_MS = 1500;
 
 const loadSession = () => {
   try {
@@ -199,6 +206,21 @@ const StudioChat = ({ onPaywall }) => {
   // ops should lock the stream; this only decides which button gets to say it's working,
   // so the FREE re-score can no longer make the PAID re-check look like it's running.
   const [scanKind, setScanKind] = useState(null); // null | 'recompute' | 'rescan'
+  // ─── Auto re-score plumbing (the silent path) ───
+  //
+  // A SILENT recompute deliberately does not touch `scanning`: that flag gates `ready`,
+  // which unmounts every card in the stream. Fine for a button the user just pressed,
+  // wrong for a background heal after a preview edit. These two refs are what let the
+  // silent path stay out of React state entirely.
+  //
+  //   silentRecomputeRef — one silent recompute at a time. Two overlapping calls would
+  //     race to write studioScan, and the loser could land an older snapshot.
+  //   lastScoredSigRef   — the content signature as of the last SUCCESSFUL scan or
+  //     recompute. The auto effect fires only when the live signature differs from it,
+  //     which is also what stops it firing on mount (it is seeded to match).
+  const silentRecomputeRef = useRef(false);
+  const lastScoredSigRef = useRef(null);
+
   // Generic "step confirmed, moving on" beat — hides the current/next card behind a
   // short labeled thinking indicator instead of swapping cards instantly.
   const [transitionLabel, setTransitionLabel] = useState(null);
@@ -713,16 +735,39 @@ const StudioChat = ({ onPaywall }) => {
     setPhase('job');
   };
 
+  // The CV as the SCAN sees it, folded to one string (studioFlow.scoreSignature). Read
+  // through a ref by anything asynchronous, so a recompute records the document it
+  // actually scored rather than whatever the closure it was created in happened to hold.
+  const contentSig = scoreSignature(cvData);
+  const contentSigRef = useRef(contentSig);
+  useEffect(() => {
+    contentSigRef.current = contentSig;
+  }, [contentSig]);
+
+  // SEED the baseline once the draft is bound. Without this the ref would start null,
+  // the live signature would differ from it, and a session that merely OPENED on an
+  // existing scan would fire an auto re-score nobody asked for.
+  useEffect(() => {
+    if (loading || !draftId) return;
+    if (lastScoredSigRef.current === null) lastScoredSigRef.current = contentSig;
+  }, [loading, draftId, contentSig]);
+
   // ─── Step 5: the scan — the one charged action in the flow ───
   const runScan = async () => {
     if (scanning || !draftId) return;
     setScanning(true);
     setScanKind('rescan');
+    const sigAtRequest = contentSigRef.current;
     try {
       const res = await CVService.studioScan(draftId, modelId);
       // The snapshot lives on the draft; mirror it into context so every card and the
       // artifact panel read one source of truth.
       updateCvData({ studioScan: res.studioScan });
+      // This document is now scored. Captured at REQUEST time, not here: an edit made
+      // while the scan was in flight is genuinely unscored, and recording the newer
+      // signature would swallow the auto re-score that should follow it.
+      lastScoredSigRef.current = sigAtRequest;
+
       if (res.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
       }
@@ -751,23 +796,83 @@ const StudioChat = ({ onPaywall }) => {
 
   // Free deterministic re-score. No AI, no charge — so it can run after every edit.
   // Returns the new snapshot so callers can report a delta.
-  const runRecompute = async () => {
+  //
+  // TWO MODES, one implementation:
+  //
+  //   silent: false (the default, and what every existing caller passes) — today's
+  //     behaviour exactly. Sets scanning/scanKind, so the chat shows its busy state and
+  //     a failure is toasted. Right for a re-score the user just asked for.
+  //
+  //   silent: true — the AUTOMATIC path behind a Live Preview edit. It must not set
+  //     `scanning`: that gates `ready`, which unmounts every card in the stream, so a
+  //     background heal would briefly tear down the conversation the user is reading.
+  //     The feedback is the preview's existing aria-just-fixed pulse when a band moves.
+  //     A failure is logged and swallowed — a surprise error toast for work nobody asked
+  //     for is worse than a score that stays stale until the next change.
+  const runRecompute = async ({ silent = false } = {}) => {
     if (!draftId) return null;
-    setScanning(true);
-    setScanKind('recompute');
+    // One silent recompute at a time. The debounced effect re-fires on the next change,
+    // so skipping here loses nothing and can't leave two responses racing to write
+    // studioScan.
+    if (silent && silentRecomputeRef.current) return null;
+    if (silent) silentRecomputeRef.current = true;
+    else {
+      setScanning(true);
+      setScanKind('recompute');
+    }
+    const sigAtRequest = contentSigRef.current;
     try {
       const res = await CVService.studioRecompute(draftId);
       updateCvData({ studioScan: res.studioScan });
+      // Same reasoning as runScan: record what was SENT, so an edit made mid-flight
+      // still reads as unscored and gets its own pass.
+      lastScoredSigRef.current = sigAtRequest;
       return res.studioScan;
     } catch (err) {
       console.error('studio recompute failed', err);
-      toast.error(t('ariaStudio.chat.toast.recomputeFailed'));
+      if (!silent) toast.error(t('ariaStudio.chat.toast.recomputeFailed'));
       return null;
     } finally {
-      setScanning(false);
-      setScanKind(null);
+      if (silent) silentRecomputeRef.current = false;
+      else {
+        setScanning(false);
+        setScanKind(null);
+      }
     }
   };
+
+  // ─── The auto re-score ───
+  //
+  // A preview edit or delete changes the CV; the fit score has to follow, or the number
+  // on screen is describing a document that no longer exists. Recompute is free and
+  // deterministic, so this can just run — debounced, so a drag plus a delete plus a field
+  // edit coalesce into ONE call.
+  //
+  // Every condition below is load-bearing:
+  //   • a scan must already exist — there is nothing to refresh before the first one;
+  //   • the target job must carry a description — recompute 400s NO_TARGET_JOB without
+  //     one, so every build session without a JD would hammer a failing endpoint;
+  //   • the CONTENT signature must differ from the last scored one — this is what makes
+  //     a REORDER a no-op. Reordering is score-neutral (the scan joins entry text
+  //     order-independently), and the signature sorts by _sortId to match;
+  //   • nothing else may be re-scoring.
+  //
+  // Keyed on the signature rather than on studioScan: a recompute WRITES studioScan, so
+  // depending on it would re-enter. The signature only moves when the user's content does.
+  const autoRescoreReady =
+    !!cvData?.studioScan?.scannedAt && !!(cvData?.targetJob?.description || '').trim();
+  useEffect(() => {
+    if (!autoRescoreReady) return undefined;
+    // Not seeded yet (the draft is still loading) — nothing to compare against.
+    if (lastScoredSigRef.current === null) return undefined;
+    if (contentSig === lastScoredSigRef.current) return undefined;
+    if (scanning || silentRecomputeRef.current) return undefined;
+    const timer = setTimeout(() => runRecompute({ silent: true }), AUTO_RESCORE_MS);
+    return () => clearTimeout(timer);
+    // runRecompute is re-created every render; the timer deliberately closes over the one
+    // from the render that scheduled it, which is the one holding the current draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentSig, autoRescoreReady, scanning]);
 
   // ─── The fix loop ───
 

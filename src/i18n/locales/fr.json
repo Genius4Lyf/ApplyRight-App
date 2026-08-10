@@ -4446,6 +4446,7 @@
       "fixPickWithKeywords": "{{section}} : ce poste s'appuie sur {{keywords}} — lequel devrions-nous affiner ?",
       "fixPickNoKeywords": "{{section}} : lequel devrions-nous affiner ?",
       "fixSkills": "Voici ce que le poste demande et que votre CV ne mentionne pas encore.",
+      "fixSkillsIntro": "Mettons vos compétences en phase avec ce poste — je peux en proposer à partir de votre CV, ou vous ajoutez les vôtres. Vous choisissez ce qui correspond vraiment.",
       "fixGuide": "{{section}} : ici, c'est une question d'exhaustivité, pas de formulation — voici ce qui manque et où l'ajouter.",
       "projectIdeaOpener": "Construisons « {{title}} ». Pour commencer — que fait ce projet, ou quel problème résout-il ?",
       "projectIdeasNone": "Rien ne m'est venu à partir de votre CV pour l'instant — façonnons un projet ensemble.",
