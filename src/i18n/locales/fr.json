@@ -584,6 +584,7 @@
     "colLegal": "Mentions légales",
     "atsGuide": "Guide ATS",
     "cvBuilderGuide": "Guide du créateur de CV",
+    "ariaStudioGuide": "Guide Aria Studio",
     "cvHealth": "Santé du CV",
     "cvTips": "Conseils CV",
     "howAtsWorks": "Comment fonctionnent les ATS et les recruteurs",
@@ -4046,6 +4047,7 @@
       "noCvYet": "Aucun CV pour l'instant",
       "closePanel": "Fermer le panneau",
       "cvHealth": "Santé du CV",
+      "viewCv": "Voir le CV",
       "sectionsDoneCount": "{{done}} section(s) sur {{total}} terminée(s)",
       "sections": "Sections",
       "capturedSoFar": "Informations enregistrées",
@@ -4069,6 +4071,50 @@
       "srGood": "bon",
       "srNeedsWork": "à améliorer",
       "srPoor": "faible"
+    },
+    "welcomeGuide": {
+      "eyebrow": "ARIA Studio · guide rapide",
+      "howItWorks": "Comment fonctionne ARIA Studio",
+      "guide": "Guide",
+      "tutorialVideos": "Vidéos tutoriels",
+      "progress": "Étape {{current}} sur {{total}}",
+      "stepLabel": "Étape {{current}} / {{total}}",
+      "skip": "Passer le guide",
+      "back": "Retour",
+      "next": "Suivant",
+      "finish": "Commencer à utiliser Studio",
+      "steps": {
+        "welcome": {
+          "title": "Bienvenue dans votre espace CV.",
+          "body": "ARIA Studio réunit la conversation, la santé du CV et l’aperçu en direct au même endroit pour vous permettre d’améliorer votre CV sans perdre le fil.",
+          "detailOne": "Créez un CV avec ARIA ou ouvrez un CV enregistré pour l’adapter à un poste.",
+          "detailTwo": "Votre travail est enregistré dans le CV tout au long de la conversation."
+        },
+        "workspace": {
+          "title": "Trois espaces fonctionnent ensemble pendant vos modifications.",
+          "body": "Utilisez la discussion pour dire à ARIA ce dont vous avez besoin. La santé du CV indique la prochaine priorité et l’aperçu en direct montre la vraie page du CV.",
+          "detailOne": "Sélectionnez Santé du CV pour voir ce qui est terminé ou ce qui doit encore être amélioré.",
+          "detailTwo": "Ouvrez l’aperçu en direct pour vérifier la mise en page, les modèles et la formulation finale."
+        },
+        "edit": {
+          "title": "Utilisez Studio pour améliorer ce qui est déjà dans votre CV.",
+          "body": "ARIA Studio est idéal pour améliorer des postes, des puces de projet, des compétences et des résumés existants, dans la discussion ou directement dans l’aperçu en direct.",
+          "detailOne": "Demandez à ARIA d’affiner une section, de l’adapter à un poste ou de corriger les manques trouvés par l’analyse.",
+          "detailTwo": "Utilisez Modifier dans l’aperçu en direct pour des changements rapides et contextualisés."
+        },
+        "review": {
+          "title": "Vérifiez la vraie page avant l’envoi.",
+          "body": "Passez à l’aperçu lorsque le texte est prêt. Vérifiez ici la hiérarchie de la page, le modèle, les dates et l’espacement des puces comme un recruteur les verra.",
+          "detailOne": "Essayez un modèle ou ajustez les détails existants, puis vérifiez que rien ne déborde sur une autre page.",
+          "detailTwo": "Revenez à Santé du CV si une modification demande encore de l’attention."
+        },
+        "builder": {
+          "title": "Vous ajoutez un nouveau poste ou projet ? Utilisez le générateur de CV.",
+          "body": "Le générateur de CV est le meilleur endroit pour ajouter une expérience ou un projet, car il recueille chaque détail dans la bonne structure.",
+          "detailOne": "Ajoutez d’abord l’intitulé, l’employeur ou le contexte du projet, les dates et les réalisations.",
+          "detailTwo": "ARIA est aussi disponible dans le générateur de CV pour vous aider à rédiger chaque nouvelle entrée."
+        }
+      }
     },
     "common": {
       "outOf100": "/ 100"
@@ -4566,6 +4612,8 @@
       "jobDetailsCorrect": "Oui, ces informations sur le poste sont correctes",
       "fitScanComplete": "Analyse de compatibilité terminée",
       "respondedToAriaInterview": "Réponse à l’entretien avec ARIA",
+      "focus": "Ciblage",
+      "focusExited": "Mode ciblage quitté",
       "fixClosed": "Correction terminée",
       "fixingSection": "Correction · {{section}}",
       "sectionFallback": "section",
@@ -4575,6 +4623,9 @@
       "noSpecificJobYet": "Pas encore de poste précis",
       "untitledRole": "Poste sans titre",
       "untitledProject": "Projet sans titre",
+      "focusNewExperience": "Nouvelle expérience",
+      "focusNewProject": "Nouveau projet",
+      "focusNewEducation": "Nouvelle formation",
       "bulletsOnCv_one": "{{count}} puce sur votre CV",
       "bulletsOnCv_other": "{{count}} puces sur votre CV",
       "contactConfirmed": "Coordonnées confirmées",
@@ -4651,6 +4702,7 @@
       "previewHint": "Design final",
       "emptyState": "Lancez une analyse et votre CV s'illumine ici.",
       "emptyStateBuild": "Votre CV prendra forme ici à mesure que vous le construisez avec Aria.",
+      "lockedHint": "La modification et l'aperçu se débloquent une fois que votre CV comporte toutes ses sections essentielles. Continuez avec Aria — cela se remplit à mesure.",
       "removeEntry": "Retirer",
       "confirmRemove": "Retirer ceci ?",
       "entryRemoved": "Retiré.",
@@ -4663,6 +4715,10 @@
       "addSkill": "Ajouter une compétence",
       "skillNamePlaceholder": "Nom de la compétence",
       "skillCategoryPlaceholder": "Catégorie (facultatif)",
+      "suggestSkillsWithAria": "Proposer des compétences avec Aria",
+      "draftSummaryWithAria": "Rédiger avec Aria",
+      "summaryPlaceholder": "Un court résumé professionnel — 2 à 4 phrases.",
+      "addCertification": "Ajouter une certification",
       "saveEdit": "Enregistrer",
       "currentRole": "Poste actuel",
       "bulletsHint": "Une réalisation par ligne.",

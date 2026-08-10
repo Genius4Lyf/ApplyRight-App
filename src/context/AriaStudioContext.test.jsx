@@ -357,6 +357,16 @@ describe('AriaStudioProvider — entry writers', () => {
     _id: 'd1',
     title: 'Draft',
     coachChats: {},
+    // A SUBDOC, not a list — and it deliberately carries two fields the preview's contact
+    // editor never offers (photoUrl, nationality) plus one it offers but leaves empty
+    // (phone). They are what the dot-notation assertions below are watching.
+    personalInfo: {
+      fullName: 'Ada L',
+      email: 'ada@example.com',
+      phone: '',
+      photoUrl: 'data:image/png;base64,AAAA',
+      nationality: 'British',
+    },
     experience: [
       { _sortId: 'a', title: 'Engineer', company: 'Acme', description: '• one' },
       { _sortId: 'b', title: 'Analyst', company: 'Globex', description: '• two' },
@@ -366,6 +376,11 @@ describe('AriaStudioProvider — entry writers', () => {
     projects: [{ _sortId: 'p1', title: 'Side thing', description: '' }],
     education: [{ _sortId: 'e1', degree: 'BSc', school: 'State' }],
     skills: [{ name: 'React' }, { name: 'Node' }],
+    // No _sortId, deliberately — a certification is addressed by INDEX and nothing else.
+    certifications: [
+      { name: 'H2S Awareness', issuer: 'OPITO', date: '2023' },
+      { name: 'First Aid', issuer: 'Red Cross', date: '2022' },
+    ],
   });
 
   // Mount with a draft already BOUND, so every writer's closure sees a real draftId and
@@ -656,6 +671,160 @@ describe('AriaStudioProvider — entry writers', () => {
     expect(held.current.cvData.skills).toEqual([{ name: 'React' }, { name: 'Node' }]);
   });
 
+  // ── replaceCertifications ──
+  //
+  // The same contract as replaceSkills, on the other _sortId-less list. Both of its
+  // callers are whole-array computations done by the UI — the preview's add appends and
+  // its delete filters — so what's guarded here is that this writes exactly what it was
+  // handed, to exactly one key.
+
+  it('replaceCertifications replaces the array wholesale, saving ONLY { _id, certifications }', async () => {
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.replaceCertifications([
+        { name: 'H2S Awareness', issuer: 'OPITO', date: '2023' },
+        { name: 'Confined Space', issuer: '', date: '' },
+      ]);
+    });
+
+    expect(res).toEqual({ ok: true });
+    // THE narrow-patch assertion: certifications ride under Education on the page, but
+    // they are their OWN top-level key — a payload that also carried `education` would
+    // write a stale copy of the degrees back over whatever else the session changed.
+    expect(Object.keys(lastPayload()).sort()).toEqual(['_id', 'certifications']);
+    expect(lastPayload().certifications).toEqual([
+      { name: 'H2S Awareness', issuer: 'OPITO', date: '2023' },
+      { name: 'Confined Space', issuer: '', date: '' },
+    ]);
+    expect(held.current.cvData.certifications).toEqual(lastPayload().certifications);
+    // Education is NOT touched by a certifications write, on the document either.
+    expect(held.current.cvData.education).toEqual([
+      { _sortId: 'e1', degree: 'BSc', school: 'State' },
+    ]);
+  });
+
+  it('replaceCertifications rolls back to the previous array when the save rejects', async () => {
+    const held = await mountBound();
+    CVService.saveDraft.mockRejectedValueOnce(new Error('offline'));
+
+    let res;
+    await act(async () => {
+      res = await held.current.replaceCertifications([]);
+    });
+
+    expect(res).toEqual({ ok: false });
+    expect(held.current.cvData.certifications).toEqual([
+      { name: 'H2S Awareness', issuer: 'OPITO', date: '2023' },
+      { name: 'First Aid', issuer: 'Red Cross', date: '2022' },
+    ]);
+    // commitList toasts on the caller's behalf, which is why PreviewCertsBlock adds
+    // nothing of its own to a failed save.
+    expect(toast.error).toHaveBeenCalled();
+  });
+
+  // ── updatePersonalInfo ──
+  //
+  // The ONE subdoc writer, and the one whose narrow patch is spelled differently. Every
+  // other writer owns a whole top-level key, so { _id, key } IS the narrow patch. A
+  // subdoc has siblings INSIDE it, and an implicit $set of the whole object replaces it —
+  // so narrowness here has to be expressed in the payload's KEYS, one dotted path per
+  // changed field. These tests are about those keys.
+
+  it('updatePersonalInfo saves DOT-NOTATION paths for the changed fields only', async () => {
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.updatePersonalInfo({
+        fullName: 'Ada Lovelace',
+        phone: '+44 7700 900000',
+      });
+    });
+
+    expect(res).toEqual({ ok: true });
+    // THE assertion this writer exists for: dotted PATHS, not a `personalInfo` object.
+    // Mongoose turns each into a $set of exactly that path, so the fields nobody named
+    // are never written.
+    expect(Object.keys(lastPayload()).sort()).toEqual([
+      '_id',
+      'personalInfo.fullName',
+      'personalInfo.phone',
+    ]);
+    expect(lastPayload()['personalInfo.fullName']).toBe('Ada Lovelace');
+    expect(lastPayload()['personalInfo.phone']).toBe('+44 7700 900000');
+    // A whole-subdoc write is what this is NOT.
+    expect(lastPayload()).not.toHaveProperty('personalInfo');
+    // Locally the patch is MERGED, so the untouched fields are still on cvData.
+    expect(held.current.cvData.personalInfo).toEqual({
+      fullName: 'Ada Lovelace',
+      email: 'ada@example.com',
+      phone: '+44 7700 900000',
+      photoUrl: 'data:image/png;base64,AAAA',
+      nationality: 'British',
+    });
+  });
+
+  it('editing ONLY the email leaves every sibling — including photoUrl — out of the payload', async () => {
+    const held = await mountBound();
+
+    await act(async () => {
+      await held.current.updatePersonalInfo({ email: 'ada@lovelace.dev' });
+    });
+
+    // The whole point of the dot-notation shape, stated as one payload: a one-field edit
+    // is a one-path write. photoUrl is uploaded on a DIFFERENT card and nationality is
+    // captured elsewhere — a payload carrying a stale copy of either would silently undo
+    // work this editor never even showed the user.
+    expect(Object.keys(lastPayload()).sort()).toEqual(['_id', 'personalInfo.email']);
+    expect(lastPayload()['personalInfo.email']).toBe('ada@lovelace.dev');
+    expect(lastPayload()).not.toHaveProperty('personalInfo.fullName');
+    expect(lastPayload()).not.toHaveProperty('personalInfo.phone');
+    expect(lastPayload()).not.toHaveProperty('personalInfo.photoUrl');
+    expect(lastPayload()).not.toHaveProperty('personalInfo.nationality');
+    // Untouched on the document too.
+    expect(held.current.cvData.personalInfo.photoUrl).toBe('data:image/png;base64,AAAA');
+    expect(held.current.cvData.personalInfo.nationality).toBe('British');
+  });
+
+  it('updatePersonalInfo writes NOTHING when the patch is empty', async () => {
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.updatePersonalInfo({});
+    });
+
+    // Reported as success — "nothing to change" is not a failure — but no request. An
+    // empty $set would still be a write racing whatever else the session is saving.
+    expect(res).toEqual({ ok: true });
+    expect(CVService.saveDraft).not.toHaveBeenCalled();
+  });
+
+  it('updatePersonalInfo rolls the WHOLE previous subdoc back when the save rejects', async () => {
+    const held = await mountBound();
+    CVService.saveDraft.mockRejectedValueOnce(new Error('offline'));
+
+    let res;
+    await act(async () => {
+      res = await held.current.updatePersonalInfo({ fullName: 'Wrong Name', email: 'no@no.no' });
+    });
+
+    expect(res).toEqual({ ok: false });
+    // Back to exactly what was on the document — the optimistic merge is undone in full,
+    // which is what the re-opened editor re-seeds from.
+    expect(held.current.cvData.personalInfo).toEqual({
+      fullName: 'Ada L',
+      email: 'ada@example.com',
+      phone: '',
+      photoUrl: 'data:image/png;base64,AAAA',
+      nationality: 'British',
+    });
+    // Toasted by the writer, which is why PreviewContactBlock adds nothing of its own.
+    expect(toast.error).toHaveBeenCalled();
+  });
+
   // ── Shared guarantee, stated once across every writer ──
 
   it('EVERY writer sends exactly _id plus ONE top-level key', async () => {
@@ -668,6 +837,7 @@ describe('AriaStudioProvider — entry writers', () => {
       () => held.current.removeEntry('project', 'p1'),
       () => held.current.restoreEntry('project', { _sortId: 'p1', title: 'Side thing' }, 0),
       () => held.current.replaceSkills([{ name: 'Go' }]),
+      () => held.current.replaceCertifications([{ name: 'H2S Awareness' }]),
       () => held.current.applyRoleEdit('experience', 'a', '• bullet'),
     ];
 

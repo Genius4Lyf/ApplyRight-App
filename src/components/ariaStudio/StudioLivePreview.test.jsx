@@ -266,9 +266,11 @@ describe('StudioLivePreview — reorder entries', () => {
   // jsdom doesn't produce, so the actual drag is verified in the browser; the chevrons and
   // the drag share ONE commit path (arrayMove over the displayed list → reorderEntries),
   // so covering them covers the payload shape for both.
+  // A tailor session (no studioKind: 'build'), so the panel is unlocked regardless of
+  // completeness — these tests exercise edit-CONTROL routing, which the completeness lock
+  // (covered in its own block below) is orthogonal to.
   const threeRoles = {
     _id: 'd1',
-    studioKind: 'build',
     personalInfo: { fullName: 'Ada Lovelace' },
     experience: [
       { _sortId: 'a', title: 'Analyst', company: 'RSA' },
@@ -304,7 +306,6 @@ describe('StudioLivePreview — reorder entries', () => {
     // sent as 'projects' resolves to no list key and no-ops silently.
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
       personalInfo: { fullName: 'Ada Lovelace' },
       projects: [
         { _sortId: 'p1', title: 'Notes engine' },
@@ -322,7 +323,6 @@ describe('StudioLivePreview — reorder entries', () => {
   it('reorders education under its own section token', () => {
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
       personalInfo: { fullName: 'Ada Lovelace' },
       education: [
         { _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG' },
@@ -350,7 +350,6 @@ describe('StudioLivePreview — reorder entries', () => {
   it('renders NO reorder controls for a single-entry section', () => {
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
       personalInfo: { fullName: 'Ada Lovelace' },
       experience: [{ _sortId: 'only', title: 'Analyst', company: 'RSA' }],
       studioScan: null,
@@ -374,7 +373,11 @@ describe('StudioLivePreview — reorder entries', () => {
     expect(screen.getByRole('menuitem', { name: 'Move down' }).disabled).toBe(true);
   });
 
-  it('leaves SKILLS alone — index-keyed pills are out of scope this slice', () => {
+  it('leaves SKILLS unreorderable — no _sortId means nothing to reorder BY', () => {
+    // Skills ARE editable now (delete + add, see StudioLivePreview.skills.test.jsx), but
+    // they are addressed by name alone. There is no id to build an order from, so they get
+    // no ↑/↓, no grip, and no entry-row cluster — the section is a different shape, not a
+    // half-finished one.
     mockCvData = { ...threeRoles, skills: ['Algorithms', 'Analysis'] };
     render(<StudioLivePreview />);
     // Exactly one control cluster per experience row (3), and none for the two skills.
@@ -413,9 +416,10 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
   // directly — StudioChat's self-heal would fire, push "pin cleared", and race the save.
   // Every delete must route through requestStudioCommand instead.
 
+  // A tailor session (see the reorder block's note) — unlocked, so the delete controls are
+  // present; the completeness lock is tested separately.
   const threeRoles = {
     _id: 'd1',
-    studioKind: 'build',
     personalInfo: { fullName: 'Ada Lovelace' },
     experience: [
       { _sortId: 'a', title: 'Analyst', company: 'RSA', description: '• one' },
@@ -484,7 +488,6 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
   it("sends 'project' SINGULAR for projects — the SECTION_LIST gotcha again", () => {
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
       personalInfo: { fullName: 'Ada' },
       projects: [
         { _sortId: 'p1', title: 'Notes engine', description: '• proj' },
@@ -502,7 +505,6 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
   it('commands education deletes under the education token', () => {
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
       personalInfo: { fullName: 'Ada' },
       education: [{ _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG', description: '• study' }],
       studioScan: null,
@@ -524,5 +526,62 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
     expect(mockRequestStudioCommand).toHaveBeenCalled();
     // removeEntry was NOT — StudioChat executes it when it consumes the command.
     expect(mockRemoveEntry).not.toHaveBeenCalled();
+  });
+});
+
+describe('StudioLivePreview — completeness lock', () => {
+  // A build session's document is read-only until the CV is genuinely complete (name +
+  // summary + experience + education + skills; projects optional — the canonical
+  // getCompletionStatus rule). The sheet still renders so the user watches it fill in, but
+  // no control shows and the Edit/Preview toggle is gone until it unlocks. Tailor sessions
+  // arrive complete and are never locked.
+
+  const completeBuild = {
+    _id: 'd1',
+    studioKind: 'build',
+    personalInfo: { fullName: 'Ada Lovelace' },
+    professionalSummary: 'Analytical engine pioneer.',
+    experience: [{ _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' }],
+    education: [{ _sortId: 'edu-1', degree: 'BSc Mathematics', school: 'UNILAG' }],
+    skills: ['Algorithms'],
+    studioScan: null,
+  };
+  // The same document with two required sections missing → still incomplete.
+  const incompleteBuild = {
+    ...completeBuild,
+    education: [],
+    skills: [],
+  };
+
+  it('locks an INCOMPLETE build session — read-only, no toggle, hint shown', () => {
+    mockCvData = incompleteBuild;
+    render(<StudioLivePreview />);
+    // The document still renders — the whole point is watching it take shape.
+    expect(screen.getByText('Led the notes')).toBeTruthy();
+    // The lock hint explains why editing isn't available yet.
+    expect(screen.getByText(/Editing and preview unlock once your CV/i)).toBeTruthy();
+    // The Edit/Preview view toggle is gone (the 'Preview' toggle button is its tell).
+    expect(screen.queryByRole('button', { name: 'Preview' })).toBeNull();
+    // And not a single entry-action control is offered.
+    expect(screen.queryAllByLabelText('Edit')).toHaveLength(0);
+  });
+
+  it('unlocks a COMPLETE build session — toggle and controls return', () => {
+    mockCvData = completeBuild;
+    render(<StudioLivePreview />);
+    expect(screen.queryByText(/Editing and preview unlock once your CV/i)).toBeNull();
+    // The toggle is back…
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    // …and the experience row offers its edit control.
+    expect(screen.getAllByLabelText('Edit').length).toBeGreaterThan(0);
+  });
+
+  it('never locks a TAILOR session, even when its CV is incomplete', () => {
+    // No studioKind: 'build' → a tailor session. Missing education/skills, but tailoring
+    // starts from a finished CV in hand, so editing stays available.
+    mockCvData = { ...incompleteBuild, studioKind: undefined };
+    render(<StudioLivePreview />);
+    expect(screen.queryByText(/Editing and preview unlock once your CV/i)).toBeNull();
+    expect(screen.getAllByLabelText('Edit').length).toBeGreaterThan(0);
   });
 });

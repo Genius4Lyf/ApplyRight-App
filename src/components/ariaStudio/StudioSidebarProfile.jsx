@@ -18,7 +18,7 @@ import { planLabelFor } from '../../lib/planLabels';
 // the sidebar already surfaces it. Positioned via ordinary relative/absolute layout —
 // not a portal — so the popover stays confined to the rail's own width and can't run
 // off the side of a viewport the way a viewport-fixed dropdown would.
-const StudioSidebarProfile = () => {
+const StudioSidebarProfile = ({ onOpenGuide }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -113,6 +113,21 @@ const StudioSidebarProfile = () => {
               <LanguageSwitcher />
             </div>
             <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1.5 my-1" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onOpenGuide?.();
+              }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+            >
+              <AriaOrbit size={16} />
+              <span className="flex-1">{t('ariaStudio.welcomeGuide.howItWorks')}</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.welcomeGuide.guide')}
+              </span>
+            </button>
             <button
               type="button"
               role="menuitem"

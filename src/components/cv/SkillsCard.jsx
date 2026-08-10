@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 
 const lower = (s) => (s || '').trim().toLowerCase();
 
@@ -28,7 +29,8 @@ const SkillsCard = ({
   const [openDetail, setOpenDetail] = useState(null);
   // 'Uncategorized' stays the internal/stored category value; only its display
   // is localized (like the CV section labels — translate at the render layer).
-  const catLabel = (c) => (c === 'Uncategorized' ? t('cvBuilder.skillsCard.uncategorized') : c);
+  // Shared with the Live Preview's grouped skills so both name the bucket the same way.
+  const catLabel = (c) => skillCategoryLabel(c, t);
 
   const existingSet = useMemo(() => new Set(existingSkills.map(lower)), [existingSkills]);
   const bestSet = useMemo(() => new Set(bestForRole.map(lower)), [bestForRole]);
@@ -50,7 +52,7 @@ const SkillsCard = ({
         seen.add(key);
         out.push({
           name,
-          category: group.category || 'Uncategorized',
+          category: group.category || UNCATEGORIZED,
           isBest: bestSet.has(key),
           isAdded: existingSet.has(key),
           detail: detailByName[key] || null,
@@ -95,9 +97,7 @@ const SkillsCard = ({
   const selectedCount = [...selected].filter((n) => !existingSet.has(lower(n))).length;
 
   const sections =
-    mode === 'role'
-      ? [[t('cvBuilder.skillsCard.bestForRole'), bestRows]]
-      : Object.entries(grouped);
+    mode === 'role' ? [[t('cvBuilder.skillsCard.bestForRole'), bestRows]] : Object.entries(grouped);
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900/60 overflow-hidden">

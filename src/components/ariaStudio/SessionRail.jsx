@@ -27,6 +27,7 @@ const SessionRail = ({
   onDelete,
   onNewTailoring,
   onNewCv,
+  onOpenGuide,
 }) => {
   const { t } = useTranslation();
   return (
@@ -179,10 +180,9 @@ const SessionRail = ({
         )}
       </div>
 
-      <StudioSidebarProfile />
+      <StudioSidebarProfile onOpenGuide={onOpenGuide} />
     </div>
   );
 };
 
 export default SessionRail;
-

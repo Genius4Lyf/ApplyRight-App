@@ -162,6 +162,30 @@ const PreviewEntryEditor = ({ section = 'experience', entry, onClose }) => {
     save();
   };
 
+  // Descriptions are stored as one newline-delimited bullet per line. Continue that
+  // structure at the cursor so Enter in the live editor behaves like a CV list instead
+  // of leaving the next achievement as unformatted prose. Experience and projects share
+  // this behavior; education keeps Enter as a normal paragraph break.
+  const descriptionKeyDown = (event) => {
+    if (escapeCloses(event)) return;
+    if (event.key !== 'Enter' || section === 'education') return;
+
+    event.preventDefault();
+    const textarea = event.currentTarget;
+    const value = form.description || '';
+    const start = textarea.selectionStart ?? value.length;
+    const end = textarea.selectionEnd ?? start;
+    const insert = value ? '\n• ' : '• ';
+    const next = `${value.slice(0, start)}${insert}${value.slice(end)}`;
+    const caret = start + insert.length;
+
+    setForm((prev) => ({ ...prev, description: next }));
+    window.requestAnimationFrame?.(() => {
+      textarea.focus();
+      textarea.setSelectionRange(caret, caret);
+    });
+  };
+
   const line = (key, labelKey, ref) => (
     <input
       ref={ref}
@@ -229,7 +253,7 @@ const PreviewEntryEditor = ({ section = 'experience', entry, onClose }) => {
         <textarea
           value={form.description}
           onChange={set('description')}
-          onKeyDown={escapeCloses}
+          onKeyDown={descriptionKeyDown}
           disabled={saving}
           rows={Math.min(8, Math.max(3, (form.description || '').split('\n').length + 1))}
           aria-label={t(spec.descriptionLabelKey)}

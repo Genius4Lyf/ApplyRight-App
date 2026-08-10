@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { bandOf } from '../../lib/applicationInsights';
@@ -18,7 +18,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 //
 // Reads entirely from the persisted `studioScan` snapshot on the draft, so it survives a
 // refresh without re-scanning (and without re-charging).
-const StudioArtifactPanel = ({ onClose, bare = false }) => {
+const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
   const { t } = useTranslation();
   const { cvData } = useAriaStudio();
   const [openSection, setOpenSection] = useState(null);
@@ -389,6 +389,18 @@ const StudioArtifactPanel = ({ onClose, bare = false }) => {
                 })
               ).join(' ')}
             </p>
+            {progress.total > 0 && progress.done === progress.total && onViewCv && (
+              <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={onViewCv}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t('ariaStudio.studioArtifactPanel.viewCv')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : !scan ? (

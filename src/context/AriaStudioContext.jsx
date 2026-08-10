@@ -581,6 +581,32 @@ export const AriaStudioProvider = ({ children }) => {
     [cvData, commitList]
   );
 
+  // Replace the WHOLE certifications array.
+  //
+  // Same shape as replaceSkills, and for the same reason: a certification is { name,
+  // issuer, date } with NO _sortId, so position is identity and there is nothing to
+  // address a single one by. Add and delete both reduce to "the UI owns the array and
+  // hands back the final one", which this writes atomically.
+  //
+  // There is no merging counterpart here (no applyCertifications): certifications are
+  // never AI-generated — they're typed by hand, in the build flow and in the Live
+  // Preview — so nothing has suggestions to dedupe against.
+  const replaceCertifications = useCallback(
+    async (nextCertifications) => {
+      if (!cvData) return { ok: false };
+      const previous = cvData.certifications || [];
+      const next = nextCertifications || [];
+      const ok = await commitList(
+        'certifications',
+        next,
+        previous,
+        "Couldn't save those certifications. Try again."
+      );
+      return { ok };
+    },
+    [cvData, commitList]
+  );
+
   // Apply a coach-generated bullet rewrite to ONE role/project in place: replace that
   // entry's `description`, persist immediately (so a follow-up recheck reads the new
   // bullets server-side), and bump externalEditNonce. `section` is 'experience' | 'project'.
@@ -611,6 +637,56 @@ export const AriaStudioProvider = ({ children }) => {
           console.error('Failed to save applied summary', error);
           setCvDataRaw((prev) => ({ ...(prev || {}), professionalSummary: previous }));
           toast.error("Couldn't save that summary. Try again.");
+          return { ok: false };
+        }
+      }
+      return { ok: true };
+    },
+    [cvData, draftId]
+  );
+
+  // Writer: patch the personalInfo SUBDOC — the CHANGED fields only.
+  //
+  // personalInfo is not a list, so it can't go through commitList; and the narrow-patch
+  // rule commitList exists to enforce needs a different expression for a subdoc. saveDraft
+  // lands as findByIdAndUpdate — an implicit $set — and a $set of a whole subdoc REPLACES
+  // it, so a payload of { personalInfo: {...} } built from this closure's cvData would
+  // drop photoUrl and nationality, the two fields no caller on this path even offers to
+  // edit. DOT NOTATION sets exactly the paths named and leaves every sibling untouched:
+  //
+  //     { _id, 'personalInfo.email': 'ada@example.com' }
+  //
+  // — the same technique the job-capture fix uses for targetJob.
+  //
+  // `patch` is therefore the changed fields ALONE: the caller diffs the form against what
+  // it seeded from, so an untouched field is absent from the payload rather than written
+  // back with a stale value.
+  const updatePersonalInfo = useCallback(
+    async (patch) => {
+      if (!cvData) return { ok: false };
+      const fields = Object.keys(patch || {});
+      // Nothing changed — a write here would be a no-op $set that still races whatever
+      // else the session is saving.
+      if (!fields.length) return { ok: true };
+      const previous = cvData.personalInfo || {};
+      setCvDataRaw((prev) => ({
+        ...(prev || {}),
+        personalInfo: { ...(prev?.personalInfo || {}), ...patch },
+      }));
+      setExternalEditNonce((n) => n + 1);
+      if (draftId) {
+        const data = { _id: draftId };
+        fields.forEach((key) => {
+          data[`personalInfo.${key}`] = patch[key];
+        });
+        try {
+          await CVService.saveDraft(data);
+        } catch (error) {
+          console.error('Failed to save contact details', error);
+          // The WHOLE previous subdoc goes back, not just the patched keys: that's the
+          // state the document was in, and it's what the open editor re-seeds from.
+          setCvDataRaw((prev) => ({ ...(prev || {}), personalInfo: previous }));
+          toast.error("Couldn't save those contact details. Try again.");
           return { ok: false };
         }
       }
@@ -778,6 +854,10 @@ export const AriaStudioProvider = ({ children }) => {
     removeEntry,
     restoreEntry,
     replaceSkills,
+    replaceCertifications,
+    // The one SUBDOC writer — dot-notation, changed fields only, so the fields it does
+    // NOT offer (photoUrl, nationality) survive every save it makes.
+    updatePersonalInfo,
     externalEditNonce,
     lastAiWriteSortId,
     saving,

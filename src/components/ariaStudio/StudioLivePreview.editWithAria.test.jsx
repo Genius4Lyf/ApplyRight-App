@@ -50,7 +50,7 @@ afterEach(() => {
 // by its own label rather than by counting past the others.
 const oneOfEach = {
   _id: 'd1',
-  studioKind: 'build',
+  studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
   personalInfo: { fullName: 'Ada Lovelace' },
   experience: [
     {

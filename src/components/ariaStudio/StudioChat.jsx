@@ -69,11 +69,7 @@ import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
 import CertificationsCard from './CertificationsCard';
 import SkillsBuildCard from './SkillsBuildCard';
-import {
-  SelectedAnswerBubble,
-  StudioPhaseDivider,
-  StudioReceipt,
-} from './StudioTranscriptEvent';
+import { SelectedAnswerBubble, StudioPhaseDivider, StudioReceipt } from './StudioTranscriptEvent';
 
 // Aria's opening line in the Studio. Flagged `_opening` so it's regenerated on every
 // mount and never persisted — same contract as the coach panel's step openers.
@@ -481,6 +477,18 @@ const StudioChat = ({ onPaywall }) => {
   // and only generates bullets at the end, once the user picks a count. "Edit with Aria"
   // means the interview, so nothing here generates anything on arrival: the rewrite card
   // stays where it was chosen deliberately, from Fix → pick an entry.
+  //
+  // ─── Commanded "Suggest skills with Aria" (the Live Preview's skills section) ───
+  //
+  // The one command with no sortId — a skill is addressed by NAME, and this asks about the
+  // SECTION rather than a row. That null is why both branches above are gated on their own
+  // `type` rather than on the presence of a sortId: a section-level command must not fall
+  // into an entry-level one.
+  //
+  // It routes rather than generates, for the same reason as the rest of this effect: the
+  // consent step, the price and the phase belong to the chat. Each session kind lands on
+  // the skills flow it already has — build:skills for a build, the fix:skills flow for a
+  // tailor — so there is no third skills path to keep in step with the other two.
   useEffect(() => {
     if (!studioCommand) return;
 
@@ -521,6 +529,78 @@ const StudioChat = ({ onPaywall }) => {
         // eslint-disable-next-line no-use-before-define
         startInterview({ section, sortId, title: entry?.title, company: entry?.company });
       }
+      clearStudioCommand?.();
+      return;
+    }
+
+    if (studioCommand.type === 'suggestSkills') {
+      if (cvData?.studioKind === 'build') {
+        // Enter build:skills as if it had just been reached from the section hub. Both
+        // pieces of build-skills state are reset for the reason handleFix resets the fix
+        // pair: leftovers would open the card mid-flow — straight on 'card' phase showing
+        // suggestions from an earlier visit, or Done landing a receipt counting skills
+        // added before this one. (A persisted studioPending is deliberately left alone:
+        // it is PAID output, and discarding it here would throw away something bought.)
+        setSkillsData(null);
+        setManualSkillsAdded(0);
+        setPhase('build:skills');
+      } else {
+        // The TAILOR route goes through handleFix, not around it. It already pushes the
+        // fixstart{mode:'skills'} marker, resets fixSkillsData/fixSkillsAdded, says the
+        // intro line and sets fix:skills — so calling it is what guarantees this entry
+        // point and tapping Fix on the skills row can never drift apart.
+        //
+        // No scan is required: the generation grounds on the CV and the target job, and
+        // the gaps are context. Read off the live snapshot when there IS one, so arriving
+        // here after a scan is indistinguishable from arriving from the breakdown.
+        const row = cvData?.studioScan?.sections?.find((s) => s.key === 'skills');
+        // Declared below, called only from this effect — the component body has already
+        // run by then. Same shape (and same suppression) as startInterview above.
+        // eslint-disable-next-line no-use-before-define
+        handleFix({
+          key: 'skills',
+          label: row?.label || t('ariaStudio.studioFlow.sections.skills'),
+          missingKeywords: row?.missingKeywords || [],
+        });
+      }
+      clearStudioCommand?.();
+      return;
+    }
+
+    if (studioCommand.type === 'draftSummary') {
+      if (cvData?.studioKind === 'build') {
+        // Enter build:summary as if it had just been reached from the section hub, which
+        // is what cancelFix and the applied-summary path both leave behind: an empty draft
+        // and no reroll flag. Leftovers would open the card on someone ELSE's sentence —
+        // showing a draft from an earlier visit as though it had just been written, with
+        // "Try another angle" already spent. (The persisted studioPending is deliberately
+        // left alone: it is PAID output, and discarding it here would throw away something
+        // bought — same call the skills branch makes above.)
+        setSummaryDraft('');
+        setSummaryWasReroll(false);
+        setPhase('build:summary');
+      } else {
+        // The TAILOR route goes through handleFix, not around it. Its summary branch
+        // already says the fixSummary intro and sets fix:summary, so calling it is what
+        // guarantees this entry point and tapping Fix on the summary row can never drift
+        // apart. No scan is required — the rewrite grounds on the CV and the target job,
+        // and the gaps are context — so the row is read off the live snapshot when there
+        // IS one and an empty list stands in when there isn't.
+        const row = cvData?.studioScan?.sections?.find((s) => s.key === 'summary');
+        // Declared below, called only from this effect — the component body has already
+        // run by then. Same shape (and same suppression) as startInterview above.
+        // eslint-disable-next-line no-use-before-define
+        handleFix({
+          key: 'summary',
+          label: row?.label || t('ariaStudio.studioFlow.sections.summary'),
+          missingKeywords: row?.missingKeywords || [],
+        });
+      }
+      // The CAREER STAGE needs nothing here. SummaryFixCard hides its stage chips whenever
+      // `careerStage` is set, and that flows from cvData.careerStage — so a session that
+      // stored one goes straight to "ready to write" and Aria never re-asks. A draft with
+      // no stored stage (an older CV) gets the chips, which is the correct fallback rather
+      // than a guess.
       clearStudioCommand?.();
       return;
     }
@@ -2249,6 +2329,66 @@ const StudioChat = ({ onPaywall }) => {
   const focusedFixSortId = focusedFix?.sortId || null;
   const focusedRewriteSection = focusedRewrite?.section || null;
   const focusedRewriteSortId = focusedRewrite?.sortId || null;
+  const focusNoticeSection = focusedPinSortId
+    ? pinnedSectionKey
+    : focusedFixSortId
+      ? focusedFixSection
+      : focusedRewriteSection;
+  const focusNoticeSortId = focusedPinSortId || focusedFixSortId || focusedRewriteSortId;
+  const focusNoticeTitle = focusedPinSortId
+    ? pinnedEntry?.title
+    : focusedFixSortId
+      ? focusedFix?.title
+      : focusedRewrite?.title;
+  const focusNoticeCompany = focusedPinSortId
+    ? pinnedEntry?.company
+    : focusedFixSortId
+      ? focusedFix?.company
+      : focusedRewrite?.company;
+  const focusNoticeKey = focusNoticeSortId ? `${focusNoticeSection}:${focusNoticeSortId}` : null;
+  const focusNoticeRef = useRef(null);
+  const focusNoticePrimedRef = useRef(false);
+
+  // The Live Preview already receives this focus as derived state. Mirror its START and
+  // END in the transcript too, so a user can see where an Aria interview began when they
+  // return to the chat. The first restored state is only primed, never re-announced.
+  useEffect(() => {
+    const focusNotice = focusNoticeKey
+      ? {
+          section: focusNoticeSection,
+          sortId: focusNoticeSortId,
+          title: focusNoticeTitle,
+          company: focusNoticeCompany,
+        }
+      : null;
+    if (!focusNoticePrimedRef.current) {
+      if (loading) return;
+      const hasSavedThread = !!draftId && (cvData?.coachChats?.studio || []).length > 0;
+      if (hasSavedThread && messages.some((m) => m._opening)) return;
+      focusNoticeRef.current = focusNotice;
+      focusNoticePrimedRef.current = true;
+      return;
+    }
+
+    const previous = focusNoticeRef.current;
+    const previousKey = previous ? `${previous.section}:${previous.sortId}` : null;
+    if (previousKey === focusNoticeKey) return;
+
+    if (focusNotice) push({ who: 'focus', ...focusNotice });
+    else if (previous) push({ who: 'unfocus' });
+    focusNoticeRef.current = focusNotice;
+  }, [
+    focusNoticeKey,
+    focusNoticeSection,
+    focusNoticeSortId,
+    focusNoticeTitle,
+    focusNoticeCompany,
+    loading,
+    draftId,
+    cvData?.coachChats?.studio,
+    messages,
+  ]);
+
   useEffect(() => {
     if (focusedPinSortId) {
       setActiveEntry?.({ section: pinnedSectionKey, sortId: focusedPinSortId });
@@ -2584,6 +2724,58 @@ const StudioChat = ({ onPaywall }) => {
               );
             }
 
+            // Focus start / end — a thin boundary showing which role or project Aria is
+            // interviewing on, plus the point where that focused conversation closed.
+            if (m.who === 'focus' || m.who === 'unfocus') {
+              const exited = m.who === 'unfocus';
+              return (
+                <motion.div
+                  key={i}
+                  className="self-stretch my-1 flex items-center gap-2 px-1"
+                  {...bubbleAnim('aria', reduce)}
+                >
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                  <span className="shrink-0 flex items-center gap-1.5">
+                    <span
+                      className={`h-1 w-1 rounded-full ${
+                        exited
+                          ? 'bg-amber-400 dark:bg-amber-500'
+                          : 'bg-emerald-400 dark:bg-emerald-500'
+                      }`}
+                    />
+                    <span
+                      className={`max-w-[210px] truncate text-[9px] font-semibold ${
+                        exited
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-emerald-700 dark:text-emerald-300'
+                      }`}
+                    >
+                      {exited
+                        ? t('ariaStudio.chat.focusExited')
+                        : // A pinned BUILD entry has no title yet — it's captured later in
+                          // the interview — so the fallback is what this crumb reads as for
+                          // most of its life. "Untitled role" described that as a defect and
+                          // never updated; a section-aware "New experience" describes what is
+                          // actually happening. `section` rides along on the focus marker;
+                          // experience is the safe default for older persisted markers that
+                          // predate it.
+                          `${t('ariaStudio.chat.focus')} · ${
+                            m.title ||
+                            t(
+                              m.section === 'project'
+                                ? 'ariaStudio.chat.focusNewProject'
+                                : m.section === 'education'
+                                  ? 'ariaStudio.chat.focusNewEducation'
+                                  : 'ariaStudio.chat.focusNewExperience'
+                            )
+                          }${m.company ? ` · ${m.company}` : ''}`}
+                    </span>
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                </motion.div>
+              );
+            }
+
             // Fix session boundaries — a thin hairline so scrolling the history shows
             // where a section's fix began and ended.
             if (m.who === 'fixstart' || m.who === 'fixend') {
@@ -2638,8 +2830,7 @@ const StudioChat = ({ onPaywall }) => {
                       : t('ariaStudio.chat.addedBullets', { count: n })
                   }
                   detail={
-                    m.entry?.title ||
-                    sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel })
+                    m.entry?.title || sectionLabel(t, { key: m.sectionKey, label: m.sectionLabel })
                   }
                 />
               );

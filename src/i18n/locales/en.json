@@ -588,6 +588,7 @@
     "colLegal": "Legal",
     "atsGuide": "ATS Guide",
     "cvBuilderGuide": "CV Builder Guide",
+    "ariaStudioGuide": "Aria Studio Guide",
     "cvHealth": "CV Health",
     "cvTips": "CV Tips",
     "howAtsWorks": "How ATS & Recruiters Work",
@@ -4050,6 +4051,7 @@
       "noCvYet": "No CV yet",
       "closePanel": "Close panel",
       "cvHealth": "CV health",
+      "viewCv": "View CV",
       "sectionsDoneCount": "{{done}} of {{total}} sections done",
       "sections": "Sections",
       "capturedSoFar": "Captured so far",
@@ -4073,6 +4075,50 @@
       "srGood": "good",
       "srNeedsWork": "needs work",
       "srPoor": "poor"
+    },
+    "welcomeGuide": {
+      "eyebrow": "ARIA Studio · quick guide",
+      "howItWorks": "How ARIA Studio works",
+      "guide": "Guide",
+      "tutorialVideos": "Tutorial videos",
+      "progress": "Step {{current}} of {{total}}",
+      "stepLabel": "Step {{current}} / {{total}}",
+      "skip": "Skip guide",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Start using Studio",
+      "steps": {
+        "welcome": {
+          "title": "Welcome to your CV workspace.",
+          "body": "ARIA Studio brings the conversation, CV health and live preview into one place, so you can make confident improvements without losing your place.",
+          "detailOne": "Start a new CV with ARIA or open a saved CV to tailor it to a job.",
+          "detailTwo": "Your work is saved to the CV while you move through the conversation."
+        },
+        "workspace": {
+          "title": "Three areas work together while you edit.",
+          "body": "Use the chat to tell ARIA what you need. CV Health keeps the next priority visible, and Live preview shows the actual CV page.",
+          "detailOne": "Select CV Health when you want to see what is complete or still needs attention.",
+          "detailTwo": "Open Live preview when you want to check layout, templates and final wording."
+        },
+        "edit": {
+          "title": "Use Studio to improve what is already on your CV.",
+          "body": "ARIA Studio is best for refining existing roles, project bullets, skills and summaries—either through the chat or directly in the live preview.",
+          "detailOne": "Ask ARIA to sharpen a section, tailor it to a job, or fix gaps the scan finds.",
+          "detailTwo": "Use Edit in Live preview for quick, contextual changes to existing content."
+        },
+        "review": {
+          "title": "Review the real page before you send it.",
+          "body": "Switch to Preview when the wording is ready. This is where you check the page hierarchy, template, dates and bullet spacing as an employer will see them.",
+          "detailOne": "Try a template or adjust existing details, then confirm nothing spills awkwardly onto another page.",
+          "detailTwo": "Use CV Health as your return point if an edit leaves a section needing attention."
+        },
+        "builder": {
+          "title": "Adding a new role or project? Use CV Builder.",
+          "body": "CV Builder is the best place to add new work history and projects because it captures all the details in the right structure.",
+          "detailOne": "Add the title, employer or project context, dates and achievements there first.",
+          "detailTwo": "ARIA is in CV Builder too, so you still get writing help for every new entry."
+        }
+      }
     },
     "common": {
       "outOf100": "/ 100"
@@ -4570,6 +4616,8 @@
       "jobDetailsCorrect": "Yes, these job details are right",
       "fitScanComplete": "Fit scan complete",
       "respondedToAriaInterview": "Responded to ARIA interview",
+      "focus": "Focus",
+      "focusExited": "Focus mode exited",
       "fixClosed": "Fix closed",
       "fixingSection": "Fixing · {{section}}",
       "sectionFallback": "section",
@@ -4579,6 +4627,9 @@
       "noSpecificJobYet": "No specific job yet",
       "untitledRole": "Untitled role",
       "untitledProject": "Untitled project",
+      "focusNewExperience": "New experience",
+      "focusNewProject": "New project",
+      "focusNewEducation": "New education",
       "bulletsOnCv_one": "{{count}} bullet on your CV",
       "bulletsOnCv_other": "{{count}} bullets on your CV",
       "contactConfirmed": "Contact details confirmed",
@@ -4655,6 +4706,7 @@
       "previewHint": "Final design",
       "emptyState": "Run a scan and your CV lights up here.",
       "emptyStateBuild": "Your CV will take shape here as you build it with Aria.",
+      "lockedHint": "Editing and preview unlock once your CV has all its core sections. Keep building with Aria — this fills in as you go.",
       "removeEntry": "Remove",
       "confirmRemove": "Remove this?",
       "entryRemoved": "Removed.",
@@ -4667,6 +4719,10 @@
       "addSkill": "Add skill",
       "skillNamePlaceholder": "Skill name",
       "skillCategoryPlaceholder": "Category (optional)",
+      "suggestSkillsWithAria": "Suggest skills with Aria",
+      "draftSummaryWithAria": "Draft with Aria",
+      "summaryPlaceholder": "A short professional summary — 2–4 sentences.",
+      "addCertification": "Add certification",
       "saveEdit": "Save",
       "currentRole": "Current role",
       "bulletsHint": "One achievement per line.",

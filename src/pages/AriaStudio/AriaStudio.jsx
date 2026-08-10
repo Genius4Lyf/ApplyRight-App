@@ -17,6 +17,9 @@ import ModelPicker from '../../components/ModelPicker';
 import SessionRail from '../../components/ariaStudio/SessionRail';
 import StudioOverlay from '../../components/ariaStudio/StudioOverlay';
 import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
+import StudioWelcomeGuide from '../../components/ariaStudio/StudioWelcomeGuide';
+
+const STUDIO_WELCOME_GUIDE_KEY = 'ariaStudio:welcome-guide-seen:v1';
 
 // The Studio desk. Three panes at full width — sessions · conversation · artifact —
 // collapsing to ONE pane on a phone, where the rail becomes a drawer and the artifact
@@ -48,6 +51,27 @@ const StudioDesk = () => {
   // The session awaiting a delete confirm, and which action is in flight.
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(null);
+  const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
+
+  // This is deliberately a one-time orientation. It explains the boundary between
+  // Studio (improve what's already there) and Builder (add structured CV entries)
+  // before someone starts looking for an "add role" control in the live preview.
+  useEffect(() => {
+    try {
+      setShowWelcomeGuide(!window.localStorage.getItem(STUDIO_WELCOME_GUIDE_KEY));
+    } catch {
+      setShowWelcomeGuide(true);
+    }
+  }, []);
+
+  const completeWelcomeGuide = useCallback(() => {
+    setShowWelcomeGuide(false);
+    try {
+      window.localStorage.setItem(STUDIO_WELCOME_GUIDE_KEY, '1');
+    } catch {
+      // A privacy-restricted browser can still dismiss the guide for this visit.
+    }
+  }, []);
 
   const scan = cvData?.studioScan;
   const score = scan?.fitScore;
@@ -178,6 +202,7 @@ const StudioDesk = () => {
     },
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
+    onOpenGuide: () => setShowWelcomeGuide(true),
   };
 
   // Select a right-panel view. On a sheet width both open as the bottom sheet; inline,
@@ -426,7 +451,10 @@ const StudioDesk = () => {
             </div>
           ) : (
             <div className="w-[320px] shrink-0 min-h-0">
-              <StudioArtifactPanel onClose={() => layout.setPanelView(null)} />
+              <StudioArtifactPanel
+                onClose={() => layout.setPanelView(null)}
+                onViewCv={() => selectView('preview')}
+              />
             </div>
           ))}
 
@@ -471,7 +499,11 @@ const StudioDesk = () => {
             isSheet={layout.panelUsesSheet}
           />
         ) : (
-          <StudioArtifactPanel bare onClose={() => layout.setPanelOverlay(false)} />
+          <StudioArtifactPanel
+            bare
+            onClose={() => layout.setPanelOverlay(false)}
+            onViewCv={() => selectView('preview')}
+          />
         )}
       </StudioOverlay>
 
@@ -482,6 +514,8 @@ const StudioDesk = () => {
         onRemove={removeFromStudio}
         onDelete={deleteSession}
       />
+
+      <StudioWelcomeGuide open={showWelcomeGuide} onComplete={completeWelcomeGuide} />
     </div>
   );
 };

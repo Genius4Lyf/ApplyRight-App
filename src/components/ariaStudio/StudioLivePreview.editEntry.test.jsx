@@ -47,7 +47,7 @@ afterEach(() => {
 
 const twoRoles = {
   _id: 'd1',
-  studioKind: 'build',
+  studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
   personalInfo: { fullName: 'Ada Lovelace' },
   experience: [
     {
@@ -209,10 +209,32 @@ describe('StudioLivePreview — saving an inline edit', () => {
     render(<StudioLivePreview />);
     openRow(0);
     fireEvent.change(bulletsInput(), { target: { value: '• one' } });
+    bulletsInput().setSelectionRange(5, 5);
     fireEvent.keyDown(bulletsInput(), { key: 'Enter' });
 
     expect(mockApplyEdit).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Achievements')).toBeTruthy(); // still open
+    expect(bulletsInput().value).toMatch(/\n• $/);
+  });
+
+  it('continues a project achievement with a bullet when Enter is pressed', async () => {
+    mockCvData = {
+      _id: 'd1',
+      studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
+      personalInfo: { fullName: 'Ada Lovelace' },
+      projects: [
+        { _sortId: 'p1', title: 'Portfolio', description: '• Built the first release' },
+        { _sortId: 'p2', title: 'Website', description: '• Published it' },
+      ],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+    openRow(0);
+
+    const projectBullets = screen.getByLabelText('What you did');
+    projectBullets.setSelectionRange(projectBullets.value.length, projectBullets.value.length);
+    fireEvent.keyDown(projectBullets, { key: 'Enter' });
+
+    await waitFor(() => expect(projectBullets.value).toMatch(/\n• $/));
   });
 });
 
@@ -305,7 +327,7 @@ describe('StudioLivePreview — the other two lists', () => {
     // key, so the edit would be reported as saved and land nowhere.
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
+      studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
       personalInfo: { fullName: 'Ada' },
       projects: [{ _sortId: 'p1', title: 'Notes engine', description: '• proj' }],
       studioScan: null,
@@ -325,7 +347,7 @@ describe('StudioLivePreview — the other two lists', () => {
   it('edits an education entry under its own token and fields', async () => {
     mockCvData = {
       _id: 'd1',
-      studioKind: 'build',
+      studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
       personalInfo: { fullName: 'Ada' },
       education: [{ _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG', graduationDate: '2019' }],
       studioScan: null,

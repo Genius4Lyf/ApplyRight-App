@@ -197,6 +197,25 @@ describe('StudioChat — focus in a BUILD interview', () => {
 
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
     await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'experience', sortId: 'a' }));
+    await waitFor(() => expect(countOf('focus')).toBe(1));
+    expect(screen.getByText(/Focus.*Engineer/)).toBeTruthy();
+  });
+
+  // A build interview pins the entry BEFORE its title is captured, so the crumb reads its
+  // fallback for most of its life. It must describe what's happening ("New experience"),
+  // not read as a defect ("Untitled role").
+  it('reads "New experience" — not "Untitled role" — for a titleless pinned entry', async () => {
+    const draft = buildDraft();
+    draft.experience = [{ _sortId: 'a', title: '', company: '', description: '' }];
+    await mountStudio(draft);
+
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'experience', 'a');
+    });
+
+    await waitFor(() => expect(countOf('focus')).toBe(1));
+    expect(screen.getByText(/Focus.*New experience/)).toBeTruthy();
+    expect(screen.queryByText(/Untitled role/)).toBeNull();
   });
 
   // The recurring 'project'-singular trap: the pinned section key is what rides along, so
@@ -228,6 +247,8 @@ describe('StudioChat — focus in a BUILD interview', () => {
 
     await waitFor(() => expect(countOf('unpinrole')).toBe(1));
     await waitFor(() => expect(ctx.activeEntry).toBeNull());
+    await waitFor(() => expect(countOf('unfocus')).toBe(1));
+    expect(screen.getByText('Focus mode exited')).toBeTruthy();
   });
 });
 

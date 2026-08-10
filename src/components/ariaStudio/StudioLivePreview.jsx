@@ -31,9 +31,14 @@ import AriaOrbit from '../cv/AriaOrbit';
 import CvLanguageToggle from '../cv/CvLanguageToggle';
 import PreviewEntryRow from './PreviewEntryRow';
 import PreviewEntryEditor from './PreviewEntryEditor';
+import PreviewCertsBlock from './PreviewCertsBlock';
+import PreviewContactBlock from './PreviewContactBlock';
+import PreviewSkillsBlock from './PreviewSkillsBlock';
+import PreviewSummaryBlock from './PreviewSummaryBlock';
 import StudioTemplatePreview from './StudioTemplatePreview';
 import { cvLabel } from '../../lib/cvLabels';
 import { withoutBlankEntries } from '../../lib/studioFlow';
+import { getCompletionStatus } from '../../lib/cvCompleteness';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
 // (NOT the template markdown), so it updates the instant an edit lands. Each section
@@ -114,6 +119,7 @@ const ReorderableList = ({
   onCloseEdit,
   onEditWithAria,
   canEditWithAria = false,
+  readOnly = false,
   children,
 }) => {
   const { reorderEntries, requestStudioCommand, activeEntry } = useAriaStudio();
@@ -149,45 +155,53 @@ const ReorderableList = ({
     commit(arrayMove(entries, index, target));
   };
 
+  // `readOnly` guards the editor branch as well as the row's controls: the lock can land
+  // WHILE an editor is open (an edit that empties a section un-completes the CV), and a
+  // live form inside a read-only document would be the one way back in.
+  const rows = entries.map((entry, index) =>
+    entry._sortId === editingSortId && !readOnly ? (
+      // In the entry's own slot, inside this same SectionBlock — the document keeps
+      // its shape while one entry becomes editable.
+      <PreviewEntryEditor
+        key={entry._sortId}
+        section={section}
+        entry={entry}
+        onClose={onCloseEdit}
+      />
+    ) : (
+      <PreviewEntryRow
+        key={entry._sortId}
+        id={entry._sortId}
+        index={index}
+        total={entries.length}
+        onMoveUp={() => move(index, -1)}
+        onMoveDown={() => move(index, 1)}
+        // The row only ASKS; the parent owns which entry is open, so one edit at a
+        // time and no editor inside the dnd wrapper.
+        onEdit={() => onEdit?.(entry._sortId)}
+        // Told, not derived: the row never decides which sections have an
+        // interview. Same `section` token again — 'project' singular.
+        canEditWithAria={canEditWithAria}
+        onEditWithAria={() => onEditWithAria?.(section, entry._sortId)}
+        // Same `section` token the reorder uses — 'project' singular for projects.
+        onRemove={() => requestStudioCommand?.('deleteEntry', section, entry._sortId)}
+        // Aria is on THIS row: the row marks itself and drops every control.
+        isActive={!!activeEntry && entry._sortId === activeEntry.sortId}
+        readOnly={readOnly}
+      >
+        {children(entry)}
+      </PreviewEntryRow>
+    )
+  );
+
+  // No DndContext at all when locked — not a disabled one. The rows carry no grip to start
+  // a drag from, so the wrapper would only be listening for gestures nothing can begin.
+  if (readOnly) return <div className={className}>{rows}</div>;
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={entries.map((e) => e._sortId)} strategy={verticalListSortingStrategy}>
-        <div className={className}>
-          {entries.map((entry, index) =>
-            entry._sortId === editingSortId ? (
-              // In the entry's own slot, inside this same SectionBlock — the document keeps
-              // its shape while one entry becomes editable.
-              <PreviewEntryEditor
-                key={entry._sortId}
-                section={section}
-                entry={entry}
-                onClose={onCloseEdit}
-              />
-            ) : (
-              <PreviewEntryRow
-                key={entry._sortId}
-                id={entry._sortId}
-                index={index}
-                total={entries.length}
-                onMoveUp={() => move(index, -1)}
-                onMoveDown={() => move(index, 1)}
-                // The row only ASKS; the parent owns which entry is open, so one edit at a
-                // time and no editor inside the dnd wrapper.
-                onEdit={() => onEdit?.(entry._sortId)}
-                // Told, not derived: the row never decides which sections have an
-                // interview. Same `section` token again — 'project' singular.
-                canEditWithAria={canEditWithAria}
-                onEditWithAria={() => onEditWithAria?.(section, entry._sortId)}
-                // Same `section` token the reorder uses — 'project' singular for projects.
-                onRemove={() => requestStudioCommand?.('deleteEntry', section, entry._sortId)}
-                // Aria is on THIS row: the row marks itself and drops every control.
-                isActive={!!activeEntry && entry._sortId === activeEntry.sortId}
-              >
-                {children(entry)}
-              </PreviewEntryRow>
-            )
-          )}
-        </div>
+        <div className={className}>{rows}</div>
       </SortableContext>
     </DndContext>
   );
@@ -227,6 +241,30 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // channel, same `section` vocabulary as deleteEntry — 'project' singular.
   const editWithAria = (section, sortId) => {
     requestStudioCommand?.('editWithAria', section, sortId);
+    if (isSheet) onClose?.();
+  };
+
+  // ── Hand the SKILLS section to Aria. ──
+  //
+  // Same command channel, same close-on-mobile rule, no sortId (a skill carries none):
+  // the payload's `null` sortId is what keeps it out of the editWithAria/deleteEntry
+  // branches, which are both guarded on their own `type`. Nothing is generated here —
+  // StudioChat routes the command to build:skills or the fix:skills flow and owns the
+  // consent, the charge and the phase.
+  const suggestSkills = () => {
+    requestStudioCommand?.('suggestSkills', 'skills', null);
+    if (isSheet) onClose?.();
+  };
+
+  // ── Hand the SUMMARY section to Aria. ──
+  //
+  // Same command channel, same close-on-mobile rule, no sortId (the summary is a single
+  // field, not an entry row): the payload's `null` sortId is what keeps it out of the
+  // editWithAria/deleteEntry branches, exactly as it does for suggestSkills. Nothing is
+  // generated here — StudioChat routes the command to build:summary or the fix:summary
+  // flow and owns the career stage, the consent, the charge and the phase.
+  const draftSummary = () => {
+    requestStudioCommand?.('draftSummary', 'summary', null);
     if (isSheet) onClose?.();
   };
 
@@ -270,6 +308,23 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
 
   const info = cvData?.personalInfo || {};
   const capturedCv = withoutBlankEntries(cvData);
+
+  // ── The completeness lock. ──
+  //
+  // A build session's document is READ-ONLY until the CV is actually complete. The sheet
+  // still renders — watching it fill in is the whole point of this panel — but nothing on
+  // it can be edited, reordered or deleted, and the view toggle goes with it.
+  //
+  // Gated on `capturedCv`, NOT on cvData, for the same reason buildProgress is: the
+  // Studio persists a blank row before /coach can write into it by _sortId, so the raw
+  // document reads as complete the instant a section is STARTED. Filtering the
+  // placeholders out first keeps one definition of "complete" and refuses to count an
+  // empty row as work.
+  //
+  // Tailor sessions arrive with a finished CV in hand, so they are never locked.
+  const isBuildSession = cvData?.studioKind === 'build';
+  const canEdit = !isBuildSession || getCompletionStatus(capturedCv).isComplete;
+
   const experience = capturedCv.experience || [];
   const projects = capturedCv.projects || [];
   const education = capturedCv.education || [];
@@ -277,10 +332,8 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   const skills = cvData?.skills || [];
   const summary = (cvData?.professionalSummary || '').trim();
   const skillNames = skills.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
-  const contactLine = [info.email, info.phone, info.address, info.linkedin, info.website]
-    .map((s) => (s || '').trim())
-    .filter(Boolean)
-    .join('  ·  ');
+  // NOTE: the joined contact line moved INTO PreviewContactBlock along with the header it
+  // labels. `info` stays because hasAnything still asks it whether the CV has a name yet.
 
   const bandOfKey = (key) => bandForKey(scan, key);
   // Render a body section only when it has content OR the scan has an opinion on it — an
@@ -301,7 +354,6 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   );
   // An empty BUILD session hasn't got a scan to run, so "Run a scan…" would be advice it
   // can't take — it's told its CV will appear here as it's built instead.
-  const isBuildSession = cvData?.studioKind === 'build';
   const emptyStateKey = isBuildSession
     ? 'ariaStudio.livePreview.emptyStateBuild'
     : 'ariaStudio.livePreview.emptyState';
@@ -312,6 +364,12 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // labels ("Summary"/"Experience"/"Contact") have their own entries in the table.
   const docLang = cvData?.outputLang || 'en';
   const label = (name) => cvLabel(name, docLang);
+
+  // The lock outranks whatever the toggle was last left on. A session can go BACK to
+  // incomplete — an edit that empties a section does it — and a user sitting in 'preview'
+  // when that happens would be stranded there, the toggle that got them in having just
+  // been removed.
+  const effectiveView = canEdit ? viewMode : 'edit';
 
   return (
     <aside className="h-full min-h-0 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 overflow-hidden">
@@ -324,38 +382,42 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
             {cvData?.title || t('ariaStudio.livePreview.yourCv')}
           </p>
         </div>
-        <div
-          className="shrink-0 inline-flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
-          aria-label={t('ariaStudio.livePreview.viewMode')}
-        >
-          <button
-            type="button"
-            onClick={() => setViewMode('edit')}
-            aria-pressed={viewMode === 'edit'}
-            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] ${
-              viewMode === 'edit'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
-                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
-            }`}
+        {/* No toggle at all while locked: 'preview' renders the FINISHED document, and a
+            build session that hasn't got one yet has nothing to show there. */}
+        {canEdit && (
+          <div
+            className="shrink-0 inline-flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800"
+            aria-label={t('ariaStudio.livePreview.viewMode')}
           >
-            <PencilLine className="h-3 w-3" aria-hidden="true" />
-            {t('ariaStudio.livePreview.editMode')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('preview')}
-            disabled={!hasAnything || !!editingSortId}
-            aria-pressed={viewMode === 'preview'}
-            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] disabled:cursor-not-allowed disabled:opacity-40 ${
-              viewMode === 'preview'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
-                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
-            }`}
-          >
-            <Eye className="h-3 w-3" aria-hidden="true" />
-            {t('ariaStudio.livePreview.previewMode')}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setViewMode('edit')}
+              aria-pressed={viewMode === 'edit'}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] ${
+                viewMode === 'edit'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+              }`}
+            >
+              <PencilLine className="h-3 w-3" aria-hidden="true" />
+              {t('ariaStudio.livePreview.editMode')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('preview')}
+              disabled={!hasAnything || !!editingSortId}
+              aria-pressed={viewMode === 'preview'}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] disabled:cursor-not-allowed disabled:opacity-40 ${
+                viewMode === 'preview'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+              }`}
+            >
+              <Eye className="h-3 w-3" aria-hidden="true" />
+              {t('ariaStudio.livePreview.previewMode')}
+            </button>
+          </div>
+        )}
         {/* The language this CV is WRITTEN in — drives Aria's writing and the
             section labels on the downloaded document. */}
         {cvData?._id && (
@@ -394,35 +456,33 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
         </div>
       ) : (
         <div className="h-0 flex-1 min-h-0">
-          {viewMode === 'edit' ? (
+          {effectiveView === 'edit' ? (
             <div className="h-full overflow-y-auto overscroll-contain scrollbar-none p-4 sm:p-6">
               {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
               <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
+                {/* Says WHY there is nothing to touch. One muted line at the top of the
+                    sheet, in the same helper voice as the rest of the panel — an
+                    explanation, not a warning. */}
+                {!canEdit && (
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    {t('ariaStudio.livePreview.lockedHint')}
+                  </p>
+                )}
                 {/* Contact header */}
                 <SectionBlock
                   label={label('Contact')}
                   band={bandOfKey('contact')}
                   pulsing={pulsing.contact}
                 >
-                  <div className="flex items-center gap-3">
-                    {info.photoUrl && (
-                      <img
-                        src={info.photoUrl}
-                        alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
-                        className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover dark:border-slate-700"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
-                        {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
-                      </p>
-                      {contactLine && (
-                        <p className="mt-1 break-words text-[12px] text-slate-500 dark:text-slate-400">
-                          {contactLine}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  {/* EDIT-MODE ONLY, like the summary and skills blocks below it: this
+                      whole branch is the 'edit' one, and 'preview' renders the read-only
+                      template instead. The header owns its own block rather than going
+                      through ReorderableList for the same reason the summary does — it
+                      is a single SUBDOC, so there is no list to order, no _sortId to
+                      address and nothing focus mode can lock. It reads its own values
+                      and its own writer from the context, so nothing has to be threaded
+                      through here. */}
+                  <PreviewContactBlock readOnly={!canEdit} />
                 </SectionBlock>
 
                 {/* Body sections, in the CV's real order. */}
@@ -436,15 +496,18 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         band={bandOfKey('summary')}
                         pulsing={pulsing.summary}
                       >
-                        {summary ? (
-                          <p className="text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
-                            {summary}
-                          </p>
-                        ) : (
-                          <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                            {t('ariaStudio.livePreview.noSummaryYet')}
-                          </p>
-                        )}
+                        {/* EDIT-MODE ONLY, like the skills block beside it: this whole
+                        branch is the 'edit' one, and 'preview' renders the read-only
+                        template instead. The summary owns its own block rather than
+                        going through ReorderableList — it is a single FIELD, so there is
+                        no list to order, no _sortId to address and nothing focus mode can
+                        lock. The placeholder moves inside it, next to the text it stands
+                        in for.
+
+                        "Draft with Aria" is wired from HERE, not from inside the block:
+                        the command channel and the sheet-close are the parent's job,
+                        exactly as onSuggestWithAria and onEditWithAria are. */}
+                        <PreviewSummaryBlock onDraftWithAria={draftSummary} readOnly={!canEdit} />
                       </SectionBlock>
                     );
                   }
@@ -466,6 +529,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           onCloseEdit={closeEdit}
                           canEditWithAria
                           onEditWithAria={editWithAria}
+                          readOnly={!canEdit}
                         >
                           {(r) => (
                             <>
@@ -516,6 +580,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           onCloseEdit={closeEdit}
                           canEditWithAria
                           onEditWithAria={editWithAria}
+                          readOnly={!canEdit}
                         >
                           {(p) => (
                             <>
@@ -538,22 +603,18 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         band={bandOfKey('skills')}
                         pulsing={pulsing.skills}
                       >
-                        {skillNames.length ? (
-                          <div className="flex flex-wrap gap-1.5">
-                            {skillNames.map((s, i) => (
-                              <span
-                                key={`${s}-${i}`}
-                                className="text-[11.5px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                              >
-                                {s}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-[12px] italic text-slate-400 dark:text-slate-500">
-                            {t('ariaStudio.livePreview.noSkillsYet')}
-                          </p>
-                        )}
+                        {/* EDIT-MODE ONLY, like everything else on this sheet: the whole
+                        branch this lives in is the 'edit' one, and the 'preview' branch
+                        renders the read-only template instead. Skills own their own block
+                        rather than going through ReorderableList — they carry no _sortId,
+                        so there is nothing to reorder by and nothing focus mode can lock.
+                        The empty state moves inside it, next to the groups it replaces.
+
+                        The suggest affordance is wired from HERE, not from inside the
+                        block: the command channel and the sheet-close are the parent's
+                        job, exactly as onEditWithAria is passed down to the rows rather
+                        than requested by them. */}
+                        <PreviewSkillsBlock onSuggestWithAria={suggestSkills} readOnly={!canEdit} />
                       </SectionBlock>
                     );
                   }
@@ -579,6 +640,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                             // interview to hand a degree to (ENTRY_SOURCE covers experience
                             // and projects only), so its ✎ is the manual editor, full stop.
                             canEditWithAria={false}
+                            readOnly={!canEdit}
                           >
                             {(e) => (
                               <>
@@ -600,27 +662,19 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                               </>
                             )}
                           </ReorderableList>
-                          {/* Certifications are NOT reorderable this slice — they carry no
-                          _sortId, so there's nothing to address one by. */}
-                          {certifications.length > 0 && (
-                            <div className="pt-1">
-                              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-                                {t('ariaStudio.livePreview.certifications')}
-                              </p>
-                              <div className="mt-1 space-y-1">
-                                {certifications.map((certificate, index) => (
-                                  <p
-                                    key={`${certificate.name}-${index}`}
-                                    className="text-[12px] text-slate-600 dark:text-slate-300"
-                                  >
-                                    {certificate.name}
-                                    {certificate.issuer ? ` · ${certificate.issuer}` : ''}
-                                    {certificate.date ? ` · ${certificate.date}` : ''}
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                          {/* Certifications are NOT reorderable — they carry no _sortId,
+                          so there's nothing to address one by and index is identity.
+                          They stay UNDER Education, where the builder stores them and
+                          the template renders them; the block only makes them editable.
+
+                          UNCONDITIONAL, unlike the read-only list it replaces: this whole
+                          branch is the 'edit' one, and a "no certifications yet" document
+                          is exactly the one that needs the "Add certification" affordance.
+                          Gating it on `certifications.length` would leave a user with no
+                          way to add their first. The 'preview' branch renders the
+                          read-only template instead, where an empty section simply
+                          doesn't appear. */}
+                          <PreviewCertsBlock readOnly={!canEdit} />
                         </div>
                       </SectionBlock>
                     );

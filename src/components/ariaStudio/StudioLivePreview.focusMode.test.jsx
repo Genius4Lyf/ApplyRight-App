@@ -54,7 +54,7 @@ afterEach(() => {
 // the same list. A project as well, to prove the match is by _sortId across every list.
 const draft = {
   _id: 'd1',
-  studioKind: 'build',
+  studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
   personalInfo: { fullName: 'Ada Lovelace' },
   experience: [
     {

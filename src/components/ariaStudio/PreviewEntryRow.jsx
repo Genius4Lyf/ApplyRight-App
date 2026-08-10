@@ -19,12 +19,13 @@ const PreviewEntryRow = ({
   canEditWithAria = false,
   onRemove,
   isActive = false,
+  readOnly = false,
   children,
 }) => {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: isActive,
+    disabled: isActive || readOnly,
   });
   const [confirming, setConfirming] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,7 +51,10 @@ const PreviewEntryRow = ({
   }, [menuOpen]);
 
   const showReorder = total > 1;
-  const showControls = !isActive && (showReorder || !!onEdit || !!onRemove);
+  // `readOnly` is the whole-document lock (an incomplete build session), where `isActive`
+  // is the one row Aria is interviewing. Different scopes, same consequence for this row:
+  // it renders its content and nothing else.
+  const showControls = !isActive && !readOnly && (showReorder || !!onEdit || !!onRemove);
   const offersAriaEdit = !!(canEditWithAria && onEditWithAria);
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -59,7 +63,7 @@ const PreviewEntryRow = ({
     zIndex: isDragging ? 10 : 'auto',
   };
   const control =
-    'inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200';
+    'inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100';
   const menuItem =
     'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-300 dark:hover:bg-slate-800';
   const visibility =
@@ -74,7 +78,9 @@ const PreviewEntryRow = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative -mx-1 rounded-md px-1 py-0.5 transition-colors hover:bg-slate-50/90 focus-within:bg-slate-50/90 dark:hover:bg-slate-800/45 dark:focus-within:bg-slate-800/45 ${
+      className={`group relative -mx-1 rounded-md pl-1 py-0.5 transition-colors hover:bg-slate-50/90 focus-within:bg-slate-50/90 dark:hover:bg-slate-800/45 dark:focus-within:bg-slate-800/45 ${
+        showControls ? 'pr-[4.25rem]' : 'pr-1'
+      } ${
         isActive
           ? 'bg-slate-50/90 ring-1 ring-slate-200 dark:bg-slate-800/45 dark:ring-slate-700'
           : ''
@@ -82,7 +88,7 @@ const PreviewEntryRow = ({
     >
       {showControls && !confirming && (
         <div
-          className={`absolute -right-7 top-0 z-20 flex flex-col items-center gap-0.5 transition-opacity ${
+          className={`absolute right-0 top-0 z-20 flex items-center gap-1 transition-opacity ${
             menuOpen ? 'opacity-100' : visibility
           }`}
         >
@@ -93,7 +99,7 @@ const PreviewEntryRow = ({
               {...listeners}
               aria-label={t('common.sortable.dragToReorder')}
               title={t('common.sortable.dragToReorder')}
-              className={`${control} hidden cursor-grab touch-none active:cursor-grabbing [@media(min-width:1100px)]:inline-flex`}
+              className={`${control} cursor-grab touch-none active:cursor-grabbing`}
             >
               <GripVertical className="h-3.5 w-3.5" />
             </button>
