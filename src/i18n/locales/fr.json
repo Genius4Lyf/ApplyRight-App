@@ -4487,6 +4487,8 @@
       "confirmBriefWithSource": "Parfait. Je vais adapter une copie de {{title}} — un instant.",
       "confirmBriefNoSource": "Parfait. À partir de quel CV dois-je travailler ?",
       "scanDone": "Voici où vous en êtes. Les sections rouges et orange sont là où il y a du travail.",
+      "buildScanGapNudge": "Vous êtes à {{fit}} % d'adéquation avec ce poste. Les principales lacunes se trouvent dans {{sections}} — ce poste demande {{keywords}}, que je ne vois pas encore sur votre CV. Touchez Corriger sur ces sections et je vous aiderai à les ajouter, à condition qu'elles soient réellement les vôtres.",
+      "buildScanStrong": "Bien — vous êtes déjà à {{fit}} % d'adéquation avec ce poste. Jetez un œil aux sections orange si vous voulez aller plus loin, ou vous pouvez terminer.",
       "scanInsufficientCredits": "Une analyse complète nécessite {{required}} crédits et vous en avez {{current}}. Rechargez et je la lancerai.",
       "scanFailed": "Je n'ai pas pu terminer l'analyse pour l'instant — réessayez dans un instant.",
       "fixPickWithKeywords": "{{section}} : ce poste s'appuie sur {{keywords}} — lequel devrions-nous affiner ?",
@@ -4657,6 +4659,8 @@
         "cta": "Analyser mon CV"
       },
       "achievementsLanded": "C'est ajouté sur le poste ci-dessus. Ajoutez un autre poste, ou déclarez l'expérience professionnelle terminée.",
+      "appliedContinueRole": "Parfait — c'est maintenant sur votre CV. Qu'avez-vous fait d'autre dans ce poste ? Dites-le-moi et j'en ferai d'autres puces — ou utilisez la carte ci-dessus pour passer à la suite quand vous avez terminé.",
+      "appliedContinueProject": "Parfait — c'est maintenant sur votre CV. Qu'impliquait ce projet d'autre ? Dites-le-moi et j'en ferai d'autres puces — ou utilisez la carte ci-dessus pour passer à la suite quand vous avez terminé.",
       "nBullets_one": "{{count}} puce",
       "nBullets_other": "{{count}} puces",
       "useCardAbove": "Utilisez la carte ci-dessus ↑",

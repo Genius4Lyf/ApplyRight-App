@@ -25,6 +25,7 @@ const COLUMNS = [
     links: [
       { key: 'footer.atsGuide', to: '/ats-guide' },
       { key: 'footer.cvBuilderGuide', to: '/cv-builder-guide' },
+      { key: 'footer.ariaStudioGuide', to: '/aria-studio-guide' },
       { key: 'footer.cvHealth', to: '/cv-health' },
       { key: 'footer.cvTips', to: '/cv-tips' },
       { key: 'footer.howAtsWorks', to: '/how-ats-recruiters-work' },

@@ -59,6 +59,7 @@ import ATSGuide from './pages/ATSGuide';
 import Pricing from './pages/Pricing';
 import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
 import CVBuilderGuide from './pages/CVBuilderGuide';
+import AriaStudioGuide from './pages/AriaStudioGuide';
 import CVHealth from './pages/CVHealth';
 import CVTips from './pages/CVTips';
 import HowToAceYourInterview from './pages/HowToAceYourInterview';
@@ -313,6 +314,10 @@ const router = createBrowserRouter([
       {
         path: '/cv-builder-guide',
         element: <CVBuilderGuide />,
+      },
+      {
+        path: '/aria-studio-guide',
+        element: <AriaStudioGuide />,
       },
       {
         path: '/cv-health',

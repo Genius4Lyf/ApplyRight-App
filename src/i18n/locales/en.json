@@ -4491,6 +4491,8 @@
       "confirmBriefWithSource": "Good. I'll tailor a copy of {{title}} — one moment.",
       "confirmBriefNoSource": "Good. Which CV should I work from?",
       "scanDone": "Here's where you stand. The red and amber sections are where the work is.",
+      "buildScanGapNudge": "You're at {{fit}}% fit for this job. The biggest gaps are in {{sections}} — this role wants {{keywords}}, which I don't see on your CV yet. Tap Fix on those sections and I'll help you add them, as long as they're truthfully yours.",
+      "buildScanStrong": "Nice — you're already a {{fit}}% fit for this job. Have a look at any amber sections if you want to push it higher, or you're good to finish.",
       "scanInsufficientCredits": "You need {{required}} credits for a full scan and you have {{current}}. Top up and I'll run it.",
       "scanFailed": "I couldn't finish the scan just now — try again in a moment.",
       "fixPickWithKeywords": "{{section}}: this job leans on {{keywords}} — which one should we sharpen?",
@@ -4661,6 +4663,8 @@
         "cta": "Scan my CV"
       },
       "achievementsLanded": "That's landed on the role above. Add another job, or call work history done.",
+      "appliedContinueRole": "Nice — those are on your CV now. What else did you do in this role? Tell me and I'll turn it into more bullet points — or use the card above to move on when you're done.",
+      "appliedContinueProject": "Nice — those are on your CV now. What else did this project involve? Tell me and I'll turn it into more bullet points — or use the card above to move on when you're done.",
       "nBullets_one": "{{count}} bullet",
       "nBullets_other": "{{count}} bullets",
       "useCardAbove": "Use the card above ↑",

@@ -242,6 +242,7 @@ const StudioChat = ({ onPaywall }) => {
   const [roleBusy, setRoleBusy] = useState(null);
   const [pinMessage, setPinMessage] = useState({ sortId: null, nonce: 0 });
   const [appliedReceipt, setAppliedReceipt] = useState(null);
+  const [buildRoundNonce, setBuildRoundNonce] = useState(0);
   const [reviewHint, setReviewHint] = useState(null);
   // Generated skill suggestions awaiting a pick, or null. Transient: the ANSWER (what
   // was added) lives on the CV, so a refresh returns to the consent card rather than
@@ -2413,19 +2414,21 @@ const StudioChat = ({ onPaywall }) => {
   // entirely rather than sitting there disabled and competing for attention.
   // SectionCoach brings its own input whenever it's driving — the fix loop, or the
   // achievements stage of a pinned role.
-  // A charged bullet generation still waiting on the PINNED entry.
+  // The coach drives a pinned EXPERIENCE or PROJECT entry through its bullet interview.
+  // It must stay mounted once the entry already HAS bullets (stage 'complete'), not only
+  // while it has none ('achievements'): otherwise applying the first bullet flips the
+  // stage to 'complete', tears the coach down, and ends the interview after one apply —
+  // the user can never add a second thing to the same role. Education is excluded: it has
+  // no achievements interview, so it must not mount the coach at 'complete'.
   //
-  // `roleStage` reports 'complete' the moment an entry holds any bullet line, so a
-  // pending card belonging to an entry that already has bullets (a second pass, or one
-  // partly applied elsewhere) would otherwise never mount — leaving output the user has
-  // already PAID FOR unreachable. Restoring it outranks the stage being nominally done.
-  const pendingBulletsForPin =
-    !!pinnedEntry &&
-    cvData?.studioPending?.kind === 'bullets' &&
-    cvData.studioPending.sortId === pinnedEntry._sortId;
+  // This also subsumes the old pendingBulletsForPin case: a paid-but-unapplied generation
+  // on an entry that already has bullets is 'complete' + coachable, so the coach mounts
+  // and SectionCoach's own re-sync effect restores the pending results.
+  const isCoachableSection = pinnedSectionKey === 'experience' || pinnedSectionKey === 'project';
   const coachDrivesPin =
     !!pinnedEntry &&
-    (pinnedStage === 'achievements' || (pendingBulletsForPin && pinnedStage === 'complete'));
+    isCoachableSection &&
+    (pinnedStage === 'achievements' || pinnedStage === 'complete');
   const coachOwnsInput = phase === 'fix:coach' || coachDrivesPin;
   // Free chat is live throughout a build (asking a question must never be blocked by a
   // card), and after a scan. The tailor intake stays card-driven.
@@ -3477,7 +3480,7 @@ const StudioChat = ({ onPaywall }) => {
               all behave identically here. */}
           {coachDrivesPin && !studioTransition && !thinking && !roleBusy && !transitionLabel && (
             <SectionCoach
-              key={`rolecoach-${pinnedEntry._sortId}`}
+              key={`rolecoach-${pinnedEntry._sortId}-${buildRoundNonce}`}
               draftId={draftId}
               dockNode={coachDock}
               entry={{
@@ -3530,6 +3533,25 @@ const StudioChat = ({ onPaywall }) => {
                       n: result.applied.length,
                       nonce: Date.now(),
                     });
+                    // Keep the interview going on the SAME role. Re-pin it so the coach's
+                    // turn window (and prior-answer context, which primes the next paid
+                    // generation) resets to a clean round — a transcript marker, so it
+                    // survives refresh. Bump the round nonce to remount the coach back into
+                    // its interview (its internal phase was left on 'results'). Aria invites
+                    // more; the pinned card's "next role / done" is how the user moves on.
+                    push({
+                      who: 'pinrole',
+                      sortId: pinnedEntry._sortId,
+                      section: pinnedSectionKey,
+                    });
+                    setBuildRoundNonce((n) => n + 1);
+                    ariaSays(
+                      t(
+                        pinnedSectionKey === 'project'
+                          ? 'ariaStudio.chat.appliedContinueProject'
+                          : 'ariaStudio.chat.appliedContinueRole'
+                      )
+                    );
                   }
                 }, 500);
               }}
