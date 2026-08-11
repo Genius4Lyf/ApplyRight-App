@@ -4,6 +4,7 @@ import { Plus, FilePlus2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
+import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import AriaOrbit from '../cv/AriaOrbit';
 import StudioSidebarNav from './StudioSidebarNav';
 import StudioSidebarProfile from './StudioSidebarProfile';
@@ -36,17 +37,21 @@ const SessionRail = ({
         {/* The system's primary and secondary. Sizing is COMPOSED on top (w-full, compact
           padding, rail-scale text) rather than re-implementing the colours, so these
           stay in step with every other button in the app. */}
-        <button
-          type="button"
-          onClick={onNewTailoring}
-          className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
-        >
-          <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
-        </button>
+        {STUDIO_TAILORING_ENABLED && (
+          <button
+            type="button"
+            onClick={onNewTailoring}
+            className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+          >
+            <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
+          </button>
+        )}
+        {/* With tailoring hidden, this is the rail's only new-session action — so it
+          takes the primary weight, rather than leaving the region with no primary. */}
         <button
           type="button"
           onClick={onNewCv}
-          className="btn-secondary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
         >
           <FilePlus2 className="w-4 h-4" /> {t('ariaStudio.sessionRail.newCv')}
         </button>

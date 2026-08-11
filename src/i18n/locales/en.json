@@ -4044,7 +4044,9 @@
       "savedBullets": "{{n}} bullet points saved",
       "bulletReceipt": "{{n}} bullet points added to {{title}}",
       "openRoleToReview": "Open this role to review it",
-      "openProjectToReview": "Open this project to review it"
+      "openProjectToReview": "Open this project to review it",
+      "editField": "Edit {{field}}",
+      "saveField": "Save"
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Tailored copy",
@@ -4352,7 +4354,7 @@
     "sectionBreakdown": {
       "heading": "Section by section",
       "allClear": "all clear",
-      "toFix": "{{n}} to fix",
+      "toFix": "{{n}} need work",
       "fix": "Fix",
       "rescoring": "Re-scoring…",
       "rescoreFree": "Re-score · free",
@@ -4491,7 +4493,7 @@
       "confirmBriefWithSource": "Good. I'll tailor a copy of {{title}} — one moment.",
       "confirmBriefNoSource": "Good. Which CV should I work from?",
       "scanDone": "Here's where you stand. The red and amber sections are where the work is.",
-      "buildScanGapNudge": "You're at {{fit}}% fit for this job. The biggest gaps are in {{sections}} — this role wants {{keywords}}, which I don't see on your CV yet. Tap Fix on those sections and I'll help you add them, as long as they're truthfully yours.",
+      "buildScanGapNudge": "You're at {{fit}}% fit for this job. The biggest gaps are in {{sections}} — this role wants {{keywords}}, which I don't see on your CV yet. If any of that is truthfully yours, open the Live preview and add it to those sections.",
       "buildScanStrong": "Nice — you're already a {{fit}}% fit for this job. Have a look at any amber sections if you want to push it higher, or you're good to finish.",
       "scanInsufficientCredits": "You need {{required}} credits for a full scan and you have {{current}}. Top up and I'll run it.",
       "scanFailed": "I couldn't finish the scan just now — try again in a moment.",

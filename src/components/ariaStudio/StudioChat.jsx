@@ -30,6 +30,7 @@ import {
   scoreSignature,
   isDismissable,
 } from '../../lib/studioFlow';
+import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useChatTheme } from '../../hooks/useChatTheme';
@@ -873,7 +874,37 @@ const StudioChat = ({ onPaywall }) => {
       }
       push({ who: 'scan', at: res.studioScan?.scannedAt });
       setPhase('results');
-      ariaSays(t('ariaStudio.chat.scanDone'));
+
+      // Name the gap instead of just announcing the score. The scan result is already in
+      // hand, so the nudge points at the weakest sections and the exact keywords they're
+      // missing — the difference between "you scored 61" and knowing what to fix next.
+      const fit = Math.round(res.studioScan?.fitScore ?? 0);
+      const allSections = Array.isArray(res.studioScan?.sections) ? res.studioScan.sections : [];
+      const bad = allSections.filter((s) => s?.band === 'bad');
+      const weak = (bad.length ? bad : allSections.filter((s) => s?.band === 'warn'))
+        .slice()
+        .sort((a, b) => (a?.score ?? 0) - (b?.score ?? 0))
+        .slice(0, 2);
+      const sections = weak.map((s) => sectionLabel(t, { key: s.key, label: s.label })).join(', ');
+      const keywords = [
+        ...new Set(
+          weak.flatMap((s) =>
+            (Array.isArray(s?.missingKeywords) ? s.missingKeywords : [])
+              .map((k) => String(k || '').trim())
+              .filter(Boolean)
+          )
+        ),
+      ]
+        .slice(0, 3)
+        .join(', ');
+
+      if (weak.length && keywords) {
+        ariaSays(t('ariaStudio.chat.buildScanGapNudge', { fit, sections, keywords }));
+      } else if (!bad.length) {
+        ariaSays(t('ariaStudio.chat.buildScanStrong', { fit }));
+      } else {
+        ariaSays(t('ariaStudio.chat.scanDone'));
+      }
     } catch (err) {
       const code = err?.response?.data?.code;
       if (code === 'INSUFFICIENT_CREDITS') {
@@ -2086,6 +2117,12 @@ const StudioChat = ({ onPaywall }) => {
   // what lets this ship without touching the section it fronts.
   const offerProjectIdeas = async () => {
     if (roleBusy || ideasBusy) return;
+    // Feature OFF → the same fallthrough the empty-ideas case already uses: the normal
+    // blank-project flow (type chip → interview), with nothing generated and nothing charged.
+    if (!STUDIO_PROJECT_IDEAS_ENABLED) {
+      enterSection('project');
+      return;
+    }
     if (!draftId || !cvGroundedForIdeas()) {
       enterSection('project');
       return;
@@ -2295,6 +2332,9 @@ const StudioChat = ({ onPaywall }) => {
   // Mounting IS the ask on this path — there's no row to tap. `ideasAskedRef` is what
   // keeps a PAID endpoint out of the render loop when it comes back empty (or 403).
   useEffect(() => {
+    // Feature OFF → never fetch. The picker's own empty state shows instead, exactly as
+    // it does today when the fetch comes back with no ideas.
+    if (!STUDIO_PROJECT_IDEAS_ENABLED) return;
     if (phase !== 'fix:pick' || !fixWantsIdeas) return;
     if (ideasAskedRef.current || ideasBusy || projectIdeas) return;
     fetchProjectIdeas('fix');
@@ -2604,6 +2644,17 @@ const StudioChat = ({ onPaywall }) => {
                 defaultExpanded={false}
                 onNextRole={nextEntry}
                 onDone={finishSection}
+                // CORRECT one captured field, in place on the card. Straight through to
+                // the same narrow field-overwrite the interview's own capture uses —
+                // optimistic apply, {_id, <list>} save, rollback + toast on failure —
+                // so a typo fix is the SAME write as the answer that made it, minus the
+                // conversation. Deliberately NOT the capture path in `answer`: that one
+                // also advances the stage and asks the next question, and re-asking
+                // "what company?" because the user fixed the role title would restart an
+                // interview they already finished.
+                onFieldSave={(patch) =>
+                  applyEntryEdit(pinnedSectionKey, pinnedEntry._sortId, patch)
+                }
               />
             </div>
           )}

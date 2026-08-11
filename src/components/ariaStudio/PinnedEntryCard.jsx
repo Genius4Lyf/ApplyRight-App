@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
 import { ChevronDown, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { entryProgress, bulletCount } from '../../lib/studioFlow';
@@ -38,6 +39,23 @@ const COPY = {
   },
 };
 
+// ─── Which captured fields can be corrected in place ───
+//
+// A WHITELIST, not "everything the row can render". The interview asks one question at a
+// time and mishearing one of them is ordinary — the company typed into the role title —
+// but until now the only way back was to finish the CV and unlock the Live Preview.
+//
+// Only the SCALAR capture fields are here. The three deliberate omissions:
+//   entryType / type — chip-picked, and the pick also drives what Aria asks next; a free
+//     text box would let a value in that no prompt knows how to interpret.
+//   achievements     — a bullet LIST, generated and applied through applyRoleBulletDiff.
+//     A single-line input is the wrong instrument, and the coach already owns them.
+const EDITABLE_TEXT_FIELDS = ['title', 'company', 'degree', 'school', 'graduationDate', 'link'];
+// Everything except the link identifies the entry, so clearing one would leave the CV
+// holding a nameless row. A link is genuinely optional and may be emptied.
+const REQUIRED_TEXT_FIELDS = ['title', 'company', 'degree', 'school', 'graduationDate'];
+const isEditableField = (key) => key === 'dates' || EDITABLE_TEXT_FIELDS.includes(key);
+
 const PinnedEntryCard = ({
   entry,
   section = 'experience',
@@ -56,6 +74,12 @@ const PinnedEntryCard = ({
   // already writing into the same entry. That belongs with the manual-vs-Aria choice in
   // 3c-ii, which has to answer the pinned-entry question anyway.
   onEdit,
+  // CORRECT one captured field in place. Takes the SAME narrow patch the interview's own
+  // capture sends — { title } or { startDate, endDate, isCurrent } — and returns { ok }.
+  // The caller (StudioChat → applyEntryEdit) owns the optimistic write, the narrow
+  // { _id, <list> } save, and the rollback + toast if it fails; this card only decides
+  // WHICH key changed and what it becomes. Absent → no ✎ renders, as before.
+  onFieldSave,
   busy,
   messagePulse = 0,
   reviewHint = '',
@@ -66,7 +90,19 @@ const PinnedEntryCard = ({
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultExpanded);
   const [interacting, setInteracting] = useState(false);
+  // WHICH field is being corrected, or null. One at a time — an inline editor is a
+  // correction, not a form, and two open at once invites a half-typed second edit being
+  // abandoned by saving the first.
+  const [editingKey, setEditingKey] = useState(null);
+  // The open editor's working copy. Seeded from the entry when the ✎ is tapped and thrown
+  // away on cancel, so nothing here can drift from the draft while it's closed.
+  const [draft, setDraft] = useState({ text: '', start: '', end: '', isCurrent: false });
+  const [saving, setSaving] = useState(false);
+  // The opened editor's first input, so the caret lands where the correction is typed
+  // instead of leaving the user to hunt for a box that appeared mid-card.
+  const editorInputRef = useRef(null);
   const bulletTotal = bulletCount(entry);
+
   const toggleOpen = () => {
     setOpen((wasOpen) => {
       const next = !wasOpen;
@@ -107,6 +143,108 @@ const PinnedEntryCard = ({
         ? t('ariaStudio.pinnedEntry.addedCount', { n: bulletCount(entry) })
         : '';
     return entry[key] || '';
+  };
+
+  // A field is correctable only when it is a whitelisted scalar, it has ALREADY been
+  // captured (f.done), and the parent gave us somewhere to write. Offering ✎ on a field
+  // the interview hasn't reached yet would put two ways to answer the same question on
+  // screen at once — the capture card is already asking it.
+  const canEdit = (f) => !!onFieldSave && !!f.done && isEditableField(f.key);
+
+  const startEditing = (f) => {
+    setEditingKey(f.key);
+    // Seed from the ENTRY, not from whatever the last editor held: the point of the ✎ is
+    // to correct what is actually saved, so the input has to open on that.
+    setDraft({
+      text: f.key === 'dates' ? '' : entry[f.key] || '',
+      start: entry.startDate || '',
+      end: entry.endDate || '',
+      isCurrent: !!entry.isCurrent,
+    });
+    // requestAnimationFrame: the input doesn't exist yet this tick. Optional-called so
+    // jsdom without rAF still opens the editor, it just doesn't move focus.
+    window.requestAnimationFrame?.(() => editorInputRef.current?.focus());
+  };
+
+  // Escape and Cancel are the same act — close and write NOTHING. No patch, no save, no
+  // rollback to reason about.
+  const cancelEditing = () => setEditingKey(null);
+
+  const textEditValid = (key) =>
+    !REQUIRED_TEXT_FIELDS.includes(key) || !!draft.text.trim() || key === 'link';
+  const datesEditValid = !!draft.start.trim();
+
+  // ONE narrow patch per save — exactly the shape applyEntryEdit expects, and never more
+  // keys than the field the user opened. `dates` is the one field that is three keys on
+  // the entry, so it sends all three together: an end date left behind by a role that is
+  // now current would render as "2021 – Present" on a document that also stores 2024.
+  const submitEdit = async (f) => {
+    if (saving) return;
+    const patch =
+      f.key === 'dates'
+        ? {
+            startDate: draft.start.trim(),
+            endDate: draft.isCurrent ? '' : draft.end.trim(),
+            isCurrent: draft.isCurrent,
+          }
+        : { [f.key]: draft.text.trim() };
+    setSaving(true);
+    try {
+      const res = await onFieldSave?.(patch);
+      // A failed save has ALREADY been rolled back and toasted by the writer, so the
+      // editor deliberately stays open — closing it would throw away what the user typed
+      // and leave them re-typing a correction that never landed. `undefined` counts as
+      // success for a caller that doesn't report one.
+      if (res === undefined || res === true || res?.ok) setEditingKey(null);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // The quiet control shared by every editable row. Small and grey until hovered — a
+  // correction affordance, not a call to action competing with Aria's question.
+  const editButton = (f) => (
+    <button
+      type="button"
+      onClick={() => startEditing(f)}
+      aria-label={t('ariaStudio.pinnedEntry.editField', { field: t(f.labelKey) })}
+      className="shrink-0 text-[11px] leading-none px-1 py-0.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+    >
+      ✎
+    </button>
+  );
+
+  const editorActions = (f, valid) => (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => submitEdit(f)}
+        disabled={saving || !valid}
+        className="btn-primary px-2.5 py-1 text-[11px] disabled:opacity-40"
+      >
+        {saving ? t('ariaStudio.pinnedEntry.saving') : t('ariaStudio.pinnedEntry.saveField')}
+      </button>
+      <button
+        type="button"
+        onClick={cancelEditing}
+        disabled={saving}
+        className="text-[11px] font-semibold px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50"
+      >
+        {t('common.cancel')}
+      </button>
+    </div>
+  );
+
+  // Enter saves, Escape abandons — the same two keys the capture card the value came from
+  // already answers to, so correcting a field feels like re-answering the question.
+  const onEditorKeyDown = (f, valid) => (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (valid) submitEdit(f);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelEditing();
+    }
   };
 
   return (
@@ -203,24 +341,94 @@ const PinnedEntryCard = ({
             <dl className="space-y-1.5">
               {fields.map((f) => {
                 const value = valueFor(f.key);
+                const editing = editingKey === f.key;
                 return (
                   <div key={f.key} className="flex items-baseline gap-2 min-w-0">
                     <dt className="shrink-0 w-24 font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
                       {t(f.labelKey)}
                     </dt>
-                    <dd
-                      className={`min-w-0 flex-1 truncate text-[12.5px] ${
-                        f.done
-                          ? 'text-slate-800 dark:text-slate-100'
-                          : 'italic text-slate-400 dark:text-slate-500'
-                      }`}
-                    >
-                      {f.done && value
-                        ? value
-                        : f.optional
-                          ? t('ariaStudio.pinnedEntry.optional')
-                          : t('ariaStudio.pinnedEntry.notYet')}
-                    </dd>
+                    {/* The dates editor is three controls, so the row it replaces stops
+                        being a single-line value. Everything else keeps the read-only
+                        <dd> exactly as it was, with the ✎ trailing the value. */}
+                    {editing && f.key === 'dates' ? (
+                      <dd className="min-w-0 flex-1 space-y-1.5">
+                        <label className="block">
+                          <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            {t('ariaStudio.roleCapture.started')}
+                          </span>
+                          <input
+                            type="text"
+                            value={draft.start}
+                            ref={editorInputRef}
+                            onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))}
+                            onKeyDown={onEditorKeyDown(f, datesEditValid)}
+                            placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
+                            className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                          />
+                        </label>
+                        <label className="flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={draft.isCurrent}
+                            onChange={(e) =>
+                              setDraft((d) => ({ ...d, isCurrent: e.target.checked }))
+                            }
+                            className="rounded border-slate-300 dark:border-slate-600"
+                          />
+                          {t('ariaStudio.roleCapture.stillWorkHere')}
+                        </label>
+                        {/* Hidden rather than disabled while current: there is no end
+                            date to correct on a role that hasn't ended. */}
+                        {!draft.isCurrent && (
+                          <label className="block">
+                            <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                              {t('ariaStudio.roleCapture.ended')}
+                            </span>
+                            <input
+                              type="text"
+                              value={draft.end}
+                              onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))}
+                              onKeyDown={onEditorKeyDown(f, datesEditValid)}
+                              placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
+                              className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                            />
+                          </label>
+                        )}
+                        {editorActions(f, datesEditValid)}
+                      </dd>
+                    ) : editing ? (
+                      <dd className="min-w-0 flex-1 space-y-1.5">
+                        <input
+                          type="text"
+                          value={draft.text}
+                          ref={editorInputRef}
+                          onChange={(e) => setDraft((d) => ({ ...d, text: e.target.value }))}
+                          onKeyDown={onEditorKeyDown(f, textEditValid(f.key))}
+                          aria-label={t('ariaStudio.pinnedEntry.editField', {
+                            field: t(f.labelKey),
+                          })}
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                        />
+                        {editorActions(f, textEditValid(f.key))}
+                      </dd>
+                    ) : (
+                      <>
+                        <dd
+                          className={`min-w-0 flex-1 truncate text-[12.5px] ${
+                            f.done
+                              ? 'text-slate-800 dark:text-slate-100'
+                              : 'italic text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          {f.done && value
+                            ? value
+                            : f.optional
+                              ? t('ariaStudio.pinnedEntry.optional')
+                              : t('ariaStudio.pinnedEntry.notYet')}
+                        </dd>
+                        {canEdit(f) && editButton(f)}
+                      </>
+                    )}
                   </div>
                 );
               })}

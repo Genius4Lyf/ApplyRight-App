@@ -4,6 +4,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { finishSummary } from '../../lib/studioFlow';
+import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import AriaCard from './AriaCard';
 
 // The end of a tailoring: what changed, and how to get the file out.
@@ -192,7 +193,7 @@ const FinishCard = ({
             so it's offered directly rather than left for the user to rediscover. */}
         {isBuild && (onTailor || onScan) && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {onTailor && (
+            {STUDIO_TAILORING_ENABLED && onTailor && (
               <button
                 type="button"
                 onClick={onTailor}

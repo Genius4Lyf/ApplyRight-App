@@ -4040,7 +4040,9 @@
       "savedBullets": "{{n}} puces enregistrées",
       "bulletReceipt": "{{n}} puces ajoutées à {{title}}",
       "openRoleToReview": "Ouvrir ce poste pour le vérifier",
-      "openProjectToReview": "Ouvrir ce projet pour le vérifier"
+      "openProjectToReview": "Ouvrir ce projet pour le vérifier",
+      "editField": "Modifier {{field}}",
+      "saveField": "Enregistrer"
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Copie adaptée",
@@ -4348,7 +4350,7 @@
     "sectionBreakdown": {
       "heading": "Section par section",
       "allClear": "tout est bon",
-      "toFix": "{{n}} à corriger",
+      "toFix": "{{n}} à améliorer",
       "fix": "Corriger",
       "rescoring": "Recalcul…",
       "rescoreFree": "Recalculer · gratuit",
@@ -4487,7 +4489,7 @@
       "confirmBriefWithSource": "Parfait. Je vais adapter une copie de {{title}} — un instant.",
       "confirmBriefNoSource": "Parfait. À partir de quel CV dois-je travailler ?",
       "scanDone": "Voici où vous en êtes. Les sections rouges et orange sont là où il y a du travail.",
-      "buildScanGapNudge": "Vous êtes à {{fit}} % d'adéquation avec ce poste. Les principales lacunes se trouvent dans {{sections}} — ce poste demande {{keywords}}, que je ne vois pas encore sur votre CV. Touchez Corriger sur ces sections et je vous aiderai à les ajouter, à condition qu'elles soient réellement les vôtres.",
+      "buildScanGapNudge": "Vous êtes à {{fit}} % d'adéquation avec ce poste. Les principales lacunes se trouvent dans {{sections}} — ce poste demande {{keywords}}, que je ne vois pas encore sur votre CV. Si l'une de ces choses est réellement la vôtre, ouvrez l'aperçu en direct et ajoutez-la à ces sections.",
       "buildScanStrong": "Bien — vous êtes déjà à {{fit}} % d'adéquation avec ce poste. Jetez un œil aux sections orange si vous voulez aller plus loin, ou vous pouvez terminer.",
       "scanInsufficientCredits": "Une analyse complète nécessite {{required}} crédits et vous en avez {{current}}. Rechargez et je la lancerai.",
       "scanFailed": "Je n'ai pas pu terminer l'analyse pour l'instant — réessayez dans un instant.",

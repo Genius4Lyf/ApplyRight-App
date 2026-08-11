@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BAND_RULEBG } from '../../lib/noteStyles';
 import { sectionLabel, sectionNote, isDismissable } from '../../lib/studioFlow';
+import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import AriaCard from './AriaCard';
 
 // Section-by-section verdict — one row per part of the CV, each with a band dot and a
@@ -53,7 +54,10 @@ const SectionBreakdownCard = ({
             const dismissed = !!s.dismissed;
             // Nothing to fix on a section that isn't being scored, so no Fix button —
             // it would open a coach loop for a section the user just opted out of.
-            const showFix = !dismissed && s.band !== 'ok' && s.band !== 'neutral';
+            // The feature flag hides the fix loop entirely while tailoring is off; the
+            // verdicts, notes and re-score/re-check below are unaffected.
+            const showFix =
+              STUDIO_TAILORING_ENABLED && !dismissed && s.band !== 'ok' && s.band !== 'neutral';
             const canDismiss = !dismissed && !!onDismissSection && isDismissable(s.key);
             return (
               <li key={s.key} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">

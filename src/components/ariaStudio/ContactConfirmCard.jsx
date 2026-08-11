@@ -96,7 +96,6 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   const save = () => {
     onChange?.(form);
     setEditing(false);
-    onConfirm?.(form);
   };
 
   if (editing) {

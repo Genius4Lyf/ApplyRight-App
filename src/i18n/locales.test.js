@@ -158,6 +158,7 @@ describe('locale files', () => {
       'ariaStudio.chat.sectionFallback', // "section" — same word in French
       'ariaStudio.desk.title', // "Aria Studio" — brand name
       'ariaStudio.desk.outOf100', // "/100" — a number format, language-neutral
+      'ariaStudio.welcomeGuide.guide', // "Guide" — same word in French (un guide)
       'onboarding.welcome.steps.0.type', // "MOTIVATION" — same word in French
       'onboarding.welcome.steps.2.type', // "GUIDE" — same word in French
       'fitScoreCard.liftPts', // "+{{lift}} pts" — abbreviation format, language-neutral
