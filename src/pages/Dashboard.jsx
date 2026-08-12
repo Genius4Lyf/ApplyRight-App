@@ -40,6 +40,7 @@ import GlobalBanner from '../components/GlobalBanner';
 import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
+import { STUDIO_TAILORING_ENABLED } from '../lib/studioFeatures';
 import { isMobile } from '../utils/platform';
 import { signalReady } from '../utils/splash';
 import { useTranslation, Trans } from 'react-i18next';
@@ -1443,17 +1444,19 @@ const Dashboard = () => {
                       </>
                     ) : (
                       <div className="flex flex-col items-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={openInAriaStudio}
-                          disabled={openingStudio}
-                          className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors disabled:opacity-60"
-                        >
-                          <AriaOrbit size={14} tone="mono" />
-                          {openingStudio
-                            ? t('dashboard.toolkit.openingStudio')
-                            : t('dashboard.toolkit.workWithAria')}
-                        </button>
+                        {STUDIO_TAILORING_ENABLED && (
+                          <button
+                            type="button"
+                            onClick={openInAriaStudio}
+                            disabled={openingStudio}
+                            className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors disabled:opacity-60"
+                          >
+                            <AriaOrbit size={14} tone="mono" />
+                            {openingStudio
+                              ? t('dashboard.toolkit.openingStudio')
+                              : t('dashboard.toolkit.workWithAria')}
+                          </button>
+                        )}
                         <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
                           <button
                             type="button"
@@ -1750,16 +1753,18 @@ const Dashboard = () => {
           >
             {!application.optimizedCV ? (
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={openInAriaStudio}
-                  disabled={openingStudio}
-                  className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary disabled:opacity-60"
-                >
-                  <AriaOrbit size={16} tone="mono" />
-                  {openingStudio
-                    ? t('dashboard.toolkit.openingStudio')
-                    : t('dashboard.toolkit.workWithAria')}
-                </button>
+                {STUDIO_TAILORING_ENABLED && (
+                  <button
+                    onClick={openInAriaStudio}
+                    disabled={openingStudio}
+                    className="w-full flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm btn-primary disabled:opacity-60"
+                  >
+                    <AriaOrbit size={16} tone="mono" />
+                    {openingStudio
+                      ? t('dashboard.toolkit.openingStudio')
+                      : t('dashboard.toolkit.workWithAria')}
+                  </button>
+                )}
                 <CreditGate cost={CREDIT_COSTS.GENERATE_CV}>
                   <button
                     onClick={handleGenerateCV}

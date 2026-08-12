@@ -686,7 +686,7 @@
     "studio": {
       "kicker": "Aria Studio",
       "title": "Créez votre CV avec Aria",
-      "body": "Donnez une offre d’emploi à Aria. Elle évalue votre adéquation, retravaille une copie de votre CV section par section, et vous montre exactement ce qu’elle a changé — votre original reste intact.",
+      "body": "Créez votre CV en discutant avec Aria — elle pose les questions, vous répondez, et elle le rédige au fil de l’échange. Collez une offre d’emploi et elle orientera chaque section vers ce poste, ou créez un CV général sans offre.",
       "cta": "Ouvrir Aria Studio"
     },
     "pillarApplication": "Votre candidature",

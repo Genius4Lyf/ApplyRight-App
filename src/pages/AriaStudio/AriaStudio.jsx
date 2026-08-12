@@ -8,6 +8,7 @@ import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
+import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import CVService from '../../services/cv.service';
 import AriaOrbit from '../../components/cv/AriaOrbit';
 import StudioChat from '../../components/ariaStudio/StudioChat';
@@ -159,7 +160,7 @@ const StudioDesk = () => {
   // Deleting the ACTIVE session has to unbind first, or the provider stays pointed at a
   // draft that no longer exists and every autosave 404s.
   const finishRemoval = async (session) => {
-    if (session._id === draftId) await newSession('tailor');
+    if (session._id === draftId) await newSession(STUDIO_TAILORING_ENABLED ? 'tailor' : 'build');
     setPendingDelete(null);
     setDeleteBusy(null);
     await refreshSessions();
