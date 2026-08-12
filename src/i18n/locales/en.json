@@ -4571,6 +4571,7 @@
         "project": "Projects done. Education next.",
         "education": "Education's in. Any certifications or training to add?"
       },
+      "editUpdated": "Done — that's updated, and your CV's still complete. Here it is.",
       "pickProjectType": "Good. What's the project called?",
       "skillsInsufficientCredits": "Finding your skills costs {{cost}} credits and you're short right now. You can type them in yourself for free instead.",
       "skillsInDone": "{{n}} skills in. Last one — the summary at the top of your CV.",

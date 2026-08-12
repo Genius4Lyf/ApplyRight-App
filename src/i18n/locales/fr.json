@@ -4567,6 +4567,7 @@
         "project": "Projets terminés. La formation est la suite.",
         "education": "La formation est ajoutée. Des certifications ou formations à ajouter ?"
       },
+      "editUpdated": "Voilà — c'est mis à jour, et votre CV est toujours complet. Le voici.",
       "pickProjectType": "Parfait. Comment s'appelle le projet ?",
       "skillsInsufficientCredits": "Trouver vos compétences coûte {{cost}} crédits et il vous en manque pour l'instant. Vous pouvez les saisir vous-même gratuitement à la place.",
       "skillsInDone": "{{n}} compétences ajoutées. Dernière étape — le résumé en haut de votre CV.",

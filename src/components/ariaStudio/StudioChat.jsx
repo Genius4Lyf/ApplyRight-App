@@ -3541,6 +3541,7 @@ const StudioChat = ({ onPaywall }) => {
                 sortId: pinnedEntry._sortId,
                 title: pinnedEntry.title,
                 company: pinnedEntry.company,
+                entryType: pinnedEntry.entryType,
               }}
               missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
                 .map((k) => (typeof k === 'string' ? k : k?.name))

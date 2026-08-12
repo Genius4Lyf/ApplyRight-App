@@ -58,7 +58,12 @@ const SectionCoach = ({
 }) => {
   const { t } = useTranslation();
   const isProject = entry?.section === 'project';
-  const isGradCareer = careerStage === 'grad';
+  // Mirrors the backend: a non-'job' experience entry type (internship/part-time/
+  // volunteering/coursework) is coached gently even in an experienced session, so the
+  // defensive metric-strip on Aria's reply/suggestions/example also applies here.
+  const entryLevelType =
+    entry?.section === 'experience' && !!entry?.entryType && entry.entryType !== 'job';
+  const isGradCareer = careerStage === 'grad' || entryLevelType;
   const { cvData, updateCvData } = useAriaStudio();
   // The charged generation still waiting on THIS entry, or null. One pending card is
   // shared by the whole Studio session, so it's matched on section + sortId.
