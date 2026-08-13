@@ -2,7 +2,6 @@ import React from 'react';
 import { ArrowUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
-import ChatThemePicker from './ChatThemePicker';
 
 // THE Aria composer — one docked input shared by every Aria chat surface (the builder's
 // AriaChat + AskAriaGenerate, the Target step's inert parity row, StudioChat, and
@@ -89,12 +88,11 @@ const AriaComposer = ({
           placeholder={resolvedPlaceholder}
           // min-w-0 is load-bearing: without it flex refuses to shrink the textarea and
           // the send button gets pushed out of a narrow row.
-          className={`flex-1 min-w-0 bg-transparent border-0 outline-none resize-none px-1.5 py-2 text-[16px] sm:text-[13px] leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[140px] ${
+          className={`flex-1 min-w-0 bg-transparent border-0 outline-none resize-none px-1.5 py-2.5 text-[16px] leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[140px] ${
             inputInert ? 'opacity-50' : ''
           } ${inert ? 'cursor-not-allowed' : ''}`}
         />
 
-        <ChatThemePicker compact />
         <button
           type="button"
           onClick={() => onSend?.()}

@@ -40,7 +40,7 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
 
   return (
     <AriaCard cardKey="brief">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-900 dark:text-white">
           {t('ariaStudio.roleBrief.ariasRead')}
         </p>

@@ -27,7 +27,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
 
   return (
     <AriaCard cardKey="certs" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.certifications.heading')}
@@ -36,7 +36,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             {t('ariaStudio.certifications.noCharge')}
           </span>
         </div>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.certifications.body')}
         </p>
 
@@ -47,7 +47,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
                 key={`${c.name}-${i}`}
                 className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5"
               >
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-slate-800 dark:text-slate-100">
+                <span className="min-w-0 flex-1 truncate text-[14px] text-slate-800 dark:text-slate-100">
                   {c.name}
                   {c.issuer ? ` · ${c.issuer}` : ''}
                   {c.date ? ` · ${c.date}` : ''}

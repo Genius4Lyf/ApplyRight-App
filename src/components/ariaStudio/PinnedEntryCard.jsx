@@ -363,7 +363,7 @@ const PinnedEntryCard = ({
                             onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))}
                             onKeyDown={onEditorKeyDown(f, datesEditValid)}
                             placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
-                            className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                            className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
                           />
                         </label>
                         <label className="flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
@@ -390,7 +390,7 @@ const PinnedEntryCard = ({
                               onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))}
                               onKeyDown={onEditorKeyDown(f, datesEditValid)}
                               placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
-                              className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                              className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
                             />
                           </label>
                         )}
@@ -407,14 +407,14 @@ const PinnedEntryCard = ({
                           aria-label={t('ariaStudio.pinnedEntry.editField', {
                             field: t(f.labelKey),
                           })}
-                          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[12.5px] text-slate-900 dark:text-slate-100"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
                         />
                         {editorActions(f, textEditValid(f.key))}
                       </dd>
                     ) : (
                       <>
                         <dd
-                          className={`min-w-0 flex-1 truncate text-[12.5px] ${
+                          className={`min-w-0 flex-1 truncate text-[14px] ${
                             f.done
                               ? 'text-slate-800 dark:text-slate-100'
                               : 'italic text-slate-400 dark:text-slate-500'

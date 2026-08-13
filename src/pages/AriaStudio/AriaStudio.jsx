@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
+import { PanelLeft, Eye, ListChecks } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -162,6 +162,26 @@ const StudioDesk = () => {
     await refreshSessions();
   };
 
+  // Renaming from a Recents row — the only place a session can be renamed now that the
+  // header no longer carries an editable title. Works on any row, not just the active
+  // one, so a build session's name can be fixed without opening it first.
+  const renameSession = async (session, rawTitle) => {
+    const title = (rawTitle || '').trim();
+    if (!title || title === (session.title || '')) return;
+    if (session._id === draftId) {
+      await renameCv(title);
+    } else {
+      try {
+        await CVService.saveDraft({ _id: session._id, title });
+      } catch (err) {
+        console.error('Failed to rename session', err);
+        toast.error(t('ariaStudio.desk.toast.renameFailed', { defaultValue: 'Could not save the new name.' }));
+        return;
+      }
+    }
+    await refreshSessions();
+  };
+
   const removeFromStudio = async (session) => {
     setDeleteBusy('remove');
     try {
@@ -193,6 +213,7 @@ const StudioDesk = () => {
     loading: loadingSessions,
     activeId: draftId,
     onSelect: openSession,
+    onRename: renameSession,
     onDelete: (s) => {
       layout.setRailOverlay(false);
       setPendingDelete(s);
@@ -224,11 +245,8 @@ const StudioDesk = () => {
   // Tapping the score chip goes straight to the section verdicts (insights view).
   const openPanel = () => selectView('insights');
 
-  const isBuildSession = cvData?.studioKind === 'build';
   // The Preview toggle appears once a draft is bound (build OR tailor). Before that it
-  // stays hidden — the mode chooser has no bound document to preview. This replaces the
-  // old isTailorSession gate, whose only three uses were the ones below; a tailor session
-  // always has an _id, so that path is unchanged.
+  // stays hidden — the mode chooser has no bound document to preview.
   const canPreview = !!cvData?._id;
   const panelView = !canPreview && layout.panelView === 'preview' ? 'insights' : layout.panelView;
 
@@ -241,59 +259,8 @@ const StudioDesk = () => {
     setPanelOverlay(false);
   }, [canPreview, layout.panelView, closePreview, setPanelOverlay]);
 
-  const headingTitle = isBuildSession
-    ? cvData?.title || t('ariaStudio.desk.newCv')
-    : cvData?.tailoredForJob?.title ||
-      cvData?.targetJob?.title ||
-      cvData?.title ||
-      t('ariaStudio.desk.title');
-  // A build session isn't tailoring anything, so it must not claim to be. Falls back to
-  // the kind's own description rather than the tailor strapline.
-  const headingSub =
-    [
-      cvData?.targetJob?.brief?.company,
-      cvData?.tailoredFromTitle &&
-        t('ariaStudio.sessionRail.fromSource', { source: cvData.tailoredFromTitle }),
-    ]
-      .filter(Boolean)
-      .join(' · ') ||
-    (isBuildSession ? t('ariaStudio.desk.buildingWithAria') : t('ariaStudio.desk.tailorToJob'));
-
-  // Inline title editing for BUILD sessions — mirrors the CV builder's header rename
-  // (click → focused input; Enter or blur saves; Escape cancels). A tailor session's
-  // heading is its job title, not cvData.title, so it stays read-only for now.
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState('');
-  const titleInputRef = useRef(null);
-  const skipTitleSave = useRef(false);
-  useEffect(() => {
-    if (editingTitle) {
-      titleInputRef.current?.focus();
-      titleInputRef.current?.select();
-    }
-  }, [editingTitle]);
-  // Switching sessions mid-edit must not carry the open editor into the next one.
-  useEffect(() => {
-    setEditingTitle(false);
-  }, [draftId]);
-  const beginTitleEdit = () => {
-    setTitleDraft(cvData?.title || '');
-    setEditingTitle(true);
-  };
-  const commitTitleEdit = async () => {
-    setEditingTitle(false);
-    if (skipTitleSave.current) {
-      skipTitleSave.current = false;
-      return;
-    }
-    const next = (titleDraft || '').trim();
-    if (!next || next === (cvData?.title || '')) return; // no real change → nothing to refresh
-    await renameCv(next);
-    await refreshSessions(); // the rail row reflects the new name immediately
-  };
-
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-transparent">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-white dark:bg-slate-950">
       <main
         className="studio-main flex-1 min-h-0 w-full max-w-[1600px] mx-auto px-0 sm:px-4 sm:py-4 flex gap-4 min-w-0"
         {...studioMainAttrs({
@@ -331,44 +298,10 @@ const StudioDesk = () => {
 
             <AriaOrbit size={18} className="shrink-0 hidden sm:block" />
 
-            <div className="min-w-0 flex-1">
-              {isBuildSession && editingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={titleDraft}
-                  onChange={(e) => setTitleDraft(e.target.value)}
-                  onBlur={commitTitleEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      e.currentTarget.blur();
-                    } else if (e.key === 'Escape') {
-                      skipTitleSave.current = true;
-                      e.currentTarget.blur();
-                    }
-                  }}
-                  aria-label={t('ariaStudio.desk.cvName')}
-                  className="w-full max-w-[18rem] text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight bg-transparent border-0 outline-none p-0"
-                />
-              ) : isBuildSession ? (
-                <button
-                  type="button"
-                  onClick={beginTitleEdit}
-                  title={t('ariaStudio.desk.renameCv')}
-                  className="group/title flex items-center gap-1 max-w-full text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight hover:text-slate-900 dark:hover:text-white transition-colors"
-                >
-                  <span className="truncate">{headingTitle}</span>
-                  <Pencil className="w-3 h-3 shrink-0 text-slate-400 dark:text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity" />
-                </button>
-              ) : (
-                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight truncate">
-                  {headingTitle}
-                </p>
-              )}
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 truncate">
-                {headingSub}
-              </p>
+            <div className="min-w-0 flex-1 flex items-center">
+              {/* Model picker lives here now — no header title/subtitle to edit or read;
+                  renaming a CV happens from its row in the Recents rail instead. */}
+              {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="left" />}
             </div>
 
             {/* The score stays in the top bar at EVERY width — on a phone it's the only
@@ -390,10 +323,6 @@ const StudioDesk = () => {
                 </span>
               </button>
             )}
-
-            {/* Model picker — which model powers this session's chat/tailoring. Only once
-                there's a real draft to persist the choice onto. */}
-            {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="right" />}
 
             {/* View switch — the WIDE Live preview vs the NARROW insights. Active view
                 gets the neutral active-state (matching the other header toggles); the

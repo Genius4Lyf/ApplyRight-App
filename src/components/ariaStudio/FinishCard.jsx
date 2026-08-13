@@ -40,7 +40,7 @@ const FinishCard = ({
 
   return (
     <AriaCard cardKey="finish">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
           {t('ariaStudio.finishCard.readyToSend')}
         </p>
@@ -63,7 +63,7 @@ const FinishCard = ({
                 {t('ariaStudio.finishCard.percentComplete')}
               </span>
             </div>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
               {[
                 contents?.roles
                   ? t('ariaStudio.finishCard.contentsRoles', { count: contents.roles })
@@ -120,7 +120,7 @@ const FinishCard = ({
         )}
 
         {!isBuild && summary?.newlyGreen?.length > 0 && (
-          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               {summary.newlyGreen.join(', ')}
             </span>{' '}
@@ -129,7 +129,7 @@ const FinishCard = ({
         )}
 
         {!isBuild && summary && summary.moved === 0 && (
-          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
             {t('ariaStudio.finishCard.scoreNotMoved')}
           </p>
         )}
@@ -179,7 +179,7 @@ const FinishCard = ({
             >
               {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
             </button>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
               {isBuild
                 ? // They have literally never seen this document — it only ever existed as a
                   // conversation. Looking at it as pages matters more here than anywhere.

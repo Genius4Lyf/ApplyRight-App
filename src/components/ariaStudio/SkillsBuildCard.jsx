@@ -48,7 +48,7 @@ const SkillsBuildCard = ({
 
   return (
     <AriaCard cardKey="skillsconsent">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.studioFlow.sections.skills')}
@@ -58,7 +58,7 @@ const SkillsBuildCard = ({
           </span>
         </div>
 
-        <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
           {hasJob ? t('ariaStudio.skillsBuild.bodyWithJob') : t('ariaStudio.skillsBuild.bodyNoJob')}
         </p>
 

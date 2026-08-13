@@ -23,7 +23,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
     const canSave = !!start.trim();
     return (
       <AriaCard cardKey="capture-dates" wide>
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.roleCapture.whenWereYouThere')}
           </p>
@@ -61,7 +61,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               onChange={(e) => setIsCurrent(e.target.checked)}
               className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:text-white dark:focus:ring-white"
             />
-            <span className="text-[12.5px] text-slate-700 dark:text-slate-200">
+            <span className="text-[14px] text-slate-700 dark:text-slate-200">
               {t('ariaStudio.roleCapture.stillWorkHere')}
             </span>
           </label>
@@ -143,7 +143,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
 
   return (
     <AriaCard cardKey={`capture-${stage}`} wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {prompt.q}
         </p>

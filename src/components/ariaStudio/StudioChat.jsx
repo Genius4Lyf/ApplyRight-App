@@ -34,7 +34,6 @@ import {
 import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
 import { useStickToBottom } from '../../hooks/useStickToBottom';
-import { useChatTheme } from '../../hooks/useChatTheme';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
@@ -123,7 +122,6 @@ const loadSession = () => {
 const StudioChat = ({ onPaywall }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const [chatTheme] = useChatTheme();
   const {
     draftId,
     cvData,
@@ -2605,13 +2603,13 @@ const StudioChat = ({ onPaywall }) => {
     !transitionLabel;
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col p-4 aria-theme-${chatTheme}`}>
+    <div className="flex-1 min-h-0 flex flex-col p-4 bg-white dark:bg-slate-900">
       <div className="flex-1 min-h-0 relative">
         <AnimatePresence>
           {studioTransition && (
             <motion.div
               key={`studio-${studioTransition}`}
-              className={`absolute inset-0 z-30 flex items-center justify-center px-6 aria-theme-${chatTheme}`}
+              className="absolute inset-0 z-30 flex items-center justify-center px-6 bg-white dark:bg-slate-900"
               initial={reduce ? { opacity: 1 } : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -2749,7 +2747,7 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <motion.div
                   key={i}
-                  className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
+                  className="self-end max-w-[92%] bg-white text-slate-900 border border-slate-200 shadow-sm dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700 rounded-2xl rounded-tr-md px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap"
                   {...bubbleAnim('user', reduce)}
                 >
                   {m.text}
@@ -3008,20 +3006,22 @@ const StudioChat = ({ onPaywall }) => {
             // Aria turn and must never fall through into an empty speech bubble.
             if (!m.text) return null;
 
-            // Aria turn — orbit slot + slate bubble. The flex wrapper is load-bearing:
-            // it makes the bubble a flex ITEM (a block box), so its padding and
-            // background form one rounded shape. As a bare inline <span> the background
-            // paints per line-fragment and the bubble breaks apart across wrapped lines.
+            // Aria turn — grey bubble, orbit mark BELOW it (Claude-style: the mark trails
+            // the response instead of flagging it from the side). The flex wrapper is
+            // load-bearing: it makes the bubble a flex ITEM (a block box), so its padding
+            // and background form one rounded shape. As a bare inline <span> the
+            // background paints per line-fragment and the bubble breaks apart across
+            // wrapped lines.
             return (
               <motion.div
                 key={i}
-                className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
-                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-4 py-3 text-[15px] leading-relaxed">
                   {m.text}
                 </span>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
           })}
@@ -3116,7 +3116,7 @@ const StudioChat = ({ onPaywall }) => {
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {nextSection.eyebrow}
                   </p>
-                  <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {nextSection.blurb}
                   </p>
                   <button
@@ -3311,7 +3311,7 @@ const StudioChat = ({ onPaywall }) => {
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {t('ariaStudio.chat.buildNewCvHeading')}
                   </p>
-                  <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {t('ariaStudio.chat.buildNewCvBody')}
                   </p>
                   <div className="mt-4 flex items-center justify-between gap-2">

@@ -11,13 +11,13 @@ export const SelectedAnswerBubble = ({ children, reduce = false }) => {
   return (
     <motion.div
       data-transcript-kind="selection"
-      className="self-end max-w-[92%] rounded-2xl rounded-tr-md bg-slate-900 px-3.5 py-2.5 text-white dark:bg-white dark:text-slate-900"
+      className="self-end max-w-[92%] rounded-2xl rounded-tr-md border border-slate-200 dark:border-slate-700 bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-50 px-4 py-3"
       {...bubbleAnim('user', reduce)}
     >
-      <span className="mb-0.5 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white/55 dark:text-slate-500">
+      <span className="mb-0.5 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
         {t('ariaStudio.chat.respondedToAriaInterview')}
       </span>
-      <span className="block whitespace-pre-wrap text-[13px] leading-relaxed">{children}</span>
+      <span className="block whitespace-pre-wrap text-[15px] leading-relaxed">{children}</span>
     </motion.div>
   );
 };
@@ -36,11 +36,11 @@ export const StudioReceipt = ({ title, detail, reduce = false }) => (
       ✓
     </span>
     <span className="min-w-0">
-      <span className="block text-[12.5px] font-semibold leading-5 text-slate-800 dark:text-slate-100">
+      <span className="block text-[14px] font-semibold leading-5 text-slate-800 dark:text-slate-100">
         {title}
       </span>
       {detail ? (
-        <span className="block truncate text-[10.5px] leading-4 text-slate-500 dark:text-slate-400">
+        <span className="block truncate text-[12px] leading-4 text-slate-500 dark:text-slate-400">
           {detail}
         </span>
       ) : null}

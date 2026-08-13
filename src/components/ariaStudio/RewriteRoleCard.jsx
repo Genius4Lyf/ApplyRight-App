@@ -119,7 +119,7 @@ const RewriteRoleCard = ({
 
   return (
     <AriaCard cardKey="rewriterole" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.rewriteRole.title')}
@@ -135,7 +135,7 @@ const RewriteRoleCard = ({
           )}
         </div>
 
-        <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
           {nothingToDo
             ? t('ariaStudio.rewriteRole.nothingToImprove')
             : t('ariaStudio.rewriteRole.intro')}
@@ -153,7 +153,7 @@ const RewriteRoleCard = ({
                   <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     {t('ariaStudio.rewriteRole.unchanged')}
                   </p>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-1 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {row.before}
                   </p>
                 </div>
@@ -169,7 +169,7 @@ const RewriteRoleCard = ({
                   <p className="font-mono text-[9px] uppercase tracking-wider text-amber-700 dark:text-amber-400">
                     {t('ariaStudio.rewriteRole.blocked', { reason: row.blockedReason || '' })}
                   </p>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-1 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {row.before}
                   </p>
                 </div>
@@ -206,7 +206,7 @@ const RewriteRoleCard = ({
                   <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     {t('ariaStudio.rewriteRole.sharperLabel')}
                   </span>
-                  <span className="block text-[12.5px] leading-relaxed text-slate-800 dark:text-slate-100">
+                  <span className="block text-[14px] leading-relaxed text-slate-800 dark:text-slate-100">
                     {row.after}
                   </span>
                 </span>
