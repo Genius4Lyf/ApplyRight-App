@@ -2674,9 +2674,27 @@ const StudioChat = ({ onPaywall }) => {
                 // also advances the stage and asks the next question, and re-asking
                 // "what company?" because the user fixed the role title would restart an
                 // interview they already finished.
-                onFieldSave={(patch) =>
-                  applyEntryEdit(pinnedSectionKey, pinnedEntry._sortId, patch)
-                }
+                onFieldSave={async (patch) => {
+                  const r = await applyEntryEdit(pinnedSectionKey, pinnedEntry._sortId, patch);
+                  // A pencil-icon correction to the role/company/project name happens
+                  // AFTER Aria has already asked for achievements against the old value —
+                  // silently swapping it out from under her would leave the bullets she
+                  // generates next referencing a name that's no longer on the entry.
+                  // Speaking up here keeps her grounded in what's actually on the card.
+                  if (r.ok && (patch.title !== undefined || patch.company !== undefined)) {
+                    const value = (patch.title ?? patch.company ?? '').trim();
+                    if (value) {
+                      const key =
+                        patch.company !== undefined
+                          ? 'company'
+                          : pinnedSectionKey === 'project'
+                            ? 'projectTitle'
+                            : 'roleTitle';
+                      ariaSays(t(`ariaStudio.chat.fieldCorrected.${key}`, { value }));
+                    }
+                  }
+                  return r;
+                }}
               />
             </div>
           )}

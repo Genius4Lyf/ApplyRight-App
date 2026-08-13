@@ -4551,6 +4551,11 @@
         "achievementsProject": "Now the interesting part — tell me what you did on {{title}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time.",
         "achievementsRole": "Now the part that matters — tell me what you actually did at {{company}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time."
       },
+      "fieldCorrected": {
+        "roleTitle": "Oh, I see you changed the role to {{value}} — let's work with that so the bullets don't get confused.",
+        "company": "Oh, I see you changed the company to {{value}} — let's work with that so the bullets don't get confused.",
+        "projectTitle": "Oh, I see you renamed the project to {{value}} — let's work with that so the bullets don't get confused."
+      },
       "experienceType": {
         "heading": "What kind of experience was this?",
         "body": "This helps ARIA ask the right questions for this entry.",

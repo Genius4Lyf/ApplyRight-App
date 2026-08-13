@@ -4547,6 +4547,11 @@
         "achievementsProject": "Maintenant la partie intéressante — dites-moi ce que vous avez fait sur {{title}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une.",
         "achievementsRole": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une."
       },
+      "fieldCorrected": {
+        "roleTitle": "Ah, je vois que vous avez changé le rôle en {{value}} — on va travailler avec ça pour que les points ne se mélangent pas.",
+        "company": "Ah, je vois que vous avez changé l'entreprise en {{value}} — on va travailler avec ça pour que les points ne se mélangent pas.",
+        "projectTitle": "Ah, je vois que vous avez renommé le projet en {{value}} — on va travailler avec ça pour que les points ne se mélangent pas."
+      },
       "experienceType": {
         "heading": "De quel type d’expérience s’agissait-il ?",
         "body": "Cela aide Aria à poser les bonnes questions pour cette entrée.",
