@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ChevronUp, ChevronDown, Trash2, Settings, X } from 'lucide-react';
+import {
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  Trash2,
+  Settings,
+  X,
+  Pencil,
+  Minimize2,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
@@ -74,9 +83,15 @@ const SortableItem = ({
               e.stopPropagation();
               onToggleExpand();
             }}
-            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
+            aria-label={isExpanded ? t('common.sortable.collapse') : t('common.sortable.edit')}
+            title={isExpanded ? t('common.sortable.collapse') : t('common.sortable.edit')}
+            className="min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-center"
           >
-            {isExpanded ? t('common.sortable.collapse') : t('common.sortable.edit')}
+            {isExpanded ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Pencil className="w-3.5 h-3.5" />
+            )}
           </button>
         )}
         <AnimatePresence initial={false}>

@@ -594,8 +594,11 @@ const AskAriaGenerate = ({
     <div className="flex-1 min-h-0 flex flex-col p-4">
       {/* "Aria's read" — the Role Brief, with the infer+confirm company-type chip.
           Non-blocking: sits above the stream, shown only when a JD produced a
-          brief. Confirm once → it sharpens every generation. No JD → no strip. */}
-      {brief && (brief.role || brief.company) && (
+          brief. Confirm once → it sharpens every generation. No JD → no strip.
+          UNFOCUSED ONLY: once a role/project is focused, the build-with conversation
+          owns the space — the JD summary is redundant next to the focus divider and
+          just crowds out the chat. */}
+      {!focused && brief && (brief.role || brief.company) && (
         <div className="shrink-0 mb-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 px-3 py-2.5">
           <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-indigo-500 dark:text-indigo-400">
             {t('cvBuilder.askAria.ariasRead')}

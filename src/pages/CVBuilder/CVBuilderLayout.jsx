@@ -249,6 +249,14 @@ const CVBuilderInner = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerDragY, setDrawerDragY] = useState(0);
   const [drawerDragging, setDrawerDragging] = useState(false);
+  // Animate the open/close toggle, then drop to snap-tracking so keyboard-driven
+  // visualViewport resizes move the sheet instantly (no 420ms chase behind the keyboard).
+  const [animateDrawer, setAnimateDrawer] = useState(false);
+  useEffect(() => {
+    setAnimateDrawer(true);
+    const id = setTimeout(() => setAnimateDrawer(false), 460);
+    return () => clearTimeout(id);
+  }, [drawerOpen]);
   const [mobileViewport, setMobileViewport] = useState(() => ({
     height:
       typeof window !== 'undefined' ? (window.visualViewport?.height ?? window.innerHeight) : 800,
@@ -717,7 +725,9 @@ const CVBuilderInner = () => {
               paddingBottom: drawerOpen ? 'env(safe-area-inset-bottom)' : 0,
               transition: drawerDragging
                 ? 'none'
-                : 'height 420ms cubic-bezier(0.22, 1, 0.36, 1), top 420ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+                : animateDrawer
+                  ? 'height 420ms cubic-bezier(0.22, 1, 0.36, 1), top 420ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)'
+                  : 'transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
             <button

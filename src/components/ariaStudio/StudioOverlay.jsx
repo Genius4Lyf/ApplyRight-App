@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 // The mobile presentation for the rail (left drawer) and the artifact panel (bottom
 // sheet). One component because the BEHAVIOUR is identical — scrim, focus trap, Escape,
@@ -18,6 +19,12 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
   const panelRef = useRef(null);
   const restoreRef = useRef(null);
   const reduce = useReducedMotion();
+
+  // Shared counter-based lock (see useBodyScrollLock) — NOT an independent save/restore
+  // of style.overflow. This overlay nests inside a page (Aria Studio) that ALSO locks the
+  // body while it's mounted; two uncoordinated lockers racing on unmount is what used to
+  // leave the page frozen when "Home" was tapped while this sheet was still open.
+  useBodyScrollLock(open);
 
   // Escape + Android/browser back. The history entry is pushed on open and consumed on
   // close, so the hardware back button dismisses the overlay instead of leaving the
@@ -62,15 +69,10 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
       (nodes?.[0] || panelRef.current)?.focus?.();
     });
 
-    // The page behind must not scroll under the overlay.
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', onKey, true);
       window.removeEventListener('popstate', onPop);
       cancelAnimationFrame(raf);
-      document.body.style.overflow = prevOverflow;
       // Consume the history entry if we're closing for a reason OTHER than back.
       if (window.history.state?.studioOverlay) window.history.back();
       restoreRef.current?.focus?.();

@@ -6,6 +6,7 @@ import { PanelLeft, Pencil, Eye, ListChecks } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
@@ -97,19 +98,14 @@ const StudioDesk = () => {
 
   // This page is `fixed inset-0` (own full-screen scroll region), but the document
   // behind it is still scrollable — on mobile that's what let a chat's exhausted
-  // scroll chain drag the whole page along with it. Lock html+body while mounted,
-  // and restore whatever was there before (never blindly clear it: something else,
-  // e.g. a modal, may have locked it first and still owns the unlock).
-  useEffect(() => {
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
-    };
-  }, []);
+  // scroll chain drag the whole page along with it. Lock html+body while mounted.
+  //
+  // Goes through the SHARED counter-based lock (not an ad hoc save/restore of
+  // style.overflow) because this page's own mobile rail drawer and bottom sheet
+  // (StudioOverlay) lock the same body independently — two uncoordinated lockers
+  // racing on unmount is exactly what left the page frozen after "Home" while a
+  // sheet was open: whichever one unwound LAST clobbered the other's restore.
+  useBodyScrollLock(true);
 
   // Arrived from an analysis with a source CV already decided — open a tailor
   // session with it pre-selected, so Aria doesn't ask which CV to use. Consumed
