@@ -181,12 +181,39 @@ describe('StudioLivePreview — delete a skill', () => {
     expect(mockReplaceSkills).toHaveBeenCalledWith([{ name: 'Node' }]);
   });
 
-  it('drops the whole section content to an empty array on the last skill', () => {
+  it('DISABLES the × on the last skill, and says why', () => {
+    // Skills is a required section, so the last one is not deletable. The guard is the
+    // affordance itself — disabled, with the reason on it — rather than a click that
+    // fails: a × that looks live and then refuses reads as a broken button.
     mockCvData = { ...skillsCv, skills: [{ name: 'React', category: 'Frontend' }] };
     render(<StudioLivePreview />);
-    removeSkill('React');
 
-    expect(mockReplaceSkills).toHaveBeenCalledWith([]);
+    const reason = i18n.t('ariaStudio.livePreview.cannotEmptySkills');
+    const x = within(pill('React')).getByLabelText(reason);
+    // Native DOM assertions — this suite doesn't load jest-dom's custom matchers.
+    expect(x.disabled).toBe(true);
+    // The reason is on the title too, so hovering explains it without a screen reader.
+    expect(x.getAttribute('title')).toBe(reason);
+    // And the generic label is GONE, which is what makes the disabled state discoverable
+    // rather than a silently dead control wearing the same name as a working one.
+    expect(within(pill('React')).queryByLabelText('Remove skill')).toBeNull();
+
+    fireEvent.click(x);
+    expect(mockReplaceSkills).not.toHaveBeenCalled();
+  });
+
+  it('re-enables every × as soon as a SECOND skill exists', () => {
+    // The other side of the predicate: the guard is about the last skill, not about skills.
+    mockCvData = { ...skillsCv, skills: [{ name: 'React' }, { name: 'Node' }] };
+    render(<StudioLivePreview />);
+
+    ['React', 'Node'].forEach((name) => {
+      expect(within(pill(name)).getByLabelText('Remove skill').disabled).toBe(false);
+    });
+
+    // …and deleting down TO one is allowed — it's emptying that isn't.
+    removeSkill('Node');
+    expect(mockReplaceSkills).toHaveBeenCalledWith([{ name: 'React' }]);
   });
 
   it('goes through replaceSkills ALONE — no command channel, no direct draft write', () => {

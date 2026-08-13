@@ -15,6 +15,9 @@ let mockReorderEntries;
 let mockRequestStudioCommand;
 let mockRemoveEntry;
 let mockSelectTemplate;
+let mockAddRole;
+let mockAddProject;
+let mockAddEducation;
 vi.mock('../../context/AriaStudioContext', () => ({
   useAriaStudio: () => ({
     cvData: mockCvData,
@@ -24,6 +27,9 @@ vi.mock('../../context/AriaStudioContext', () => ({
     requestStudioCommand: mockRequestStudioCommand,
     removeEntry: mockRemoveEntry,
     selectTemplate: mockSelectTemplate,
+    addRole: mockAddRole,
+    addProject: mockAddProject,
+    addEducation: mockAddEducation,
   }),
 }));
 vi.mock('../TemplatePreviewThumb', () => ({
@@ -43,6 +49,9 @@ beforeEach(() => {
   mockRequestStudioCommand = vi.fn();
   mockRemoveEntry = vi.fn();
   mockSelectTemplate = vi.fn().mockResolvedValue({ ok: true });
+  mockAddRole = vi.fn().mockResolvedValue('new-role');
+  mockAddProject = vi.fn().mockResolvedValue('new-project');
+  mockAddEducation = vi.fn().mockResolvedValue('new-edu');
   vi.stubGlobal('matchMedia', (q) => ({
     matches: false,
     media: q,
@@ -506,12 +515,16 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
     mockCvData = {
       _id: 'd1',
       personalInfo: { fullName: 'Ada' },
-      education: [{ _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG', description: '• study' }],
+      // TWO degrees: deleting the FIRST is a permitted delete (one survives), so this
+      // still exercises the 'education' token without tripping the last-entry guard —
+      // which has its own suite below.
+      education: [
+        { _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG', description: '• study' },
+        { _sortId: 'edu-b', degree: 'MSc', school: 'UNILAG', description: '• more study' },
+      ],
       studioScan: null,
     };
     render(<StudioLivePreview />);
-    // A SINGLE-entry section still offers delete — it has no reorder controls, but its
-    // last entry is exactly the one a user may want gone.
     removeRow(0);
 
     expect(mockRequestStudioCommand).toHaveBeenCalledWith('deleteEntry', 'education', 'edu-a');
@@ -529,6 +542,96 @@ describe('StudioLivePreview — delete an entry via command channel', () => {
   });
 });
 
+describe('StudioLivePreview — required sections can never be emptied', () => {
+  // The user-facing half of the guard whose silent backstop lives in the context. A CV
+  // must keep at least one role, one degree and one skill; the affordance to delete the
+  // LAST of any of those is shown DISABLED, with the reason on hover, rather than hidden —
+  // a missing trash reads as a bug, a disabled one with a tooltip reads as a rule. Projects
+  // are optional, so their last entry stays deletable.
+  //
+  // `entries` inside the preview is already blank-filtered, so "one visible entry" is one
+  // substantive entry — the same count the context backstop recomputes.
+
+  // Open row 0's menu WITHOUT confirming — the disabled item has no onClick to arm it.
+  const openMenu = (i = 0) => fireEvent.click(screen.getAllByLabelText('Edit')[i]);
+  const removeItem = () => screen.getByRole('menuitem', { name: 'Remove' });
+
+  // The section TOKEN is singular ('project'), but the cvData field is 'projects' — the
+  // SECTION_LIST gotcha this suite guards elsewhere. Map it here so a project fixture lands
+  // on the key the preview actually reads.
+  const LIST_KEY = { experience: 'experience', education: 'education', project: 'projects' };
+  const single = (section, entry) => ({
+    _id: 'd1',
+    personalInfo: { fullName: 'Ada' },
+    [LIST_KEY[section]]: [entry],
+    studioScan: null,
+  });
+
+  it('DISABLES Remove on the last experience, with the reason on hover', () => {
+    mockCvData = single('experience', { _sortId: 'a', title: 'Analyst', company: 'RSA' });
+    render(<StudioLivePreview />);
+    openMenu();
+
+    const item = removeItem();
+    // Native DOM assertions — this suite doesn't load jest-dom's custom matchers.
+    expect(item.disabled).toBe(true);
+    expect(item.getAttribute('title')).toBe(i18n.t('ariaStudio.livePreview.cannotEmptyExperience'));
+
+    // A disabled menuitem has no onClick, so it can't open the confirm — the whole point.
+    fireEvent.click(item);
+    expect(screen.queryByText('Remove this?')).toBeNull();
+    expect(mockRequestStudioCommand).not.toHaveBeenCalled();
+  });
+
+  it('DISABLES Remove on the last education, with ITS reason', () => {
+    mockCvData = single('education', { _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG' });
+    render(<StudioLivePreview />);
+    openMenu();
+
+    const item = removeItem();
+    expect(item.disabled).toBe(true);
+    // The education-specific string, not the experience one — the section chooses the copy.
+    expect(item.getAttribute('title')).toBe(i18n.t('ariaStudio.livePreview.cannotEmptyEducation'));
+    fireEvent.click(item);
+    expect(mockRequestStudioCommand).not.toHaveBeenCalled();
+  });
+
+  it('KEEPS Remove live on the last project — projects are optional', () => {
+    mockCvData = single('project', { _sortId: 'p1', title: 'Notes engine', description: '• x' });
+    render(<StudioLivePreview />);
+    openMenu();
+
+    const item = removeItem();
+    expect(item.disabled).toBe(false);
+    // The live variant carries no reason — a title would only invite a tooltip on a button
+    // that works.
+    expect(item.getAttribute('title')).toBeNull();
+
+    // And it still routes a real delete through the command channel.
+    fireEvent.click(item);
+    fireEvent.click(
+      within(screen.getByText('Remove this?').parentElement).getByRole('button', { name: 'Remove' })
+    );
+    expect(mockRequestStudioCommand).toHaveBeenCalledWith('deleteEntry', 'project', 'p1');
+  });
+
+  it('re-enables Remove on experience the moment a SECOND role exists', () => {
+    // The guard is about the last one, not about the section: two roles, both deletable.
+    mockCvData = {
+      _id: 'd1',
+      personalInfo: { fullName: 'Ada' },
+      experience: [
+        { _sortId: 'a', title: 'Analyst', company: 'RSA' },
+        { _sortId: 'b', title: 'Builder', company: 'BBC' },
+      ],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+    openMenu(0);
+    expect(removeItem().disabled).toBe(false);
+  });
+});
+
 describe('StudioLivePreview — completeness lock', () => {
   // A build session's document is read-only until the CV is genuinely complete (name +
   // summary + experience + education + skills; projects optional — the canonical
@@ -541,7 +644,9 @@ describe('StudioLivePreview — completeness lock', () => {
     studioKind: 'build',
     personalInfo: { fullName: 'Ada Lovelace' },
     professionalSummary: 'Analytical engine pioneer.',
-    experience: [{ _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' }],
+    experience: [
+      { _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' },
+    ],
     education: [{ _sortId: 'edu-1', degree: 'BSc Mathematics', school: 'UNILAG' }],
     skills: ['Algorithms'],
     studioScan: null,
@@ -583,5 +688,81 @@ describe('StudioLivePreview — completeness lock', () => {
     render(<StudioLivePreview />);
     expect(screen.queryByText(/Editing and preview unlock once your CV/i)).toBeNull();
     expect(screen.getAllByLabelText('Edit').length).toBeGreaterThan(0);
+  });
+});
+
+describe('StudioLivePreview — add-entry footer', () => {
+  // A complete build CV so the panel is unlocked (canEdit) — the footer is gated on
+  // canEdit exactly like every other row control.
+  const completeBuild = {
+    _id: 'd1',
+    studioKind: 'build',
+    personalInfo: { fullName: 'Ada Lovelace' },
+    professionalSummary: 'Analytical engine pioneer.',
+    experience: [
+      { _sortId: 'e1', title: 'Analyst', company: 'RSA', description: '• Led the notes' },
+    ],
+    projects: [],
+    education: [{ _sortId: 'edu-1', degree: 'BSc Mathematics', school: 'UNILAG' }],
+    skills: ['Algorithms'],
+    studioScan: null,
+  };
+
+  it('shows the add footer on each entry-section in edit mode', () => {
+    mockCvData = completeBuild;
+    render(<StudioLivePreview />);
+    expect(screen.getAllByText('Add manually')).toHaveLength(3); // experience, projects, education
+    expect(screen.getAllByText('Build with Aria')).toHaveLength(3);
+  });
+
+  it('renders the projects footer even with ZERO projects', () => {
+    mockCvData = completeBuild; // projects: []
+    render(<StudioLivePreview />);
+    expect(screen.getByText('Projects')).toBeTruthy();
+  });
+
+  it('"Add manually" creates an entry and opens its inline editor', async () => {
+    mockAddRole = vi.fn().mockImplementation(async () => {
+      const sortId = 'new-role';
+      mockCvData = {
+        ...mockCvData,
+        experience: [
+          ...(mockCvData.experience || []),
+          { _sortId: sortId, title: '', company: '', description: '' },
+        ],
+      };
+      return sortId;
+    });
+    mockCvData = completeBuild;
+    render(<StudioLivePreview />);
+
+    fireEvent.click(screen.getAllByText('Add manually')[0]); // experience is first
+    expect(mockAddRole).toHaveBeenCalled();
+
+    // The freshly-created blank entry is spliced back into the displayed list (it would
+    // otherwise be blank-filtered out) and its inline editor opens straight away.
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Role')).toBeTruthy();
+    });
+  });
+
+  it('"Build with Aria" sends the addEntry command and closes the sheet when isSheet', () => {
+    mockCvData = completeBuild;
+    const onClose = vi.fn();
+    render(<StudioLivePreview isSheet onClose={onClose} />);
+
+    fireEvent.click(screen.getAllByText('Build with Aria')[0]); // experience
+
+    expect(mockRequestStudioCommand).toHaveBeenCalledWith('addEntry', 'experience', null);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("sends the SINGULAR 'project' token for the projects footer", () => {
+    mockCvData = completeBuild;
+    render(<StudioLivePreview />);
+
+    fireEvent.click(screen.getAllByText('Build with Aria')[1]); // projects is second
+
+    expect(mockRequestStudioCommand).toHaveBeenCalledWith('addEntry', 'project', null);
   });
 });

@@ -36,6 +36,24 @@ const StudioTemplatePreview = () => {
     };
   }, [cvData, templateId]);
 
+  // Templates read the profile shape from the classic builder (`firstName`/`lastName`/
+  // `location`/`linkedinUrl`/`portfolioUrl`), not Studio's `personalInfo` shape
+  // (`fullName`/`address`/`linkedin`/`website`) — same mapping ResumeReview's
+  // mergedUserProfile uses, minus the /auth/me merge Studio has no equivalent of.
+  const templateProfile = useMemo(() => {
+    const info = cvData?.personalInfo || {};
+    const [firstName, ...rest] = (info.fullName || '').trim().split(/\s+/).filter(Boolean);
+    return {
+      ...info, // fullName, email, phone, photoUrl stay as-is for templates that read them directly
+      firstName: firstName || '',
+      lastName: rest.join(' '),
+      otherName: '',
+      location: info.address || '',
+      linkedinUrl: info.linkedin || '',
+      portfolioUrl: info.website || '',
+    };
+  }, [cvData?.personalInfo]);
+
   // Fit the real 794px-wide template into whichever Studio pane/sheet owns it.
   // Transform does not affect layout dimensions, so the wrapper below receives the
   // scaled width and measured height explicitly to keep every page scrollable.
@@ -137,7 +155,7 @@ const StudioTemplatePreview = () => {
               '--cv-leading': 1.5,
             }}
           >
-            <CVTemplateRenderer application={application} userProfile={cvData.personalInfo} />
+            <CVTemplateRenderer application={application} userProfile={templateProfile} />
           </div>
         </div>
       </div>

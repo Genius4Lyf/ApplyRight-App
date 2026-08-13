@@ -209,7 +209,13 @@ describe('StudioChat — commanded delete (Live Preview Remove)', () => {
       _id: 'd1',
       title: 'My CV',
       personalInfo: { fullName: 'Ada' },
-      experience: [{ _sortId: 'x', title: 'Job', company: 'Co', description: '• work' }],
+      // TWO roles, so deleting 'x' isn't emptying the section — the required-section
+      // backstop (a CV must keep at least one role) would otherwise refuse the delete and
+      // this test would never reach the fixend it exists to prove. 'y' is the survivor.
+      experience: [
+        { _sortId: 'x', title: 'Job', company: 'Co', description: '• work' },
+        { _sortId: 'y', title: 'Other', company: 'Co2', description: '• more' },
+      ],
       studioScan: { fitScore: 40, sections: [{ key: 'experience', band: 'bad', score: 20 }] },
       coachChats: {
         studio: [
@@ -230,7 +236,7 @@ describe('StudioChat — commanded delete (Live Preview Remove)', () => {
     await act(async () => {
       ctx.requestStudioCommand('deleteEntry', 'experience', 'x');
     });
-    await waitFor(() => expect(ctx.cvData.experience).toHaveLength(0));
+    await waitFor(() => expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['y']));
 
     // The coach was closed BEFORE the entry vanished, so a refresh can't reopen a coach
     // pointed at a role that no longer exists.

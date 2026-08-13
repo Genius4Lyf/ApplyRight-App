@@ -37,7 +37,7 @@ import PreviewSkillsBlock from './PreviewSkillsBlock';
 import PreviewSummaryBlock from './PreviewSummaryBlock';
 import StudioTemplatePreview from './StudioTemplatePreview';
 import { cvLabel } from '../../lib/cvLabels';
-import { withoutBlankEntries } from '../../lib/studioFlow';
+import { withoutBlankEntries, hasSubstance } from '../../lib/studioFlow';
 import { getCompletionStatus } from '../../lib/cvCompleteness';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
@@ -122,6 +122,7 @@ const ReorderableList = ({
   readOnly = false,
   children,
 }) => {
+  const { t } = useTranslation();
   const { reorderEntries, requestStudioCommand, activeEntry } = useAriaStudio();
 
   // The builder's sensor config, unchanged: a 5px drag threshold so a click still reads
@@ -155,6 +156,20 @@ const ReorderableList = ({
     commit(arrayMove(entries, index, target));
   };
 
+  // A required section may never be emptied: experience and education must each keep at
+  // least one entry. `entries` is already the blank-filtered displayed list, so its length
+  // IS the substantive count — the last real row is exactly the one whose delete is blocked.
+  // Projects is not required, so its rows stay removable to empty (Phase 3 adds the re-add).
+  const requiredSection = section === 'experience' || section === 'education';
+  const canRemove = !(requiredSection && entries.length <= 1);
+  const removeReason = requiredSection
+    ? t(
+        section === 'experience'
+          ? 'ariaStudio.livePreview.cannotEmptyExperience'
+          : 'ariaStudio.livePreview.cannotEmptyEducation'
+      )
+    : '';
+
   // `readOnly` guards the editor branch as well as the row's controls: the lock can land
   // WHILE an editor is open (an edit that empties a section un-completes the CV), and a
   // live form inside a read-only document would be the one way back in.
@@ -185,6 +200,10 @@ const ReorderableList = ({
         onEditWithAria={() => onEditWithAria?.(section, entry._sortId)}
         // Same `section` token the reorder uses — 'project' singular for projects.
         onRemove={() => requestStudioCommand?.('deleteEntry', section, entry._sortId)}
+        // The last role/degree can't be deleted — the row renders its Remove disabled
+        // with `removeReason` on hover rather than hiding it.
+        canRemove={canRemove}
+        removeReason={removeReason}
         // Aria is on THIS row: the row marks itself and drops every control.
         isActive={!!activeEntry && entry._sortId === activeEntry.sortId}
         readOnly={readOnly}
@@ -224,6 +243,36 @@ const Bullets = ({ description }) => {
   );
 };
 
+// The quiet "add another" footer under an entry-section's list: a label plus two ghost
+// buttons, Add manually / Build with Aria. Same shape in all three entry sections, so it
+// lives once here rather than three times inline.
+const AddEntryFooter = ({ labelKey, onAddManually, onAddWithAria }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-3 flex items-center justify-between gap-2">
+      <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+        {t(labelKey)}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onAddManually}
+          className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          {t('ariaStudio.livePreview.addManually')}
+        </button>
+        <button
+          type="button"
+          onClick={onAddWithAria}
+          className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          {t('ariaStudio.livePreview.buildWithAria')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // `isSheet` says HOW this preview is mounted, not how wide the window is: on the bottom
 // sheet the chat is behind the preview, so handing an entry to Aria has to close it or
 // the user is staring at the document while she asks her first question. On the inline
@@ -231,7 +280,16 @@ const Bullets = ({ description }) => {
 const StudioLivePreview = ({ onClose, isSheet = false }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const { cvData, updateCvData, requestStudioCommand, activeEntry } = useAriaStudio();
+  const {
+    cvData,
+    updateCvData,
+    requestStudioCommand,
+    activeEntry,
+    addRole,
+    addProject,
+    addEducation,
+    removeEntry,
+  } = useAriaStudio();
   const scan = cvData?.studioScan;
 
   // ── Hand an entry to Aria. ──
@@ -268,6 +326,22 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
     if (isSheet) onClose?.();
   };
 
+  // ── Add a new entry, manually or with Aria. ──
+  //
+  // Same `section` vocabulary as everywhere else on this sheet ('experience' | 'project' |
+  // 'education'). Manual creates a real (blank) entry straight away and opens its inline
+  // editor in the same slot the row would have used; Aria routes through the command
+  // channel like every other hand-off here, so StudioChat owns the pin and the interview.
+  const addManually = async (section) => {
+    const create = section === 'project' ? addProject : section === 'education' ? addEducation : addRole;
+    const sortId = await create();
+    if (sortId) setEditingSortId(sortId);
+  };
+  const addWithAria = (section) => {
+    requestStudioCommand?.('addEntry', section, null);
+    if (isSheet) onClose?.();
+  };
+
   // ── Which entry is being edited, ONE at a time. ──
   //
   // It lives up here rather than in each row because "one open editor" is a property of
@@ -275,7 +349,27 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // the row the editor replaces. A _sortId is unique across the whole document, so a
   // single value is enough to address any entry in any of the three lists.
   const [editingSortId, setEditingSortId] = useState(null);
-  const closeEdit = () => setEditingSortId(null);
+  // An entry that closes still blank was an abandoned "Add manually" — an EXISTING entry
+  // is never blank, so this only ever catches a just-created one — and a lingering blank
+  // row would sit there as a phantom "Add" the user never finished. Prune it on close.
+  const closeEdit = () => {
+    const sortId = editingSortId;
+    if (sortId) {
+      const lists = [
+        ['experience', cvData?.experience],
+        ['project', cvData?.projects],
+        ['education', cvData?.education],
+      ];
+      for (const [token, list] of lists) {
+        const entry = (list || []).find((e) => e._sortId === sortId);
+        if (entry) {
+          if (!hasSubstance(entry)) removeEntry?.(token, sortId);
+          break;
+        }
+      }
+    }
+    setEditingSortId(null);
+  };
   const [viewMode, setViewMode] = useState('edit');
 
   // The lock outranks the manual editor. If Aria takes over the entry that was mid-edit,
@@ -334,6 +428,17 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   const skillNames = skills.map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
   // NOTE: the joined contact line moved INTO PreviewContactBlock along with the header it
   // labels. `info` stays because hasAnything still asks it whether the CV has a name yet.
+
+  // A freshly "Add manually"-created entry is blank, so `capturedCv`'s blank-filter drops
+  // it from the displayed list — and with it, its own inline editor, the one place it can
+  // be filled in. Splice the entry BEING edited back in, straight off the raw cvData, so
+  // its editor still has a slot to render into even before it has anything in it.
+  const rawFor = (key) => cvData?.[key] || [];
+  const withNewEntry = (filtered, key) => {
+    if (!editingSortId || filtered.some((e) => e._sortId === editingSortId)) return filtered;
+    const extra = rawFor(key).find((e) => e._sortId === editingSortId);
+    return extra ? [...filtered, extra] : filtered;
+  };
 
   const bandOfKey = (key) => bandForKey(scan, key);
   // Render a body section only when it has content OR the scan has an opinion on it — an
@@ -522,7 +627,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                       >
                         <ReorderableList
                           section="experience"
-                          entries={experience}
+                          entries={withNewEntry(experience, 'experience')}
                           className="space-y-3"
                           editingSortId={editingSortId}
                           onEdit={setEditingSortId}
@@ -557,11 +662,18 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                             </>
                           )}
                         </ReorderableList>
+                        {canEdit && (
+                          <AddEntryFooter
+                            labelKey="ariaStudio.livePreview.addRole"
+                            onAddManually={() => addManually('experience')}
+                            onAddWithAria={() => addWithAria('experience')}
+                          />
+                        )}
                       </SectionBlock>
                     );
                   }
                   if (key === 'projects') {
-                    if (!show('projects', projects.length > 0)) return null;
+                    if (!canEdit && !show('projects', projects.length > 0)) return null;
                     return (
                       <SectionBlock
                         key="projects"
@@ -573,7 +685,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         resolve to no list and no-op silently. */}
                         <ReorderableList
                           section="project"
-                          entries={projects}
+                          entries={withNewEntry(projects, 'projects')}
                           className="space-y-3"
                           editingSortId={editingSortId}
                           onEdit={setEditingSortId}
@@ -591,6 +703,13 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                             </>
                           )}
                         </ReorderableList>
+                        {canEdit && (
+                          <AddEntryFooter
+                            labelKey="ariaStudio.livePreview.addProject"
+                            onAddManually={() => addManually('project')}
+                            onAddWithAria={() => addWithAria('project')}
+                          />
+                        )}
                       </SectionBlock>
                     );
                   }
@@ -631,7 +750,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         <div className="space-y-2">
                           <ReorderableList
                             section="education"
-                            entries={education}
+                            entries={withNewEntry(education, 'education')}
                             className="space-y-2"
                             editingSortId={editingSortId}
                             onEdit={setEditingSortId}
@@ -662,6 +781,13 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                               </>
                             )}
                           </ReorderableList>
+                          {canEdit && (
+                            <AddEntryFooter
+                              labelKey="ariaStudio.livePreview.addEducation"
+                              onAddManually={() => addManually('education')}
+                              onAddWithAria={() => addWithAria('education')}
+                            />
+                          )}
                           {/* Certifications are NOT reorderable — they carry no _sortId,
                           so there's nothing to address one by and index is identity.
                           They stay UNDER Education, where the builder stores them and

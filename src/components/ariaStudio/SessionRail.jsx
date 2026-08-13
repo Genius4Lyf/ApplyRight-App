@@ -29,6 +29,7 @@ const SessionRail = ({
   onNewTailoring,
   onNewCv,
   onOpenGuide,
+  onBeforeCreditStore,
 }) => {
   const { t } = useTranslation();
   return (
@@ -57,7 +58,7 @@ const SessionRail = ({
         </button>
       </div>
 
-      <StudioSidebarNav />
+      <StudioSidebarNav onBeforeNavigate={onBeforeCreditStore} />
 
       <div className="shrink-0 px-3 pb-1.5">
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">

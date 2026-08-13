@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, Settings, CreditCard, Moon, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
@@ -11,9 +11,10 @@ import { useAccountWallet } from '../../hooks/useAccountWallet';
 // navbar uses so there is only ever one wallet fetch/localStorage-writer active on a
 // page, and the SAME isAgent/homePath derivation the navbar uses (Navbar.jsx) rather
 // than re-deriving it.
-const StudioSidebarNav = () => {
+const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
   const isAuthenticated = !!localStorage.getItem('token');
@@ -30,6 +31,22 @@ const StudioSidebarNav = () => {
 
   const rowClass =
     'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
+
+  const openCredits = async () => {
+    try {
+      await onBeforeNavigate?.();
+    } catch {
+      // Checkout navigation remains available if a best-effort chat flush fails.
+    }
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    try {
+      localStorage.setItem('arPostCheckout', returnTo);
+      localStorage.setItem('arCheckoutIntent', 'credits');
+    } catch {
+      /* Router state still carries the return destination for this visit. */
+    }
+    navigate('/credits', { state: { returnTo } });
+  };
 
   if (!isAuthenticated) return null;
 
@@ -48,7 +65,7 @@ const StudioSidebarNav = () => {
           <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
           {t('nav.account.manageAccount')}
         </button>
-        <button type="button" onClick={() => navigate('/credits')} className={rowClass}>
+        <button type="button" onClick={openCredits} className={rowClass}>
           <CreditCard className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
           {t('nav.account.creditsAndBilling')}
         </button>
@@ -94,7 +111,7 @@ const StudioSidebarNav = () => {
         </div>
         <button
           type="button"
-          onClick={() => navigate('/credits')}
+          onClick={openCredits}
           className="w-full flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200 dark:border-slate-700 text-[12.5px] text-slate-600 dark:text-slate-300"
         >
           <span className="flex items-center gap-1.5">

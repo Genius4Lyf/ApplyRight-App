@@ -48,8 +48,17 @@ const BillingReturn = () => {
     }
   });
 
-  const successPath = returnTo ? `${returnTo}?paid=1` : '/dashboard';
+  const successPath = (() => {
+    if (!returnTo) return '/dashboard';
+    const hashIndex = returnTo.indexOf('#');
+    const pathAndQuery = hashIndex === -1 ? returnTo : returnTo.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? '' : returnTo.slice(hashIndex);
+    const separator = pathAndQuery.includes('?') ? '&' : '?';
+    return `${pathAndQuery}${separator}paid=1${hash}`;
+  })();
   const isInterviewReturn = !!returnTo && returnTo.includes('/mock');
+  const isWorkspaceReturn =
+    !!returnTo && (returnTo.startsWith('/cv-builder/') || returnTo.startsWith('/aria-studio'));
   const goToSuccess = useCallback(() => {
     try {
       localStorage.removeItem('arPostCheckout');
@@ -157,7 +166,9 @@ const BillingReturn = () => {
                 ? t('billing.return.ctaDownload')
                 : isInterviewReturn
                   ? t('billing.return.ctaInterview')
-                  : t('billing.return.ctaDashboard')}
+                  : isWorkspaceReturn
+                    ? t('billing.return.backToOrigin')
+                    : t('billing.return.ctaDashboard')}
             </button>
           </>
         )}

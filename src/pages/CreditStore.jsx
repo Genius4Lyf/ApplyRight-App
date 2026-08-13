@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Share2, X, Check, Play, ArrowRight, Lock } from 'lucide-react';
@@ -38,6 +38,7 @@ const SectionHeading = ({ eyebrow, title, subtitle }) => (
 
 const CreditStore = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
 
   // Ad State
@@ -76,6 +77,14 @@ const CreditStore = () => {
     try {
       setBuyingPack(planId);
       localStorage.setItem('arCheckoutOrigin', window.location.pathname);
+      const returnTo = location.state?.returnTo || localStorage.getItem('arPostCheckout');
+      if (returnTo) {
+        localStorage.setItem('arPostCheckout', returnTo);
+        localStorage.setItem('arCheckoutIntent', 'credits');
+      } else {
+        localStorage.removeItem('arPostCheckout');
+        localStorage.removeItem('arCheckoutIntent');
+      }
       const { link } = await billingService.checkout(planId, currency);
       if (link) window.location.href = link;
       else setBuyingPack(null);
@@ -485,8 +494,7 @@ const CreditStore = () => {
                     )}
                     <div>
                       <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                        {value}{' '}
-                        <span className="text-base font-semibold">{unit}</span>
+                        {value} <span className="text-base font-semibold">{unit}</span>
                       </p>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                         {perMin ?? (

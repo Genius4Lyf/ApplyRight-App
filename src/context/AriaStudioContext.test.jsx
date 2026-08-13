@@ -641,6 +641,95 @@ describe('AriaStudioProvider — entry writers', () => {
     expect(sortIds(held.current.cvData.experience)).toEqual(['a', 'b', 'c', 'blank']);
   });
 
+  // ── the required-section backstop ──
+  //
+  // Experience, education and skills may never be emptied. The USER-FACING guard is the
+  // Live Preview's disabled Remove (with the reason on hover) — this is the silent net
+  // under it, so no other path can empty a required section: a stale queued command, a
+  // future caller, a race between a delete and a re-render. `blocked: true` marks a
+  // REFUSAL rather than a failed save, which is why nothing is written and nothing toasts.
+
+  it('removeEntry BLOCKS the last experience — no write, nothing lost', async () => {
+    const held = await mountBound({
+      ...draftFixture(),
+      experience: [{ _sortId: 'only', title: 'Engineer', company: 'Acme' }],
+    });
+
+    let res;
+    await act(async () => {
+      res = await held.current.removeEntry('experience', 'only');
+    });
+
+    expect(res).toEqual({ ok: false, blocked: true, removed: null, index: -1 });
+    // The refusal is silent AND total: no save attempt, and the entry is still there.
+    expect(CVService.saveDraft).not.toHaveBeenCalled();
+    expect(sortIds(held.current.cvData.experience)).toEqual(['only']);
+  });
+
+  it('counts SUBSTANCE, not length — a blank placeholder does not keep the section alive', async () => {
+    // The gotcha this predicate exists for. The Studio seeds blank rows to hold a _sortId,
+    // so `next.length` is 1 after this delete — but a sheet with an empty heading on it is
+    // not a CV with a role on it, which is why the guard filters by hasSubstance.
+    const held = await mountBound({
+      ...draftFixture(),
+      experience: [
+        { _sortId: 'only', title: 'Engineer', company: 'Acme' },
+        { _sortId: 'blank', title: '', company: '', description: '' },
+      ],
+    });
+
+    let res;
+    await act(async () => {
+      res = await held.current.removeEntry('experience', 'only');
+    });
+
+    expect(res).toEqual({ ok: false, blocked: true, removed: null, index: -1 });
+    expect(CVService.saveDraft).not.toHaveBeenCalled();
+  });
+
+  it('removeEntry BLOCKS the last education', async () => {
+    // The fixture carries exactly one degree, so this is its last one.
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.removeEntry('education', 'e1');
+    });
+
+    expect(res).toEqual({ ok: false, blocked: true, removed: null, index: -1 });
+    expect(CVService.saveDraft).not.toHaveBeenCalled();
+    expect(sortIds(held.current.cvData.education)).toEqual(['e1']);
+  });
+
+  it('ALLOWS the last project — projects are optional, so the section may go empty', async () => {
+    // The other half of the contract, and the reason the guard names its sections rather
+    // than applying to every list: a CV with no side projects is a perfectly good CV.
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.removeEntry('project', 'p1');
+    });
+
+    expect(res).toMatchObject({ ok: true, index: 0 });
+    expect(res.blocked).toBeUndefined();
+    expect(lastPayload().projects).toEqual([]);
+    expect(held.current.cvData.projects).toEqual([]);
+  });
+
+  it('still deletes a NON-last experience — the guard is about the last one only', async () => {
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.removeEntry('experience', 'b');
+    });
+
+    expect(res).toMatchObject({ ok: true, index: 1 });
+    expect(res.blocked).toBeUndefined();
+    expect(sortIds(held.current.cvData.experience)).toEqual(['a', 'c', 'blank']);
+  });
+
   // ── replaceSkills ──
 
   it('replaceSkills replaces the array wholesale, saving ONLY { _id, skills }', async () => {
@@ -664,11 +753,54 @@ describe('AriaStudioProvider — entry writers', () => {
 
     let res;
     await act(async () => {
-      res = await held.current.replaceSkills([]);
+      res = await held.current.replaceSkills([{ name: 'Rust' }]);
     });
 
     expect(res).toEqual({ ok: false });
     expect(held.current.cvData.skills).toEqual([{ name: 'React' }, { name: 'Node' }]);
+  });
+
+  it('replaceSkills BLOCKS emptying a populated list — no write, skills intact', async () => {
+    // Skills is required, and this writer is the ONE way the list is written: the preview's
+    // pill × recomputes the whole array and hands it over. So "delete the last skill"
+    // arrives here as replaceSkills([]) — refused, the same way the last experience is.
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.replaceSkills([]);
+    });
+
+    expect(res).toEqual({ ok: false, blocked: true });
+    expect(CVService.saveDraft).not.toHaveBeenCalled();
+    expect(held.current.cvData.skills).toEqual([{ name: 'React' }, { name: 'Node' }]);
+  });
+
+  it('replaceSkills ALLOWS [] when the list was ALREADY empty — refuse to DELETE, not to no-op', async () => {
+    // The guard is about losing work, so it only fires when there is work to lose. An
+    // already-empty list writing [] takes nothing away, and blocking it would strand a CV
+    // that arrived skill-less (an import, a half-built draft) with a writer that always says no.
+    const held = await mountBound({ ...draftFixture(), skills: [] });
+
+    let res;
+    await act(async () => {
+      res = await held.current.replaceSkills([]);
+    });
+
+    expect(res).toEqual({ ok: true });
+    expect(res.blocked).toBeUndefined();
+  });
+
+  it('replaceSkills still allows a DOWN-TO-ONE edit — only zero is refused', async () => {
+    const held = await mountBound();
+
+    let res;
+    await act(async () => {
+      res = await held.current.replaceSkills([{ name: 'React' }]);
+    });
+
+    expect(res).toEqual({ ok: true });
+    expect(lastPayload().skills).toEqual([{ name: 'React' }]);
   });
 
   // ── replaceCertifications ──

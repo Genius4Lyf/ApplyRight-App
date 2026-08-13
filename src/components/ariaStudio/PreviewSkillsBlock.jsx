@@ -170,6 +170,14 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  // A CV needs at least one skill, so the last pill's × is disabled with the reason rather
+  // than removed — same "show why it's blocked" rule the required entry rows follow. Skills
+  // carry no _sortId, so "the last one" is simply a length check on the whole array.
+  const isLastSkill = skills.length <= 1;
+  const removeSkillLabel = isLastSkill
+    ? t('ariaStudio.livePreview.cannotEmptySkills')
+    : t('ariaStudio.livePreview.removeSkill');
+
   return (
     <div className="space-y-2.5">
       {groups.length ? (
@@ -189,9 +197,9 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
                     <button
                       type="button"
                       onClick={() => remove(skill)}
-                      disabled={busy}
-                      aria-label={t('ariaStudio.livePreview.removeSkill')}
-                      title={t('ariaStudio.livePreview.removeSkill')}
+                      disabled={busy || isLastSkill}
+                      aria-label={removeSkillLabel}
+                      title={removeSkillLabel}
                       className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-slate-400 transition-[opacity,color,background-color] hover:bg-slate-200 hover:text-slate-700 disabled:cursor-not-allowed dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200 ${revealOnHover}`}
                     >
                       <X className="h-2.5 w-2.5" aria-hidden="true" />

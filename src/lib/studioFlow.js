@@ -4,7 +4,7 @@
 // refresh restores the flow exactly, and the rules can be reasoned about (and tested)
 // without mounting a chat.
 
-import { CV_SECTIONS } from './cvCompleteness';
+import { CV_SECTIONS, getCompletionStatus } from './cvCompleteness';
 
 /**
  * The six sections a build session walks, in CV-builder order.
@@ -141,6 +141,13 @@ export function buildProgress(cv, msgs = []) {
     done,
     total: BUILD_SECTIONS.length,
   };
+}
+
+// True when the CV is content-complete IGNORING blank placeholder rows — the signal that an
+// entry interaction is an EDIT of a finished CV, not a build step. Reuses the one completeness
+// definition (getCompletionStatus) the preview lock / dashboard / picker all use.
+export function finishableNow(cv) {
+  return getCompletionStatus(withoutBlankEntries(cv)).isComplete;
 }
 
 /**
@@ -519,7 +526,7 @@ export function derivePhase(msgs = [], cvData = {}) {
     // away on a refresh.
     if (cvData?.studioPending?.kind === 'projectideas') return 'build:project-ideas';
 
-    if (has('summarydone')) return 'build:done';
+    if (has('summarydone') || finishableNow(cvData)) return 'build:done';
     if (has('skillsdone')) return 'build:sections';
     if (has('certsdone')) return 'build:sections';
     if (has('educationdone')) return 'build:sections';

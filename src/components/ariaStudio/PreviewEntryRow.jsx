@@ -18,6 +18,8 @@ const PreviewEntryRow = ({
   onEditWithAria,
   canEditWithAria = false,
   onRemove,
+  canRemove = true,
+  removeReason = '',
   isActive = false,
   readOnly = false,
   children,
@@ -173,7 +175,7 @@ const PreviewEntryRow = ({
                   </>
                 )}
 
-                {onRemove && (
+                {onRemove && canRemove && (
                   <>
                     <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
                     <button
@@ -184,6 +186,25 @@ const PreviewEntryRow = ({
                         setConfirming(true);
                       }}
                       className={`${menuItem} text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40`}
+                    >
+                      <Trash2 className="h-3 w-3 shrink-0" />
+                      {t('ariaStudio.livePreview.removeEntry')}
+                    </button>
+                  </>
+                )}
+                {/* Last required entry: the same row, disabled, with the reason on hover.
+                    Showing WHY deletion is blocked beats hiding the control — a missing
+                    action reads as a bug, a disabled one with a tooltip reads as a rule.
+                    No onClick, so it can never arm the confirm. */}
+                {onRemove && !canRemove && (
+                  <>
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      disabled
+                      title={removeReason}
+                      className={menuItem}
                     >
                       <Trash2 className="h-3 w-3 shrink-0" />
                       {t('ariaStudio.livePreview.removeEntry')}

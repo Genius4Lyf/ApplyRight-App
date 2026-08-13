@@ -29,6 +29,7 @@ import {
   scoreDelta,
   scoreSignature,
   isDismissable,
+  finishableNow,
 } from '../../lib/studioFlow';
 import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
@@ -604,6 +605,17 @@ const StudioChat = ({ onPaywall }) => {
       // no stored stage (an older CV) gets the chips, which is the correct fallback rather
       // than a guess.
       clearStudioCommand?.();
+      return;
+    }
+
+    if (studioCommand.type === 'addEntry') {
+      const { section } = studioCommand;
+      clearStudioCommand?.();
+      // Build track only (tailor is disabled). enterSection creates a fresh entry, pins it
+      // and drops into the from-scratch interview (type chip → capture → bullets). On
+      // finish, Phase 1's completeness-aware finishSection lands it back on the finish card.
+      // eslint-disable-next-line no-use-before-define
+      if (cvData?.studioKind === 'build') enterSection(section);
       return;
     }
 
@@ -1821,7 +1833,11 @@ const StudioChat = ({ onPaywall }) => {
     // An untouched entry would otherwise sit in the CV as an empty row forever — and,
     // worse, tick its section in the completeness view.
     const isBlank = pinnedEntry && entryProgress(pinnedEntry, section).done === 0;
-    if (!isBlank && pinnedEntry) {
+    // A content-complete CV means this is an EDIT, not a build step: don't record a duplicate
+    // receipt, don't stamp a DONE marker, don't walk the section chain — just close the entry
+    // and return to the finish card.
+    const editing = finishableNow(cvData);
+    if (!isBlank && pinnedEntry && !editing) {
       push({ who: 'rolerecord', sortId: pinnedEntry._sortId, section });
     }
     advance(() => {
@@ -1832,15 +1848,21 @@ const StudioChat = ({ onPaywall }) => {
           console.error('Failed to prune the empty entry', err)
         );
       }
-      push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
-      setPhase('build:sections');
-      ariaSays(
-        section === 'experience'
-          ? t('ariaStudio.chat.finishSection.experience')
-          : section === 'project'
-            ? t('ariaStudio.chat.finishSection.project')
-            : t('ariaStudio.chat.finishSection.education')
-      );
+      if (editing) {
+        push({ who: 'unpinrole' });
+        setPhase('build:done');
+        ariaSays(t('ariaStudio.chat.editUpdated'));
+      } else {
+        push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
+        setPhase('build:sections');
+        ariaSays(
+          section === 'experience'
+            ? t('ariaStudio.chat.finishSection.experience')
+            : section === 'project'
+              ? t('ariaStudio.chat.finishSection.project')
+              : t('ariaStudio.chat.finishSection.education')
+        );
+      }
     }, t('ariaStudio.chat.thinking.sectionWrappedUp'));
   };
 

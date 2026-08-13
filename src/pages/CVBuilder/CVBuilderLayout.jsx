@@ -12,6 +12,8 @@ import {
   Eye,
   EyeOff,
   ChevronLeft,
+  ChevronUp,
+  X,
   Target,
   Lock,
   Crown,
@@ -20,6 +22,8 @@ import { CVBuilderProvider, useCVBuilder } from '../../context/CVContext';
 import ATSCoachPanel from '../../components/cv/ATSCoachPanel';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import CVTemplateRenderer from '../../components/CVTemplateRenderer';
+import AriaOrbit from '../../components/cv/AriaOrbit';
+import WorkspaceCreditBalance from '../../components/WorkspaceCreditBalance';
 
 const ScaledCVPreview = ({ cvData }) => {
   const { t } = useTranslation();
@@ -238,24 +242,66 @@ const CVBuilderInner = () => {
   const currentStepId = steps[currentStepIndex]?.id;
 
   // ── Draggable mobile coach drawer ────────────────────────────────────────────
-  // The coach lives in an always-present bottom drawer the student drags up (to
+  // Mobile Aria starts as a compact dock and expands into a conversation sheet.
   // read/chat, up to ~85vh) or down to a small peek — so they balance the CV form
-  // against the conversation. Height is a plain px value driven by the drag handle.
-  const DRAWER_MIN = 140;
-  const drawerMax = () => Math.round(window.innerHeight * 0.85);
-  const [drawerH, setDrawerH] = useState(260); // resting "peek"
+  // visualViewport keeps the top edge stable while the bottom contracts above the
+  // software keyboard instead of jumping or being covered.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerDragY, setDrawerDragY] = useState(0);
+  const [drawerDragging, setDrawerDragging] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(() => ({
+    height:
+      typeof window !== 'undefined' ? (window.visualViewport?.height ?? window.innerHeight) : 800,
+    offsetTop: typeof window !== 'undefined' ? (window.visualViewport?.offsetTop ?? 0) : 0,
+  }));
   const dragRef = useRef(null);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const updateViewport = () => {
+      setMobileViewport({
+        height: viewport?.height ?? window.innerHeight,
+        offsetTop: viewport?.offsetTop ?? 0,
+      });
+    };
+    updateViewport();
+    viewport?.addEventListener('resize', updateViewport);
+    viewport?.addEventListener('scroll', updateViewport);
+    window.addEventListener('resize', updateViewport);
+    return () => {
+      viewport?.removeEventListener('resize', updateViewport);
+      viewport?.removeEventListener('scroll', updateViewport);
+      window.removeEventListener('resize', updateViewport);
+    };
+  }, []);
+
+  const viewportBottom = mobileViewport.height + mobileViewport.offsetTop;
+  const sheetTop =
+    typeof window !== 'undefined' ? Math.max(12, Math.round(window.innerHeight * 0.2)) : 120;
+  const expandedDrawerH = Math.max(180, Math.min(720, viewportBottom - sheetTop - 10));
+
   const onDragStart = (e) => {
-    dragRef.current = { y: e.clientY, h: drawerH };
+    if (!drawerOpen) return;
+    dragRef.current = { y: e.clientY, dy: 0 };
+    setDrawerDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onDragMove = (e) => {
     if (!dragRef.current) return;
-    const h = dragRef.current.h + (dragRef.current.y - e.clientY);
-    setDrawerH(Math.max(DRAWER_MIN, Math.min(drawerMax(), h)));
+    const dy = Math.max(0, e.clientY - dragRef.current.y);
+    dragRef.current.dy = dy;
+    setDrawerDragY(dy);
   };
-  const onDragEnd = () => {
+  const onDragEnd = (e) => {
+    if (!dragRef.current) return;
+    const shouldClose = dragRef.current.dy > 84;
+    if (e?.currentTarget?.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     dragRef.current = null;
+    setDrawerDragging(false);
+    setDrawerDragY(0);
+    if (shouldClose) setDrawerOpen(false);
   };
 
   // The role/project Aria is focused on (bound via "Ask Aria" from Work History /
@@ -279,8 +325,7 @@ const CVBuilderInner = () => {
   // is no longer a usable scroll target, so lock the document the same way
   // AriaStudio's full-screen chat does. Restores whatever overflow value was there
   // before (never blindly clears it — another surface may own the lock too).
-  const drawerExpanded =
-    !isDesktop && drawerH > (typeof window !== 'undefined' ? window.innerHeight * 0.5 : Infinity);
+  const drawerExpanded = !isDesktop && drawerOpen;
   useEffect(() => {
     if (!drawerExpanded) return;
     const prevHtmlOverflow = document.documentElement.style.overflow;
@@ -308,7 +353,7 @@ const CVBuilderInner = () => {
     });
     setActiveTab('coach');
     setShowPreview(true); // ensure desktop rail open
-    setDrawerH((h) => Math.max(h, Math.round(window.innerHeight * 0.6))); // raise mobile drawer
+    setDrawerOpen(true);
   };
 
   // Coach the user through every building step, then hand them the live preview
@@ -506,11 +551,7 @@ const CVBuilderInner = () => {
                         index + 1
                       )}
                     </span>
-                    <span
-                      className={`whitespace-nowrap ${isCurrent ? 'inline' : 'hidden md:inline'}`}
-                    >
-                      {step.label}
-                    </span>
+                    <span className="inline whitespace-nowrap">{step.label}</span>
                   </button>
                 );
               })}
@@ -531,6 +572,7 @@ const CVBuilderInner = () => {
                 <span className="hidden sm:inline">{t('cvBuilder.layout.unsaved')}</span>
               </span>
             )}
+            <WorkspaceCreditBalance onBeforeNavigate={flushDraft} />
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
@@ -538,7 +580,9 @@ const CVBuilderInner = () => {
               title={showPreview ? t('cvBuilder.layout.hideAria') : t('cvBuilder.layout.showAria')}
             >
               {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showPreview ? t('cvBuilder.layout.hideAria') : t('cvBuilder.layout.showAria')}</span>
+              <span>
+                {showPreview ? t('cvBuilder.layout.hideAria') : t('cvBuilder.layout.showAria')}
+              </span>
             </button>
             <button
               type="button"
@@ -557,7 +601,7 @@ const CVBuilderInner = () => {
                 form clears the resting coach drawer (≈ its peek height). */}
             <div
               ref={workspaceScrollRef}
-              className={`flex-1 min-h-0 overflow-x-hidden scrollbar-none pb-[280px] lg:pb-0 ${
+              className={`flex-1 min-h-0 overflow-x-hidden scrollbar-none pb-[104px] lg:pb-0 ${
                 currentStepId === 'target_job'
                   ? 'overflow-y-auto lg:overflow-hidden'
                   : 'overflow-y-auto'
@@ -587,6 +631,7 @@ const CVBuilderInner = () => {
                     tailoredForJob: cvData.tailoredForJob,
                     focusedEntry,
                     onAskAria: askAria,
+                    ariaDrawerOpen: drawerExpanded,
                     externalEditNonce,
                     lastAiWriteSortId,
                   }}
@@ -647,58 +692,132 @@ const CVBuilderInner = () => {
           live in parallel with the desktop rail — a hidden duplicate would clobber
           coachChats on focus. */}
       {!isDesktop && (
-        <div
-          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex flex-col"
-          style={{ height: drawerH, paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          {/* Drag handle */}
+        <>
+          <button
+            type="button"
+            aria-label="Close Aria"
+            tabIndex={drawerOpen ? 0 : -1}
+            onClick={() => setDrawerOpen(false)}
+            className={`lg:hidden fixed inset-0 z-[9998] bg-slate-950/40 backdrop-blur-[3px] transition-[opacity,backdrop-filter] duration-300 ${
+              drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          />
+
           <div
-            className="py-2.5 flex justify-center cursor-ns-resize touch-none shrink-0"
-            onPointerDown={onDragStart}
-            onPointerMove={onDragMove}
-            onPointerUp={onDragEnd}
-            onPointerCancel={onDragEnd}
+            className={`lg:hidden fixed left-3 right-3 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 shadow-[0_12px_40px_rgba(15,23,42,0.24)] flex flex-col ${
+              drawerOpen ? 'z-[9999]' : 'z-40'
+            }`}
+            style={{
+              height: drawerOpen ? expandedDrawerH : 64,
+              top: drawerOpen
+                ? Math.max(sheetTop, mobileViewport.offsetTop + 8)
+                : window.innerHeight - 76,
+              borderRadius: drawerOpen ? 28 : 32,
+              transform: `translate3d(0, ${drawerDragY}px, 0)`,
+              paddingBottom: drawerOpen ? 'env(safe-area-inset-bottom)' : 0,
+              transition: drawerDragging
+                ? 'none'
+                : 'height 420ms cubic-bezier(0.22, 1, 0.36, 1), top 420ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
           >
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-          </div>
-
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            {/* Slim preview toggle — Coach ↔ Live preview. Coach→preview is the book
-              icon inside the coach header; preview→coach is this back bar. */}
-            {activeTab === 'preview' && (
-              <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('coach')}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" /> Aria
-                </button>
-                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  {t('cvBuilder.layout.livePreview')}
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open Aria chat"
+              className={`absolute inset-0 z-10 flex items-center gap-3 px-4 text-left transition-all duration-200 ${
+                drawerOpen ? 'opacity-0 pointer-events-none scale-[0.98]' : 'opacity-100 scale-100'
+              }`}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                <AriaOrbit size={21} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
+                  Ask Aria
                 </span>
-              </div>
-            )}
+                <span className="block truncate text-[11px] text-slate-400 dark:text-slate-500">
+                  Get help with this CV
+                </span>
+              </span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <ChevronUp className="h-4 w-4" />
+              </span>
+            </button>
 
-            {activeTab === 'coach' ? (
-              <div className="flex-1 min-h-0 flex flex-col">
-                <ATSCoachPanel
-                  cvData={liveCvData}
-                  user={user}
-                  currentStepId={currentStepId}
-                  updateCvData={updateCvData}
-                  onShowPreview={() => setActiveTab('preview')}
-                  focusedEntry={focusedEntry}
-                  onClearFocus={() => setFocusedEntry(null)}
-                />
+            <div
+              className={`relative z-20 shrink-0 h-[58px] flex items-center px-4 transition-opacity duration-200 ${
+                drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              <div
+                className="absolute inset-x-0 top-0 h-7 flex justify-center cursor-ns-resize touch-none"
+                onPointerDown={onDragStart}
+                onPointerMove={onDragMove}
+                onPointerUp={onDragEnd}
+                onPointerCancel={onDragEnd}
+              >
+                <span className="mt-2 h-1 w-8 rounded-full bg-slate-400 dark:bg-slate-600" />
               </div>
-            ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-                <ScaledCVPreview cvData={cvData} />
+              <span className="mt-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                <AriaOrbit size={20} />
+              </span>
+              <div className="mt-3 ml-2.5 min-w-0 flex-1">
+                <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">Aria</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">Your CV assistant</p>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Close Aria"
+                className="mt-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div
+              aria-hidden={!drawerOpen}
+              className={`flex-1 min-h-0 flex flex-col overflow-hidden border-t border-slate-100 dark:border-slate-800 transition-opacity duration-200 ${
+                drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none invisible'
+              }`}
+            >
+              {/* Slim preview toggle — Coach ↔ Live preview. Coach→preview is the book
+              icon inside the coach header; preview→coach is this back bar. */}
+              {activeTab === 'preview' && (
+                <div className="flex items-center px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('coach')}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-colors"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Aria
+                  </button>
+                  <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    {t('cvBuilder.layout.livePreview')}
+                  </span>
+                </div>
+              )}
+
+              {activeTab === 'coach' ? (
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <ATSCoachPanel
+                    cvData={liveCvData}
+                    user={user}
+                    currentStepId={currentStepId}
+                    updateCvData={updateCvData}
+                    onShowPreview={() => setActiveTab('preview')}
+                    focusedEntry={focusedEntry}
+                    onClearFocus={() => setFocusedEntry(null)}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                  <ScaledCVPreview cvData={cvData} />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

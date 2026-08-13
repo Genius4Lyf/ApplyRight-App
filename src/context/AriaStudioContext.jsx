@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import CVService from '../services/cv.service';
 import { newSortId } from '../lib/sortId';
 import { startCvErrorMessage } from '../lib/startCvError';
-import { SECTION_LIST } from '../lib/studioFlow';
+import { SECTION_LIST, hasSubstance } from '../lib/studioFlow';
 
 // Aria Studio's state brain — a decoupled sibling of CVContext. It carries the SAME
 // CV-mutation invariants (functional coachChats merge, debounced chats autosave as the
@@ -522,6 +522,17 @@ export const AriaStudioProvider = ({ children }) => {
       if (index === -1) return { ok: false, removed: null, index: -1 };
       const removed = previous[index];
       const next = previous.filter((_, i) => i !== index);
+      // Defensive backstop: a required section may never be emptied. The affordance guard
+      // in the Live Preview (disabled Remove with a reason) is the user-facing path — this
+      // is the silent net under it, so no code path (a stale command, a future caller) can
+      // delete the last substantive experience/degree. No write, no toast: `blocked` tells
+      // a caller it was refused, distinct from a save that failed.
+      if (
+        (section === 'experience' || section === 'education') &&
+        next.filter(hasSubstance).length === 0
+      ) {
+        return { ok: false, blocked: true, removed: null, index: -1 };
+      }
       const ok = await commitList(key, next, previous, "Couldn't delete that. Try again.");
       return ok ? { ok: true, removed, index } : { ok: false, removed, index, saveFailed: true };
     },
@@ -570,6 +581,12 @@ export const AriaStudioProvider = ({ children }) => {
       if (!cvData) return { ok: false };
       const previous = cvData.skills || [];
       const next = nextSkills || [];
+      // Defensive backstop, mirroring removeEntry: a CV must keep at least one skill. The
+      // pill ×'s disabled state is the user-facing guard; this refuses a whole-array replace
+      // that would clear a non-empty section, so no path can empty it silently.
+      if (next.length === 0 && previous.length > 0) {
+        return { ok: false, blocked: true };
+      }
       const ok = await commitList(
         'skills',
         next,

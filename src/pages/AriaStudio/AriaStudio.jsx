@@ -204,6 +204,7 @@ const StudioDesk = () => {
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
     onOpenGuide: () => setShowWelcomeGuide(true),
+    onBeforeCreditStore: flushChats,
   };
 
   // Select a right-panel view. On a sheet width both open as the bottom sheet; inline,

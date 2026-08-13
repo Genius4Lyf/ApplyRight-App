@@ -16,6 +16,7 @@ import {
   resolveProjectType,
   resolvePinnedEntry,
   withoutBlankEntries,
+  finishableNow,
   openFix,
   rankEntriesByGap,
   scoreDelta,
@@ -938,6 +939,89 @@ describe('the placeholder rule extends to every section', () => {
     const cv = { experience: [{ _sortId: 'r1' }] };
     withoutBlankEntries(cv);
     expect(cv.experience).toHaveLength(1); // the real entry (and its _sortId) survives
+  });
+});
+
+// The "is this an EDIT?" signal. It reuses the ONE completeness definition
+// (getCompletionStatus) the preview lock, the dashboard and the picker all use, applied to
+// the blank-row-free view — so a placeholder can never make a half-built CV claim to be
+// finished, and a finished CV can never be sent back round the build chain.
+describe('finishableNow', () => {
+  const COMPLETE = {
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'Field operator with six years offshore.',
+    experience: [{ _sortId: 'r1', title: 'Operator', description: '• Ran pressure tests' }],
+    education: [{ _sortId: 'e1', degree: 'BSc', school: 'UNIBEN' }],
+    skills: [{ name: 'Pressure control' }],
+  };
+
+  it('is true for a content-complete CV', () => {
+    expect(finishableNow(COMPLETE)).toBe(true);
+  });
+
+  it('projects are optional — a CV with none is still finishable', () => {
+    expect(finishableNow({ ...COMPLETE, projects: [] })).toBe(true);
+  });
+
+  it('is false while ANY required section is missing', () => {
+    expect(finishableNow({ ...COMPLETE, education: [] })).toBe(false);
+    expect(finishableNow({ ...COMPLETE, experience: [] })).toBe(false);
+    expect(finishableNow({ ...COMPLETE, skills: [] })).toBe(false);
+    expect(finishableNow({ ...COMPLETE, professionalSummary: '' })).toBe(false);
+    expect(finishableNow({ ...COMPLETE, personalInfo: {} })).toBe(false);
+  });
+
+  it('a BLANK placeholder row does not make a CV finishable', () => {
+    // The raw canonical rule only asks "is the list non-empty?", so the placeholder the
+    // Studio creates to hold a _sortId would read as a finished education section — and an
+    // in-progress build would jump to the finish card. withoutBlankEntries is what stops it.
+    const placeholderEducation = { ...COMPLETE, education: [{ _sortId: 'e1' }] };
+    expect(finishableNow(placeholderEducation)).toBe(false);
+    // …and it becomes true the moment that row carries real content.
+    const filledEducation = { ...COMPLETE, education: [{ _sortId: 'e1', degree: 'BSc' }] };
+    expect(finishableNow(filledEducation)).toBe(true);
+  });
+
+  it('survives an empty or missing CV', () => {
+    expect(finishableNow({})).toBe(false);
+    expect(finishableNow(null)).toBe(false);
+    expect(finishableNow()).toBe(false);
+  });
+});
+
+// Editing a finished CV must not replay the build chain. The marker-driven chain answers
+// "which section comes next", which is the wrong question once the CV is at 100% — so a
+// content-complete build resolves to the finish card even with no summarydone marker.
+describe('derivePhase — editing a FINISHED build', () => {
+  const COMPLETE = {
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'Field operator with six years offshore.',
+    experience: [{ _sortId: 'r1', title: 'Operator', description: '• Ran pressure tests' }],
+    education: [{ _sortId: 'e1', degree: 'BSc', school: 'UNIBEN' }],
+    skills: [{ name: 'Pressure control' }],
+  };
+  const session = [{ who: 'buildintro' }, { who: 'buildstart' }, { who: 'contactdone' }];
+
+  it('lands on the finish card for a content-complete CV with NO summarydone marker', () => {
+    expect(session.some((m) => m.who === 'summarydone')).toBe(false);
+    expect(derivePhase(session, COMPLETE)).toBe('build:done');
+  });
+
+  it('a live interview still wins — the pin is checked first', () => {
+    expect(
+      derivePhase([...session, { who: 'pinrole', sortId: 'r1', section: 'experience' }], COMPLETE)
+    ).toBe('build:experience');
+    expect(
+      derivePhase([...session, { who: 'pinrole', sortId: 'p1', section: 'project' }], COMPLETE)
+    ).toBe('build:project');
+  });
+
+  it('an IN-PROGRESS build is untouched — it is gated on completeness', () => {
+    // One required section short: the section chain still decides, so nobody is dropped
+    // onto a finish card for a CV that isn't finished.
+    const midBuild = { ...COMPLETE, professionalSummary: '' };
+    expect(derivePhase(session, midBuild)).toBe('build:sections');
+    expect(derivePhase([{ who: 'buildstart' }], midBuild)).toBe('build:career-stage');
   });
 });
 
