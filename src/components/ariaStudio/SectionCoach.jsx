@@ -450,7 +450,7 @@ const SectionCoach = ({
                 key={i}
                 type="button"
                 onClick={() => insertStarter(s)}
-                className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
+                className="text-[17px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
               >
                 {s}
               </button>
@@ -459,7 +459,7 @@ const SectionCoach = ({
               <button
                 type="button"
                 onClick={toggleExample}
-                className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="text-[17px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 {exampleOpen
                   ? t('cvBuilder.askAria.hideExample')
@@ -470,7 +470,7 @@ const SectionCoach = ({
           {exampleOpen && exampleAnswer && (
             <div
               ref={exampleRef}
-              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic"
+              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[17px] sm:text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 italic"
             >
               {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
             </div>

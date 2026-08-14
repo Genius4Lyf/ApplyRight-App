@@ -292,6 +292,15 @@
     visibility: visible;
   }
 
+  /* Aria cards are response and workspace surfaces, not compact app chrome. Keep their
+     mobile content at a comfortable reading size; mono labels remain small metadata. */
+  @media (max-width: 639px) {
+    .aria-response-card :is(p, span, li, label, button, input, textarea, select):not(.font-mono) {
+      font-size: 17px !important;
+      line-height: 1.5;
+    }
+  }
+
   /* Aria one-shot apply-confirm ring (motion-spec 3.2) — a single emerald pulse
      when a suggestion/bullet card is applied. Disabled under reduced motion. */
   .aria-ring-pulse {

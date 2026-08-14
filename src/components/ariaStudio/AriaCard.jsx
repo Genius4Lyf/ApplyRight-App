@@ -34,7 +34,7 @@ const AriaCard = React.forwardRef(({ cardKey, children, wide = false }, ref) => 
     <motion.div
       ref={ref}
       key={cardKey}
-      className={`aria-row self-start flex flex-col items-start gap-1.5 ${
+      className={`aria-row aria-response-card self-start flex flex-col items-start gap-1.5 ${
         wide ? 'w-full max-w-none' : 'max-w-[92%]'
       }`}
       {...portalCard(reduce)}

@@ -279,7 +279,7 @@ const StudioDesk = () => {
         {/* Conversation — full-bleed on a phone, so the chat owns the screen. On desktop
             it's a flex column whose grow ratio is negotiated with the preview via the
             main row's data-attrs (see .studio-col rules in index.css). */}
-        <div className="studio-col-chat min-w-0 min-h-0 flex flex-col sm:rounded-xl border-y sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="studio-col-chat min-w-0 min-h-0 flex flex-col sm:rounded-xl sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
             <button
               type="button"
