@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
@@ -74,15 +74,21 @@ const AriaComposer = ({
     // Match the chat-composer behavior: once the field has expanded, retain that
     // roomy full-width edit state while any text remains. It resets only when the
     // user clears the message entirely.
-    const shouldExpand = textarea.scrollHeight > 48 || (expanded && hasText);
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
-    setExpanded((wasExpanded) => (wasExpanded === shouldExpand ? wasExpanded : shouldExpand));
-  }, [expanded, value]);
+    const wrapped = hasText && textarea.scrollHeight > 48;
+    // Placeholder-only composers always return to their true compact resting height.
+    textarea.style.height = hasText ? `${Math.min(textarea.scrollHeight, 240)}px` : '44px';
+    // Derive the sticky expanded state from the previous value inside the setter.
+    // Keeping `expanded` out of this callback's dependencies prevents a resize →
+    // setState → resize loop in the layout effect.
+    setExpanded((wasExpanded) => {
+      const shouldExpand = wrapped || (wasExpanded && hasText);
+      return wasExpanded === shouldExpand ? wasExpanded : shouldExpand;
+    });
+  }, [value]);
 
-  // Voice recognition updates `value` through React, which does not fire the
-  // textarea's native input event. Resize from the value itself so typed and spoken
-  // text have exactly the same growing behavior.
-  useEffect(() => {
+  // Resize before paint. A regular effect briefly displayed the temporary `auto`
+  // height, which looked like a vertical jump during live transcription.
+  useLayoutEffect(() => {
     resizeTextarea();
   }, [resizeTextarea]);
 
@@ -151,7 +157,7 @@ const AriaComposer = ({
 
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
-      <div className="w-full max-w-3xl mx-auto px-3 sm:px-0">
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-0">
         <div className={`relative rounded-[26px] border bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow ${
           listening
             ? 'border-rose-300/80 dark:border-rose-400/40'
@@ -162,11 +168,8 @@ const AriaComposer = ({
             value={value}
             disabled={inputInert}
             onChange={handleTextChange}
-            // Auto-grow to the content, capped at max-h-[140px] (where the textarea's own
+            // Auto-grow to the content, capped at a roomy Google-like height (where the textarea's own
             // scrollbar takes over — hidden via scrollbar-none).
-            onInput={() => {
-              resizeTextarea();
-            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -180,8 +183,8 @@ const AriaComposer = ({
             // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
             // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
             // of leaving the button a few px high or low against the text.
-            className={`block w-full min-h-10 bg-transparent border-0 outline-none resize-none overscroll-contain [-webkit-overflow-scrolling:touch] px-3 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[160px] transition-[height] duration-150 ease-out ${
-              expanded ? 'pr-3' : showModelPicker ? 'pr-60' : 'pr-28'
+            className={`block w-full min-h-11 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
+              expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-32' : 'pl-3 pr-32'
             } ${
               inputInert ? 'opacity-50' : ''
             } ${inert ? 'cursor-not-allowed' : ''}`}
@@ -190,8 +193,8 @@ const AriaComposer = ({
           <div
             className={
               expanded
-                ? 'flex h-10 items-center justify-end gap-2 px-1'
-                : 'absolute bottom-1.5 right-1.5 flex items-center gap-2'
+                ? 'pointer-events-none flex h-11 items-center justify-between gap-2 px-1'
+                : 'pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2'
             }
           >
           {/* The model chip trails the text, right of the input — mirrors the reference
@@ -199,19 +202,22 @@ const AriaComposer = ({
               of the viewport. Omitted entirely when the caller already shows the model
               elsewhere (Aria Studio's header). */}
           {showModelPicker && (
-            <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="right" compact />
+            <div className="pointer-events-auto">
+              <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="right" compact />
+            </div>
           )}
 
+          <div className="pointer-events-auto flex items-center gap-2">
           {canDictate && (
             <button
               type="button"
               onClick={toggleDictation}
               aria-label={listening ? t('cvBuilder.ariaComposer.stopDictation') : t('cvBuilder.ariaComposer.startDictation')}
               aria-pressed={listening}
-              className={`relative shrink-0 h-10 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
+              className={`relative shrink-0 h-11 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
                 listening
-                  ? 'w-[86px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
-                  : 'w-10 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+                  ? 'w-[92px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
+                  : 'w-11 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               {listening ? (
@@ -223,12 +229,12 @@ const AriaComposer = ({
                       style={{ height: `${height}px`, animationDelay: `${index * 90}ms` }}
                     />
                   ))}
-                  <span className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white">
-                    <Square className="h-2.5 w-2.5 fill-current" />
+                  <span className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-white">
+                    <Square className="h-3 w-3 fill-current" />
                   </span>
                 </span>
               ) : (
-                <Mic className="mx-auto h-4 w-4" />
+                <Mic className="mx-auto h-5 w-5" />
               )}
             </button>
           )}
@@ -238,16 +244,17 @@ const AriaComposer = ({
             onClick={send}
             disabled={!canSend}
             aria-label={resolvedSendAriaLabel}
-            className={`shrink-0 h-10 flex items-center justify-center rounded-full transition-colors ${
-              sendLabel ? 'px-4 text-[13px] font-semibold' : 'w-10'
+            className={`shrink-0 h-11 flex items-center justify-center rounded-full transition-colors ${
+              sendLabel ? 'px-4 text-[13px] font-semibold' : 'w-11 aspect-square'
             } ${
               inert
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white disabled:opacity-40'
             }`}
           >
-            {sendLabel || <ArrowUp className="w-4 h-4" />}
+            {sendLabel || <ArrowUp className="w-5 h-5" />}
           </button>
+          </div>
           </div>
         </div>
 

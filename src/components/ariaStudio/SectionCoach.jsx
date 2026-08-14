@@ -375,33 +375,36 @@ const SectionCoach = ({
     }
   };
 
-  // The coach's own composer (free-note + textarea + Back/turns row). Rendered while
+  // The coach's own composer (floating free-status + textarea + Back/turns row). Rendered while
   // she's interviewing. It must stay PINNED, not scroll away with the stream — so it's
   // portaled into StudioChat's docked slot (`dockNode`) rather than sitting inside the
   // scroll region. Falls back to inline only if the slot isn't attached yet (one frame).
   const composer = phase === 'chat' && (
-    <AriaComposer
-      className="pt-3 pb-[env(safe-area-inset-bottom)]"
+    <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
+      {/* This is a status, not part of the input. Keeping it as its own floating pill
+          prevents it from squeezing or visually attaching to the growing textarea. */}
+      <div
+        className={`pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-wide shadow-sm ${
+          isFlagship
+            ? 'border-amber-200 bg-amber-50/95 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300'
+            : 'border-emerald-200 bg-emerald-50/95 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-300'
+        }`}
+      >
+        {isFlagship
+          ? t('ariaStudio.sectionCoach.proTurnCost', { n: perTurnCost })
+          : t('ariaStudio.sectionCoach.freeBackAndForth')}
+      </div>
+      <AriaComposer
+      className=""
       inputRef={inputRef}
       value={input}
       onChange={setInput}
       onSend={send}
       disabled={thinking}
       busy={thinking}
-      placeholder={t('ariaStudio.sectionCoach.activityPlaceholder')}
+      placeholder="Tell ARIA..."
       modelId={modelId}
       onSelectModel={selectModel}
-      note={
-        isFlagship ? (
-          <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
-            {t('ariaStudio.sectionCoach.proTurnCost', { n: perTurnCost })}
-          </p>
-        ) : (
-          <p className="mb-1.5 text-center font-mono text-[9px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-            {t('ariaStudio.sectionCoach.freeBackAndForth')}
-          </p>
-        )
-      }
       footer={
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <button
@@ -426,7 +429,8 @@ const SectionCoach = ({
           </span>
         </div>
       }
-    />
+      />
+    </div>
   );
 
   // ─── The live card for whichever step of the build we're on ───

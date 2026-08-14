@@ -220,7 +220,12 @@ const StudioDesk = () => {
     },
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
-    onOpenGuide: () => setShowWelcomeGuide(true),
+    onOpenGuide: () => {
+      // A guide is a foreground surface; on a phone it must replace, not sit beside,
+      // the sessions drawer that launched it.
+      layout.setRailOverlay(false);
+      setShowWelcomeGuide(true);
+    },
     onBeforeCreditStore: flushChats,
   };
 

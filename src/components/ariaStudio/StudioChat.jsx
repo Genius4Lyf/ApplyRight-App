@@ -3784,25 +3784,34 @@ const StudioChat = ({ onPaywall }) => {
           and hidden outright while the coach has its own (which docks below). */}
       {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
           indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
-      <AriaComposer
-        className={`shrink-0 pt-3 pb-[env(safe-area-inset-bottom)] ${
-          coachOwnsInput || studioTransition ? 'hidden' : ''
-        }`}
-        inputRef={inputRef}
-        value={input}
-        onChange={setInput}
-        onSend={send}
-        disabled={inputDisabled}
-        busy={thinking}
-        placeholder={
-          inputDisabled
-            ? t('ariaStudio.chat.useCardAbove')
-            : t('cvBuilder.ariaComposer.placeholder')
-        }
-        modelId={modelId}
-        onSelectModel={selectModel}
-        showModelPicker={false}
-      />
+      <div
+        className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}
+      >
+        {/* The chat scrolls beneath this soft, cloudy edge before it reaches the
+            floating composer. It makes incoming/outgoing text visibly fade away
+            instead of ending against a hard horizontal seam. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-4 left-0 right-0 z-10 h-4 bg-gradient-to-b from-transparent to-white dark:to-slate-900 backdrop-blur-[0.5px]"
+        />
+        <AriaComposer
+          className="pb-[env(safe-area-inset-bottom)] relative z-20"
+          inputRef={inputRef}
+          value={input}
+          onChange={setInput}
+          onSend={send}
+          disabled={inputDisabled}
+          busy={thinking}
+          placeholder={
+            inputDisabled
+              ? t('ariaStudio.chat.useCardAbove')
+              : t('cvBuilder.ariaComposer.placeholder')
+          }
+          modelId={modelId}
+          onSelectModel={selectModel}
+          showModelPicker={false}
+        />
+      </div>
 
       {/* Active-coach composer dock — a PINNED shrink-0 sibling below the scroll, mounted
           only while a coach drives (the default composer is hidden then). SectionCoach
