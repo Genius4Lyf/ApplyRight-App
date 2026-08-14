@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
@@ -55,6 +55,7 @@ const AriaComposer = ({
 }) => {
   const { t } = useTranslation();
   const [listening, setListening] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef(null);
   const stopDictationRef = useRef(null);
   const dictatedPrefixRef = useRef('');
@@ -65,19 +66,25 @@ const AriaComposer = ({
   const canSend = !inputInert && !busy && value.trim().length >= 2;
   const canDictate = !inputInert && !busy && isSpeechRecognitionSupported();
 
-  const resizeTextarea = () => {
+  const resizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = 'auto';
+    const hasText = value.trim().length > 0;
+    // Match the chat-composer behavior: once the field has expanded, retain that
+    // roomy full-width edit state while any text remains. It resets only when the
+    // user clears the message entirely.
+    const shouldExpand = textarea.scrollHeight > 48 || (expanded && hasText);
     textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
-  };
+    setExpanded((wasExpanded) => (wasExpanded === shouldExpand ? wasExpanded : shouldExpand));
+  }, [expanded, value]);
 
   // Voice recognition updates `value` through React, which does not fire the
   // textarea's native input event. Resize from the value itself so typed and spoken
   // text have exactly the same growing behavior.
   useEffect(() => {
     resizeTextarea();
-  }, [value]);
+  }, [resizeTextarea]);
 
   useEffect(
     () => () => {
@@ -145,7 +152,7 @@ const AriaComposer = ({
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
       <div className="w-full max-w-3xl mx-auto px-3 sm:px-0">
-        <div className={`flex items-end gap-2 rounded-[26px] border bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow ${
+        <div className={`relative rounded-[26px] border bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow ${
           listening
             ? 'border-rose-300/80 dark:border-rose-400/40'
             : 'border-slate-200/80 dark:border-slate-700'
@@ -173,11 +180,20 @@ const AriaComposer = ({
             // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
             // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
             // of leaving the button a few px high or low against the text.
-            className={`flex-1 min-w-0 min-h-10 bg-transparent border-0 outline-none resize-none px-3 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[160px] transition-[height] duration-150 ease-out ${
+            className={`block w-full min-h-10 bg-transparent border-0 outline-none resize-none overscroll-contain [-webkit-overflow-scrolling:touch] px-3 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[160px] transition-[height] duration-150 ease-out ${
+              expanded ? 'pr-3' : showModelPicker ? 'pr-60' : 'pr-28'
+            } ${
               inputInert ? 'opacity-50' : ''
             } ${inert ? 'cursor-not-allowed' : ''}`}
           />
 
+          <div
+            className={
+              expanded
+                ? 'flex h-10 items-center justify-end gap-2 px-1'
+                : 'absolute bottom-1.5 right-1.5 flex items-center gap-2'
+            }
+          >
           {/* The model chip trails the text, right of the input — mirrors the reference
               chat's layout. Its menu drops UP since the composer is docked at the bottom
               of the viewport. Omitted entirely when the caller already shows the model
@@ -232,6 +248,7 @@ const AriaComposer = ({
           >
             {sendLabel || <ArrowUp className="w-4 h-4" />}
           </button>
+          </div>
         </div>
 
         <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
