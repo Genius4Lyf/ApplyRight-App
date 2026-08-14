@@ -186,7 +186,7 @@ const AriaComposer = ({
             // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
             // of leaving the button a few px high or low against the text.
             className={`block w-full min-h-11 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder:text-[17px] placeholder:font-normal placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
-              expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-32 sm:pl-32' : 'pl-3 pr-32'
+              expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-28 sm:pl-32' : 'pl-3 pr-28'
             } ${
               inputInert ? 'opacity-50' : ''
             } ${inert ? 'cursor-not-allowed' : ''}`}
@@ -209,7 +209,11 @@ const AriaComposer = ({
             </div>
           )}
 
-          <div className="pointer-events-auto flex items-center gap-2">
+          <div
+            className={`pointer-events-auto flex items-center gap-2 ${
+              expanded ? '' : 'absolute right-0 top-0'
+            }`}
+          >
           {canDictate && (
             <button
               type="button"
