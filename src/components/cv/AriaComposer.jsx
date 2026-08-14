@@ -92,11 +92,11 @@ const AriaComposer = ({
     // Match the chat-composer behavior: once the field has expanded, retain that
     // roomy full-width edit state while any text remains. It resets only when the
     // user clears the message entirely.
-    const wrapped = hasText && textarea.scrollHeight > 48;
+    const wrapped = hasText && textarea.scrollHeight > 56;
     // Placeholder-only composers always return to their true compact resting height.
     textarea.style.height = hasText
-      ? `${Math.max(44, Math.min(textarea.scrollHeight, 240))}px`
-      : '44px';
+      ? `${Math.max(56, Math.min(textarea.scrollHeight, 240))}px`
+      : '56px';
     // Derive the sticky expanded state from the previous value inside the setter.
     // Keeping `expanded` out of this callback's dependencies prevents a resize →
     // setState → resize loop in the layout effect.
@@ -178,10 +178,12 @@ const AriaComposer = ({
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-0">
-        <div className={`relative rounded-[26px] border bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow ${
+        <div className={`relative border bg-white dark:bg-slate-900 shadow-md shadow-slate-900/10 dark:shadow-black/30 p-1.5 transition-[border-color,box-shadow] ${
+          expanded ? 'rounded-[26px]' : 'rounded-full'
+        } ${
           listening
             ? 'border-rose-300/80 dark:border-rose-400/40'
-            : 'border-slate-200/80 dark:border-slate-700'
+            : 'border-slate-200/70 dark:border-slate-700/80'
         }`}>
           <AnimatePresence>
             {modelNotice && (
@@ -224,10 +226,9 @@ const AriaComposer = ({
             placeholder={resolvedPlaceholder}
             // min-w-0 is load-bearing: without it flex refuses to shrink the textarea and
             // the send button gets pushed out of a narrow row.
-            // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
-            // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
-            // of leaving the button a few px high or low against the text.
-            className={`block w-full min-h-11 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder:text-[17px] placeholder:font-normal placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
+            // py-4 + leading-6 fills the 56px resting field exactly, vertically centering
+            // the text line with the 44px control buttons rather than leaving it top-heavy.
+            className={`block w-full min-h-14 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-4 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder:text-[17px] placeholder:font-normal placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
               expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-28 sm:pl-32' : 'pl-3 pr-28'
             } ${
               inputInert ? 'opacity-50' : ''
@@ -240,7 +241,7 @@ const AriaComposer = ({
                 ? `pointer-events-none flex h-11 items-center gap-2 px-1 ${
                     showModelPicker ? 'justify-between' : 'justify-end'
                   }`
-                : `pointer-events-none absolute inset-x-1.5 bottom-1.5 flex h-11 items-center gap-2 ${
+                : `pointer-events-none absolute inset-x-1.5 top-1/2 flex h-11 -translate-y-1/2 items-center gap-2 ${
                     showModelPicker ? 'justify-between' : 'justify-end'
                   }`
             }
