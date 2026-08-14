@@ -76,7 +76,9 @@ const AriaComposer = ({
     // user clears the message entirely.
     const wrapped = hasText && textarea.scrollHeight > 48;
     // Placeholder-only composers always return to their true compact resting height.
-    textarea.style.height = hasText ? `${Math.min(textarea.scrollHeight, 240)}px` : '44px';
+    textarea.style.height = hasText
+      ? `${Math.max(44, Math.min(textarea.scrollHeight, 240))}px`
+      : '44px';
     // Derive the sticky expanded state from the previous value inside the setter.
     // Keeping `expanded` out of this callback's dependencies prevents a resize →
     // setState → resize loop in the layout effect.
@@ -183,8 +185,8 @@ const AriaComposer = ({
             // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
             // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
             // of leaving the button a few px high or low against the text.
-            className={`block w-full min-h-11 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
-              expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-32' : 'pl-3 pr-32'
+            className={`block w-full min-h-11 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder:text-[17px] placeholder:font-normal placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
+              expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-32 sm:pl-32' : 'pl-3 pr-32'
             } ${
               inputInert ? 'opacity-50' : ''
             } ${inert ? 'cursor-not-allowed' : ''}`}
@@ -217,7 +219,7 @@ const AriaComposer = ({
               className={`relative shrink-0 h-11 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
                 listening
                   ? 'w-[92px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
-                  : 'w-11 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+                  : 'w-11 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               {listening ? (
