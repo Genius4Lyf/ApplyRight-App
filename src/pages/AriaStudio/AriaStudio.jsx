@@ -280,7 +280,7 @@ const StudioDesk = () => {
             it's a flex column whose grow ratio is negotiated with the preview via the
             main row's data-attrs (see .studio-col rules in index.css). */}
         <div className="studio-col-chat min-w-0 min-h-0 flex flex-col sm:rounded-xl sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
+          <div className="studio-mobile-header relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2.5 sm:border-b border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={() =>
@@ -291,17 +291,17 @@ const StudioDesk = () => {
                   ? t('ariaStudio.desk.hideSessions')
                   : t('ariaStudio.desk.showSessions')
               }
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              <PanelLeft className="w-4 h-4" />
+              <PanelLeft className="w-5 h-5" />
             </button>
 
-            <AriaOrbit size={18} className="shrink-0 hidden sm:block" />
+            <AriaOrbit size={20} className="shrink-0" />
 
             <div className="min-w-0 flex-1 flex items-center">
               {/* Model picker lives here now — no header title/subtitle to edit or read;
                   renaming a CV happens from its row in the Recents rail instead. */}
-              {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="left" />}
+              {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="left" studio />}
             </div>
 
             {/* The score stays in the top bar at EVERY width — on a phone it's the only
@@ -334,13 +334,13 @@ const StudioDesk = () => {
                   onClick={() => selectView('preview')}
                   aria-pressed={panelView === 'preview'}
                   aria-label={t('ariaStudio.livePreview.heading')}
-                  className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
                     panelView === 'preview'
                       ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
                       : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-5 h-5" />
                   <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
                 </button>
               )}
@@ -350,13 +350,13 @@ const StudioDesk = () => {
                 aria-pressed={panelView === 'insights'}
                 aria-label={t('ariaStudio.desk.insights')}
                 title={t('ariaStudio.desk.sectionVerdicts')}
-                className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                className={`inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
                   panelView === 'insights'
                     ? 'text-slate-900 dark:text-white'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                <ListChecks className="w-4 h-4" />
+                <ListChecks className="w-5 h-5" />
               </button>
             </div>
           </div>

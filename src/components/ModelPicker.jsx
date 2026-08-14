@@ -42,6 +42,7 @@ const ModelPicker = ({
   align = 'left',
   drop = 'down',
   compact = false,
+  studio = false,
 }) => {
   const { t } = useTranslation();
   const tierLabel = (tier) =>
@@ -196,7 +197,10 @@ const ModelPicker = ({
   const withPortal = (node) => (dropUp ? createPortal(node, document.body) : node);
 
   return (
-    <div className={`relative ${compact ? 'shrink-0' : ''}`} ref={ref}>
+    <div
+      className={`relative ${compact ? 'shrink-0' : ''} ${studio ? 'aria-studio-model-picker' : ''}`}
+      ref={ref}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -209,12 +213,11 @@ const ModelPicker = ({
         className={`relative inline-flex items-center shrink-0 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 ${
           compact
             ? "gap-1 h-10 px-2 rounded-full text-[12px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 before:content-[''] before:absolute before:inset-x-0 before:-inset-y-1"
-            : 'gap-1.5 h-8 px-2.5 rounded-lg text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+            : `gap-1.5 rounded-lg text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                studio ? 'h-10 sm:h-8 px-2.5' : 'h-8 px-2.5'
+              }`
         }`}
       >
-        <span aria-hidden="true" className="text-slate-400 dark:text-slate-500">
-          {PROVIDER_GLYPH[rows.find((m) => m.id === current)?.provider] || '◇'}
-        </span>
         {/* The current model stays visibly labeled at every width, not just ≥sm — the
             reference chat header never hides which model is active. */}
         <span aria-hidden="true" className={compact ? 'hidden sm:inline' : 'inline'}>

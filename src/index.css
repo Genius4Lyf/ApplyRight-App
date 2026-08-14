@@ -876,6 +876,32 @@
 .studio-main[data-panel='preview'][data-rail='open'] .studio-col-chat {
   flex-grow: 1;
 }
+
+@media (max-width: 639px) {
+  .studio-mobile-header::after {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: -16px;
+    left: 0;
+    height: 16px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 88%), rgb(255 255 255 / 0%));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    content: '';
+  }
+
+  .dark .studio-mobile-header::after {
+    background: linear-gradient(to bottom, rgb(15 23 42 / 88%), rgb(15 23 42 / 0%));
+  }
+
+  /* The Studio picker is a reading/control surface on mobile: its selected model,
+     options, and explainer all share the same 17px text scale. */
+  .aria-studio-model-picker :is(button, p, li, span) {
+    font-size: 17px !important;
+  }
+}
 .studio-main[data-panel='preview'][data-rail='open'] .studio-col-panel {
   flex-grow: 1;
 }

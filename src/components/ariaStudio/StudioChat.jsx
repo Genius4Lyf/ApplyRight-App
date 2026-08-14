@@ -1556,18 +1556,22 @@ const StudioChat = ({ onPaywall }) => {
     }
   };
 
-  // Free manual entry — comma-separated, and NOT a fix close: the user keeps typing and
-  // presses Done when they're finished. 'Other' rather than 'Uncategorized' because the
-  // blanket label is half of what made the old flow read as a flat wall.
-  const addManualFixSkills = async (text) => {
-    const names = text
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!names.length) return;
+  // Free manual entry mirrors the CV builder: each Studio form submission carries a
+  // name + category. String support remains for any persisted/legacy caller.
+  const addManualFixSkills = async (input) => {
+    const skills =
+      typeof input === 'string'
+        ? input
+            .split(',')
+            .map((name) => ({ name: name.trim(), category: 'Other' }))
+            .filter(({ name }) => name)
+        : input?.name?.trim()
+          ? [{ name: input.name.trim(), category: input.category || 'Other' }]
+          : [];
+    if (!skills.length) return;
     setRoleBusy('skills');
     try {
-      const res = await applySkills(names.map((name) => ({ name, category: 'Other' })));
+      const res = await applySkills(skills);
       if (res?.ok) {
         if (res.added) {
           setFixSkillsAdded((n) => n + res.added);
@@ -2010,17 +2014,23 @@ const StudioChat = ({ onPaywall }) => {
     }, t('ariaStudio.chat.thinking.skillsSaved'));
   };
 
-  // Free manual entry — comma-separated, straight through applySkills. Nobody should
-  // have to spend credits to list skills they already know they have.
-  const addManualSkills = async (text) => {
-    const names = text
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!names.length) return;
+  // Free manual entry is categorized, matching the CV Builder's skill form. String
+  // support keeps the function compatible with older calls while new form submissions
+  // carry the selected category through to the durable CV record.
+  const addManualSkills = async (input) => {
+    const skills =
+      typeof input === 'string'
+        ? input
+            .split(',')
+            .map((name) => ({ name: name.trim(), category: 'Uncategorized' }))
+            .filter(({ name }) => name)
+        : input?.name?.trim()
+          ? [{ name: input.name.trim(), category: input.category || 'Uncategorized' }]
+          : [];
+    if (!skills.length) return;
     setRoleBusy('skills');
     try {
-      const res = await applySkills(names.map((name) => ({ name, category: 'Uncategorized' })));
+      const res = await applySkills(skills);
       if (res?.ok) {
         if (res.added) {
           setManualSkillsAdded((n) => n + res.added);
