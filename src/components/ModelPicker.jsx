@@ -59,6 +59,9 @@ const ModelPicker = ({
   const ref = useRef(null);
   const menuRef = useRef(null);
   const dropUp = drop === 'up';
+  // Studio's header sits beside the Focus workspace, which has sticky layers of its
+  // own. Portal this menu too so it always belongs to the top application layer.
+  const portalMenu = dropUp || studio;
 
   // Fixed coordinates for the portaled ('up') menu, measured off the trigger. Also
   // caps the height to the room actually above it, so the menu scrolls internally
@@ -75,13 +78,21 @@ const ModelPicker = ({
     const left = Math.min(Math.max(EDGE, raw), Math.max(EDGE, window.innerWidth - W - EDGE));
     setPos({
       left,
-      bottom: window.innerHeight - r.top + GAP,
-      maxHeight: Math.max(140, Math.min(window.innerHeight * 0.6, r.top - GAP - EDGE)),
+      ...(dropUp
+        ? {
+            bottom: window.innerHeight - r.top + GAP,
+            maxHeight: Math.max(140, Math.min(window.innerHeight * 0.6, r.top - GAP - EDGE)),
+          }
+        : {
+            top: r.bottom + GAP,
+            maxHeight: Math.max(140, Math.min(window.innerHeight * 0.6, window.innerHeight - r.bottom - GAP - EDGE)),
+          }),
     });
-  }, [align]);
+  }, [align, dropUp]);
 
   useLayoutEffect(() => {
-    if (!open || !dropUp) return undefined;
+    if (!open || !portalMenu) return undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronizes fixed portal coordinates with its trigger.
     place();
     // Reposition rather than close: the composer moves when the input auto-grows, the
     // drawer is dragged, or the on-screen keyboard resizes the viewport.
@@ -94,7 +105,7 @@ const ModelPicker = ({
       window.removeEventListener('resize', onMove);
       window.visualViewport?.removeEventListener('resize', onMove);
     };
-  }, [open, dropUp, place]);
+  }, [open, portalMenu, place]);
 
   // The explainer bloom: grows from near the (i) trigger (top-right) on open, shrinks out
   // on close. Reduced motion → an instant fade, no scale. Reuses the shared Aria SPRING.
@@ -192,9 +203,9 @@ const ModelPicker = ({
     );
   };
 
-  // 'up' escapes the composer's clipping ancestors through a body portal (it carries its
-  // own fixed coordinates); 'down' stays absolutely positioned in flow, as it always was.
-  const withPortal = (node) => (dropUp ? createPortal(node, document.body) : node);
+  // Menus that open upward and Studio's header menu escape their local stacking contexts
+  // through a body portal; ordinary downward pickers stay positioned in flow.
+  const withPortal = (node) => (portalMenu ? createPortal(node, document.body) : node);
 
   return (
     <div
@@ -232,11 +243,11 @@ const ModelPicker = ({
             ref={menuRef}
             role="listbox"
             style={
-              dropUp
+              portalMenu
                 ? {
                     position: 'fixed',
                     left: pos?.left ?? -9999,
-                    bottom: pos?.bottom ?? 0,
+                    ...(dropUp ? { bottom: pos?.bottom ?? 0 } : { top: pos?.top ?? -9999 }),
                     maxHeight: pos?.maxHeight,
                     // Hidden until measured, so it can't flash at the wrong spot.
                     visibility: pos ? 'visible' : 'hidden',
@@ -246,8 +257,8 @@ const ModelPicker = ({
             // Never wider than the viewport allows: a flat w-60 overflows a 360px screen
             // once the panel is anchored near an edge.
             className={`w-[min(15rem,calc(100vw-2rem))] overflow-y-auto scrollbar-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg ${
-              dropUp
-                ? 'z-50'
+              portalMenu
+                ? 'z-[1000]'
                 : `absolute z-40 mt-1 max-h-[60vh] ${align === 'right' ? 'right-0' : 'left-0'}`
             }`}
           >

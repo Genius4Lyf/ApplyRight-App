@@ -3787,13 +3787,6 @@ const StudioChat = ({ onPaywall }) => {
       <div
         className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}
       >
-        {/* The chat scrolls beneath this soft, cloudy edge before it reaches the
-            floating composer. It makes incoming/outgoing text visibly fade away
-            instead of ending against a hard horizontal seam. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-4 left-0 right-0 z-10 h-4 bg-gradient-to-b from-transparent to-white dark:to-slate-900 backdrop-blur-[0.5px]"
-        />
         <AriaComposer
           className="pb-[env(safe-area-inset-bottom)] relative z-20"
           inputRef={inputRef}
