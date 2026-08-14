@@ -448,6 +448,7 @@ const StudioDesk = () => {
       />
 
       <StudioWelcomeGuide open={showWelcomeGuide} onComplete={completeWelcomeGuide} />
+
     </div>
   );
 };

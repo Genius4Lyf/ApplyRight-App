@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
 import { isSpeechRecognitionSupported, startDictation } from '../../lib/speech';
+import { costForActionTier, tierOf } from '../../lib/models';
 
 // THE Aria composer — one docked input shared by every Aria chat surface (the builder's
 // AriaChat + AskAriaGenerate, the Target step's inert parity row, StudioChat, and
@@ -47,6 +50,7 @@ const AriaComposer = ({
   modelId,
   onSelectModel,
   showModelPicker = true,
+  showModelNotice = false,
   sendLabel = null,
   sendAriaLabel,
   note = null,
@@ -56,6 +60,7 @@ const AriaComposer = ({
   const { t } = useTranslation();
   const [listening, setListening] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [modelNotice, setModelNotice] = useState(null);
   const textareaRef = useRef(null);
   const stopDictationRef = useRef(null);
   const dictatedPrefixRef = useRef('');
@@ -65,6 +70,19 @@ const AriaComposer = ({
   const inputInert = disabled || inert;
   const canSend = !inputInert && !busy && value.trim().length >= 2;
   const canDictate = !inputInert && !busy && isSpeechRecognitionSupported();
+
+  useEffect(() => {
+    if (!showModelNotice) return undefined;
+    const onModelSelected = (event) => setModelNotice(event.detail?.modelId || null);
+    window.addEventListener('aria:model-selected', onModelSelected);
+    return () => window.removeEventListener('aria:model-selected', onModelSelected);
+  }, [showModelNotice]);
+
+  useEffect(() => {
+    if (!modelNotice) return undefined;
+    const timeout = window.setTimeout(() => setModelNotice(null), 3200);
+    return () => window.clearTimeout(timeout);
+  }, [modelNotice]);
 
   const resizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
@@ -165,6 +183,30 @@ const AriaComposer = ({
             ? 'border-rose-300/80 dark:border-rose-400/40'
             : 'border-slate-200/80 dark:border-slate-700'
         }`}>
+          <AnimatePresence>
+            {modelNotice && (
+              <motion.div
+                key={modelNotice}
+                role="status"
+                aria-live="polite"
+                initial={{ opacity: 0, y: 5, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 3, scale: 0.98 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className={`pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-wide shadow-sm ${
+                  tierOf(modelNotice) === 'flagship'
+                    ? 'border-amber-200 bg-amber-50/95 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300'
+                    : 'border-emerald-200 bg-emerald-50/95 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-300'
+                }`}
+              >
+                {tierOf(modelNotice) === 'flagship'
+                  ? t('ariaStudio.sectionCoach.proTurnCost', {
+                      n: costForActionTier('ARIA_CHAT_MESSAGE', 'flagship'),
+                    })
+                  : t('ariaStudio.sectionCoach.freeBackAndForth')}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <textarea
             ref={setTextareaRef}
             value={value}

@@ -3803,6 +3803,7 @@ const StudioChat = ({ onPaywall }) => {
           modelId={modelId}
           onSelectModel={selectModel}
           showModelPicker
+          showModelNotice
         />
       </div>
 

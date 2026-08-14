@@ -19,6 +19,9 @@ export function useAriaModel({ draftId, cvData, updateCvData }) {
       const prev = modelId;
       if (!id || id === prev) return;
       updateCvData?.({ studioModelId: id });
+      // Studio listens for this single selection event and shows one consistent model
+      // notice regardless of which of its pickers the user used.
+      window.dispatchEvent(new CustomEvent('aria:model-selected', { detail: { modelId: id } }));
       // No draft yet ('new'): the first real save carries the whole cvData, this key
       // included — there's nothing to PATCH server-side until then.
       if (!draftId || draftId === 'new') return;
