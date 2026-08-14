@@ -11,7 +11,7 @@ const ProjectTypeCard = ({ onPick, busy }) => {
   return (
     <AriaCard cardKey="projecttype">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+        <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.projectType.whatKind')}
         </p>
         <div className="mt-3 flex flex-col gap-2">

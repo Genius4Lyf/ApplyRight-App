@@ -41,7 +41,7 @@ const FinishCard = ({
   return (
     <AriaCard cardKey="finish">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+        <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
           {t('ariaStudio.finishCard.readyToSend')}
         </p>
 

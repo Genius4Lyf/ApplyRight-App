@@ -121,7 +121,7 @@ const RewriteRoleCard = ({
     <AriaCard cardKey="rewriterole" wide>
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.rewriteRole.title')}
           </p>
           {/* The price badge appears ONLY when a credit was actually spent. The server

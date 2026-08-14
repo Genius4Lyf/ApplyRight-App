@@ -195,7 +195,9 @@ const AriaComposer = ({
           <div
             className={
               expanded
-                ? 'pointer-events-none flex h-11 items-center justify-between gap-2 px-1'
+                ? `pointer-events-none flex h-11 items-center gap-2 px-1 ${
+                    showModelPicker ? 'justify-between' : 'justify-end'
+                  }`
                 : `pointer-events-none absolute inset-x-1.5 bottom-1.5 flex h-11 items-center gap-2 ${
                     showModelPicker ? 'justify-between' : 'justify-end'
                   }`
