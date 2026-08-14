@@ -91,7 +91,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
   return (
     <AriaCard cardKey="score">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 overflow-hidden">
-        <div className="p-4">
+        <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
               {t('ariaStudio.scoreCard.fitAgainstJob')}
@@ -111,14 +111,14 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
             <span className={`font-heading text-4xl font-bold tabular-nums ${BAND_TEXT[band]}`}>
               {score}
             </span>
-            <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            <span className="font-mono text-[12px] text-slate-400 dark:text-slate-500">
               {t('ariaStudio.common.outOf100')}
             </span>
           </div>
 
           <BandRail score={score} />
 
-          <p className="mt-3 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-3 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
             {scan.recommendation && RECOMMENDATION_KEYS[scan.recommendation]
               ? t(RECOMMENDATION_KEYS[scan.recommendation])
               : t('ariaStudio.scoreCard.scanComplete')}
@@ -139,7 +139,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
           aria-expanded={open}
           className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
         >
-          <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">
+          <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300">
             {open
               ? t('ariaStudio.scoreCard.hideFullAnalysis')
               : t('ariaStudio.scoreCard.showFullAnalysis')}
@@ -174,7 +174,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
                       const dBand = bandOf(s);
                       return (
                         <div key={label}>
-                          <div className="flex justify-between text-[12px] mb-1">
+                          <div className="flex justify-between text-[13.5px] mb-1">
                             <span className="text-slate-600 dark:text-slate-300">
                               {label}{' '}
                               <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
@@ -211,7 +211,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
                           {matched.map((s, i) => (
                             <span
                               key={`${s.name}-${i}`}
-                              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                              className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                             >
                               {s.name}
                             </span>
@@ -228,7 +228,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
                           {missing.map((s, i) => (
                             <span
                               key={`${s.name}-${i}`}
-                              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                              className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300"
                             >
                               {s.name}
                             </span>
@@ -252,16 +252,16 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
                             {String(i + 1).padStart(2, '0')}
                           </span>
                           <div className="min-w-0">
-                            <p className="font-heading italic text-[13px] text-slate-900 dark:text-slate-100">
+                            <p className="font-heading italic text-[14px] text-slate-900 dark:text-slate-100">
                               &ldquo;{e.quote}&rdquo;
                             </p>
                             {e.issue && (
-                              <p className="mt-1 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
+                              <p className="mt-1 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300">
                                 {e.issue}
                               </p>
                             )}
                             {e.fix && (
-                              <p className="mt-1 flex items-start gap-1.5 text-[12px] text-slate-700 dark:text-slate-300">
+                              <p className="mt-1 flex items-start gap-1.5 text-[13.5px] text-slate-700 dark:text-slate-300">
                                 <Wrench className="w-3 h-3 mt-0.5 shrink-0" />
                                 <span>{e.fix}</span>
                               </p>

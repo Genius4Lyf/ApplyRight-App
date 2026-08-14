@@ -119,7 +119,7 @@ const RewriteRoleCard = ({
 
   return (
     <AriaCard cardKey="rewriterole" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.rewriteRole.title')}
@@ -135,7 +135,7 @@ const RewriteRoleCard = ({
           )}
         </div>
 
-        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {nothingToDo
             ? t('ariaStudio.rewriteRole.nothingToImprove')
             : t('ariaStudio.rewriteRole.intro')}
@@ -153,7 +153,7 @@ const RewriteRoleCard = ({
                   <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     {t('ariaStudio.rewriteRole.unchanged')}
                   </p>
-                  <p className="mt-1 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-1 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {row.before}
                   </p>
                 </div>
@@ -169,7 +169,7 @@ const RewriteRoleCard = ({
                   <p className="font-mono text-[9px] uppercase tracking-wider text-amber-700 dark:text-amber-400">
                     {t('ariaStudio.rewriteRole.blocked', { reason: row.blockedReason || '' })}
                   </p>
-                  <p className="mt-1 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-1 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {row.before}
                   </p>
                 </div>
@@ -200,13 +200,13 @@ const RewriteRoleCard = ({
                   <span className="block font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     {t('ariaStudio.rewriteRole.nowLabel')}
                   </span>
-                  <span className="block text-[12px] leading-relaxed text-slate-500 dark:text-slate-400 line-through decoration-slate-300 dark:decoration-slate-600">
+                  <span className="block text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400 line-through decoration-slate-300 dark:decoration-slate-600">
                     {row.before}
                   </span>
                   <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     {t('ariaStudio.rewriteRole.sharperLabel')}
                   </span>
-                  <span className="block text-[14px] leading-relaxed text-slate-800 dark:text-slate-100">
+                  <span className="block text-[16px] leading-relaxed text-slate-800 dark:text-slate-100">
                     {row.after}
                   </span>
                 </span>
@@ -220,7 +220,7 @@ const RewriteRoleCard = ({
             <button
               type="button"
               onClick={onInterview}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="text-[14px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               {t('ariaStudio.rewriteRole.interviewInstead')}
             </button>
@@ -230,7 +230,7 @@ const RewriteRoleCard = ({
               <button
                 type="button"
                 onClick={onInterview}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full border border-dashed border-amber-400 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                className="text-[14px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-amber-400 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
               >
                 {t('ariaStudio.rewriteRole.addDetails')}
               </button>
@@ -239,7 +239,7 @@ const RewriteRoleCard = ({
               <button
                 type="button"
                 onClick={() => run(true)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
+                className="text-[14px] font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
               >
                 {t('ariaStudio.rewriteRole.tryAnother', { cost: rerollCost })}
               </button>
@@ -250,7 +250,7 @@ const RewriteRoleCard = ({
             <button
               type="button"
               onClick={onBack}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
+              className="text-[14px] font-semibold px-3 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
             >
               {t('common.back')}
             </button>
@@ -259,7 +259,7 @@ const RewriteRoleCard = ({
               type="button"
               onClick={apply}
               disabled={applying || selected.size === 0}
-              className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+              className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
             >
               {applying
                 ? t('ariaStudio.rewriteRole.applying')

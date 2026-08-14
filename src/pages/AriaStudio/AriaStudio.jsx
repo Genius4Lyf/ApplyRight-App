@@ -352,8 +352,8 @@ const StudioDesk = () => {
                 title={t('ariaStudio.desk.sectionVerdicts')}
                 className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
                   panelView === 'insights'
-                    ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
-                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 <ListChecks className="w-4 h-4" />

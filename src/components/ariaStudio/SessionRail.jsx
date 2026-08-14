@@ -60,7 +60,7 @@ const SessionRail = ({
         chat's own top bar dropped its editable title. */}
       <div className="shrink-0 flex items-center gap-2 px-3 pt-3">
         <AriaOrbit size={18} className="shrink-0" />
-        <span className="font-mono text-[13px] font-semibold tracking-[0.08em] text-slate-700 dark:text-slate-200">
+        <span className="font-mono text-[17px] sm:text-[13px] font-semibold tracking-[0.08em] text-slate-700 dark:text-slate-200">
           {t('ariaStudio.desk.title')}
         </span>
       </div>
@@ -73,7 +73,7 @@ const SessionRail = ({
           <button
             type="button"
             onClick={onNewTailoring}
-            className="btn-primary w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+            className="btn-primary w-full gap-2 px-3 py-2 text-[17px] sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
           >
             <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
           </button>
@@ -83,7 +83,7 @@ const SessionRail = ({
         <button
           type="button"
           onClick={onNewCv}
-          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} w-full gap-2 px-3 py-2 text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
+          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} w-full gap-2 px-3 py-2 text-[17px] sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
         >
           <FilePlus2 className="w-4 h-4" /> {t('ariaStudio.sessionRail.newCv')}
         </button>
@@ -170,7 +170,7 @@ const SessionRail = ({
                           }
                         }}
                         aria-label={t('ariaStudio.desk.cvName')}
-                        className="w-full text-[13px] font-semibold text-slate-900 dark:text-slate-50 leading-tight bg-transparent border-0 outline-none p-0"
+                        className="w-full text-[17px] sm:text-[13px] font-semibold text-slate-900 dark:text-slate-50 leading-tight bg-transparent border-0 outline-none p-0"
                       />
                     </div>
                   ) : (
@@ -184,7 +184,7 @@ const SessionRail = ({
                     >
                       <span className="flex items-baseline gap-2">
                         <span
-                          className={`min-w-0 flex-1 truncate text-[13px] ${
+                          className={`min-w-0 flex-1 truncate text-[17px] sm:text-[13px] ${
                             active
                               ? 'font-semibold text-slate-900 dark:text-slate-50'
                               : 'font-medium text-slate-700 dark:text-slate-300'
@@ -256,7 +256,7 @@ const SessionRail = ({
         )}
       </div>
 
-      <StudioSidebarProfile onOpenGuide={onOpenGuide} />
+      <StudioSidebarProfile onOpenGuide={onOpenGuide} onBeforeNavigate={onBeforeCreditStore} />
     </div>
   );
 };

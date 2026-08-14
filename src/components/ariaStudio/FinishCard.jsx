@@ -40,7 +40,7 @@ const FinishCard = ({
 
   return (
     <AriaCard cardKey="finish">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
           {t('ariaStudio.finishCard.readyToSend')}
         </p>
@@ -63,7 +63,7 @@ const FinishCard = ({
                 {t('ariaStudio.finishCard.percentComplete')}
               </span>
             </div>
-            <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
               {[
                 contents?.roles
                   ? t('ariaStudio.finishCard.contentsRoles', { count: contents.roles })
@@ -79,7 +79,7 @@ const FinishCard = ({
                 .join(' · ') || t('ariaStudio.finishCard.cvSaved')}
             </p>
             {progress && progress.done < progress.total && (
-              <p className="mt-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+              <p className="mt-1.5 text-[13.5px] text-slate-500 dark:text-slate-400">
                 {t('ariaStudio.finishCard.sectionsEmpty', {
                   count: progress.total - progress.done,
                 })}
@@ -98,7 +98,7 @@ const FinishCard = ({
             </span>
             {summary.moved !== 0 && (
               <span
-                className={`font-mono text-[11px] font-bold ${
+                className={`font-mono text-[12px] font-bold ${
                   summary.improved
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-slate-400 dark:text-slate-500'
@@ -120,7 +120,7 @@ const FinishCard = ({
         )}
 
         {!isBuild && summary?.newlyGreen?.length > 0 && (
-          <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               {summary.newlyGreen.join(', ')}
             </span>{' '}
@@ -129,20 +129,20 @@ const FinishCard = ({
         )}
 
         {!isBuild && summary && summary.moved === 0 && (
-          <p className="mt-2 text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-[16px] leading-relaxed text-slate-500 dark:text-slate-400">
             {t('ariaStudio.finishCard.scoreNotMoved')}
           </p>
         )}
 
         {!isBuild && summary?.stillWeak?.length > 0 && (
-          <p className="mt-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+          <p className="mt-1.5 text-[13.5px] text-slate-500 dark:text-slate-400">
             {t('ariaStudio.finishCard.stillWorthLook', { list: summary.stillWeak.join(', ') })}
           </p>
         )}
 
         {/* Where the file lives — said plainly, because "where did it go?" is the most
             common thing to wonder after a download. */}
-        <p className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
           <Trans
             i18nKey="ariaStudio.finishCard.savedAs"
             values={{
@@ -175,11 +175,11 @@ const FinishCard = ({
               onClick={onOpenEditor}
               // Still the dominant action on the card — ink IS the system's dominant, so
               // it loses no weight by dropping the accent fill.
-              className="btn-primary w-full gap-2 px-4 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              className="btn-primary w-full gap-2 px-4 text-[16px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
             >
               {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
             </button>
-            <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
               {isBuild
                 ? // They have literally never seen this document — it only ever existed as a
                   // conversation. Looking at it as pages matters more here than anywhere.
@@ -198,7 +198,7 @@ const FinishCard = ({
                 type="button"
                 onClick={onTailor}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {t('ariaStudio.finishCard.tailorToJob')} <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -210,7 +210,7 @@ const FinishCard = ({
                 type="button"
                 onClick={onScan}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {t('ariaStudio.finishCard.seeHowItMatches', { cost: scanCost ?? 10 })}
               </button>

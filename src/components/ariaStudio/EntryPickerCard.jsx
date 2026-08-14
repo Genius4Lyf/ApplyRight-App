@@ -37,14 +37,14 @@ const EntryPickerCard = ({
 
   return (
     <AriaCard cardKey="entrypicker">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.entryPicker.whichOne')}
         </p>
 
         {ranked.length === 0 && (
           <div className="mt-3">
-            <p className="text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+            <p className="text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
               {t('ariaStudio.entryPicker.nothingHere')}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -55,7 +55,7 @@ const EntryPickerCard = ({
                   href={builderUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
                 >
                   {t('ariaStudio.entryPicker.openBuilder')} <ExternalLink className="w-3 h-3" />
                 </a>
@@ -67,7 +67,7 @@ const EntryPickerCard = ({
                   type="button"
                   onClick={() => onDismissSection(section)}
                   disabled={busy}
-                  className="text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  className="text-[14px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {t('ariaStudio.sectionBreakdown.notApplicable')}
                 </button>
@@ -86,11 +86,11 @@ const EntryPickerCard = ({
               onClick={() => onPick?.(entry)}
               className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white bg-white dark:bg-slate-900 px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
             >
-              <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+              <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100 truncate">
                 {entry.title || t('ariaStudio.entryPicker.untitled')}
               </span>
               {entry.company && (
-                <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                <span className="block text-[12px] text-slate-500 dark:text-slate-400 truncate">
                   {entry.company}
                 </span>
               )}
@@ -119,7 +119,7 @@ const EntryPickerCard = ({
           <button
             type="button"
             onClick={() => onCancel?.()}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
           >
             {t('common.back')}
           </button>

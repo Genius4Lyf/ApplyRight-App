@@ -1830,7 +1830,8 @@
     },
     "ariaComposer": {
       "placeholder": "Ask ARIA anything…",
-      "send": "Send"
+      "send": "Send",
+      "aiDisclaimer": "ARIA is AI and can make mistakes."
     },
     "chatThemePicker": {
       "chatBackground": "Chat background",

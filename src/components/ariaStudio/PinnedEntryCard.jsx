@@ -208,7 +208,7 @@ const PinnedEntryCard = ({
       type="button"
       onClick={() => startEditing(f)}
       aria-label={t('ariaStudio.pinnedEntry.editField', { field: t(f.labelKey) })}
-      className="shrink-0 text-[11px] leading-none px-1 py-0.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+      className="shrink-0 text-[12px] leading-none px-1 py-0.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
     >
       ✎
     </button>
@@ -220,7 +220,7 @@ const PinnedEntryCard = ({
         type="button"
         onClick={() => submitEdit(f)}
         disabled={saving || !valid}
-        className="btn-primary px-2.5 py-1 text-[11px] disabled:opacity-40"
+        className="btn-primary px-2.5 py-1 text-[12px] disabled:opacity-40"
       >
         {saving ? t('ariaStudio.pinnedEntry.saving') : t('ariaStudio.pinnedEntry.saveField')}
       </button>
@@ -228,7 +228,7 @@ const PinnedEntryCard = ({
         type="button"
         onClick={cancelEditing}
         disabled={saving}
-        className="text-[11px] font-semibold px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50"
+        className="text-[12px] font-semibold px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50"
       >
         {t('common.cancel')}
       </button>
@@ -249,7 +249,7 @@ const PinnedEntryCard = ({
 
   return (
     <div
-      className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-sm"
+      className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md dark:shadow-black/20"
       onMouseEnter={() => setInteracting(true)}
       onMouseLeave={() => setInteracting(false)}
       onFocusCapture={() => setInteracting(true)}
@@ -274,11 +274,11 @@ const PinnedEntryCard = ({
           </span>
           {t(copy.labelKey)}
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+        <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
           {heading}
         </span>
         <span
-          className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${
+          className={`shrink-0 font-mono text-[12px] font-bold tabular-nums ${
             done === total
               ? 'text-emerald-600 dark:text-emerald-400'
               : 'text-slate-400 dark:text-slate-500'
@@ -363,10 +363,10 @@ const PinnedEntryCard = ({
                             onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))}
                             onKeyDown={onEditorKeyDown(f, datesEditValid)}
                             placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
-                            className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
+                            className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[16px] text-slate-900 dark:text-slate-100"
                           />
                         </label>
-                        <label className="flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
+                        <label className="flex items-center gap-1.5 text-[14px] text-slate-600 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={draft.isCurrent}
@@ -390,7 +390,7 @@ const PinnedEntryCard = ({
                               onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))}
                               onKeyDown={onEditorKeyDown(f, datesEditValid)}
                               placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
-                              className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
+                              className="mt-0.5 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[16px] text-slate-900 dark:text-slate-100"
                             />
                           </label>
                         )}
@@ -407,14 +407,14 @@ const PinnedEntryCard = ({
                           aria-label={t('ariaStudio.pinnedEntry.editField', {
                             field: t(f.labelKey),
                           })}
-                          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[14px] text-slate-900 dark:text-slate-100"
+                          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[16px] text-slate-900 dark:text-slate-100"
                         />
                         {editorActions(f, textEditValid(f.key))}
                       </dd>
                     ) : (
                       <>
                         <dd
-                          className={`min-w-0 flex-1 truncate text-[14px] ${
+                          className={`min-w-0 flex-1 truncate text-[16px] ${
                             f.done
                               ? 'text-slate-800 dark:text-slate-100'
                               : 'italic text-slate-400 dark:text-slate-500'
@@ -439,7 +439,7 @@ const PinnedEntryCard = ({
                 {bullets.map((b, i) => (
                   <li
                     key={i}
-                    className="flex gap-1.5 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300"
+                    className="flex gap-1.5 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300"
                   >
                     {/* A list glyph — decoration, not Aria and not an action. */}
                     <span className="shrink-0 text-slate-400 dark:text-slate-500">•</span>
@@ -455,7 +455,7 @@ const PinnedEntryCard = ({
                 onClick={onNextRole}
                 disabled={busy || done < total}
                 title={done < total ? t('ariaStudio.pinnedEntry.finishFirst') : undefined}
-                className="btn-primary px-3.5 py-1.5 text-xs disabled:opacity-40"
+                className="btn-primary px-3.5 py-1.5 text-[14px] disabled:opacity-40"
               >
                 {busy === 'next' ? t('ariaStudio.pinnedEntry.saving') : t(copy.nextKey)}
               </button>
@@ -463,7 +463,7 @@ const PinnedEntryCard = ({
                 type="button"
                 onClick={onDone}
                 disabled={busy}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                className="text-[12px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
                 {busy === 'done' ? t('ariaStudio.pinnedEntry.finishing') : t(copy.doneKey)}
               </button>
@@ -472,7 +472,7 @@ const PinnedEntryCard = ({
                   type="button"
                   onClick={onEdit}
                   disabled={busy}
-                  className="text-[11px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                  className="text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
                 >
                   ✎ {t('ariaStudio.pinnedEntry.edit')}
                 </button>

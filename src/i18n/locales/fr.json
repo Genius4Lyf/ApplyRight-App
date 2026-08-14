@@ -1826,7 +1826,8 @@
     },
     "ariaComposer": {
       "placeholder": "Posez une question à Aria…",
-      "send": "Envoyer"
+      "send": "Envoyer",
+      "aiDisclaimer": "ARIA est une IA et peut se tromper."
     },
     "chatThemePicker": {
       "chatBackground": "Fond de la discussion",

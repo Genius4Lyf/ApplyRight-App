@@ -12,7 +12,7 @@ const ModeChooser = ({ onPick }) => {
   const { t } = useTranslation();
   return (
     <AriaCard cardKey="mode">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.modeChooser.whatAreWeDoing')}
         </p>
@@ -29,10 +29,10 @@ const ModeChooser = ({ onPick }) => {
               <Target className="w-4 h-4" />
             </span>
             <span className="min-w-0">
-              <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+              <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
                 {t('ariaStudio.modeChooser.tailorTitle')}
               </span>
-              <span className="block mt-0.5 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+              <span className="block mt-0.5 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
                 {t('ariaStudio.modeChooser.tailorBody')}
               </span>
             </span>
@@ -48,10 +48,10 @@ const ModeChooser = ({ onPick }) => {
             <FilePlus2 className="w-4 h-4" />
           </span>
           <span className="min-w-0">
-            <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+            <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
               {t('ariaStudio.modeChooser.buildTitle')}
             </span>
-            <span className="block mt-0.5 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+            <span className="block mt-0.5 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
               {t('ariaStudio.modeChooser.buildBody')}
             </span>
           </span>

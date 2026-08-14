@@ -1,16 +1,18 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, Settings, CreditCard, Moon, Plus } from 'lucide-react';
+import { Home, FileText, MessageSquare, Moon, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccountWallet } from '../../hooks/useAccountWallet';
 
-// The Studio sidebar's destination rows + wallet block — everything the top navbar's
-// account dropdown carried other than sign-out and language (those live in
-// StudioSidebarProfile's popover instead). Reuses the SAME useAccountWallet hook the
-// navbar uses so there is only ever one wallet fetch/localStorage-writer active on a
-// page, and the SAME isAgent/homePath derivation the navbar uses (Navbar.jsx) rather
-// than re-deriving it.
+// The Studio sidebar's destination rows + wallet block — Home, My CVs, Interview prep,
+// dark mode. Account-management links (view profile, manage account, credits & billing)
+// live in StudioSidebarProfile's drop-up popover instead, alongside sign-out and
+// language — everything you'd go looking for by clicking your own name at the bottom,
+// rather than mixed in with the primary destinations up here. Reuses the SAME
+// useAccountWallet hook the navbar uses so there is only ever one wallet fetch/
+// localStorage-writer active on a page, and the SAME isAgent/homePath derivation the
+// navbar uses (Navbar.jsx) rather than re-deriving it.
 const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -30,7 +32,7 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const { displayCredits, minutesLeft, freeTasteMin } = useAccountWallet(isAuthenticated);
 
   const rowClass =
-    'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
+    'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[17px] sm:text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
 
   const openCredits = async () => {
     try {
@@ -57,17 +59,13 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
           <Home className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
           {t('nav.mobile.home')}
         </button>
-        <button type="button" onClick={() => navigate('/profile')} className={rowClass}>
-          <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-          {t('nav.account.viewProfile')}
+        <button type="button" onClick={() => navigate('/my-cvs')} className={rowClass}>
+          <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+          {t('nav.myCvs')}
         </button>
-        <button type="button" onClick={() => navigate('/profile')} className={rowClass}>
-          <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-          {t('nav.account.manageAccount')}
-        </button>
-        <button type="button" onClick={openCredits} className={rowClass}>
-          <CreditCard className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-          {t('nav.account.creditsAndBilling')}
+        <button type="button" onClick={() => navigate('/interview-prep')} className={rowClass}>
+          <MessageSquare className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+          {t('nav.interviewPrep')}
         </button>
         <button
           type="button"
@@ -95,13 +93,13 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
       {/* Wallet — a subtle grouped surface, not a bordered card, sitting one shade
           deeper than the rail's own background. */}
       <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 px-2.5 py-2 space-y-1.5">
-        <div className="flex items-center justify-between text-[12.5px]">
+        <div className="flex items-center justify-between text-[17px] sm:text-[12.5px]">
           <span className="text-slate-500 dark:text-slate-400">{t('nav.account.credits')}</span>
           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
             {t('nav.account.creditsLeft', { count: displayCredits ?? 0 })}
           </span>
         </div>
-        <div className="flex items-center justify-between text-[12.5px]">
+        <div className="flex items-center justify-between text-[17px] sm:text-[12.5px]">
           <span className="text-slate-500 dark:text-slate-400">
             {t('nav.account.interviewMinutes')}
           </span>
@@ -112,12 +110,12 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
         <button
           type="button"
           onClick={openCredits}
-          className="w-full flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200 dark:border-slate-700 text-[12.5px] text-slate-600 dark:text-slate-300"
+          className="w-full flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200 dark:border-slate-700 text-[17px] sm:text-[12.5px] text-slate-600 dark:text-slate-300"
         >
           <span className="flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" /> {t('nav.account.topUpCredits')}
           </span>
-          <span className="text-[11px] font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full px-2.5 py-0.5">
+          <span className="text-[15px] sm:text-[11px] font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full px-2.5 py-0.5">
             {t('nav.account.topUpAction')}
           </span>
         </button>

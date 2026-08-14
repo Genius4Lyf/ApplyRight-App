@@ -33,7 +33,6 @@ import {
 } from '../../lib/studioFlow';
 import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
-import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
@@ -118,6 +117,34 @@ const loadSession = () => {
 // The scan snapshot lives on the DRAFT (studioScan), not in the transcript — a scan
 // marker only records that one happened, so the cards always render the current
 // snapshot (including after a free recompute) rather than a stale copy of it.
+
+// Reveals `text` a few characters at a time, like tokens streaming in — used ONLY for
+// a freshly-arrived Aria reply (see revealedRef in StudioChat), never for restored
+// history, so reopening a session doesn't replay every past message. Reduced motion
+// shows the full text immediately, matching the app's other reduced-motion bailouts.
+const TYPE_CHARS_PER_TICK = 3;
+const TYPE_TICK_MS = 16;
+const AriaTypewriter = ({ text, reduce, onDone }) => {
+  const [count, setCount] = useState(reduce ? text.length : 0);
+  useEffect(() => {
+    if (reduce) {
+      onDone?.();
+      return undefined;
+    }
+    let n = 0;
+    const id = setInterval(() => {
+      n = Math.min(text.length, n + TYPE_CHARS_PER_TICK);
+      setCount(n);
+      if (n >= text.length) {
+        clearInterval(id);
+        onDone?.();
+      }
+    }, TYPE_TICK_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+  return text.slice(0, count);
+};
 
 const StudioChat = ({ onPaywall }) => {
   const { t } = useTranslation();
@@ -321,11 +348,56 @@ const StudioChat = ({ onPaywall }) => {
   // One-shot guard for the localStorage → coachChats migration.
   const migratedRef = useRef(false);
 
-  useStickToBottom(
-    chatRef,
-    [messages, thinking, working, reading, transitionLabel, phase, editingJob],
-    reduce
-  );
+  // DOM nodes for the plain typed/response bubbles, keyed by their `messages` index —
+  // populated by the two bubble branches below. Cards/markers don't register here, so
+  // a turn that's all cards (no free-form text yet) naturally falls through to the
+  // bottom-scroll fallback in the effect below.
+  const msgDomRef = useRef({});
+  // Which messages are done "typing" and should render as plain static text — seeded
+  // with the CURRENT length so nothing already on screen at mount replays, and bulk-
+  // filled by the rehydrate effect so restored history never replays either.
+  const revealedRef = useRef(new Set(messages.map((_, i) => i)));
+  const prevMsgLenRef = useRef(messages.length);
+  const turnAnchorIndexRef = useRef(0);
+  // Set by the rehydrate effect right before it bulk-loads a returning session's saved
+  // thread — that's a history LOAD, not a new turn, so it should land at the bottom
+  // (the most recent point) instead of anchoring to the top of the oldest restored
+  // message the way a live reply does.
+  const hydratingRef = useRef(false);
+
+  // Anchors the view to the TOP of whatever just arrived — your own message when you
+  // send it, then Aria's reply when it lands — rather than chasing every new line with
+  // a scroll-to-bottom. Re-runs on the loading-state flags too (not just `messages`) so
+  // the anchor holds steady through a turn's whole lifecycle instead of drifting once
+  // the thinking indicator appears or clears.
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el) return undefined;
+
+    if (messages.length > prevMsgLenRef.current) {
+      turnAnchorIndexRef.current = prevMsgLenRef.current;
+    }
+    prevMsgLenRef.current = messages.length;
+    const landOnBottom = hydratingRef.current;
+    hydratingRef.current = false;
+
+    const behavior = reduce ? 'auto' : 'smooth';
+    const doScroll = () => {
+      const anchorNode = !landOnBottom && msgDomRef.current[turnAnchorIndexRef.current];
+      if (anchorNode) {
+        el.scrollTo({ top: Math.max(0, anchorNode.offsetTop - 12), behavior });
+      } else {
+        el.scrollTo({ top: el.scrollHeight, behavior: landOnBottom ? 'auto' : behavior });
+      }
+    };
+    doScroll();
+    const raf = requestAnimationFrame(doScroll); // catch entrance layout
+    const settle = setTimeout(doScroll, 340); // after header slide / card mount settles
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(settle);
+    };
+  }, [messages, thinking, working, reading, transitionLabel, phase, editingJob, reduce]);
 
   const advance = (fn, label, delay = 700) => {
     setTransitionLabel(label);
@@ -346,6 +418,8 @@ const StudioChat = ({ onPaywall }) => {
       if (localPersisted.length) return prev; // local thread wins; nothing to restore
       migratedRef.current = true; // came FROM the backend — don't migrate back over it
       setPhase(derivePhase(saved, cvData));
+      hydratingRef.current = true; // land the scroll at the bottom, not the top of history
+      for (let idx = 0; idx < saved.length; idx += 1) revealedRef.current.add(idx); // no typewriter replay
       return saved;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2632,7 +2706,7 @@ const StudioChat = ({ onPaywall }) => {
             </motion.div>
           )}
         </AnimatePresence>
-        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
+        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-5">
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft
               entry, so free chat, an Aria turn, or a refresh all leave it untouched.
@@ -2747,7 +2821,10 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <motion.div
                   key={i}
-                  className="self-end max-w-[92%] bg-white text-slate-900 border border-slate-200 shadow-sm dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700 rounded-2xl rounded-tr-md px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap"
+                  ref={(el) => {
+                    msgDomRef.current[i] = el;
+                  }}
+                  className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
                   {...bubbleAnim('user', reduce)}
                 >
                   {m.text}
@@ -3006,20 +3083,30 @@ const StudioChat = ({ onPaywall }) => {
             // Aria turn and must never fall through into an empty speech bubble.
             if (!m.text) return null;
 
-            // Aria turn — grey bubble, orbit mark BELOW it (Claude-style: the mark trails
-            // the response instead of flagging it from the side). The flex wrapper is
-            // load-bearing: it makes the bubble a flex ITEM (a block box), so its padding
-            // and background form one rounded shape. As a bare inline <span> the
-            // background paints per line-fragment and the bubble breaks apart across
-            // wrapped lines.
+            // Aria turn — no bubble at all, just text on the page (the grey pill is
+            // reserved for OUR side, matching the reference chat). Orbit mark trails
+            // BELOW the text, Claude-style, rather than flagging it from the side.
+            // A freshly-arrived reply types itself in like a stream; restored history
+            // (see revealedRef, seeded by the rehydrate effect) renders as plain text.
             return (
               <motion.div
                 key={i}
+                ref={(el) => {
+                  msgDomRef.current[i] = el;
+                }}
                 className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-4 py-3 text-[15px] leading-relaxed">
-                  {m.text}
+                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
+                  {revealedRef.current.has(i) ? (
+                    m.text
+                  ) : (
+                    <AriaTypewriter
+                      text={m.text}
+                      reduce={reduce}
+                      onDone={() => revealedRef.current.add(i)}
+                    />
+                  )}
                 </span>
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
@@ -3112,7 +3199,7 @@ const StudioChat = ({ onPaywall }) => {
             {/* The section menu — whatever is still unfinished, in builder order. */}
             {ready && phase === 'build:sections' && !pinnedEntry && nextSection && (
               <AriaCard cardKey={`sections-${nextSection.key}`} key={`sections-${nextSection.key}`}>
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {nextSection.eyebrow}
                   </p>
@@ -3307,7 +3394,7 @@ const StudioChat = ({ onPaywall }) => {
                 half-working in-chat build, and the round trip back here is the point. */}
             {ready && phase === 'build' && (
               <AriaCard cardKey="build" key="build">
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {t('ariaStudio.chat.buildNewCvHeading')}
                   </p>
@@ -3373,7 +3460,7 @@ const StudioChat = ({ onPaywall }) => {
             {/* The scan offer — the one charged action, priced before it's taken. */}
             {ready && phase === 'scanoffer' && (
               <AriaCard cardKey="scanoffer" key="scanoffer">
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                       {t('ariaStudio.chat.scanOffer.heading')}
@@ -3704,6 +3791,7 @@ const StudioChat = ({ onPaywall }) => {
         }
         modelId={modelId}
         onSelectModel={selectModel}
+        showModelPicker={false}
       />
 
       {/* Active-coach composer dock — a PINNED shrink-0 sibling below the scroll, mounted

@@ -34,19 +34,19 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
 
   return (
     <AriaCard cardKey="cvpicker">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.cvPicker.whichCv')}
         </p>
 
         {drafts === null && (
-          <p className="mt-3 text-[12px] text-slate-400 dark:text-slate-500">
+          <p className="mt-3 text-[13.5px] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.cvPicker.fetching')}
           </p>
         )}
 
         {drafts?.length === 0 && (
-          <p className="mt-3 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-3 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
             {error ? t('ariaStudio.cvPicker.loadError') : t('ariaStudio.cvPicker.noneYet')}
           </p>
         )}
@@ -72,15 +72,15 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
                 >
                   <span className={`absolute left-0 inset-y-0 w-[3px] ${BAND_RULEBG[band]}`} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+                    <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100 truncate">
                       {d.title || t('ariaStudio.cvPicker.untitledCv')}
                     </span>
-                    <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    <span className="block text-[12px] text-slate-500 dark:text-slate-400 truncate">
                       {name}
                       {relative ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}` : ''}
                     </span>
                   </span>
-                  <span className={`shrink-0 font-mono text-[11px] font-bold ${BAND_TEXT[band]}`}>
+                  <span className={`shrink-0 font-mono text-[12px] font-bold ${BAND_TEXT[band]}`}>
                     {busy ? '…' : `${percent}%`}
                   </span>
                 </button>
@@ -94,7 +94,7 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
             type="button"
             onClick={() => onCancel?.()}
             disabled={!!busyId}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {t('common.back')}
           </button>

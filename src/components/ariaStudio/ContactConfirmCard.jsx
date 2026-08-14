@@ -101,7 +101,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   if (editing) {
     return (
       <AriaCard cardKey="contactedit" wide>
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {isEmpty
               ? t('ariaStudio.contactConfirm.howReachYou')
@@ -113,7 +113,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
               <div key={field.key} className="min-w-0">
                 <label
                   htmlFor={`studio-contact-${field.key}`}
-                  className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+                  className="mb-1 block text-[12px] font-semibold text-slate-600 dark:text-slate-300"
                 >
                   {t(field.labelKey)}
                   <span
@@ -131,7 +131,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   value={form[field.key] || ''}
                   onChange={(event) => set(field.key, event.target.value)}
                   placeholder={t(field.placeholderKey)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[13px] text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/20"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[14px] text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/20"
                 />
               </div>
             ))}
@@ -140,7 +140,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
           <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <p className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">
                   {t('ariaStudio.contactConfirm.fields.photo.label')}
                   <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
                     {t('ariaStudio.contactConfirm.importance.optional')}
@@ -160,7 +160,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                 )}
                 <label
                   htmlFor="studio-contact-photoUrl"
-                  className="cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-[11px] font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-950 dark:border-slate-700 dark:text-slate-200 dark:hover:border-white dark:hover:text-white"
+                  className="cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-[12px] font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-950 dark:border-slate-700 dark:text-slate-200 dark:hover:border-white dark:hover:text-white"
                 >
                   {form.photoUrl
                     ? t('ariaStudio.contactConfirm.replacePhoto')
@@ -194,7 +194,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   setForm({ ...personalInfo });
                   setEditing(false);
                 }}
-                className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+                className="rounded-lg px-2 py-1.5 text-[14px] font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 {t('common.cancel')}
               </button>
@@ -203,7 +203,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
               type="button"
               onClick={save}
               disabled={!canSave || saving}
-              className="btn-primary ml-auto px-5 py-2 text-sm disabled:opacity-50"
+              className="btn-primary ml-auto px-5 py-2 text-[16px] disabled:opacity-50"
             >
               {saving
                 ? t('ariaStudio.contactConfirm.saving')
@@ -217,7 +217,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
 
   return (
     <AriaCard cardKey="contactconfirm" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.contactConfirm.reviewDetails')}
         </p>
@@ -235,7 +235,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   className="h-9 w-9 rounded-full border border-slate-200 object-cover dark:border-slate-700"
                 />
               ) : (
-                <span className="text-[12px] italic text-slate-400 dark:text-slate-500">
+                <span className="text-[13.5px] italic text-slate-400 dark:text-slate-500">
                   {t('ariaStudio.contactConfirm.missing')}
                 </span>
               )}
@@ -266,7 +266,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   {t(field.labelKey)}
                 </dt>
                 <dd
-                  className={`min-w-0 truncate text-[12px] ${
+                  className={`min-w-0 truncate text-[13.5px] ${
                     value
                       ? 'text-slate-800 dark:text-slate-100'
                       : field.required
@@ -307,7 +307,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+            className="rounded-lg px-2 py-1.5 text-[14px] font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
           >
             ✎ {t('ariaStudio.pinnedEntry.edit')}
           </button>
@@ -317,7 +317,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
               missingRequired.length ? editField(missingRequired[0].key) : onConfirm?.(personalInfo)
             }
             disabled={saving}
-            className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+            className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
           >
             {missingRequired.length
               ? t('ariaStudio.contactConfirm.addMissing', { count: missingRequired.length })

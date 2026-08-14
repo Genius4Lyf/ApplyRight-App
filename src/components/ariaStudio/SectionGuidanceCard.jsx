@@ -36,7 +36,7 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescor
 
   return (
     <AriaCard cardKey={`guide-${section}`}>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t(g.titleKey)}
@@ -47,12 +47,12 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescor
         </div>
 
         {note && (
-          <p className="mt-2 text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+          <p className="mt-2 text-[13.5px] font-semibold text-slate-700 dark:text-slate-200">
             {note}
           </p>
         )}
 
-        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t(g.bodyKey)}
         </p>
 
@@ -61,7 +61,7 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescor
             type="button"
             onClick={() => onBack?.()}
             disabled={rescoring}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {t('common.back')}
           </button>
@@ -71,7 +71,7 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescor
                 href={`/cv-builder/${draftId}/${g.step}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
               >
                 {t(g.ctaKey)} <ExternalLink className="w-3 h-3" />
               </a>
@@ -83,7 +83,7 @@ const SectionGuidanceCard = ({ section, draftId, note, onBack, onRescore, rescor
                 type="button"
                 onClick={() => onRescore()}
                 disabled={rescoring}
-                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 text-[14px] font-bold px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity disabled:opacity-60"
               >
                 <RefreshCw className={`w-3 h-3 ${rescoring ? 'animate-spin' : ''}`} />
                 {rescoring

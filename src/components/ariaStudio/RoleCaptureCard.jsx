@@ -23,14 +23,14 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
     const canSave = !!start.trim();
     return (
       <AriaCard cardKey="capture-dates" wide>
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.roleCapture.whenWereYouThere')}
           </p>
 
           <label
             htmlFor="studio-role-start"
-            className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            className="mt-3 block text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
           >
             {t('ariaStudio.roleCapture.started')}
           </label>
@@ -39,7 +39,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             value={start}
             onChange={(e) => setStart(e.target.value)}
             placeholder={t('ariaStudio.roleCapture.startedPlaceholder')}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
           />
           <div className="mt-1.5 flex flex-wrap gap-1">
             {RECENT_YEARS.map((y) => (
@@ -47,7 +47,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
                 key={y}
                 type="button"
                 onClick={() => setStart(y)}
-                className="text-[11px] font-semibold px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+                className="text-[12px] font-semibold px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
               >
                 {y}
               </button>
@@ -61,7 +61,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               onChange={(e) => setIsCurrent(e.target.checked)}
               className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:text-white dark:focus:ring-white"
             />
-            <span className="text-[14px] text-slate-700 dark:text-slate-200">
+            <span className="text-[16px] text-slate-700 dark:text-slate-200">
               {t('ariaStudio.roleCapture.stillWorkHere')}
             </span>
           </label>
@@ -70,7 +70,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             <>
               <label
                 htmlFor="studio-role-end"
-                className="mt-3 block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+                className="mt-3 block text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
               >
                 {t('ariaStudio.roleCapture.ended')}
               </label>
@@ -79,7 +79,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
                 placeholder={t('ariaStudio.roleCapture.endedPlaceholder')}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
               />
             </>
           )}
@@ -90,7 +90,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               onSubmit({ startDate: start.trim(), endDate: isCurrent ? '' : end.trim(), isCurrent })
             }
             disabled={!canSave || busy}
-            className="btn-primary w-full mt-4 py-2 text-sm disabled:opacity-50"
+            className="btn-primary w-full mt-4 py-2 text-[16px] disabled:opacity-50"
           >
             {busy ? t('ariaStudio.roleCapture.saving') : t('ariaStudio.roleCapture.save')}
           </button>
@@ -143,7 +143,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
 
   return (
     <AriaCard cardKey={`capture-${stage}`} wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {prompt.q}
         </p>
@@ -152,10 +152,10 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder={prompt.placeholder}
-          className="mt-3 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+          className="mt-3 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
         />
         {prompt.hint && (
-          <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">{prompt.hint}</p>
+          <p className="mt-1.5 text-[12px] text-slate-400 dark:text-slate-500">{prompt.hint}</p>
         )}
 
         <div className="mt-4 flex items-center justify-between gap-2">
@@ -164,7 +164,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
               type="button"
               onClick={onSkip}
               disabled={busy}
-              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
               {t('ariaStudio.roleCapture.skip')}
             </button>
@@ -175,7 +175,7 @@ const RoleCaptureCard = ({ stage, entry, section = 'experience', onSubmit, onSki
             type="button"
             onClick={submit}
             disabled={!canSave || busy}
-            className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+            className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
           >
             {busy ? t('ariaStudio.roleCapture.saving') : t('ariaStudio.roleCapture.save')}
           </button>

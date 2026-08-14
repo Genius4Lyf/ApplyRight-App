@@ -638,26 +638,27 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         >
                           {(r) => (
                             <>
-                              <div className="flex items-baseline justify-between gap-3">
-                                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                                  {r.title || t('ariaStudio.studioFlow.fields.experience.title')}
-                                  {r.company ? (
-                                    <span className="font-normal text-slate-500 dark:text-slate-400">
-                                      {' '}
-                                      · {r.company}
-                                    </span>
-                                  ) : null}
-                                </p>
-                                {(r.startDate || r.endDate || r.isCurrent) && (
-                                  <span className="shrink-0 font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
-                                    {r.startDate || ''}
-                                    {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
-                                    {r.isCurrent
-                                      ? t('ariaStudio.pinnedEntry.present')
-                                      : r.endDate || ''}
+                              {/* Title/company own the FULL row width, date on its own line
+                              below — matching Education's stacked pattern. A side-by-side
+                              row here squeezed the date into a shrink-0 column that fought
+                              the entry controls' reserved right-padding on a narrow phone,
+                              wrapping a long title/company across several ragged lines. */}
+                              <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                                {r.title || t('ariaStudio.studioFlow.fields.experience.title')}
+                                {r.company ? (
+                                  <span className="font-normal text-slate-500 dark:text-slate-400">
+                                    {' '}
+                                    · {r.company}
                                   </span>
-                                )}
-                              </div>
+                                ) : null}
+                              </p>
+                              {(r.startDate || r.endDate || r.isCurrent) && (
+                                <p className="font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                                  {r.startDate || ''}
+                                  {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
+                                  {r.isCurrent ? t('ariaStudio.pinnedEntry.present') : r.endDate || ''}
+                                </p>
+                              )}
                               <Bullets description={r.description} />
                             </>
                           )}

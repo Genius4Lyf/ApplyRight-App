@@ -11,13 +11,13 @@ export const SelectedAnswerBubble = ({ children, reduce = false }) => {
   return (
     <motion.div
       data-transcript-kind="selection"
-      className="self-end max-w-[92%] rounded-2xl rounded-tr-md border border-slate-200 dark:border-slate-700 bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-50 px-4 py-3"
+      className="self-end max-w-[92%] rounded-[28px] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 px-7 py-5"
       {...bubbleAnim('user', reduce)}
     >
-      <span className="mb-0.5 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+      <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
         {t('ariaStudio.chat.respondedToAriaInterview')}
       </span>
-      <span className="block whitespace-pre-wrap text-[15px] leading-relaxed">{children}</span>
+      <span className="block whitespace-pre-wrap text-[17px] leading-6">{children}</span>
     </motion.div>
   );
 };

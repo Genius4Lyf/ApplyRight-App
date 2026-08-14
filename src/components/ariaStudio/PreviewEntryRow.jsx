@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaOrbit from '../cv/AriaOrbit';
 
@@ -81,16 +81,20 @@ const PreviewEntryRow = ({
       ref={setNodeRef}
       style={style}
       className={`group relative -mx-1 rounded-md pl-1 py-0.5 transition-colors hover:bg-slate-50/90 focus-within:bg-slate-50/90 dark:hover:bg-slate-800/45 dark:focus-within:bg-slate-800/45 ${
-        showControls ? 'pr-[4.25rem]' : 'pr-1'
+        showControls ? 'pr-9' : 'pr-1'
       } ${
         isActive
           ? 'bg-slate-50/90 ring-1 ring-slate-200 dark:bg-slate-800/45 dark:ring-slate-700'
           : ''
       }`}
     >
+      {/* Stacked, not side-by-side — a phone has no hover state so these two controls
+          sit permanently visible; stacking them keeps the reserved right-margin to ONE
+          button's width instead of two, leaving a long title/company line more room
+          before it has to wrap. */}
       {showControls && !confirming && (
         <div
-          className={`absolute right-0 top-0 z-20 flex items-center gap-1 transition-opacity ${
+          className={`absolute right-0 top-0 z-20 flex flex-col items-end gap-1 transition-opacity ${
             menuOpen ? 'opacity-100' : visibility
           }`}
         >
@@ -117,7 +121,7 @@ const PreviewEntryRow = ({
               aria-expanded={menuOpen}
               className={control}
             >
-              <MoreHorizontal className="h-3.5 w-3.5" />
+              <MoreVertical className="h-3.5 w-3.5" />
             </button>
 
             {menuOpen && (

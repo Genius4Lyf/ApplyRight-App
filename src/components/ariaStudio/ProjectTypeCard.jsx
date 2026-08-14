@@ -10,7 +10,7 @@ const ProjectTypeCard = ({ onPick, busy }) => {
   const { t } = useTranslation();
   return (
     <AriaCard cardKey="projecttype">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.projectType.whatKind')}
         </p>
@@ -23,10 +23,10 @@ const ProjectTypeCard = ({ onPick, busy }) => {
               onClick={() => onPick?.(pt)}
               className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white px-3 py-2.5 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
             >
-              <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+              <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
                 {t(pt.labelKey)}
               </span>
-              <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="block text-[12px] text-slate-500 dark:text-slate-400">
                 {t(pt.hintKey)}
               </span>
             </button>

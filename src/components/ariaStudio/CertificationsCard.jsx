@@ -27,7 +27,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
 
   return (
     <AriaCard cardKey="certs" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.certifications.heading')}
@@ -36,7 +36,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             {t('ariaStudio.certifications.noCharge')}
           </span>
         </div>
-        <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.certifications.body')}
         </p>
 
@@ -47,7 +47,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
                 key={`${c.name}-${i}`}
                 className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5"
               >
-                <span className="min-w-0 flex-1 truncate text-[14px] text-slate-800 dark:text-slate-100">
+                <span className="min-w-0 flex-1 truncate text-[16px] text-slate-800 dark:text-slate-100">
                   {c.name}
                   {c.issuer ? ` · ${c.issuer}` : ''}
                   {c.date ? ` · ${c.date}` : ''}
@@ -69,7 +69,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
           <div className="min-w-0">
             <label
               htmlFor="studio-cert-name"
-              className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+              className="block text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
               {t('ariaStudio.certifications.fieldCertification')}
             </label>
@@ -79,13 +79,13 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderCertification')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
             <label
               htmlFor="studio-cert-issuer"
-              className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+              className="block text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
               {t('ariaStudio.certifications.fieldIssuer')}
             </label>
@@ -95,13 +95,13 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setIssuer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderIssuer')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
             <label
               htmlFor="studio-cert-date"
-              className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
+              className="block text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
             >
               {t('ariaStudio.certifications.fieldYear')}
             </label>
@@ -111,7 +111,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setDate(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderYear')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[13px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
         </div>
@@ -121,7 +121,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             type="button"
             onClick={add}
             disabled={!canAdd || busy}
-            className="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+            className="text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
             + {t('ariaStudio.certifications.add')}
           </button>
@@ -129,7 +129,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
             type="button"
             onClick={onDone}
             disabled={busy}
-            className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+            className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
           >
             {certifications.length
               ? t('ariaStudio.certifications.done')

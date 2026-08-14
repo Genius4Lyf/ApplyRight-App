@@ -50,13 +50,13 @@ const SummaryFixCard = ({
   if (draft) {
     return (
       <AriaCard cardKey="summarydraft">
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {wasReroll
               ? t('ariaStudio.summaryFix.anotherAngle')
               : t('ariaStudio.summaryFix.yourTailoredSummary')}
           </p>
-          <p className="mt-2.5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
             {draft}
           </p>
           <div className="mt-4 flex items-center justify-between gap-2">
@@ -64,7 +64,7 @@ const SummaryFixCard = ({
               type="button"
               onClick={() => onGenerate?.(effectiveStage, true)}
               disabled={generating || applying}
-              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
               {generating
                 ? t('ariaStudio.summaryFix.rewriting')
@@ -74,7 +74,7 @@ const SummaryFixCard = ({
               type="button"
               onClick={() => onApply?.(draft)}
               disabled={generating || applying}
-              className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+              className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
             >
               {applying ? t('ariaStudio.summaryFix.applying') : t('ariaStudio.summaryFix.useThis')}
             </button>
@@ -87,7 +87,7 @@ const SummaryFixCard = ({
   // First step — which stage are you at?
   return (
     <AriaCard cardKey="summarystage">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {careerStage
@@ -124,10 +124,10 @@ const SummaryFixCard = ({
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white'
                   }`}
                 >
-                  <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                  <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
                     {t(s.labelKey)}
                   </span>
-                  <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="block text-[12px] text-slate-500 dark:text-slate-400">
                     {t(s.hintKey)}
                   </span>
                 </button>
@@ -141,7 +141,7 @@ const SummaryFixCard = ({
             type="button"
             onClick={() => onCancel?.()}
             disabled={generating}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {t('common.back')}
           </button>
@@ -149,7 +149,7 @@ const SummaryFixCard = ({
             type="button"
             onClick={() => onGenerate?.(effectiveStage, false)}
             disabled={!effectiveStage || generating}
-            className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
+            className="btn-primary px-5 py-2 text-[16px] disabled:opacity-50"
           >
             {generating ? t('ariaStudio.summaryFix.writing') : t('ariaStudio.summaryFix.writeIt')}
           </button>

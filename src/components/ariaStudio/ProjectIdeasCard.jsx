@@ -29,11 +29,11 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
 
   return (
     <AriaCard cardKey="projectideas" wide>
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.projectIdeas.title')}
         </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.projectIdeas.intro')}
         </p>
 
@@ -53,7 +53,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
                 className="text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white bg-white dark:bg-slate-900 px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
               >
                 <span className="flex items-start justify-between gap-2">
-                  <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                  <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100">
                     {idea.title}
                   </span>
                   {typeDef && (
@@ -64,7 +64,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
                 </span>
 
                 {idea.oneLiner && (
-                  <span className="mt-1 block text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  <span className="mt-1 block text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {idea.oneLiner}
                   </span>
                 )}
@@ -74,7 +74,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
                     <span className="block font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                       {t('ariaStudio.projectIdeas.whyItFits')}
                     </span>
-                    <span className="block text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    <span className="block text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
                       {idea.whyItFits}
                     </span>
                   </span>
@@ -86,13 +86,13 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
                     <span className="block font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
                       {t('ariaStudio.projectIdeas.fromYourCv')}
                     </span>
-                    <span className="block text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+                    <span className="block text-[12px] leading-relaxed text-slate-400 dark:text-slate-500">
                       {idea.evidence}
                     </span>
                   </span>
                 )}
 
-                <span className="mt-2 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                <span className="mt-2 block text-[12px] font-semibold text-slate-500 dark:text-slate-400">
                   {t('ariaStudio.projectIdeas.buildThis')} →
                 </span>
               </button>
@@ -106,7 +106,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
           <button
             type="button"
             onClick={() => onStartBlank?.()}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+            className="text-[14px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
           >
             {t('ariaStudio.projectIdeas.startBlank')}
           </button>
@@ -114,7 +114,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
           <button
             type="button"
             onClick={() => onSkip?.()}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
           >
             {t('ariaStudio.projectIdeas.skip')}
           </button>
@@ -126,7 +126,7 @@ const ProjectIdeasCard = ({ ideas = [], busy, onUse, onStartBlank, onSkip, onDis
             <button
               type="button"
               onClick={() => onDismissSection('projects')}
-              className="text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1.5 rounded-lg transition-colors"
+              className="text-[14px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1.5 rounded-lg transition-colors"
             >
               {t('ariaStudio.sectionBreakdown.notApplicable')}
             </button>

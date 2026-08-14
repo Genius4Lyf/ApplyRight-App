@@ -37,7 +37,7 @@ const SectionBreakdownCard = ({
 
   return (
     <AriaCard cardKey="sections">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-4">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-baseline justify-between gap-2">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.sectionBreakdown.heading')}
@@ -67,14 +67,14 @@ const SectionBreakdownCard = ({
                 />
                 <div className={`min-w-0 flex-1 ${dismissed ? 'opacity-60' : ''}`}>
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                    <span className="text-[14px] font-semibold text-slate-800 dark:text-slate-100">
                       {sectionLabel(t, s)}
                     </span>
                     <span className="shrink-0 font-mono text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
                       {s.score == null ? '—' : s.score}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
                     {sectionNote(t, s)}
                   </p>
                   {/* The way BACK. Dismissing is a preference, not a deletion, so the
@@ -84,7 +84,7 @@ const SectionBreakdownCard = ({
                       type="button"
                       onClick={() => onRestoreSection(s.key)}
                       disabled={busy}
-                      className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors disabled:opacity-50"
+                      className="mt-1 text-[12px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors disabled:opacity-50"
                     >
                       {t('ariaStudio.sectionBreakdown.includeAgain')}
                     </button>
@@ -96,7 +96,7 @@ const SectionBreakdownCard = ({
                       <button
                         type="button"
                         onClick={() => onFix?.(s)}
-                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
+                        className="text-[12px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
                       >
                         {t('ariaStudio.sectionBreakdown.fix')}
                       </button>
@@ -137,7 +137,7 @@ const SectionBreakdownCard = ({
                 type="button"
                 onClick={() => onRecompute()}
                 disabled={busy}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                className="text-[12px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
                 {recomputing
                   ? t('ariaStudio.sectionBreakdown.rescoring')
@@ -149,7 +149,7 @@ const SectionBreakdownCard = ({
                 type="button"
                 onClick={() => onRescan()}
                 disabled={busy}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
+                className="text-[12px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
               >
                 {rescanning
                   ? t('ariaStudio.sectionBreakdown.rechecking')

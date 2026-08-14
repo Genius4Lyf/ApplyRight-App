@@ -482,7 +482,7 @@ const SectionCoach = ({
         {/* Count picker — the first point anything costs, priced before the click. */}
         {phase === 'picking' && (
           <AriaCard cardKey="picking" key="picking" wide>
-            <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('cvBuilder.askAria.howManyBullets')}
               </p>
@@ -556,7 +556,7 @@ const SectionCoach = ({
         {/* Results — per-bullet toggles, a free-re-roll offer, and Apply. */}
         {phase === 'results' && bullets.length > 0 && (
           <AriaCard cardKey="results" key="results" wide>
-            <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('ariaStudio.sectionCoach.pickWhatsTrue')}
               </p>

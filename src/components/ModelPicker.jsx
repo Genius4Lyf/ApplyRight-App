@@ -208,14 +208,16 @@ const ModelPicker = ({
         // rather than by growing the row — a 36px chip is what fits beside the input.
         className={`relative inline-flex items-center shrink-0 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 ${
           compact
-            ? "gap-1 h-9 px-2 rounded-full text-[12px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 before:content-[''] before:absolute before:inset-x-0 before:-inset-y-1"
+            ? "gap-1 h-10 px-2 rounded-full text-[12px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 before:content-[''] before:absolute before:inset-x-0 before:-inset-y-1"
             : 'gap-1.5 h-8 px-2.5 rounded-lg text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
         }`}
       >
         <span aria-hidden="true" className="text-slate-400 dark:text-slate-500">
           {PROVIDER_GLYPH[rows.find((m) => m.id === current)?.provider] || '◇'}
         </span>
-        <span aria-hidden="true" className="hidden sm:inline">
+        {/* The current model stays visibly labeled at every width, not just ≥sm — the
+            reference chat header never hides which model is active. */}
+        <span aria-hidden="true" className={compact ? 'hidden sm:inline' : 'inline'}>
           {tierLabel(currentTier)}
         </span>
         <ChevronDown className="w-3.5 h-3.5 shrink-0" />

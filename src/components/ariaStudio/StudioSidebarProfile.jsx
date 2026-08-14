@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, User, LogOut } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp, User, Settings, CreditCard, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
@@ -12,15 +12,17 @@ import SignOutConfirm from '../SignOutConfirm';
 import { useAccountWallet } from '../../hooks/useAccountWallet';
 import { planLabelFor } from '../../lib/planLabels';
 
-// Pinned to the bottom of the sidebar, above nothing. Everything the top navbar's
-// account dropdown offered beyond destinations/wallet (which live in
-// StudioSidebarNav) collapses down to just sign-out + language here, since the rest of
-// the sidebar already surfaces it. Positioned via ordinary relative/absolute layout —
-// not a portal — so the popover stays confined to the rail's own width and can't run
-// off the side of a viewport the way a viewport-fixed dropdown would.
-const StudioSidebarProfile = ({ onOpenGuide }) => {
+// Pinned to the bottom of the sidebar, above nothing. Clicking your own name is where
+// the top navbar's account dropdown lived, so everything it offered beyond the primary
+// destinations (which live in StudioSidebarNav) lands here too: view profile, manage
+// account, credits & billing, language, the guide, and sign-out. Positioned via
+// ordinary relative/absolute layout — not a portal — so the popover stays confined to
+// the rail's own width and can't run off the side of a viewport the way a
+// viewport-fixed dropdown would.
+const StudioSidebarProfile = ({ onOpenGuide, onBeforeNavigate }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const btnRef = useRef(null);
@@ -35,6 +37,25 @@ const StudioSidebarProfile = ({ onOpenGuide }) => {
   }
   const { entitlement, isPaid } = useAccountWallet(isAuthenticated);
   const initials = ((user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')).toUpperCase();
+
+  // Same credits-checkout handoff StudioSidebarNav's wallet "Top up" uses — flush any
+  // pending chat, remember where to bounce back to, then hand off to /credits.
+  const openCredits = async () => {
+    setOpen(false);
+    try {
+      await onBeforeNavigate?.();
+    } catch {
+      // Checkout navigation remains available if a best-effort chat flush fails.
+    }
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    try {
+      localStorage.setItem('arPostCheckout', returnTo);
+      localStorage.setItem('arCheckoutIntent', 'credits');
+    } catch {
+      /* Router state still carries the return destination for this visit. */
+    }
+    navigate('/credits', { state: { returnTo } });
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -76,7 +97,7 @@ const StudioSidebarProfile = ({ onOpenGuide }) => {
           {initials || <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+          <p className="text-[17px] sm:text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
             {user && user.firstName
               ? `${user.firstName} ${user.lastName || ''}`.trim()
               : user?.email?.split('@')[0] || t('nav.account.defaultUser')}
@@ -120,7 +141,7 @@ const StudioSidebarProfile = ({ onOpenGuide }) => {
                 setOpen(false);
                 onOpenGuide?.();
               }}
-              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
             >
               <AriaOrbit size={16} />
               <span className="flex-1">{t('ariaStudio.welcomeGuide.howItWorks')}</span>
@@ -133,9 +154,43 @@ const StudioSidebarProfile = ({ onOpenGuide }) => {
               role="menuitem"
               onClick={() => {
                 setOpen(false);
+                navigate('/profile');
+              }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+            >
+              <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <span className="flex-1">{t('nav.account.viewProfile')}</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate('/profile');
+              }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+            >
+              <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <span className="flex-1">{t('nav.account.manageAccount')}</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={openCredits}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+            >
+              <CreditCard className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <span className="flex-1">{t('nav.account.creditsAndBilling')}</span>
+            </button>
+            <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1.5 my-1" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
                 setShowLogoutConfirm(true);
               }}
-              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px] text-slate-500 dark:text-slate-400 text-left transition-colors"
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-500 dark:text-slate-400 text-left transition-colors"
             >
               <LogOut className="w-4 h-4" />
               <span className="flex-1">{t('common.signOut')}</span>

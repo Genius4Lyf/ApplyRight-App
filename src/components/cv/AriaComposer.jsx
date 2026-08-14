@@ -8,9 +8,11 @@ import ModelPicker from '../ModelPicker';
 // SectionCoach's portaled dock). It used to be five near-identical copies; a change to
 // the input meant five edits, so it lives here now.
 //
-// Shape: ONE row inside a pill — model chip · divider · textarea · theme · send. A second
-// footer row would double the resting height (~78px vs ~44px), which is real estate a
-// phone can't spare. That keeps rounded-3xl right: it's a single-row pill again.
+// Shape: ONE row inside a FULL pill — textarea · model chip · send — mirroring the
+// reference chat's input bar (soft shadow instead of a hard border, generous height,
+// the model chip trailing on the right rather than leading on the left). A second
+// footer row would double the resting height (~86px vs ~48px), which is real estate a
+// phone can't spare, so it stays single-row.
 //
 // Two things that look broken if they drift:
 //   · `items-end`, never items-center — the textarea auto-grows, and centred controls
@@ -28,6 +30,8 @@ import ModelPicker from '../ModelPicker';
 //   busy      a turn is in flight — blocks send without dimming the input
 //   inert     permanently decorative (the Target step, which is driven by its form)
 //   modelId/onSelectModel  the per-CV Aria model (see hooks/useAriaModel)
+//   showModelPicker  set false when the caller already surfaces the model chip elsewhere
+//                     (Aria Studio's header) — keeps the input row from duplicating it
 //   sendLabel  render a text send button instead of the round arrow
 //   note/footer  optional lines above the box / below it
 const AriaComposer = ({
@@ -41,6 +45,7 @@ const AriaComposer = ({
   inert = false,
   modelId,
   onSelectModel,
+  showModelPicker = true,
   sendLabel = null,
   sendAriaLabel,
   note = null,
@@ -58,56 +63,67 @@ const AriaComposer = ({
     <div className={className}>
       {note}
 
-      <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-1.5 py-1 focus-within:border-slate-900 dark:focus-within:border-slate-100 focus-within:ring-1 focus-within:ring-slate-900/20 dark:focus-within:ring-slate-100/20 transition-colors">
-        {/* The model chip. Its menu drops UP — the composer is docked at the bottom of
-            the viewport, so a downward menu would open off-screen. */}
-        <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="left" compact />
-        <span
-          aria-hidden="true"
-          className="w-px h-[18px] mb-2 bg-slate-200 dark:bg-slate-700 shrink-0"
-        />
+      {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
+          stretch edge to edge with the column (matches the reference chat). */}
+      <div className="w-full max-w-3xl mx-auto">
+        <div className="flex items-end gap-2 rounded-full border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/30 px-2.5 py-2 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow">
+          <textarea
+            ref={inputRef}
+            value={value}
+            disabled={inputInert}
+            onChange={(e) => onChange?.(e.target.value)}
+            // Auto-grow to the content, capped at max-h-[140px] (where the textarea's own
+            // scrollbar takes over — hidden via scrollbar-none).
+            onInput={(e) => {
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                onSend?.();
+              }
+            }}
+            rows={1}
+            placeholder={resolvedPlaceholder}
+            // min-w-0 is load-bearing: without it flex refuses to shrink the textarea and
+            // the send button gets pushed out of a narrow row.
+            // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
+            // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
+            // of leaving the button a few px high or low against the text.
+            className={`flex-1 min-w-0 bg-transparent border-0 outline-none resize-none px-2.5 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[140px] ${
+              inputInert ? 'opacity-50' : ''
+            } ${inert ? 'cursor-not-allowed' : ''}`}
+          />
 
-        <textarea
-          ref={inputRef}
-          value={value}
-          disabled={inputInert}
-          onChange={(e) => onChange?.(e.target.value)}
-          // Auto-grow to the content, capped at max-h-[140px] (where the textarea's own
-          // scrollbar takes over — hidden via scrollbar-none).
-          onInput={(e) => {
-            e.currentTarget.style.height = 'auto';
-            e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              onSend?.();
-            }
-          }}
-          rows={1}
-          placeholder={resolvedPlaceholder}
-          // min-w-0 is load-bearing: without it flex refuses to shrink the textarea and
-          // the send button gets pushed out of a narrow row.
-          className={`flex-1 min-w-0 bg-transparent border-0 outline-none resize-none px-1.5 py-2.5 text-[16px] leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[140px] ${
-            inputInert ? 'opacity-50' : ''
-          } ${inert ? 'cursor-not-allowed' : ''}`}
-        />
+          {/* The model chip trails the text, right of the input — mirrors the reference
+              chat's layout. Its menu drops UP since the composer is docked at the bottom
+              of the viewport. Omitted entirely when the caller already shows the model
+              elsewhere (Aria Studio's header). */}
+          {showModelPicker && (
+            <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="right" compact />
+          )}
 
-        <button
-          type="button"
-          onClick={() => onSend?.()}
-          disabled={!canSend}
-          aria-label={resolvedSendAriaLabel}
-          className={`shrink-0 h-9 flex items-center justify-center rounded-full transition-colors ${
-            sendLabel ? 'px-4 text-[12px] font-semibold' : 'w-9'
-          } ${
-            inert
-              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-              : 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white ring-1 ring-transparent dark:ring-slate-100/30 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40'
-          }`}
-        >
-          {sendLabel || <ArrowUp className="w-4 h-4" />}
-        </button>
+          <button
+            type="button"
+            onClick={() => onSend?.()}
+            disabled={!canSend}
+            aria-label={resolvedSendAriaLabel}
+            className={`shrink-0 h-10 flex items-center justify-center rounded-full transition-colors ${
+              sendLabel ? 'px-4 text-[13px] font-semibold' : 'w-10'
+            } ${
+              inert
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white disabled:opacity-40'
+            }`}
+          >
+            {sendLabel || <ArrowUp className="w-4 h-4" />}
+          </button>
+        </div>
+
+        <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
+          {t('cvBuilder.ariaComposer.aiDisclaimer')}
+        </p>
       </div>
 
       {footer}
