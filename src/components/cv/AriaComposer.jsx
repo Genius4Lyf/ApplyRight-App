@@ -1,7 +1,8 @@
-import React from 'react';
-import { ArrowUp } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
+import { isSpeechRecognitionSupported, startDictation } from '../../lib/speech';
 
 // THE Aria composer — one docked input shared by every Aria chat surface (the builder's
 // AriaChat + AskAriaGenerate, the Target step's inert parity row, StudioChat, and
@@ -53,11 +54,89 @@ const AriaComposer = ({
   className = '',
 }) => {
   const { t } = useTranslation();
+  const [listening, setListening] = useState(false);
+  const textareaRef = useRef(null);
+  const stopDictationRef = useRef(null);
+  const dictatedPrefixRef = useRef('');
   // Defaults resolve to i18n at render — a caller-supplied string still wins.
   const resolvedPlaceholder = placeholder ?? t('cvBuilder.ariaComposer.placeholder');
   const resolvedSendAriaLabel = sendAriaLabel ?? t('cvBuilder.ariaComposer.send');
   const inputInert = disabled || inert;
   const canSend = !inputInert && !busy && value.trim().length >= 2;
+  const canDictate = !inputInert && !busy && isSpeechRecognitionSupported();
+
+  const resizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  };
+
+  // Voice recognition updates `value` through React, which does not fire the
+  // textarea's native input event. Resize from the value itself so typed and spoken
+  // text have exactly the same growing behavior.
+  useEffect(() => {
+    resizeTextarea();
+  }, [value]);
+
+  useEffect(
+    () => () => {
+      stopDictationRef.current?.();
+    },
+    []
+  );
+
+  const stopDictation = () => {
+    stopDictationRef.current?.();
+    stopDictationRef.current = null;
+    setListening(false);
+  };
+
+  const toggleDictation = () => {
+    if (listening) {
+      stopDictation();
+      return;
+    }
+
+    // Preserve typed text; each interim transcript replaces only its live tail.
+    dictatedPrefixRef.current = value.trimEnd();
+    setListening(true);
+    stopDictationRef.current = startDictation({
+      onText: (transcript) => {
+        const prefix = dictatedPrefixRef.current;
+        onChange?.([prefix, transcript].filter(Boolean).join(prefix && transcript ? ' ' : ''));
+      },
+      onEnd: () => {
+        stopDictationRef.current = null;
+        setListening(false);
+      },
+      onError: () => {
+        stopDictationRef.current = null;
+        setListening(false);
+      },
+    });
+  };
+
+  const send = () => {
+    // Reset immediately; a late browser `onend` cannot restore sent text.
+    if (listening) stopDictation();
+    onSend?.();
+  };
+
+  const handleTextChange = (event) => {
+    // A physical keyboard (or paste) means the user has taken over from voice.
+    // Stop first so a delayed recognition result cannot overwrite their typing.
+    if (listening) stopDictation();
+    onChange?.(event.target.value);
+  };
+
+  const setTextareaRef = (node) => {
+    textareaRef.current = node;
+    if (typeof inputRef === 'function') inputRef(node);
+    // The documented contract forwards the DOM textarea to the caller.
+    // eslint-disable-next-line react-hooks/immutability
+    else if (inputRef) inputRef.current = node;
+  };
 
   return (
     <div className={className}>
@@ -66,22 +145,25 @@ const AriaComposer = ({
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
       <div className="w-full max-w-3xl mx-auto px-3 sm:px-0">
-        <div className="flex items-end gap-2 rounded-[26px] border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow">
+        <div className={`flex items-end gap-2 rounded-[26px] border bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow ${
+          listening
+            ? 'border-rose-300/80 dark:border-rose-400/40'
+            : 'border-slate-200/80 dark:border-slate-700'
+        }`}>
           <textarea
-            ref={inputRef}
+            ref={setTextareaRef}
             value={value}
             disabled={inputInert}
-            onChange={(e) => onChange?.(e.target.value)}
+            onChange={handleTextChange}
             // Auto-grow to the content, capped at max-h-[140px] (where the textarea's own
             // scrollbar takes over — hidden via scrollbar-none).
-            onInput={(e) => {
-              e.currentTarget.style.height = 'auto';
-              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 160)}px`;
+            onInput={() => {
+              resizeTextarea();
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                onSend?.();
+                send();
               }
             }}
             rows={1}
@@ -104,9 +186,40 @@ const AriaComposer = ({
             <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="right" compact />
           )}
 
+          {canDictate && (
+            <button
+              type="button"
+              onClick={toggleDictation}
+              aria-label={listening ? t('cvBuilder.ariaComposer.stopDictation') : t('cvBuilder.ariaComposer.startDictation')}
+              aria-pressed={listening}
+              className={`relative shrink-0 h-10 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
+                listening
+                  ? 'w-[86px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
+                  : 'w-10 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              {listening ? (
+                <span className="flex h-full items-center justify-center gap-[3px]" aria-hidden="true">
+                  {[12, 19, 27, 16, 23, 13, 20].map((height, index) => (
+                    <span
+                      key={index}
+                      className="w-[2px] rounded-full bg-current animate-pulse"
+                      style={{ height: `${height}px`, animationDelay: `${index * 90}ms` }}
+                    />
+                  ))}
+                  <span className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white">
+                    <Square className="h-2.5 w-2.5 fill-current" />
+                  </span>
+                </span>
+              ) : (
+                <Mic className="mx-auto h-4 w-4" />
+              )}
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => onSend?.()}
+            onClick={send}
             disabled={!canSend}
             aria-label={resolvedSendAriaLabel}
             className={`shrink-0 h-10 flex items-center justify-center rounded-full transition-colors ${

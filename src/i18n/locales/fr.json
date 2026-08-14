@@ -1827,6 +1827,8 @@
     "ariaComposer": {
       "placeholder": "Posez une question à Aria…",
       "send": "Envoyer",
+      "startDictation": "Démarrer la saisie vocale",
+      "stopDictation": "Arrêter la saisie vocale",
       "aiDisclaimer": "ARIA est une IA et peut se tromper."
     },
     "chatThemePicker": {

@@ -1831,6 +1831,8 @@
     "ariaComposer": {
       "placeholder": "Ask ARIA anything…",
       "send": "Send",
+      "startDictation": "Start voice typing",
+      "stopDictation": "Stop voice typing",
       "aiDisclaimer": "ARIA is AI and can make mistakes."
     },
     "chatThemePicker": {
