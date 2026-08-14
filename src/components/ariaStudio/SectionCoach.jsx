@@ -389,7 +389,6 @@ const SectionCoach = ({
       disabled={thinking}
       busy={thinking}
       placeholder={t('ariaStudio.sectionCoach.activityPlaceholder')}
-      sendLabel={t('ariaStudio.sectionCoach.send')}
       modelId={modelId}
       onSelectModel={selectModel}
       note={
