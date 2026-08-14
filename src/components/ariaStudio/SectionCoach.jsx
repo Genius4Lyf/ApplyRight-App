@@ -104,8 +104,17 @@ const SectionCoach = ({
   const [suggestions, setSuggestions] = useState([]);
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
+  // Keep the price cue contextual: it introduces the current model when the
+  // composer opens and briefly confirms any model switch, then gets out of the way.
+  const [showModelNotice, setShowModelNotice] = useState(true);
 
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    setShowModelNotice(true);
+    const timeout = window.setTimeout(() => setShowModelNotice(false), 3200);
+    return () => window.clearTimeout(timeout);
+  }, [modelId]);
   const exampleRef = useRef(null);
 
   // Re-sync when a pending generation lands AFTER this mounted.
@@ -383,17 +392,26 @@ const SectionCoach = ({
     <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
       {/* This is a status, not part of the input. Keeping it as its own floating pill
           prevents it from squeezing or visually attaching to the growing textarea. */}
-      <div
-        className={`pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-wide shadow-sm ${
-          isFlagship
-            ? 'border-amber-200 bg-amber-50/95 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300'
-            : 'border-emerald-200 bg-emerald-50/95 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-300'
-        }`}
-      >
-        {isFlagship
-          ? t('ariaStudio.sectionCoach.proTurnCost', { n: perTurnCost })
-          : t('ariaStudio.sectionCoach.freeBackAndForth')}
-      </div>
+      <AnimatePresence>
+        {showModelNotice && (
+          <motion.div
+            key={modelId}
+            initial={{ opacity: 0, y: 5, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 3, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className={`pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-wide shadow-sm ${
+            isFlagship
+              ? 'border-amber-200 bg-amber-50/95 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300'
+              : 'border-emerald-200 bg-emerald-50/95 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-300'
+          }`}
+          >
+            {isFlagship
+              ? t('ariaStudio.sectionCoach.proTurnCost', { n: perTurnCost })
+              : t('ariaStudio.sectionCoach.freeBackAndForth')}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AriaComposer
       className=""
       inputRef={inputRef}
