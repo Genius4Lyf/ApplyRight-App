@@ -196,7 +196,9 @@ const AriaComposer = ({
             className={
               expanded
                 ? 'pointer-events-none flex h-11 items-center justify-between gap-2 px-1'
-                : 'pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2'
+                : `pointer-events-none absolute inset-x-1.5 bottom-1.5 flex h-11 items-center gap-2 ${
+                    showModelPicker ? 'justify-between' : 'justify-end'
+                  }`
             }
           >
           {/* The model chip trails the text, right of the input — mirrors the reference
@@ -209,11 +211,7 @@ const AriaComposer = ({
             </div>
           )}
 
-          <div
-            className={`pointer-events-auto flex items-center gap-2 ${
-              expanded ? '' : 'absolute right-0 top-0'
-            }`}
-          >
+          <div className="pointer-events-auto flex items-center gap-2">
           {canDictate && (
             <button
               type="button"
