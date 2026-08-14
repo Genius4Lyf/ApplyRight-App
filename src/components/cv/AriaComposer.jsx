@@ -65,8 +65,8 @@ const AriaComposer = ({
 
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
-      <div className="w-full max-w-3xl mx-auto">
-        <div className="flex items-end gap-2 rounded-full border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/30 px-2.5 py-2 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow">
+      <div className="w-full max-w-3xl mx-auto px-3 sm:px-0">
+        <div className="flex items-end gap-2 rounded-[26px] border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 p-1.5 focus-within:ring-2 focus-within:ring-slate-900/15 dark:focus-within:ring-slate-100/20 transition-shadow">
           <textarea
             ref={inputRef}
             value={value}
@@ -76,7 +76,7 @@ const AriaComposer = ({
             // scrollbar takes over — hidden via scrollbar-none).
             onInput={(e) => {
               e.currentTarget.style.height = 'auto';
-              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 140)}px`;
+              e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 160)}px`;
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -91,7 +91,7 @@ const AriaComposer = ({
             // py-2 + leading-6 sums to exactly 40px on one line — the same as the send
             // button's h-10, so `items-end` centers them pixel-for-pixel at rest instead
             // of leaving the button a few px high or low against the text.
-            className={`flex-1 min-w-0 bg-transparent border-0 outline-none resize-none px-2.5 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[140px] ${
+            className={`flex-1 min-w-0 min-h-10 bg-transparent border-0 outline-none resize-none px-3 py-2 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[160px] transition-[height] duration-150 ease-out ${
               inputInert ? 'opacity-50' : ''
             } ${inert ? 'cursor-not-allowed' : ''}`}
           />
