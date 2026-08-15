@@ -49,6 +49,7 @@ const AskAriaGenerate = ({
   setAiByStep,
   isPaid,
   onClearFocus,
+  compactComposer = false,
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
@@ -1184,6 +1185,7 @@ const AskAriaGenerate = ({
           }
           modelId={modelId}
           onSelectModel={selectModel}
+          hideDisclaimer={compactComposer}
           note={
             isFlagship ? (
               <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">

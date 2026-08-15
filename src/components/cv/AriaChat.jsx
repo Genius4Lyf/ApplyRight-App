@@ -35,6 +35,7 @@ const AriaChat = ({
   ensureDraft,
   applySummary,
   applySkills,
+  compactComposer = false,
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
@@ -529,6 +530,7 @@ const AriaChat = ({
         busy={thinking}
         modelId={modelId}
         onSelectModel={selectModel}
+        hideDisclaimer={compactComposer}
         note={
           freeLine ? (
             <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">

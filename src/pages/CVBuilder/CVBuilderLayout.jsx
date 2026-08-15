@@ -309,7 +309,7 @@ const CVBuilderInner = () => {
   const usableBottom = mobileViewport.height;
   // 12% (was 20%) — a taller sheet, closer to the reference chat, leaving more room for
   // the conversation once the keyboard takes the bottom half.
-  const sheetTop = Math.max(12, Math.round(baseHeight * 0.12));
+  const sheetTop = Math.max(12, Math.round(baseHeight * 0.08));
   const expandedDrawerH = Math.max(180, Math.min(900, usableBottom - sheetTop - 10));
 
   const onDragStart = (e) => {
@@ -828,6 +828,7 @@ const CVBuilderInner = () => {
                     onShowPreview={() => setActiveTab('preview')}
                     focusedEntry={focusedEntry}
                     onClearFocus={() => setFocusedEntry(null)}
+                    compactComposer
                   />
                 </div>
               ) : (

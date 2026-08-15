@@ -38,6 +38,7 @@ import { costForActionTier, tierOf } from '../../lib/models';
 //                     (Aria Studio's header) — keeps the input row from duplicating it
 //   sendLabel  render a text send button instead of the round arrow
 //   note/footer  optional lines above the box / below it
+//   hideDisclaimer  omit the "AI can make mistakes" line — reclaims the row on a cramped mobile keyboard view
 const AriaComposer = ({
   value = '',
   onChange,
@@ -56,6 +57,7 @@ const AriaComposer = ({
   note = null,
   footer = null,
   className = '',
+  hideDisclaimer = false,
 }) => {
   const { t } = useTranslation();
   const [listening, setListening] = useState(false);
@@ -319,9 +321,11 @@ const AriaComposer = ({
           </div>
         </div>
 
-        <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
-          {t('cvBuilder.ariaComposer.aiDisclaimer')}
-        </p>
+        {!hideDisclaimer && (
+          <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
+            {t('cvBuilder.ariaComposer.aiDisclaimer')}
+          </p>
+        )}
       </div>
 
       {footer}

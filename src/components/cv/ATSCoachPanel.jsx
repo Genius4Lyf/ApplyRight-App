@@ -67,6 +67,7 @@ const TargetChat = ({
   updateCvData,
   draftId,
   ensureDraft,
+  compactComposer = false,
 }) => {
   const { t } = useTranslation();
   // Q&A (+ the 'research' marker) persists ON the draft (cvData.coachChats.target_job),
@@ -255,6 +256,7 @@ const TargetChat = ({
         sendAriaLabel={t('cvBuilder.atsCoach.inertSendLabel')}
         modelId={modelId}
         onSelectModel={selectModel}
+        hideDisclaimer={compactComposer}
       />
     </section>
   );
@@ -268,6 +270,7 @@ const ATSCoachPanel = ({
   onShowPreview,
   focusedEntry,
   onClearFocus,
+  compactComposer = false,
 }) => {
   const { t } = useTranslation();
   const { id: draftId } = useParams();
@@ -459,6 +462,7 @@ const ATSCoachPanel = ({
                   updateCvData={updateCvData}
                   draftId={draftId}
                   ensureDraft={ensureDraft}
+                  compactComposer={compactComposer}
                 />
               ) : currentStepId === 'history' || currentStepId === 'projects' ? (
                 // The unified build-with chat — general Q&A + focused build-with in ONE
@@ -475,6 +479,7 @@ const ATSCoachPanel = ({
                   setAiByStep={setAiByStep}
                   isPaid={isPaidHint}
                   onClearFocus={onClearFocus}
+                  compactComposer={compactComposer}
                 />
               ) : (
                 // The general Aria chat on every other step.
@@ -486,6 +491,7 @@ const ATSCoachPanel = ({
                   ensureDraft={ensureDraft}
                   applySummary={applySummary}
                   applySkills={applySkills}
+                  compactComposer={compactComposer}
                 />
               )}
             </motion.div>
