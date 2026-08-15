@@ -224,6 +224,18 @@ const AriaComposer = ({
             }}
             rows={1}
             placeholder={resolvedPlaceholder}
+            // Prose, not a credential field — keeps password managers / AutoFill from
+            // claiming a row of the keyboard accessory bar, while predictive text stays on.
+            name="aria-message"
+            autoComplete="off"
+            autoCorrect="on"
+            autoCapitalize="sentences"
+            spellCheck="true"
+            enterKeyHint="send"
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true"
+            data-form-type="other"
             // min-w-0 is load-bearing: without it flex refuses to shrink the textarea and
             // the send button gets pushed out of a narrow row.
             // py-4 + leading-6 fills the 56px resting field exactly, vertically centering

@@ -282,9 +282,27 @@ const CVBuilderInner = () => {
     };
   }, []);
 
+  // The sheet's TOP edge must hold still when the keyboard opens — only its BOTTOM
+  // rises. `interactive-widget=resizes-content` shrinks the layout viewport while the
+  // keyboard is up, so reading window.innerHeight live would drag the sheet up into
+  // the browser chrome. Anchor to the tallest (keyboard-closed) height instead, and
+  // re-baseline on rotation.
+  const [baseHeight, setBaseHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 800
+  );
+  useEffect(() => {
+    const grow = () => setBaseHeight((h) => (window.innerHeight > h ? window.innerHeight : h));
+    const rebase = () => setTimeout(() => setBaseHeight(window.innerHeight), 300);
+    window.addEventListener('resize', grow);
+    window.addEventListener('orientationchange', rebase);
+    return () => {
+      window.removeEventListener('resize', grow);
+      window.removeEventListener('orientationchange', rebase);
+    };
+  }, []);
+
   const viewportBottom = mobileViewport.height + mobileViewport.offsetTop;
-  const sheetTop =
-    typeof window !== 'undefined' ? Math.max(12, Math.round(window.innerHeight * 0.2)) : 120;
+  const sheetTop = Math.max(12, Math.round(baseHeight * 0.2));
   const expandedDrawerH = Math.max(180, Math.min(720, viewportBottom - sheetTop - 10));
 
   const onDragStart = (e) => {
@@ -718,7 +736,7 @@ const CVBuilderInner = () => {
               height: drawerOpen ? expandedDrawerH : 64,
               top: drawerOpen
                 ? Math.max(sheetTop, mobileViewport.offsetTop + 8)
-                : window.innerHeight - 76,
+                : viewportBottom - 76,
               borderRadius: drawerOpen ? 28 : 32,
               transform: `translate3d(0, ${drawerDragY}px, 0)`,
               paddingBottom: drawerOpen ? 'env(safe-area-inset-bottom)' : 0,
