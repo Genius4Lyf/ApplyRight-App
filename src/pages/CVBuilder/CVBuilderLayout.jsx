@@ -301,9 +301,16 @@ const CVBuilderInner = () => {
     };
   }, []);
 
-  const viewportBottom = mobileViewport.height + mobileViewport.offsetTop;
-  const sheetTop = Math.max(12, Math.round(baseHeight * 0.2));
-  const expandedDrawerH = Math.max(180, Math.min(720, viewportBottom - sheetTop - 10));
+  // Size from the visual viewport's HEIGHT ONLY. Adding offsetTop here re-inflated the
+  // sheet by exactly what the keyboard removed (iOS Safari sets offsetTop when it scrolls
+  // the visual viewport to reveal the focused input), which pushed the composer under the
+  // iOS keyboard. offsetTop is applied as a TRANSLATION below instead, so the sheet follows
+  // the scrolled visual viewport. On Android offsetTop is 0, so this is a no-op there.
+  const usableBottom = mobileViewport.height;
+  // 12% (was 20%) — a taller sheet, closer to the reference chat, leaving more room for
+  // the conversation once the keyboard takes the bottom half.
+  const sheetTop = Math.max(12, Math.round(baseHeight * 0.12));
+  const expandedDrawerH = Math.max(180, Math.min(900, usableBottom - sheetTop - 10));
 
   const onDragStart = (e) => {
     if (!drawerOpen) return;
@@ -734,11 +741,9 @@ const CVBuilderInner = () => {
             }`}
             style={{
               height: drawerOpen ? expandedDrawerH : 64,
-              top: drawerOpen
-                ? Math.max(sheetTop, mobileViewport.offsetTop + 8)
-                : viewportBottom - 76,
+              top: drawerOpen ? sheetTop : usableBottom - 76,
               borderRadius: drawerOpen ? 28 : 32,
-              transform: `translate3d(0, ${drawerDragY}px, 0)`,
+              transform: `translate3d(0, ${drawerDragY + mobileViewport.offsetTop}px, 0)`,
               paddingBottom: drawerOpen ? 'env(safe-area-inset-bottom)' : 0,
               transition: drawerDragging
                 ? 'none'
