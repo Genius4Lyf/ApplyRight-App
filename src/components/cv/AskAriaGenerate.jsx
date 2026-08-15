@@ -902,7 +902,7 @@ const AskAriaGenerate = ({
               dashed starter to drop an EDITABLE opener into the box (never auto-sent);
               "Show me an example" toggles a sample answer. Focused build-with only. */}
           {focused && phase === 'chat' && !thinking && suggestions.length > 0 && (
-            <div className="self-start pl-6 flex flex-col gap-1.5">
+            <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
               <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 {suggestionsLabel || t('cvBuilder.askAria.starterFallback')}
               </span>
@@ -912,7 +912,7 @@ const AskAriaGenerate = ({
                     key={i}
                     type="button"
                     onClick={() => applyStarter(s)}
-                    className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                    className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                   >
                     {s}
                   </button>
@@ -921,7 +921,7 @@ const AskAriaGenerate = ({
                   <button
                     type="button"
                     onClick={() => setExampleOpen((o) => !o)}
-                    className="text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     {exampleOpen
                       ? t('cvBuilder.askAria.hideExample')
@@ -930,7 +930,7 @@ const AskAriaGenerate = ({
                 )}
               </div>
               {exampleOpen && exampleAnswer && (
-                <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[12px] text-slate-600 dark:text-slate-300 italic">
+                <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] text-slate-600 dark:text-slate-300 italic">
                   {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
                 </div>
               )}

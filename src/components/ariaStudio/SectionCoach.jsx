@@ -429,7 +429,7 @@ const SectionCoach = ({
       {/* Answer scaffolds — role-aware starters + a sample, under Aria's follow-up.
           Only while she's actually asking something. */}
       {phase === 'chat' && !thinking && suggestions.length > 0 && (
-        <div className="self-start pl-6 flex flex-col gap-1.5">
+        <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
           <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
             {t('ariaStudio.sectionCoach.clickableImpact')}
           </span>
@@ -439,7 +439,7 @@ const SectionCoach = ({
                 key={i}
                 type="button"
                 onClick={() => insertStarter(s)}
-                className="text-[17px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
+                className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
               >
                 {s}
               </button>
@@ -448,7 +448,7 @@ const SectionCoach = ({
               <button
                 type="button"
                 onClick={toggleExample}
-                className="text-[17px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 {exampleOpen
                   ? t('cvBuilder.askAria.hideExample')
@@ -459,7 +459,7 @@ const SectionCoach = ({
           {exampleOpen && exampleAnswer && (
             <div
               ref={exampleRef}
-              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[17px] sm:text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 italic"
+              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 italic"
             >
               {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
             </div>
@@ -472,7 +472,7 @@ const SectionCoach = ({
         {phase === 'picking' && (
           <AriaCard cardKey="picking" key="picking" wide>
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-              <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('cvBuilder.askAria.howManyBullets')}
               </p>
               <div className="mt-3 grid grid-cols-4 gap-2">
@@ -546,7 +546,7 @@ const SectionCoach = ({
         {phase === 'results' && bullets.length > 0 && (
           <AriaCard cardKey="results" key="results" wide>
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-              <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('ariaStudio.sectionCoach.pickWhatsTrue')}
               </p>
               {rerollNote && (

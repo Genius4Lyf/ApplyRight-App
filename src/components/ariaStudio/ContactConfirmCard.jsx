@@ -102,7 +102,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
     return (
       <AriaCard cardKey="contactedit" wide>
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
-          <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             {isEmpty
               ? t('ariaStudio.contactConfirm.howReachYou')
               : t('ariaStudio.contactConfirm.yourDetails')}
@@ -218,7 +218,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   return (
     <AriaCard cardKey="contactconfirm" wide>
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
-        <p className="font-mono text-[17px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.contactConfirm.reviewDetails')}
         </p>
 
