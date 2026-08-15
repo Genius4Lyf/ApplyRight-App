@@ -694,7 +694,7 @@ const Dashboard = () => {
         )}
 
         {!workflowMode && initialLoading && (
-          <div className="py-20 flex flex-col items-center gap-4">
+          <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
             <AriaLoader size={40} label={t('dashboard.loading.sr')} />
             {slowWake && (
               <p className="max-w-sm px-6 text-center text-sm text-slate-500 dark:text-slate-400 animate-in fade-in duration-500">
