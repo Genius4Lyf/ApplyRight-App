@@ -13,7 +13,6 @@ import {
   EyeOff,
   ChevronLeft,
   ChevronUp,
-  X,
   Target,
   Lock,
   Crown,
@@ -727,7 +726,7 @@ const CVBuilderInner = () => {
                 ? 'none'
                 : animateDrawer
                   ? 'height 420ms cubic-bezier(0.22, 1, 0.36, 1), top 420ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)'
-                  : 'transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+                  : 'height 220ms ease-out, top 220ms ease-out, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
             <button
@@ -755,33 +754,21 @@ const CVBuilderInner = () => {
             </button>
 
             <div
-              className={`relative z-20 shrink-0 h-[58px] flex items-center px-4 transition-opacity duration-200 ${
+              className={`relative z-20 shrink-0 h-3 transition-opacity duration-200 ${
                 drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
             >
-              <div
+              <button
+                type="button"
+                aria-label="Close Aria"
                 className="absolute inset-x-0 top-0 h-7 flex justify-center cursor-ns-resize touch-none"
                 onPointerDown={onDragStart}
                 onPointerMove={onDragMove}
                 onPointerUp={onDragEnd}
                 onPointerCancel={onDragEnd}
+                onClick={() => setDrawerOpen(false)}
               >
                 <span className="mt-2 h-1 w-8 rounded-full bg-slate-400 dark:bg-slate-600" />
-              </div>
-              <span className="mt-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
-                <AriaOrbit size={20} />
-              </span>
-              <div className="mt-3 ml-2.5 min-w-0 flex-1">
-                <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">Aria</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">Your CV assistant</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close Aria"
-                className="mt-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              >
-                <X className="h-4 w-4" />
               </button>
             </div>
 

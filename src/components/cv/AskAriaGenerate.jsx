@@ -15,6 +15,7 @@ import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
+import AriaTypewriter from './AriaTypewriter';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import GenerationModelRow from './GenerationModelRow';
@@ -141,6 +142,8 @@ const AskAriaGenerate = ({
   const [savingEntryType, setSavingEntryType] = useState(false);
 
   const chatRef = useRef(null);
+  // Restored messages render plain; only a freshly-arrived Aria reply types in (mirrors AriaChat).
+  const revealedRef = useRef(new Set(messages.map((_, i) => i)));
   const inputRef = useRef(null);
   const resultsRef = useRef(null); // the results card, so we can scroll its TOP into view
   const buildTurnsRef = useRef(0); // per-role build-with turn counter (backend turn cap)
@@ -582,16 +585,16 @@ const AskAriaGenerate = ({
     <motion.div
       ref={ref}
       key={key}
-      className={`aria-row self-start flex items-start gap-2 ${wide ? 'w-full max-w-none' : 'max-w-[92%]'}`}
+      className={`aria-row self-start flex flex-col items-start gap-1.5 ${wide ? 'w-full max-w-none' : 'max-w-[92%]'}`}
       {...portalCard(reduce)}
     >
-      <AriaOrbit size={16} className="aria-mark mt-2" />
       {body}
+      <AriaOrbit size={16} className="aria-mark ml-1" />
     </motion.div>
   );
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col p-4">
+    <div className="flex-1 min-h-0 flex flex-col px-4 pb-4 pt-1">
       {/* "Aria's read" — the Role Brief, with the infer+confirm company-type chip.
           Non-blocking: sits above the stream, shown only when a JD produced a
           brief. Confirm once → it sharpens every generation. No JD → no strip.
@@ -651,14 +654,14 @@ const AskAriaGenerate = ({
       {/* The conversation — ALWAYS mounted; picker/consent/generating/results bloom
           in as the last item in this same scroll stream (never a phase-swap). */}
       <div className="flex-1 min-h-0 relative">
-        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
+        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-5">
           {messages.map((m, i) => {
             // User turn — right-aligned ink bubble.
             if (m.who === 'user') {
               return (
                 <motion.div
                   key={i}
-                  className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
+                  className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
                   {...bubbleAnim('user', reduce)}
                 >
                   {m.text}
@@ -723,10 +726,9 @@ const AskAriaGenerate = ({
               return (
                 <motion.div
                   key={i}
-                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <div className="min-w-0">
                     <button
                       type="button"
@@ -786,6 +788,7 @@ const AskAriaGenerate = ({
                       </div>
                     )}
                   </div>
+                  <AriaOrbit size={16} className="aria-mark ml-1" />
                 </motion.div>
               );
             }
@@ -793,30 +796,38 @@ const AskAriaGenerate = ({
             if (m.who === 'research') {
               return <ResearchCard key={i} section={m.section} />;
             }
-            // Aria turn — orbit slot + slate bubble.
+            // Aria turn — plain text with the orbit below.
             return (
               <motion.div
                 key={i}
-                className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
-                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
-                  {m.text}
+                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
+                  {revealedRef.current.has(i) ? (
+                    m.text
+                  ) : (
+                    <AriaTypewriter
+                      text={m.text}
+                      reduce={reduce}
+                      onDone={() => revealedRef.current.add(i)}
+                    />
+                  )}
                 </span>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
           })}
 
           {/* Starter questions — only on a fresh, unfocused section chat. */}
           {phase === 'chat' && showChips && !focused && (
-            <div className="self-start flex flex-wrap gap-1.5 pl-6">
+            <div className="self-end max-w-[92%] flex flex-wrap justify-end gap-1.5">
               {suggestionsFor(t, currentStepId).map((chip) => (
                 <button
                   key={chip}
                   type="button"
                   onClick={() => send(chip)}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
                   {chip}
                 </button>
@@ -824,7 +835,7 @@ const AskAriaGenerate = ({
               <button
                 type="button"
                 onClick={injectResearch}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
               >
                 📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>

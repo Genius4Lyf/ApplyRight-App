@@ -10,7 +10,6 @@ import { useCVBuilder } from '../../context/CVContext';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
-import { useChatTheme } from '../../hooks/useChatTheme';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import AriaComposer from './AriaComposer';
 import AskAriaGenerate from './AskAriaGenerate';
@@ -18,6 +17,7 @@ import AriaChat from './AriaChat';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
+import AriaTypewriter from './AriaTypewriter';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -84,6 +84,8 @@ const TargetChat = ({
   const reduce = useReducedMotion();
   const scrollRef = useRef(null);
   useStickToBottom(scrollRef, [qa, qThinking], reduce);
+  // Only NEW answers type in. A step revisited with saved Q&A renders as plain text.
+  const revealedRef = useRef(new Set(savedQa.map((_, i) => i)));
 
   // Persist the Q&A to the draft. Pass ONLY this section's key — updateCvData
   // deep-merges functionally, so it can't clobber another section's saved thread.
@@ -160,7 +162,7 @@ const TargetChat = ({
   };
 
   return (
-    <section className="flex flex-col flex-1 min-h-0 p-4">
+    <section className="flex flex-col flex-1 min-h-0 px-4 pb-4 pt-1">
       {/* No header — the CV-builder hero introduces Aria; this opens straight into
           the conversation, consistent with AriaChat. There's no chat textarea on this
           step: the job comes from the form, questions from the starter chips. */}
@@ -168,13 +170,13 @@ const TargetChat = ({
         <div ref={scrollRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
           {/* Greeting */}
           <motion.div
-            className="aria-row self-start max-w-[92%] flex items-start gap-2"
+            className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
             {...bubbleAnim('aria', reduce)}
           >
-            <AriaOrbit size={16} className="aria-mark mt-2" />
-            <span className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
+            <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
               {t('cvBuilder.atsCoach.greeting')}
             </span>
+            <AriaOrbit size={16} className="aria-mark ml-1" />
           </motion.div>
 
           {/* (a) Live starter-question Q&A. */}
@@ -183,7 +185,7 @@ const TargetChat = ({
             return m.who === 'user' ? (
               <motion.div
                 key={i}
-                className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed"
+                className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
                 {...bubbleAnim('user', reduce)}
               >
                 {m.text}
@@ -191,13 +193,21 @@ const TargetChat = ({
             ) : (
               <motion.div
                 key={i}
-                className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
-                <span className="bg-white dark:bg-slate-900 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
-                  {m.text}
+                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
+                  {revealedRef.current.has(i) ? (
+                    m.text
+                  ) : (
+                    <AriaTypewriter
+                      text={m.text}
+                      reduce={reduce}
+                      onDone={() => revealedRef.current.add(i)}
+                    />
+                  )}
                 </span>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
           })}
@@ -210,14 +220,14 @@ const TargetChat = ({
 
           {/* Optional target-job questions stay in chat; capture and confirmation
               now live in the central workspace. */}
-          <div className="self-start flex flex-wrap gap-1.5 pl-6">
+          <div className="self-end max-w-[92%] flex flex-wrap justify-end gap-1.5">
               {showChips &&
                 suggestionsFor(t, 'target_job').map((chip) => (
                   <button
                     key={chip}
                     type="button"
                     onClick={() => askQuestion(chip)}
-                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                   >
                     {chip}
                   </button>
@@ -226,7 +236,7 @@ const TargetChat = ({
                 <button
                   type="button"
                   onClick={injectResearch}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
                   📖 {t('cvBuilder.researchCard.whatResearchSays')}
                 </button>
@@ -261,7 +271,6 @@ const ATSCoachPanel = ({
 }) => {
   const { t } = useTranslation();
   const { id: draftId } = useParams();
-  const [chatTheme] = useChatTheme();
   const health = useMemo(() => computeCvHealth(t, cvData), [t, cvData]);
 
   // Coach conversation (per-step replies + interaction) is cached in the builder
@@ -384,7 +393,7 @@ const ATSCoachPanel = ({
 
       {/* ─── Aria pane (chat / build-with) — today's coach content unchanged ─── */}
       {coachTab === 'aria' && (
-        <div className={`flex-1 min-h-0 flex flex-col pt-3 aria-theme-${chatTheme}`}>
+        <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-slate-900">
           {/* Focus MODE header — Aria is locked onto a specific role/project (bound via
               "Ask Aria" from Work History / Projects). Pinned, with an ink left-accent
               to read as an active mode + a labeled Exit; height-collapses away on clear. */}

@@ -15,6 +15,7 @@ import { useGenerationModel } from '../../hooks/useGenerationModel';
 import CVService from '../../services/cv.service';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
+import AriaTypewriter from './AriaTypewriter';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
@@ -83,6 +84,9 @@ const AriaChat = ({
 
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  // Only NEW replies type in. A step revisited with saved Q&A renders as plain text
+  // (mirrors StudioChat's revealedRef); a fresh step lets its opening line type.
+  const revealedRef = useRef(new Set(savedQA.length ? messages.map((_, i) => i) : []));
   useStickToBottom(scrollRef, [messages, thinking, sPhase, skPhase], reduce);
 
   // Persist just this step's Q&A (never the regenerated opening) to the draft, so
@@ -249,11 +253,11 @@ const AriaChat = ({
         : t('cvBuilder.common.freeChatsDone');
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-3 p-4">
+    <div className="flex-1 min-h-0 flex flex-col gap-3 px-4 pb-4 pt-1 bg-white dark:bg-slate-900">
       {/* Conversation — bottom-anchored, absolute scroll layer so it can only scroll,
           never stretch the fixed frame. */}
       <div className="flex-1 min-h-0 relative">
-        <div ref={scrollRef} className="absolute inset-0 chat-scroll flex flex-col gap-2.5">
+        <div ref={scrollRef} className="absolute inset-0 chat-scroll flex flex-col gap-5">
           {messages.map((m, i) => {
             if (m.who === 'research') return <ResearchCard key={i} section={m.section} />;
             // Durable skills record — persisted, re-opens the SAME generation (no
@@ -262,10 +266,9 @@ const AriaChat = ({
               return (
                 <motion.div
                   key={i}
-                  className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                  className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                   {...bubbleAnim('aria', reduce)}
                 >
-                  <AriaOrbit size={16} className="aria-mark mt-2" />
                   <button
                     type="button"
                     onClick={() => {
@@ -290,13 +293,14 @@ const AriaChat = ({
                       ›
                     </span>
                   </button>
+                  <AriaOrbit size={16} className="aria-mark ml-1" />
                 </motion.div>
               );
             }
             return m.who === 'user' ? (
               <motion.div
                 key={i}
-                className="self-end max-w-[92%] bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl rounded-tr-md px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
+                className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
                 {...bubbleAnim('user', reduce)}
               >
                 {m.text}
@@ -304,26 +308,34 @@ const AriaChat = ({
             ) : (
               <motion.div
                 key={i}
-                className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
-                <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
-                  {m.text}
+                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
+                  {revealedRef.current.has(i) ? (
+                    m.text
+                  ) : (
+                    <AriaTypewriter
+                      text={m.text}
+                      reduce={reduce}
+                      onDone={() => revealedRef.current.add(i)}
+                    />
+                  )}
                 </span>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
           })}
 
           {/* Ready-made questions — shown under the opening until the first send. */}
           {showChips && (
-            <div className="flex flex-wrap gap-1.5 pl-6">
+            <div className="self-end max-w-[92%] flex flex-wrap justify-end gap-1.5">
               {suggestionsFor(t, currentStepId).map((chip) => (
                 <button
                   key={chip}
                   type="button"
                   onClick={() => send(chip)}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
                   {chip}
                 </button>
@@ -331,7 +343,7 @@ const AriaChat = ({
               <button
                 type="button"
                 onClick={injectResearch}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
               >
                 📖 {t('cvBuilder.researchCard.whatResearchSays')}
               </button>
@@ -340,33 +352,34 @@ const AriaChat = ({
                 <button
                   type="button"
                   onClick={() => generateSummary(cvData?.careerStage)}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
+                  <AriaOrbit size={12} tone="mono" />
                   {t('cvBuilder.ariaChat.draftSummaryChip', { n: summaryCost })}
                 </button>
               )}
-              {/* Skills step: kick off Aria's in-chat skills search — only with content
-                  to ground it (a role or project); otherwise a coaching line, no chip. */}
-              {isSkills && skPhase === 'idle' && hasContent && (
+              {/* Skills step: kick off Aria's in-chat skills search. With no role/project
+                  yet to ground it, tapping the chip answers in-chat instead of opening
+                  the (ungroundable) generation — a real Aria reply, not a static aside. */}
+              {isSkills && skPhase === 'idle' && (
                 <button
                   type="button"
-                  onClick={() => setSkPhase('consent')}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-indigo-300 dark:border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
+                  onClick={() => {
+                    if (hasContent) {
+                      setSkPhase('consent');
+                    } else {
+                      setMessages((m) => [
+                        ...m,
+                        { who: 'aria', text: t('cvBuilder.ariaChat.skillsEmpty') },
+                      ]);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
+                  <AriaOrbit size={12} tone="mono" />
                   {t('cvBuilder.ariaChat.findSkillsChip', { n: skillsCost })}
                 </button>
               )}
-            </div>
-          )}
-
-          {/* Skills empty-state: no work history/projects to ground skills → coach the
-              user to add one first, instead of offering the (ungroundable) generation. */}
-          {isSkills && skPhase === 'idle' && !hasContent && (
-            <div className="aria-row self-start max-w-[92%] flex items-start gap-2">
-              <AriaOrbit size={16} className="aria-mark mt-2" />
-              <span className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] leading-relaxed">
-                {t('cvBuilder.ariaChat.skillsEmpty')}
-              </span>
             </div>
           )}
 
@@ -382,10 +395,9 @@ const AriaChat = ({
             {isSummary && sPhase === 'card' && (
               <motion.div
                 key="s-card"
-                className="aria-row self-start max-w-[94%] flex items-start gap-2"
+                className="aria-row self-start max-w-[94%] flex flex-col items-start gap-1.5"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-indigo-400 dark:border-l-indigo-500 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <span className="font-mono text-[10px] uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
                     {t('cvBuilder.ariaChat.yourSummary')}
@@ -424,6 +436,7 @@ const AriaChat = ({
                     </button>
                   </div>
                 </div>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -434,10 +447,9 @@ const AriaChat = ({
             {isSkills && skPhase === 'consent' && (
               <motion.div
                 key="sk-consent"
-                className="aria-row self-start max-w-[92%] flex items-start gap-2"
+                className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 flex flex-col gap-2.5">
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
@@ -466,6 +478,7 @@ const AriaChat = ({
                     </button>
                   </div>
                 </div>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             )}
 
@@ -478,10 +491,9 @@ const AriaChat = ({
             {isSkills && skPhase === 'card' && skData && (
               <motion.div
                 key="sk-card"
-                className="aria-row self-start w-full max-w-[96%] flex items-start gap-2"
+                className="aria-row self-start w-full max-w-[96%] flex flex-col items-start gap-1.5"
                 {...portalCard(reduce)}
               >
-                <AriaOrbit size={16} className="aria-mark mt-2" />
                 <div className="min-w-0 flex-1">
                   <SkillsCard
                     suggestions={skData.suggestions}
@@ -493,6 +505,7 @@ const AriaChat = ({
                     onAdd={handleAddSkills}
                   />
                 </div>
+                <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             )}
           </AnimatePresence>
