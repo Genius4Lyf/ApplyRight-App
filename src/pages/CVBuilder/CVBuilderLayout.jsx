@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react';
 import AriaLoader from '../../components/ui/AriaLoader';
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -250,8 +250,13 @@ const CVBuilderInner = () => {
   const [drawerDragging, setDrawerDragging] = useState(false);
   // Animate the open/close toggle, then drop to snap-tracking so keyboard-driven
   // visualViewport resizes move the sheet instantly (no 420ms chase behind the keyboard).
+  // useLayoutEffect (not useEffect) so `animateDrawer` flips to true in the SAME paint
+  // as the drawerOpen toggle — with a plain effect, the first frame after tapping open/
+  // close still rendered with the stale (false) value from the previous toggle's settle,
+  // so the transition string briefly used the idle branch before snapping to this one
+  // mid-flight, producing a visible stutter right at the start of the motion.
   const [animateDrawer, setAnimateDrawer] = useState(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     setAnimateDrawer(true);
     const id = setTimeout(() => setAnimateDrawer(false), 460);
     return () => clearTimeout(id);
@@ -745,11 +750,17 @@ const CVBuilderInner = () => {
               borderRadius: drawerOpen ? 28 : 32,
               transform: `translate3d(0, ${drawerDragY + mobileViewport.offsetTop}px, 0)`,
               paddingBottom: drawerOpen ? 'env(safe-area-inset-bottom)' : 0,
-              transition: drawerDragging
-                ? 'none'
-                : animateDrawer
-                  ? 'height 420ms cubic-bezier(0.22, 1, 0.36, 1), top 420ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)'
-                  : 'height 220ms ease-out, top 220ms ease-out, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+              // ONE duration + easing for every animated property, in both directions —
+              // open and close previously used mismatched curves/durations (420ms vs
+              // 220ms), which reads as an asymmetric, unpolished motion. Outside the
+              // open/close window (animateDrawer false, not dragging) transitions drop
+              // to 'none' entirely so keyboard-driven visualViewport changes track the
+              // sheet instantly instead of chasing it behind a transition.
+              willChange: drawerDragging || animateDrawer ? 'height, top, transform' : 'auto',
+              transition:
+                drawerDragging || !animateDrawer
+                  ? 'none'
+                  : 'height 420ms cubic-bezier(0.32, 0.72, 0, 1), top 420ms cubic-bezier(0.32, 0.72, 0, 1), border-radius 420ms cubic-bezier(0.32, 0.72, 0, 1), transform 420ms cubic-bezier(0.32, 0.72, 0, 1)',
             }}
           >
             <button
