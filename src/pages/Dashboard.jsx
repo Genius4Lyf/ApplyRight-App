@@ -37,7 +37,6 @@ import {
 import Navbar from '../components/Navbar';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import GlobalBanner from '../components/GlobalBanner';
-import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
 import { STUDIO_TAILORING_ENABLED } from '../lib/studioFeatures';
@@ -128,6 +127,14 @@ const Dashboard = () => {
   // and also gates the Capacitor splash (via signalReady) on mobile so the app
   // doesn't flash an empty dashboard between splash-hide and first paint.
   const [initialLoading, setInitialLoading] = useState(true);
+  // After ~6s of the first load still running, own the likelihood that a cold
+  // backend is waking — so the wait reads as "working", not "hung".
+  const [slowWake, setSlowWake] = useState(false);
+  useEffect(() => {
+    if (!initialLoading) { setSlowWake(false); return; }
+    const id = setTimeout(() => setSlowWake(true), 6000);
+    return () => clearTimeout(id);
+  }, [initialLoading]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [draftToDelete, setDraftToDelete] = useState(null);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
@@ -686,7 +693,16 @@ const Dashboard = () => {
           </div>
         )}
 
-        {!workflowMode && initialLoading && <DashboardSkeleton />}
+        {!workflowMode && initialLoading && (
+          <div className="py-20 flex flex-col items-center gap-4">
+            <AriaLoader size={40} label={t('dashboard.loading.sr')} />
+            {slowWake && (
+              <p className="max-w-sm px-6 text-center text-sm text-slate-500 dark:text-slate-400 animate-in fade-in duration-500">
+                {t('dashboard.loading.wakingUp')}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Welcome heading — only on the dashboard landing state. Once the
             user picks a workflow we hide it so the upload/job inputs aren't

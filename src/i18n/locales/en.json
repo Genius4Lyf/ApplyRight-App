@@ -687,6 +687,10 @@
       "completeBody": "Tell us about your goals to get personalized recommendations."
     },
     "workspace": "Your workspace",
+    "loading": {
+      "sr": "Loading your workspace…",
+      "wakingUp": "Waking things up — the first load after a quiet spell can take a moment."
+    },
     "studio": {
       "kicker": "ARIA Studio",
       "title": "Build your CV with ARIA",

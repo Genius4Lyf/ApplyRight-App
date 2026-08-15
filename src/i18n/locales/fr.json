@@ -683,6 +683,10 @@
       "completeBody": "Parlez-nous de vos objectifs pour recevoir des conseils personnalisés."
     },
     "workspace": "Votre espace",
+    "loading": {
+      "sr": "Chargement de votre espace…",
+      "wakingUp": "Réveil en cours — le premier chargement après une période d'inactivité peut prendre un instant."
+    },
     "studio": {
       "kicker": "Aria Studio",
       "title": "Créez votre CV avec Aria",

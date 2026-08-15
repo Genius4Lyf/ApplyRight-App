@@ -710,6 +710,16 @@ function App() {
       .catch(() => {});
   }, []);
 
+  // Wake the (possibly spun-down) Render backend as early as the app loads, on
+  // every platform — so the first real request after login isn't stuck behind a
+  // cold start. Hits the root health route ('/'), not '/api'. Fire-and-forget.
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const healthUrl = apiUrl.replace(/\/api\/?$/, '') || apiUrl;
+    if (!healthUrl) return;
+    fetch(healthUrl, { method: 'GET', cache: 'no-store' }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!isMobile()) return;
     StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
@@ -719,11 +729,6 @@ function App() {
     // Init AdMob on Android — dynamic import so the plugin is never bundled
     // for web. Failure is swallowed so it can't block splash hide.
     import('./services/admob.service').then(({ initAdMob }) => initAdMob()).catch(() => {});
-
-    // Wake the Render backend in the background so the first real request is
-    // warm by the time the destination page needs it.
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    fetch(apiUrl, { method: 'GET' }).catch(() => {});
 
     // Hold the splash until the destination route signals it has content
     // (via signalReady()), or the 8s safety net fires. This replaces the old
