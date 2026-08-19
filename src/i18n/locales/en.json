@@ -4503,8 +4503,8 @@
       "readFromCv": "Read from your CV"
     },
     "chat": {
-      "opener": "Hey — I'm ARIA. Tell me the job you're going for and I'll tailor a copy of your CV to it, section by section. Your original stays untouched.",
-      "kindOpenerBuild": "Let's build your CV together. I'll ask, you answer, and I'll write it up as we go — here's how it'll run.",
+      "opener": "Welcome — I’m ARIA. I’m here to help you create a CV that tells your story with purpose, so you can apply the right way, not blindly. Send me a message anytime while we build it, then return to edit and refine it whenever you need.",
+      "kindOpenerBuild": "Welcome — I’m ARIA. We’ll build a CV that helps you apply with purpose, not blindly. Message me anytime as we create it, and come back to edit or refine it whenever you need — here’s how we’ll begin.",
       "kindOpenerTailor": "New tailoring. Paste the job you're going for and I'll read it properly.",
       "pickModeBuild": "Let's build it together. Here's how it'll run.",
       "pickModeTailor": "Good — paste the job below and I'll read it properly.",

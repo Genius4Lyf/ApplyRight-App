@@ -24,7 +24,10 @@ const ModeChooser = ({ onPick }) => {
     return (
       <AriaCard cardKey="mode">
         <section className="w-full min-w-0 overflow-hidden rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20">
-          <div className="border-b border-slate-100 px-5 pb-5 pt-5 dark:border-slate-800 sm:px-6 sm:pb-6 sm:pt-6">
+          <div className="relative border-b border-slate-100 px-5 pb-5 pt-5 pr-16 dark:border-slate-800 sm:px-6 sm:pb-6 sm:pt-6 sm:pr-[5.5rem]">
+            <span className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950 sm:right-6 sm:top-6">
+              <FilePlus2 className="h-4 w-4" aria-hidden="true" />
+            </span>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
               {t('ariaStudio.modeChooser.buildEyebrow')}
             </p>
@@ -56,14 +59,9 @@ const ModeChooser = ({ onPick }) => {
               {t('ariaStudio.modeChooser.buildCta')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
-            <div className="mt-3 flex items-center justify-between gap-4">
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                {t('ariaStudio.modeChooser.buildNote')}
-              </p>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950">
-                <FilePlus2 className="h-4 w-4" aria-hidden="true" />
-              </span>
-            </div>
+            <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.modeChooser.buildNote')}
+            </p>
           </div>
         </section>
       </AriaCard>

@@ -4499,8 +4499,8 @@
       "readFromCv": "Extrait de votre CV"
     },
     "chat": {
-      "opener": "Bonjour — je suis Aria. Dites-moi le poste que vous visez et j'adapterai une copie de votre CV, section par section. Votre original reste intact.",
-      "kindOpenerBuild": "Construisons votre CV ensemble. Je vous poserai des questions, vous répondrez, et je le rédigerai au fur et à mesure — voici comment ça va se passer.",
+      "opener": "Bienvenue — je suis Aria. Je suis là pour vous aider à créer un CV qui raconte votre parcours avec intention, afin que vous postuliez de la bonne manière, pas à l’aveugle. Envoyez-moi un message à tout moment pendant sa création, puis revenez le modifier et l’affiner quand vous le souhaitez.",
+      "kindOpenerBuild": "Bienvenue — je suis Aria. Nous allons créer un CV qui vous aide à postuler avec intention, pas à l’aveugle. Écrivez-moi à tout moment pendant sa création et revenez le modifier ou l’affiner quand vous le souhaitez — voici comment nous allons commencer.",
       "kindOpenerTailor": "Nouvelle adaptation. Collez le poste que vous visez et je le lirai attentivement.",
       "pickModeBuild": "Construisons-le ensemble. Voici comment ça va se passer.",
       "pickModeTailor": "Parfait — collez le poste ci-dessous et je le lirai attentivement.",
