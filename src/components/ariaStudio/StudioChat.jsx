@@ -2689,7 +2689,10 @@ const StudioChat = ({ onPaywall }) => {
             </motion.div>
           )}
         </AnimatePresence>
-        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-5">
+        {/* The trailing padding is part of the scrollable transcript, not the composer.
+            That lets the final card (and Aria's orbit beneath it) scroll clear of the
+            docked input instead of being visually pressed into its top edge. */}
+        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-5 pb-12 sm:pb-14">
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft
               entry, so free chat, an Aria turn, or a refresh all leave it untouched.

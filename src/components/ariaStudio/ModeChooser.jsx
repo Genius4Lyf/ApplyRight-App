@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Check, FilePlus2, Target } from 'lucide-react';
+import { ArrowRight, FilePlus2, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
@@ -25,22 +25,15 @@ const ModeChooser = ({ onPick }) => {
       <AriaCard cardKey="mode">
         <section className="w-full min-w-0 overflow-hidden rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20">
           <div className="border-b border-slate-100 px-5 pb-5 pt-5 dark:border-slate-800 sm:px-6 sm:pb-6 sm:pt-6">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950">
-                <FilePlus2 className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 pt-0.5">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
-                  {t('ariaStudio.modeChooser.buildEyebrow')}
-                </p>
-                <h2 className="mt-1.5 text-[22px] font-bold tracking-[-0.03em] text-slate-950 dark:text-white">
-                  {t('ariaStudio.modeChooser.buildTitle')}
-                </h2>
-                <p className="mt-2 max-w-[34rem] text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
-                  {t('ariaStudio.modeChooser.buildBody')}
-                </p>
-              </div>
-            </div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.modeChooser.buildEyebrow')}
+            </p>
+            <h2 className="mt-1.5 text-[22px] font-bold tracking-[-0.03em] text-slate-950 dark:text-white">
+              {t('ariaStudio.modeChooser.buildTitle')}
+            </h2>
+            <p className="mt-2 max-w-[34rem] text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {t('ariaStudio.modeChooser.buildBody')}
+            </p>
           </div>
 
           <div className="px-5 py-4 dark:bg-slate-950/30 sm:px-6">
@@ -63,10 +56,14 @@ const ModeChooser = ({ onPick }) => {
               {t('ariaStudio.modeChooser.buildCta')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
-            <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
-              <Check className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('ariaStudio.modeChooser.buildNote')}
-            </p>
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.modeChooser.buildNote')}
+              </p>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950">
+                <FilePlus2 className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </div>
           </div>
         </section>
       </AriaCard>
