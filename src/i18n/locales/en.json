@@ -4286,7 +4286,14 @@
       "tailorTitle": "Tailor my CV to a job",
       "tailorBody": "I'll rework a copy against the job description. Your original stays as it is.",
       "buildTitle": "Create a new CV",
-      "buildBody": "I'll build it with you section by section — I ask, you answer, and I write it up as we go."
+      "buildBody": "I'll build it with you section by section — I ask, you answer, and I write it up as we go.",
+      "buildEyebrow": "Build with ARIA",
+      "buildStepsLabel": "Your CV creation path",
+      "buildStepOne": "Tell me about your experience",
+      "buildStepTwo": "Shape each section together",
+      "buildStepThree": "Review a polished CV live",
+      "buildCta": "Start creating my CV",
+      "buildNote": "You can pause, edit, and return whenever you need."
     },
     "roleBrief": {
       "ariasRead": "ARIA's read",

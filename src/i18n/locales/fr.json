@@ -4282,7 +4282,14 @@
       "tailorTitle": "Adapter mon CV à un poste",
       "tailorBody": "Je vais retravailler une copie en fonction de l'offre d'emploi. Votre original reste tel quel.",
       "buildTitle": "Créer un nouveau CV",
-      "buildBody": "Je vais le construire avec vous section par section — je pose des questions, vous répondez, et je le rédige au fur et à mesure."
+      "buildBody": "Je vais le construire avec vous section par section — je pose des questions, vous répondez, et je le rédige au fur et à mesure.",
+      "buildEyebrow": "Créer avec ARIA",
+      "buildStepsLabel": "Votre parcours de création de CV",
+      "buildStepOne": "Parlez-moi de votre expérience",
+      "buildStepTwo": "Construisons chaque section ensemble",
+      "buildStepThree": "Consultez votre CV finalisé en direct",
+      "buildCta": "Commencer mon CV",
+      "buildNote": "Vous pouvez faire une pause, modifier et revenir à tout moment."
     },
     "roleBrief": {
       "ariasRead": "La lecture d'Aria",
