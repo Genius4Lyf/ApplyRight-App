@@ -97,6 +97,23 @@ describe('AriaStudioProvider — initialisation', () => {
     expect(CVService.getDraftById).not.toHaveBeenCalled();
   });
 
+  it('discards a remembered session owned by a different signed-in user', async () => {
+    localStorage.setItem('user', JSON.stringify({ _id: 'current-user' }));
+    localStorage.setItem('ariaStudio:draftId', 'other-users-draft');
+    localStorage.setItem('ariaStudio:draftOwnerId', 'other-user');
+
+    render(
+      <AriaStudioProvider>
+        <div data-testid="child">hello</div>
+      </AriaStudioProvider>
+    );
+
+    await waitFor(() => expect(localStorage.getItem('ariaStudio:draftId')).toBeNull());
+    expect(localStorage.getItem('ariaStudio:draftOwnerId')).toBeNull();
+    expect(CVService.getDraftById).not.toHaveBeenCalled();
+    expect(screen.getByTestId('child')).toBeTruthy();
+  });
+
   it('re-binds a remembered session on mount without throwing', async () => {
     localStorage.setItem('ariaStudio:draftId', 'd1');
 

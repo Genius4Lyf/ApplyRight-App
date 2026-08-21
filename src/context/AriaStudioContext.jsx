@@ -17,6 +17,16 @@ const AriaStudioContext = createContext(null);
 // Without this a reload would orphan the tailored copy — and its transcript, which
 // lives on the draft as coachChats.studio.
 const ACTIVE_KEY = 'ariaStudio:draftId';
+const ACTIVE_OWNER_KEY = 'ariaStudio:draftOwnerId';
+
+const currentUserId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return user?._id || user?.id || null;
+  } catch {
+    return null;
+  }
+};
 // The pre-clone transcript — the intake conversation that exists before a draft does.
 // Owned by StudioChat, but cleared here too: starting a new session must not inherit
 // the previous one's unsaved intake. Kept in sync with StudioChat's LS_KEY.
@@ -122,8 +132,14 @@ export const AriaStudioProvider = ({ children }) => {
     lastSavedChatsRef.current = draft ? JSON.stringify(draft.coachChats || {}) : null;
     pendingChatsRef.current = null;
     try {
-      if (draft?._id) localStorage.setItem(ACTIVE_KEY, draft._id);
-      else localStorage.removeItem(ACTIVE_KEY);
+      if (draft?._id) {
+        localStorage.setItem(ACTIVE_KEY, draft._id);
+        const ownerId = currentUserId();
+        if (ownerId) localStorage.setItem(ACTIVE_OWNER_KEY, ownerId);
+      } else {
+        localStorage.removeItem(ACTIVE_KEY);
+        localStorage.removeItem(ACTIVE_OWNER_KEY);
+      }
     } catch {
       /* storage unavailable — the session just won't survive a reload */
     }
@@ -161,12 +177,23 @@ export const AriaStudioProvider = ({ children }) => {
   useEffect(() => {
     const remembered = (() => {
       try {
-        return localStorage.getItem(ACTIVE_KEY);
+        const draftId = localStorage.getItem(ACTIVE_KEY);
+        const ownerId = localStorage.getItem(ACTIVE_OWNER_KEY);
+        const userId = currentUserId();
+        if (draftId && ownerId && userId && ownerId !== userId) {
+          localStorage.removeItem(ACTIVE_KEY);
+          localStorage.removeItem(ACTIVE_OWNER_KEY);
+          return null;
+        }
+        return draftId;
       } catch {
         return null;
       }
     })();
-    if (!remembered) return;
+    if (!remembered) {
+      setLoading(false);
+      return;
+    }
     const myEpoch = sessionEpochRef.current;
     let alive = true;
     (async () => {

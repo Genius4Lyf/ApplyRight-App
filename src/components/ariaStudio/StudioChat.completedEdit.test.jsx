@@ -86,8 +86,7 @@ const completeBuild = () => ({
   coachChats: { studio: [{ who: 'buildstart' }, { who: 'contactdone' }] },
 });
 
-const mountStudio = async () => {
-  const draft = completeBuild();
+const mountStudio = async (draft = completeBuild()) => {
   localStorage.setItem('ariaStudio:draftId', draft._id);
   CVService.getDraftById.mockResolvedValueOnce(draft);
   render(
@@ -148,7 +147,23 @@ describe('StudioChat — applying edits to a completed build', () => {
   });
 
   it('returns to the completion card after applying a skill edit with Aria', async () => {
-    await mountStudio();
+    // This is the exact state from the reported failure: the build flow is finished and
+    // the card is visible because summarydone is durable, while the document itself does
+    // not pass canonical completeness because the summary was deliberately skipped.
+    // The old skills handler checked only the latter and incorrectly said summary was next.
+    const transcriptCompleteDraft = {
+      ...completeBuild(),
+      professionalSummary: '',
+      coachChats: {
+        studio: [
+          { who: 'buildstart' },
+          { who: 'contactdone' },
+          { who: 'skillsdone', n: 1 },
+          { who: 'summarydone', skipped: true },
+        ],
+      },
+    };
+    await mountStudio(transcriptCompleteDraft);
 
     await act(async () => {
       ctx.requestStudioCommand('suggestSkills', 'skills', null);

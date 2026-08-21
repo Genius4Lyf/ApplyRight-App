@@ -14,7 +14,7 @@ import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 // grounded in what the user has already described, not invented from a job title.
 const SkillsBuildCard = ({
   phase, // 'consent' | 'card'
-  data, // { suggestions, bestForRole }
+  data, // { suggestions, bestForRole, reviewGroups }
   existingSkills = [],
   hasJob,
   cost, // resolved credit cost — priced by the caller off the GENERATION model's tier
@@ -67,6 +67,7 @@ const SkillsBuildCard = ({
           <SkillsCard
             suggestions={data.suggestions}
             bestForRole={data.bestForRole}
+            reviewGroups={data.reviewGroups}
             existingSkills={existingSkills}
             onAdd={onAdd}
           />
@@ -161,7 +162,9 @@ const SkillsBuildCard = ({
             <button
               type="button"
               onClick={addManualSkill}
-              disabled={!manualName.trim() || (creatingNewCategory && !newCategoryName.trim()) || busy}
+              disabled={
+                !manualName.trim() || (creatingNewCategory && !newCategoryName.trim()) || busy
+              }
               className="shrink-0 text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
               {t('ariaStudio.jobCapture.add')}

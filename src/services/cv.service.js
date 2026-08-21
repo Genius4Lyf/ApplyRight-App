@@ -128,7 +128,7 @@ const CVService = {
       draftId,
       model,
     });
-    return response.data; // { suggestions, bestForRole, isPaid, fromCache, remainingCredits }
+    return response.data; // { suggestions, bestForRole, reviewGroups, isPaid, fromCache, remainingCredits }
   },
 
   // Suggest ATS keywords for the target job. Baseline is free; pass

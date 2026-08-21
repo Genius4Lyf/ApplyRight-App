@@ -170,7 +170,11 @@ const AriaChat = ({
         id,
         genModelId
       );
-      setSkData({ suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] });
+      setSkData({
+        suggestions: r.suggestions || [],
+        bestForRole: r.bestForRole || [],
+        reviewGroups: r.reviewGroups || null,
+      });
       setSkSel([]);
       setSkPhase('card');
     } catch (e) {
@@ -195,6 +199,7 @@ const AriaChat = ({
         who: 'skillsRecord',
         suggestions: skData?.suggestions || [],
         bestForRole: skData?.bestForRole || [],
+        reviewGroups: skData?.reviewGroups || null,
         added: [...new Set([...(skSel || []), ...added])],
         n: res?.added ?? added.length,
       },
@@ -273,7 +278,11 @@ const AriaChat = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setSkData({ suggestions: m.suggestions, bestForRole: m.bestForRole });
+                      setSkData({
+                        suggestions: m.suggestions,
+                        bestForRole: m.bestForRole,
+                        reviewGroups: m.reviewGroups || null,
+                      });
                       setSkSel(m.added || []);
                       setSkPhase('card');
                     }}
@@ -499,6 +508,7 @@ const AriaChat = ({
                   <SkillsCard
                     suggestions={skData.suggestions}
                     bestForRole={skData.bestForRole}
+                    reviewGroups={skData.reviewGroups}
                     existingSkills={(cvData.skills || []).map((s) =>
                       typeof s === 'string' ? s : s.name
                     )}

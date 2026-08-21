@@ -1879,6 +1879,16 @@ const StudioChat = ({ onPaywall }) => {
     education: 'educationdone',
   };
 
+  // There are TWO legitimate ways a build is finished:
+  //   1. its live document passes the canonical completeness rules; or
+  //   2. its transcript reached summarydone (including an intentionally skipped summary).
+  // derivePhase already treats both as build:done. Edit handlers must use the same rule,
+  // otherwise a CV can visibly show the finish card, then a skills edit makes Aria claim
+  // the summary is still next and strands the user on the section hub.
+  const completedBuildSession =
+    cvData?.studioKind === 'build' &&
+    (messages.some((message) => message?.who === 'summarydone') || finishableNow(cvData));
+
   // A build can be reopened from its finish card to improve one section. Once that CV is
   // already content-complete, applying the improvement must close the edit and restore
   // the finish card — walking the section hub again makes Aria look as though she forgot
@@ -1900,7 +1910,7 @@ const StudioChat = ({ onPaywall }) => {
     // A content-complete CV means this is an EDIT, not a build step: don't record a duplicate
     // receipt, don't stamp a DONE marker, don't walk the section chain — just close the entry
     // and return to the finish card.
-    const editing = finishableNow(cvData);
+    const editing = completedBuildSession;
     if (!isBlank && pinnedEntry && !editing) {
       push({ who: 'rolerecord', sortId: pinnedEntry._sortId, section });
     }
@@ -1996,7 +2006,7 @@ const StudioChat = ({ onPaywall }) => {
     // Capture this before the optimistic writer runs. This is an edit session when the
     // document was already complete on entry; applying another skill must return to the
     // completion card instead of reopening the builder's section sequence.
-    const editingCompletedBuild = finishableNow(cvData);
+    const editingCompletedBuild = completedBuildSession;
     const res = await applySkills(picked);
     if (!res?.ok) return;
     if (!(await persistStudioPending(null))) return;
@@ -2046,7 +2056,7 @@ const StudioChat = ({ onPaywall }) => {
   // runs. No persistStudioPending call — manual entry never creates a pending
   // generation, so there's nothing to discard.
   const finishManualSkills = () => {
-    const editingCompletedBuild = finishableNow(cvData);
+    const editingCompletedBuild = completedBuildSession;
     advance(() => {
       setSkillsData(null);
       if (editingCompletedBuild) {
@@ -3736,7 +3746,7 @@ const StudioChat = ({ onPaywall }) => {
                     // is the completion moment: clear focus and put the completion card
                     // back immediately. In-progress builds retain the existing multi-round
                     // interview so a new role can collect more than one achievement.
-                    if (finishableNow(cvData)) {
+                    if (completedBuildSession) {
                       returnToCompletedBuild({ unpin: true });
                       return;
                     }

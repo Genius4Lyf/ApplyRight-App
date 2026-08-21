@@ -41,7 +41,17 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const isAuthRequest =
         error.config.url?.includes('/auth/login') || error.config.url?.includes('/auth/register');
-      if (!isAuthRequest) {
+      const { code, message } = error.response.data || {};
+      // A 401 is also sometimes used by role/resource gates. Only destroy the
+      // browser session when the authentication middleware explicitly says the
+      // bearer token itself is absent or invalid. Exact-message fallbacks keep
+      // this compatible while an older backend instance is rolling over.
+      const isTokenFailure =
+        code === 'AUTH_TOKEN_INVALID' ||
+        code === 'AUTH_TOKEN_MISSING' ||
+        message === 'Not authorized, token failed' ||
+        message === 'Not authorized, no token';
+      if (!isAuthRequest && isTokenFailure) {
         // Token expired or invalid — redirect to login
         localStorage.removeItem('token');
         localStorage.removeItem('user');

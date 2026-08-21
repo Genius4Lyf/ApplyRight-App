@@ -1,247 +1,325 @@
 import React, { useMemo, useState } from 'react';
-import { Check, Info } from 'lucide-react';
+import { Check, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
+import { UNCATEGORIZED } from '../../lib/skillCategories';
 
-const lower = (s) => (s || '').trim().toLowerCase();
+const lower = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase();
 
-// Grouped skills picker rendered INLINE in Aria's chat (adapted from the old
-// GeneratedSkillsModal, minus the modal shell + the free-pick cap + the locked
-// Best-for-role upsell — best-for-role is now a free view for everyone). Purely
-// presentational: the parent owns generation, charging, and the durable record.
-//
-// Props:
-//  - suggestions:   [{ category, skills:[], skillsDetailed?:[] }]
-//  - bestForRole:   string[] of skill names matching the target job (empty → no JD)
-//  - existingSkills:string[] names already on the CV (shown greyed, "on CV", not pickable)
-//  - initialSelected: string[] names to pre-check (only for a re-opened record)
-//  - onAdd:         (picked: object[]) => void
+const legacyGroups = (suggestions, bestForRole) => {
+  const best = new Set((bestForRole || []).map(lower));
+  const rows = [];
+  (suggestions || []).forEach((group) => {
+    const details = new Map((group.skillsDetailed || []).map((item) => [lower(item.name), item]));
+    (group.skills || []).forEach((name) => {
+      const detail = details.get(lower(name)) || {};
+      rows.push({
+        name,
+        category: group.category || UNCATEGORIZED,
+        evidence: detail.evidence || [],
+        talkingPoint: detail.talkingPoint || '',
+        reason: detail.evidence?.[0]?.snippet || '',
+        explicitlyConfirmed: false,
+      });
+    });
+  });
+  return best.size
+    ? {
+        mode: 'job',
+        important: rows.filter((row) => best.has(lower(row.name))),
+        additional: rows.filter((row) => !best.has(lower(row.name))),
+        confirmation: [],
+        gaps: [],
+      }
+    : {
+        mode: 'profile',
+        core: rows.slice(0, 6),
+        additional: rows.slice(6),
+        confirmation: [],
+        gaps: [],
+      };
+};
+
 const SkillsCard = ({
   suggestions = [],
   bestForRole = [],
+  reviewGroups,
   existingSkills = [],
   initialSelected = [],
   onAdd,
 }) => {
   const { t } = useTranslation();
-  const [mode, setMode] = useState('all'); // 'all' | 'role'
+  const groups = useMemo(
+    () => reviewGroups || legacyGroups(suggestions, bestForRole),
+    [reviewGroups, suggestions, bestForRole]
+  );
+  const existingSet = useMemo(() => new Set(existingSkills.map(lower)), [existingSkills]);
   const [selected, setSelected] = useState(() => new Set(initialSelected));
   const [openDetail, setOpenDetail] = useState(null);
-  // 'Uncategorized' stays the internal/stored category value; only its display
-  // is localized (like the CV section labels — translate at the render layer).
-  // Shared with the Live Preview's grouped skills so both name the bucket the same way.
-  const catLabel = (c) => skillCategoryLabel(c, t);
+  const [confirmations, setConfirmations] = useState({});
 
-  const existingSet = useMemo(() => new Set(existingSkills.map(lower)), [existingSkills]);
-  const bestSet = useMemo(() => new Set(bestForRole.map(lower)), [bestForRole]);
-  const hasBest = bestForRole.length > 0;
-
-  // Flatten suggestions → display rows, merging per-skill detail + the deterministic
-  // best-for-role flag + whether it's already on the CV.
-  const rows = useMemo(() => {
-    const out = [];
-    const seen = new Set();
-    suggestions.forEach((group) => {
-      const detailByName = (group.skillsDetailed || []).reduce((acc, d) => {
-        if (d?.name) acc[lower(d.name)] = d;
-        return acc;
-      }, {});
-      (group.skills || []).forEach((name) => {
-        const key = lower(name);
-        if (seen.has(key)) return;
-        seen.add(key);
-        out.push({
-          name,
-          category: group.category || UNCATEGORIZED,
-          isBest: bestSet.has(key),
-          isAdded: existingSet.has(key),
-          detail: detailByName[key] || null,
-        });
-      });
-    });
-    return out;
-  }, [suggestions, bestSet, existingSet]);
+  const confirmedCandidates = (groups.confirmation || [])
+    .filter((row) => ['direct', 'basic'].includes(confirmations[row.name]))
+    .map((row) => ({
+      ...row,
+      explicitlyConfirmed: true,
+      confirmationStatus: confirmations[row.name],
+      evidenceStatus: confirmations[row.name] === 'direct' ? 'confirmed' : 'basic_exposure',
+    }));
+  const primary = groups.mode === 'job' ? groups.important || [] : groups.core || [];
+  const addableSections = [
+    [
+      groups.mode === 'job'
+        ? t('cvBuilder.skillsCard.provenImportantJob')
+        : t('cvBuilder.skillsCard.coreSkills'),
+      primary,
+      'primary',
+    ],
+    [
+      t('cvBuilder.skillsCard.provenAdditional'),
+      [...(groups.additional || []), ...confirmedCandidates],
+      'additional',
+    ],
+  ].filter(([, rows]) => rows.length);
+  const addableRows = addableSections.flatMap(([, rows]) => rows);
+  const selectedCount = addableRows.filter(
+    (row) => selected.has(row.name) && !existingSet.has(lower(row.name))
+  ).length;
 
   const toggle = (row) => {
-    if (row.isAdded) return;
-    setSelected((prev) => {
-      const next = new Set(prev);
+    if (existingSet.has(lower(row.name))) return;
+    setSelected((current) => {
+      const next = new Set(current);
       if (next.has(row.name)) next.delete(row.name);
       else next.add(row.name);
       return next;
     });
   };
 
+  const confirm = (row, status) => {
+    setConfirmations((current) => ({ ...current, [row.name]: status }));
+    setSelected((current) => {
+      const next = new Set(current);
+      if (['direct', 'basic'].includes(status)) next.add(row.name);
+      else next.delete(row.name);
+      return next;
+    });
+  };
+
   const handleAdd = () => {
-    const picked = rows
-      .filter((r) => selected.has(r.name) && !r.isAdded)
-      .map((r) => ({
-        name: r.name,
-        category: r.category,
+    const picked = addableRows
+      .filter((row) => selected.has(row.name) && !existingSet.has(lower(row.name)))
+      .map((row) => ({
+        name: row.name,
+        category: row.category || UNCATEGORIZED,
         isAutoGenerated: true,
-        evidence: r.detail?.evidence || [],
-        talkingPoint: r.detail?.talkingPoint || '',
+        evidence: row.evidence || [],
+        talkingPoint: row.talkingPoint || '',
+        explicitlyConfirmed: !!row.explicitlyConfirmed,
+        confirmationStatus: row.confirmationStatus || '',
       }));
     onAdd?.(picked);
   };
 
-  const grouped = useMemo(() => {
-    const g = {};
-    rows.forEach((r) => {
-      (g[r.category] = g[r.category] || []).push(r);
-    });
-    return g;
-  }, [rows]);
-
-  const bestRows = rows.filter((r) => r.isBest);
-  const selectedCount = [...selected].filter((n) => !existingSet.has(lower(n))).length;
-
-  const sections =
-    mode === 'role' ? [[t('cvBuilder.skillsCard.bestForRole'), bestRows]] : Object.entries(grouped);
-
-  return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white dark:bg-slate-900/60 overflow-hidden">
-      {/* Header + segmented control. */}
-      <div className="p-3.5 border-b border-slate-100 dark:border-slate-800">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-slate-900 dark:text-white">
-          {t('cvBuilder.skillsCard.eyebrow')}
-        </span>
-        <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 leading-snug">
-          {t('cvBuilder.skillsCard.subtitle')}
-        </p>
-        <div className="mt-2.5 inline-flex gap-1 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+  const SkillRow = ({ row }) => {
+    const added = existingSet.has(lower(row.name));
+    const active = selected.has(row.name);
+    const detailOpen = openDetail === row.name;
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex items-start gap-2.5 p-3">
           <button
             type="button"
-            onClick={() => setMode('all')}
-            className={`px-3.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
-              mode === 'all'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            onClick={() => toggle(row)}
+            disabled={added}
+            aria-pressed={active || added}
+            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+              active || added
+                ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                : 'border-slate-300 dark:border-slate-600'
             }`}
           >
-            {t('cvBuilder.skillsCard.allSkills')}
+            {(active || added) && <Check className="h-2.5 w-2.5" />}
           </button>
           <button
             type="button"
-            onClick={() => hasBest && setMode('role')}
-            disabled={!hasBest}
-            title={!hasBest ? t('cvBuilder.skillsCard.addTargetJobTitle') : undefined}
-            className={`px-3.5 py-1 text-[11px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${
-              mode === 'role'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-            }`}
+            onClick={() => toggle(row)}
+            disabled={added}
+            className="min-w-0 flex-1 text-left disabled:cursor-default"
           >
-            ★ {t('cvBuilder.skillsCard.bestForRole')}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                {row.name}
+              </span>
+              {row.explicitlyConfirmed && (
+                <span className="rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-[8px] uppercase text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  {t('cvBuilder.skillsCard.confirmedByYou')}
+                </span>
+              )}
+              {added && (
+                <span className="font-mono text-[8px] uppercase text-slate-400">
+                  {t('cvBuilder.skillsCard.onCv')}
+                </span>
+              )}
+            </div>
+            {row.reason && (
+              <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                {row.reason}
+              </p>
+            )}
           </button>
+          {!!row.evidence?.length && (
+            <button
+              type="button"
+              onClick={() => setOpenDetail(detailOpen ? null : row.name)}
+              className="rounded p-1 text-slate-400 hover:text-slate-800 dark:hover:text-white"
+              aria-label={t('cvBuilder.skillsCard.whyFits')}
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${detailOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+          )}
         </div>
-        {!hasBest && (
-          <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
-            {t('cvBuilder.skillsCard.addTargetJobHint')}
-          </p>
+        {detailOpen && (
+          <div className="border-t border-slate-100 px-3 py-2.5 text-[11px] dark:border-slate-800">
+            {(row.evidence || []).map((item, index) => (
+              <p
+                key={`${item.type}-${item.refIndex}-${index}`}
+                className="text-slate-500 dark:text-slate-400"
+              >
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {item.sourceLabel || item.type}:
+                </span>{' '}
+                {item.snippet}
+              </p>
+            ))}
+          </div>
         )}
       </div>
+    );
+  };
 
-      {/* Grouped chips. */}
-      <div className="max-h-[46vh] overflow-y-auto scrollbar-none p-3.5 flex flex-col gap-4 bg-slate-50/60 dark:bg-slate-950/20">
-        {sections.map(([category, items]) => (
-          <div key={category}>
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              {catLabel(category)}
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 border-l-2 border-l-slate-900 bg-white dark:border-slate-800 dark:border-l-white dark:bg-slate-900/60">
+      <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+          <span className="font-mono text-[10px] uppercase tracking-wide text-slate-900 dark:text-white">
+            {t('cvBuilder.skillsCard.eyebrow')}
+          </span>
+        </div>
+        <p className="mt-1 text-[12px] leading-snug text-slate-500 dark:text-slate-400">
+          {groups.mode === 'job'
+            ? t('cvBuilder.skillsCard.subtitleJob')
+            : t('cvBuilder.skillsCard.subtitleProfile')}
+        </p>
+      </div>
+
+      <div className="max-h-[58vh] space-y-5 overflow-y-auto bg-slate-50/60 p-3.5 scrollbar-none dark:bg-slate-950/20">
+        {addableSections.map(([title, rows, kind]) => (
+          <section key={kind}>
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              {title}
             </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {items.map((row) => {
-                const isSel = selected.has(row.name);
+            <div className="space-y-2">
+              {rows.map((row) => (
+                <SkillRow key={row.name} row={row} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {!!groups.confirmation?.length && (
+          <section>
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+              {groups.mode === 'job'
+                ? t('cvBuilder.skillsCard.confirmFirst')
+                : t('cvBuilder.skillsCard.needsConfirmation')}
+            </h4>
+            <p className="mb-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              {t('cvBuilder.skillsCard.confirmIntro')}
+            </p>
+            <div className="space-y-2">
+              {groups.confirmation.map((row) => {
+                const answer = confirmations[row.name];
                 return (
                   <div
                     key={row.name}
-                    className={`inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1 rounded-lg border text-[12.5px] font-medium transition-all ${
-                      row.isAdded
-                        ? 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                        : isSel
-                          ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
-                    }`}
+                    className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900 dark:bg-amber-950/20"
                   >
-                    <button
-                      type="button"
-                      onClick={() => toggle(row)}
-                      disabled={row.isAdded}
-                      className="inline-flex items-center gap-1.5 disabled:cursor-default"
-                    >
-                      <span
-                        className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
-                          row.isAdded || isSel
-                            ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900'
-                            : 'border-slate-300 dark:border-slate-600'
-                        }`}
-                      >
-                        {(row.isAdded || isSel) && <Check className="w-2.5 h-2.5" />}
-                      </span>
-                      {row.isBest && <span className="text-current">★</span>}
+                    <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
                       {row.name}
-                    </button>
-
-                    {row.detail && (
-                      <button
-                        type="button"
-                        onClick={() => setOpenDetail(openDetail === row.name ? null : row.name)}
-                        title={t('cvBuilder.skillsCard.whyFits')}
-                        className="text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
-                      >
-                        <Info className="w-3 h-3" />
-                      </button>
-                    )}
-
-                    {row.isAdded && (
-                      <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 dark:text-slate-500">
-                        {t('cvBuilder.skillsCard.onCv')}
-                      </span>
-                    )}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      {row.reason}
+                    </p>
+                    <p className="mt-1.5 text-[11.5px] font-medium text-slate-700 dark:text-slate-200">
+                      {row.question ||
+                        t('cvBuilder.skillsCard.confirmQuestion', { skill: row.name })}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {['direct', 'basic', 'encountered', 'no'].map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => confirm(row, status)}
+                          className={`rounded-lg border px-2 py-1 text-[10.5px] font-semibold ${
+                            answer === status
+                              ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                              : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                          }`}
+                        >
+                          {t(`cvBuilder.skillsCard.confirmation.${status}`)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 );
               })}
             </div>
+          </section>
+        )}
 
-            {openDetail &&
-              items.some((r) => r.name === openDetail && r.detail) &&
-              (() => {
-                const d = items.find((r) => r.name === openDetail)?.detail;
-                if (!d) return null;
-                return (
-                  <div className="mt-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100/70 dark:bg-slate-800/60 p-2.5 text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {d.talkingPoint && <p className="italic">"{d.talkingPoint}"</p>}
-                    {Array.isArray(d.evidence) && d.evidence.length > 0 && (
-                      <p className="mt-1 text-slate-500 dark:text-slate-400">
-                        {t('cvBuilder.skillsCard.fromYour', {
-                          types: d.evidence.map((e) => e.type).join(', '),
-                        })}
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-          </div>
-        ))}
+        {!!groups.gaps?.length && (
+          <section>
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+              {t('cvBuilder.skillsCard.notDemonstrated')}
+            </h4>
+            <p className="mb-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              {t('cvBuilder.skillsCard.gapsIntro')}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {groups.gaps.map((row) => (
+                <span
+                  key={row.name}
+                  className="rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-500 dark:border-rose-900 dark:bg-slate-900 dark:text-slate-400"
+                >
+                  {row.name}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Soft-skills steer — set expectations before they hunt for "leadership". */}
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed italic border-t border-slate-100 dark:border-slate-800 pt-2.5">
+        <p className="border-t border-slate-100 pt-2.5 text-[11px] italic leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400">
           {t('cvBuilder.skillsCard.softSkillsNote')}
         </p>
       </div>
 
-      {/* Footer. */}
-      <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 border-t border-slate-100 p-3 dark:border-slate-800">
         <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {t('cvBuilder.skillsCard.selectedCount', { n: selectedCount })}
         </span>
         <button
           type="button"
           onClick={handleAdd}
-          disabled={selectedCount === 0}
-          className="text-xs font-semibold px-4 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          disabled={!selectedCount}
+          className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-slate-900"
         >
-          {selectedCount > 0
+          {selectedCount
             ? t('cvBuilder.skillsCard.addNToCv', { n: selectedCount })
             : t('cvBuilder.skillsCard.addToCv')}
         </button>
