@@ -1479,7 +1479,11 @@ const StudioChat = ({ onPaywall }) => {
         draftId,
         genModelId
       );
-      const data = { suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] };
+      const data = {
+        suggestions: r.suggestions || [],
+        bestForRole: r.bestForRole || [],
+        reviewGroups: r.reviewGroups || null,
+      };
       setFixSkillsData(data);
       // PAID output, so persisting is load-bearing: a refresh must return the suggestions
       // the user already bought rather than charging for them twice. `workflow` is what
@@ -1875,6 +1879,17 @@ const StudioChat = ({ onPaywall }) => {
     education: 'educationdone',
   };
 
+  // A build can be reopened from its finish card to improve one section. Once that CV is
+  // already content-complete, applying the improvement must close the edit and restore
+  // the finish card — walking the section hub again makes Aria look as though she forgot
+  // the document was finished. Callers decide whether a pin needs clearing because
+  // section-level edits (skills/summary) do not own one.
+  const returnToCompletedBuild = ({ unpin = false } = {}) => {
+    if (unpin) push({ who: 'unpinrole' });
+    setPhase('build:done');
+    ariaSays(t('ariaStudio.chat.editUpdated'));
+  };
+
   const finishSection = () => {
     if (roleBusy) return;
     const section = pinnedSectionKey;
@@ -1898,9 +1913,7 @@ const StudioChat = ({ onPaywall }) => {
         );
       }
       if (editing) {
-        push({ who: 'unpinrole' });
-        setPhase('build:done');
-        ariaSays(t('ariaStudio.chat.editUpdated'));
+        returnToCompletedBuild({ unpin: true });
       } else {
         push({ who: 'unpinrole' }, { who: DONE_MARKER[section] });
         setPhase('build:sections');
@@ -1953,7 +1966,11 @@ const StudioChat = ({ onPaywall }) => {
         draftId,
         genModelId
       );
-      const data = { suggestions: r.suggestions || [], bestForRole: r.bestForRole || [] };
+      const data = {
+        suggestions: r.suggestions || [],
+        bestForRole: r.bestForRole || [],
+        reviewGroups: r.reviewGroups || null,
+      };
       setSkillsData(data);
       await persistStudioPending({ kind: 'skills', data });
       if (r.remainingCredits != null) {
@@ -1976,14 +1993,22 @@ const StudioChat = ({ onPaywall }) => {
   };
 
   const addPickedSkills = async (picked) => {
+    // Capture this before the optimistic writer runs. This is an edit session when the
+    // document was already complete on entry; applying another skill must return to the
+    // completion card instead of reopening the builder's section sequence.
+    const editingCompletedBuild = finishableNow(cvData);
     const res = await applySkills(picked);
     if (!res?.ok) return;
     if (!(await persistStudioPending(null))) return;
     advance(() => {
       setSkillsData(null);
-      push({ who: 'skillsdone', n: res?.added ?? picked.length });
-      setPhase('build:sections');
-      ariaSays(t('ariaStudio.chat.skillsInDone', { n: res?.added ?? picked.length }));
+      if (editingCompletedBuild) {
+        returnToCompletedBuild();
+      } else {
+        push({ who: 'skillsdone', n: res?.added ?? picked.length });
+        setPhase('build:sections');
+        ariaSays(t('ariaStudio.chat.skillsInDone', { n: res?.added ?? picked.length }));
+      }
     }, t('ariaStudio.chat.thinking.skillsSaved'));
   };
 
@@ -2021,11 +2046,16 @@ const StudioChat = ({ onPaywall }) => {
   // runs. No persistStudioPending call — manual entry never creates a pending
   // generation, so there's nothing to discard.
   const finishManualSkills = () => {
+    const editingCompletedBuild = finishableNow(cvData);
     advance(() => {
       setSkillsData(null);
-      push({ who: 'skillsdone', n: manualSkillsAdded });
-      setPhase('build:sections');
-      ariaSays(t('ariaStudio.chat.skillsInDone', { n: manualSkillsAdded }));
+      if (editingCompletedBuild) {
+        returnToCompletedBuild();
+      } else {
+        push({ who: 'skillsdone', n: manualSkillsAdded });
+        setPhase('build:sections');
+        ariaSays(t('ariaStudio.chat.skillsInDone', { n: manualSkillsAdded }));
+      }
     }, t('ariaStudio.chat.thinking.skillsSaved'));
   };
 
@@ -2692,7 +2722,10 @@ const StudioChat = ({ onPaywall }) => {
         {/* The trailing padding is part of the scrollable transcript, not the composer.
             That lets the final card (and Aria's orbit beneath it) scroll clear of the
             docked input instead of being visually pressed into its top edge. */}
-        <div ref={chatRef} className="absolute inset-0 chat-scroll flex flex-col gap-5 pb-12 sm:pb-14">
+        <div
+          ref={chatRef}
+          className="absolute inset-0 chat-scroll flex flex-col gap-5 pb-12 sm:pb-14"
+        >
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft
               entry, so free chat, an Aria turn, or a refresh all leave it untouched.
@@ -3698,6 +3731,15 @@ const StudioChat = ({ onPaywall }) => {
                       n: result.applied.length,
                       nonce: Date.now(),
                     });
+                    // "Edit with Aria" on an already-finished build is a bounded edit,
+                    // not the start of another role-building loop. The successful Apply
+                    // is the completion moment: clear focus and put the completion card
+                    // back immediately. In-progress builds retain the existing multi-round
+                    // interview so a new role can collect more than one achievement.
+                    if (finishableNow(cvData)) {
+                      returnToCompletedBuild({ unpin: true });
+                      return;
+                    }
                     // Keep the interview going on the SAME role. Re-pin it so the coach's
                     // turn window (and prior-answer context, which primes the next paid
                     // generation) resets to a clean round — a transcript marker, so it
@@ -3760,9 +3802,7 @@ const StudioChat = ({ onPaywall }) => {
           and hidden outright while the coach has its own (which docks below). */}
       {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
           indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
-      <div
-        className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}
-      >
+      <div className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}>
         <AriaComposer
           className="pb-[env(safe-area-inset-bottom)] relative z-20"
           inputRef={inputRef}
