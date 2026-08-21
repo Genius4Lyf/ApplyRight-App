@@ -15,7 +15,7 @@ import { costForActionTier } from '../../lib/models';
 //
 // `model` is the generation model id (genModelId in StudioChat). It's still passed to
 // the draft call, but the backend now PINS Draft-JD to the Standard (light) model and
-// ignores the client's pick — a generic posting doesn't warrant a flagship charge. So
+// ignores the client's pick — a generic role profile doesn't warrant a flagship charge. So
 // the assist is always priced at the light DRAFT_JD cost, keeping the quote in step
 // with what the server actually bills.
 const JobCaptureCard = ({

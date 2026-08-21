@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { createPortal } from 'react-dom';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks jsx-uses-vars
 // so it reads as unused — suppress the false positive (same as the chat surfaces).
@@ -13,6 +20,8 @@ import {
   modelLabel,
   modelsByTier,
   costForActionTier,
+  subscribeModelConfig,
+  getModelConfigVersion,
 } from '../lib/models';
 import { SPRING } from '../lib/ariaMotion';
 
@@ -45,6 +54,7 @@ const ModelPicker = ({
   studio = false,
 }) => {
   const { t } = useTranslation();
+  useSyncExternalStore(subscribeModelConfig, getModelConfigVersion, getModelConfigVersion);
   const tierLabel = (tier) =>
     t(
       tier === 'flagship' ? 'cvBuilder.modelPicker.tierFlagship' : 'cvBuilder.modelPicker.tierLight'
@@ -85,7 +95,10 @@ const ModelPicker = ({
           }
         : {
             top: r.bottom + GAP,
-            maxHeight: Math.max(140, Math.min(window.innerHeight * 0.6, window.innerHeight - r.bottom - GAP - EDGE)),
+            maxHeight: Math.max(
+              140,
+              Math.min(window.innerHeight * 0.6, window.innerHeight - r.bottom - GAP - EDGE)
+            ),
           }),
     });
   }, [align, dropUp]);

@@ -1596,6 +1596,7 @@
       "flatCost": "{{n}} cr",
       "sameCost": "Même prix",
       "chatNote": "Uniquement pour ce brouillon — vous discutez toujours avec {{tier}}.",
+      "loadingOptions": "Chargement des options…",
       "blurb": {
         "experience": {
           "light": "Fiable et exact. Idéal pour les stages, les emplois à temps partiel et les premiers postes.",
@@ -4269,13 +4270,13 @@
     "jobCapture": {
       "theJob": "Le poste que vous visez",
       "add": "Ajouter",
-      "draftAssist": "Pas de description de poste ? Aria peut en rédiger une type — {{cost}} cr",
-      "draftAssistNeedsTitle": "Entrez d'abord un intitulé de poste — Aria en a besoin pour rédiger une description",
-      "drafting": "Rédaction d'une description de poste type",
-      "draftedNote": "Ceci est une description type pour ce poste, pas une offre réelle — modifiez-la si vous avez l'offre exacte.",
-      "draftedTag": "Description de poste type, pas une offre réelle",
-      "draftInsufficientCredits": "Crédits insuffisants pour rédiger une description.",
-      "draftFailed": "Impossible de rédiger une description pour cet intitulé de poste. Veuillez réessayer."
+      "draftAssist": "Pas de description de poste ? Générez un profil de poste type avec ARIA — {{cost}} cr",
+      "draftAssistNeedsTitle": "Entrez d'abord un intitulé de poste — ARIA en a besoin pour générer un profil de poste",
+      "drafting": "Génération d'un profil de poste type",
+      "draftedNote": "Profil de poste généré par l'IA à partir de l'intitulé. Il peut ne pas correspondre aux exigences d'un employeur précis. Remplacez-le par l'offre réelle dès que possible.",
+      "draftedTag": "Profil généré par l'IA · pas une offre réelle",
+      "draftInsufficientCredits": "Crédits insuffisants pour générer un profil de poste.",
+      "draftFailed": "Impossible de générer un profil pour cet intitulé de poste. Veuillez réessayer."
     },
     "modeChooser": {
       "whatAreWeDoing": "Que faisons-nous ?",
@@ -4298,6 +4299,9 @@
       "lookingForYears_one": "Recherche environ {{count}} an d'expérience.",
       "lookingForYears_other": "Recherche environ {{count}} ans d'expérience.",
       "keepsAskingFor": "Ce qui revient sans cesse",
+      "mainResponsibilities": "Responsabilités principales",
+      "niceToHave": "Souhaité, mais non essentiel",
+      "investigationNote": "Je m’en servirai pour choisir mes questions. Je n’écrirai que ce que vos réponses permettent réellement d’affirmer.",
       "couldntFullyRead": "Je n'ai pas pu lire le poste en entier pour l'instant — on peut quand même continuer, et je le relirai quand je commencerai à adapter le CV."
     },
     "roleCapture": {
@@ -4722,7 +4726,9 @@
       "generatingBullets": "Génération de vos puces…",
       "readyForBullets": "D'accord, j'ai tout ce qu'il me faut pour créer vos puces.",
       "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
-      "clickableImpact": "Façons de montrer l’impact — cliquez sur celle qui vous convient :"
+      "clickableImpact": "Façons de montrer l’impact — cliquez sur celle qui vous convient :",
+      "supportedBy": "D’après votre entretien : {{evidence}}",
+      "matchesRequirements": "Correspond à : {{requirements}}"
     },
     "livePreview": {
       "heading": "Aperçu en direct",

@@ -9,6 +9,21 @@ export const AI_MODELS = {
   flagshipCreditCosts: {}, // action → flagship credit cost (light costs live in CREDIT_COSTS)
 };
 
+// Model config arrives asynchronously from /auth/config. Consumers used to read this
+// mutable singleton without subscribing, so a screen rendered before hydration could
+// keep an empty model list until some unrelated state happened to re-render it.
+let modelConfigVersion = 0;
+const modelConfigListeners = new Set();
+export const subscribeModelConfig = (listener) => {
+  modelConfigListeners.add(listener);
+  return () => modelConfigListeners.delete(listener);
+};
+export const getModelConfigVersion = () => modelConfigVersion;
+const publishModelConfig = () => {
+  modelConfigVersion += 1;
+  modelConfigListeners.forEach((listener) => listener());
+};
+
 // The backend sends flagship costs keyed by its canonical action names; the frontend
 // mirror renames one (ANALYSIS → FIT_ANALYSIS), exactly as hydrateCreditCosts does. Apply
 // the same rename here so costForActionTier reads flagship costs with the frontend keys.
@@ -27,6 +42,7 @@ export function hydrateModels(payload) {
     });
     AI_MODELS.flagshipCreditCosts = remapped;
   }
+  publishModelConfig();
 }
 
 // The model tier ('light'|'flagship') for a resolved/selected model id — used to price

@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { modelsByTier, costForActionTier, PROVIDER_NAME, modelLabel } from '../../lib/models';
+import {
+  AI_MODELS,
+  modelsByTier,
+  costForActionTier,
+  PROVIDER_NAME,
+  modelLabel,
+  subscribeModelConfig,
+  getModelConfigVersion,
+} from '../../lib/models';
 
 const ACTION_KEY = {
   experience: 'GENERATE_BULLET',
@@ -18,12 +26,41 @@ const ACTION_KEY = {
 // name — never fused into one label, since the engine can change under a slot.
 const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }) => {
   const { t } = useTranslation();
+  useSyncExternalStore(subscribeModelConfig, getModelConfigVersion, getModelConfigVersion);
   const actionKey = ACTION_KEY[action];
   const headingKey = action === 'project' ? 'experience' : action;
 
   const models = [...modelsByTier('light'), ...modelsByTier('flagship')];
 
-  if (models.length < 2) return null;
+  if (models.length < 2) {
+    const active = models[0] || {
+      id: value || AI_MODELS.defaultModel,
+      tier: 'light',
+      provider: 'openai',
+    };
+    return (
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          {t(`cvBuilder.genModel.heading.${headingKey}`)}
+        </p>
+        <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
+              {active.tier === 'flagship'
+                ? PROVIDER_NAME[active.provider] || modelLabel(active.id)
+                : t('cvBuilder.modelPicker.tierLight')}
+            </span>
+            <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+              {t('cvBuilder.genModel.loadingOptions')}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            {modelLabel(active.id)}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const lightCost = costForActionTier(actionKey, 'light');
   const flagshipCost = costForActionTier(actionKey, 'flagship');

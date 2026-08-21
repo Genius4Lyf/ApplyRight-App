@@ -94,6 +94,7 @@ const SectionCoach = ({
   const [description, setDescription] = useState(restored?.description || '');
   const [count, setCount] = useState(restored?.count || REC);
   const [bullets, setBullets] = useState(restored?.bullets || []);
+  const [bulletDetails, setBulletDetails] = useState(restored?.bulletDetails || []);
   const [selected, setSelected] = useState(
     new Set((restored?.bullets || []).map((_, index) => index))
   );
@@ -118,6 +119,7 @@ const SectionCoach = ({
     // Never stomp what's on screen: a live result, or a re-roll still in flight.
     if (bullets.length || phase === 'generating') return;
     setBullets(restored.bullets);
+    setBulletDetails(restored.bulletDetails || []);
     setSelected(new Set(restored.bullets.map((_, index) => index)));
     setDescription(restored.description || '');
     setCount(restored.count || REC);
@@ -318,6 +320,7 @@ const SectionCoach = ({
         model: genModelId,
       });
       setBullets(res.bullets || []);
+      setBulletDetails(res.bulletDetails || []);
       setSelected(new Set((res.bullets || []).map((_, i) => i))); // all on by default
       setWasFree(!!res.wasFree);
       await persistPending({
@@ -327,6 +330,7 @@ const SectionCoach = ({
         description: description.trim(),
         count,
         bullets: res.bullets || [],
+        bulletDetails: res.bulletDetails || [],
         wasFree: !!res.wasFree,
       });
       if (res.remainingCredits != null) {
@@ -379,42 +383,42 @@ const SectionCoach = ({
   const composer = phase === 'chat' && (
     <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
       <AriaComposer
-      className=""
-      inputRef={inputRef}
-      value={input}
-      onChange={setInput}
-      onSend={send}
-      disabled={thinking}
-      busy={thinking}
-      placeholder="Tell ARIA..."
-      modelId={modelId}
-      onSelectModel={selectModel}
-      showModelPicker
-      showModelNotice
-      footer={
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => onDone?.(null)}
-            className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-          >
-            ← {t('ariaStudio.sectionCoach.backToSections')}
-          </button>
-          {missingKeywords.length > 0 && (
-            <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-              {t(
-                keywordsAreGaps
-                  ? 'ariaStudio.sectionCoach.aimingAt'
-                  : 'ariaStudio.sectionCoach.jobAsksFor',
-                { keywords: missingKeywords.slice(0, 2).join(', ') }
-              )}
+        className=""
+        inputRef={inputRef}
+        value={input}
+        onChange={setInput}
+        onSend={send}
+        disabled={thinking}
+        busy={thinking}
+        placeholder="Tell ARIA..."
+        modelId={modelId}
+        onSelectModel={selectModel}
+        showModelPicker
+        showModelNotice
+        footer={
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => onDone?.(null)}
+              className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            >
+              ← {t('ariaStudio.sectionCoach.backToSections')}
+            </button>
+            {missingKeywords.length > 0 && (
+              <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
+                {t(
+                  keywordsAreGaps
+                    ? 'ariaStudio.sectionCoach.aimingAt'
+                    : 'ariaStudio.sectionCoach.jobAsksFor',
+                  { keywords: missingKeywords.slice(0, 2).join(', ') }
+                )}
+              </span>
+            )}
+            <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {Math.min(turnsTaken, TURN_CAP)}/{TURN_CAP}
             </span>
-          )}
-          <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {Math.min(turnsTaken, TURN_CAP)}/{TURN_CAP}
-          </span>
-        </div>
-      }
+          </div>
+        }
       />
     </div>
   );
@@ -557,6 +561,7 @@ const SectionCoach = ({
               <ul className="mt-3 space-y-2">
                 {bullets.map((b, i) => {
                   const on = selected.has(i);
+                  const detail = bulletDetails[i];
                   return (
                     <li key={i}>
                       <button
@@ -578,8 +583,27 @@ const SectionCoach = ({
                         >
                           ✓
                         </span>
-                        <span className="text-[12.5px] leading-relaxed text-slate-700 dark:text-slate-200">
-                          {b}
+                        <span className="min-w-0 text-[12.5px] leading-relaxed text-slate-700 dark:text-slate-200">
+                          <span className="block">{b}</span>
+                          {!!detail?.evidence?.length && (
+                            <span className="mt-1.5 block text-[10.5px] leading-snug text-slate-500 dark:text-slate-400">
+                              {t('ariaStudio.sectionCoach.supportedBy', {
+                                evidence: detail.evidence
+                                  .slice(0, 2)
+                                  .map((item) => item.claim)
+                                  .join(' · '),
+                              })}
+                            </span>
+                          )}
+                          {!!detail?.requirements?.length && (
+                            <span className="mt-1 block font-mono text-[9px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                              {t('ariaStudio.sectionCoach.matchesRequirements', {
+                                requirements: detail.requirements
+                                  .map((item) => item.name)
+                                  .join(', '),
+                              })}
+                            </span>
+                          )}
                         </span>
                       </button>
                     </li>

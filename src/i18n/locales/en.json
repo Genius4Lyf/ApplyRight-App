@@ -1600,6 +1600,7 @@
       "flatCost": "{{n}} cr",
       "sameCost": "Same price",
       "chatNote": "Just for this draft — you're still chatting with {{tier}}.",
+      "loadingOptions": "Loading options…",
       "blurb": {
         "experience": {
           "light": "Steady and accurate. Good for internships, part-time work and first jobs.",
@@ -4273,13 +4274,13 @@
     "jobCapture": {
       "theJob": "The job you're going for",
       "add": "Add",
-      "draftAssist": "No job description? ARIA can draft a typical one — {{cost}} cr",
-      "draftAssistNeedsTitle": "Enter a job title first — ARIA needs it to draft a description",
-      "drafting": "Drafting a typical job description",
-      "draftedNote": "This is a typical description for the role, not a real posting — edit it if you have the actual one.",
-      "draftedTag": "Typical role description, not a real posting",
-      "draftInsufficientCredits": "Not enough credits to draft a description.",
-      "draftFailed": "Couldn't draft a description for that job title. Please try again."
+      "draftAssist": "No job description? Generate a typical role profile with ARIA — {{cost}} cr",
+      "draftAssistNeedsTitle": "Enter a job title first — ARIA needs it to generate a role profile",
+      "drafting": "Generating a typical role profile",
+      "draftedNote": "AI-generated role profile based on the job title. It may not reflect a specific employer's requirements. Replace it with the real job posting when available.",
+      "draftedTag": "AI-generated role profile · not a real posting",
+      "draftInsufficientCredits": "Not enough credits to generate a role profile.",
+      "draftFailed": "Couldn't generate a role profile for that job title. Please try again."
     },
     "modeChooser": {
       "whatAreWeDoing": "What are we doing?",
@@ -4302,6 +4303,9 @@
       "lookingForYears_one": "Looking for around {{count}} year of experience.",
       "lookingForYears_other": "Looking for around {{count}} years of experience.",
       "keepsAskingFor": "What it keeps asking for",
+      "mainResponsibilities": "Main responsibilities",
+      "niceToHave": "Preferred, not essential",
+      "investigationNote": "I’ll use this to decide what to ask about. I’ll only write what your answers genuinely support.",
       "couldntFullyRead": "I couldn't fully read the job just now — we can still carry on, and I'll re-read it when I start tailoring."
     },
     "roleCapture": {
@@ -4726,7 +4730,9 @@
       "generatingBullets": "Generating your bullet points…",
       "readyForBullets": "Okay, I have everything I need to create your bullet points.",
       "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
-      "clickableImpact": "Ways to show the impact — click the one that sits well with you:"
+      "clickableImpact": "Ways to show the impact — click the one that sits well with you:",
+      "supportedBy": "From your interview: {{evidence}}",
+      "matchesRequirements": "Supports: {{requirements}}"
     },
     "livePreview": {
       "heading": "Live preview",

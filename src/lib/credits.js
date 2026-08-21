@@ -39,7 +39,7 @@ export const CREDIT_COSTS = {
   REWRITE_ROLE: 1,
   // Coach: AI-generate one career-stage-aware, JD-tailored summary (each re-roll charges).
   GENERATE_SUMMARY: 3,
-  // Aria Studio — draft a typical job description from just a job title. Always runs
+  // Aria Studio — generate a typical role profile from just a job title. Always runs
   // on the Standard (light) model regardless of the user's gen-model pick (the backend
   // pins it), so this light cost is what's actually billed.
   DRAFT_JD: 1,

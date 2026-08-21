@@ -701,13 +701,29 @@ function App() {
   // overrides) so preflight checks reflect live prices. Runs on all platforms;
   // on failure the offline fallback in lib/credits.js stays in effect.
   useEffect(() => {
-    api
-      .get('/auth/config')
-      .then((res) => {
-        hydrateCreditCosts(res?.data?.creditCosts);
-        hydrateModels(res?.data?.aiModels);
-      })
-      .catch(() => {});
+    let cancelled = false;
+    let retryTimer;
+    const loadConfig = (attempt = 0) => {
+      api
+        .get('/auth/config')
+        .then((res) => {
+          if (cancelled) return;
+          hydrateCreditCosts(res?.data?.creditCosts);
+          hydrateModels(res?.data?.aiModels);
+        })
+        .catch(() => {
+          // A local restart or Render cold start can make the first request lose the
+          // race. Retry briefly instead of hiding model choices for the whole session.
+          if (!cancelled && attempt < 2) {
+            retryTimer = window.setTimeout(() => loadConfig(attempt + 1), 1500 * (attempt + 1));
+          }
+        });
+    };
+    loadConfig();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retryTimer);
+    };
   }, []);
 
   // Wake the (possibly spun-down) Render backend as early as the app loads, on

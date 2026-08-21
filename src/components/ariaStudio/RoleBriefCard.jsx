@@ -27,6 +27,12 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
     .map((k) => (typeof k === 'string' ? k : k?.name))
     .filter(Boolean)
     .slice(0, 8);
+  const niceToHaves = (brief?.niceToHaves || [])
+    .map((k) => (typeof k === 'string' ? k : k?.name))
+    .filter(Boolean)
+    .filter((name) => !mustHaves.some((required) => required.toLowerCase() === name.toLowerCase()))
+    .slice(0, 5);
+  const responsibilities = (brief?.responsibilities || []).filter(Boolean).slice(0, 3);
 
   const typeLabel = brief?.companyType ? t(COMPANY_TYPE_KEYS[brief.companyType]) : null;
   const line = [
@@ -75,6 +81,48 @@ const RoleBriefCard = ({ brief, jobTitle, onConfirm, onEdit }) => {
               ))}
             </div>
           </div>
+        )}
+
+        {responsibilities.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <p className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-2">
+              {t('ariaStudio.roleBrief.mainResponsibilities')}
+            </p>
+            <ul className="space-y-1.5 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
+              {responsibilities.map((responsibility) => (
+                <li key={responsibility} className="flex gap-2">
+                  <span aria-hidden="true" className="text-slate-400">
+                    •
+                  </span>
+                  <span>{responsibility}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {niceToHaves.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <p className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 mb-2">
+              {t('ariaStudio.roleBrief.niceToHave')}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {niceToHaves.map((name) => (
+                <span
+                  key={name}
+                  className="rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!!brief && (
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            {t('ariaStudio.roleBrief.investigationNote')}
+          </p>
         )}
 
         {!brief && (
