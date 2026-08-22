@@ -20,6 +20,7 @@ import SessionRail from '../../components/ariaStudio/SessionRail';
 import StudioOverlay from '../../components/ariaStudio/StudioOverlay';
 import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
 import StudioWelcomeGuide from '../../components/ariaStudio/StudioWelcomeGuide';
+import TargetJobStrip from '../../components/ariaStudio/TargetJobStrip';
 
 const STUDIO_WELCOME_GUIDE_KEY = 'ariaStudio:welcome-guide-seen:v1';
 
@@ -339,10 +340,10 @@ const StudioDesk = () => {
                   onClick={() => selectView('preview')}
                   aria-pressed={panelView === 'preview'}
                   aria-label={t('ariaStudio.livePreview.heading')}
-                  className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                     panelView === 'preview'
-                      ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800'
-                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'text-slate-900 dark:text-white'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
                   <Eye className="w-5 h-5" />
@@ -365,6 +366,8 @@ const StudioDesk = () => {
               </button>
             </div>
           </div>
+
+          <TargetJobStrip model={modelId} />
 
           {/* Remounted per session — a stale phase or in-flight coach state from the
               previous session must never bleed into the next one. */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
+import { prepareCvPhoto } from '../../utils/cvPhoto';
 
 const FIELDS = [
   {
@@ -66,30 +67,14 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
     requestAnimationFrame(() => document.getElementById(`studio-contact-${key}`)?.focus());
   };
 
-  const handlePhotoChange = (event) => {
+  const handlePhotoChange = async (event) => {
     const file = event.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const image = new window.Image();
-      image.onload = () => {
-        const size = 320;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const context = canvas.getContext('2d');
-        const side = Math.min(image.width, image.height);
-        const sourceX = (image.width - side) / 2;
-        const sourceY = (image.height - side) / 2;
-        context.drawImage(image, sourceX, sourceY, side, side, 0, 0, size, size);
-        let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        if (dataUrl.length > 220_000) dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-        set('photoUrl', dataUrl);
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      set('photoUrl', await prepareCvPhoto(file));
+    } catch {
+      // Invalid/unreadable images leave the current photo untouched.
+    }
     event.target.value = '';
   };
 
@@ -169,6 +154,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                 <input
                   id="studio-contact-photoUrl"
                   type="file"
+                  aria-label={t('ariaStudio.contactConfirm.fields.photo.label')}
                   accept="image/*"
                   onChange={handlePhotoChange}
                   className="sr-only"

@@ -132,6 +132,7 @@ const StudioChat = ({ onPaywall }) => {
     applyEntryEdit,
     applySummary,
     applySkills,
+    updateTargetJob,
     startBuild,
     newSession,
     addRole,
@@ -149,6 +150,7 @@ const StudioChat = ({ onPaywall }) => {
     // Focus mode runs the OTHER way down the same wire: this component publishes which
     // entry Aria is working on, and the Live Preview marks + locks that row.
     setActiveEntry,
+    setStudioPhase,
   } = useAriaStudio();
 
   // The session's Aria CHAT model — the SAME per-draft choice the Studio header picker and
@@ -176,6 +178,12 @@ const StudioChat = ({ onPaywall }) => {
     ...(pendingKind ? [] : loadSession()),
   ]);
   const [phase, setPhase] = useState(() => phaseForNewSession(pendingKind, loadSession()));
+
+  // Publish the already-derived chat phase for sibling UI. The transcript remains the
+  // source of truth; this merely prevents contextual chrome from guessing where Aria is.
+  useEffect(() => {
+    setStudioPhase?.(phase);
+  }, [phase, setStudioPhase]);
   const [openingStudio, setOpeningStudio] = useState(
     () => !loading && !draftId && loadSession().length === 0
   );
@@ -1620,39 +1628,25 @@ const StudioChat = ({ onPaywall }) => {
     const autoTitle = isUnnamedCv(cvData?.title)
       ? t('ariaStudio.chat.cvForJob', { jobTitle })
       : null;
-    // Persist the job onto the draft so every later section is JD-grounded.
-    const previousTargetJob = cvData?.targetJob || {};
-    const previousTitle = cvData?.title;
-    updateCvData({
-      targetJob: { ...(cvData?.targetJob || {}), title: jobTitle, description: jobDescription },
-      ...(autoTitle ? { title: autoTitle } : {}),
+    // Persist JD + Role Brief together through the same operation the permanent strip
+    // uses. This prevents an edited JD from leaving the old Brief behind for Skills or
+    // later role interviews.
+    const targetResult = await updateTargetJob({
+      jobTitle,
+      jobDescription,
+      model: genModelId,
+      brief,
     });
-    if (draftId) {
+    if (!targetResult?.ok) {
+      setReading(false);
+      return;
+    }
+    if (autoTitle && draftId) {
+      updateCvData({ title: autoTitle });
       try {
-        await CVService.saveDraft({
-          _id: draftId,
-          // DOT NOTATION, deliberately. saveDraft hands `data` straight to
-          // findByIdAndUpdate — an implicit $set — and $set on `targetJob` REPLACES the
-          // entire subdocument. Sending a bare { title, description } silently destroyed
-          // its siblings: the Role Brief buildStart had just written, the CACHED (already
-          // paid for) aiKeywords, and the `source` flag marking an AI-drafted JD, whose
-          // loss makes a score computed against a synthetic posting render as if it came
-          // from a real one. These two paths $set only themselves.
-          //
-          // Not a spread of the client's copy: that persists whatever this tab happens to
-          // hold and re-introduces the stale-snapshot lost update avoided elsewhere here.
-          'targetJob.title': jobTitle,
-          'targetJob.description': jobDescription,
-          ...(autoTitle ? { title: autoTitle } : {}),
-        });
+        await CVService.saveDraft({ _id: draftId, title: autoTitle });
       } catch (err) {
-        console.error('Failed to save the build target job', err);
-        // Local-only rollback: the save failed, so the DB was never touched and the
-        // whole previous subdocument is exactly what this client held before.
-        updateCvData({ targetJob: previousTargetJob, title: previousTitle });
-        setReading(false);
-        toast.error(t('ariaStudio.chat.toast.saveFailed'));
-        return;
+        console.error('Failed to save the job-derived CV title', err);
       }
     }
     setReading(false);
@@ -2700,7 +2694,7 @@ const StudioChat = ({ onPaywall }) => {
     !transitionLabel;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col p-4 bg-white dark:bg-slate-900">
+    <div className="flex-1 min-h-0 flex flex-col px-4 pb-4 pt-0 bg-white dark:bg-slate-900">
       <div className="flex-1 min-h-0 relative">
         <AnimatePresence>
           {studioTransition && (
@@ -2729,12 +2723,13 @@ const StudioChat = ({ onPaywall }) => {
             </motion.div>
           )}
         </AnimatePresence>
-        {/* The trailing padding is part of the scrollable transcript, not the composer.
-            That lets the final card (and Aria's orbit beneath it) scroll clear of the
-            docked input instead of being visually pressed into its top edge. */}
+        {/* The leading and trailing spacing belong to the scrollable transcript, not
+            the outer chat shell or composer. The top breathes below the divider when
+            the thread begins, then scrolls away; the bottom lets the final card (and
+            Aria's orbit beneath it) clear the docked input. */}
         <div
           ref={chatRef}
-          className="absolute inset-0 chat-scroll flex flex-col gap-5 pb-12 sm:pb-14"
+          className="absolute inset-0 chat-scroll flex flex-col gap-5 pt-4 pb-12 sm:pt-3 sm:pb-14"
         >
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft

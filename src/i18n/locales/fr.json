@@ -4285,6 +4285,26 @@
       "untitled": "Sans titre",
       "noKeyword": "pas de {{keyword}}"
     },
+    "targetJobStrip": {
+      "label": "Poste cible",
+      "noRole": "Aucun poste cible",
+      "jdAdded": "Offre ajoutée",
+      "noJd": "Aucune description de poste",
+      "edit": "Modifier",
+      "add": "Ajouter l'offre",
+      "editorTitleEdit": "Modifier le poste cible",
+      "editorTitleAdd": "Ajouter une description de poste",
+      "editorHelp": "ARIA relira cette offre et utilisera les nouvelles exigences pour les entretiens sur vos expériences, le classement des compétences, le résumé et l'évaluation de correspondance.",
+      "roleLabel": "Poste cible",
+      "jdLabel": "Description du poste",
+      "jdPlaceholder": "Collez ici la description complète du poste…",
+      "jdTooShort": "Ajoutez au moins {{count}} caractères pour qu'ARIA puisse analyser le poste.",
+      "preserveNotice": "Le contenu actuel de votre CV restera inchangé. ARIA vous guidera sur les éléments à revoir.",
+      "saveAndReread": "Enregistrer et relire",
+      "rereading": "Relecture du poste…",
+      "updatedNotice": "Poste cible mis à jour. Les prochains conseils utiliseront la nouvelle offre.",
+      "noChanges": "Votre poste cible est déjà à jour."
+    },
     "jobCapture": {
       "theJob": "Le poste que vous visez",
       "add": "Ajouter",
@@ -4423,6 +4443,9 @@
       "loading": "Chargement…",
       "noSessionsYet": "Aucune session pour l'instant. Lancez une adaptation et elle vivra ici — une par poste que vous visez.",
       "fromSource": "de {{source}}",
+      "actions": "Plus d’actions",
+      "actionsFor": "Plus d’actions pour {{heading}}",
+      "rename": "Renommer",
       "removeOrDeleteCv": "Retirer ou supprimer ce CV",
       "deleteTailoring": "Supprimer cette adaptation",
       "deleteAria": "Supprimer {{heading}}"

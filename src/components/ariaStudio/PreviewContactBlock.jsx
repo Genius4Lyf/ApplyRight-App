@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
+import { prepareCvPhoto } from '../../utils/cvPhoto';
 
 // The Live Preview's CONTACT HEADER, editable in place.
 //
@@ -21,9 +22,9 @@ import { useAriaStudio } from '../../context/AriaStudioContext';
 // editor is the only path, which is why this component takes no callback props at all.
 //
 // THE FIELDS ARE THE WHOLE POINT of the write shape. This edits six of them —
-// fullName, email, phone, linkedin, website, address — and deliberately NOT photoUrl
-// (which has its own uploader on ContactConfirmCard, with its own resize/compress) or
-// nationality (out of scope). Save DIFFS the form against what it seeded from and sends
+// fullName, email, phone, linkedin, website, address and photoUrl. Photo preparation is
+// shared with ContactConfirmCard, so both entry points crop/compress identically.
+// Nationality remains out of scope. Save DIFFS the form against what it seeded from and sends
 // only what CHANGED, so updatePersonalInfo's dot-notation $set touches exactly those
 // paths and every field this form doesn't offer survives untouched. Sending the whole
 // subdoc would silently clobber the photo the user uploaded one card earlier.
@@ -79,6 +80,7 @@ const PreviewContactBlock = ({ readOnly = false }) => {
     FIELDS.forEach((key) => {
       seed[key] = info[key] || '';
     });
+    seed.photoUrl = info.photoUrl || '';
     seedRef.current = seed;
     setForm(seed);
     setEditing(true);
@@ -98,6 +100,18 @@ const PreviewContactBlock = ({ readOnly = false }) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const changePhoto = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const photoUrl = await prepareCvPhoto(file);
+      setForm((prev) => ({ ...prev, photoUrl }));
+    } catch {
+      // Keep the existing preview when a file cannot be decoded.
+    }
+    event.target.value = '';
+  };
+
   const save = async () => {
     if (saving) return;
     // THE DIFF. Only fields whose trimmed value differs from the seed go into the patch,
@@ -108,6 +122,9 @@ const PreviewContactBlock = ({ readOnly = false }) => {
       const next = (form[key] || '').trim();
       if (next !== (seedRef.current[key] || '').trim()) patch[key] = next;
     });
+    if ((form.photoUrl || '') !== (seedRef.current.photoUrl || '')) {
+      patch.photoUrl = form.photoUrl || '';
+    }
     // Nothing changed — close without spending a write. Opening the editor and thinking
     // better of it is not an edit.
     if (!Object.keys(patch).length) {
@@ -175,6 +192,52 @@ const PreviewContactBlock = ({ readOnly = false }) => {
             </div>
           ))}
         </div>
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2 dark:border-slate-800">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              {t('ariaStudio.contactConfirm.fields.photo.label')}
+            </p>
+            <p className="mt-0.5 text-[9.5px] leading-relaxed text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.contactConfirm.photoGuidance')}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {form.photoUrl && (
+              <img
+                src={form.photoUrl}
+                alt={t('ariaStudio.contactConfirm.photoPreviewAlt')}
+                className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+              />
+            )}
+            <label
+              htmlFor="studio-preview-contact-photo"
+              className="cursor-pointer rounded-md border border-slate-200 px-2 py-1 text-[10.5px] font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white"
+            >
+              {form.photoUrl
+                ? t('ariaStudio.contactConfirm.replacePhoto')
+                : t('ariaStudio.contactConfirm.addPhoto')}
+            </label>
+            <input
+              id="studio-preview-contact-photo"
+              type="file"
+              aria-label={t('ariaStudio.contactConfirm.fields.photo.label')}
+              accept="image/*"
+              onChange={changePhoto}
+              disabled={saving}
+              className="sr-only"
+            />
+            {form.photoUrl && (
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, photoUrl: '' }))}
+                disabled={saving}
+                className="text-[9.5px] font-semibold text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
+              >
+                {t('ariaStudio.contactConfirm.removePhoto')}
+              </button>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -202,9 +265,7 @@ const PreviewContactBlock = ({ readOnly = false }) => {
   return (
     <div className="group">
       <div className="flex items-center gap-3">
-        {/* Rendered, never EDITED here: the photo has its own uploader on
-            ContactConfirmCard, and the dot-notation write is what guarantees this form
-            can't quietly drop it. */}
+        {/* The same photo can be changed from this block's edit form. */}
         {info.photoUrl && (
           <img
             src={info.photoUrl}

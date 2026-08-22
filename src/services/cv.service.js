@@ -194,6 +194,19 @@ const CVService = {
     return response.data; // { brief }
   },
 
+  // Add or replace the canonical target job on an existing Studio CV. The backend
+  // refreshes the Role Brief and invalidates JD-derived caches as one operation.
+  studioUpdateTargetJob: async ({ draftId, jobTitle, jobDescription, model, brief }) => {
+    const response = await api.post('/studio/target-job', {
+      draftId,
+      jobTitle,
+      jobDescription,
+      model,
+      brief,
+    });
+    return response.data; // { changed, targetJob, studioScan:null, reviewSuggested }
+  },
+
   // Aria Studio — draft a realistic, generic job posting from just a job title, for a
   // user who knows the role they want but has no real posting to paste. Charges
   // DRAFT_JD, only after a non-empty draft comes back. 403 { code:'INSUFFICIENT_CREDITS' }.

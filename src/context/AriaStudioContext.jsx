@@ -113,6 +113,12 @@ export const AriaStudioProvider = ({ children }) => {
   // copy of a fact the document already holds — one that could then disagree with it.
   const [activeEntry, setActiveEntry] = useState(null);
 
+  // The chat's current derived phase, published by StudioChat for sibling chrome such
+  // as the Target Job strip. Like activeEntry, this is UI state rather than a second
+  // persisted workflow source; StudioChat re-derives it from transcript markers after
+  // refresh and publishes the result here.
+  const [studioPhase, setStudioPhase] = useState(null);
+
   // The _sortId of the entry Aria most recently WROTE bullets into — drives the
   // "Aria filled this in" reveal on the matching card.
   const [lastAiWriteSortId, setLastAiWriteSortId] = useState(null);
@@ -125,6 +131,7 @@ export const AriaStudioProvider = ({ children }) => {
   // its conversation as already-persisted so the autosave below doesn't echo it back.
   const setCvData = useCallback((draft) => {
     setCvDataRaw(draft);
+    setStudioPhase(null);
     // RESET the echo guard on every bind. Seeding it with the incoming draft's own
     // chats is what stops the autosave immediately re-writing what we just loaded —
     // and clearing it on unbind (null) means the next session's FIRST write is never
@@ -695,8 +702,9 @@ export const AriaStudioProvider = ({ children }) => {
   // rule commitList exists to enforce needs a different expression for a subdoc. saveDraft
   // lands as findByIdAndUpdate — an implicit $set — and a $set of a whole subdoc REPLACES
   // it, so a payload of { personalInfo: {...} } built from this closure's cvData would
-  // drop photoUrl and nationality, the two fields no caller on this path even offers to
-  // edit. DOT NOTATION sets exactly the paths named and leaves every sibling untouched:
+  // drop nationality or any future field this editor does not offer. PhotoUrl is included
+  // only when the user changes it. DOT NOTATION sets exactly the paths named and leaves
+  // every sibling untouched:
   //
   //     { _id, 'personalInfo.email': 'ada@example.com' }
   //
@@ -737,6 +745,49 @@ export const AriaStudioProvider = ({ children }) => {
       return { ok: true };
     },
     [cvData, draftId]
+  );
+
+  // Replace the draft's target job through the coordinated backend operation. Only the
+  // returned JD-dependent fields are merged locally so an in-flight transcript/contact
+  // save cannot be overwritten by a stale full-document response.
+  const updateTargetJob = useCallback(
+    async ({ jobTitle, jobDescription, model, brief }) => {
+      if (!draftId) return { ok: false };
+      setSaving(true);
+      try {
+        const result = await CVService.studioUpdateTargetJob({
+          draftId,
+          jobTitle,
+          jobDescription,
+          model,
+          brief,
+        });
+        setCvDataRaw((prev) =>
+          prev
+            ? {
+                ...prev,
+                targetJob: result.targetJob,
+                studioScan: result.studioScan || null,
+                skillsGenCache: undefined,
+                genState: {},
+                tailoredForJob: {
+                  ...(prev.tailoredForJob || {}),
+                  title: result.targetJob?.title || jobTitle,
+                },
+              }
+            : prev
+        );
+        setExternalEditNonce((nonce) => nonce + 1);
+        return { ok: true, ...result };
+      } catch (error) {
+        console.error('Failed to update target job', error);
+        toast.error("Couldn't update that job description. Try again.");
+        return { ok: false };
+      } finally {
+        setSaving(false);
+      }
+    },
+    [draftId]
   );
 
   // Writer: append Aria's chat-picked skills (case-insensitive dedupe vs what's already
@@ -900,8 +951,9 @@ export const AriaStudioProvider = ({ children }) => {
     replaceSkills,
     replaceCertifications,
     // The one SUBDOC writer — dot-notation, changed fields only, so the fields it does
-    // NOT offer (photoUrl, nationality) survive every save it makes.
+    // does not offer (currently nationality) survives every save it makes.
     updatePersonalInfo,
+    updateTargetJob,
     externalEditNonce,
     lastAiWriteSortId,
     saving,
@@ -928,6 +980,8 @@ export const AriaStudioProvider = ({ children }) => {
     // read by the Live Preview. Plain state, no persistence: it's derived UI focus.
     activeEntry,
     setActiveEntry,
+    studioPhase,
+    setStudioPhase,
   };
 
   return <AriaStudioContext.Provider value={value}>{children}</AriaStudioContext.Provider>;

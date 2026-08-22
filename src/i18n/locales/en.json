@@ -4289,6 +4289,26 @@
       "untitled": "Untitled",
       "noKeyword": "no {{keyword}}"
     },
+    "targetJobStrip": {
+      "label": "Target job",
+      "noRole": "No target job yet",
+      "jdAdded": "JD added",
+      "noJd": "No job description",
+      "edit": "Edit",
+      "add": "Add JD",
+      "editorTitleEdit": "Edit target job",
+      "editorTitleAdd": "Add a job description",
+      "editorHelp": "ARIA will reread this job and use the updated requirements for future role interviews, skills ranking, summaries, and job-match checks.",
+      "roleLabel": "Target role",
+      "jdLabel": "Job description",
+      "jdPlaceholder": "Paste the full job description here…",
+      "jdTooShort": "Add at least {{count}} characters so ARIA has enough detail to read.",
+      "preserveNotice": "Your existing CV content will stay unchanged. ARIA will guide you through anything worth reviewing.",
+      "saveAndReread": "Save and reread",
+      "rereading": "Rereading job…",
+      "updatedNotice": "Target job updated. Future guidance will use the new job description.",
+      "noChanges": "Your target job is already up to date."
+    },
     "jobCapture": {
       "theJob": "The job you're going for",
       "add": "Add",
@@ -4427,6 +4447,9 @@
       "loading": "Loading…",
       "noSessionsYet": "No sessions yet. Start a tailoring and it'll live here — one per job you go for.",
       "fromSource": "from {{source}}",
+      "actions": "More actions",
+      "actionsFor": "More actions for {{heading}}",
+      "rename": "Rename",
       "removeOrDeleteCv": "Remove or delete this CV",
       "deleteTailoring": "Delete this tailoring",
       "deleteAria": "Delete {{heading}}"

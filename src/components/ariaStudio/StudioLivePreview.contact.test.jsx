@@ -137,7 +137,7 @@ describe('StudioLivePreview — the contact header renders', () => {
 });
 
 describe('StudioLivePreview — editing the contact header', () => {
-  it('seeds every field from personalInfo, and offers NEITHER photo nor nationality', () => {
+  it('seeds every field, offers the shared photo uploader, and leaves nationality alone', () => {
     mockCvData = contactCv;
     render(<StudioLivePreview />);
     openEdit();
@@ -148,11 +148,20 @@ describe('StudioLivePreview — editing the contact header', () => {
     expect(field('LinkedIn').value).toBe('linkedin.com/in/ada');
     expect(field('Portfolio / website').value).toBe('');
     expect(field('Location').value).toBe('London, UK');
-    // The two fields this editor deliberately doesn't own: the photo has its own uploader
-    // on ContactConfirmCard, and nationality is captured elsewhere. Not rendering them is
-    // half the guarantee; the dot-notation write is the other half.
     expect(screen.queryByLabelText(/nationality/i)).toBeNull();
-    expect(screen.queryByLabelText(/photo/i)).toBeNull();
+    expect(screen.getByLabelText(/photo/i)).toBeTruthy();
+  });
+
+  it('can remove the saved photo without resending the other contact fields', async () => {
+    mockCvData = contactCv;
+    render(<StudioLivePreview />);
+    openEdit();
+
+    fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+    fireEvent.click(saveBtn());
+
+    await waitFor(() => expect(mockUpdatePersonalInfo).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePersonalInfo).toHaveBeenCalledWith({ photoUrl: '' });
   });
 
   it('sends ONLY the changed field — a one-field edit is a one-key patch', async () => {
