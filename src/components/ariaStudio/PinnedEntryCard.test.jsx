@@ -143,3 +143,59 @@ describe('PinnedEntryCard inline field editing', () => {
     expect(screen.queryByRole('button', { name: 'Edit Role' })).toBeNull();
   });
 });
+
+const educationEntry = {
+  _sortId: 'edu-1',
+  degree: 'BSc Computer Science',
+  school: 'University of Lagos',
+  graduationDate: '2019',
+  cgpa: '4.5/5.0',
+};
+
+describe('PinnedEntryCard — education CGPA', () => {
+  it('offers an edit control once a CGPA is captured', () => {
+    render(
+      <PinnedEntryCard
+        entry={educationEntry}
+        section="education"
+        onFieldSave={vi.fn()}
+        defaultExpanded
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Edit CGPA / Grade' })).toBeTruthy();
+  });
+
+  it('saves an edited CGPA value', async () => {
+    const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
+    render(
+      <PinnedEntryCard entry={educationEntry} section="education" onFieldSave={onFieldSave} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit CGPA / Grade' }), {
+      target: { value: '4.8/5.0' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onFieldSave).toHaveBeenCalledTimes(1));
+    expect(onFieldSave).toHaveBeenCalledWith({ cgpa: '4.8/5.0' });
+  });
+
+  it('accepts an EMPTY CGPA on save — it is optional, unlike degree/school', async () => {
+    const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
+    render(
+      <PinnedEntryCard entry={educationEntry} section="education" onFieldSave={onFieldSave} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit CGPA / Grade' }), {
+      target: { value: '' },
+    });
+    expect(screen.getByRole('button', { name: 'Save' }).disabled).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onFieldSave).toHaveBeenCalledTimes(1));
+    expect(onFieldSave).toHaveBeenCalledWith({ cgpa: '' });
+  });
+});

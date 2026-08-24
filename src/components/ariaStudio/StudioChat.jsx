@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaTypewriter from '../cv/AriaTypewriter';
-import { costForActionTier, tierOf } from '../../lib/models';
+import { costForActionTier, tierOf, AI_MODELS } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
 import {
   derivePhase,
@@ -26,6 +26,7 @@ import {
   ENTRY_SOURCE,
   sectionLabel,
   sectionNote,
+  sectionIcon,
   hasSubstance,
   scoreDelta,
   scoreSignature,
@@ -65,7 +66,7 @@ import TargetJobAskCard from './TargetJobAskCard';
 import CareerStageAskCard from './CareerStageAskCard';
 import ContactConfirmCard from './ContactConfirmCard';
 import PinnedEntryCard from './PinnedEntryCard';
-import RoleCaptureCard from './RoleCaptureCard';
+import EntryCaptureCard from './EntryCaptureCard';
 import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
 import CertificationsCard from './CertificationsCard';
@@ -483,6 +484,15 @@ const StudioChat = ({ onPaywall }) => {
     : null;
 
   const pinnedStage = roleStage(pinnedEntry, pinnedSectionKey, { typePicked: !!pinnedType });
+
+  // The pinned status card duplicates the combined capture card's own fields while an
+  // experience/project entry is still on the type-chip or form stage — showing both at
+  // once is redundant. It appears once the entry moves past the form (Save clicked),
+  // where it earns its keep tracking achievements. Education's form is the whole
+  // entry — no achievements stage follows it — so it keeps showing from the start.
+  const showPinnedEntryCard =
+    !!pinnedEntry &&
+    (pinnedSectionKey === 'education' || pinnedStage === 'achievements' || pinnedStage === 'complete');
 
   // Career stage — same "Where are you in your career?" question as the CV builder's
   // build-with, picked once and carried across every role for this Studio session.
@@ -1479,13 +1489,16 @@ const StudioChat = ({ onPaywall }) => {
     if (!draftId) return;
     setRoleBusy('skills');
     try {
+      // Skills extraction reads back the same roles/projects/education either model
+      // would — there's no writing quality to buy here, so this always runs on the
+      // standard model rather than offering (and charging for) a Claude option.
       const r = await CVService.generateSkills(
         cvData.education,
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        genModelId
+        AI_MODELS.defaultModel
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -1505,7 +1518,7 @@ const StudioChat = ({ onPaywall }) => {
         push({
           who: 'aria',
           text: t('ariaStudio.chat.skillsInsufficientCredits', {
-            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
+            cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
           }),
         });
       } else {
@@ -1815,27 +1828,24 @@ const StudioChat = ({ onPaywall }) => {
         });
       }
       // Aria acknowledges and asks for the next missing thing. Reading the stage off the
-      // UPDATED entry keeps the question in step with the document.
+      // UPDATED entry keeps the question in step with the document. With every scalar
+      // field captured together on the 'form' card, the only stages left to narrate are
+      // the achievements handoff and (for education, which has no achievements) done.
       const updated = { ...pinnedEntry, ...patch };
       const stage = roleStage(updated, pinnedSectionKey, { typePicked: !!pinnedType });
-      const NEXT_LINE = {
-        company: t('ariaStudio.chat.nextLine.company'),
-        dates: t('ariaStudio.chat.nextLine.dates'),
-        school: t('ariaStudio.chat.nextLine.school'),
-        graduationDate: t('ariaStudio.chat.nextLine.graduationDate'),
-        achievements:
+      if (stage === 'achievements') {
+        ariaSays(
           pinnedSectionKey === 'project'
             ? t('ariaStudio.chat.nextLine.achievementsProject', {
                 title: updated.title || t('ariaStudio.chat.itFallback'),
               })
             : t('ariaStudio.chat.nextLine.achievementsRole', {
                 company: updated.company || t('ariaStudio.chat.thisJobFallback'),
-              }),
-        entryType: t('ariaStudio.chat.nextLine.roleTitle'),
-      };
-      if (NEXT_LINE[stage]) ariaSays(NEXT_LINE[stage]);
-      else if (stage === 'complete' && pinnedSectionKey === 'education')
+              })
+        );
+      } else if (stage === 'complete' && pinnedSectionKey === 'education') {
         ariaSays(t('ariaStudio.chat.educationNoBullets'));
+      }
     } finally {
       setTransitionLabel(null);
       setRoleBusy(null);
@@ -1962,13 +1972,16 @@ const StudioChat = ({ onPaywall }) => {
     if (!draftId) return;
     setRoleBusy('skills');
     try {
+      // Skills extraction reads back the same roles/projects/education either model
+      // would — there's no writing quality to buy here, so this always runs on the
+      // standard model rather than offering (and charging for) a Claude option.
       const r = await CVService.generateSkills(
         cvData.education,
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        genModelId
+        AI_MODELS.defaultModel
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -1985,7 +1998,7 @@ const StudioChat = ({ onPaywall }) => {
         push({
           who: 'aria',
           text: t('ariaStudio.chat.skillsInsufficientCredits', {
-            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
+            cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
           }),
         });
       } else {
@@ -2599,6 +2612,7 @@ const StudioChat = ({ onPaywall }) => {
   const nextSection = !closed('experiencedone')
     ? {
         key: 'experience',
+        icon: sectionIcon('experience'),
         eyebrow: progress.status.experience
           ? t('ariaStudio.studioFlow.sections.experience')
           : t('ariaStudio.chat.nextUp'),
@@ -2620,6 +2634,7 @@ const StudioChat = ({ onPaywall }) => {
     : !closed('projectsdone')
       ? {
           key: 'project',
+          icon: sectionIcon('project'),
           eyebrow: t('ariaStudio.chat.sectionMenu.projectsEyebrow'),
           blurb: t('ariaStudio.chat.sectionMenu.projectsBlurb'),
           cta: t('ariaStudio.chat.sectionMenu.projectsCta'),
@@ -2633,6 +2648,7 @@ const StudioChat = ({ onPaywall }) => {
       : !closed('educationdone')
         ? {
             key: 'education',
+            icon: sectionIcon('education'),
             eyebrow: t('ariaStudio.studioFlow.sections.education'),
             blurb: t('ariaStudio.chat.sectionMenu.educationBlurb'),
             cta: t('ariaStudio.chat.sectionMenu.educationCta'),
@@ -2643,6 +2659,7 @@ const StudioChat = ({ onPaywall }) => {
         : !closed('certsdone')
           ? {
               key: 'certs',
+              icon: sectionIcon('certs'),
               eyebrow: t('ariaStudio.chat.sectionMenu.certsEyebrow'),
               blurb: t('ariaStudio.chat.sectionMenu.certsBlurb'),
               cta: t('ariaStudio.chat.sectionMenu.certsCta'),
@@ -2656,6 +2673,7 @@ const StudioChat = ({ onPaywall }) => {
           : !closed('skillsdone')
             ? {
                 key: 'skills',
+                icon: sectionIcon('skills'),
                 eyebrow: t('ariaStudio.studioFlow.sections.skills'),
                 blurb: t('ariaStudio.chat.sectionMenu.skillsBlurb'),
                 cta: t('ariaStudio.chat.sectionMenu.skillsCta'),
@@ -2669,6 +2687,7 @@ const StudioChat = ({ onPaywall }) => {
             : !closed('summarydone')
               ? {
                   key: 'summary',
+                  icon: sectionIcon('summary'),
                   eyebrow: t('ariaStudio.chat.sectionMenu.summaryEyebrow'),
                   blurb: t('ariaStudio.chat.sectionMenu.summaryBlurb'),
                   cta: t('ariaStudio.chat.sectionMenu.summaryCta'),
@@ -2736,7 +2755,7 @@ const StudioChat = ({ onPaywall }) => {
               entry, so free chat, an Aria turn, or a refresh all leave it untouched.
               Always starts collapsed so it remains a glanceable status bar and never
               competes with the active question. The user controls when it opens. */}
-          {pinnedEntry && (
+          {showPinnedEntryCard && (
             <div className="sticky top-0 z-20 w-full sm:w-[94%] mx-auto pb-1.5 pt-0.5">
               <PinnedEntryCard
                 key={pinnedEntry._sortId}
@@ -2759,7 +2778,9 @@ const StudioChat = ({ onPaywall }) => {
                     : ''
                 }
                 onReviewHintOpen={dismissReviewHint}
-                defaultExpanded={false}
+                // Opens on arrival so a first-time user notices it exists, then the
+                // card's own idle timer collapses it a few seconds later.
+                defaultExpanded
                 onNextRole={nextEntry}
                 onDone={finishSection}
                 // CORRECT one captured field, in place on the card. Straight through to
@@ -3225,7 +3246,8 @@ const StudioChat = ({ onPaywall }) => {
               <AriaCard cardKey={`sections-${nextSection.key}`} key={`sections-${nextSection.key}`}>
                 <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    {nextSection.eyebrow}
+                    <span aria-hidden="true">{nextSection.icon}</span>{' '}
+                    <span>{nextSection.eyebrow}</span>
                   </p>
                   <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                     {nextSection.blurb}
@@ -3285,10 +3307,7 @@ const StudioChat = ({ onPaywall }) => {
                   typeof s === 'string' ? s : s.name
                 )}
                 busy={roleBusy === 'skills'}
-                cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
-                genModelId={genModelId}
-                onSelectGenModel={setGenModelId}
-                chatTier={tierOf(modelId)}
+                cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
                 onGenerate={generateBuildSkills}
                 onAdd={addPickedSkills}
                 onManual={addManualSkills}
@@ -3385,23 +3404,16 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
 
-            {/* Capture — one field at a time, driven by what's still missing on the entry. */}
-            {ready &&
-              pinnedEntry &&
-              pinnedStage &&
-              pinnedStage !== 'type' &&
-              pinnedStage !== 'entryType' &&
-              pinnedStage !== 'achievements' &&
-              pinnedStage !== 'complete' && (
-                <RoleCaptureCard
-                  key={`capture-${pinnedEntry._sortId}-${pinnedStage}`}
-                  stage={pinnedStage}
-                  entry={pinnedEntry}
-                  section={pinnedSectionKey}
-                  busy={roleBusy === 'field'}
-                  onSubmit={captureRoleField}
-                />
-              )}
+            {/* Capture — every scalar field for this entry, gathered in ONE form. */}
+            {ready && pinnedEntry && pinnedStage === 'form' && (
+              <EntryCaptureCard
+                key={`capture-${pinnedEntry._sortId}`}
+                entry={pinnedEntry}
+                section={pinnedSectionKey}
+                busy={roleBusy === 'field'}
+                onSubmit={captureRoleField}
+              />
+            )}
 
             {ready && phase === 'build:contact' && (
               <ContactConfirmCard
@@ -3620,10 +3632,7 @@ const StudioChat = ({ onPaywall }) => {
                   typeof s === 'string' ? s : s.name
                 )}
                 busy={roleBusy === 'skills' || applyingFix}
-                cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
-                genModelId={genModelId}
-                onSelectGenModel={setGenModelId}
-                chatTier={tierOf(modelId)}
+                cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
                 onGenerate={generateFixSkills}
                 onAdd={addPickedFixSkills}
                 onManual={addManualFixSkills}

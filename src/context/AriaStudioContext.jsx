@@ -377,6 +377,7 @@ export const AriaStudioProvider = ({ children }) => {
         degree: '',
         school: '',
         graduationDate: '',
+        cgpa: '',
         description: '',
         ...fields,
       }),

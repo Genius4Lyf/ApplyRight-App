@@ -10,9 +10,11 @@ import { useAriaStudio } from '../../context/AriaStudioContext';
 // 680px sheet set in 12.5px type. contenteditable would fight the bullets, which are
 // newline TEXT in `description` rather than DOM list items.
 //
-// It edits ONLY what the preview shows. A field the sheet doesn't render (links, entry
-// type, the project kind) is not silently absent here — it's simply not this surface's
-// business, and a patch that never mentions it can't clobber it.
+// It edits ONLY what the preview shows, with two exceptions carried in explicitly: a
+// project's link and an education entry's CGPA are both optional, not rendered on the
+// read-only row, but genuinely useful to fix without reopening the whole build flow. A
+// field still absent here (entry type, the project kind) isn't silently missing — it's
+// simply not this surface's business, and a patch that never mentions it can't clobber it.
 //
 // ONE WRITE PATH: applyEntryEdit(section, sortId, patch), with a patch of the CHANGED
 // fields only. That function owns the optimistic apply, the narrow single-key save and the
@@ -39,7 +41,10 @@ const SECTION_FIELDS = {
     descriptionLabelKey: 'ariaStudio.studioFlow.fields.experience.achievements',
   },
   project: {
-    lines: [{ key: 'title', labelKey: 'ariaStudio.studioFlow.fields.project.title' }],
+    lines: [
+      { key: 'title', labelKey: 'ariaStudio.studioFlow.fields.project.title' },
+      { key: 'link', labelKey: 'ariaStudio.studioFlow.fields.project.link' },
+    ],
     dates: false,
     descriptionLabelKey: 'ariaStudio.studioFlow.fields.project.achievements',
   },
@@ -48,10 +53,19 @@ const SECTION_FIELDS = {
       { key: 'degree', labelKey: 'ariaStudio.studioFlow.fields.education.degree' },
       { key: 'school', labelKey: 'ariaStudio.studioFlow.fields.education.school' },
       { key: 'graduationDate', labelKey: 'ariaStudio.studioFlow.fields.education.graduationDate' },
+      { key: 'cgpa', labelKey: 'ariaStudio.studioFlow.fields.education.cgpa' },
     ],
     dates: false,
     descriptionLabelKey: 'ariaStudio.studioFlow.fields.education.description',
   },
+};
+
+// Auto-prepend https:// to a bare domain on blur, matching CVBuilder/Projects.jsx's own
+// link normalizer — a link fixed here should behave identically to one typed in the wizard.
+const normalizeLink = (value) => {
+  const trimmed = (value || '').trim();
+  if (!trimmed || trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  return `https://${trimmed}`;
 };
 
 const field =
@@ -192,6 +206,7 @@ const PreviewEntryEditor = ({ section = 'experience', entry, onClose }) => {
       type="text"
       value={form[key]}
       onChange={set(key)}
+      onBlur={key === 'link' ? () => setForm((prev) => ({ ...prev, link: normalizeLink(prev.link) })) : undefined}
       onKeyDown={lineKeyDown}
       disabled={saving}
       aria-label={t(labelKey)}

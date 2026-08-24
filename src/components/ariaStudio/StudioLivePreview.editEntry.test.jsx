@@ -379,6 +379,67 @@ describe('StudioLivePreview — the other two lists', () => {
   });
 });
 
+describe('StudioLivePreview — project link and education CGPA', () => {
+  it('offers the project LINK field, and normalizes a bare domain on blur', async () => {
+    mockCvData = {
+      _id: 'd1',
+      studioKind: 'tailor', // unlocked; the build-only completeness lock is tested elsewhere
+      personalInfo: { fullName: 'Ada' },
+      projects: [{ _sortId: 'p1', title: 'Notes engine', link: '', description: '• proj' }],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+    openRow(0);
+
+    const linkInput = screen.getByLabelText('Link');
+    fireEvent.change(linkInput, { target: { value: 'github.com/ada/notes' } });
+    fireEvent.blur(linkInput);
+    expect(linkInput.value).toBe('https://github.com/ada/notes');
+
+    fireEvent.click(saveBtn());
+    await waitFor(() => expect(mockApplyEdit).toHaveBeenCalled());
+    expect(mockApplyEdit).toHaveBeenCalledWith('project', 'p1', {
+      link: 'https://github.com/ada/notes',
+    });
+  });
+
+  it('seeds the link field to empty when the entry has no link key at all — no throw', () => {
+    // Backward-compat: a project saved before this field existed has no `link` key.
+    mockCvData = {
+      _id: 'd1',
+      studioKind: 'tailor',
+      personalInfo: { fullName: 'Ada' },
+      projects: [{ _sortId: 'p1', title: 'Notes engine', description: '• proj' }],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+    openRow(0);
+    expect(screen.getByLabelText('Link').value).toBe('');
+  });
+
+  it('offers the education CGPA field, and saves it', async () => {
+    mockCvData = {
+      _id: 'd1',
+      studioKind: 'tailor',
+      personalInfo: { fullName: 'Ada' },
+      education: [{ _sortId: 'edu-a', degree: 'BSc', school: 'UNILAG', graduationDate: '2019' }],
+      studioScan: null,
+    };
+    render(<StudioLivePreview />);
+    openRow(0);
+
+    const cgpaInput = screen.getByLabelText('CGPA / Grade');
+    // Backward-compat: this seed entry has no `cgpa` key at all — must seed to '', not throw.
+    expect(cgpaInput.value).toBe('');
+
+    fireEvent.change(cgpaInput, { target: { value: '4.5/5.0' } });
+    fireEvent.click(saveBtn());
+
+    await waitFor(() => expect(mockApplyEdit).toHaveBeenCalled());
+    expect(mockApplyEdit).toHaveBeenCalledWith('education', 'edu-a', { cgpa: '4.5/5.0' });
+  });
+});
+
 describe('StudioLivePreview — an edit is not a recompute', () => {
   it('does NOT send a studio command — the inline editor writes directly', async () => {
     // Unlike delete, a field edit has nothing to unpin, so it needs no command channel;

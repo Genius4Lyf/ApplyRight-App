@@ -46,7 +46,7 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting }) => {
                     : 'text-slate-700 dark:text-slate-200'
                 }`}
               >
-                {t(s.labelKey)}
+                <span aria-hidden="true">{s.icon}</span> <span>{t(s.labelKey)}</span>
               </span>
             </li>
           );

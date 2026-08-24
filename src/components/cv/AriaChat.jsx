@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
-import { tierOf, costForActionTier } from '../../lib/models';
+import { tierOf, costForActionTier, AI_MODELS } from '../../lib/models';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
@@ -78,7 +78,9 @@ const AriaChat = ({
   // generation — no re-charge — with already-added skills marked "on CV").
   const isSkills = currentStepId === 'skills';
   const hasContent = (cvData?.experience?.length || 0) > 0 || (cvData?.projects?.length || 0) > 0;
-  const skillsCost = costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10;
+  // No model choice for skills — extraction reads the same content either model would,
+  // so it always runs on the standard model rather than offering a Claude option.
+  const skillsCost = costForActionTier('GENERATE_SKILLS', 'light') ?? 10;
   const [skPhase, setSkPhase] = useState('idle'); // 'idle'|'consent'|'generating'|'card'
   const [skData, setSkData] = useState(null); // { suggestions, bestForRole }
   const [skSel, setSkSel] = useState([]); // initialSelected for a re-opened record
@@ -168,7 +170,7 @@ const AriaChat = ({
         cvData.projects,
         cvData.targetJob?.description,
         id,
-        genModelId
+        AI_MODELS.defaultModel
       );
       setSkData({
         suggestions: r.suggestions || [],
@@ -464,13 +466,6 @@ const AriaChat = ({
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
                   </p>
-                  <GenerationModelRow
-                    action="skills"
-                    value={genModelId}
-                    onSelect={setGenModelId}
-                    chatTier={tierOf(modelId)}
-                    unit="flat"
-                  />
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"

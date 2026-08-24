@@ -4024,6 +4024,7 @@
           "degree": "Qualification",
           "school": "School",
           "graduationDate": "Finished",
+          "cgpa": "CGPA / Grade",
           "description": "Notes"
         }
       }
@@ -4386,6 +4387,14 @@
           "hint": "A short, plain name — what you'd call it out loud."
         }
       }
+    },
+    "entryCapture": {
+      "heading": {
+        "experience": "Tell me about this role",
+        "project": "Tell me about this project",
+        "education": "Tell me about this qualification"
+      },
+      "cgpaPlaceholder": "e.g. 4.5/5.0 (optional)"
     },
     "sectionGuidance": {
       "education": {

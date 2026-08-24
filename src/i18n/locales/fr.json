@@ -4020,6 +4020,7 @@
           "degree": "Diplôme",
           "school": "Établissement",
           "graduationDate": "Fin d'études",
+          "cgpa": "Moyenne / Mention",
           "description": "Notes"
         }
       }
@@ -4382,6 +4383,14 @@
           "hint": "Un nom court et simple — celui que vous utiliseriez à l'oral."
         }
       }
+    },
+    "entryCapture": {
+      "heading": {
+        "experience": "Parlez-moi de ce poste",
+        "project": "Parlez-moi de ce projet",
+        "education": "Parlez-moi de ce diplôme"
+      },
+      "cgpaPlaceholder": "ex. 4.5/5.0 (facultatif)"
     },
     "sectionGuidance": {
       "education": {

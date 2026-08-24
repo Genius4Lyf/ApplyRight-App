@@ -75,7 +75,7 @@ const JobCaptureCard = ({
     // `wide` — this card is a workspace, not speech: a full JD needs room to paste and
     // read. `min-w-0` lets it shrink below the flex basis on a 360px screen instead of
     // forcing horizontal scroll.
-    <AriaCard cardKey="jobform" wide>
+    <AriaCard cardKey="jobform">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
           {t('ariaStudio.jobCapture.theJob')}

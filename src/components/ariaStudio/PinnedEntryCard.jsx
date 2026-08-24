@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { ChevronDown, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { entryProgress, bulletCount } from '../../lib/studioFlow';
+import { entryProgress, bulletCount, sectionIcon } from '../../lib/studioFlow';
 
 // The role being built, pinned to the top of the conversation.
 //
@@ -50,9 +50,17 @@ const COPY = {
 //     text box would let a value in that no prompt knows how to interpret.
 //   achievements     — a bullet LIST, generated and applied through applyRoleBulletDiff.
 //     A single-line input is the wrong instrument, and the coach already owns them.
-const EDITABLE_TEXT_FIELDS = ['title', 'company', 'degree', 'school', 'graduationDate', 'link'];
-// Everything except the link identifies the entry, so clearing one would leave the CV
-// holding a nameless row. A link is genuinely optional and may be emptied.
+const EDITABLE_TEXT_FIELDS = [
+  'title',
+  'company',
+  'degree',
+  'school',
+  'graduationDate',
+  'link',
+  'cgpa',
+];
+// Everything except link/cgpa identifies the entry, so clearing one would leave the CV
+// holding a nameless row. A link or a CGPA is genuinely optional and may be emptied.
 const REQUIRED_TEXT_FIELDS = ['title', 'company', 'degree', 'school', 'graduationDate'];
 const isEditableField = (key) => key === 'dates' || EDITABLE_TEXT_FIELDS.includes(key);
 
@@ -170,8 +178,7 @@ const PinnedEntryCard = ({
   // rollback to reason about.
   const cancelEditing = () => setEditingKey(null);
 
-  const textEditValid = (key) =>
-    !REQUIRED_TEXT_FIELDS.includes(key) || !!draft.text.trim() || key === 'link';
+  const textEditValid = (key) => !REQUIRED_TEXT_FIELDS.includes(key) || !!draft.text.trim();
   const datesEditValid = !!draft.start.trim();
 
   // ONE narrow patch per save — exactly the shape applyEntryEdit expects, and never more
@@ -272,7 +279,7 @@ const PinnedEntryCard = ({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:animate-none" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]" />
           </span>
-          {t(copy.labelKey)}
+          <span aria-hidden="true">{sectionIcon(section)}</span> <span>{t(copy.labelKey)}</span>
         </span>
         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
           {heading}

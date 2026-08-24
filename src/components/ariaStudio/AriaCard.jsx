@@ -19,24 +19,19 @@ import AriaOrbit from '../cv/AriaOrbit';
 // Usage (Phase 1+), inside StudioChat's <AnimatePresence>:
 //   {phase === 'plan' && <AriaCard cardKey="plan"><TailorPlan …/></AriaCard>}
 //
-// `wide` opts a card out of the conversational bubble width and lets it fill the chat
-// column. Forms are workspaces — a job description needs room to paste and read — while
-// chat cards are speech and stay narrow. The contrast is intentional; only form-bearing
-// cards should pass it. The chat column's own padding still bounds a wide card, so
-// nothing can overflow horizontally.
+// Every card fills the chat column's full width. The chat column's own padding still
+// bounds it, so nothing can overflow horizontally.
 //
 // Every card's own root div supplies the shadow (shadow-sm/shadow-md classes) — this
 // wrapper only handles the bloom animation and the trailing mark — so a card always
 // reads as a raised, clickable surface rather than a flat message.
-const AriaCard = React.forwardRef(({ cardKey, children, wide = false }, ref) => {
+const AriaCard = React.forwardRef(({ cardKey, children }, ref) => {
   const reduce = useReducedMotion();
   return (
     <motion.div
       ref={ref}
       key={cardKey}
-      className={`aria-row aria-response-card self-start flex flex-col items-start gap-1.5 ${
-        wide ? 'w-full max-w-none' : 'max-w-[92%]'
-      }`}
+      className="aria-row aria-response-card self-start flex flex-col items-start gap-1.5 w-full max-w-none"
       {...portalCard(reduce)}
     >
       {children}

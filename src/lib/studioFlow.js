@@ -18,17 +18,45 @@ import { CV_SECTIONS, getCompletionStatus } from './cvCompleteness';
 // `labelKey` is an i18n key, not text — this file is plain JS with no react-i18next
 // context, so every caller (a React component with useTranslation) resolves it via t().
 export const BUILD_SECTIONS = [
-  { key: 'contact', labelKey: 'ariaStudio.studioFlow.sections.contact', cvKey: 'name' },
-  { key: 'experience', labelKey: 'ariaStudio.studioFlow.sections.experience', cvKey: 'experience' },
-  { key: 'projects', labelKey: 'ariaStudio.studioFlow.sections.projects', cvKey: 'projects' },
+  { key: 'contact', labelKey: 'ariaStudio.studioFlow.sections.contact', cvKey: 'name', icon: '📇' },
+  {
+    key: 'experience',
+    labelKey: 'ariaStudio.studioFlow.sections.experience',
+    cvKey: 'experience',
+    icon: '💼',
+  },
+  {
+    key: 'projects',
+    labelKey: 'ariaStudio.studioFlow.sections.projects',
+    cvKey: 'projects',
+    icon: '🚀',
+  },
   {
     key: 'education',
     labelKey: 'ariaStudio.studioFlow.sections.education',
     cvKey: 'education',
+    icon: '🎓',
   },
-  { key: 'skills', labelKey: 'ariaStudio.studioFlow.sections.skills', cvKey: 'skills' },
-  { key: 'summary', labelKey: 'ariaStudio.studioFlow.sections.summary', cvKey: 'summary' },
+  { key: 'skills', labelKey: 'ariaStudio.studioFlow.sections.skills', cvKey: 'skills', icon: '🛠️' },
+  { key: 'summary', labelKey: 'ariaStudio.studioFlow.sections.summary', cvKey: 'summary', icon: '📝' },
 ];
+
+// Per-section emoji, keyed the same way as BUILD_SECTIONS plus the two sub-steps that
+// don't have their own BUILD_SECTIONS row (certifications rides on education; project is
+// the singular form StudioChat's pinned-entry flow uses).
+export const SECTION_ICON = {
+  contact: '📇',
+  experience: '💼',
+  projects: '🚀',
+  project: '🚀',
+  education: '🎓',
+  certs: '🎓',
+  skills: '🛠️',
+  summary: '📝',
+};
+
+/** The emoji for a section key, or '' if none is registered. */
+export const sectionIcon = (key) => SECTION_ICON[key] || '';
 
 /**
  * The DISPLAY NAME of a scan section, in the user's language.
@@ -259,6 +287,12 @@ export const SECTION_FIELDS = {
       done: (e) => !!(e?.graduationDate || '').trim(),
     },
     {
+      key: 'cgpa',
+      labelKey: 'ariaStudio.studioFlow.fields.education.cgpa',
+      optional: true,
+      done: (e) => !!(e?.cgpa || '').trim(),
+    },
+    {
       key: 'description',
       labelKey: 'ariaStudio.studioFlow.fields.education.description',
       optional: true,
@@ -299,21 +333,43 @@ export function entryProgress(entry, section = 'experience', opts = {}) {
 }
 
 /**
- * Where Aria is in building ONE entry — the first REQUIRED thing still missing.
+ * Where Aria is in building ONE entry.
  *
  * Derived rather than tracked, so a refresh mid-entry resumes at exactly the right
- * question, and a user who fills something in elsewhere isn't asked for it again.
- * Optional fields are never a stage: Aria offers them, she doesn't block on them.
+ * card, and a user who fills something in elsewhere isn't asked for it again. Optional
+ * fields never gate a stage: Aria offers them, she doesn't block on them.
  *
- * @returns {string|'complete'|null}
+ * Every required SCALAR field (title/company/dates, degree/school/graduationDate, etc.)
+ * is captured together on one combined card — `'form'` — rather than one card per field.
+ * The context-only field (entryType/type) stays its own stage, since it's a single tap
+ * that decides what the form even asks, not a field to fill in; achievements stays its
+ * own stage too, since it's an AI-mediated interview, not scalar capture.
+ *
+ * @returns {string|'form'|'achievements'|'complete'|null}
  */
 export function roleStage(entry, section = 'experience', opts = {}) {
   if (!entry) return null;
   const spec = SECTION_FIELDS[section] || SECTION_FIELDS.experience;
-  const next = spec
-    .filter((f) => !f.optional)
-    .find((f) => (f.fromContext ? !opts.typePicked : !f.done(entry)));
-  return next ? next.key : 'complete';
+
+  // The type-chip stage — project's `type` (transcript-only, read via opts.typePicked)
+  // and experience's `entryType` (a real field, read off the entry like any other) are
+  // both single-tap pickers, not "fields to fill in", so they still gate ahead of the
+  // combined form exactly as they did when every field had its own stage.
+  const chipField = spec.find((f) => f.fromContext || f.key === 'entryType');
+  if (chipField) {
+    const chipDone = chipField.fromContext ? !!opts.typePicked : chipField.done(entry);
+    if (!chipDone) return chipField.key;
+  }
+
+  const scalarFields = spec.filter(
+    (f) => !f.optional && f !== chipField && f.key !== 'achievements'
+  );
+  if (scalarFields.some((f) => !f.done(entry))) return 'form';
+
+  const achievementsField = spec.find((f) => f.key === 'achievements');
+  if (achievementsField && !achievementsField.done(entry)) return 'achievements';
+
+  return 'complete';
 }
 
 /**

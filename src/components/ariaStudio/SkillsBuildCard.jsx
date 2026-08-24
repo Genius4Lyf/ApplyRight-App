@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SkillsCard from '../cv/SkillsCard';
-import GenerationModelRow from '../cv/GenerationModelRow';
 import AriaCard from './AriaCard';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
+import { sectionIcon } from '../../lib/studioFlow';
 
 // Skills for a build session — the SAME flow the CV builder's AriaChat runs: consent →
 // CVService.generateSkills → SkillsCard → applySkills. The picking UI IS SkillsCard,
@@ -17,10 +17,7 @@ const SkillsBuildCard = ({
   data, // { suggestions, bestForRole, reviewGroups }
   existingSkills = [],
   hasJob,
-  cost, // resolved credit cost — priced by the caller off the GENERATION model's tier
-  genModelId,
-  onSelectGenModel,
-  chatTier,
+  cost, // resolved credit cost — always the light-tier price; skills has no model choice
   onGenerate,
   onAdd,
   onManual,
@@ -62,7 +59,7 @@ const SkillsBuildCard = ({
 
   if (phase === 'card' && data) {
     return (
-      <AriaCard cardKey="skillscard" wide>
+      <AriaCard cardKey="skillscard">
         <div className="min-w-0 flex-1">
           <SkillsCard
             suggestions={data.suggestions}
@@ -81,7 +78,8 @@ const SkillsBuildCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.studioFlow.sections.skills')}
+            <span aria-hidden="true">{sectionIcon('skills')}</span>{' '}
+            <span>{t('ariaStudio.studioFlow.sections.skills')}</span>
           </p>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr
@@ -91,16 +89,6 @@ const SkillsBuildCard = ({
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {hasJob ? t('ariaStudio.skillsBuild.bodyWithJob') : t('ariaStudio.skillsBuild.bodyNoJob')}
         </p>
-
-        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <GenerationModelRow
-            action="skills"
-            value={genModelId}
-            onSelect={onSelectGenModel}
-            chatTier={chatTier}
-            unit="flat"
-          />
-        </div>
 
         <button
           type="button"

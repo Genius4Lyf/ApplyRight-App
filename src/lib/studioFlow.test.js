@@ -580,12 +580,12 @@ describe('entryProgress — the n/5 counter', () => {
 });
 
 describe('roleStage — derived, so a refresh resumes correctly', () => {
-  it('asks for the first missing thing, in order', () => {
+  it('asks for the type chip first, then the combined form, then achievements', () => {
     expect(roleStage({})).toBe('entryType');
-    expect(roleStage({ entryType: 'full-time' })).toBe('title');
-    expect(roleStage({ entryType: 'full-time', title: 'Operator' })).toBe('company');
+    expect(roleStage({ entryType: 'full-time' })).toBe('form');
+    expect(roleStage({ entryType: 'full-time', title: 'Operator' })).toBe('form');
     expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe(
-      'dates'
+      'form'
     );
     expect(
       roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker', startDate: '2021' })
@@ -605,15 +605,22 @@ describe('roleStage — derived, so a refresh resumes correctly', () => {
   });
 
   it('does not re-ask for something filled in elsewhere', () => {
-    // Someone edits the company in the CV builder mid-session; Aria must skip that
-    // question rather than asking again from a stored step counter.
+    // Someone edits the company in the CV builder mid-session; Aria must resolve to the
+    // combined form (not a stored step) rather than asking again.
     expect(
       roleStage({ entryType: 'full-time', title: 'Operator', company: 'Filled in elsewhere' })
-    ).toBe('dates');
+    ).toBe('form');
   });
 
   it('is null with no entry', () => {
     expect(roleStage(null)).toBeNull();
+  });
+
+  it('a mid-old-flow entry — one field saved under the old per-field capture, the rest blank — still resolves to form, not an error or a stale field key', () => {
+    // Backward-compat for drafts started before this consolidation shipped: position is
+    // derived from the entry, never a stored step pointer, so a partially-answered entry
+    // just lands on the combined form pre-filled with whatever was already captured.
+    expect(roleStage({ entryType: 'full-time', company: 'Baker' })).toBe('form');
   });
 });
 
@@ -769,9 +776,9 @@ describe('projects — the counter must exclude optional fields', () => {
     expect(entryProgress(proj, 'project', { typePicked: true }).done).toBe(3);
   });
 
-  it('asks for the type FIRST, then the name, then the work', () => {
+  it('asks for the type FIRST, then the combined form, then the work', () => {
     expect(roleStage({}, 'project', { typePicked: false })).toBe('type');
-    expect(roleStage({}, 'project', { typePicked: true })).toBe('title');
+    expect(roleStage({}, 'project', { typePicked: true })).toBe('form');
     expect(roleStage({ title: 'X' }, 'project', { typePicked: true })).toBe('achievements');
     expect(
       roleStage({ title: 'X', description: '• did it' }, 'project', { typePicked: true })
@@ -785,13 +792,23 @@ describe('projects — the counter must exclude optional fields', () => {
     ).not.toBe('link');
   });
 
-  it('education excludes its optional notes field too', () => {
+  it('education excludes its optional notes and CGPA fields too', () => {
     const edu = { degree: 'BSc', school: 'UNIBEN', graduationDate: '2019' };
     const p = entryProgress(edu, 'education');
     expect(p.total).toBe(3);
     expect(p.done).toBe(3);
     expect(p.fields.find((f) => f.key === 'description').optional).toBe(true);
+    expect(p.fields.find((f) => f.key === 'cgpa').optional).toBe(true);
+    expect(p.fields.find((f) => f.key === 'cgpa').done).toBe(false);
     expect(roleStage(edu, 'education')).toBe('complete');
+  });
+
+  it('a CGPA does not push the counter past total, and resolves to form until it does', () => {
+    const withCgpa = { degree: 'BSc', school: 'UNIBEN', graduationDate: '2019', cgpa: '4.5/5.0' };
+    const p = entryProgress(withCgpa, 'education');
+    expect(p.done).toBe(p.total);
+    expect(p.done).toBe(3);
+    expect(roleStage({ degree: 'BSc' }, 'education')).toBe('form');
   });
 });
 

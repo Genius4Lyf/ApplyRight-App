@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import GenerationModelRow from '../cv/GenerationModelRow';
 import AriaCard from './AriaCard';
+import { sectionIcon } from '../../lib/studioFlow';
 
 // Career stage drives the whole shape of a summary — a student leads with potential,
 // a career-changer leads with transferable evidence. The backend's stage enum is
@@ -52,9 +53,12 @@ const SummaryFixCard = ({
       <AriaCard cardKey="summarydraft">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {wasReroll
-              ? t('ariaStudio.summaryFix.anotherAngle')
-              : t('ariaStudio.summaryFix.yourTailoredSummary')}
+            <span aria-hidden="true">{sectionIcon('summary')}</span>{' '}
+            <span>
+              {wasReroll
+                ? t('ariaStudio.summaryFix.anotherAngle')
+                : t('ariaStudio.summaryFix.yourTailoredSummary')}
+            </span>
           </p>
           <p className="mt-2.5 text-[14px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
             {draft}
@@ -90,9 +94,12 @@ const SummaryFixCard = ({
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {careerStage
-              ? t('ariaStudio.summaryFix.readyToWrite')
-              : t('ariaStudio.summaryFix.whereAreYou')}
+            <span aria-hidden="true">{sectionIcon('summary')}</span>{' '}
+            <span>
+              {careerStage
+                ? t('ariaStudio.summaryFix.readyToWrite')
+                : t('ariaStudio.summaryFix.whereAreYou')}
+            </span>
           </p>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr

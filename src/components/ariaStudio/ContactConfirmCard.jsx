@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 import { prepareCvPhoto } from '../../utils/cvPhoto';
+import { sectionIcon } from '../../lib/studioFlow';
 
 const FIELDS = [
   {
@@ -85,12 +86,15 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
 
   if (editing) {
     return (
-      <AriaCard cardKey="contactedit" wide>
+      <AriaCard cardKey="contactedit">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {isEmpty
-              ? t('ariaStudio.contactConfirm.howReachYou')
-              : t('ariaStudio.contactConfirm.yourDetails')}
+            <span aria-hidden="true">{sectionIcon('contact')}</span>{' '}
+            <span>
+              {isEmpty
+                ? t('ariaStudio.contactConfirm.howReachYou')
+                : t('ariaStudio.contactConfirm.yourDetails')}
+            </span>
           </p>
 
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -202,10 +206,11 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   }
 
   return (
-    <AriaCard cardKey="contactconfirm" wide>
+    <AriaCard cardKey="contactconfirm">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.contactConfirm.reviewDetails')}
+          <span aria-hidden="true">{sectionIcon('contact')}</span>{' '}
+          <span>{t('ariaStudio.contactConfirm.reviewDetails')}</span>
         </p>
 
         <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">

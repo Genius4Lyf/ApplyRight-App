@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
+import { sectionIcon } from '../../lib/studioFlow';
 
 // Certifications are a sub-list of Education, not a section of their own — that's how the
 // CV builder treats them, and how they render on the page. So they get a compact
@@ -26,11 +27,12 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
   };
 
   return (
-    <AriaCard cardKey="certs" wide>
+    <AriaCard cardKey="certs">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.certifications.heading')}
+            <span aria-hidden="true">{sectionIcon('certs')}</span>{' '}
+            <span>{t('ariaStudio.certifications.heading')}</span>
           </p>
           <span className="shrink-0 rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
             {t('ariaStudio.certifications.noCharge')}
