@@ -171,6 +171,47 @@ describe('StudioChat — addEntry in a BUILD session', () => {
     });
   });
 
+  // "Let's start with your most recent experience" is right the first time and wrong every
+  // time after — "+ Add" can fire on a section that already has entries, where "let's
+  // start" reads as if Aria lost the thread.
+  describe('the opener matches whether the section is empty', () => {
+    const ariaTexts = () =>
+      (ctx?.cvData?.coachChats?.studio || []).filter((m) => m.who === 'aria').map((m) => m.text);
+
+    it('opens the SECTION when it is still empty', async () => {
+      const draft = buildDraft();
+      draft.projects = [];
+      await mountStudio(draft);
+
+      await act(async () => {
+        ctx.requestStudioCommand('addEntry', 'project', null);
+      });
+
+      await waitFor(
+        () => expect(ariaTexts()).toContain("Let's add a project. First — what kind is it?"),
+        { timeout: 2500 }
+      );
+    });
+
+    it('says "next one" when the section already has entries', async () => {
+      const draft = buildDraft(); // already carries one experience entry
+      await mountStudio(draft);
+
+      await act(async () => {
+        ctx.requestStudioCommand('addEntry', 'experience', null);
+      });
+
+      await waitFor(
+        () =>
+          expect(ariaTexts()).toContain('Next one — what kind of experience was this?'),
+        { timeout: 2500 }
+      );
+      expect(ariaTexts().some((line) => line.includes("Let's start with your most recent"))).toBe(
+        false
+      );
+    });
+  });
+
   it('clears the command, so a second add is not blocked', async () => {
     await mountStudio(buildDraft());
 

@@ -4616,6 +4616,18 @@
       },
       "skipProject": "Fine — plenty of strong CVs have none. Your work history is doing that job.",
       "skipOther": "No problem, we'll leave that out.",
+      "editWithAria": {
+        "type": {
+          "experience": "Let's pick up {{title}}. First — what kind of experience was it?",
+          "project": "Let's pick up {{title}}. First — what kind of project is it?"
+        },
+        "form": "Let's pick up {{title}}. Check the details below and save when they're right.",
+        "achievements": {
+          "experience": "Let's pick up {{title}}. Tell me what you actually did there — one thing or several, separated with full stops.",
+          "project": "Let's pick up {{title}}. Tell me what you did on it — one thing or several, separated with full stops."
+        },
+        "complete": "{{title}} is already filled in. Change any detail below, or tell me more about what you did and I'll work it in."
+      },
       "itFallback": "it",
       "thisJobFallback": "this job",
       "nextLine": {
@@ -4786,6 +4798,7 @@
     },
     "livePreview": {
       "heading": "Live preview",
+      "headingLive": "Live preview — on, updating as you go",
       "yourCv": "Your CV",
       "closePreview": "Close preview",
       "viewMode": "Live preview mode",

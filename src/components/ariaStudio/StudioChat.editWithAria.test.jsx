@@ -220,6 +220,89 @@ describe('StudioChat — editWithAria in a BUILD session', () => {
     });
     await waitFor(() => expect(countOf('pinrole')).toBe(2));
   });
+
+  // The preview's ✎ is the one route into a pin the user did not walk to
+  // conversationally. Pinning a card in silence leaves them re-reading a half-finished
+  // entry to work out what Aria wants — so she names it and says what's being picked up.
+  describe('Aria greets the hand-off instead of pinning in silence', () => {
+    const ariaTexts = () =>
+      transcript()
+        .filter((m) => m.who === 'aria')
+        .map((m) => m.text);
+
+    it('names the ROLE and asks for its type when the entry never got one', async () => {
+      await mountStudio(buildDraft());
+
+      await act(async () => {
+        ctx.requestStudioCommand('editWithAria', 'experience', 'a');
+      });
+
+      await waitFor(
+        () =>
+          expect(ariaTexts()).toContain(
+            "Let's pick up Engineer. First — what kind of experience was it?"
+          ),
+        { timeout: 2500 }
+      );
+    });
+
+    it('names the PROJECT and asks for its type', async () => {
+      await mountStudio(buildDraft());
+
+      await act(async () => {
+        ctx.requestStudioCommand('editWithAria', 'project', 'p1');
+      });
+
+      await waitFor(
+        () =>
+          expect(ariaTexts()).toContain(
+            "Let's pick up Difference Engine. First — what kind of project is it?"
+          ),
+        { timeout: 2500 }
+      );
+    });
+
+    // A finished entry must not be greeted as if it were half-built — the line has to
+    // match where the entry actually stopped, since ✎ can land on any stage.
+    it('tells the user a COMPLETE entry is already filled in', async () => {
+      const draft = buildDraft();
+      draft.experience = [
+        {
+          _sortId: 'a',
+          title: 'Engineer',
+          company: 'Acme',
+          entryType: 'job',
+          startDate: '2020',
+          endDate: '2023',
+          description: '• Shipped the thing',
+        },
+      ];
+      await mountStudio(draft);
+
+      await act(async () => {
+        ctx.requestStudioCommand('editWithAria', 'experience', 'a');
+      });
+
+      await waitFor(
+        () =>
+          expect(ariaTexts().some((line) => line.includes('is already filled in'))).toBe(true),
+        { timeout: 2500 }
+      );
+    });
+
+    // The tailor track already had its opener (startInterview pushes one); this must not
+    // start double-greeting it.
+    it('does not add a second greeting on the TAILOR track', async () => {
+      await mountStudio(tailorDraft());
+
+      await act(async () => {
+        ctx.requestStudioCommand('editWithAria', 'experience', 'a');
+      });
+
+      await waitFor(() => expect(countOf('fixstart')).toBe(1));
+      expect(ariaTexts().filter((line) => line.startsWith("Let's pick up"))).toHaveLength(0);
+    });
+  });
 });
 
 describe('StudioChat — editWithAria in a TAILOR session', () => {

@@ -492,7 +492,9 @@ const StudioChat = ({ onPaywall }) => {
   // entry — no achievements stage follows it — so it keeps showing from the start.
   const showPinnedEntryCard =
     !!pinnedEntry &&
-    (pinnedSectionKey === 'education' || pinnedStage === 'achievements' || pinnedStage === 'complete');
+    (pinnedSectionKey === 'education' ||
+      pinnedStage === 'achievements' ||
+      pinnedStage === 'complete');
 
   // Career stage — same "Where are you in your career?" question as the CV builder's
   // build-with, picked once and carried across every role for this Studio session.
@@ -578,6 +580,33 @@ const StudioChat = ({ onPaywall }) => {
         // field capture. Field-by-field, exactly as if Aria had just created it.
         push({ who: 'pinrole', sortId, section });
         setPhase(`build:${section}`);
+        // ...but unlike startEntry's own callers (enterSection, nextEntry), which each
+        // follow the pin with an opener, arriving from the preview's ✎ is the one route
+        // into a pin the user did not walk to conversationally. Without a line Aria pins
+        // a card and goes silent on a half-finished entry the user has to re-read to
+        // place. So name the entry and say what's being picked up — matched to where
+        // this entry actually stopped, since "Edit with Aria" can land on any stage.
+        const stage = roleStage(entry, section, {
+          typePicked: !!(entry && resolveProjectType(entry, messages, sortId)),
+        });
+        const title =
+          entry?.title?.trim() ||
+          entry?.company?.trim() ||
+          t(
+            section === 'project' ? 'ariaStudio.chat.itFallback' : 'ariaStudio.chat.thisJobFallback'
+          );
+        // Declared below but only ever CALLED from an effect, by which point the whole
+        // component body has run — same shape as startInterview just below.
+        // eslint-disable-next-line no-use-before-define
+        ariaSays(
+          stage === 'complete'
+            ? t('ariaStudio.chat.editWithAria.complete', { title })
+            : stage === 'achievements'
+              ? t(`ariaStudio.chat.editWithAria.achievements.${section}`, { title })
+              : stage === 'form'
+                ? t('ariaStudio.chat.editWithAria.form', { title })
+                : t(`ariaStudio.chat.editWithAria.type.${section}`, { title })
+        );
       } else {
         // The INTERVIEW, not the rewrite. Aria asks about this entry — guided by its
         // type and the session's career stage — and bullets are only generated at the
@@ -1766,9 +1795,16 @@ const StudioChat = ({ onPaywall }) => {
     education: t('ariaStudio.chat.sectionOpener.education'),
   };
 
+  // SECTION_OPENER opens a section ("Let's start with your most recent experience"), which
+  // is right the first time and wrong every time after: "+ Add" on the Live Preview can
+  // fire this on a section that already has three entries, where "let's start" reads as if
+  // Aria lost the thread. Counted BEFORE startEntry, which creates the entry it pins.
   const enterSection = async (section) => {
+    const listKey = section === 'project' ? 'projects' : section;
+    const hadEntries = (cvData?.[listKey] || []).length > 0;
     const sortId = await startEntry(section);
-    if (sortId) ariaSays(SECTION_OPENER[section]);
+    if (!sortId) return;
+    ariaSays(hadEntries ? t(`ariaStudio.chat.nextEntry.${section}`) : SECTION_OPENER[section]);
   };
 
   const pickCareerStage = (stage) => {
@@ -2778,9 +2814,13 @@ const StudioChat = ({ onPaywall }) => {
                     : ''
                 }
                 onReviewHintOpen={dismissReviewHint}
-                // Opens on arrival so a first-time user notices it exists, then the
-                // card's own idle timer collapses it a few seconds later.
-                defaultExpanded
+                // Starts COLLAPSED (the prop's own default) on every arrival — adding an
+                // entry, editing one with Aria, or moving to the next. It used to open
+                // itself so a first-timer would notice it, but arriving mid-conversation
+                // to a panel that expands on its own and then collapses a few seconds
+                // later reads as a glitch, and it covers the chat exactly when Aria is
+                // asking something. The collapsed header is visible either way; opening
+                // it is the user's call.
                 onNextRole={nextEntry}
                 onDone={finishSection}
                 // CORRECT one captured field, in place on the card. Straight through to

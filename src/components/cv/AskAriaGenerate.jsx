@@ -78,7 +78,7 @@ const AskAriaGenerate = ({
   // Section-aware recommended count + per-bullet cost (shown before /auth/config
   // hydrates, thanks to the credits.js default). Priced at the GENERATION model's
   // tier, not the chat model's — Pro must be quoted (and charged) the flagship rate.
-  const REC = isProject ? 3 : 5;
+  const REC = isProject ? 4 : 6;
   const per = costForActionTier('GENERATE_BULLET', tierOf(genModelId)) ?? 1;
 
   // Openers — general (per-step coaching) vs focused (role/project build-with).
@@ -965,8 +965,8 @@ const AskAriaGenerate = ({
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                     {t('cvBuilder.askAria.howManyBullets')}
                   </p>
-                  <div className="mt-3 grid grid-cols-4 gap-2">
-                    {[3, 4, 5, 6].map((n) => {
+                  <div className="mt-3 grid grid-cols-5 gap-1.5 sm:gap-2">
+                    {[3, 4, 5, 6, 8].map((n) => {
                       const active = count === n;
                       return (
                         <button

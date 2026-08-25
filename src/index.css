@@ -447,6 +447,31 @@
     }
   }
 
+  /* "On air" dot for the Studio header's Live preview toggle — pulses while the preview
+     is actually on screen, so the live state is legible at a glance and, crucially, in
+     the icon-only mode below md where the "Live preview" label is hidden.
+     Reduced motion holds it SOLID rather than removing it: a steady dot still reads as
+     "on", which is the whole job here (unlike a loader, where a frozen mark reads stuck). */
+  .studio-live-dot {
+    animation: studioLiveDot 1.6s ease-in-out infinite;
+  }
+  @keyframes studioLiveDot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .studio-live-dot {
+      animation: none;
+    }
+  }
+
   /* Aria chat background themes — education-led surfaces behind the conversation.
      Campus is the default; every surface keeps enough contrast for white/slate cards. */
   .aria-theme-grid,

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { PanelLeft, Eye, ListChecks } from 'lucide-react';
+import { PanelLeft, FilePen, ListChecks } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -256,6 +256,13 @@ const StudioDesk = () => {
   const canPreview = !!cvData?._id;
   const panelView = !canPreview && layout.panelView === 'preview' ? 'insights' : layout.panelView;
 
+  // The "live" dot means the preview is ON SCREEN, not merely the selected view. Those
+  // come apart: at in-between widths the panel can be collapsed (neither inline nor sheet,
+  // hence the reopen tab) while 'preview' is still the remembered choice, and on sheet
+  // widths it only shows while the overlay is open. A dot pulsing at a preview the user
+  // cannot see would be worse than no dot at all.
+  const previewLive = panelView === 'preview' && (layout.panelInline || layout.panelOverlay);
+
   // A remembered Preview preference must not leak into a session that can't show it yet.
   // Once canPreview is true (cvData._id exists) the effect short-circuits and the panel
   // preference can be 'preview' for both build and tailor.
@@ -339,14 +346,30 @@ const StudioDesk = () => {
                   type="button"
                   onClick={() => selectView('preview')}
                   aria-pressed={panelView === 'preview'}
-                  aria-label={t('ariaStudio.livePreview.heading')}
+                  aria-label={
+                    previewLive
+                      ? t('ariaStudio.livePreview.headingLive')
+                      : t('ariaStudio.livePreview.heading')
+                  }
                   className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                     panelView === 'preview'
                       ? 'text-slate-900 dark:text-white'
                       : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
-                  <Eye className="w-5 h-5" />
+                  {/* The dot sits ON the icon, not beside the label — the label is hidden
+                      below md, and that is exactly the width where "is it on?" is hardest
+                      to answer. aria-hidden: the state is already on aria-pressed and in
+                      the label, so announcing the dot too would just be noise. */}
+                  <span className="relative inline-flex shrink-0">
+                    <FilePen className="w-5 h-5" />
+                    {previewLive && (
+                      <span
+                        aria-hidden="true"
+                        className="studio-live-dot absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950"
+                      />
+                    )}
+                  </span>
                   <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
                 </button>
               )}

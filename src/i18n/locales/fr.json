@@ -4612,6 +4612,18 @@
       },
       "skipProject": "D'accord — beaucoup de bons CV n'en ont aucun. Votre expérience professionnelle fait déjà ce travail.",
       "skipOther": "Pas de problème, on laisse ça de côté.",
+      "editWithAria": {
+        "type": {
+          "experience": "Reprenons {{title}}. D'abord — de quel type d'expérience s'agissait-il ?",
+          "project": "Reprenons {{title}}. D'abord — de quel type de projet s'agit-il ?"
+        },
+        "form": "Reprenons {{title}}. Vérifiez les détails ci-dessous et enregistrez quand tout est bon.",
+        "achievements": {
+          "experience": "Reprenons {{title}}. Dites-moi ce que vous y avez concrètement fait — une chose ou plusieurs, séparées par des points.",
+          "project": "Reprenons {{title}}. Dites-moi ce que vous y avez fait — une chose ou plusieurs, séparées par des points."
+        },
+        "complete": "{{title}} est déjà complet. Modifiez n'importe quel détail ci-dessous, ou dites-m'en plus sur ce que vous avez fait et je l'intégrerai."
+      },
       "itFallback": "il",
       "thisJobFallback": "ce poste",
       "nextLine": {
@@ -4782,6 +4794,7 @@
     },
     "livePreview": {
       "heading": "Aperçu en direct",
+      "headingLive": "Aperçu en direct — activé, mis à jour au fil de vos modifications",
       "yourCv": "Votre CV",
       "closePreview": "Fermer l'aperçu",
       "viewMode": "Mode d'aperçu du CV",
