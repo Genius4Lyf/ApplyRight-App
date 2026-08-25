@@ -5,6 +5,7 @@
 // without mounting a chat.
 
 import { CV_SECTIONS, getCompletionStatus } from './cvCompleteness';
+import { STUDIO_PROJECT_IDEAS_ENABLED } from './studioFeatures';
 
 /**
  * The six sections a build session walks, in CV-builder order.
@@ -550,7 +551,15 @@ export function derivePhase(msgs = [], cvData = {}) {
   // Pending project IDEAS are ranked exactly like the rewrite above, and for the same
   // reason: they were PAID for, so a refresh must not drop the user back onto the empty
   // picker and make them buy the same three ideas again.
-  if (fix?.mode === 'pick' && cvData?.studioPending?.kind === 'projectideas')
+  // Flag-gated: with project ideas retired, a pending bought before it was switched off
+  // must NOT resurrect the card on a refresh — that phase has nothing to render any more,
+  // and it would strand the user on a blank step. The stale pending is inert data; the
+  // next persistStudioPending overwrites it.
+  if (
+    STUDIO_PROJECT_IDEAS_ENABLED &&
+    fix?.mode === 'pick' &&
+    cvData?.studioPending?.kind === 'projectideas'
+  )
     return 'fix:project-ideas';
   // Skills suggestions bought inside a FIX. Ranked here for the same reason as the two
   // above — the generation was PAID for — and `workflow` is what tells it apart from the
@@ -580,7 +589,8 @@ export function derivePhase(msgs = [], cvData = {}) {
     // is actually open, that interview is where the user is. But above the section hub,
     // because these ideas cost a credit and re-deriving 'build:sections' would throw them
     // away on a refresh.
-    if (cvData?.studioPending?.kind === 'projectideas') return 'build:project-ideas';
+    if (STUDIO_PROJECT_IDEAS_ENABLED && cvData?.studioPending?.kind === 'projectideas')
+      return 'build:project-ideas';
 
     if (has('summarydone') || finishableNow(cvData)) return 'build:done';
     if (has('skillsdone')) return 'build:sections';

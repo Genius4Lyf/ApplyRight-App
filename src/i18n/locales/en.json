@@ -1413,6 +1413,19 @@
       "remove": "Remove {{name}}",
       "giveCategoryName": "Give the new category a name first.",
       "alreadyInList": "“{{name}}” is already in your list.",
+      "confirmKeyword": {
+        "title": "Have you used {{name}}?",
+        "body": "This employer asks for it. That doesn't put it on your CV — your experience does. Which of these is true?",
+        "levels": {
+          "direct": "Yes — I've used it in my work",
+          "basic": "A little — basic use",
+          "encountered": "I've only come across it",
+          "no": "No, I haven't used it"
+        },
+        "reassure": "Be honest here. A skill you can't talk about in the room costs you more than a gap does.",
+        "evidenceDirect": "You confirmed you've used this in your work.",
+        "evidenceBasic": "You confirmed basic hands-on use."
+      },
       "added": "Added “{{name}}”",
       "saveCvFirstPrep": "Save your CV first so we can attach this prep to a role.",
       "savedToApps": "Saved to {{n}} applications",
@@ -1873,6 +1886,8 @@
       "confirmQuestion": "Did you use {{skill}} in this work? It’s completely fine if not.",
       "notDemonstrated": "Employer requirement not demonstrated",
       "gapsIntro": "These stay as honest gaps and cannot be added from this screen.",
+      "gapsIntroHunt": "Nothing in your CV shows these yet. If you think you've done one somewhere — another job, a course, a project — let me look.",
+      "lookElsewhere": "Look for this",
       "confirmedByYou": "confirmed by you",
       "confirmation": {
         "direct": "I used it directly",
@@ -4607,6 +4622,9 @@
       "buildJobDoneWithBrief": "Got it — {{role}}. Now let's make sure they can reach you.",
       "buildJobDoneNoBrief": "Got it. Now let's make sure they can reach you.",
       "buildSkipJob": "No problem — we'll build a strong all-rounder. First, your contact details.",
+      "hunt": {
+        "opener": "Can we check whether I've done {{name}} anywhere?"
+      },
       "firstNamesCv": "{{first}}'s CV",
       "confirmContactDone": "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you.",
       "sectionOpener": {
@@ -4615,6 +4633,7 @@
         "education": "Let's add your education. What did you study?"
       },
       "skipProject": "Fine — plenty of strong CVs have none. Your work history is doing that job.",
+      "skipProjectThinHistory": "That’s your call. Worth knowing though: with a short work history, projects are usually what carries a CV — coursework, something you built, anything you organised. Come back to this whenever you like.",
       "skipOther": "No problem, we'll leave that out.",
       "editWithAria": {
         "type": {
@@ -4636,7 +4655,12 @@
         "dates": "And when were you there?",
         "school": "Where did you study it?",
         "graduationDate": "And when did you finish?",
-        "achievementsProject": "Now the interesting part — tell me what you did on {{title}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time.",
+        "projectOpener": {
+          "neutral": "Now the interesting part — what does {{title}} actually do, or what problem does it solve? We'll come to your part in it, the tools, and how it turned out.",
+          "course": "Now the interesting part — what did you build for {{title}}, and what was the brief? We'll come to your part in it, the tools, and how it was received.",
+          "personal": "Now the interesting part — what made you build {{title}}, and what does it do? We'll come to how you built it and who ended up using it.",
+          "work": "Now the interesting part — what problem was {{title}} solving, and who for? We'll come to your part in it, the tools, and what happened once it shipped."
+        },
         "achievementsRole": "Now the part that matters — tell me what you actually did at {{company}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time."
       },
       "fieldCorrected": {
@@ -4793,6 +4817,7 @@
       "readyForBullets": "Okay, I have everything I need to create your bullet points.",
       "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
       "clickableImpact": "Ways to show the impact — click the one that sits well with you:",
+      "stageNudge": "Where are you in your career? It changes how I ask.",
       "supportedBy": "From your interview: {{evidence}}",
       "matchesRequirements": "Supports: {{requirements}}"
     },

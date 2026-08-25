@@ -119,7 +119,10 @@ const CVService = {
 
   // Generate categorized skills. draftId lets the backend cache the result against
   // the profile inputs so re-opening the modal / re-clicking doesn't re-charge.
-  generateSkills: async (education, experience, projects, targetJob, draftId, model) => {
+  // `stage` ranks the result: coursework-only evidence is real, but for a grad it is not
+  // a headline strength. Optional — the backend falls back to the pick persisted on the
+  // draft, then to CV-shape inference.
+  generateSkills: async (education, experience, projects, targetJob, draftId, model, stage) => {
     const response = await api.post('/ai/generate-skills', {
       education,
       experience,
@@ -127,6 +130,7 @@ const CVService = {
       targetJob,
       draftId,
       model,
+      stage,
     });
     return response.data; // { suggestions, bestForRole, reviewGroups, isPaid, fromCache, remainingCredits }
   },
@@ -281,6 +285,14 @@ const CVService = {
     return response.data; // { brief }
   },
 
+  // Record "no target job — build a strong all-rounder", and cache the role-family
+  // vocabulary that stands in for a Role Brief. FREE (extraction-cached inference).
+  // Returns { noJd: { roleFamily, keywords } }.
+  setNoTarget: async (draftId, roleFamily) => {
+    const response = await api.post('/coach/no-target', { draftId, roleFamily });
+    return response.data;
+  },
+
   // Aria's free-form coach chat. Shares one daily free pool with build-with, then
   // 1 credit each. A 402 { code:'CHAT_LIMIT_REACHED' } means out of free chats +
   // credits for today.
@@ -300,6 +312,9 @@ const CVService = {
     buildTurns,
     stage,
     studioInterview,
+    // { requirementId } — runs the CROSS-HISTORY HUNT for one employer requirement
+    // instead of the entry interview. Free, like a build turn.
+    probe,
     model,
   }) => {
     const response = await api.post('/coach/chat', {
@@ -313,6 +328,7 @@ const CVService = {
       // entry-level is eased in (no metric pressure). Optional — the backend infers
       // from the draft when it's absent.
       stage,
+      probe,
       model,
     });
     // remainingCredits is the post-charge balance, or null when the turn was free.

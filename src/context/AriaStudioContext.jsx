@@ -95,8 +95,11 @@ export const AriaStudioProvider = ({ children }) => {
   // consumer's effect would never re-fire).
   const commandNonceRef = useRef(0);
   const [studioCommand, setStudioCommand] = useState(null);
-  const requestStudioCommand = useCallback((type, section, sortId) => {
-    setStudioCommand({ type, section, sortId, nonce: commandNonceRef.current++ });
+  // `payload` carries whatever a command needs beyond an entry address — e.g. the hunt's
+  // { requirementId, name }, which isn't addressed by section/sortId at all because it
+  // spans the WHOLE history rather than one entry.
+  const requestStudioCommand = useCallback((type, section, sortId, payload = null) => {
+    setStudioCommand({ type, section, sortId, payload, nonce: commandNonceRef.current++ });
   }, []);
   const clearStudioCommand = useCallback(() => setStudioCommand(null), []);
 

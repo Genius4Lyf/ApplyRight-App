@@ -1409,6 +1409,19 @@
       "remove": "Supprimer {{name}}",
       "giveCategoryName": "Donnez d’abord un nom à la nouvelle catégorie.",
       "alreadyInList": "« {{name}} » est déjà dans votre liste.",
+      "confirmKeyword": {
+        "title": "Avez-vous utilisé {{name}} ?",
+        "body": "L’employeur le demande. Cela ne le place pas sur votre CV — c’est votre expérience qui le fait. Qu’est-ce qui est vrai ?",
+        "levels": {
+          "direct": "Oui — je l’ai utilisé dans mon travail",
+          "basic": "Un peu — usage basique",
+          "encountered": "Je l’ai seulement côtoyé",
+          "no": "Non, je ne l’ai jamais utilisé"
+        },
+        "reassure": "Soyez honnête. Une compétence que vous ne pouvez pas défendre en entretien coûte plus cher qu’une lacune.",
+        "evidenceDirect": "Vous avez confirmé l’avoir utilisé dans votre travail.",
+        "evidenceBasic": "Vous avez confirmé un usage basique."
+      },
       "added": "« {{name}} » ajouté",
       "saveCvFirstPrep": "Enregistrez d’abord votre CV pour que nous puissions rattacher cette préparation à un poste.",
       "savedToApps": "Enregistré dans {{n}} candidatures",
@@ -1869,6 +1882,8 @@
       "confirmQuestion": "Avez-vous utilisé {{skill}} dans ce travail ? Ce n’est pas grave si ce n’est pas le cas.",
       "notDemonstrated": "Exigence employeur non démontrée",
       "gapsIntro": "Elles restent des écarts honnêtes et ne peuvent pas être ajoutées depuis cet écran.",
+      "gapsIntroHunt": "Rien dans votre CV ne les démontre pour l’instant. Si vous pensez en avoir fait une quelque part — un autre poste, un cours, un projet — laissez-moi chercher.",
+      "lookElsewhere": "Chercher",
       "confirmedByYou": "confirmée par vous",
       "confirmation": {
         "direct": "Je l’ai utilisée directement",
@@ -4603,6 +4618,9 @@
       "buildJobDoneWithBrief": "Compris — {{role}}. Assurons-nous maintenant qu'on puisse vous joindre.",
       "buildJobDoneNoBrief": "Compris. Assurons-nous maintenant qu'on puisse vous joindre.",
       "buildSkipJob": "Pas de problème — on va construire un CV solide et polyvalent. D'abord, vos coordonnées.",
+      "hunt": {
+        "opener": "Peut-on vérifier si j’ai déjà fait {{name}} quelque part ?"
+      },
       "firstNamesCv": "CV de {{first}}",
       "confirmContactDone": "Votre en-tête est fait. L'expérience professionnelle est la prochaine étape — c'est là que se joue le plus gros du poids, et c'est là que je passerai le plus de temps avec vous.",
       "sectionOpener": {
@@ -4611,6 +4629,7 @@
         "education": "Ajoutons votre formation. Qu'avez-vous étudié ?"
       },
       "skipProject": "D'accord — beaucoup de bons CV n'en ont aucun. Votre expérience professionnelle fait déjà ce travail.",
+      "skipProjectThinHistory": "C’est vous qui décidez. Sachez toutefois qu’avec un parcours professionnel court, ce sont souvent les projets qui portent un CV — travaux de cours, quelque chose que vous avez construit, ou organisé. Revenez-y quand vous voulez.",
       "skipOther": "Pas de problème, on laisse ça de côté.",
       "editWithAria": {
         "type": {
@@ -4632,7 +4651,12 @@
         "dates": "Et vous y étiez de quand à quand ?",
         "school": "Où l'avez-vous étudié ?",
         "graduationDate": "Et quand avez-vous terminé ?",
-        "achievementsProject": "Maintenant la partie intéressante — dites-moi ce que vous avez fait sur {{title}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une.",
+        "projectOpener": {
+          "neutral": "Maintenant la partie intéressante — que fait {{title}}, ou quel problème résout-il ? On verra ensuite votre rôle, les outils et le résultat.",
+          "course": "Maintenant la partie intéressante — qu’avez-vous construit pour {{title}}, et quelle était la consigne ? On verra ensuite votre rôle, les outils et l’accueil reçu.",
+          "personal": "Maintenant la partie intéressante — qu’est-ce qui vous a poussé à créer {{title}}, et que fait-il ? On verra ensuite comment vous l’avez construit et qui l’a utilisé.",
+          "work": "Maintenant la partie intéressante — quel problème {{title}} résolvait-il, et pour qui ? On verra ensuite votre rôle, les outils et ce qui s’est passé après la mise en production."
+        },
         "achievementsRole": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une."
       },
       "fieldCorrected": {
@@ -4789,6 +4813,7 @@
       "readyForBullets": "D'accord, j'ai tout ce qu'il me faut pour créer vos puces.",
       "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
       "clickableImpact": "Façons de montrer l’impact — cliquez sur celle qui vous convient :",
+      "stageNudge": "Où en êtes-vous dans votre carrière ? Cela change ma façon de questionner.",
       "supportedBy": "D’après votre entretien : {{evidence}}",
       "matchesRequirements": "Correspond à : {{requirements}}"
     },

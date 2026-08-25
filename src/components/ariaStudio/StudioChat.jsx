@@ -314,7 +314,9 @@ const StudioChat = ({ onPaywall }) => {
     if (pending?.kind === 'rewrite') setRewriteTarget(pending);
     // Same reasoning for the ideas: they cost a credit, so a refresh must return the
     // list the user already paid for rather than quietly buying it again.
-    if (pending?.kind === 'projectideas') {
+    // Flag-gated with the phase resolution in studioFlow: with project ideas retired,
+    // a pending saved before the switch must not repopulate the card.
+    if (STUDIO_PROJECT_IDEAS_ENABLED && pending?.kind === 'projectideas') {
       setProjectIdeas(pending.ideas || []);
       ideasAskedRef.current = true;
     }
@@ -485,6 +487,23 @@ const StudioChat = ({ onPaywall }) => {
 
   const pinnedStage = roleStage(pinnedEntry, pinnedSectionKey, { typePicked: !!pinnedType });
 
+  // The handoff into a project's achievements interview, framed by the project TYPE.
+  //
+  // This used to be a near-clone of the ROLE line — "tell me what you did on X… separate
+  // different things with full stops" — which was wrong twice over. A project is not a
+  // list of activities, so inviting one fights the backend's own designed funnel (what it
+  // does → your specific role → tech → outcome); and the three types genuinely open on
+  // different questions. The type already shapes Aria's follow-ups and the final bullets;
+  // it should shape the first sentence too, not appear only from the second.
+  //
+  // Falls back to the neutral line when the type is unknown (an older entry, or a project
+  // created outside the type chip) — never guesses one.
+  const projectAchievementsOpener = (title, type) => {
+    const name = (title || '').trim() || t('ariaStudio.chat.itFallback');
+    const key = ['course', 'personal', 'work'].includes(type) ? type : 'neutral';
+    return t(`ariaStudio.chat.nextLine.projectOpener.${key}`, { title: name });
+  };
+
   // The pinned status card duplicates the combined capture card's own fields while an
   // experience/project entry is still on the type-chip or form stage — showing both at
   // once is redundant. It appears once the entry moves past the form (Save clicked),
@@ -623,6 +642,19 @@ const StudioChat = ({ onPaywall }) => {
         // fix loop away from the rest of it.
         // eslint-disable-next-line no-use-before-define
         startInterview({ section, sortId, title: entry?.title, company: entry?.company });
+      }
+      clearStudioCommand?.();
+      return;
+    }
+
+    // The CROSS-HISTORY HUNT, started from a gap chip. Unlike every other command here it
+    // addresses no entry: the whole point is that it looks EVERYWHERE, so the requirement
+    // travels in `payload` instead of section/sortId.
+    if (studioCommand.type === 'proveSkill') {
+      const { requirementId, name } = studioCommand.payload || {};
+      if (requirementId) {
+        // eslint-disable-next-line no-use-before-define
+        startHunt(requirementId, name);
       }
       clearStudioCommand?.();
       return;
@@ -1527,7 +1559,8 @@ const StudioChat = ({ onPaywall }) => {
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        AI_MODELS.defaultModel
+        AI_MODELS.defaultModel,
+        careerStage
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -1701,10 +1734,32 @@ const StudioChat = ({ onPaywall }) => {
     );
   };
 
+  // "Not yet — build a strong all-rounder" used to only print a sentence: the answer
+  // changed nothing downstream, even though TargetJobAskCard's own comment says it should
+  // change every question that follows. Now it records the decision and caches the
+  // role-family vocabulary that stands in for a Role Brief.
+  //
+  // Best-effort by design. The whole point of this branch is that the user has nothing to
+  // paste, so a failed inference must never block them — the flow continues either way,
+  // just without the extra grounding.
   const buildSkipJob = () => {
-    push({ who: 'buildjobdone', skipped: true });
-    setPhase('build:contact');
-    ariaSays(t('ariaStudio.chat.buildSkipJob'));
+    advance(async () => {
+      const roleFamily =
+        (cvData?.targetJob?.title || '').trim() ||
+        (cvData?.experience || []).find((e) => (e?.title || '').trim())?.title ||
+        '';
+      if (draftId) {
+        try {
+          const { noJd } = await CVService.setNoTarget(draftId, roleFamily);
+          if (noJd) updateCvData({ targetJob: { ...(cvData?.targetJob || {}), noJd } });
+        } catch (err) {
+          console.error('Failed to record no-target', err);
+        }
+      }
+      push({ who: 'buildjobdone', skipped: true });
+      setPhase('build:contact');
+      ariaSays(t('ariaStudio.chat.buildSkipJob'));
+    }, t('ariaStudio.chat.thinking.notingThatDown'));
   };
 
   // ─── Build track: confirm Aria's read of the target job ───
@@ -1835,7 +1890,16 @@ const StudioChat = ({ onPaywall }) => {
       push({ who: marker, skipped: true });
       setPhase('build:sections');
       ariaSays(
-        section === 'project' ? t('ariaStudio.chat.skipProject') : t('ariaStudio.chat.skipOther')
+        section === 'project'
+          ? // "Your work history is doing that job" is only true if they HAVE one. Said to
+            // a student or a career changer it is both wrong and quietly discouraging —
+            // projects are exactly what carries a CV with a thin employment history, so
+            // this is the one place the reassurance must not be stage-blind. We don't
+            // block the skip; we just don't pretend nothing was lost.
+            careerStage === 'grad' || careerStage === 'changer'
+            ? t('ariaStudio.chat.skipProjectThinHistory')
+            : t('ariaStudio.chat.skipProject')
+          : t('ariaStudio.chat.skipOther')
       );
     }, t('ariaStudio.chat.thinking.movingOn'));
   };
@@ -1872,9 +1936,7 @@ const StudioChat = ({ onPaywall }) => {
       if (stage === 'achievements') {
         ariaSays(
           pinnedSectionKey === 'project'
-            ? t('ariaStudio.chat.nextLine.achievementsProject', {
-                title: updated.title || t('ariaStudio.chat.itFallback'),
-              })
+            ? projectAchievementsOpener(updated.title, pinnedType)
             : t('ariaStudio.chat.nextLine.achievementsRole', {
                 company: updated.company || t('ariaStudio.chat.thisJobFallback'),
               })
@@ -2017,7 +2079,8 @@ const StudioChat = ({ onPaywall }) => {
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        AI_MODELS.defaultModel
+        AI_MODELS.defaultModel,
+        careerStage
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -2359,12 +2422,9 @@ const StudioChat = ({ onPaywall }) => {
     try {
       const sortId = await addProject();
       if (!sortId) return;
-      startInterview(
-        { sortId, title: '' },
-        t('ariaStudio.chat.nextLine.achievementsProject', {
-          title: t('ariaStudio.chat.itFallback'),
-        })
-      );
+      // A brand-new blank project inside a fix — no title and no type yet, so the neutral
+      // opener is the honest one. The type chip comes next and shapes everything after.
+      startInterview({ sortId, title: '' }, projectAchievementsOpener('', null));
     } finally {
       setRoleBusy(null);
     }
@@ -2378,6 +2438,69 @@ const StudioChat = ({ onPaywall }) => {
     else skipSection('project', 'projectsdone');
   };
 
+  // ─── The cross-history hunt ───
+  //
+  // One employer requirement, hunted across the user's WHOLE history. It deliberately
+  // does NOT pin an entry: the answer may live in a job three roles back, a course, or a
+  // side project, and pinning one row would frame the question too narrowly.
+  //
+  // Kept in component state rather than a transcript marker because a hunt is a short
+  // detour, not a section of the build — it ends the moment the user answers, and
+  // whatever it proves is persisted server-side against the entry they named.
+  const [activeHunt, setActiveHunt] = useState(null);
+
+  const runHuntTurn = async (requirementId, thread) => {
+    setThinking(true);
+    try {
+      const r = await CVService.coachChat({
+        draftId,
+        currentStepId: 'skills',
+        messages: thread
+          .filter((m) => m.who === 'aria' || m.who === 'user')
+          .map((m) => ({ who: m.who, text: m.text })),
+        probe: { requirementId },
+        studioInterview: true,
+        stage: careerStage,
+        model: modelId,
+      });
+      push({ who: 'aria', text: r.reply, suggestions: r.suggestions, huntTurn: true });
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+      // The server VERIFIED the answer before writing anything — probeResult.status is its
+      // verdict, not the model's. Anything short of a clean confirmation leaves the CV
+      // untouched, which is the honest outcome.
+      if (r.probeResult) {
+        setActiveHunt(null);
+        await refreshDraft?.();
+      }
+      return r;
+    } catch (e) {
+      const code = e?.response?.data?.code;
+      push({
+        who: 'aria',
+        text:
+          code === 'INSUFFICIENT_CREDITS'
+            ? t('ariaStudio.chat.proNeedsCredits')
+            : code === 'BUILD_LIMIT_REACHED'
+              ? t('ariaStudio.chat.chatLimitReached')
+              : t('ariaStudio.chat.chatUnreachable'),
+      });
+      setActiveHunt(null);
+      return null;
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const startHunt = async (requirementId, name) => {
+    if (!draftId || thinking) return;
+    setActiveHunt({ requirementId, name });
+    const opener = { who: 'user', text: t('ariaStudio.chat.hunt.opener', { name }) };
+    push(opener);
+    await runHuntTurn(requirementId, [...messages, opener]);
+  };
+
   const send = async (raw) => {
     const text = (raw ?? input).trim();
     if (text.length < 2 || thinking) return;
@@ -2385,6 +2508,13 @@ const StudioChat = ({ onPaywall }) => {
     push({ who: 'user', text });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
+
+    // A hunt owns the conversation until it resolves, so the user's answer goes back to
+    // the hunt rather than to the general coach.
+    if (activeHunt) {
+      await runHuntTurn(activeHunt.requirementId, next);
+      return;
+    }
 
     // In a build session the docked input is for REAL questions — "should I include a
     // job I was only in for 3 months?" — so route it to the existing unfocused coach
@@ -3350,6 +3480,7 @@ const StudioChat = ({ onPaywall }) => {
                 cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
                 onGenerate={generateBuildSkills}
                 onAdd={addPickedSkills}
+                onProveSkill={startHunt}
                 onManual={addManualSkills}
                 addedCount={manualSkillsAdded}
                 onDone={finishManualSkills}
@@ -3675,6 +3806,7 @@ const StudioChat = ({ onPaywall }) => {
                 cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
                 onGenerate={generateFixSkills}
                 onAdd={addPickedFixSkills}
+                onProveSkill={startHunt}
                 onManual={addManualFixSkills}
                 addedCount={fixSkillsAdded}
                 onDone={finishFixSkills}

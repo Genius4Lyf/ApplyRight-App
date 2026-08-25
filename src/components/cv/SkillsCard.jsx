@@ -49,6 +49,10 @@ const SkillsCard = ({
   existingSkills = [],
   initialSelected = [],
   onAdd,
+  // (requirementId, name) => void — starts the cross-history hunt for one employer
+  // requirement the CV hasn't demonstrated. Omitted on surfaces with no chat to host it,
+  // where the gap chips stay read-only as before.
+  onProveSkill,
 }) => {
   const { t } = useTranslation();
   const groups = useMemo(
@@ -289,15 +293,31 @@ const SkillsCard = ({
               {t('cvBuilder.skillsCard.notDemonstrated')}
             </h4>
             <p className="mb-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              {t('cvBuilder.skillsCard.gapsIntro')}
+              {onProveSkill
+                ? t('cvBuilder.skillsCard.gapsIntroHunt')
+                : t('cvBuilder.skillsCard.gapsIntro')}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {groups.gaps.map((row) => (
                 <span
                   key={row.name}
-                  className="rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-500 dark:border-rose-900 dark:bg-slate-900 dark:text-slate-400"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-500 dark:border-rose-900 dark:bg-slate-900 dark:text-slate-400"
                 >
                   {row.name}
+                  {/* The dead end, opened up. A gap chip used to say "this cannot be added
+                      from this screen" and stop there — at the exact moment the user is
+                      most motivated. Now it starts the cross-history hunt: Aria asks
+                      whether they've done it ANYWHERE, and only their own answer decides
+                      whether it can go on the CV. */}
+                  {onProveSkill && row.requirementId && (
+                    <button
+                      type="button"
+                      onClick={() => onProveSkill(row.requirementId, row.name)}
+                      className="font-semibold text-slate-700 underline decoration-dotted underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    >
+                      {t('cvBuilder.skillsCard.lookElsewhere')}
+                    </button>
+                  )}
                 </span>
               ))}
             </div>

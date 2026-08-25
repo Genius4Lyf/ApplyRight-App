@@ -122,12 +122,14 @@ describe('derivePhase — the fix loop', () => {
     expect(derivePhase(s, { studioPending: { kind: 'skills', data: {} } })).toBe('build:skills');
   });
 
-  it('narrows pick → project-ideas while paid ideas are pending', () => {
-    // Same reasoning as the rewrite above: the three ideas cost a credit, so a refresh
-    // must not drop the user back on the empty projects picker and charge them twice.
+  it('ignores a stale project-ideas pending now the feature is retired', () => {
+    // Project suggestions are switched off (STUDIO_PROJECT_IDEAS_ENABLED). A pending saved
+    // before the switch must NOT resurrect the card: that phase has nothing left to render,
+    // so honouring it would strand the user on a blank step. It falls through to the
+    // picker, which has its own empty state.
     const s = [...scanned, { who: 'fixstart', mode: 'pick', sectionKey: 'projects' }];
     const pending = { studioPending: { kind: 'projectideas', ideas: [{ id: 'i1' }] } };
-    expect(derivePhase(s, pending)).toBe('fix:project-ideas');
+    expect(derivePhase(s, pending)).toBe('fix:pick');
   });
 
   it('an EXPLICIT coach marker outranks pending project ideas too', () => {

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import CVService from '../../services/cv.service';
 import { tierOf, costForActionTier } from '../../lib/models';
+import { CAREER_STAGES } from '../../lib/careerStages';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
@@ -51,9 +52,6 @@ const SectionCoach = ({
   onDone, // () => void — fix finished, hand back to the breakdown
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
   careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
-  // Kept for API symmetry with StudioChat's CareerStageAskCard, which now owns the
-  // pick; SectionCoach only reads `careerStage`.
-  // eslint-disable-next-line no-unused-vars
   onPickCareerStage, // (k) => void — lifts the pick to the parent
 }) => {
   const { t } = useTranslation();
@@ -429,6 +427,35 @@ const SectionCoach = ({
       {/* A sent answer is already in the stream; make the model round-trip visible so
           the composer never looks stalled while Aria is preparing her follow-up. */}
       {phase === 'chat' && thinking && <AriaThinking variant="chat" />}
+
+      {/* Career stage, offered inline when the session never captured one. A TAILOR
+          session skips StudioChat's CareerStageAskCard entirely, and 'changer' is the one
+          stage that CANNOT be inferred from CV shape — so without this, someone who only
+          ever tailors an uploaded CV can never be coached as a career changer.
+
+          Deliberately NOT a blocking card: it sits beside the conversation and can be
+          ignored. Interrupting "Edit with Aria" with a questionnaire before the thing the
+          user actually clicked is the wrong trade. Answering re-aims the very next
+          question, which is when it starts to matter. */}
+      {phase === 'chat' && !thinking && !careerStage && onPickCareerStage && (
+        <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
+          <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {t('ariaStudio.sectionCoach.stageNudge')}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {CAREER_STAGES.map((s) => (
+              <button
+                key={s.k}
+                type="button"
+                onClick={() => onPickCareerStage(s.k)}
+                className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-white dark:hover:text-white transition-colors"
+              >
+                {t(s.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Answer scaffolds — role-aware starters + a sample, under Aria's follow-up.
           Only while she's actually asking something. */}

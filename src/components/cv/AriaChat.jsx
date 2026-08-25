@@ -170,7 +170,8 @@ const AriaChat = ({
         cvData.projects,
         cvData.targetJob?.description,
         id,
-        AI_MODELS.defaultModel
+        AI_MODELS.defaultModel,
+        cvData?.careerStage
       );
       setSkData({
         suggestions: r.suggestions || [],

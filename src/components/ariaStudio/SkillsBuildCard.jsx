@@ -20,6 +20,8 @@ const SkillsBuildCard = ({
   cost, // resolved credit cost — always the light-tier price; skills has no model choice
   onGenerate,
   onAdd,
+  // (requirementId, name) => void — starts the cross-history hunt from a gap chip.
+  onProveSkill,
   onManual,
   onSkip,
   onDone,
@@ -67,6 +69,7 @@ const SkillsBuildCard = ({
             reviewGroups={data.reviewGroups}
             existingSkills={existingSkills}
             onAdd={onAdd}
+            onProveSkill={onProveSkill}
           />
         </div>
       </AriaCard>
