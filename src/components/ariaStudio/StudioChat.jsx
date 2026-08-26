@@ -71,6 +71,7 @@ import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
 import CertificationsCard from './CertificationsCard';
 import SkillsBuildCard from './SkillsBuildCard';
+import HuntOfferCard from './HuntOfferCard';
 import { SelectedAnswerBubble, StudioPhaseDivider, StudioReceipt } from './StudioTranscriptEvent';
 
 // Aria's opening line in the Studio. Flagged `_opening` so it's regenerated on every
@@ -2449,6 +2450,13 @@ const StudioChat = ({ onPaywall }) => {
   // whatever it proves is persisted server-side against the entry they named.
   const [activeHunt, setActiveHunt] = useState(null);
 
+  // A hunt OFFERED at the end of an entry interview (the server decides what may be
+  // offered — see huntOffersForEntry). Deliberately ephemeral rather than a transcript
+  // marker: an offer is a "right now" thing, and persisting it would leave a live chip in
+  // history for a requirement the user may since have declined. The durable route to the
+  // hunt is the gap chips on the skills card, which are recomputed from the draft.
+  const [huntOffer, setHuntOffer] = useState(null);
+
   const runHuntTurn = async (requirementId, thread) => {
     setThinking(true);
     try {
@@ -2495,6 +2503,8 @@ const StudioChat = ({ onPaywall }) => {
 
   const startHunt = async (requirementId, name) => {
     if (!draftId || thinking) return;
+    // Taking the offer consumes it, whichever entry point opened this.
+    setHuntOffer(null);
     setActiveHunt({ requirementId, name });
     const opener = { who: 'user', text: t('ariaStudio.chat.hunt.opener', { name }) };
     push(opener);
@@ -3465,6 +3475,18 @@ const StudioChat = ({ onPaywall }) => {
                 />
               )}
 
+            {/* Cross-history hunt, offered right after an entry's bullets land. Never
+                while one is already running, and never mid-transition. */}
+            {huntOffer && !activeHunt && !thinking && !studioTransition && (
+              <HuntOfferCard
+                key={`huntoffer-${huntOffer.requirementId}`}
+                name={huntOffer.name}
+                busy={!!roleBusy}
+                onAccept={() => startHunt(huntOffer.requirementId, huntOffer.name)}
+                onDecline={() => setHuntOffer(null)}
+              />
+            )}
+
             {/* Skills — the same consent → generate → SkillsCard → applySkills flow the
                 CV builder runs, grounded on the roles and projects just captured. */}
             {ready && phase === 'build:skills' && (
@@ -3945,6 +3967,11 @@ const StudioChat = ({ onPaywall }) => {
                           : 'ariaStudio.chat.appliedContinueRole'
                       )
                     );
+                    // The interview is genuinely over and the bullets have landed — the
+                    // one moment where "shall I look for this elsewhere?" is a natural
+                    // question rather than an interruption. One at a time.
+                    const offer = result.huntOffers?.[0];
+                    if (offer?.requirementId) setHuntOffer(offer);
                   }
                 }, 500);
               }}

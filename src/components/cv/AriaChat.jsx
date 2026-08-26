@@ -210,6 +210,67 @@ const AriaChat = ({
     setSkPhase('idle');
   };
 
+  // ─── Cross-history hunt ───
+  // The builder's SkillsCard has always rendered gap chips, but it had no chat able to
+  // run the conversation behind them, so the chips were read-only here while working in
+  // the Studio. Same server contract as StudioChat's hunt: /coach/chat with a `probe`,
+  // free (counted against ariaBuild), and nothing reaches the CV unless the server
+  // verifies the user's own words against a real turn.
+  const [activeHunt, setActiveHunt] = useState(null);
+
+  const runHuntTurn = async (requirementId, thread) => {
+    setThinking(true);
+    try {
+      const id = draftId === 'new' ? await ensureDraft() : draftId;
+      if (!id) {
+        setMessages((m) => [...m, { who: 'aria', text: t('cvBuilder.common.couldntSetup') }]);
+        setActiveHunt(null);
+        return;
+      }
+      const r = await CVService.coachChat({
+        draftId: id,
+        currentStepId: 'skills',
+        messages: thread
+          .filter((m) => m.who === 'aria' || m.who === 'user')
+          .map((m) => ({ who: m.who, text: m.text })),
+        probe: { requirementId },
+        stage: cvData?.careerStage,
+        model: modelId,
+      });
+      setMessages((m) => [...m, { who: 'aria', text: r.reply }]);
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+      // probeResult is the SERVER's verdict, not the model's — anything short of a clean
+      // confirmation leaves the CV untouched. Either way the hunt is over.
+      if (r.probeResult) setActiveHunt(null);
+    } catch (e) {
+      const code = e?.response?.data?.code;
+      setMessages((m) => [
+        ...m,
+        {
+          who: 'aria',
+          text:
+            code === 'BUILD_LIMIT_REACHED'
+              ? t('cvBuilder.ariaChat.outOfChats')
+              : t('cvBuilder.common.couldntSetup'),
+        },
+      ]);
+      setActiveHunt(null);
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const startHunt = async (requirementId, name) => {
+    if (thinking) return;
+    setShowChips(false);
+    setActiveHunt({ requirementId, name });
+    const opener = { who: 'user', text: t('ariaStudio.chat.hunt.opener', { name }) };
+    setMessages((m) => [...m, opener]);
+    await runHuntTurn(requirementId, [...messages, opener]);
+  };
+
   const send = async (text) => {
     const q = (text ?? input).trim();
     if (!q || thinking) return;
@@ -217,6 +278,14 @@ const AriaChat = ({
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setShowChips(false);
+
+    // A hunt owns the conversation until it resolves, so the answer goes back to the
+    // hunt rather than to the general /coach/ask below.
+    if (activeHunt) {
+      await runHuntTurn(activeHunt.requirementId, [...messages, { who: 'user', text: q }]);
+      return;
+    }
+
     setThinking(true);
     // Actively CREATE the draft on demand (shared with builder-entry, no duplicate)
     // and use its real id — so an eager click the instant the builder opens works.
@@ -510,6 +579,10 @@ const AriaChat = ({
                     )}
                     initialSelected={skSel}
                     onAdd={handleAddSkills}
+                    // Gap chips are live in the builder too now — this chat is the host
+                    // the hunt always needed, and it is the same conversation the Studio
+                    // runs against the same endpoint.
+                    onProveSkill={startHunt}
                   />
                 </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />

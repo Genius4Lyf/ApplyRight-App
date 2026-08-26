@@ -101,6 +101,9 @@ const SectionCoach = ({
   const [suggestions, setSuggestions] = useState([]);
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
+  // Set when the interview closes; handed to onDone so the parent can offer the
+  // cross-history hunt AFTER the bullets land. See the readyToDraft branch below.
+  const [huntOffers, setHuntOffers] = useState([]);
   const inputRef = useRef(null);
   const exampleRef = useRef(null);
 
@@ -247,6 +250,11 @@ const SectionCoach = ({
             .map((m) => m.text)
             .join('. ');
         setDescription(desc);
+        // Requirements this entry could NOT prove, which the server says are worth taking
+        // to the rest of the CV. Held rather than shown: interrupting here would put a
+        // question between the user and the bullets they are two taps from getting. It
+        // rides out on onDone, once the interview is genuinely over.
+        setHuntOffers(Array.isArray(r.huntOffers) ? r.huntOffers : []);
         // Aria has enough truthful material; move directly to the bullet-count choice.
         setPhase('picking');
       }
@@ -362,7 +370,7 @@ const SectionCoach = ({
     setApplying(false);
     if (res?.ok) {
       if (!(await persistPending(null))) return;
-      onDone?.({ entry, applied: add });
+      onDone?.({ entry, applied: add, huntOffers });
     } else if (res && !res.found) {
       toast.error(
         t('cvBuilder.askAria.couldntFind', {

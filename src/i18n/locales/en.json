@@ -4610,6 +4610,12 @@
       "hunt": {
         "opener": "Can we check whether I've done {{name}} anywhere?"
       },
+      "huntOffer": {
+        "eyebrow": "One more thing",
+        "body": "The job asks for {{name}}, and this role didn't turn out to be where you did it. Want me to check the rest of your history before we move on?",
+        "accept": "Yes, have a look",
+        "decline": "Not now"
+      },
       "firstNamesCv": "{{first}}'s CV",
       "confirmContactDone": "That's your header done. Work history is next — that's where most of the weight sits, and it's what I'll spend the most time on with you.",
       "sectionOpener": {

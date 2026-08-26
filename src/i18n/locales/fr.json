@@ -4606,6 +4606,12 @@
       "hunt": {
         "opener": "Peut-on vérifier si j’ai déjà fait {{name}} quelque part ?"
       },
+      "huntOffer": {
+        "eyebrow": "Encore une chose",
+        "body": "Le poste demande {{name}}, et ce n’est visiblement pas dans ce rôle que vous l’avez fait. Voulez-vous que je regarde le reste de votre parcours avant de continuer ?",
+        "accept": "Oui, regardez",
+        "decline": "Pas maintenant"
+      },
       "firstNamesCv": "CV de {{first}}",
       "confirmContactDone": "Votre en-tête est fait. L'expérience professionnelle est la prochaine étape — c'est là que se joue le plus gros du poids, et c'est là que je passerai le plus de temps avec vous.",
       "sectionOpener": {
