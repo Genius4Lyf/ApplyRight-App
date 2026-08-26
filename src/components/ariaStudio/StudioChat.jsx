@@ -2457,6 +2457,9 @@ const StudioChat = ({ onPaywall }) => {
   // hunt is the gap chips on the skills card, which are recomputed from the draft.
   const [huntOffer, setHuntOffer] = useState(null);
 
+  // requirementId → the server's verdict for a hunt already answered this session.
+  const [huntedRequirements, setHuntedRequirements] = useState({});
+
   const runHuntTurn = async (requirementId, thread) => {
     setThinking(true);
     try {
@@ -2480,6 +2483,9 @@ const StudioChat = ({ onPaywall }) => {
       // untouched, which is the honest outcome.
       if (r.probeResult) {
         setActiveHunt(null);
+        // Remember the verdict so the gap chip stops offering a hunt it has already had.
+        // The review groups are a snapshot from the last generation and cannot know.
+        setHuntedRequirements((prev) => ({ ...prev, [requirementId]: r.probeResult.status }));
         await refreshDraft?.();
       }
       return r;
@@ -3503,6 +3509,7 @@ const StudioChat = ({ onPaywall }) => {
                 onGenerate={generateBuildSkills}
                 onAdd={addPickedSkills}
                 onProveSkill={startHunt}
+                huntedRequirements={huntedRequirements}
                 onManual={addManualSkills}
                 addedCount={manualSkillsAdded}
                 onDone={finishManualSkills}
@@ -3829,6 +3836,7 @@ const StudioChat = ({ onPaywall }) => {
                 onGenerate={generateFixSkills}
                 onAdd={addPickedFixSkills}
                 onProveSkill={startHunt}
+                huntedRequirements={huntedRequirements}
                 onManual={addManualFixSkills}
                 addedCount={fixSkillsAdded}
                 onDone={finishFixSkills}

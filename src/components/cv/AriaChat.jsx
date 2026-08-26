@@ -217,6 +217,10 @@ const AriaChat = ({
   // free (counted against ariaBuild), and nothing reaches the CV unless the server
   // verifies the user's own words against a real turn.
   const [activeHunt, setActiveHunt] = useState(null);
+  // requirementId → the server's verdict for a hunt already answered this session, so a
+  // settled gap chip stops offering one. The review groups are a snapshot from the last
+  // generation and cannot know.
+  const [huntedRequirements, setHuntedRequirements] = useState({});
 
   const runHuntTurn = async (requirementId, thread) => {
     setThinking(true);
@@ -243,7 +247,10 @@ const AriaChat = ({
       }
       // probeResult is the SERVER's verdict, not the model's — anything short of a clean
       // confirmation leaves the CV untouched. Either way the hunt is over.
-      if (r.probeResult) setActiveHunt(null);
+      if (r.probeResult) {
+        setActiveHunt(null);
+        setHuntedRequirements((prev) => ({ ...prev, [requirementId]: r.probeResult.status }));
+      }
     } catch (e) {
       const code = e?.response?.data?.code;
       setMessages((m) => [
@@ -583,6 +590,7 @@ const AriaChat = ({
                     // the hunt always needed, and it is the same conversation the Studio
                     // runs against the same endpoint.
                     onProveSkill={startHunt}
+                    huntedRequirements={huntedRequirements}
                   />
                 </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />

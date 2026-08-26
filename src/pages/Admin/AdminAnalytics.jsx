@@ -17,6 +17,12 @@ import api from '../../services/api';
 import { toast } from 'sonner';
 
 // Friendly labels for the AI operations logged in AICallLog.
+//
+// This maps HISTORICAL log rows, so an entry outliving the code that wrote it is normal
+// and must not be "cleaned up" — deleting one only makes old charts render a raw
+// operation key. generateBulletPoints/generateAtsSuggestions are the retired two-column
+// work-history picker, replaced by the Ask Aria build-with; generateSummaries is the
+// retired multi-tone summary picker, replaced by Aria's in-chat summary.
 const OP_LABELS = {
   extractJobRequirements: 'Job keyword extraction',
   generateBulletPoints: 'AI bullet points',

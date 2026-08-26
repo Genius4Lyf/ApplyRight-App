@@ -1888,6 +1888,10 @@
       "gapsIntro": "These stay as honest gaps and cannot be added from this screen.",
       "gapsIntroHunt": "Nothing in your CV shows these yet. If you think you've done one somewhere — another job, a course, a project — let me look.",
       "lookElsewhere": "Look for this",
+      "hunted": {
+        "confirmed": "found — added to your evidence",
+        "declined": "you said no — I won't ask again"
+      },
       "confirmedByYou": "confirmed by you",
       "confirmation": {
         "direct": "I used it directly",

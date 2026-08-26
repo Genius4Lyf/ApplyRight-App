@@ -60,46 +60,6 @@ const CVService = {
     return response.data;
   },
 
-  // Generate bullet points using AI.
-  // - summary/project → { suggestions, lockedCount }
-  // - experience → two-tier payload: { isPaid, ai:{title,suggestions},
-  //   ats:{title,suggestions,locked}, limits:{selectMax,bulletMax} }. Free users
-  //   get real "AI suggestions" + a blurred "ApplyRight ATS" teaser; paid users
-  //   get real, JD-keyword-targeted ApplyRight ATS suggestions. draftId lets the
-  //   server reuse the cached target-job keywords for ATS generation.
-  generateBullets: async (role, context, type, targetJob, draftId) => {
-    const response = await api.post('/ai/generate-bullets', {
-      role,
-      context,
-      type,
-      targetJob,
-      draftId,
-    });
-    return response.data;
-  },
-
-  // Reveal the free user's ONE-TIME real ApplyRight ATS suggestions for a role.
-  // Called only when the user clicks "Reveal" — this is where the lifetime taste
-  // is spent (server-side, atomic). Returns { taste, ats:{suggestions,locked},
-  // limits }, or HTTP 409 { code:'TASTE_USED' } if it was already used.
-  revealAtsTaste: async (role, context, targetJob, draftId) => {
-    const response = await api.post('/ai/reveal-ats-taste', {
-      role,
-      context,
-      targetJob,
-      draftId,
-    });
-    return response.data;
-  },
-
-  // ApplyRight Suggested Summary — professional-summary variations by tone.
-  // Free users get the Professional tone real + the rest as locked teasers; paid
-  // get all tones. Returns { isPaid, tones:[{key,label,text,locked}] }.
-  generateSummaries: async (role, context) => {
-    const response = await api.post('/ai/generate-summaries', { role, context });
-    return response.data;
-  },
-
   // Rewrite a professional summary into a tighter, shorter version. Charges 1
   // credit (paid tiers draw from their allowance); AI outage 503s with no charge.
   // Returns { tightened, remainingCredits }.

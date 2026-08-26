@@ -22,6 +22,8 @@ const SkillsBuildCard = ({
   onAdd,
   // (requirementId, name) => void — starts the cross-history hunt from a gap chip.
   onProveSkill,
+  // Verdicts for hunts already answered this session — a settled chip stops offering one.
+  huntedRequirements = {},
   onManual,
   onSkip,
   onDone,
@@ -70,6 +72,7 @@ const SkillsBuildCard = ({
             existingSkills={existingSkills}
             onAdd={onAdd}
             onProveSkill={onProveSkill}
+            huntedRequirements={huntedRequirements}
           />
         </div>
       </AriaCard>

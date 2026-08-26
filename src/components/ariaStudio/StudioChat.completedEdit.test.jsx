@@ -96,7 +96,10 @@ const mountStudio = async (draft = completeBuild()) => {
     </AriaStudioProvider>
   );
   await waitFor(() => expect(ctx?.draftId).toBe(draft._id));
-  await screen.findByText('Ready to send');
+  // Every findBy in this file carries an explicit timeout: StudioChat is a large tree and
+  // a loaded parallel run routinely takes it past findBy's 1000ms default. Leaving the
+  // default made the file pass alone and fail in the full suite.
+  await screen.findByText('Ready to send', {}, { timeout: 2500 });
 };
 
 beforeEach(() => {
@@ -134,7 +137,16 @@ describe('StudioChat — applying edits to a completed build', () => {
     await act(async () => {
       ctx.requestStudioCommand('editWithAria', 'experience', 'r1');
     });
-    const apply = await screen.findByRole('button', { name: 'Apply entry edit' });
+    // Explicit timeout, matching the one already used further down. StudioChat has to
+    // resolve the pin and mount the coach before this button exists, and under a loaded
+    // parallel run that can exceed findBy's 1000ms default — which made this test pass
+    // alone and fail in the full suite, so the suite's failure count was not a stable
+    // number to read regressions against.
+    const apply = await screen.findByRole(
+      'button',
+      { name: 'Apply entry edit' },
+      { timeout: 2500 }
+    );
 
     fireEvent.click(apply);
 
@@ -168,7 +180,11 @@ describe('StudioChat — applying edits to a completed build', () => {
     await act(async () => {
       ctx.requestStudioCommand('suggestSkills', 'skills', null);
     });
-    const apply = await screen.findByRole('button', { name: 'Apply skill edit' });
+    const apply = await screen.findByRole(
+      'button',
+      { name: 'Apply skill edit' },
+      { timeout: 2500 }
+    );
 
     fireEvent.click(apply);
 

@@ -1884,6 +1884,10 @@
       "gapsIntro": "Elles restent des écarts honnêtes et ne peuvent pas être ajoutées depuis cet écran.",
       "gapsIntroHunt": "Rien dans votre CV ne les démontre pour l’instant. Si vous pensez en avoir fait une quelque part — un autre poste, un cours, un projet — laissez-moi chercher.",
       "lookElsewhere": "Chercher",
+      "hunted": {
+        "confirmed": "trouvée — ajoutée à vos preuves",
+        "declined": "vous avez dit non — je ne redemanderai pas"
+      },
       "confirmedByYou": "confirmée par vous",
       "confirmation": {
         "direct": "Je l’ai utilisée directement",
