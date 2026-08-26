@@ -4359,7 +4359,6 @@
       "couldntFullyRead": "Je n'ai pas pu lire le poste en entier pour l'instant — on peut quand même continuer, et je le relirai quand je commencerai à adapter le CV."
     },
     "roleCapture": {
-      "whenWereYouThere": "Vous y étiez de quand à quand ?",
       "started": "Début",
       "startedPlaceholder": "ex. mars 2021",
       "stillWorkHere": "J'y travaille encore",
@@ -4367,35 +4366,21 @@
       "endedPlaceholder": "ex. août 2024",
       "saving": "Enregistrement…",
       "save": "Enregistrer",
-      "skip": "Passer",
       "prompts": {
-        "title": {
-          "q": "Comment s'appelait votre poste ?",
-          "hint": "Utilisez l'intitulé de votre contrat — un titre gonflé est la première chose qu'une vérification de références repère."
-        },
         "company": {
-          "q": "C'était où ?",
-          "placeholder": "ex. Baker Hughes",
-          "hint": "Le nom de l'employeur tel qu'il apparaîtrait sur une fiche de paie."
+          "placeholder": "ex. Baker Hughes"
         },
         "degree": {
-          "q": "Qu'avez-vous étudié ?",
-          "placeholder": "ex. Licence en génie mécanique",
-          "hint": "Le diplôme tel qu'il figure sur le certificat."
+          "placeholder": "ex. Licence en génie mécanique"
         },
         "school": {
-          "q": "Où l'avez-vous étudié ?",
           "placeholder": "ex. Université de Benin City"
         },
         "graduationDate": {
-          "q": "Quand avez-vous terminé ?",
-          "placeholder": "ex. 2019 (ou prévu en 2026)",
-          "hint": "Une date prévue convient si vous étudiez encore."
+          "placeholder": "ex. 2019 (ou prévu en 2026)"
         },
         "projectTitle": {
-          "q": "Comment s'appelait le projet ?",
-          "placeholder": "ex. Tableau de bord de télémétrie de plateforme",
-          "hint": "Un nom court et simple — celui que vous utiliseriez à l'oral."
+          "placeholder": "ex. Tableau de bord de télémétrie de plateforme"
         }
       }
     },
@@ -4685,7 +4670,7 @@
         "education": "La formation est ajoutée. Des certifications ou formations à ajouter ?"
       },
       "editUpdated": "Voilà — c'est mis à jour, et votre CV est toujours complet. Le voici.",
-      "pickProjectType": "Parfait. Comment s'appelle le projet ?",
+      "askProjectTitle": "Parfait. Comment s'appelle le projet ?",
       "skillsInsufficientCredits": "Trouver vos compétences coûte {{cost}} crédits et il vous en manque pour l'instant. Vous pouvez les saisir vous-même gratuitement à la place.",
       "skillsInDone": "{{n}} compétences ajoutées. Dernière étape — le résumé en haut de votre CV.",
       "manualSkillsAdded": "{{n}} ajoutée(s). D'autres, ou on passe à la suite ?",

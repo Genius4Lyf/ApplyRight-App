@@ -2058,7 +2058,7 @@ const StudioChat = ({ onPaywall }) => {
         { who: 'user', text: t(type.messageKey), selected: true },
         { who: 'projecttype', sortId: pinnedEntry._sortId, type: type.key, labelKey: type.labelKey }
       );
-      ariaSays(t('ariaStudio.chat.pickProjectType'));
+      ariaSays(t('ariaStudio.chat.askProjectTitle'));
     }, t('ariaStudio.chat.thinking.notingThatDown'));
   };
 
