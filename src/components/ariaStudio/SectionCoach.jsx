@@ -37,19 +37,25 @@ const STEP_FOR_SECTION = { experience: 'history', project: 'projects' };
 const SectionCoach = ({
   draftId,
   entry, // { section: 'experience'|'project', sortId, title, company }
+  // The MEASURED gaps for this section, straight off the scan — the terms this fix was
+  // opened to close. Display only; the server sources its own gaps for the prompt
+  // (scopedMissingKeywords), so nothing here steers what Aria asks.
+  //
+  // Only the fix loop has them. The build track used to pass the job's must-haves instead,
+  // which meant the same two words sat under every role for the whole build: not measured,
+  // not entry-specific, and claiming to "aim at" terms the entry may already cover is the
+  // kind of small invented progress that teaches people to distrust the rest of the read.
   missingKeywords = [],
-  // Whether `missingKeywords` are MEASURED GAPS (the fix loop, straight off the section
-  // scan) or just the job's must-haves (the build track, where nothing has been scored
-  // yet). Only the first can honestly be called "aiming at": on the build track the
-  // entry may already cover every term listed, and claiming to aim at something the CV
-  // has had all along is the kind of small invented progress that teaches people to
-  // distrust the rest of the read. Defaults true — the fix loop is the caller that
-  // supplies real gaps.
-  keywordsAreGaps = true,
   messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
-  onDone, // () => void — fix finished, hand back to the breakdown
+  onDone, // (result|null) => void — the interview produced bullets, or the entry vanished
+  // () => void — leave without applying anything. Omitted on surfaces that have their own
+  // way out (the build track exits via the pinned card's "next role" / "done"), and the
+  // button is then not rendered at all, the way SkillsCard omits its hunt affordance where
+  // no chat can host it. Kept separate from onDone(null): that is the 404 "entry deleted"
+  // contract, which the build track answers through its self-clearing pin instead.
+  onBack,
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
   careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
   onPickCareerStage, // (k) => void — lifts the pick to the parent
@@ -159,6 +165,12 @@ const SectionCoach = ({
   // an interview on turn one.
   const turnsTaken =
     sessionStart >= 0 ? messages.slice(sessionStart + 1).filter((m) => m.who === 'user').length : 0;
+
+  // The turn budget is the AI CONVERSATION's, not the CV's — the server turns `buildTurns`
+  // into a hard "wrap this up now". Shown as a permanent "1/10" it read like a score, and
+  // now that the top bar carries a real progress number it would compete with it. So it
+  // only speaks near the limit, where it is genuinely news: Aria is about to close the role.
+  const nearTurnLimit = turnsTaken >= TURN_CAP - 3;
 
   useEffect(() => {
     if (!exampleOpen) return undefined;
@@ -401,29 +413,42 @@ const SectionCoach = ({
         onSelectModel={selectModel}
         showModelPicker
         showModelNotice
+        // What this fix was opened to close. It used to sit in the footer below, at 9px and
+        // truncated to two terms, between a nav link and a turn counter — a row of chrome,
+        // holding the one substantive thing on screen. It belongs above the input, because
+        // this is the ONLY place the gaps are ever shown: the "Fixing Experience" divider
+        // names the section and nothing else. Same treatment as every other composer note.
+        note={
+          missingKeywords.length > 0 ? (
+            <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.sectionCoach.aimingAt', { keywords: missingKeywords.join(', ') })}
+            </p>
+          ) : null
+        }
         footer={
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => onDone?.(null)}
-              className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          onBack || nearTurnLimit ? (
+            <div
+              data-coach-footer=""
+              className={`mt-1.5 flex items-center gap-2 ${onBack ? 'justify-between' : 'justify-end'}`}
             >
-              ← {t('ariaStudio.sectionCoach.backToSections')}
-            </button>
-            {missingKeywords.length > 0 && (
-              <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 truncate">
-                {t(
-                  keywordsAreGaps
-                    ? 'ariaStudio.sectionCoach.aimingAt'
-                    : 'ariaStudio.sectionCoach.jobAsksFor',
-                  { keywords: missingKeywords.slice(0, 2).join(', ') }
-                )}
-              </span>
-            )}
-            <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              {Math.min(turnsTaken, TURN_CAP)}/{TURN_CAP}
-            </span>
-          </div>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                >
+                  ← {t('ariaStudio.sectionCoach.backToSections')}
+                </button>
+              )}
+              {nearTurnLimit && (
+                <span className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  {t('ariaStudio.sectionCoach.questionsLeft', {
+                    count: Math.max(0, TURN_CAP - turnsTaken),
+                  })}
+                </span>
+              )}
+            </div>
+          ) : null
         }
       />
     </div>

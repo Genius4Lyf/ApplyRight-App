@@ -237,7 +237,10 @@ const AriaChat = ({
         messages: thread
           .filter((m) => m.who === 'aria' || m.who === 'user')
           .map((m) => ({ who: m.who, text: m.text })),
-        probe: { requirementId },
+        // Always 'open' here: this is a side chat with no live entry interview, so a
+        // verdict has nowhere to go and nothing has to be settled. The probe is also this
+        // turn's trigger, which is why the opening call carries no user message.
+        probe: { requirementId, mode: 'open' },
         stage: cvData?.careerStage,
         model: modelId,
       });
@@ -250,6 +253,10 @@ const AriaChat = ({
       if (r.probeResult) {
         setActiveHunt(null);
         setHuntedRequirements((prev) => ({ ...prev, [requirementId]: r.probeResult.status }));
+      } else if (r.intent === 'answer') {
+        // The conversation ran its course without landing on an answer. Let go and record
+        // nothing — that is the right outcome for something that was only ever a question.
+        setActiveHunt(null);
       }
     } catch (e) {
       const code = e?.response?.data?.code;
@@ -273,9 +280,11 @@ const AriaChat = ({
     if (thinking) return;
     setShowChips(false);
     setActiveHunt({ requirementId, name });
-    const opener = { who: 'user', text: t('ariaStudio.chat.hunt.opener', { name }) };
-    setMessages((m) => [...m, opener]);
-    await runHuntTurn(requirementId, [...messages, opener]);
+    // A MARKER, not a message. This used to push a sentence into the user's own bubble,
+    // styled as if they had typed it. Their side of the transcript now only ever holds
+    // what they actually wrote; the probe itself is what opens the turn.
+    setMessages((m) => [...m, { who: 'hunt', name }]);
+    await runHuntTurn(requirementId, messages);
   };
 
   const send = async (text) => {
@@ -384,6 +393,20 @@ const AriaChat = ({
                   </button>
                   <AriaOrbit size={16} className="aria-mark ml-1" />
                 </motion.div>
+              );
+            }
+            // A requirement tapped on the job checklist — a marker, not a message. Rendered
+            // as a faint rule so the transcript records WHAT was asked about without
+            // attributing a sentence to the user that they never wrote.
+            if (m.who === 'hunt') {
+              return (
+                <div key={i} className="self-stretch my-1 flex items-center gap-2 px-1">
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                  <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {t('ariaStudio.chat.hunt.askedAbout', { name: m.name })}
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+                </div>
               );
             }
             return m.who === 'user' ? (

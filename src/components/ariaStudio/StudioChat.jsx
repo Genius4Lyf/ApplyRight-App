@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
@@ -50,7 +50,7 @@ import ModeChooser from './ModeChooser';
 import JobCaptureCard from './JobCaptureCard';
 import RoleBriefCard from './RoleBriefCard';
 import CvPickerCard from './CvPickerCard';
-import AriaCard from './AriaCard';
+import AriaCard, { CardCollapseProvider } from './AriaCard';
 import ScoreCard from './ScoreCard';
 import SectionBreakdownCard from './SectionBreakdownCard';
 import FinishCard from './FinishCard';
@@ -2457,10 +2457,14 @@ const StudioChat = ({ onPaywall }) => {
   // hunt is the gap chips on the skills card, which are recomputed from the draft.
   const [huntOffer, setHuntOffer] = useState(null);
 
+  // The prompt/form card has stood down because the user started talking instead of tapping.
+  // Presentation only — the phase is untouched, so nothing about where they are has changed.
+  const [cardStoodDown, setCardStoodDown] = useState(false);
+
   // requirementId → the server's verdict for a hunt already answered this session.
   const [huntedRequirements, setHuntedRequirements] = useState({});
 
-  const runHuntTurn = async (requirementId, thread) => {
+  const runHuntTurn = async (requirementId, thread, mode) => {
     setThinking(true);
     try {
       const r = await CVService.coachChat({
@@ -2469,7 +2473,9 @@ const StudioChat = ({ onPaywall }) => {
         messages: thread
           .filter((m) => m.who === 'aria' || m.who === 'user')
           .map((m) => ({ who: m.who, text: m.text })),
-        probe: { requirementId },
+        // The probe IS this turn's trigger, so the opening one carries no user message —
+        // the server allows that for a probe and only a probe.
+        probe: { requirementId, mode: mode || activeHunt?.mode || 'open' },
         studioInterview: true,
         stage: careerStage,
         model: modelId,
@@ -2487,6 +2493,12 @@ const StudioChat = ({ onPaywall }) => {
         // The review groups are a snapshot from the last generation and cannot know.
         setHuntedRequirements((prev) => ({ ...prev, [requirementId]: r.probeResult.status }));
         await refreshDraft?.();
+      } else if (r.intent === 'answer') {
+        // An exploring conversation that ran its course without landing on an answer. The
+        // hunt lets go and the chat returns to normal — nothing recorded, which is the right
+        // outcome for something that was only ever a question. Deliberately NOT marked in
+        // huntedRequirements: they may well come back to it.
+        setActiveHunt(null);
       }
       return r;
     } catch (e) {
@@ -2511,10 +2523,17 @@ const StudioChat = ({ onPaywall }) => {
     if (!draftId || thinking) return;
     // Taking the offer consumes it, whichever entry point opened this.
     setHuntOffer(null);
-    setActiveHunt({ requirementId, name });
-    const opener = { who: 'user', text: t('ariaStudio.chat.hunt.opener', { name }) };
-    push(opener);
-    await runHuntTurn(requirementId, [...messages, opener]);
+    // Press for an answer only where one has somewhere to go: mid-interview on an entry, a
+    // verdict becomes a bullet. Tapping the checklist at any other moment is curiosity, and
+    // pinning someone down for asking is the wrong trade.
+    const mode = coachDrivesPin ? 'build' : 'open';
+    setActiveHunt({ requirementId, name, mode });
+    // A MARKER, not a message. This used to push a sentence into the user's own bubble
+    // ("Can we check whether I've done X anywhere?") styled exactly like something they had
+    // typed — the one place in the Studio that put words in their mouth. Their side of the
+    // transcript now only ever holds what they actually wrote.
+    push({ who: 'hunt', name });
+    await runHuntTurn(requirementId, messages, mode);
   };
 
   const send = async (raw) => {
@@ -2524,11 +2543,15 @@ const StudioChat = ({ onPaywall }) => {
     push({ who: 'user', text });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
+    // They chose to talk rather than tap. The card steps aside for the conversation and
+    // waits as a line they can tap to come back to.
+    setCardStoodDown(true);
 
     // A hunt owns the conversation until it resolves, so the user's answer goes back to
-    // the hunt rather than to the general coach.
+    // the hunt rather than to the general coach. An exploring hunt lets go on its own once
+    // the conversation moves on (see the intent:'answer' branch in runHuntTurn).
     if (activeHunt) {
-      await runHuntTurn(activeHunt.requirementId, next);
+      await runHuntTurn(activeHunt.requirementId, next, activeHunt.mode);
       return;
     }
 
@@ -2885,6 +2908,47 @@ const StudioChat = ({ onPaywall }) => {
 
   // A card may own the stream only once nothing else does — no restore in flight, no
   // Aria turn mid-beat, no tailor-start or scan running.
+  // ─── Standing down for the conversation ───
+  //
+  // Free chat is live throughout a build, so a user can ask Aria something while a card is
+  // up — and the card used to sit there at full size, making the chat happen around a panel
+  // that had nothing to do with it. Once they start talking, a card that is only ASKING
+  // shrinks to a line they can tap to get back.
+  //
+  // Only prompts and forms take part. A card HOLDING something — generated skills, a summary
+  // draft, rewrite rows, the scan results — is never shrunk: it is either paid-for work
+  // awaiting a decision or the answer they came for, and hiding it is how it gets forgotten.
+  const collapsibleCardLabel = (() => {
+    if (pinnedEntry && pinnedStage === 'form')
+      return t('ariaStudio.chat.cardCollapsed.form', {
+        title: pinnedEntry.title || t('ariaStudio.chat.cardCollapsed.thisEntry'),
+      });
+    if (pinnedEntry && (pinnedStage === 'type' || pinnedStage === 'entryType'))
+      return t('ariaStudio.chat.cardCollapsed.type');
+    if (phase === 'build:sections' && !pinnedEntry && nextSection)
+      return t('ariaStudio.chat.cardCollapsed.section', { section: nextSection.eyebrow });
+    if (phase === 'build:contact') return t('ariaStudio.chat.cardCollapsed.contact');
+    if (phase === 'build:certs') return t('ariaStudio.chat.cardCollapsed.certs');
+    if (phase === 'build:career-stage') return t('ariaStudio.chat.cardCollapsed.careerStage');
+    if (phase === 'build:job') return t('ariaStudio.chat.cardCollapsed.job');
+    return null;
+  })();
+
+  // Reset the moment the card changes: a NEW step is a new thing to look at, and being born
+  // collapsed would hide the very prompt that just arrived.
+  useEffect(() => {
+    setCardStoodDown(false);
+  }, [collapsibleCardLabel]);
+
+  const cardCollapse = useMemo(
+    () => ({
+      collapsed: cardStoodDown,
+      label: collapsibleCardLabel,
+      expand: () => setCardStoodDown(false),
+    }),
+    [cardStoodDown, collapsibleCardLabel]
+  );
+
   const ready =
     !studioTransition &&
     !thinking &&
@@ -3120,6 +3184,17 @@ const StudioChat = ({ onPaywall }) => {
               return (
                 <StudioPhaseDivider key={i} reduce={reduce}>
                   {t('ariaStudio.chat.fitScanComplete')}
+                </StudioPhaseDivider>
+              );
+            }
+
+            // A requirement was tapped on the job checklist. A marker, not a message — the
+            // user pressed a chip, they did not type a question, and their side of the
+            // transcript must never hold words they didn't write.
+            if (m.who === 'hunt') {
+              return (
+                <StudioPhaseDivider key={i} reduce={reduce}>
+                  {t('ariaStudio.chat.hunt.askedAbout', { name: m.name })}
                 </StudioPhaseDivider>
               );
             }
@@ -3363,7 +3438,12 @@ const StudioChat = ({ onPaywall }) => {
           )}
 
           {/* The live card — always the LAST item in the stream, blooming from Aria's
-              orbit and collapsing back into it. Never a phase-swap. */}
+              orbit and collapsing back into it. Never a phase-swap.
+
+              The provider lets a PROMPT or FORM card stand down to a tappable line once the
+              user starts talking (see AriaCard). Cards holding generated work read the same
+              context but never have a label, so they are never shrunk. */}
+          <CardCollapseProvider value={cardCollapse}>
           <AnimatePresence>
             {ready && phase === 'mode' && <ModeChooser key="mode" onPick={pickMode} />}
 
@@ -3886,6 +3966,7 @@ const StudioChat = ({ onPaywall }) => {
               />
             )}
           </AnimatePresence>
+          </CardCollapseProvider>
 
           {/* Achievements for the pinned role — the SAME SectionCoach protocol the fix
               loop uses, pointed at this entry. One coaching path, not two: the free
@@ -3905,13 +3986,11 @@ const StudioChat = ({ onPaywall }) => {
                 company: pinnedEntry.company,
                 entryType: pinnedEntry.entryType,
               }}
-              missingKeywords={(cvData?.targetJob?.brief?.mustHaves || [])
-                .map((k) => (typeof k === 'string' ? k : k?.name))
-                .filter(Boolean)
-                .slice(0, 4)}
-              // The job's must-haves, NOT measured gaps: nothing has been scanned on the
-              // build track, and this entry may already cover every one of them.
-              keywordsAreGaps={false}
+              // No missingKeywords and no onBack on the build track. Nothing has been
+              // scanned here, so there are no measured gaps to name — the job's must-haves
+              // stood in for them, which put the same two words under every role for the
+              // whole build. And this track has its own exits: the pinned card's "next
+              // role" / "done", plus Live Preview's Edit with Aria once the CV is finished.
               messages={messages}
               onPush={push}
               onApply={async (add, remove) => {
@@ -4012,6 +4091,10 @@ const StudioChat = ({ onPaywall }) => {
                   }
                 )
               }
+              // Backing out of a fix without applying anything — the same path onDone(null)
+              // took, now its own prop so the build track (where it did nothing) can simply
+              // not render the button.
+              onBack={() => finishFix(null)}
               careerStage={careerStage}
               onPickCareerStage={setCareerStage}
             />

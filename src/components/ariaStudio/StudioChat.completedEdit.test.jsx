@@ -96,10 +96,11 @@ const mountStudio = async (draft = completeBuild()) => {
     </AriaStudioProvider>
   );
   await waitFor(() => expect(ctx?.draftId).toBe(draft._id));
-  // Every findBy in this file carries an explicit timeout: StudioChat is a large tree and
-  // a loaded parallel run routinely takes it past findBy's 1000ms default. Leaving the
-  // default made the file pass alone and fail in the full suite.
-  await screen.findByText('Ready to send', {}, { timeout: 2500 });
+  // No per-call timeout here or anywhere else in this file. StudioChat is a large tree and a
+  // loaded parallel run takes it well past RTL's 1000ms default, but that is the whole
+  // suite's problem and it is solved once in src/test/setup.js. A local override would only
+  // mask it here, and a lower one would silently win.
+  await screen.findByText('Ready to send');
 };
 
 beforeEach(() => {
@@ -137,20 +138,11 @@ describe('StudioChat — applying edits to a completed build', () => {
     await act(async () => {
       ctx.requestStudioCommand('editWithAria', 'experience', 'r1');
     });
-    // Explicit timeout, matching the one already used further down. StudioChat has to
-    // resolve the pin and mount the coach before this button exists, and under a loaded
-    // parallel run that can exceed findBy's 1000ms default — which made this test pass
-    // alone and fail in the full suite, so the suite's failure count was not a stable
-    // number to read regressions against.
-    const apply = await screen.findByRole(
-      'button',
-      { name: 'Apply entry edit' },
-      { timeout: 2500 }
-    );
+    const apply = await screen.findByRole('button', { name: 'Apply entry edit' });
 
     fireEvent.click(apply);
 
-    await screen.findByText('Ready to send', {}, { timeout: 2500 });
+    await screen.findByText('Ready to send');
     await waitFor(() =>
       expect(ctx.cvData.coachChats.studio.filter((message) => message.who === 'unpinrole')).toHaveLength(
         1
@@ -180,15 +172,11 @@ describe('StudioChat — applying edits to a completed build', () => {
     await act(async () => {
       ctx.requestStudioCommand('suggestSkills', 'skills', null);
     });
-    const apply = await screen.findByRole(
-      'button',
-      { name: 'Apply skill edit' },
-      { timeout: 2500 }
-    );
+    const apply = await screen.findByRole('button', { name: 'Apply skill edit' });
 
     fireEvent.click(apply);
 
-    await screen.findByText('Ready to send', {}, { timeout: 2500 });
+    await screen.findByText('Ready to send');
     expect(ctx.cvData.skills.map((skill) => skill.name)).toContain('Terraform');
   });
 });

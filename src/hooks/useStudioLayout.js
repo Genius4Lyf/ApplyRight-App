@@ -52,15 +52,18 @@ export function useStudioLayout() {
       return true;
     }
   });
-  // The right panel is now a THREE-state view, not an open/closed boolean:
+  // The right panel is a multi-state view, not an open/closed boolean:
   //   'insights' — the narrow, fixed-width StudioArtifactPanel (≈ today's panel)
+  //   'target'   — the narrow JobTargetPanel: what the job asks for, ticked off
   //   'preview'  — the WIDE StudioLivePreview that shares the room with the chat
   //   null       — closed; the chat owns everything
+  // Only 'preview' is special below (it collapses the rail to make room); the narrow views
+  // are interchangeable as far as layout is concerned.
   // Migrated from the old `panelOpen` flag so a returning user keeps their preference.
   const [panelView, setPanelViewRaw] = useState(() => {
     try {
       const v = localStorage.getItem('ariaStudio:panelView');
-      if (v === 'preview' || v === 'insights') return v;
+      if (v === 'preview' || v === 'insights' || v === 'target') return v;
       if (v === 'none') return null;
       // First run after the upgrade: honour the old open/closed boolean.
       return localStorage.getItem('ariaStudio:panelOpen') === '0' ? null : 'insights';

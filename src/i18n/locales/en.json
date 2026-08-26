@@ -4094,6 +4094,18 @@
       "editField": "Edit {{field}}",
       "saveField": "Save"
     },
+    "jobTarget": {
+      "eyebrow": "What this job asks for",
+      "thisJob": "This job",
+      "ofTarget": "of {{total}} must-haves covered",
+      "blurb": "These are the things the posting says it needs. Cover them with work you can actually defend — anything else is a bonus.",
+      "mustHave": "Must have",
+      "niceToHave": "Nice to have",
+      "bonus": "Not required — extra credit if you have them.",
+      "provedAt": "you showed this in {{where}}",
+      "askAria": "Ask Aria about this",
+      "pillAria": "{{done}} of {{total}} must-haves covered — open what this job asks for"
+    },
     "studioArtifactPanel": {
       "tailoredCopy": "Tailored copy",
       "noCvYet": "No CV yet",
@@ -4612,7 +4624,17 @@
       "buildJobDoneNoBrief": "Got it. Now let's make sure they can reach you.",
       "buildSkipJob": "No problem — we'll build a strong all-rounder. First, your contact details.",
       "hunt": {
-        "opener": "Can we check whether I've done {{name}} anywhere?"
+        "askedAbout": "asked about: {{name}}"
+      },
+      "cardCollapsed": {
+        "thisEntry": "this one",
+        "form": "{{title}} — tap to finish the details",
+        "type": "tap to pick the type",
+        "section": "{{section}} — tap to pick this up",
+        "contact": "your contact details — tap to pick this up",
+        "certs": "certifications — tap to pick this up",
+        "careerStage": "where you are in your career — tap to pick this up",
+        "job": "the job you're aiming at — tap to pick this up"
       },
       "huntOffer": {
         "eyebrow": "One more thing",
@@ -4800,8 +4822,9 @@
       "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
       "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
       "backToSections": "Back to sections",
-      "aimingAt": "aiming at {{keywords}}",
-      "jobAsksFor": "job asks for {{keywords}}",
+      "aimingAt": "Aiming at: {{keywords}}",
+      "questionsLeft_one": "{{count}} question left on this role",
+      "questionsLeft_other": "{{count}} questions left on this role",
       "entryGone": "That one's gone now — pick another and we'll keep going.",
       "send": "Send",
       "draftCount": "Draft {{n}} · {{cr}} cr",

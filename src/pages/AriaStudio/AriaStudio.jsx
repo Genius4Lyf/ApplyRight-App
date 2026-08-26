@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { PanelLeft, FilePen, ListChecks } from 'lucide-react';
+import { PanelLeft, FilePen, ListChecks, Briefcase } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { useAriaModel } from '../../hooks/useAriaModel';
+import { useJobCoverage } from '../../hooks/useJobCoverage';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
@@ -14,6 +15,7 @@ import CVService from '../../services/cv.service';
 import AriaOrbit from '../../components/cv/AriaOrbit';
 import StudioChat from '../../components/ariaStudio/StudioChat';
 import StudioArtifactPanel from '../../components/ariaStudio/StudioArtifactPanel';
+import JobTargetPanel from '../../components/ariaStudio/JobTargetPanel';
 import StudioLivePreview from '../../components/ariaStudio/StudioLivePreview';
 import ModelPicker from '../../components/ModelPicker';
 import SessionRail from '../../components/ariaStudio/SessionRail';
@@ -79,6 +81,15 @@ const StudioDesk = () => {
   const scan = cvData?.studioScan;
   const score = scan?.fitScore;
   const band = bandOf(score);
+
+  // Live "how much of this job can my CV defend yet?". Free, no AI, no charge, and it
+  // writes nothing — see useJobCoverage. Present whenever a brief with must-haves exists,
+  // which on the build track is from the moment the JD is read.
+  const { coverage: jobCoverage, keywords: jobKeywords, ready: hasJobTarget } =
+    useJobCoverage(cvData);
+  // ONE pill, never two. A scanned tailoring keeps its fit score exactly as before; the
+  // tracker is for the build track, which never scans and so has shown nothing at all.
+  const showJobTracker = score == null && hasJobTarget;
 
   // Refresh the rail. Re-run whenever the bound session changes so a brand-new
   // tailoring appears in the list the moment it's created.
@@ -250,11 +261,22 @@ const StudioDesk = () => {
   };
   // Tapping the score chip goes straight to the section verdicts (insights view).
   const openPanel = () => selectView('insights');
+  // The job tracker opens its OWN view — what the job asks for, ticked off — rather than
+  // the section verdicts. The two answer different questions: insights is organised by the
+  // user's CV, this is organised by the employer's list.
+  const openTarget = () => selectView('target');
 
   // The Preview toggle appears once a draft is bound (build OR tailor). Before that it
   // stays hidden — the mode chooser has no bound document to preview.
   const canPreview = !!cvData?._id;
-  const panelView = !canPreview && layout.panelView === 'preview' ? 'insights' : layout.panelView;
+  // A remembered view must not leak into a session that cannot show it: 'preview' before a
+  // draft is bound, and 'target' on a CV with no job to target (a no-JD build, or a session
+  // opened before one was set). Both fall back to insights rather than an empty panel.
+  const rememberedView = layout.panelView;
+  const panelView =
+    (rememberedView === 'preview' && !canPreview) || (rememberedView === 'target' && !hasJobTarget)
+      ? 'insights'
+      : rememberedView;
 
   // The "live" dot means the preview is ON SCREEN, not merely the selected view. Those
   // come apart: at in-between widths the panel can be collapsed (neither inline nor sheet,
@@ -337,6 +359,32 @@ const StudioDesk = () => {
               </button>
             )}
 
+            {/* The job tracker — the build track's answer to the score pill above. Shows
+                how many of the job's MUST-HAVES the CV can defend so far, from the moment
+                the JD is read. Deliberately ink and not a band colour: 0 of 4 at the start
+                of a build is a to-do list, and painting it red would call an unfinished CV
+                a bad one. */}
+            {showJobTracker && (
+              <button
+                type="button"
+                onClick={openTarget}
+                aria-label={t('ariaStudio.jobTarget.pillAria', {
+                  done: jobCoverage?.mustHaveCovered ?? 0,
+                  total: jobCoverage?.mustHaveTotal ?? 0,
+                })}
+                title={t('ariaStudio.jobTarget.eyebrow')}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <Briefcase className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                <span className="font-heading text-[15px] font-bold tabular-nums text-slate-900 dark:text-white">
+                  {jobCoverage?.mustHaveCovered ?? 0}
+                </span>
+                <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">
+                  /{jobCoverage?.mustHaveTotal ?? 0}
+                </span>
+              </button>
+            )}
+
             {/* View switch — the WIDE Live preview vs the NARROW insights. Active view
                 gets the neutral active-state (matching the other header toggles); the
                 score pill stays to their right. */}
@@ -407,6 +455,14 @@ const StudioDesk = () => {
                 isSheet={layout.panelUsesSheet}
               />
             </div>
+          ) : panelView === 'target' ? (
+            <div className="w-[320px] shrink-0 min-h-0">
+              <JobTargetPanel
+                coverage={jobCoverage}
+                keywords={jobKeywords}
+                onClose={() => layout.setPanelView(null)}
+              />
+            </div>
           ) : (
             <div className="w-[320px] shrink-0 min-h-0">
               <StudioArtifactPanel
@@ -448,13 +504,21 @@ const StudioDesk = () => {
         label={
           panelView === 'preview'
             ? t('ariaStudio.livePreview.heading')
-            : t('ariaStudio.desk.tailoredCopy')
+            : panelView === 'target'
+              ? t('ariaStudio.jobTarget.eyebrow')
+              : t('ariaStudio.desk.tailoredCopy')
         }
       >
         {panelView === 'preview' ? (
           <StudioLivePreview
             onClose={() => layout.setPanelOverlay(false)}
             isSheet={layout.panelUsesSheet}
+          />
+        ) : panelView === 'target' ? (
+          <JobTargetPanel
+            coverage={jobCoverage}
+            keywords={jobKeywords}
+            onClose={() => layout.setPanelOverlay(false)}
           />
         ) : (
           <StudioArtifactPanel

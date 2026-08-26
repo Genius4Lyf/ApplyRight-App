@@ -4090,6 +4090,18 @@
       "editField": "Modifier {{field}}",
       "saveField": "Enregistrer"
     },
+    "jobTarget": {
+      "eyebrow": "Ce que ce poste demande",
+      "thisJob": "Ce poste",
+      "ofTarget": "sur {{total}} indispensables couverts",
+      "blurb": "Voici ce que l'annonce dit exiger. Couvrez-les avec du vécu que vous pouvez réellement défendre — le reste est un bonus.",
+      "mustHave": "Indispensable",
+      "niceToHave": "Souhaité",
+      "bonus": "Non exigé — un plus si vous l'avez.",
+      "provedAt": "vous l'avez montré dans {{where}}",
+      "askAria": "En parler à Aria",
+      "pillAria": "{{done}} sur {{total}} indispensables couverts — ouvrir ce que ce poste demande"
+    },
     "studioArtifactPanel": {
       "tailoredCopy": "Copie adaptée",
       "noCvYet": "Aucun CV pour l'instant",
@@ -4608,7 +4620,17 @@
       "buildJobDoneNoBrief": "Compris. Assurons-nous maintenant qu'on puisse vous joindre.",
       "buildSkipJob": "Pas de problème — on va construire un CV solide et polyvalent. D'abord, vos coordonnées.",
       "hunt": {
-        "opener": "Peut-on vérifier si j’ai déjà fait {{name}} quelque part ?"
+        "askedAbout": "à propos de : {{name}}"
+      },
+      "cardCollapsed": {
+        "thisEntry": "cet élément",
+        "form": "{{title}} — appuyez pour compléter les détails",
+        "type": "appuyez pour choisir le type",
+        "section": "{{section}} — appuyez pour reprendre",
+        "contact": "vos coordonnées — appuyez pour reprendre",
+        "certs": "certifications — appuyez pour reprendre",
+        "careerStage": "où vous en êtes dans votre carrière — appuyez pour reprendre",
+        "job": "le poste que vous visez — appuyez pour reprendre"
       },
       "huntOffer": {
         "eyebrow": "Encore une chose",
@@ -4796,8 +4818,9 @@
       "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
       "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
       "backToSections": "Retour aux sections",
-      "aimingAt": "vise {{keywords}}",
-      "jobAsksFor": "le poste demande {{keywords}}",
+      "aimingAt": "Objectif : {{keywords}}",
+      "questionsLeft_one": "{{count}} question restante sur ce poste",
+      "questionsLeft_other": "{{count}} questions restantes sur ce poste",
       "entryGone": "Celui-ci n'existe plus — choisissez-en un autre et on continue.",
       "send": "Envoyer",
       "draftCount": "Rédiger {{n}} · {{cr}} cr",
