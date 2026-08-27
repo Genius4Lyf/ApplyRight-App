@@ -3090,12 +3090,17 @@ const StudioChat = ({ onPaywall }) => {
           )}
         </AnimatePresence>
         {/* The leading and trailing spacing belong to the scrollable transcript, not
-            the outer chat shell or composer. The top breathes below the divider when
-            the thread begins, then scrolls away; the bottom lets the final card (and
-            Aria's orbit beneath it) clear the docked input. */}
+            the outer chat shell or composer. The bottom lets the final card (and Aria's
+            orbit beneath it) clear the docked input.
+
+            ONE top value at every width. It used to be 16px on a phone, sized to sit
+            under the header's 16px blurred fade; with that fade gone the 16px read as a
+            gap, and taking it out entirely put the first line against the header. 12px is
+            a breath, not a band — and being the same figure desktop already used, there
+            is no longer a per-width rule to keep in step with a decoration. */}
         <div
           ref={chatRef}
-          className="absolute inset-0 chat-scroll flex flex-col gap-5 pt-4 pb-12 sm:pt-3 sm:pb-14"
+          className="absolute inset-0 chat-scroll flex flex-col gap-5 pt-3 pb-12 sm:pb-14"
         >
           {/* The role being built — pinned to the top of the SCROLL AREA, so it holds
               position as the conversation grows beneath it. Rendered from the draft

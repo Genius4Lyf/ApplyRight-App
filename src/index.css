@@ -903,23 +903,10 @@
 }
 
 @media (max-width: 639px) {
-  .studio-mobile-header::after {
-    position: absolute;
-    z-index: 1;
-    right: 0;
-    bottom: -16px;
-    left: 0;
-    height: 16px;
-    pointer-events: none;
-    background: linear-gradient(to bottom, rgb(255 255 255 / 88%), rgb(255 255 255 / 0%));
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    content: '';
-  }
-
-  .dark .studio-mobile-header::after {
-    background: linear-gradient(to bottom, rgb(15 23 42 / 88%), rgb(15 23 42 / 0%));
-  }
+  /* NO fade under the mobile header. It used to bleed a blurred white gradient 16px into
+     the transcript, which smeared whatever line happened to be scrolling under it —
+     softening a message is not the same as showing there is more above it, and on a phone
+     the header already reads as a header without help. Plain edges, plain scroll. */
 
   /* The Studio picker is a reading/control surface on mobile: its selected model,
      options, and explainer all share the same 17px text scale. */
