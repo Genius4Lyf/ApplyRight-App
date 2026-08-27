@@ -29,7 +29,41 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting, onUploadInstead }) =
         {t('ariaStudio.buildRoadmap.sixSections')}
       </p>
 
-      <ol className="mt-3 space-y-1.5">
+      {/* THE PLAN, TWICE — one row per section on a real screen, one flowing line on a
+          phone.
+
+          The six rows are reassurance, not a decision: nobody picks "Start building"
+          BECAUSE Projects is fourth. At full height they pushed the card past a phone
+          viewport, and since the chat anchors a new turn to its TOP, the two things the
+          card actually asks you to choose between fell below the fold — on the one screen
+          size where nothing tells you there is more to scroll to.
+
+          Same sections, same order, same done-state in both; only the density changes. */}
+      <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-[13.5px] leading-relaxed sm:hidden">
+        {BUILD_SECTIONS.map((s, i) => {
+          const done = !!status[s.key];
+          return (
+            <li
+              key={s.key}
+              className={`flex items-center gap-1 ${
+                done
+                  ? 'text-slate-400 line-through decoration-1 dark:text-slate-500'
+                  : 'text-slate-700 dark:text-slate-200'
+              }`}
+            >
+              <span aria-hidden="true">{done ? '✓' : s.icon}</span>
+              <span>{t(s.labelKey)}</span>
+              {i < BUILD_SECTIONS.length - 1 && (
+                <span aria-hidden="true" className="pl-1 text-slate-300 dark:text-slate-600">
+                  ·
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <ol className="mt-3 hidden space-y-1.5 sm:block">
         {BUILD_SECTIONS.map((s, i) => {
           const done = !!status[s.key];
           return (

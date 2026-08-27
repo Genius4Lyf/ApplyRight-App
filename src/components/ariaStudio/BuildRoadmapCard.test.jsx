@@ -13,6 +13,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import i18n from '../../i18n';
 import { CREDIT_COSTS } from '../../lib/credits';
+import { BUILD_SECTIONS } from '../../lib/studioFlow';
 import BuildRoadmapCard from './BuildRoadmapCard';
 
 afterEach(cleanup);
@@ -71,5 +72,54 @@ describe('BuildRoadmapCard — the upload fork', () => {
 
     fireEvent.click(screen.getByText(t('ariaStudio.buildRoadmap.uploadTitle')));
     expect(onUploadInstead).not.toHaveBeenCalled();
+  });
+});
+
+describe('BuildRoadmapCard — fitting a phone', () => {
+  // The card outgrew a phone viewport, and the chat anchors a new turn to its TOP — so
+  // "Start building" and the upload option both fell below the fold, on the one screen
+  // size with nothing to say there was more below. The plan now renders twice: a compact
+  // line on phones, the numbered list from `sm` up.
+  // The card has exactly one of each: the compact plan is a <ul>, the numbered one an
+  // <ol>. Selecting by tag rather than by Tailwind class keeps these tests about the two
+  // renderings existing, not about which breakpoint utility spells them.
+  const lists = () => ({
+    compact: document.querySelector('ul'),
+    full: document.querySelector('ol'),
+  });
+
+  it('offers a compact plan on phones and the numbered one above sm', () => {
+    render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
+
+    const { compact, full } = lists();
+    expect(compact).toBeTruthy();
+    expect(full).toBeTruthy();
+    // Exactly one is ever displayed — the other is display:none, so it never doubles up
+    // visually or in the accessibility tree.
+    expect(full.className).toContain('hidden');
+  });
+
+  it('names the same six sections either way', () => {
+    render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
+
+    const { compact, full } = lists();
+    BUILD_SECTIONS.forEach((s) => {
+      expect(compact.textContent).toContain(t(s.labelKey));
+      expect(full.textContent).toContain(t(s.labelKey));
+    });
+    expect(compact.querySelectorAll('li')).toHaveLength(BUILD_SECTIONS.length);
+  });
+
+  it('still shows what is already done in the compact plan', () => {
+    // A resumed session must not lose its ticks just because the screen is small.
+    render(
+      <BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} status={{ contact: true }} />
+    );
+
+    const contactItem = [...lists().compact.querySelectorAll('li')].find((li) =>
+      li.textContent.includes(t('ariaStudio.studioFlow.sections.contact'))
+    );
+    expect(contactItem.className).toContain('line-through');
+    expect(contactItem.textContent).toContain('✓');
   });
 });
