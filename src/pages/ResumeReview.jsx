@@ -68,7 +68,7 @@ import {
   SalesSidebarTemplate,
   SlateTimelineTemplate,
 } from '../components/templates/SignatureCollectionTemplates';
-import { TEMPLATES } from '../data/templates';
+import { TEMPLATES, paperColor, sidebarFill } from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
@@ -105,25 +105,9 @@ import {
 // gated by the server-side paywall (DownloadPaywallModal), not an ad.
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
-// Templates whose sidebar is a full-height design element: the colored/ruled
-// column must reach the page bottom even when the CV is short. Keyed by
-// templateId; width/side must match the sidebar div in each template file.
-const SIDEBAR_FILL = {
-  'applyright-navy': { side: 'left', width: '34%', className: 'bg-[#0c1627]' },
-  'applyright-mono': {
-    side: 'left',
-    width: '32%',
-    className: 'bg-[#f5f5f2] border-r-2 border-[#111318]',
-  },
-  'slate-timeline': { side: 'left', width: '35%', className: 'bg-[#343d4d]' },
-  'navy-portrait': { side: 'left', width: '36%', className: 'bg-[#193e57]' },
-  'sales-sidebar': { side: 'left', width: '38%', className: 'bg-[#d5dfe7]' },
-  'minimal-grid': {
-    side: 'left',
-    width: '30%',
-    className: 'bg-[#f2f1ed] border-r border-[#d7d5cf]',
-  },
-};
+// The sidebar-fill registry moved to data/templates (sidebarFill) so Aria Studio's
+// template preview can render the same band. It only existed here, which is why a
+// sidebar template looked right in CV Studio and stopped halfway down the page there.
 
 const STUDIO_BEST_CHOICES_PREFERENCE_KEY = 'cvStudio:showBestChoices';
 
@@ -1699,8 +1683,11 @@ const ResumeReview = () => {
             <div
               ref={previewContentRef}
               id="resume-content"
-              className={`cv-template-container bg-white shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none ${
-                activeTab === 'resume' && SIDEBAR_FILL[templateId]
+              // No `bg-white` class — the page's colour is the inline backgroundColor
+              // below (paperColor). The class was dead (inline wins) but read as if the
+              // page were always white, which is the belief this whole fix removed.
+              className={`cv-template-container shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none ${
+                activeTab === 'resume' && sidebarFill(templateId)
                   ? 'cv-continuous-sidebar'
                   : ''
               }`}
@@ -1708,12 +1695,12 @@ const ResumeReview = () => {
                 width: paperWidth,
                 minWidth: paperWidth,
                 minHeight: paperHeight,
-                backgroundColor:
-                  templateId === 'the-profile'
-                    ? '#faf8f4'
-                    : templateId === 'minimal-serif'
-                      ? '#fcfbf7'
-                      : '#ffffff',
+                // The page takes the template's paper colour. This used to be a ternary
+                // naming two of the four tinted templates from memory, so Modern
+                // Professional and Operations Blueprint got a white page under their
+                // warm content — a hard colour break wherever the CV ran short of the
+                // full A4 height. paperColor reads it off the template's own entry.
+                backgroundColor: paperColor(templateId),
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
@@ -1747,13 +1734,13 @@ const ResumeReview = () => {
                   LengthCoach page-count measurement. The template's own sidebar
                   paints over this in the content region; below the content, only
                   this layer shows, reaching the page bottom. */}
-              {activeTab === 'resume' && SIDEBAR_FILL[templateId] && (
+              {activeTab === 'resume' && sidebarFill(templateId) && (
                 <div
                   aria-hidden="true"
-                  className={`absolute inset-y-0 ${SIDEBAR_FILL[templateId].className}`}
+                  className={`absolute inset-y-0 ${sidebarFill(templateId).className}`}
                   style={{
-                    [SIDEBAR_FILL[templateId].side]: 0,
-                    width: SIDEBAR_FILL[templateId].width,
+                    [sidebarFill(templateId).side]: 0,
+                    width: sidebarFill(templateId).width,
                     zIndex: 0,
                   }}
                 />

@@ -1,6 +1,6 @@
 import CVService from '../services/cv.service';
 import { downloadBlob } from '../utils/download';
-import { TEMPLATES } from '../data/templates';
+import { TEMPLATES, paperColor } from '../data/templates';
 
 // The template a download falls back to when nothing has been chosen. 'ats-clean' is the
 // free, single-column, ATS-parseable one — the safe default to hand someone who never
@@ -108,8 +108,15 @@ export function buildPrintHtml(element, { paperWidth, paperHeight, paper, isDark
 
   const contentHtml = clone.outerHTML;
 
-  // Apply dark background only for Royal Elegance template
-  const bgColor = isDarkTemplate ? '#0f172a' : 'transparent';
+  // THE PAGE BEHIND THE CV, in the actual PDF.
+  //
+  // The clone's minHeight is stripped just above, so the CV node ends with its content —
+  // but the PDF PAGE is still a full sheet. Whatever `body` is painted shows below the
+  // content, and 'transparent' prints as white. On a tinted template that put a hard
+  // white band under every CV that ran short of a page, in the paid download.
+  //
+  // Royal Elegance keeps its own dark page (its template is designed against it).
+  const bgColor = isDarkTemplate ? '#0f172a' : paperColor(templateId);
 
   return `
                 <!DOCTYPE html>

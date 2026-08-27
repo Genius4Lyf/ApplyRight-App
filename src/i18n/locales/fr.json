@@ -4093,6 +4093,7 @@
       "openRoleToReview": "Ouvrir ce poste pour le vérifier",
       "openProjectToReview": "Ouvrir ce projet pour le vérifier",
       "editField": "Modifier {{field}}",
+      "achievementsList": "Réalisations",
       "saveField": "Enregistrer"
     },
     "jobTarget": {

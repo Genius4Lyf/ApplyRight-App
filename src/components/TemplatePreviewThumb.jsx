@@ -1,51 +1,12 @@
 import React from 'react';
 
-// Kept templates — mapped by their REAL ids (must match ResumeReview's render
-// ternary / templates.js). NOTE: intentionally NOT reusing CVTemplateRenderer,
-// whose id keys differ (e.g. 'minimalist', 'professional').
-import ATSCleanTemplate from './templates/ATSCleanTemplate';
-import StudentATSTemplate from './templates/StudentATSTemplate';
-import ModernProfessionalTemplate from './templates/ModernProfessionalTemplate';
-import ModernCleanTemplate from './templates/ModernCleanTemplate';
-import MinimalistSerifTemplate from './templates/MinimalistSerifTemplate';
-import MinimalistGridTemplate from './templates/MinimalistGridTemplate';
-import ExecutiveCorporateTemplate from './templates/ExecutiveCorporateTemplate';
-import ExecutiveEnergyTemplate from './templates/ExecutiveEnergyTemplate';
-import OperationsBlueprintTemplate from './templates/OperationsBlueprintTemplate';
-import ApplyRightNavyTemplate from './templates/ApplyRightNavyTemplate';
-import ApplyRightMonoTemplate from './templates/ApplyRightMonoTemplate';
-import ApplyRightBandTemplate from './templates/ApplyRightBandTemplate';
-import ApplyRightBandTwinTemplate from './templates/ApplyRightBandTwinTemplate';
-import TheProfileTemplate from './templates/TheProfileTemplate';
-import TheAscentTemplate from './templates/TheAscentTemplate';
-import {
-  AngularCorporateTemplate,
-  NavyPortraitTemplate,
-  SalesSidebarTemplate,
-  SlateTimelineTemplate,
-} from './templates/SignatureCollectionTemplates';
+// The id → component map is SHARED (lib/templateComponents). It used to be declared
+// here with a comment saying CVTemplateRenderer's keys deliberately differed — which is
+// exactly how three templates ended up rendering as ATS Clean everywhere except these
+// thumbnails. One list now.
+import { TEMPLATE_COMPONENTS } from '../lib/templateComponents';
 
-const TEMPLATE_COMPONENTS = {
-  'ats-clean': ATSCleanTemplate,
-  'student-ats': StudentATSTemplate,
-  'modern-professional': ModernProfessionalTemplate,
-  modern: ModernCleanTemplate,
-  'minimal-serif': MinimalistSerifTemplate,
-  'minimal-grid': MinimalistGridTemplate,
-  'executive-corporate': ExecutiveCorporateTemplate,
-  'executive-energy': ExecutiveEnergyTemplate,
-  'operations-blueprint': OperationsBlueprintTemplate,
-  'applyright-navy': ApplyRightNavyTemplate,
-  'applyright-mono': ApplyRightMonoTemplate,
-  'applyright-band': ApplyRightBandTemplate,
-  'applyright-band-twin': ApplyRightBandTwinTemplate,
-  'the-profile': TheProfileTemplate,
-  'the-ascent': TheAscentTemplate,
-  'slate-timeline': SlateTimelineTemplate,
-  'navy-portrait': NavyPortraitTemplate,
-  'angular-corporate': AngularCorporateTemplate,
-  'sales-sidebar': SalesSidebarTemplate,
-};
+
 
 // A4 width in px at 96dpi (210mm). The inner page renders at this width and is
 // scaled down to fit the thumbnail; overflow is clipped so only the top of the

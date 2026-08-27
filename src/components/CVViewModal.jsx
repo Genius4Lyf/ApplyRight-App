@@ -6,6 +6,7 @@ import { X, FileText, ArrowUpRight, Lock } from 'lucide-react';
 import ApplicationService from '../services/application.service';
 import api from '../services/api';
 import CVTemplateRenderer from './CVTemplateRenderer';
+import { paperColor } from '../data/templates';
 import ScreenshotCover from './ScreenshotCover';
 import { useScreenshotGuard } from '../hooks/useScreenshotGuard';
 
@@ -209,10 +210,13 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           </div>
         ) : (
           <div
-            className="bg-white shadow-2xl mx-auto relative select-none"
+            className="shadow-2xl mx-auto relative select-none"
             style={{
               zoom: scale,
               width: `${A4_WIDTH}px`,
+              // The page owns the paper colour now — CVTemplateRenderer no longer paints
+              // a white background, because doing so covered the tinted page beneath it.
+              backgroundColor: paperColor(app?.templateId),
               // Copy-protection: block long-press callout / drag-to-save on mobile.
               WebkitTouchCallout: 'none',
             }}

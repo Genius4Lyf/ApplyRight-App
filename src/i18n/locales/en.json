@@ -4097,6 +4097,7 @@
       "openRoleToReview": "Open this role to review it",
       "openProjectToReview": "Open this project to review it",
       "editField": "Edit {{field}}",
+      "achievementsList": "Achievements",
       "saveField": "Save"
     },
     "jobTarget": {

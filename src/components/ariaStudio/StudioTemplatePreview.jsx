@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import CVTemplateRenderer from '../CVTemplateRenderer';
 import TemplatePreviewThumb from '../TemplatePreviewThumb';
-import { TEMPLATES } from '../../data/templates';
+import { TEMPLATES, paperColor, sidebarFill } from '../../data/templates';
 import { DEFAULT_TEMPLATE_ID } from '../../lib/cvDownload';
 import { generateMarkdownFromDraft } from '../../utils/markdownUtils';
 import { useAriaStudio } from '../../context/AriaStudioContext';
@@ -24,6 +24,7 @@ const StudioTemplatePreview = () => {
 
   const templateId = cvData?.templateId || DEFAULT_TEMPLATE_ID;
   const selected = TEMPLATES.find((template) => template.id === templateId) || TEMPLATES[0];
+  const sidebar = sidebarFill(templateId);
   const application = useMemo(() => {
     if (!cvData) return null;
     return {
@@ -146,16 +147,44 @@ const StudioTemplatePreview = () => {
         >
           <div
             ref={documentRef}
-            className="cv-template-container origin-top-left bg-white text-black shadow-[0_2px_4px_rgba(15,23,42,.08),0_18px_48px_-20px_rgba(15,23,42,.35)] transition-transform duration-200"
+            className={`cv-template-container relative origin-top-left text-black shadow-[0_2px_4px_rgba(15,23,42,.08),0_18px_48px_-20px_rgba(15,23,42,.35)] transition-transform duration-200 ${
+              // Bleeds the template's own sidebar 3px past its bottom edge. The band
+              // behind it is the SAME colour, but the two meet on a fractional pixel
+              // (the page is transform-scaled), which shows as a hairline across the
+              // column. Same class CV Studio applies, for the same reason.
+              sidebar ? 'cv-continuous-sidebar' : ''
+            }`}
             style={{
               width: A4_WIDTH,
               minWidth: A4_WIDTH,
               minHeight: A4_HEIGHT,
+              // The page keeps its full A4 height on purpose (a CV is a sheet), so it has
+              // to be the template's own paper colour — otherwise a short CV ends in a
+              // white block halfway down.
+              backgroundColor: paperColor(templateId),
               transform: `scale(${scale})`,
               '--cv-leading': 1.5,
             }}
           >
-            <CVTemplateRenderer application={application} userProfile={templateProfile} />
+            {/* Full-page sidebar band, for templates whose coloured column is a design
+                element. Same treatment CV Studio gives it, from the same registry.
+
+                ABSOLUTE, and that is load-bearing: out of flow it adds nothing to the
+                measured content height, so it cannot push a one-page CV onto a second
+                page. `inset-y-0` spans exactly this page and no further, so it also
+                can't inflate scrollHeight — which the height measurement above reads.
+                The template's own sidebar paints over this across the content region;
+                below the content, only this band shows. */}
+            {sidebar && (
+              <div
+                aria-hidden="true"
+                className={`absolute inset-y-0 ${sidebar.className}`}
+                style={{ [sidebar.side]: 0, width: sidebar.width, zIndex: 0 }}
+              />
+            )}
+            <div className="relative" style={{ zIndex: 1 }}>
+              <CVTemplateRenderer application={application} userProfile={templateProfile} />
+            </div>
           </div>
         </div>
       </div>

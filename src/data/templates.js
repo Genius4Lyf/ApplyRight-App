@@ -11,6 +11,7 @@ export const WEEKLY_TRENDING_TEMPLATE_IDS = [
 export const TEMPLATES = [
   {
     id: 'applyright-navy',
+    sidebar: { side: 'left', width: '34%', className: 'bg-[#0c1627]' },
     name: 'ApplyRight Navy',
     group: 'ApplyRight',
     isPro: true,
@@ -41,6 +42,7 @@ export const TEMPLATES = [
   },
   {
     id: 'applyright-mono',
+    sidebar: { side: 'left', width: '32%', className: 'bg-[#f5f5f2] border-r-2 border-[#111318]' },
     name: 'ApplyRight Mono',
     group: 'ApplyRight',
     isPro: true,
@@ -71,6 +73,7 @@ export const TEMPLATES = [
   },
   {
     id: 'modern-professional',
+    paper: '#f7f6f2',
     name: 'Modern Professional',
     group: 'Professional',
     isPro: true,
@@ -81,6 +84,7 @@ export const TEMPLATES = [
   },
   {
     id: 'slate-timeline',
+    sidebar: { side: 'left', width: '35%', className: 'bg-[#343d4d]' },
     name: 'Slate Timeline',
     group: 'Sidebar',
     isPro: true,
@@ -91,6 +95,7 @@ export const TEMPLATES = [
   },
   {
     id: 'navy-portrait',
+    sidebar: { side: 'left', width: '36%', className: 'bg-[#193e57]' },
     name: 'Navy Portrait',
     group: 'Sidebar',
     isPro: true,
@@ -111,6 +116,7 @@ export const TEMPLATES = [
   },
   {
     id: 'sales-sidebar',
+    sidebar: { side: 'left', width: '38%', className: 'bg-[#d5dfe7]' },
     name: 'Sales Sidebar',
     group: 'Sidebar',
     isPro: true,
@@ -152,6 +158,7 @@ export const TEMPLATES = [
   },
   {
     id: 'minimal-serif',
+    paper: '#fcfbf7',
     name: 'The Author',
     group: 'Editorial',
     isPro: true,
@@ -162,6 +169,7 @@ export const TEMPLATES = [
   },
   {
     id: 'minimal-grid',
+    sidebar: { side: 'left', width: '30%', className: 'bg-[#f2f1ed] border-r border-[#d7d5cf]' },
     name: 'Nordic Grid',
     group: 'Sidebar',
     isPro: true,
@@ -171,6 +179,7 @@ export const TEMPLATES = [
   },
   {
     id: 'the-profile',
+    paper: '#faf8f4',
     name: 'The Profile',
     group: 'Editorial',
     isPro: true,
@@ -191,6 +200,7 @@ export const TEMPLATES = [
   },
   {
     id: 'operations-blueprint',
+    paper: '#fbfaf7',
     name: 'Operations Blueprint',
     group: 'Industry',
     isPro: true,
@@ -200,3 +210,54 @@ export const TEMPLATES = [
     thumbnail: 'bg-[#fbfaf7] border-t-4 border-t-[#18232d] border-l-2 border-l-[#ef8f22]',
   },
 ];
+
+/** The colour of unprinted paper. Every template that doesn't say otherwise is white. */
+export const DEFAULT_PAPER = '#ffffff';
+
+/**
+ * The paper colour behind a template, for the A4 "page" shell each rendering surface
+ * draws around it.
+ *
+ * A template paints its own paper only as far as its CONTENT goes. The page it sits on is
+ * taller than that — deliberately, since a CV is a sheet and seeing how much room is left
+ * is useful — so unless the shell paints the SAME colour, a short CV on a tinted template
+ * ends in a hard white block partway down the page. That happened on every surface: CV
+ * Studio, Aria Studio's live preview, the view modal, and the downloaded PDF.
+ *
+ * This is the one answer all of them ask. `paper` lives on the template entry above
+ * rather than in a second lookup keyed by id — a second list keyed by id is exactly the
+ * shape that let the renderer's ids drift out of step with these in the first place.
+ *
+ * @param {string} templateId
+ * @returns {string} a CSS colour, never undefined
+ */
+export const paperColor = (templateId) =>
+  TEMPLATES.find((template) => template.id === templateId)?.paper || DEFAULT_PAPER;
+
+/**
+ * The full-height sidebar spec for templates whose coloured column is a design element
+ * rather than a container for content — or `null`.
+ *
+ * A sidebar is laid out in flow, so it ends where its own content ends. On a page that is
+ * deliberately taller than the CV (a short CV on a full A4 sheet) that leaves the column
+ * stopping partway down with bare paper beneath it — the same break the page colour had,
+ * one layer in.
+ *
+ * The fix each surface renders from this is an ABSOLUTELY POSITIONED band behind the
+ * template, `inset-y-0` so it spans exactly the page and no more. Out of flow is the
+ * whole point: it adds nothing to the measured content height, so it cannot push a
+ * one-page CV onto a second page. Never make the sidebar itself stretch — that changes
+ * layout, and page count with it.
+ *
+ * `width` and `className` MUST match the sidebar element inside the template file.
+ *
+ * The PDF does NOT use this. buildPrintHtml reads the width off the sidebar's own
+ * `w-[…]` class and pins it with position:fixed, which Chrome's print engine repeats on
+ * every page — a better mechanism that needs no registration, but one that only works
+ * against a print page box, not on screen.
+ *
+ * @param {string} templateId
+ * @returns {{side: string, width: string, className: string}|null}
+ */
+export const sidebarFill = (templateId) =>
+  TEMPLATES.find((template) => template.id === templateId)?.sidebar || null;

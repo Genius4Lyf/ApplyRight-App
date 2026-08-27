@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { localizeCvMarkdown } from '../lib/cvLabels';
+import { TEMPLATE_COMPONENTS } from '../lib/templateComponents';
 
 // Template components — same set the full ResumeReview / Preview use.
 import ATSCleanTemplate from './templates/ATSCleanTemplate';
@@ -48,6 +49,18 @@ import {
 // Pure, read-only CV renderer. Takes an application (with `optimizedCV` markdown
 // and `templateId`) and renders it with the same template components used by the
 // full CV page — so the inline preview matches the real thing exactly.
+
+// ─── LEGACY ids. DO NOT DELETE. ───
+//
+// These are NOT dead code, however much they look it. The picker was pruned from 29
+// templates to 19, and most of the keys below are no longer offered — but a CV SAVED
+// before that prune still stores its old id ('luxury-gold', 'tech-google', …), and this
+// map is the only thing that still renders those documents as their owners designed
+// them. Deleting these would silently redraw real users' CVs as ATS Clean.
+//
+// Currently-offered templates are resolved from lib/templateComponents instead, which is
+// the single list shared with the picker and the thumbnails. Overlapping entries here are
+// harmless: the shared map is consulted first.
 const TEMPLATES = {
   'ats-clean': ATSCleanTemplate,
   modern: ModernCleanTemplate,
@@ -130,11 +143,28 @@ const CVTemplateRenderer = ({ application, userProfile }) => {
     [rawMarkdown, application?.outputLang]
   );
 
-  // Unknown/legacy templateId falls back to the safe, ATS-clean default.
-  const Template = TEMPLATES[application?.templateId] || ATSCleanTemplate;
+  // CURRENT templates resolve through the shared map; LEGACY ids fall through to
+  // TEMPLATES below (see its comment — those are still real CVs). Anything neither knows
+  // renders ATS Clean, which is the right answer for an unrecognised id: a CV must render
+  // SOMETHING. But it says so now — a silent substitution is precisely what let three
+  // live templates render as ATS Clean for months without anyone seeing an error.
+  const templateId = application?.templateId;
+  const Template = TEMPLATE_COMPONENTS[templateId] || TEMPLATES[templateId];
+  if (!Template && templateId) {
+    console.warn(
+      `CVTemplateRenderer: no template for id "${templateId}" — falling back to ATS Clean.`
+    );
+  }
+  const Resolved = Template || ATSCleanTemplate;
+
+  // NO background here. This div sits BETWEEN the page shell and the template, and each
+  // template paints its own paper only as far as its content goes — so a white background
+  // on this wrapper covered the tinted page underneath and produced a hard white block
+  // below every short CV on a tinted template. The shell owns the paper colour
+  // (data/templates.paperColor); this wrapper owns nothing but layout.
   return (
-    <div className="cv-template-container bg-white text-black text-left">
-      <Template markdown={localizedMarkdown} userProfile={profile} />
+    <div className="cv-template-container text-black text-left">
+      <Resolved markdown={localizedMarkdown} userProfile={profile} />
     </div>
   );
 };

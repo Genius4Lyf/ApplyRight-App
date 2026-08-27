@@ -110,6 +110,20 @@ const PinnedEntryCard = ({
   // instead of leaving the user to hunt for a box that appeared mid-card.
   const editorInputRef = useRef(null);
   const bulletTotal = bulletCount(entry);
+  // Scrolling the achievements list is real engagement, but on touch it fires neither
+  // mouseenter nor focus — so `interacting` stays false and the idle timer below would
+  // shut the card mid-scroll. Re-arm that timer on activity instead of pinning
+  // `interacting` true: touch has no matching "leave" event, so pinning it would wedge
+  // the card open for good.
+  const [activity, setActivity] = useState(0);
+  const lastBump = useRef(0);
+  const bumpActivity = () => {
+    // Scroll fires continuously; re-arming twice a second is enough.
+    const now = performance.now();
+    if (now - lastBump.current < 500) return;
+    lastBump.current = now;
+    setActivity((n) => n + 1);
+  };
 
   const toggleOpen = () => {
     setOpen((wasOpen) => {
@@ -124,7 +138,7 @@ const PinnedEntryCard = ({
     if (!open || interacting) return undefined;
     const timer = setTimeout(() => setOpen(false), 5000);
     return () => clearTimeout(timer);
-  }, [open, interacting, entry?._sortId, bulletTotal]);
+  }, [open, interacting, entry?._sortId, bulletTotal, activity]);
   if (!entry) return null;
 
   const copy = COPY[section] || COPY.experience;
@@ -259,6 +273,7 @@ const PinnedEntryCard = ({
       className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md dark:shadow-black/20"
       onMouseEnter={() => setInteracting(true)}
       onMouseLeave={() => setInteracting(false)}
+      onTouchStart={bumpActivity}
       onFocusCapture={() => setInteracting(true)}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false);
@@ -441,19 +456,34 @@ const PinnedEntryCard = ({
               })}
             </dl>
 
+            {/* Capped and scrollable, because a role can collect a dozen achievements and
+                this card is sticky — an unbounded list pushes "Next role" and "Done" off
+                the viewport with no way to scroll down to them. The fields above and the
+                actions below stay in flow; only the bullets move. */}
             {bullets.length > 0 && (
-              <ul className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                {bullets.map((b, i) => (
-                  <li
-                    key={i}
-                    className="flex gap-1.5 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300"
-                  >
-                    {/* A list glyph — decoration, not Aria and not an action. */}
-                    <span className="shrink-0 text-slate-400 dark:text-slate-500">•</span>
-                    <span className="min-w-0">{b}</span>
-                  </li>
-                ))}
-              </ul>
+              <div
+                role="group"
+                // A scroll container unreachable by keyboard is a WCAG 2.1.1 failure —
+                // it has to take focus for arrows/PageDown to move it.
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                tabIndex={0}
+                aria-label={t('ariaStudio.pinnedEntry.achievementsList')}
+                onScroll={bumpActivity}
+                className="custom-scrollbar mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 max-h-[min(34vh,260px)] overflow-y-auto overscroll-contain rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600"
+              >
+                <ul className="space-y-1">
+                  {bullets.map((b, i) => (
+                    <li
+                      key={i}
+                      className="flex gap-1.5 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-300"
+                    >
+                      {/* A list glyph — decoration, not Aria and not an action. */}
+                      <span className="shrink-0 text-slate-400 dark:text-slate-500">•</span>
+                      <span className="min-w-0">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
