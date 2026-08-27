@@ -2483,6 +2483,7 @@
     }
   },
   "creditGate": {
+    "eyebrow": "Crédits",
     "needMoreCredits_one": "Il vous manque {{count}} crédit pour effectuer cette action",
     "needMoreCredits_other": "Il vous manque {{count}} crédits pour effectuer cette action",
     "costVsBalance": "Cette action coûte {{cost}} crédits — vous en avez {{credits}}.",
@@ -4048,7 +4049,11 @@
       "heresThePlan": "Voici le plan",
       "sixSections": "Six sections. On les fera une à la fois, et je vous poserai des questions — vous ne serez jamais face à une page blanche.",
       "settingUp": "Préparation…",
-      "startBuilding": "Commencer"
+      "startBuilding": "Commencer",
+      "or": "ou",
+      "uploadTitle": "Vous avez déjà un CV ?",
+      "uploadBody": "Importez-le et je le lirai, mot pour mot.",
+      "uploadCost": "{{n}} cr"
     },
     "projectType": {
       "whatKind": "De quel type de projet s'agit-il ?"
@@ -4605,6 +4610,28 @@
       "nSkills": "{{n}} compétences",
       "aTailoredSummary": "un résumé adapté",
       "beginBuild": "Avant de commencer, j’ai besoin d’un peu de contexte sur votre expérience.",
+      "beginBuildUpload": "Parfait — avant que vous m’envoyiez le fichier, deux questions rapides pour que je le lise correctement. D’abord, où en êtes-vous dans votre carrière ?",
+      "upload": {
+        "eyebrow": "Votre CV",
+        "prompt": "Envoyez-moi le CV que vous avez déjà et je l’intégrerai à cette session.",
+        "verbatimNote": "Je le reprends exactement tel que vous l’avez écrit — rien n’est réécrit. Nous l’améliorerons ensuite ensemble.",
+        "submit": "Lire mon CV",
+        "busy": "Lecture de votre CV…",
+        "typeInstead": "Je préfère le saisir moi-même",
+        "typedInstead": "Aucun souci — on le fait de la manière habituelle. Commençons par vos coordonnées.",
+        "receipt": "CV lu",
+        "failed": "La lecture de ce CV a échoué. Rien n’a été débité — réessayez, ou saisissez-le vous-même.",
+        "doneComplete": "Voilà un CV complet. J’ai ouvert l’éditeur à droite — chaque ligne vous appartient, et je suis là dès que vous voulez affiner une section.",
+        "doneIncomplete": "C’est noté. Il manque {{missing}}, donc l’éditeur reste verrouillé le temps de compléter tout ça — faisons-le ensemble, en commençant par vos coordonnées.",
+        "nRoles_one": "{{count}} poste",
+        "nRoles_other": "{{count}} postes",
+        "nProjects_one": "{{count}} projet",
+        "nProjects_other": "{{count}} projets",
+        "nEducation_one": "{{count}} diplôme",
+        "nEducation_other": "{{count}} diplômes",
+        "nSkills_one": "{{count}} compétence",
+        "nSkills_other": "{{count}} compétences"
+      },
       "careerStage": {
         "heading": "Où en êtes-vous dans votre carrière ?",
         "body": "Cela aide Aria à vous coacher de la bonne façon dans tout votre CV.",
@@ -4838,6 +4865,7 @@
     "livePreview": {
       "heading": "Aperçu en direct",
       "headingLive": "Aperçu en direct — activé, mis à jour au fil de vos modifications",
+      "headingEditable": "Aperçu en direct — votre CV est prêt à être modifié",
       "yourCv": "Votre CV",
       "closePreview": "Fermer l'aperçu",
       "viewMode": "Mode d'aperçu du CV",

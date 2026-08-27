@@ -13,6 +13,14 @@ const CVUploader = ({
   // framing (e.g. the "Step 1" card on InterviewStart), drop this component's
   // own header + card chrome so they don't double up.
   embedded = false,
+  // Extra multipart fields sent alongside the file — e.g. Aria Studio's import needs
+  // the `draftId` it's importing INTO, since that endpoint updates an existing CV
+  // rather than creating one.
+  fields = null,
+  // Overrides for the two bits of copy a host may need to reword (the Studio says
+  // "Import this CV", not "Confirm Upload").
+  submitLabel = null,
+  busyLabel = null,
 }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +48,9 @@ const CVUploader = ({
     setUploading(true);
     const formData = new FormData();
     formData.append('resume', file);
+    Object.entries(fields || {}).forEach(([key, value]) => {
+      if (value != null) formData.append(key, value);
+    });
 
     try {
       const res = await api.post(endpoint, formData, {
@@ -60,7 +71,9 @@ const CVUploader = ({
       }
       const errorMsg = error.response?.data?.message || error.message || 'Upload failed.';
       setMessage({ type: 'error', text: errorMsg });
-      if (onError) onError({ message: errorMsg });
+      // Hand the server's own payload back too (`code`, `required`, …) so a host that
+      // needs to branch on WHY it failed can, without re-parsing the message string.
+      if (onError) onError({ ...(error.response?.data || {}), message: errorMsg });
     } finally {
       setUploading(false);
     }
@@ -90,7 +103,7 @@ const CVUploader = ({
       <div
         className={`
                     flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-200 relative
-                    ${uploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer border-slate-200 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/30 dark:bg-slate-900/30'}
+                    ${uploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-100 bg-slate-50/30 dark:bg-slate-900/30'}
                 `}
         onClick={() => !uploading && fileInputRef.current.click()}
       >
@@ -106,7 +119,7 @@ const CVUploader = ({
 
         {!file ? (
           <div className="text-center pointer-events-none">
-            <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 transition-colors">
+            <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">
               <Upload className="w-6 h-6" />
             </div>
             <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">
@@ -147,7 +160,7 @@ const CVUploader = ({
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-20">
             <div className="flex flex-col items-center">
               <AriaLoader inline size={32} label="Processing your document…" />
-              <p className="mt-2 text-sm font-medium text-indigo-600">Processing Document...</p>
+              <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">Processing Document...</p>
             </div>
           </div>
         )}
@@ -179,7 +192,7 @@ const CVUploader = ({
             : 'btn-primary'
         }`}
       >
-        {uploading ? 'Processing...' : 'Confirm Upload'}
+        {uploading ? busyLabel || 'Processing...' : submitLabel || 'Confirm Upload'}
       </button>
     </div>
   );

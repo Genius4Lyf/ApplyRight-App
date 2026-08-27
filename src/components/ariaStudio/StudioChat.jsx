@@ -32,7 +32,9 @@ import {
   scoreSignature,
   isDismissable,
   finishableNow,
+  withoutBlankEntries,
 } from '../../lib/studioFlow';
+import { CV_SECTIONS } from '../../lib/cvCompleteness';
 import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -62,6 +64,7 @@ import SectionCoach from './SectionCoach';
 import SummaryFixCard from './SummaryFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
 import BuildRoadmapCard from './BuildRoadmapCard';
+import StudioUploadCard from './StudioUploadCard';
 import TargetJobAskCard from './TargetJobAskCard';
 import CareerStageAskCard from './CareerStageAskCard';
 import ContactConfirmCard from './ContactConfirmCard';
@@ -79,6 +82,11 @@ import { SelectedAnswerBubble, StudioPhaseDivider, StudioReceipt } from './Studi
 // Key, not text — resolved via t() where used, since this is module scope with no
 // react-i18next context.
 const OPENER_KEY = 'ariaStudio.chat.opener';
+
+// cvCompleteness calls the contact section 'name' (it only checks the full name); the
+// Studio calls that step 'contact'. One entry, so the imported-CV message can name a
+// missing section in the same words the rest of the Studio uses for it.
+const COMPLETENESS_SECTION_KEY = { name: 'contact' };
 
 // Phase-0 transcript home. Retired the moment a draft exists: the array migrates into
 // `cvData.coachChats.studio` (identical shape) and the context autosave takes over.
@@ -1666,7 +1674,13 @@ const StudioChat = ({ onPaywall }) => {
 
   // Roadmap accepted → create the real draft NOW. Phase 2 resolves entries server-side
   // by _sortId, so the document has to exist before any of that can be written into.
-  const beginBuild = async () => {
+  //
+  // BOTH roadmap buttons come through here, including "Already have a CV?". The draft is
+  // created either way and is free either way — the upload is an IMPORT into it, not a
+  // create — which is what lets career stage and the target job be asked BEFORE the file
+  // is handed over. `uploadintent` records the fork in the transcript, so a refresh
+  // mid-flow still knows a file is being waited on (see derivePhase).
+  const beginBuild = async (intent = 'scratch') => {
     if (working) return;
     setWorking(true);
     try {
@@ -1676,12 +1690,87 @@ const StudioChat = ({ onPaywall }) => {
         return;
       }
       if (!res) return; // startBuild already surfaced the failure
-      push({ who: 'buildintro' }, { who: 'buildstart', draftId: res.draftId });
+      push(
+        { who: 'buildintro' },
+        { who: 'buildstart', draftId: res.draftId },
+        ...(intent === 'upload' ? [{ who: 'uploadintent' }] : [])
+      );
       setPhase('build:career-stage');
-      ariaSays(t('ariaStudio.chat.beginBuild'));
+      ariaSays(
+        intent === 'upload' ? t('ariaStudio.chat.beginBuildUpload') : t('ariaStudio.chat.beginBuild')
+      );
     } finally {
       setWorking(false);
     }
+  };
+
+  // ─── The upload step ───
+  //
+  // Reached only by a session that took the roadmap's upload fork, and only once career
+  // stage and the target job are answered. The import itself is the charged action; both
+  // handlers below are what happens AFTER it has (or hasn't) landed.
+
+  // Where the build goes once the target job is settled — EITHER way it was settled
+  // ("that's right" or "not yet, build a stronger CV").
+  //
+  // Normally the contact step. But a session that took the roadmap's upload fork owes us
+  // a file first, and it is asked for here rather than after contact so the CV arrives
+  // before we start filling sections in by hand.
+  //
+  // This mirrors derivePhase's `build:upload` rule on purpose: derivePhase is the REFRESH
+  // path and setPhase is the in-session one, and when they disagree the in-session jump
+  // silently wins — which is exactly how the upload card got skipped for anyone who
+  // answered the job question rather than reloading the page.
+  const phaseAfterJob = () =>
+    messages.some((m) => m?.who === 'uploadintent') &&
+    !messages.some((m) => m?.who === 'uploaddone')
+      ? 'build:upload'
+      : 'build:contact';
+
+  // The import came back. What happens next is decided by the CV, not by us: if it covers
+  // enough to unlock the editable preview it opens there, and if it doesn't we say so
+  // plainly and carry on building — with whatever sections DID come through already filled.
+  //
+  // `finishableNow` is the same rule StudioLivePreview's editor lock uses, so the message
+  // and the panel can never disagree about whether the CV is complete.
+  const finishUpload = (data) => {
+    const draft = data?.draft;
+    if (!draft?._id) {
+      toast.error(t('ariaStudio.chat.upload.failed'));
+      return;
+    }
+    setCvData(draft);
+    if (data.remainingCredits != null) {
+      window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.remainingCredits }));
+    }
+
+    const enough = finishableNow(draft);
+    push({ who: 'uploaddone', enough, imported: data.imported || null });
+
+    if (enough) {
+      setPhase('build:done');
+      ariaSays(t('ariaStudio.chat.upload.doneComplete'));
+      return;
+    }
+
+    // Name what's missing using the SAME checks finishableNow just ran, so the sentence
+    // and the locked editor can never disagree about which sections are short. The names
+    // come from the Studio's own section vocabulary rather than a second English list.
+    const captured = withoutBlankEntries(draft);
+    const missing = CV_SECTIONS.filter((s) => !s.optional && !s.check(captured))
+      .map((s) => sectionLabel(t, { key: COMPLETENESS_SECTION_KEY[s.key] || s.key, label: s.label }))
+      .join(', ');
+    setPhase('build:contact');
+    ariaSays(t('ariaStudio.chat.upload.doneIncomplete', { missing }));
+  };
+
+  // No file — a failed upload, a CV they can't find, or a change of mind. Nothing was
+  // charged, and the session continues as an ordinary build rather than dead-ending on a
+  // card the user can't get past.
+  const skipUpload = () => {
+    push({ who: 'uploaddone', skipped: true });
+    setPhase('build:contact');
+    ariaSays(t('ariaStudio.chat.upload.typedInstead'));
   };
 
   // The build's job question reuses the SAME JobCaptureCard as the tailor track, then
@@ -1745,21 +1834,33 @@ const StudioChat = ({ onPaywall }) => {
   // just without the extra grounding.
   const buildSkipJob = () => {
     advance(async () => {
-      const roleFamily =
-        (cvData?.targetJob?.title || '').trim() ||
-        (cvData?.experience || []).find((e) => (e?.title || '').trim())?.title ||
-        '';
-      if (draftId) {
-        try {
-          const { noJd } = await CVService.setNoTarget(draftId, roleFamily);
-          if (noJd) updateCvData({ targetJob: { ...(cvData?.targetJob || {}), noJd } });
-        } catch (err) {
-          console.error('Failed to record no-target', err);
+      // BUSY ACROSS THE AWAIT, exactly as pickCareerStage does one step earlier.
+      //
+      // `advance` clears its transition label BEFORE running this callback, and this one
+      // is async — so without a flag the label drops, React repaints while the network
+      // call is still in flight, and the question the user just answered reappears for a
+      // beat before the next step arrives. roleBusy renders the SAME "noting that down"
+      // indicator, so the two hand over with no gap.
+      setRoleBusy('build-job');
+      try {
+        const roleFamily =
+          (cvData?.targetJob?.title || '').trim() ||
+          (cvData?.experience || []).find((e) => (e?.title || '').trim())?.title ||
+          '';
+        if (draftId) {
+          try {
+            const { noJd } = await CVService.setNoTarget(draftId, roleFamily);
+            if (noJd) updateCvData({ targetJob: { ...(cvData?.targetJob || {}), noJd } });
+          } catch (err) {
+            console.error('Failed to record no-target', err);
+          }
         }
+        push({ who: 'buildjobdone', skipped: true });
+        setPhase(phaseAfterJob());
+        ariaSays(t('ariaStudio.chat.buildSkipJob'));
+      } finally {
+        setRoleBusy(null);
       }
-      push({ who: 'buildjobdone', skipped: true });
-      setPhase('build:contact');
-      ariaSays(t('ariaStudio.chat.buildSkipJob'));
     }, t('ariaStudio.chat.thinking.notingThatDown'));
   };
 
@@ -1767,7 +1868,7 @@ const StudioChat = ({ onPaywall }) => {
   const confirmBuildBrief = () => {
     advance(() => {
       push({ who: 'buildjobdone' });
-      setPhase('build:contact');
+      setPhase(phaseAfterJob());
     }, t('ariaStudio.chat.thinking.savingBrief'));
   };
 
@@ -3316,6 +3417,46 @@ const StudioChat = ({ onPaywall }) => {
             // nothing; the conversation around them already tells that story.
             if (m.who === 'buildintro' || m.who === 'buildstart') return null;
 
+            // `uploadintent` is pure bookkeeping (it records which roadmap button was
+            // taken, so a refresh still knows a file is being waited on) and renders
+            // nothing. `uploaddone` DOES render: what a paid import actually brought in
+            // is a receipt the user should be able to scroll back to.
+            if (m.who === 'uploadintent') return null;
+
+            if (m.who === 'uploaddone') {
+              if (m.skipped) {
+                return (
+                  <SelectedAnswerBubble key={i} reduce={reduce}>
+                    {t('ariaStudio.chat.upload.typeInstead')}
+                  </SelectedAnswerBubble>
+                );
+              }
+              const counts = m.imported || {};
+              return (
+                <StudioReceipt
+                  key={i}
+                  reduce={reduce}
+                  title={t('ariaStudio.chat.upload.receipt')}
+                  detail={[
+                    counts.experience
+                      ? t('ariaStudio.chat.upload.nRoles', { count: counts.experience })
+                      : null,
+                    counts.projects
+                      ? t('ariaStudio.chat.upload.nProjects', { count: counts.projects })
+                      : null,
+                    counts.education
+                      ? t('ariaStudio.chat.upload.nEducation', { count: counts.education })
+                      : null,
+                    counts.skills
+                      ? t('ariaStudio.chat.upload.nSkills', { count: counts.skills })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                />
+              );
+            }
+
             if (m.who === 'careerstage') {
               return (
                 <SelectedAnswerBubble key={i} reduce={reduce}>
@@ -3453,8 +3594,19 @@ const StudioChat = ({ onPaywall }) => {
               <BuildRoadmapCard
                 key="roadmap"
                 status={progress.status}
-                onStart={beginBuild}
+                onStart={() => beginBuild('scratch')}
+                onUploadInstead={() => beginBuild('upload')}
                 starting={working}
+              />
+            )}
+
+            {/* The upload step, standing where the contact step otherwise would. */}
+            {ready && phase === 'build:upload' && (
+              <StudioUploadCard
+                key="upload"
+                draftId={draftId}
+                onImported={finishUpload}
+                onSkip={skipUpload}
               />
             )}
 

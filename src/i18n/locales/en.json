@@ -2487,6 +2487,7 @@
     }
   },
   "creditGate": {
+    "eyebrow": "Credits",
     "needMoreCredits_one": "You need {{count}} more credit to run this",
     "needMoreCredits_other": "You need {{count}} more credits to run this",
     "costVsBalance": "This action costs {{cost}} credits — you have {{credits}}.",
@@ -4052,7 +4053,11 @@
       "heresThePlan": "Here's the plan",
       "sixSections": "Six sections. I'll take them one at a time and ask you questions — you never face a blank page.",
       "settingUp": "Setting up…",
-      "startBuilding": "Start building"
+      "startBuilding": "Start building",
+      "or": "or",
+      "uploadTitle": "Already have a CV?",
+      "uploadBody": "Upload it and I'll read it in, word for word.",
+      "uploadCost": "{{n}} cr"
     },
     "projectType": {
       "whatKind": "What kind of project is it?"
@@ -4609,6 +4614,28 @@
       "nSkills": "{{n}} skills",
       "aTailoredSummary": "a tailored summary",
       "beginBuild": "Before we begin, I need one quick bit of context about your experience.",
+      "beginBuildUpload": "Good — before you send me the file, two quick questions so I read it properly. First, where are you in your career?",
+      "upload": {
+        "eyebrow": "Your CV",
+        "prompt": "Send me the CV you already have and I'll read it into this session.",
+        "verbatimNote": "I'll bring it in exactly as you wrote it — nothing rewritten. We'll improve it together from there.",
+        "submit": "Read my CV",
+        "busy": "Reading your CV…",
+        "typeInstead": "I'll type it out instead",
+        "typedInstead": "No problem — we'll do it the usual way. Let's start with your contact details.",
+        "receipt": "Read your CV",
+        "failed": "Something went wrong reading that CV. Nothing was charged — try again, or type it out instead.",
+        "doneComplete": "That's a complete CV. I've opened the editor on the right — every line is yours to change, and I'm here whenever you want a section sharpened.",
+        "doneIncomplete": "Got it. It's missing {{missing}}, so the editor stays locked until we fill those in — let's do that together now, starting with your contact details.",
+        "nRoles_one": "{{count}} role",
+        "nRoles_other": "{{count}} roles",
+        "nProjects_one": "{{count}} project",
+        "nProjects_other": "{{count}} projects",
+        "nEducation_one": "{{count}} qualification",
+        "nEducation_other": "{{count}} qualifications",
+        "nSkills_one": "{{count}} skill",
+        "nSkills_other": "{{count}} skills"
+      },
       "careerStage": {
         "heading": "Where are you in your career?",
         "body": "This helps ARIA coach you in the right way across your whole CV.",
@@ -4842,6 +4869,7 @@
     "livePreview": {
       "heading": "Live preview",
       "headingLive": "Live preview — on, updating as you go",
+      "headingEditable": "Live preview — your CV is ready to edit",
       "yourCv": "Your CV",
       "closePreview": "Close preview",
       "viewMode": "Live preview mode",

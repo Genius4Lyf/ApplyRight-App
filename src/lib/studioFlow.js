@@ -180,6 +180,47 @@ export function finishableNow(cv) {
 }
 
 /**
+ * Whether the Live Preview's EDITOR is unlocked for this CV.
+ *
+ * A tailor session arrives with a finished CV in hand, so it is never locked. A BUILD
+ * session is locked until the document is content-complete — half a CV in an editable
+ * document view is how a build stops being a conversation and becomes a form.
+ *
+ * Shared so the panel and the chrome that ADVERTISES the panel cannot drift: the header's
+ * live dot means "the editor is ready", and a dot that says so while the panel still shows
+ * a locked document would be worse than no dot at all.
+ *
+ * @param {object} cv a DraftCV
+ * @returns {boolean}
+ */
+export function editorUnlocked(cv) {
+  if (!cv?._id) return false;
+  if (cv.studioKind !== 'build') return true;
+  return finishableNow(cv);
+}
+
+/**
+ * Whether the editor has just BECOME available, and so is worth revealing unasked.
+ *
+ * "Is unlocked" is the wrong question for auto-opening a panel — a CV that was already
+ * finished when the session opened is unlocked from the first render, and acting on that
+ * would override the panel the user deliberately chose last time. Only the moment it
+ * CHANGES is news.
+ *
+ * Both readings carry their draft id, so switching sessions can never look like an
+ * unlock: a locked session followed by a finished one is two documents, not a transition.
+ *
+ * @param {{draftId: ?string, ready: ?boolean}} previous the last reading (ready:null = first)
+ * @param {{draftId: ?string, ready: ?boolean}} current
+ * @returns {boolean}
+ */
+export function editorJustUnlocked(previous = {}, current = {}) {
+  if (!current.draftId) return false;
+  if (previous.draftId !== current.draftId) return false;
+  return previous.ready === false && current.ready === true;
+}
+
+/**
  * The three project types the backend's coachChatTurn already knows how to frame.
  * `message` is sent as an ordinary user turn — that IS how the model learns the type
  * (its prompt says "the user states the type early in the thread"), so this stays a
@@ -599,6 +640,14 @@ export function derivePhase(msgs = [], cvData = {}) {
     if (has('projectsdone')) return 'build:sections';
     if (has('experiencedone')) return 'build:sections';
     if (has('contactdone')) return 'build:sections';
+    // The upload fork. A session that took "Already have a CV?" on the roadmap carries an
+    // `uploadintent` marker, and the file is asked for AFTER career stage and the target
+    // job — so the upload card stands exactly where the contact step otherwise would.
+    // Once the import lands (or is declined) `uploaddone` retires this rule and the flow
+    // rejoins the ordinary build track below: a complete CV was already routed to
+    // 'build:done' by finishableNow further up, an incomplete one falls to 'build:contact'
+    // with whatever sections DID come through already filled in.
+    if (has('buildjobdone') && has('uploadintent') && !has('uploaddone')) return 'build:upload';
     if (has('buildjobdone')) return 'build:contact';
     if (has('jobcard')) return 'build:brief';
     // Older sessions can have the CV-wide value without the newer transcript marker.

@@ -60,7 +60,18 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
       .filter(Boolean);
 
   const hasCaptured = {
-    contact: Object.values(contact).some((value) => typeof value === 'string' && value.trim()),
+    // CONTACT IS NOT LIKE THE OTHERS. Every new build session is seeded with the name,
+    // email and links from the user's ACCOUNT before the conversation starts, so "this
+    // field has a value" is no evidence the user has told us anything here — and a panel
+    // headed "Captured so far" saying Contact is in progress, on a session where nothing
+    // has been asked yet, is simply wrong.
+    //
+    // buildProgress already draws this distinction for done/not-done (it holds Contact
+    // open until ContactConfirmCard saves). Reusing its answer keeps ONE rule instead of
+    // a second, softer one that calls the same prefill "in progress". It also means
+    // Contact has no half-state, which is honest: it is a single confirmation, not a
+    // section you can be part-way through.
+    contact: progress.status.contact,
     experience: roles.length > 0,
     projects: projects.length > 0,
     education: education.length > 0 || certifications.length > 0,

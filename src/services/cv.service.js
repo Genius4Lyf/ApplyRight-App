@@ -142,6 +142,26 @@ const CVService = {
     return response.data; // { draftId, personalInfo, brief, draft }
   },
 
+  // Aria Studio — import an uploaded CV into an existing, EMPTY build session. Charges
+  // CREATE_FROM_UPLOAD (the same price the CV builder's upload charges) and only once the
+  // extraction has actually produced content. Bullets come back WORD FOR WORD — the
+  // Studio improves the CV with the user, so nothing is rewritten on the way in.
+  //
+  // 403 { code:'INSUFFICIENT_CREDITS' } → short on credits, nothing charged.
+  // 409 { code:'DRAFT_NOT_EMPTY' }      → that CV already has content.
+  // 422 { code:'NO_TEXT' | 'NOTHING_EXTRACTED' } → unreadable file, nothing charged.
+  //
+  // Note this posts multipart/form-data, so it can't go through the JSON helpers above.
+  studioUploadImport: async (draftId, file) => {
+    const form = new FormData();
+    form.append('resume', file);
+    form.append('draftId', draftId);
+    const response = await api.post('/studio/upload-import', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data; // { draft, cost, remainingCredits, imported }
+  },
+
   // Aria Studio — the user's sessions for the rail. A LEAN projection (title, job,
   // score, timestamp), never whole drafts: a session IS a DraftCV, and shipping those
   // in full would send every transcript and CV body just to draw a list.

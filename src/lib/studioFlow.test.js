@@ -17,6 +17,8 @@ import {
   resolvePinnedEntry,
   withoutBlankEntries,
   finishableNow,
+  editorUnlocked,
+  editorJustUnlocked,
   openFix,
   rankEntriesByGap,
   scoreDelta,
@@ -1323,5 +1325,153 @@ describe('scoreDelta', () => {
     // Better to say nothing than to invent a delta the user might act on.
     expect(scoreDelta(null, { score: 55, band: 'warn' })).toBeNull();
     expect(scoreDelta({ score: 30, band: 'bad' }, undefined)).toBeNull();
+  });
+});
+
+describe('derivePhase — the upload fork', () => {
+  // A session that took the roadmap's "Already have a CV?" option. The file is asked for
+  // AFTER career stage and the target job, so the upload card stands exactly where the
+  // contact step otherwise would.
+  const uploading = [
+    { who: 'buildintro' },
+    { who: 'buildstart' },
+    { who: 'uploadintent' },
+    { who: 'careerstage', stage: 'grad' },
+    { who: 'buildjobdone' },
+  ];
+
+  const COMPLETE = {
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'Field operator with six years offshore.',
+    experience: [{ _sortId: 'r1', title: 'Operator', description: '• Ran pressure tests' }],
+    education: [{ _sortId: 'e1', degree: 'BSc', school: 'UNIBEN' }],
+    skills: [{ name: 'Pressure control' }],
+  };
+
+  it('asks for the file only once career stage and the job are answered', () => {
+    const base = [{ who: 'buildintro' }, { who: 'buildstart' }, { who: 'uploadintent' }];
+    expect(derivePhase(base)).toBe('build:career-stage');
+    expect(derivePhase([...base, { who: 'careerstage', stage: 'grad' }])).toBe('build:job');
+    expect(derivePhase(uploading)).toBe('build:upload');
+  });
+
+  it('leaves an ordinary build session completely alone', () => {
+    // The rule is gated on `uploadintent`, so a from-scratch session still goes straight
+    // from the job to the contact step.
+    const scratch = uploading.filter((m) => m.who !== 'uploadintent');
+    expect(derivePhase(scratch)).toBe('build:contact');
+  });
+
+  it('survives a refresh mid-step — the marker is the memory', () => {
+    // Nothing about "we are waiting on a file" lives in component state, so reloading
+    // the page puts the user back on the upload card rather than the contact form.
+    expect(derivePhase([...uploading])).toBe('build:upload');
+  });
+
+  it('opens the editor when the imported CV covers enough', () => {
+    // finishableNow already outranks this rule, so a complete import lands on the finish
+    // step — which is where StudioLivePreview unlocks its editor.
+    expect(derivePhase([...uploading, { who: 'uploaddone', enough: true }], COMPLETE)).toBe(
+      'build:done'
+    );
+  });
+
+  it('carries on building when the imported CV is short', () => {
+    const thin = { ...COMPLETE, professionalSummary: '', skills: [] };
+    expect(derivePhase([...uploading, { who: 'uploaddone', enough: false }], thin)).toBe(
+      'build:contact'
+    );
+  });
+
+  it('does not strand a user who declines the upload', () => {
+    // "I'll type it out instead" — nothing charged, nothing imported, and the session
+    // continues as an ordinary build rather than looping back onto the card.
+    expect(derivePhase([...uploading, { who: 'uploaddone', skipped: true }])).toBe('build:contact');
+  });
+
+  it('never claims the upload step once the CV is already being built', () => {
+    // A late `uploadintent` (a stale marker, a replayed transcript) must not drag someone
+    // mid-build back to a file picker: the later step markers win.
+    const midBuild = [...uploading, { who: 'uploaddone' }, { who: 'contactdone' }];
+    expect(derivePhase(midBuild)).toBe('build:sections');
+  });
+});
+
+describe('editorUnlocked — the one gate the panel and its badge share', () => {
+  const COMPLETE = {
+    _id: 'd1',
+    studioKind: 'build',
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'Field operator with six years offshore.',
+    experience: [{ _sortId: 'r1', title: 'Operator', description: '• Ran pressure tests' }],
+    education: [{ _sortId: 'e1', degree: 'BSc', school: 'UNIBEN' }],
+    skills: [{ name: 'Pressure control' }],
+  };
+
+  it('unlocks a build once its CV is content-complete', () => {
+    expect(editorUnlocked(COMPLETE)).toBe(true);
+  });
+
+  it('keeps a half-built CV locked', () => {
+    expect(editorUnlocked({ ...COMPLETE, skills: [] })).toBe(false);
+    expect(editorUnlocked({ ...COMPLETE, professionalSummary: '' })).toBe(false);
+  });
+
+  it('never locks a tailor session — it arrives with a finished CV', () => {
+    expect(editorUnlocked({ ...COMPLETE, studioKind: 'tailor', skills: [] })).toBe(true);
+  });
+
+  it('is false before a document is bound', () => {
+    // The header would otherwise blink a "ready to edit" dot at the mode chooser.
+    expect(editorUnlocked(null)).toBe(false);
+    expect(editorUnlocked({ studioKind: 'tailor' })).toBe(false);
+  });
+
+  it('does not count a blank placeholder row as a finished section', () => {
+    // The Studio persists an empty entry to get a _sortId to write into. Counting it
+    // would unlock the editor the instant a section was STARTED.
+    expect(editorUnlocked({ ...COMPLETE, education: [{ _sortId: 'e1' }] })).toBe(false);
+  });
+});
+
+describe('editorJustUnlocked — only the moment it changes is news', () => {
+  it('fires when a locked CV becomes complete', () => {
+    expect(
+      editorJustUnlocked({ draftId: 'd1', ready: false }, { draftId: 'd1', ready: true })
+    ).toBe(true);
+  });
+
+  it('stays silent on a session that was ALREADY complete when opened', () => {
+    // The first reading has ready:null. Treating that as an unlock would override the
+    // panel the user chose last time, every single time they reopen a finished CV.
+    expect(
+      editorJustUnlocked({ draftId: null, ready: null }, { draftId: 'd1', ready: true })
+    ).toBe(false);
+  });
+
+  it('does not mistake a session SWITCH for an unlock', () => {
+    // Leaving a half-built CV and opening a finished one is two documents, not progress.
+    expect(
+      editorJustUnlocked({ draftId: 'd1', ready: false }, { draftId: 'd2', ready: true })
+    ).toBe(false);
+  });
+
+  it('does not fire twice for the same unlock', () => {
+    expect(
+      editorJustUnlocked({ draftId: 'd1', ready: true }, { draftId: 'd1', ready: true })
+    ).toBe(false);
+  });
+
+  it('stays silent while nothing is bound, and when the CV goes back to incomplete', () => {
+    expect(editorJustUnlocked({ draftId: 'd1', ready: false }, { draftId: null, ready: false })).toBe(
+      false
+    );
+    expect(
+      editorJustUnlocked({ draftId: 'd1', ready: true }, { draftId: 'd1', ready: false })
+    ).toBe(false);
+  });
+
+  it('survives being called with nothing', () => {
+    expect(editorJustUnlocked()).toBe(false);
   });
 });

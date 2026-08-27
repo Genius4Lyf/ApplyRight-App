@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { PanelLeft, FilePen, ListChecks, Briefcase } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
+import { editorUnlocked, editorJustUnlocked } from '../../lib/studioFlow';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useJobCoverage } from '../../hooks/useJobCoverage';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
@@ -278,12 +279,18 @@ const StudioDesk = () => {
       ? 'insights'
       : rememberedView;
 
-  // The "live" dot means the preview is ON SCREEN, not merely the selected view. Those
-  // come apart: at in-between widths the panel can be collapsed (neither inline nor sheet,
-  // hence the reopen tab) while 'preview' is still the remembered choice, and on sheet
-  // widths it only shows while the overlay is open. A dot pulsing at a preview the user
-  // cannot see would be worse than no dot at all.
-  const previewLive = panelView === 'preview' && (layout.panelInline || layout.panelOverlay);
+  // The green dot means THE EDITOR IS READY — your CV has its core sections and every
+  // line in the preview is now yours to change.
+  //
+  // It deliberately does NOT mean "the panel is open". The moment that matters most is the
+  // one where the panel is CLOSED and the user has no idea anything changed: on a phone
+  // there is no room to open it beside the chat at all, so the blinking dot on the toggle
+  // is the only thing that says "there's something here now". Gating it on visibility
+  // would hide it exactly when it has something to say.
+  //
+  // Shared gate with the panel itself (studioFlow.editorUnlocked), so the dot can never
+  // advertise an editor that would still be read-only when tapped.
+  const editorReady = canPreview && editorUnlocked(cvData);
 
   // A remembered Preview preference must not leak into a session that can't show it yet.
   // Once canPreview is true (cvData._id exists) the effect short-circuits and the panel
@@ -293,6 +300,31 @@ const StudioDesk = () => {
     closePreview();
     setPanelOverlay(false);
   }, [canPreview, layout.panelView, closePreview, setPanelOverlay]);
+
+  // When the editor UNLOCKS, open the preview — Aria says "I've opened the editor on the
+  // right", and she should be telling the truth rather than describing a button.
+  //
+  // Three things this is careful about:
+  //
+  //  1. ONLY ON THE TRANSITION. Opening a session whose CV was already complete must not
+  //     override the panel the user chose last time. The ref remembers per-draft, so a
+  //     session switch can't be mistaken for an unlock either.
+  //  2. INLINE WIDTHS ONLY. On a phone the panel is a full-screen sheet, so auto-opening
+  //     would bury the message the user is still reading. There the blinking dot carries
+  //     it instead — which is why the dot is not gated on the panel being visible.
+  //  3. `setPanelView`, not `selectView` — this is not a toggle. selectView would CLOSE
+  //     the preview if it happened to be the current view already.
+  const editorReadyRef = useRef({ draftId: null, ready: null });
+  useEffect(() => {
+    if (!canPreview) return; // no document yet — nothing to judge
+    const previous = editorReadyRef.current;
+    const current = { draftId, ready: editorReady };
+    editorReadyRef.current = current;
+    if (!editorJustUnlocked(previous, current)) return;
+    if (!layout.panelInline) return;
+    layout.setPanelView('preview');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canPreview, draftId, editorReady, layout.panelInline]);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-white dark:bg-slate-950">
@@ -395,8 +427,8 @@ const StudioDesk = () => {
                   onClick={() => selectView('preview')}
                   aria-pressed={panelView === 'preview'}
                   aria-label={
-                    previewLive
-                      ? t('ariaStudio.livePreview.headingLive')
+                    editorReady
+                      ? t('ariaStudio.livePreview.headingEditable')
                       : t('ariaStudio.livePreview.heading')
                   }
                   className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
@@ -406,12 +438,12 @@ const StudioDesk = () => {
                   }`}
                 >
                   {/* The dot sits ON the icon, not beside the label — the label is hidden
-                      below md, and that is exactly the width where "is it on?" is hardest
-                      to answer. aria-hidden: the state is already on aria-pressed and in
-                      the label, so announcing the dot too would just be noise. */}
+                      below md, and that is exactly the width where "your CV is editable
+                      now" is hardest to notice. aria-hidden: the state is already in the
+                      button's label, so announcing the dot too would just be noise. */}
                   <span className="relative inline-flex shrink-0">
                     <FilePen className="w-5 h-5" />
-                    {previewLive && (
+                    {editorReady && (
                       <span
                         aria-hidden="true"
                         className="studio-live-dot absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950"

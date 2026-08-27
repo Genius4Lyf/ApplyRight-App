@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, PlayCircle, Sparkles } from 'lucide-react';
+import { PlayCircle } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import useCredits from '../hooks/useCredits';
@@ -90,22 +90,27 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
+      {/* INK, not amber. Running short of credits is an ordinary fact about the account,
+          not a warning — a filled amber panel with a coloured icon and a solid orange
+          button shouts at the user about something that is simply the price. The
+          editorial language the rest of the app uses says it once, plainly: a mono
+          eyebrow, the number in ink, and one solid ink button. */}
       {!isLoading && (
         <div
           className={`flex ${
-            isCard ? 'flex-col gap-3 p-3' : 'flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4'
-          } bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl`}
+            isCard ? 'flex-col gap-3 p-3.5' : 'flex-col sm:flex-row sm:items-center gap-3 p-3.5 sm:p-4'
+          } rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50`}
         >
-          <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 leading-tight">
-                {t('creditGate.needMoreCredits', { count: short })}
-              </p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                {t('creditGate.costVsBalance', { cost, credits })}
-              </p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              {t('creditGate.eyebrow')}
+            </p>
+            <p className="mt-1 text-[14px] font-semibold leading-snug text-slate-900 dark:text-slate-100">
+              {t('creditGate.needMoreCredits', { count: short })}
+            </p>
+            <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
+              {t('creditGate.costVsBalance', { cost, credits })}
+            </p>
           </div>
           <div className={`flex gap-2 ${isCard ? 'w-full' : 'shrink-0'}`}>
             {/* Watch-ad-for-credits is NATIVE ANDROID ONLY. Web has no ads — the
@@ -115,22 +120,21 @@ const CreditGate = ({ cost, children, className = '', layout = 'wide' }) => {
                 type="button"
                 onClick={startAd}
                 disabled={checking}
-                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+                className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-[12px] font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-100 dark:hover:text-white ${
                   isCard ? 'flex-1' : ''
                 }`}
               >
-                <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
+                <PlayCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 {checking ? t('creditGate.checking') : t('creditGate.watchAd')}
               </button>
             )}
             <button
               type="button"
               onClick={() => navigate('/credits')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm ${
+              className={`inline-flex h-9 items-center justify-center rounded-lg bg-slate-950 px-4 text-[12px] font-semibold text-white transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 dark:focus-visible:ring-white dark:focus-visible:ring-offset-slate-900 ${
                 isCard ? 'flex-1' : ''
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
               {t('creditGate.getCredits')}
             </button>
           </div>

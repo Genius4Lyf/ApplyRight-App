@@ -37,8 +37,7 @@ import PreviewSkillsBlock from './PreviewSkillsBlock';
 import PreviewSummaryBlock from './PreviewSummaryBlock';
 import StudioTemplatePreview from './StudioTemplatePreview';
 import { cvLabel } from '../../lib/cvLabels';
-import { withoutBlankEntries, hasSubstance } from '../../lib/studioFlow';
-import { getCompletionStatus } from '../../lib/cvCompleteness';
+import { withoutBlankEntries, hasSubstance, editorUnlocked } from '../../lib/studioFlow';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
 // (NOT the template markdown), so it updates the instant an edit lands. Each section
@@ -416,8 +415,12 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // empty row as work.
   //
   // Tailor sessions arrive with a finished CV in hand, so they are never locked.
+  //
+  // The rule now lives in studioFlow.editorUnlocked, shared with the Studio header — whose
+  // live dot ADVERTISES this editor. Two copies of "is it unlocked?" is how the dot ends
+  // up blinking at a panel that is still read-only.
   const isBuildSession = cvData?.studioKind === 'build';
-  const canEdit = !isBuildSession || getCompletionStatus(capturedCv).isComplete;
+  const canEdit = editorUnlocked(cvData);
 
   const experience = capturedCv.experience || [];
   const projects = capturedCv.projects || [];
