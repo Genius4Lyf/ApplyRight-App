@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaTypewriter from '../cv/AriaTypewriter';
 import { costForActionTier, tierOf, AI_MODELS } from '../../lib/models';
@@ -2637,6 +2638,55 @@ const StudioChat = ({ onPaywall }) => {
     await runHuntTurn(requirementId, messages, mode);
   };
 
+  // ─── A message that didn't get through ───
+  //
+  // A failed turn used to leave the user's message sitting in the thread looking sent,
+  // with an Aria bubble underneath explaining the problem. The only way forward was to
+  // retype it — and because the failure text was pushed as a real message, it persisted
+  // into the transcript and got sent back to the model as if Aria had said it.
+  //
+  // Now the failure is marked ON the message that failed. It renders as "Not sent" with a
+  // Retry button, and clearing the mark is what sending again does. `failed` is a plain
+  // flag: the payload builder maps messages to { who, text }, so it never reaches the
+  // model, and derivePhase ignores anything it doesn't recognise.
+  const markLastUserFailed = (reasonKey) => {
+    setMessages((prev) => {
+      const at = prev.map((m) => m.who).lastIndexOf('user');
+      if (at === -1) return prev;
+      const next = [...prev];
+      next[at] = { ...next[at], failed: reasonKey };
+      return next;
+    });
+  };
+
+  // Reason → what to tell them. RATE_LIMITED is the one this was built for: it used to
+  // fall through to "couldn't reach me", which reads as a broken connection rather than
+  // something that clears on its own.
+  const FAILURE_TEXT = {
+    RATE_LIMITED: 'ariaStudio.chat.failed.rateLimited',
+    INSUFFICIENT_CREDITS: 'ariaStudio.chat.proNeedsCredits',
+    CHAT_LIMIT_REACHED: 'ariaStudio.chat.chatLimitReached',
+    UNREACHABLE: 'ariaStudio.chat.chatUnreachable',
+  };
+
+  // Map a thrown request to the reason we show. A 429 from the limiter carries its own
+  // code; anything else without one is treated as unreachable.
+  const failureReason = (e) => {
+    const code = e?.response?.data?.code;
+    if (code && FAILURE_TEXT[code]) return code;
+    if (e?.response?.status === 429) return 'RATE_LIMITED';
+    return 'UNREACHABLE';
+  };
+
+  // Send it again. Drops the failed copy first so the retry doesn't leave a duplicate of
+  // their own message in the thread — the thing they were doing by hand.
+  const retryFailed = (index) => {
+    const message = messages[index];
+    if (!message || thinking) return;
+    setMessages((prev) => prev.filter((_, at) => at !== index));
+    send(message.text);
+  };
+
   const send = async (raw) => {
     const text = (raw ?? input).trim();
     if (text.length < 2 || thinking) return;
@@ -2695,17 +2745,11 @@ const StudioChat = ({ onPaywall }) => {
           window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
         }
       } catch (e) {
-        const code = e?.response?.data?.code;
-        push({
-          who: 'aria',
-          text:
-            // Pro model, no credits — switching back to Standard is free, so say that.
-            code === 'INSUFFICIENT_CREDITS'
-              ? t('ariaStudio.chat.proNeedsCredits')
-              : code === 'CHAT_LIMIT_REACHED'
-                ? t('ariaStudio.chat.chatLimitReached')
-                : t('ariaStudio.chat.chatUnreachable'),
-        });
+        // Mark THEIR message as not-sent rather than pushing an Aria bubble. The bubble
+        // was permanent — it persisted into the transcript and went back to the model on
+        // the next turn as something Aria had supposedly said — and it left no way
+        // forward but retyping.
+        markLastUserFailed(failureReason(e));
       } finally {
         setThinking(false);
       }
@@ -3220,16 +3264,38 @@ const StudioChat = ({ onPaywall }) => {
                 );
               }
               return (
-                <motion.div
-                  key={i}
-                  ref={(el) => {
-                    msgDomRef.current[i] = el;
-                  }}
-                  className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
-                  {...bubbleAnim('user', reduce)}
-                >
-                  {m.text}
-                </motion.div>
+                <React.Fragment key={i}>
+                  <motion.div
+                    ref={(el) => {
+                      msgDomRef.current[i] = el;
+                    }}
+                    className={`self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap ${
+                      m.failed ? 'opacity-60' : ''
+                    }`}
+                    {...bubbleAnim('user', reduce)}
+                  >
+                    {m.text}
+                  </motion.div>
+                  {/* Didn't get through. Sits UNDER their own message so it is obvious
+                      which one failed, and carries the way forward — retyping it was the
+                      only option before. */}
+                  {m.failed && (
+                    <div className="self-end flex max-w-[92%] flex-col items-end gap-1 px-2 pb-1">
+                      <p className="text-[12px] leading-snug text-slate-500 dark:text-slate-400 text-right">
+                        {t(FAILURE_TEXT[m.failed] || FAILURE_TEXT.UNREACHABLE)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => retryFailed(i)}
+                        disabled={thinking}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-1 text-[12px] font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-100 dark:hover:text-white"
+                      >
+                        <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t('ariaStudio.chat.failed.retry')}
+                      </button>
+                    </div>
+                  )}
+                </React.Fragment>
               );
             }
 

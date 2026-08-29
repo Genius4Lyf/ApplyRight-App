@@ -4745,6 +4745,16 @@
       "proNeedsCredits": "The Pro model costs credits. Switch back to Standard — it's free — or top up to stay on Pro.",
       "buildLimitReached": "That's a lot of building for one day — everything's saved. Let's continue tomorrow.",
       "chatUnreachable": "Couldn't reach me just now — try again.",
+      "failed": {
+        "retry": "Retry",
+        "rateLimited": "That was a lot of messages quickly — give it a minute.",
+        "notSent": "Not sent"
+      },
+      "failed": {
+        "retry": "Retry",
+        "rateLimited": "That was a lot of messages quickly — give it a minute.",
+        "notSent": "Not sent"
+      },
       "freeTypingResults": "Your scan's above. Walking you through each fix is what I'm learning next.",
       "freeTypingOther": "Use the card above and I'll take it from there.",
       "nextUp": "Next up",

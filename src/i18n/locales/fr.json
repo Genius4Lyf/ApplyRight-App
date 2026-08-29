@@ -4741,6 +4741,11 @@
       "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Standard — il est gratuit — ou rechargez pour rester sur Pro.",
       "buildLimitReached": "Ça fait beaucoup de construction pour aujourd'hui — tout est sauvegardé. On continue demain.",
       "chatUnreachable": "Je n'ai pas pu vous joindre pour l'instant — réessayez.",
+      "failed": {
+        "retry": "Réessayer",
+        "rateLimited": "Beaucoup de messages en peu de temps — patientez une minute.",
+        "notSent": "Non envoyé"
+      },
       "freeTypingResults": "Votre analyse est ci-dessus. Vous guider à travers chaque correction est ce que j'apprends à faire ensuite.",
       "freeTypingOther": "Utilisez la carte ci-dessus et je prendrai le relais à partir de là.",
       "nextUp": "À suivre",
