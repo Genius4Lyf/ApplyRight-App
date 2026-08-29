@@ -39,6 +39,12 @@ const COPY = {
   },
 };
 
+// The card's paper. The header and the body that drops out of it are two separate boxes
+// (see the render), so the border/background/shadow that make them read as one sheet are
+// written once here rather than typed twice and left to drift apart.
+const CARD_CHROME =
+  'border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md dark:shadow-black/20';
+
 // ─── Which captured fields can be corrected in place ───
 //
 // A WHITELIST, not "everything the row can render". The interview asks one question at a
@@ -269,8 +275,17 @@ const PinnedEntryCard = ({
   };
 
   return (
+    // Only the HEADER occupies space in the transcript; the body hangs off it absolutely.
+    // This is what makes opening the card a dropdown rather than a reflow — an in-flow
+    // body grows the scroller's content by its full height and shoves the whole
+    // conversation down the moment you tap the chevron.
+    //
+    // The interaction handlers live out here, on the wrapper, precisely because the body
+    // is no longer a descendant of the bordered header: hung off the header instead, a
+    // pointer moving from header into body would read as leaving the card and let the
+    // idle timer close it mid-read.
     <div
-      className="rounded-xl border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md dark:shadow-black/20"
+      className="relative"
       onMouseEnter={() => setInteracting(true)}
       onMouseLeave={() => setInteracting(false)}
       onTouchStart={bumpActivity}
@@ -279,87 +294,98 @@ const PinnedEntryCard = ({
         if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false);
       }}
     >
-      <button
-        type="button"
-        onClick={toggleOpen}
-        aria-expanded={open}
-        className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
-      >
-        <span
-          role="status"
-          title={t('ariaStudio.pinnedEntry.liveStatus')}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-        >
-          <span className="relative flex h-2 w-2" aria-hidden="true">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:animate-none" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]" />
-          </span>
-          <span aria-hidden="true">{sectionIcon(section)}</span> <span>{t(copy.labelKey)}</span>
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
-          {heading}
-        </span>
-        <span
-          className={`shrink-0 font-mono text-[12px] font-bold tabular-nums ${
-            done === total
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-slate-400 dark:text-slate-500'
-          }`}
-        >
-          {done}/{total}
-        </span>
-        {bulletTotal > 0 && (
-          <span
-            key={`saved-bullets-${messagePulse}`}
-            role="status"
-            className={`relative shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-emerald-600 dark:text-emerald-400 ${
-              messagePulse > 0
-                ? 'animate-[bounce_0.8s_ease-in-out_2] motion-reduce:animate-none'
-                : ''
-            }`}
-            title={t('ariaStudio.pinnedEntry.savedBullets', { n: bulletTotal })}
-          >
-            {messagePulse > 0 && (
-              <span
-                className="absolute inset-0 rounded-full bg-emerald-400/60 opacity-0 animate-[ping_0.9s_cubic-bezier(0,0,0.2,1)_1] motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-            )}
-            <MessageSquare className="relative z-10 w-3.5 h-3.5" aria-hidden="true" />
-            <span className="relative z-10 font-mono text-[10px] font-bold tabular-nums">
-              {bulletTotal}
-            </span>
-            <span className="sr-only">
-              {t('ariaStudio.pinnedEntry.savedBullets', { n: bulletTotal })}
-            </span>
-          </span>
-        )}
-        <ChevronDown
-          className={`shrink-0 w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {reviewHint && !open && (
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(true);
-            onReviewHintOpen?.();
-          }}
-          className="w-full border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-emerald-500/10 transition-colors"
-        >
-          <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-          {reviewHint}
-        </button>
-      )}
-
       <div
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
-          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        className={`rounded-xl ${CARD_CHROME} ${
+          // Square off where the body meets it, so the two boxes read as one sheet.
+          open ? 'rounded-b-none' : ''
         }`}
       >
-        <div className="overflow-hidden">
-          <div className="px-3 pb-3 border-t border-slate-100 dark:border-slate-800 pt-2.5">
+        <button
+          type="button"
+          onClick={toggleOpen}
+          aria-expanded={open}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+        >
+          <span
+            role="status"
+            title={t('ariaStudio.pinnedEntry.liveStatus')}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+          >
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]" />
+            </span>
+            <span aria-hidden="true">{sectionIcon(section)}</span> <span>{t(copy.labelKey)}</span>
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
+            {heading}
+          </span>
+          <span
+            className={`shrink-0 font-mono text-[12px] font-bold tabular-nums ${
+              done === total
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-400 dark:text-slate-500'
+            }`}
+          >
+            {done}/{total}
+          </span>
+          {bulletTotal > 0 && (
+            <span
+              key={`saved-bullets-${messagePulse}`}
+              role="status"
+              className={`relative shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-emerald-600 dark:text-emerald-400 ${
+                messagePulse > 0
+                  ? 'animate-[bounce_0.8s_ease-in-out_2] motion-reduce:animate-none'
+                  : ''
+              }`}
+              title={t('ariaStudio.pinnedEntry.savedBullets', { n: bulletTotal })}
+            >
+              {messagePulse > 0 && (
+                <span
+                  className="absolute inset-0 rounded-full bg-emerald-400/60 opacity-0 animate-[ping_0.9s_cubic-bezier(0,0,0.2,1)_1] motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+              )}
+              <MessageSquare className="relative z-10 w-3.5 h-3.5" aria-hidden="true" />
+              <span className="relative z-10 font-mono text-[10px] font-bold tabular-nums">
+                {bulletTotal}
+              </span>
+              <span className="sr-only">
+                {t('ariaStudio.pinnedEntry.savedBullets', { n: bulletTotal })}
+              </span>
+            </span>
+          )}
+          <ChevronDown
+            className={`shrink-0 w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {reviewHint && !open && (
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(true);
+              onReviewHintOpen?.();
+            }}
+            className="w-full border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-emerald-500/10 transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+            {reviewHint}
+          </button>
+        )}
+      </div>
+
+      {/* `top-full` pins it to the header's bottom edge; `left/right-0` span the wrapper,
+          which is the header's border box, so the two line up exactly. The header's own
+          bottom border is the divider between them — hence `border-t-0` here, or the
+          seam would be a double hairline. */}
+      <div
+        className={`absolute left-0 right-0 top-full z-10 grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className={`overflow-hidden rounded-b-xl ${CARD_CHROME} border-t-0`}>
+          <div className="px-3 pb-3 pt-2.5">
             <dl className="space-y-1.5">
               {fields.map((f) => {
                 const value = valueFor(f.key);
