@@ -1634,6 +1634,7 @@
       "couldntDraft": "Je n’ai pas pu rédiger cela — réessayez.",
       "skillsShort": "Trouver vos compétences coûte {{n}} crédits et il vous en manque. Gagnez-en plus ou passez à une formule payante, puis réessayez.",
       "couldntPullSkills": "Je n’ai pas pu extraire vos compétences — réessayez.",
+      "skillsNoEvidence": "Je n’ai pas encore trouvé de compétences que je peux étayer — ajoutez des détails à vos expériences ou projets.",
       "tenFreeChats": "Voilà vos 10 échanges gratuits du jour 🙂 On peut continuer — 1 crédit chacun — ou revenez demain, ça se réinitialise.",
       "outOfChats": "Vous n’avez plus d’échanges gratuits ni de crédits aujourd’hui — gagnez-en quelques-uns (regardez une pub / parrainez un ami) ou revenez demain. Je peux toujours vous aider à rédiger les points d’un poste à tout moment.",
       "addedSkills_one": "{{count}} compétence ajoutée à votre CV",
@@ -4850,6 +4851,7 @@
         "summaryWriteFailed": "Impossible de le rédiger pour l'instant. Réessayez.",
         "saveFailed": "Impossible d'enregistrer — réessayez.",
         "skillsPullFailed": "Impossible de récupérer vos compétences — réessayez.",
+        "skillsNoEvidence": "Aria n’a pas encore trouvé de compétences qu’elle peut étayer — ajoutez des détails à vos expériences ou projets.",
         "downloadFailed": "Échec du téléchargement",
         "pdfDownloaded": "PDF téléchargé",
         "wordDownloaded": "Document Word téléchargé"

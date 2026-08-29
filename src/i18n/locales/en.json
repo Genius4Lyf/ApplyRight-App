@@ -1638,6 +1638,7 @@
       "couldntDraft": "Couldn’t draft that — try again.",
       "skillsShort": "Finding your skills costs {{n}} credits and you’re short right now. Earn more or upgrade, then try again.",
       "couldntPullSkills": "Couldn’t pull your skills — try again.",
+      "skillsNoEvidence": "I couldn’t find skills I can back up yet — add more detail to your experience or projects.",
       "tenFreeChats": "That’s your 10 free chats for today 🙂 We can keep going — 1 credit each — or come back tomorrow, it resets.",
       "outOfChats": "You’re out of free chats and credits for today — earn a few (watch an ad / refer a friend) or come back tomorrow. I’ll still help you write bullets on a role anytime.",
       "addedSkills_one": "Added {{count}} skill to your CV",
@@ -4859,6 +4860,7 @@
         "summaryWriteFailed": "Couldn't write it just now. Try again.",
         "saveFailed": "Couldn't save that — try again.",
         "skillsPullFailed": "Couldn't pull your skills — try again.",
+        "skillsNoEvidence": "Aria couldn't find skills she can back up yet — add more detail to your experience or projects.",
         "downloadFailed": "Download failed",
         "pdfDownloaded": "PDF downloaded",
         "wordDownloaded": "Word document downloaded"

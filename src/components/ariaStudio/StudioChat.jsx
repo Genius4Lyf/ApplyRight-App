@@ -1594,6 +1594,10 @@ const StudioChat = ({ onPaywall }) => {
             cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
           }),
         });
+      } else if (e?.response?.data?.code === 'NO_SUPPORTED_SKILLS') {
+        // Not a failure: Aria ran and found nothing she could evidence. "Try again" is
+        // false advice here — the same profile returns the same empty result forever.
+        toast.error(t('ariaStudio.chat.toast.skillsNoEvidence'));
       } else {
         toast.error(t('ariaStudio.chat.toast.skillsPullFailed'));
       }
@@ -2213,6 +2217,10 @@ const StudioChat = ({ onPaywall }) => {
             cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
           }),
         });
+      } else if (e?.response?.data?.code === 'NO_SUPPORTED_SKILLS') {
+        // Not a failure: Aria ran and found nothing she could evidence. "Try again" is
+        // false advice here — the same profile returns the same empty result forever.
+        toast.error(t('ariaStudio.chat.toast.skillsNoEvidence'));
       } else {
         toast.error(t('ariaStudio.chat.toast.skillsPullFailed'));
       }

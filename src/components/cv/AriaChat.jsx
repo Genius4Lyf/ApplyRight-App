@@ -187,6 +187,10 @@ const AriaChat = ({
           ...m,
           { who: 'aria', text: t('cvBuilder.ariaChat.skillsShort', { n: skillsCost }) },
         ]);
+      } else if (e?.response?.data?.code === 'NO_SUPPORTED_SKILLS') {
+        // Aria ran and found nothing she could evidence — a thin profile, not a fault.
+        // "Try again" would send the user back for the identical empty result.
+        toast.error(t('cvBuilder.ariaChat.skillsNoEvidence'));
       } else {
         toast.error(t('cvBuilder.ariaChat.couldntPullSkills'));
       }
