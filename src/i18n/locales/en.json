@@ -4431,6 +4431,14 @@
       },
       "rescore": "I've updated it — re-score"
     },
+    "educationSaved": {
+      "eyebrow": "Saved",
+      "onYourCv": "{{heading}} is on your CV.",
+      "onYourCvNoName": "That qualification is on your CV.",
+      "addAnother": "Add another qualification",
+      "done": "Done with education",
+      "editHint": "You can edit it any time from the card above."
+    },
     "targetJobAsk": {
       "oneThingFirst": "One thing first",
       "areYouAiming": "Are you aiming at a specific job? If you paste it, I'll shape every section around what that employer actually asks for.",
@@ -4662,7 +4670,8 @@
         "contact": "your contact details — tap to pick this up",
         "certs": "certifications — tap to pick this up",
         "careerStage": "where you are in your career — tap to pick this up",
-        "job": "the job you're aiming at — tap to pick this up"
+        "job": "the job you're aiming at — tap to pick this up",
+        "educationSaved": "Qualification saved — tap to pick this up"
       },
       "huntOffer": {
         "eyebrow": "One more thing",
@@ -4722,7 +4731,7 @@
         "volunteer": "Volunteer / campus leadership",
         "coursework": "Coursework"
       },
-      "educationNoBullets": "That's it for that one — education doesn't need bullets.",
+      "educationNoBullets": "Saved — that's the whole qualification. Education doesn't take bullet points the way a job does.",
       "nextEntry": {
         "project": "Next one — what kind of project is it?",
         "education": "What else did you study?",

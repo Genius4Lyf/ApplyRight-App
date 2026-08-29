@@ -51,7 +51,7 @@ describe('PinnedEntryCard inline field editing', () => {
   });
 
   it('seeds the editor with the value already captured', () => {
-    render(<PinnedEntryCard entry={experienceEntry} section="experience" onFieldSave={vi.fn()} />);
+    render(<PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Role' }));
 
@@ -63,7 +63,7 @@ describe('PinnedEntryCard inline field editing', () => {
   it('saves ONLY the field that changed', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" onFieldSave={onFieldSave} />
+      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Role' }));
@@ -84,7 +84,7 @@ describe('PinnedEntryCard inline field editing', () => {
   it('sends the three date keys together so a current role keeps no stale end date', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" onFieldSave={onFieldSave} />
+      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Dates' }));
@@ -107,7 +107,7 @@ describe('PinnedEntryCard inline field editing', () => {
   it('writes nothing on Cancel or Escape', () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" onFieldSave={onFieldSave} />
+      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Company' }));
@@ -129,7 +129,7 @@ describe('PinnedEntryCard inline field editing', () => {
   });
 
   it('leaves the chip-picked type and the bullet list alone', () => {
-    render(<PinnedEntryCard entry={experienceEntry} section="experience" onFieldSave={vi.fn()} />);
+    render(<PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={vi.fn()} />);
 
     // entryType drives what Aria asks next, and achievements are a generated LIST applied
     // through the bullet diff. Neither belongs behind a single-line text box.
@@ -169,7 +169,7 @@ describe('PinnedEntryCard — education CGPA', () => {
   it('saves an edited CGPA value', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={educationEntry} section="education" onFieldSave={onFieldSave} />
+      <PinnedEntryCard entry={educationEntry} section="education" defaultExpanded onFieldSave={onFieldSave} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
@@ -185,7 +185,7 @@ describe('PinnedEntryCard — education CGPA', () => {
   it('accepts an EMPTY CGPA on save — it is optional, unlike degree/school', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={educationEntry} section="education" onFieldSave={onFieldSave} />
+      <PinnedEntryCard entry={educationEntry} section="education" defaultExpanded onFieldSave={onFieldSave} />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
@@ -197,5 +197,74 @@ describe('PinnedEntryCard — education CGPA', () => {
 
     await waitFor(() => expect(onFieldSave).toHaveBeenCalledTimes(1));
     expect(onFieldSave).toHaveBeenCalledWith({ cgpa: '' });
+  });
+});
+
+describe('the "something landed here" pulse', () => {
+  // messagePulse fires whenever work lands on the pinned entry — bullets applied, or a
+  // qualification saved. It used to decorate the BULLET COUNT chip only, which is gated
+  // on there being bullets. Education never has any, so in the one section where the
+  // conversation ends at the form the nudge had nothing to land on and did nothing.
+  const qualification = {
+    _sortId: 'ed-1',
+    degree: 'BSc Electrical Engineering',
+    school: 'UNIBEN',
+    graduationDate: '2021',
+  };
+
+  const renderPinned = (entry, section, messagePulse) =>
+    render(
+      <PinnedEntryCard
+        entry={entry}
+        section={section}
+        messagePulse={messagePulse}
+        onNextRole={vi.fn()}
+        onDone={vi.fn()}
+      />
+    );
+
+  // Filtered in JS, not by selector: the Tailwind arbitrary-value class contains
+  // brackets and dots, and jsdom rejects them inside an attribute-value selector.
+  const pulsing = (container) =>
+    [...container.querySelectorAll("*")].filter((node) =>
+      String(node.className || "").includes("animate-[bounce")
+    );
+
+  it('pulses the counter for a section with no bullets', () => {
+    const { container } = renderPinned(qualification, 'education', 1);
+    expect(pulsing(container).length).toBe(1);
+  });
+
+  it('stays still when nothing has just landed', () => {
+    const { container } = renderPinned(qualification, 'education', 0);
+    expect(pulsing(container).length).toBe(0);
+  });
+
+  it('still pulses the bullet count when there are bullets', () => {
+    // The original behaviour, unchanged — and only ONE thing pulses, so a role does not
+    // flash in two places at once.
+    const { container } = renderPinned(experienceEntry, 'experience', 1);
+    expect(pulsing(container).length).toBe(1);
+    expect(container.textContent).toContain('1');
+  });
+});
+
+describe('the collapsed card is inert', () => {
+  it('hides its actions from keyboard and screen readers while closed', () => {
+    // opacity-0 hid the panel from sight but not from the browser: its buttons stayed
+    // focusable and announced. Once the same two actions were also offered in the chat,
+    // a screen reader read each of them twice.
+    const { container } = render(
+      <PinnedEntryCard
+        entry={{ _sortId: 'ed-1', degree: 'BSc', school: 'UNIBEN', graduationDate: '2021' }}
+        section="education"
+        onNextRole={vi.fn()}
+        onDone={vi.fn()}
+      />
+    );
+
+    const panel = container.querySelector('[aria-hidden="true"][inert]');
+    expect(panel).toBeTruthy();
+    expect(panel.textContent).toContain(i18n.t('ariaStudio.pinnedEntry.copy.education.done'));
   });
 });

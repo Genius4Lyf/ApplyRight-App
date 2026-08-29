@@ -320,14 +320,32 @@ const PinnedEntryCard = ({
           <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
             {heading}
           </span>
+          {/* The n/n counter, and the pulse target for a section with NO bullets.
+              messagePulse fires whenever something just landed on this entry; it used to
+              decorate the bullet chip only, which is gated on bulletTotal > 0 — so in
+              education, the one section that never has bullets, the nudge had nothing to
+              land on and silently did nothing. */}
           <span
-            className={`shrink-0 font-mono text-[12px] font-bold tabular-nums ${
+            key={`entry-progress-${bulletTotal > 0 ? 0 : messagePulse}`}
+            className={`relative shrink-0 font-mono text-[12px] font-bold tabular-nums ${
               done === total
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-slate-400 dark:text-slate-500'
+            } ${
+              messagePulse > 0 && bulletTotal === 0
+                ? 'animate-[bounce_0.8s_ease-in-out_2] motion-reduce:animate-none'
+                : ''
             }`}
           >
-            {done}/{total}
+            {messagePulse > 0 && bulletTotal === 0 && (
+              <span
+                className="absolute -inset-1 rounded-full bg-emerald-400/60 opacity-0 animate-[ping_0.9s_cubic-bezier(0,0,0.2,1)_1] motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+            )}
+            <span className="relative z-10">
+              {done}/{total}
+            </span>
           </span>
           {bulletTotal > 0 && (
             <span
@@ -379,7 +397,14 @@ const PinnedEntryCard = ({
           which is the header's border box, so the two line up exactly. The header's own
           bottom border is the divider between them — hence `border-t-0` here, or the
           seam would be a double hairline. */}
+      {/* INERT while collapsed. opacity-0 hides this from sight but not from the browser:
+          the buttons inside stayed in the accessibility tree and in the tab order, so a
+          keyboard user could focus "Done with education" on a panel they could not see —
+          and once the same two actions were also offered in the chat, a screen reader
+          announced each of them twice. pointer-events-none only ever stopped the mouse. */}
       <div
+        inert={!open}
+        aria-hidden={!open}
         className={`absolute left-0 right-0 top-full z-10 grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
           open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
         }`}

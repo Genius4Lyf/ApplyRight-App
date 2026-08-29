@@ -4427,6 +4427,14 @@
       },
       "rescore": "C'est mis à jour — recalculer"
     },
+    "educationSaved": {
+      "eyebrow": "Enregistré",
+      "onYourCv": "{{heading}} figure sur votre CV.",
+      "onYourCvNoName": "Ce diplôme figure sur votre CV.",
+      "addAnother": "Ajouter un autre diplôme",
+      "done": "Terminer la formation",
+      "editHint": "Vous pouvez le modifier à tout moment depuis la carte ci-dessus."
+    },
     "targetJobAsk": {
       "oneThingFirst": "Une chose avant tout",
       "areYouAiming": "Visez-vous un poste précis ? Si vous le collez ici, je façonnerai chaque section autour de ce que cet employeur demande vraiment.",
@@ -4658,7 +4666,8 @@
         "contact": "vos coordonnées — appuyez pour reprendre",
         "certs": "certifications — appuyez pour reprendre",
         "careerStage": "où vous en êtes dans votre carrière — appuyez pour reprendre",
-        "job": "le poste que vous visez — appuyez pour reprendre"
+        "job": "le poste que vous visez — appuyez pour reprendre",
+        "educationSaved": "Diplôme enregistré — appuyez pour reprendre"
       },
       "huntOffer": {
         "eyebrow": "Encore une chose",
@@ -4718,7 +4727,7 @@
         "volunteer": "Bénévolat / leadership associatif",
         "coursework": "Travaux de cours"
       },
-      "educationNoBullets": "C'est tout pour celle-ci — la formation n'a pas besoin de puces.",
+      "educationNoBullets": "Enregistré — le diplôme est complet. La formation ne prend pas de puces comme un poste.",
       "nextEntry": {
         "project": "Suivant — de quel type de projet s'agit-il ?",
         "education": "Qu'avez-vous étudié d'autre ?",

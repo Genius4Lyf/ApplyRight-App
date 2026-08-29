@@ -68,6 +68,7 @@ import BuildRoadmapCard from './BuildRoadmapCard';
 import StudioUploadCard from './StudioUploadCard';
 import TargetJobAskCard from './TargetJobAskCard';
 import CareerStageAskCard from './CareerStageAskCard';
+import EducationSavedCard from './EducationSavedCard';
 import ContactConfirmCard from './ContactConfirmCard';
 import PinnedEntryCard from './PinnedEntryCard';
 import EntryCaptureCard from './EntryCaptureCard';
@@ -2045,7 +2046,16 @@ const StudioChat = ({ onPaywall }) => {
               })
         );
       } else if (stage === 'complete' && pinnedSectionKey === 'education') {
+        // Aria confirms what landed and why it is finished; EducationSavedCard asks what
+        // next. She used to say only what education does NOT need, which left a
+        // first-timer with no idea whether they were done or how to add a second degree.
         ariaSays(t('ariaStudio.chat.educationNoBullets'));
+        // Same nudge the card gets when bullets land: the entry is complete and lives up
+        // there. It does not open the card — that rule stands.
+        setPinMessage((previous) => ({
+          sortId: pinnedEntry._sortId,
+          nonce: previous.nonce + 1,
+        }));
       }
     } finally {
       setTransitionLabel(null);
@@ -3068,6 +3078,11 @@ const StudioChat = ({ onPaywall }) => {
       return t('ariaStudio.chat.cardCollapsed.form', {
         title: pinnedEntry.title || t('ariaStudio.chat.cardCollapsed.thisEntry'),
       });
+    // A saved qualification asking "add another, or done?" is a PROMPT like any other:
+    // it stands down when the user types instead of tapping, and the entry is safe on the
+    // CV either way, so nothing is lost by shrinking it.
+    if (pinnedEntry && pinnedSectionKey === 'education' && pinnedStage === 'complete')
+      return t('ariaStudio.chat.cardCollapsed.educationSaved');
     if (pinnedEntry && (pinnedStage === 'type' || pinnedStage === 'entryType'))
       return t('ariaStudio.chat.cardCollapsed.type');
     if (phase === 'build:sections' && !pinnedEntry && nextSection)
@@ -3917,6 +3932,26 @@ const StudioChat = ({ onPaywall }) => {
                 onSubmit={captureRoleField}
               />
             )}
+
+            {/* A saved qualification is a FINISHED entry — education has no achievements
+                stage after its form, so this is where the conversation would otherwise
+                stop. Both actions call the same handlers the pinned card's buttons do;
+                the point is that they're visible, in the conversation, rather than behind
+                a card that starts collapsed. */}
+            {ready &&
+              pinnedEntry &&
+              pinnedSectionKey === 'education' &&
+              pinnedStage === 'complete' && (
+                <EducationSavedCard
+                  key={`edsaved-${pinnedEntry._sortId}`}
+                  heading={
+                    [pinnedEntry.degree, pinnedEntry.school].filter(Boolean).join(' · ')
+                  }
+                  busy={roleBusy}
+                  onAddAnother={nextEntry}
+                  onDone={finishSection}
+                />
+              )}
 
             {ready && phase === 'build:contact' && (
               <ContactConfirmCard
