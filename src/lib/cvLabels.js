@@ -27,6 +27,7 @@ export const CV_LABELS = {
   skills: { en: 'Skills', fr: 'Compétences' },
   education: { en: 'Education', fr: 'Formation' },
   certifications: { en: 'Certifications', fr: 'Certifications' },
+  languages: { en: 'Languages', fr: 'Langues' },
   projects: { en: 'Projects', fr: 'Projets' },
 
   // Skill-category fallbacks markdownUtils uses inside the Skills section.

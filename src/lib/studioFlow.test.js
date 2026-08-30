@@ -1524,3 +1524,60 @@ describe('scoreSignature — rearranging is not a content change', () => {
     );
   });
 });
+
+// ─── Optional means optional ───
+//
+// Both of these were added as CV content, and the instinct when adding a section is to
+// count it — toward completeness, or into the signature that decides whether the CV needs
+// re-scoring. Either would be wrong, and both would be quiet: a complete CV would start
+// reporting itself unfinished, or typing a language would spend the user's credits.
+describe('languages and the job title are optional', () => {
+  const completeCv = {
+    personalInfo: { fullName: 'Ada Lovelace', email: 'ada@example.com', phone: '0800' },
+    professionalSummary: 'A summary long enough to count as a real one for the checker.',
+    experience: [
+      {
+        _sortId: 'e1',
+        title: 'Plumber',
+        company: 'Ace Ltd',
+        startDate: 'Jan 2021',
+        endDate: 'Present',
+        description: '- Fixed pipes\n- Attended callouts',
+      },
+    ],
+    education: [{ _sortId: 'd1', degree: 'City & Guilds', school: 'Lagos Tech' }],
+    skills: [{ name: 'Soldering', category: 'Pipework' }],
+    projects: [],
+  };
+
+  it('a CV with no languages and no title is still complete', () => {
+    expect(finishableNow(completeCv)).toBe(true);
+  });
+
+  it('adding either one does not change completeness', () => {
+    // The guard against over-correcting in the other direction, too.
+    expect(
+      finishableNow({
+        ...completeCv,
+        languages: [{ name: 'French', level: 'Native' }],
+        personalInfo: { ...completeCv.personalInfo, currentJobTitle: 'Plumber' },
+      })
+    ).toBe(true);
+  });
+
+  it('adding a language does not move the score signature', () => {
+    // The scan does not read languages, so a re-score would be charged for nothing.
+    expect(scoreSignature({ ...completeCv, languages: [{ name: 'French' }] })).toBe(
+      scoreSignature(completeCv)
+    );
+  });
+
+  it('setting the job title does not move the score signature either', () => {
+    expect(
+      scoreSignature({
+        ...completeCv,
+        personalInfo: { ...completeCv.personalInfo, currentJobTitle: 'Plumber' },
+      })
+    ).toBe(scoreSignature(completeCv));
+  });
+});

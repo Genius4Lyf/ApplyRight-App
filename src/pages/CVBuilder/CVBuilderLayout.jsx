@@ -48,6 +48,9 @@ const ScaledCVPreview = ({ cvData }) => {
       linkedinUrl: cvData.personalInfo?.linkedin || '',
       portfolioUrl: cvData.personalInfo?.website || '',
       location: cvData.personalInfo?.address || '',
+      // Templates print this under the name; omitting it here was why the builder
+      // preview never showed a title even when the CV carried one.
+      currentJobTitle: cvData.personalInfo?.currentJobTitle || '',
     };
   }, [cvData]);
 

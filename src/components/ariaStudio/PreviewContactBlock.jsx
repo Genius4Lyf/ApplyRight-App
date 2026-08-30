@@ -41,6 +41,16 @@ import { prepareCvPhoto } from '../../utils/cvPhoto';
 // surfaces should find one list, not two that happen to agree.
 const FIELDS = ['fullName', 'email', 'phone', 'linkedin', 'website', 'address'];
 
+// NOT in FIELDS, and deliberately so. The title is not a contact detail, and it is not
+// asked for during the build — it is offered here, at the end, when the user can see the
+// CV it will head. Handled alongside FIELDS the same way photoUrl already is: seeded,
+// diffed and rendered on its own.
+//
+// Every template already prints it, reading `currentJobTitle` off the profile it is
+// handed — which in the Studio IS cvData.personalInfo. Until this field existed that read
+// always came back empty, and the title silently never appeared on a Studio CV.
+const TITLE_FIELD = 'currentJobTitle';
+
 // The same reveal PreviewEntryRow, the skills pills and the summary block use: hidden
 // until hover/focus on a device that HAS hover, permanently visible on touch (where
 // there is no hover to reveal it with).
@@ -81,6 +91,7 @@ const PreviewContactBlock = ({ readOnly = false }) => {
       seed[key] = info[key] || '';
     });
     seed.photoUrl = info.photoUrl || '';
+    seed[TITLE_FIELD] = info[TITLE_FIELD] || '';
     seedRef.current = seed;
     setForm(seed);
     setEditing(true);
@@ -125,6 +136,8 @@ const PreviewContactBlock = ({ readOnly = false }) => {
     if ((form.photoUrl || '') !== (seedRef.current.photoUrl || '')) {
       patch.photoUrl = form.photoUrl || '';
     }
+    const nextTitle = (form[TITLE_FIELD] || '').trim();
+    if (nextTitle !== (seedRef.current[TITLE_FIELD] || '').trim()) patch[TITLE_FIELD] = nextTitle;
     // Nothing changed — close without spending a write. Opening the editor and thinking
     // better of it is not an edit.
     if (!Object.keys(patch).length) {
@@ -166,6 +179,25 @@ const PreviewContactBlock = ({ readOnly = false }) => {
   if (editing) {
     return (
       <div className="space-y-2">
+        {/* First in the form because it is first on the page — the line under the name.
+            Optional: cleared, it simply stops rendering, here and in every template. */}
+        <div className="min-w-0">
+          <label
+            htmlFor="studio-preview-contact-currentJobTitle"
+            className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400"
+          >
+            {t('ariaStudio.livePreview.jobTitleLabel')}
+          </label>
+          <input
+            id="studio-preview-contact-currentJobTitle"
+            type="text"
+            value={form[TITLE_FIELD] || ''}
+            onChange={set(TITLE_FIELD)}
+            disabled={saving}
+            placeholder={t('ariaStudio.livePreview.jobTitlePlaceholder')}
+            className={field}
+          />
+        </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {FIELDS.map((key, index) => (
             <div key={key} className="min-w-0">
@@ -277,6 +309,11 @@ const PreviewContactBlock = ({ readOnly = false }) => {
           <p className="text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
             {(info.fullName || '').trim() || t('ariaStudio.livePreview.yourName')}
           </p>
+          {(info[TITLE_FIELD] || '').trim() && (
+            <p className="mt-0.5 text-[12.5px] font-medium text-slate-600 dark:text-slate-300">
+              {info[TITLE_FIELD].trim()}
+            </p>
+          )}
           {contactLine && (
             <p className="mt-1 break-words text-[12px] text-slate-500 dark:text-slate-400">
               {contactLine}

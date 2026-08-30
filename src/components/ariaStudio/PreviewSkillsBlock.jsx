@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FolderPlus, GripVertical, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -478,6 +479,15 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        // OFF, deliberately. dnd-kit auto-scrolls the nearest scrollable ancestor whenever
+        // the pointer is near its edge — and on a phone that ancestor is a short bottom
+        // sheet, so a finger is inside the threshold almost everywhere. The result was a
+        // sheet scrolling continuously under a chip that appeared stuck.
+        //
+        // Nothing is lost: the groups here are a few lines tall and sit together, so the
+        // target is on screen whenever the chip is. A group that genuinely is not — a long
+        // CV, a short viewport — is what the "Move to…" menu is for.
+        autoScroll={false}
         onDragStart={({ active }) => {
           const index = Number(String(active.id).split(':')[1]);
           setDragging({ index, name: skillName(skills[index]) });
@@ -563,16 +573,25 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
         )}
 
         {/* What is actually under the cursor. Without it the pill just vanishes on
-            pick-up and there is nothing to aim with. */}
-        <DragOverlay>
-          {dragging ? (
-            <span
-              className={`${pillBase} shadow-[0_4px_10px_rgba(15,23,42,0.18),0_12px_28px_-12px_rgba(15,23,42,0.30)] dark:shadow-[0_10px_26px_-10px_rgba(0,0,0,0.7)]`}
-            >
-              {dragging.name}
-            </span>
-          ) : null}
-        </DragOverlay>
+            pick-up and there is nothing to aim with.
+
+            PORTALLED to the body: the overlay positions itself against the viewport, and
+            this block lives inside a scrolling sheet. Left nested, it is measured against
+            an ancestor that moves, so it drifts away from the finger as the sheet scrolls. */}
+        {typeof document === 'undefined'
+          ? null
+          : createPortal(
+              <DragOverlay dropAnimation={null}>
+                {dragging ? (
+                  <span
+                    className={`${pillBase} shadow-[0_4px_10px_rgba(15,23,42,0.18),0_12px_28px_-12px_rgba(15,23,42,0.30)] dark:shadow-[0_10px_26px_-10px_rgba(0,0,0,0.7)]`}
+                  >
+                    {dragging.name}
+                  </span>
+                ) : null}
+              </DragOverlay>,
+              document.body
+            )}
       </DndContext>
 
       {readOnly ? null : adding ? (

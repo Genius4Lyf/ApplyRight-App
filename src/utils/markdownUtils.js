@@ -7,6 +7,7 @@ const generateMarkdownFromDraft = (draft) => {
     certifications = [],
     skills = [],
     projects = [], // Add projects support
+    languages = [],
   } = draft;
 
   let md = '';
@@ -135,6 +136,23 @@ const generateMarkdownFromDraft = (draft) => {
     certList.forEach((cert) => {
       const meta = [cert.issuer, cert.date].filter((p) => (p || '').trim()).join(', ');
       md += `- **${cert.name.trim()}**${meta ? ` — ${meta}` : ''}\n`;
+    });
+    md += '\n';
+  }
+
+  // 5c. Languages (after Certifications). Deliberately the SAME shape as the
+  // certifications list above — "- **Name** — meta" already renders cleanly in every
+  // markdown template, and a section is what makes languages visible in all of them
+  // rather than only in the three that scrape a line out of Skills.
+  //
+  // NOT the "- **Label:** value" shape: that is the skills-category pattern cvLabels
+  // rewrites when translating a CV, and a language name is not a label to translate.
+  const languageList = (languages || []).filter((l) => l && (l.name || '').trim());
+  if (languageList.length > 0) {
+    md += `## Languages\n`;
+    languageList.forEach((language) => {
+      const level = (language.level || '').trim();
+      md += `- **${language.name.trim()}**${level ? ` — ${level}` : ''}\n`;
     });
     md += '\n';
   }

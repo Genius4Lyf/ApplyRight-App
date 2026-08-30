@@ -371,3 +371,61 @@ describe('StudioLivePreview — contact editing is EDIT MODE only', () => {
     expect(mockUpdatePersonalInfo).not.toHaveBeenCalled();
   });
 });
+
+// ─── The job title ───
+//
+// It lives on the User ACCOUNT and every template prints it, reading `currentJobTitle` off
+// the profile it is handed. But the Studio hands templates `cvData.personalInfo`, which had
+// no such field — so a title set in Settings silently never appeared on a Studio CV.
+//
+// It is a per-CV field now, seeded from the account: a CV aimed at Plumber and one aimed at
+// Maintenance Technician need different titles, and one account value cannot serve both.
+describe('StudioLivePreview — the job title', () => {
+  const withTitle = (currentJobTitle) => ({
+    ...contactCv,
+    personalInfo: { ...contactCv.personalInfo, currentJobTitle },
+  });
+
+  it('prints under the name, above the contact line', () => {
+    mockCvData = withTitle('Plumber');
+    render(<StudioLivePreview />);
+
+    expect(screen.getByText('Plumber')).toBeTruthy();
+  });
+
+  it('shows nothing at all when it is empty', () => {
+    // Optional means the line does not exist, not that it renders blank.
+    mockCvData = withTitle('');
+    const { container } = render(<StudioLivePreview />);
+
+    expect(container.textContent).not.toContain('Plumber');
+  });
+
+  it('saves as a NARROW patch, not a whole-document write', async () => {
+    // The narrow-patch rule: a whole-doc save from this closure would revert whatever else
+    // changed while the form was open.
+    mockCvData = withTitle('');
+    render(<StudioLivePreview />);
+    openEdit();
+
+    fireEvent.change(screen.getByLabelText('Job title'), { target: { value: 'Plumber' } });
+    fireEvent.click(saveBtn());
+
+    await waitFor(() => expect(mockUpdatePersonalInfo).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePersonalInfo).toHaveBeenCalledWith({ currentJobTitle: 'Plumber' });
+  });
+
+  it('is not offered when the sheet is locked', () => {
+    mockCvData = {
+      ...withTitle('Plumber'),
+      studioKind: 'build',
+      experience: [],
+      professionalSummary: '',
+    };
+    render(<StudioLivePreview />);
+
+    // The title still READS — only the ✎ that opens the form goes.
+    expect(screen.getByText('Plumber')).toBeTruthy();
+    expect(screen.queryByLabelText('Job title')).toBeNull();
+  });
+});

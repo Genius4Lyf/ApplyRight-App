@@ -32,6 +32,7 @@ import CvLanguageToggle from '../cv/CvLanguageToggle';
 import PreviewEntryRow from './PreviewEntryRow';
 import PreviewEntryEditor from './PreviewEntryEditor';
 import PreviewCertsBlock from './PreviewCertsBlock';
+import PreviewLanguagesBlock from './PreviewLanguagesBlock';
 import PreviewContactBlock from './PreviewContactBlock';
 import PreviewSkillsBlock from './PreviewSkillsBlock';
 import PreviewSummaryBlock from './PreviewSummaryBlock';
@@ -332,7 +333,8 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // editor in the same slot the row would have used; Aria routes through the command
   // channel like every other hand-off here, so StudioChat owns the pin and the interview.
   const addManually = async (section) => {
-    const create = section === 'project' ? addProject : section === 'education' ? addEducation : addRole;
+    const create =
+      section === 'project' ? addProject : section === 'education' ? addEducation : addRole;
     const sortId = await create();
     if (sortId) setEditingSortId(sortId);
   };
@@ -659,7 +661,9 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                                 <p className="font-mono text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                                   {r.startDate || ''}
                                   {r.startDate || r.endDate || r.isCurrent ? ' – ' : ''}
-                                  {r.isCurrent ? t('ariaStudio.pinnedEntry.present') : r.endDate || ''}
+                                  {r.isCurrent
+                                    ? t('ariaStudio.pinnedEntry.present')
+                                    : r.endDate || ''}
                                 </p>
                               )}
                               <Bullets description={r.description} />
@@ -805,6 +809,12 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           read-only template instead, where an empty section simply
                           doesn't appear. */}
                           <PreviewCertsBlock readOnly={!canEdit} />
+
+                          {/* Languages sits with certifications for the same reasons:
+                          both are short, optional, carry no _sortId, and are typed rather
+                          than generated. Neither is in PREVIEW_ORDER — that list is the
+                          sections the SCAN reads, and languages is not scored. */}
+                          <PreviewLanguagesBlock readOnly={!canEdit} />
                         </div>
                       </SectionBlock>
                     );

@@ -662,6 +662,34 @@ export const AriaStudioProvider = ({ children }) => {
     [cvData, commitList]
   );
 
+  // Replace the WHOLE languages array.
+  //
+  // Same shape as replaceCertifications, and for the same reason: a language is
+  // { name, level } with NO _sortId, so position is identity and there is nothing to
+  // address a single one by. Add and delete both reduce to "the UI owns the array and
+  // hands back the final one", which this writes atomically.
+  //
+  // No merging counterpart, again like certifications: languages are typed by hand, never
+  // generated, so nothing has suggestions to dedupe against.
+  //
+  // Unlike skills there is no floor here — a CV with no languages is a normal CV, so
+  // emptying the section is allowed rather than blocked.
+  const replaceLanguages = useCallback(
+    async (nextLanguages) => {
+      if (!cvData) return { ok: false };
+      const previous = cvData.languages || [];
+      const next = nextLanguages || [];
+      const ok = await commitList(
+        'languages',
+        next,
+        previous,
+        "Couldn't save those languages. Try again."
+      );
+      return { ok };
+    },
+    [cvData, commitList]
+  );
+
   // Apply a coach-generated bullet rewrite to ONE role/project in place: replace that
   // entry's `description`, persist immediately (so a follow-up recheck reads the new
   // bullets server-side), and bump externalEditNonce. `section` is 'experience' | 'project'.
@@ -954,6 +982,7 @@ export const AriaStudioProvider = ({ children }) => {
     restoreEntry,
     replaceSkills,
     replaceCertifications,
+    replaceLanguages,
     // The one SUBDOC writer — dot-notation, changed fields only, so the fields it does
     // does not offer (currently nationality) survives every save it makes.
     updatePersonalInfo,
