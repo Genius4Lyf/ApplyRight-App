@@ -64,8 +64,9 @@ import {
 // component can never disagree about what a category is.
 const lower = (s) => (s || '').trim().toLowerCase();
 
-const pillBase =
-  'group inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 pl-2 pr-1 py-0.5 text-[11.5px] font-medium text-slate-600 dark:text-slate-300';
+const pillShadow =
+  'shadow-[0_1px_1px_rgba(15,23,42,0.10),0_2px_6px_-3px_rgba(15,23,42,0.16)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.45)]';
+const pillBase = `group inline-flex items-center gap-1 bg-white dark:bg-slate-800 pl-2 pr-1 py-1 text-[11.5px] font-medium text-slate-700 dark:text-slate-200 ${pillShadow}`;
 // The same reveal PreviewEntryRow uses: hidden until hover/focus on a device that HAS
 // hover, permanently visible on touch (where there is no hover to reveal it with).
 const revealOnHover =
@@ -73,7 +74,7 @@ const revealOnHover =
 const field =
   'min-w-0 flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-[12px] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
 const iconButton =
-  'inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-slate-400 transition-[opacity,color,background-color] hover:bg-slate-200 hover:text-slate-700 disabled:cursor-not-allowed dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200';
+  'inline-flex h-3.5 w-3.5 items-center justify-center text-slate-400 transition-[opacity,color,background-color] hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200';
 
 // A category name can be anything the user types, so it is carried whole after a fixed
 // prefix rather than interpolated into a structured id.
@@ -87,7 +88,7 @@ const SkillGroupDrop = ({ id, disabled, children }) => {
   return (
     <div
       ref={setNodeRef}
-      className={`-mx-1 rounded-lg px-1 py-0.5 transition-colors ${
+      className={`-mx-1 px-1 py-0.5 transition-colors ${
         isOver ? 'bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-800/70 dark:ring-slate-600' : ''
       }`}
     >
@@ -541,7 +542,9 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
             pick-up and there is nothing to aim with. */}
         <DragOverlay>
           {dragging ? (
-            <span className={`${pillBase} shadow-lg ring-1 ring-slate-300 dark:ring-slate-600`}>
+            <span
+              className={`${pillBase} shadow-[0_4px_10px_rgba(15,23,42,0.18),0_12px_28px_-12px_rgba(15,23,42,0.30)] dark:shadow-[0_10px_26px_-10px_rgba(0,0,0,0.7)]`}
+            >
               {dragging.name}
             </span>
           ) : null}
@@ -602,7 +605,7 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
           <button
             type="button"
             onClick={openAdd}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 px-2 py-0.5 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
+            className="inline-flex items-center gap-1 border border-dashed border-slate-300 px-2 py-1 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
           >
             <Plus className="h-3 w-3" aria-hidden="true" />
             {t('ariaStudio.livePreview.addSkill')}
@@ -616,7 +619,7 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
             <button
               type="button"
               onClick={onSuggestWithAria}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-0.5 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
+              className="inline-flex items-center gap-1.5 border border-slate-200 px-2 py-1 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
             >
               <AriaOrbit size={11} tone="mono" className="shrink-0" />
               {t('ariaStudio.livePreview.suggestSkillsWithAria')}
@@ -678,7 +681,7 @@ const NewGroupDrop = ({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-lg border border-dashed px-2 py-1.5 text-[11px] font-medium transition-colors ${
+      className={`border border-dashed px-2 py-1.5 text-[11px] font-medium transition-colors ${
         isOver
           ? 'border-slate-400 bg-slate-100 text-slate-700 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-200'
           : 'border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-500'
