@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
+import { LANGUAGE_LEVELS, levelI18nKey, levelLabel } from '../../lib/languageLevels';
 
 // The Live Preview's LANGUAGES sub-block, editable in place.
 //
@@ -76,8 +77,10 @@ const PreviewLanguagesBlock = ({ readOnly = false }) => {
     setBusy(false);
   };
 
-  // Level is OPTIONAL. "French" on its own is a real entry — it just says less than
-  // "French — Professional", which is why the field is offered rather than required.
+  // Level is OPTIONAL, and CHOSEN rather than typed. Free text produced a different
+  // vocabulary on every CV ("fluent", "very good", "B2", "mother tongue"), none of which a
+  // recruiter can compare and none of which could be translated when the CV language is
+  // toggled. The stored value is canonical English; see lib/languageLevels.
   const submit = async () => {
     if (busy || !canAdd) return;
     setBusy(true);
@@ -137,7 +140,7 @@ const PreviewLanguagesBlock = ({ readOnly = false }) => {
             >
               <p className="min-w-0 flex-1 text-[12px] text-slate-600 dark:text-slate-300">
                 {language.name}
-                {language.level ? ` · ${language.level}` : ''}
+                {language.level ? ` · ${levelLabel(language.level, t)}` : ''}
               </p>
               {!readOnly && (
                 <button
@@ -172,16 +175,23 @@ const PreviewLanguagesBlock = ({ readOnly = false }) => {
             placeholder={t('ariaStudio.livePreview.placeholderLanguage')}
             className={`${field} basis-[8rem]`}
           />
-          <input
-            type="text"
+          <select
             value={form.level}
             onChange={set('level')}
             onKeyDown={keyDown}
             disabled={busy}
             aria-label={t('ariaStudio.livePreview.fieldLevel')}
-            placeholder={t('ariaStudio.livePreview.placeholderLevel')}
-            className={`${field} basis-[8rem]`}
-          />
+            className={`${field} basis-[9rem]`}
+          >
+            {/* Blank first, and selected by default: a language with no level stated is a
+                real entry, and pre-picking one would put a claim on the CV nobody made. */}
+            <option value="">{t('ariaStudio.livePreview.noLevel')}</option>
+            {LANGUAGE_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {t(levelI18nKey(level))}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={submit}

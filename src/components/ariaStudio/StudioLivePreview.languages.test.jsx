@@ -102,12 +102,14 @@ describe('StudioLivePreview — languages', () => {
 
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'French' } });
     fireEvent.change(screen.getByLabelText('Level (optional)'), {
-      target: { value: 'Professional' },
+      target: { value: 'Professional working' },
     });
     fireEvent.click(screen.getByRole('button', { name: i18n.t('ariaStudio.certifications.add') }));
 
     await waitFor(() => expect(mockReplaceLanguages).toHaveBeenCalledTimes(1));
-    expect(mockReplaceLanguages).toHaveBeenCalledWith([{ name: 'French', level: 'Professional' }]);
+    expect(mockReplaceLanguages).toHaveBeenCalledWith([
+      { name: 'French', level: 'Professional working' },
+    ]);
   });
 
   it('accepts a language with NO level — a bare name is a real entry', async () => {
@@ -203,5 +205,57 @@ describe('StudioLivePreview — languages', () => {
     render(<StudioLivePreview />);
 
     expect(screen.queryByText('Languages')).toBeNull();
+  });
+});
+
+// ─── Proficiency is chosen, not typed ───
+//
+// Free text produced a different vocabulary on every CV — "fluent", "very good", "B2",
+// "mother tongue" — none of which a recruiter can compare, and none of which could be
+// translated when the CV's language is toggled. The stored value is canonical English; the
+// dropdown and the line on screen show the interface language.
+describe('StudioLivePreview — language proficiency', () => {
+  it('offers the standard scale, strongest first, with no level as the default', () => {
+    mockCvData = cvWith([]);
+    render(<StudioLivePreview />);
+    openAdd();
+
+    const select = screen.getByLabelText('Level (optional)');
+    expect([...select.options].map((o) => o.value)).toEqual([
+      '',
+      'Native',
+      'Fluent',
+      'Professional working',
+      'Conversational',
+      'Basic',
+    ]);
+    // Nothing pre-picked: a level nobody chose is a claim nobody made.
+    expect(select.value).toBe('');
+  });
+
+  it('stores the canonical English value', () => {
+    mockCvData = cvWith([]);
+    render(<StudioLivePreview />);
+    openAdd();
+
+    const select = screen.getByLabelText('Level (optional)');
+    fireEvent.change(select, { target: { value: 'Native' } });
+    expect(select.value).toBe('Native');
+  });
+
+  it('shows a stored level through the label lookup', () => {
+    mockCvData = cvWith([{ name: 'French', level: 'Professional working' }]);
+    render(<StudioLivePreview />);
+
+    expect(screen.getByText(/Professional working/)).toBeTruthy();
+  });
+
+  it('shows free text from an older draft verbatim rather than blank', () => {
+    // An import or a pre-dropdown draft can carry anything. Falling back to the raw string
+    // is better than a missing-key placeholder or an empty line.
+    mockCvData = cvWith([{ name: 'French', level: 'Mother tongue' }]);
+    render(<StudioLivePreview />);
+
+    expect(screen.getByText(/Mother tongue/)).toBeTruthy();
   });
 });

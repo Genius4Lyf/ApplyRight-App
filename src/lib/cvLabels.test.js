@@ -173,3 +173,30 @@ describe('the round-trip invariant', () => {
     expect(replaceSummaryInMarkdown(fr, 'Nouveau résumé.')).toBe(fr);
   });
 });
+
+describe('a language level on a French CV', () => {
+  // The level is stored in canonical English and translated at the render layer, like
+  // every other label here — so toggling a CV to French translates it without the stored
+  // document changing at all.
+  const line = (md) => localizeCvMarkdown(md, 'fr').trim();
+
+  it('translates the level, never the language name', () => {
+    expect(line('- **French** — Professional working')).toBe('- **French** — Professionnel');
+    expect(line('- **Yoruba** — Native')).toBe('- **Yoruba** — Langue maternelle');
+  });
+
+  it('leaves a certification issuer and date alone', () => {
+    // Certifications share this exact line shape. An unmapped meta must come back
+    // byte-identical or a French CV would start mangling awarding bodies.
+    expect(line('- **H2S Awareness** — OPITO, 2023')).toBe('- **H2S Awareness** — OPITO, 2023');
+  });
+
+  it('leaves a language with no level alone', () => {
+    expect(line('- **French**')).toBe('- **French**');
+  });
+
+  it('is a no-op in English', () => {
+    const md = '- **French** — Native';
+    expect(localizeCvMarkdown(md, 'en')).toBe(md);
+  });
+});

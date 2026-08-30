@@ -28,6 +28,14 @@ export const CV_LABELS = {
   education: { en: 'Education', fr: 'Formation' },
   certifications: { en: 'Certifications', fr: 'Certifications' },
   languages: { en: 'Languages', fr: 'Langues' },
+
+  // Language proficiency, as stored on DraftCV.languages[].level. Canonical English in,
+  // document language out — the same contract every other label here has.
+  native: { en: 'Native', fr: 'Langue maternelle' },
+  fluent: { en: 'Fluent', fr: 'Courant' },
+  'professional working': { en: 'Professional working', fr: 'Professionnel' },
+  conversational: { en: 'Conversational', fr: 'Conversationnel' },
+  basic: { en: 'Basic', fr: 'Notions' },
   projects: { en: 'Projects', fr: 'Projets' },
 
   // Skill-category fallbacks markdownUtils uses inside the Skills section.
@@ -83,6 +91,7 @@ export function cvLabel(name, lang = 'en') {
  *   `## Section`            → `## Label`
  *   `### Degree`            → `### Diplôme`   (placeholder only; real titles pass through)
  *   `- **Category:** a, b`  → `- **Catégorie :** a, b`  (label only, never the skills)
+ *   `- **French** — Native`  → `- **French** — Langue maternelle`  (the LEVEL only)
  *
  * English is a no-op and returns the input unchanged (same reference), so the
  * default path costs nothing.
@@ -108,6 +117,15 @@ export function localizeCvMarkdown(markdown, lang = 'en') {
       // `- **Skill Category:** a, b, c`
       const cat = line.match(/^(\s*[-*]\s+)\*\*([^*:]+):\*\*(.*)$/);
       if (cat) return `${cat[1]}**${cvLabel(cat[2], lang)}:**${cat[3]}`;
+
+      // `- **French** — Professional working` → translate the LEVEL, never the language.
+      //
+      // Certifications share this exact line shape ("- **H2S Awareness** — OPITO, 2023"),
+      // which is why the meta goes through cvLabel rather than being translated outright:
+      // an unmapped string comes back byte-identical, so an issuer and a date pass through
+      // untouched while a known proficiency is rewritten.
+      const meta = line.match(/^(\s*[-*]\s+\*\*[^*]+\*\*\s+—\s+)(.+?)(\s*)$/);
+      if (meta) return `${meta[1]}${cvLabel(meta[2], lang)}${meta[3]}`;
 
       return line;
     })
