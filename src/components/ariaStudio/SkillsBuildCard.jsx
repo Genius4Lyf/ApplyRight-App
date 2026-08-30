@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SkillsCard from '../cv/SkillsCard';
+import SkillsGenerationOptions from '../cv/SkillsGenerationOptions';
 import AriaCard from './AriaCard';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 import { sectionIcon } from '../../lib/studioFlow';
@@ -17,11 +18,21 @@ const SkillsBuildCard = ({
   data, // { suggestions, bestForRole, reviewGroups }
   existingSkills = [],
   hasJob,
-  cost, // resolved credit cost — always the light-tier price; skills has no model choice
+  cost, // resolved credit cost for the CURRENT model pick (light or flagship)
+  // The count/model the user picked for this generation. Owned by StudioChat so a
+  // re-render of the card cannot silently reset what they chose.
+  skillCount,
+  onSkillCount,
+  genModelId,
+  onGenModel,
+  chatTier,
   onGenerate,
   onAdd,
   // (requirementId, name) => void — starts the cross-history hunt from a gap chip.
   onProveSkill,
+  // Passed straight through to SkillsCard — the card owns the question, this owns the
+  // draft it belongs to.
+  onDecline,
   // Verdicts for hunts already answered this session — a settled chip stops offering one.
   huntedRequirements = {},
   onManual,
@@ -72,6 +83,7 @@ const SkillsBuildCard = ({
             existingSkills={existingSkills}
             onAdd={onAdd}
             onProveSkill={onProveSkill}
+            onDecline={onDecline}
             huntedRequirements={huntedRequirements}
           />
         </div>
@@ -95,6 +107,16 @@ const SkillsBuildCard = ({
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {hasJob ? t('ariaStudio.skillsBuild.bodyWithJob') : t('ariaStudio.skillsBuild.bodyNoJob')}
         </p>
+
+        <div className="mt-4">
+          <SkillsGenerationOptions
+            count={skillCount}
+            onCount={onSkillCount}
+            modelId={genModelId}
+            onModel={onGenModel}
+            chatTier={chatTier}
+          />
+        </div>
 
         <button
           type="button"

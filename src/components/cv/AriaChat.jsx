@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
-import { tierOf, costForActionTier, AI_MODELS } from '../../lib/models';
+import { tierOf, costForActionTier } from '../../lib/models';
 import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
@@ -20,6 +20,7 @@ import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
 import GenerationModelRow from './GenerationModelRow';
+import SkillsGenerationOptions, { SKILL_COUNT_DEFAULT } from './SkillsGenerationOptions';
 
 // The persistent Aria chat — replaces the old scripted CoachCard on every non-target
 // step. Opens with the step's coaching line, offers ready-made suggestion chips, and
@@ -78,10 +79,13 @@ const AriaChat = ({
   // generation — no re-charge — with already-added skills marked "on CV").
   const isSkills = currentStepId === 'skills';
   const hasContent = (cvData?.experience?.length || 0) > 0 || (cvData?.projects?.length || 0) > 0;
-  // No model choice for skills — extraction reads the same content either model would,
-  // so it always runs on the standard model rather than offering a Claude option.
-  const skillsCost = costForActionTier('GENERATE_SKILLS', 'light') ?? 10;
+  // Priced at the GENERATION model's tier. The stronger model earns its price here now:
+  // it is what turns a bare job title into the trade's real vocabulary.
+  const skillsCost = costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10;
   const [skPhase, setSkPhase] = useState('idle'); // 'idle'|'consent'|'generating'|'card'
+  // The ceiling the user picked for this generation. Never a quota — see
+  // SkillsGenerationOptions.
+  const [skillCount, setSkillCount] = useState(SKILL_COUNT_DEFAULT);
   const [skData, setSkData] = useState(null); // { suggestions, bestForRole }
   const [skSel, setSkSel] = useState([]); // initialSelected for a re-opened record
 
@@ -155,6 +159,13 @@ const AriaChat = ({
   // Pull hard skills from the CV's work history + projects — a credited generation
   // (skillsGenCache avoids a double-charge on the same profile). Lands as a grouped
   // card; picks flow into the CV via applySkills.
+  // Remember a "no" so the next generation stops asking. Fire-and-forget: the card has
+  // already dropped the question locally, so a failed write costs nothing this session.
+  const recordSkillDeclines = (declines) => {
+    if (!draftId || draftId === 'new' || !declines?.length) return;
+    CVService.declineSkills(draftId, declines).catch(() => {});
+  };
+
   const generateSkills = async () => {
     setSkPhase('generating');
     try {
@@ -170,8 +181,9 @@ const AriaChat = ({
         cvData.projects,
         cvData.targetJob?.description,
         id,
-        AI_MODELS.defaultModel,
-        cvData?.careerStage
+        genModelId,
+        cvData?.careerStage,
+        skillCount
       );
       setSkData({
         suggestions: r.suggestions || [],
@@ -570,6 +582,13 @@ const AriaChat = ({
                   <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {t('cvBuilder.ariaChat.skillsConsent', { n: skillsCost })}
                   </p>
+                  <SkillsGenerationOptions
+                    count={skillCount}
+                    onCount={setSkillCount}
+                    modelId={genModelId}
+                    onModel={setGenModelId}
+                    chatTier={tierOf(modelId)}
+                  />
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
@@ -617,6 +636,7 @@ const AriaChat = ({
                     // the hunt always needed, and it is the same conversation the Studio
                     // runs against the same endpoint.
                     onProveSkill={startHunt}
+                    onDecline={recordSkillDeclines}
                     huntedRequirements={huntedRequirements}
                   />
                 </div>

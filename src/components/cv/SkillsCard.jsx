@@ -57,6 +57,10 @@ const SkillsCard = ({
   // in this session. These review groups are a snapshot from the last generation and do
   // not know about them, so the card has to.
   huntedRequirements = {},
+  // (declines) => void — the user has said they have never done these. Recorded so the
+  // next generation stops asking: the confirmation list can now run to twenty, and
+  // re-asking a question already answered "no" is the fastest way to make it feel dumb.
+  onDecline,
 }) => {
   const { t } = useTranslation();
   const groups = useMemo(
@@ -68,7 +72,13 @@ const SkillsCard = ({
   const [openDetail, setOpenDetail] = useState(null);
   const [confirmations, setConfirmations] = useState({});
 
-  const confirmedCandidates = (groups.confirmation || [])
+  // Never ask about something already on the CV. The server filters these too, but these
+  // groups can be a cached snapshot from before the user added a skill, and being asked
+  // "did you do this?" about your own CV is the kind of thing that costs trust.
+  const openQuestions = (groups.confirmation || []).filter(
+    (row) => !existingSet.has(lower(row.name))
+  );
+  const confirmedCandidates = openQuestions
     .filter((row) => ['direct', 'basic'].includes(confirmations[row.name]))
     .map((row) => ({
       ...row,
@@ -108,6 +118,11 @@ const SkillsCard = ({
 
   const confirm = (row, status) => {
     setConfirmations((current) => ({ ...current, [row.name]: status }));
+    // "Only encountered it" and "no" are both answers, and both should stick. Sent
+    // fire-and-forget: a failure to remember must never block skills landing on the CV.
+    if (['encountered', 'no'].includes(status)) {
+      onDecline?.([{ name: row.name, level: status === 'encountered' ? 'encountered' : 'never' }]);
+    }
     setSelected((current) => {
       const next = new Set(current);
       if (['direct', 'basic'].includes(status)) next.add(row.name);
@@ -240,7 +255,7 @@ const SkillsCard = ({
           </section>
         ))}
 
-        {!!groups.confirmation?.length && (
+        {!!openQuestions.length && (
           <section>
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
               {groups.mode === 'job'
@@ -251,7 +266,7 @@ const SkillsCard = ({
               {t('cvBuilder.skillsCard.confirmIntro')}
             </p>
             <div className="space-y-2">
-              {groups.confirmation.map((row) => {
+              {openQuestions.map((row) => {
                 const answer = confirmations[row.name];
                 return (
                   <div
@@ -261,12 +276,21 @@ const SkillsCard = ({
                     <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
                       {row.name}
                     </p>
+                    {row.typicalForLabel && (
+                      <p className="mt-1 font-mono text-[9.5px] uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80">
+                        {t('cvBuilder.skillsCard.typicalFor', { role: row.typicalForLabel })}
+                      </p>
+                    )}
                     <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                       {row.reason}
                     </p>
                     <p className="mt-1.5 text-[11.5px] font-medium text-slate-700 dark:text-slate-200">
+                      {/* The server leaves the wording to us for role-typical rows, so the
+                          question can be asked in the user's own language. */}
                       {row.question ||
-                        t('cvBuilder.skillsCard.confirmQuestion', { skill: row.name })}
+                        (row.typicalForLabel
+                          ? t('cvBuilder.skillsCard.typicalQuestion', { role: row.typicalForLabel })
+                          : t('cvBuilder.skillsCard.confirmQuestion', { skill: row.name }))}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {['direct', 'basic', 'encountered', 'no'].map((status) => (

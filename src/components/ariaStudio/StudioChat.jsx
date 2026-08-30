@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaTypewriter from '../cv/AriaTypewriter';
-import { costForActionTier, tierOf, AI_MODELS } from '../../lib/models';
+import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
 import {
   derivePhase,
@@ -76,6 +76,7 @@ import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
 import CertificationsCard from './CertificationsCard';
 import SkillsBuildCard from './SkillsBuildCard';
+import { SKILL_COUNT_DEFAULT } from '../cv/SkillsGenerationOptions';
 import HuntOfferCard from './HuntOfferCard';
 import { SelectedAnswerBubble, StudioPhaseDivider, StudioReceipt } from './StudioTranscriptEvent';
 
@@ -288,6 +289,9 @@ const StudioChat = ({ onPaywall }) => {
   // differently (build advances to the section hub, a fix runs finishFix), and sharing the
   // counters is how a leftover build total ends up in a fix's receipt. Parallel and
   // explicitly separate: `skillsData`/`manualSkillsAdded` are build's, these are the fix's.
+  // How many skills to look for. Shared by build and fix: a user who wants twenty
+  // wants twenty in both places. A CEILING, clamped again server-side.
+  const [skillCount, setSkillCount] = useState(SKILL_COUNT_DEFAULT);
   const [fixSkillsData, setFixSkillsData] = useState(null);
   const [fixSkillsAdded, setFixSkillsAdded] = useState(0);
 
@@ -1561,17 +1565,18 @@ const StudioChat = ({ onPaywall }) => {
     if (!draftId) return;
     setRoleBusy('skills');
     try {
-      // Skills extraction reads back the same roles/projects/education either model
-      // would — there's no writing quality to buy here, so this always runs on the
-      // standard model rather than offering (and charging for) a Claude option.
+      // The model choice is real here now: the stronger model is what turns a bare
+      // "Plumber" into the trade's actual vocabulary, which is the point of the role
+      // canon. The count is a ceiling the server clamps and never pads to.
       const r = await CVService.generateSkills(
         cvData.education,
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        AI_MODELS.defaultModel,
-        careerStage
+        genModelId,
+        careerStage,
+        skillCount
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -1591,7 +1596,7 @@ const StudioChat = ({ onPaywall }) => {
         push({
           who: 'aria',
           text: t('ariaStudio.chat.skillsInsufficientCredits', {
-            cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
+            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
           }),
         });
       } else if (e?.response?.data?.code === 'NO_SUPPORTED_SKILLS') {
@@ -1703,7 +1708,9 @@ const StudioChat = ({ onPaywall }) => {
       );
       setPhase('build:career-stage');
       ariaSays(
-        intent === 'upload' ? t('ariaStudio.chat.beginBuildUpload') : t('ariaStudio.chat.beginBuild')
+        intent === 'upload'
+          ? t('ariaStudio.chat.beginBuildUpload')
+          : t('ariaStudio.chat.beginBuild')
       );
     } finally {
       setWorking(false);
@@ -1764,7 +1771,9 @@ const StudioChat = ({ onPaywall }) => {
     // come from the Studio's own section vocabulary rather than a second English list.
     const captured = withoutBlankEntries(draft);
     const missing = CV_SECTIONS.filter((s) => !s.optional && !s.check(captured))
-      .map((s) => sectionLabel(t, { key: COMPLETENESS_SECTION_KEY[s.key] || s.key, label: s.label }))
+      .map((s) =>
+        sectionLabel(t, { key: COMPLETENESS_SECTION_KEY[s.key] || s.key, label: s.label })
+      )
       .join(', ');
     setPhase('build:contact');
     ariaSays(t('ariaStudio.chat.upload.doneIncomplete', { missing }));
@@ -2183,21 +2192,30 @@ const StudioChat = ({ onPaywall }) => {
   // The SAME call the CV builder's AriaChat makes, including passing the target-job
   // description so the JD informs the suggestions — the draft already carries it, so
   // nothing is re-extracted.
+  // The user has said they have never done these. Fire-and-forget on purpose: the card
+  // has already stopped offering them locally, so a failed write costs nothing this
+  // session — it only means the question could come back on a later generation.
+  const recordSkillDeclines = (declines) => {
+    if (!draftId || !declines?.length) return;
+    CVService.declineSkills(draftId, declines).catch(() => {});
+  };
+
   const generateBuildSkills = async () => {
     if (!draftId) return;
     setRoleBusy('skills');
     try {
-      // Skills extraction reads back the same roles/projects/education either model
-      // would — there's no writing quality to buy here, so this always runs on the
-      // standard model rather than offering (and charging for) a Claude option.
+      // The model choice is real here now: the stronger model is what turns a bare
+      // "Plumber" into the trade's actual vocabulary, which is the point of the role
+      // canon. The count is a ceiling the server clamps and never pads to.
       const r = await CVService.generateSkills(
         cvData.education,
         cvData.experience,
         cvData.projects,
         cvData.targetJob?.description,
         draftId,
-        AI_MODELS.defaultModel,
-        careerStage
+        genModelId,
+        careerStage,
+        skillCount
       );
       const data = {
         suggestions: r.suggestions || [],
@@ -2214,7 +2232,7 @@ const StudioChat = ({ onPaywall }) => {
         push({
           who: 'aria',
           text: t('ariaStudio.chat.skillsInsufficientCredits', {
-            cost: costForActionTier('GENERATE_SKILLS', 'light') ?? 10,
+            cost: costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10,
           }),
         });
       } else if (e?.response?.data?.code === 'NO_SUPPORTED_SKILLS') {
@@ -3679,559 +3697,572 @@ const StudioChat = ({ onPaywall }) => {
               user starts talking (see AriaCard). Cards holding generated work read the same
               context but never have a label, so they are never shrunk. */}
           <CardCollapseProvider value={cardCollapse}>
-          <AnimatePresence>
-            {ready && phase === 'mode' && <ModeChooser key="mode" onPick={pickMode} />}
+            <AnimatePresence>
+              {ready && phase === 'mode' && <ModeChooser key="mode" onPick={pickMode} />}
 
-            {/* ── Build track ── */}
+              {/* ── Build track ── */}
 
-            {ready && phase === 'build:roadmap' && (
-              <BuildRoadmapCard
-                key="roadmap"
-                status={progress.status}
-                onStart={() => beginBuild('scratch')}
-                onUploadInstead={() => beginBuild('upload')}
-                starting={working}
-              />
-            )}
-
-            {/* The upload step, standing where the contact step otherwise would. */}
-            {ready && phase === 'build:upload' && (
-              <StudioUploadCard
-                key="upload"
-                draftId={draftId}
-                onImported={finishUpload}
-                onSkip={skipUpload}
-              />
-            )}
-
-            {ready && phase === 'build:career-stage' && (
-              <CareerStageAskCard
-                key="careerstage"
-                onPick={pickCareerStage}
-                onSkip={skipCareerStage}
-              />
-            )}
-
-            {ready && phase === 'build:job' && !buildJobOpen && (
-              <TargetJobAskCard
-                key="jobask"
-                onYes={() => setBuildJobOpen(true)}
-                onNo={buildSkipJob}
-              />
-            )}
-
-            {/* Yes → the SAME capture form the tailor track uses. */}
-            {ready && phase === 'build:job' && buildJobOpen && (
-              <JobCaptureCard
-                key="buildjob"
-                initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
-                initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
-                model={genModelId}
-                onSubmit={(job) => {
-                  setBuildJobOpen(false);
-                  buildCaptureJob(job);
-                }}
-                onCancel={() => {
-                  if (editingJob) {
-                    setEditingJob(false);
-                    setBuildJobOpen(false);
-                    setPhase('build:brief');
-                  } else {
-                    setBuildJobOpen(false);
-                  }
-                }}
-              />
-            )}
-
-            {ready && phase === 'build:brief' && (
-              <RoleBriefCard
-                key="buildbrief"
-                brief={latestJob?.brief}
-                jobTitle={latestJob?.jobTitle}
-                onConfirm={confirmBuildBrief}
-                onEdit={editBuildBrief}
-              />
-            )}
-
-            {/* The section menu — whatever is still unfinished, in builder order. */}
-            {ready && phase === 'build:sections' && !pinnedEntry && nextSection && (
-              <AriaCard cardKey={`sections-${nextSection.key}`} key={`sections-${nextSection.key}`}>
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    <span aria-hidden="true">{nextSection.icon}</span>{' '}
-                    <span>{nextSection.eyebrow}</span>
-                  </p>
-                  <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
-                    {nextSection.blurb}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={nextSection.start}
-                    disabled={roleBusy}
-                    className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
-                  >
-                    {roleBusy ? t('ariaStudio.buildRoadmap.settingUp') : nextSection.cta}
-                  </button>
-                  {/* Optional sections get a guilt-free out, stated plainly. */}
-                  {nextSection.skip && (
-                    <button
-                      type="button"
-                      onClick={nextSection.skip}
-                      disabled={roleBusy}
-                      className="w-full mt-2 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {nextSection.skipLabel}
-                    </button>
-                  )}
-                </div>
-              </AriaCard>
-            )}
-
-            {/* Projects ask their TYPE first — it changes what makes the project worth
-                reading, so asking afterwards would mean re-framing answers already given. */}
-            {ready && pinnedEntry && pinnedSectionKey === 'project' && pinnedStage === 'type' && (
-              <ProjectTypeCard
-                key={`ptype-${pinnedEntry._sortId}`}
-                busy={roleBusy}
-                onPick={pickProjectType}
-              />
-            )}
-
-            {ready &&
-              pinnedEntry &&
-              pinnedSectionKey === 'experience' &&
-              pinnedStage === 'entryType' && (
-                <ExperienceTypeCard
-                  busy={roleBusy}
-                  onPick={(entryType) => captureRoleField({ entryType })}
+              {ready && phase === 'build:roadmap' && (
+                <BuildRoadmapCard
+                  key="roadmap"
+                  status={progress.status}
+                  onStart={() => beginBuild('scratch')}
+                  onUploadInstead={() => beginBuild('upload')}
+                  starting={working}
                 />
               )}
 
-            {/* Cross-history hunt, offered right after an entry's bullets land. Never
-                while one is already running, and never mid-transition. */}
-            {huntOffer && !activeHunt && !thinking && !studioTransition && (
-              <HuntOfferCard
-                key={`huntoffer-${huntOffer.requirementId}`}
-                name={huntOffer.name}
-                busy={!!roleBusy}
-                onAccept={() => startHunt(huntOffer.requirementId, huntOffer.name)}
-                onDecline={() => setHuntOffer(null)}
-              />
-            )}
+              {/* The upload step, standing where the contact step otherwise would. */}
+              {ready && phase === 'build:upload' && (
+                <StudioUploadCard
+                  key="upload"
+                  draftId={draftId}
+                  onImported={finishUpload}
+                  onSkip={skipUpload}
+                />
+              )}
 
-            {/* Skills — the same consent → generate → SkillsCard → applySkills flow the
-                CV builder runs, grounded on the roles and projects just captured. */}
-            {ready && phase === 'build:skills' && (
-              <SkillsBuildCard
-                key="skills"
-                phase={skillsData ? 'card' : 'consent'}
-                data={skillsData}
-                hasJob={!!cvData?.targetJob?.description}
-                existingSkills={(cvData?.skills || []).map((s) =>
-                  typeof s === 'string' ? s : s.name
+              {ready && phase === 'build:career-stage' && (
+                <CareerStageAskCard
+                  key="careerstage"
+                  onPick={pickCareerStage}
+                  onSkip={skipCareerStage}
+                />
+              )}
+
+              {ready && phase === 'build:job' && !buildJobOpen && (
+                <TargetJobAskCard
+                  key="jobask"
+                  onYes={() => setBuildJobOpen(true)}
+                  onNo={buildSkipJob}
+                />
+              )}
+
+              {/* Yes → the SAME capture form the tailor track uses. */}
+              {ready && phase === 'build:job' && buildJobOpen && (
+                <JobCaptureCard
+                  key="buildjob"
+                  initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
+                  initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
+                  model={genModelId}
+                  onSubmit={(job) => {
+                    setBuildJobOpen(false);
+                    buildCaptureJob(job);
+                  }}
+                  onCancel={() => {
+                    if (editingJob) {
+                      setEditingJob(false);
+                      setBuildJobOpen(false);
+                      setPhase('build:brief');
+                    } else {
+                      setBuildJobOpen(false);
+                    }
+                  }}
+                />
+              )}
+
+              {ready && phase === 'build:brief' && (
+                <RoleBriefCard
+                  key="buildbrief"
+                  brief={latestJob?.brief}
+                  jobTitle={latestJob?.jobTitle}
+                  onConfirm={confirmBuildBrief}
+                  onEdit={editBuildBrief}
+                />
+              )}
+
+              {/* The section menu — whatever is still unfinished, in builder order. */}
+              {ready && phase === 'build:sections' && !pinnedEntry && nextSection && (
+                <AriaCard
+                  cardKey={`sections-${nextSection.key}`}
+                  key={`sections-${nextSection.key}`}
+                >
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      <span aria-hidden="true">{nextSection.icon}</span>{' '}
+                      <span>{nextSection.eyebrow}</span>
+                    </p>
+                    <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+                      {nextSection.blurb}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={nextSection.start}
+                      disabled={roleBusy}
+                      className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
+                    >
+                      {roleBusy ? t('ariaStudio.buildRoadmap.settingUp') : nextSection.cta}
+                    </button>
+                    {/* Optional sections get a guilt-free out, stated plainly. */}
+                    {nextSection.skip && (
+                      <button
+                        type="button"
+                        onClick={nextSection.skip}
+                        disabled={roleBusy}
+                        className="w-full mt-2 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {nextSection.skipLabel}
+                      </button>
+                    )}
+                  </div>
+                </AriaCard>
+              )}
+
+              {/* Projects ask their TYPE first — it changes what makes the project worth
+                reading, so asking afterwards would mean re-framing answers already given. */}
+              {ready && pinnedEntry && pinnedSectionKey === 'project' && pinnedStage === 'type' && (
+                <ProjectTypeCard
+                  key={`ptype-${pinnedEntry._sortId}`}
+                  busy={roleBusy}
+                  onPick={pickProjectType}
+                />
+              )}
+
+              {ready &&
+                pinnedEntry &&
+                pinnedSectionKey === 'experience' &&
+                pinnedStage === 'entryType' && (
+                  <ExperienceTypeCard
+                    busy={roleBusy}
+                    onPick={(entryType) => captureRoleField({ entryType })}
+                  />
                 )}
-                busy={roleBusy === 'skills'}
-                cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
-                onGenerate={generateBuildSkills}
-                onAdd={addPickedSkills}
-                onProveSkill={startHunt}
-                huntedRequirements={huntedRequirements}
-                onManual={addManualSkills}
-                addedCount={manualSkillsAdded}
-                onDone={finishManualSkills}
-                onSkip={async () => {
-                  if (skillsData && !(await persistStudioPending(null))) return;
-                  setSkillsData(null);
-                  push({ who: 'skillsdone', skipped: true });
-                  setPhase('build:sections');
-                  ariaSays(t('ariaStudio.chat.skillsSkipSaid'));
-                }}
-              />
-            )}
 
-            {/* Summary — LAST, so it can draw on everything above it. */}
-            {ready && phase === 'build:summary' && (
-              <SummaryFixCard
-                key="buildsummary"
-                draft={summaryDraft}
-                generating={summaryBusy}
-                applying={applyingFix}
-                wasReroll={summaryWasReroll}
-                careerStage={
-                  careerStage ||
-                  (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
-                }
-                cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
-                genModelId={genModelId}
-                onSelectGenModel={setGenModelId}
-                chatTier={tierOf(modelId)}
-                onGenerate={generateBuildSummary}
-                onApply={applyBuildSummary}
-                onCancel={async () => {
-                  if (!(await persistStudioPending(null))) return;
-                  setSummaryDraft('');
-                  push({ who: 'summarydone', skipped: true });
-                  setPhase('build:done');
-                  ariaSays(t('ariaStudio.chat.summarySkipSaid'));
-                }}
-              />
-            )}
+              {/* Cross-history hunt, offered right after an entry's bullets land. Never
+                while one is already running, and never mid-transition. */}
+              {huntOffer && !activeHunt && !thinking && !studioTransition && (
+                <HuntOfferCard
+                  key={`huntoffer-${huntOffer.requirementId}`}
+                  name={huntOffer.name}
+                  busy={!!roleBusy}
+                  onAccept={() => startHunt(huntOffer.requirementId, huntOffer.name)}
+                  onDecline={() => setHuntOffer(null)}
+                />
+              )}
 
-            {/* Build finish — CV health and contents, never a fabricated match score. */}
-            {ready && phase === 'build:done' && (
-              <FinishCard
-                key="buildfinish"
-                mode="build"
-                scan={{ title: cvData?.title }}
-                progress={progress}
-                contents={{
-                  roles: (cvData?.experience || []).length,
-                  projects: (cvData?.projects || []).length,
-                  skills: (cvData?.skills || []).length,
-                }}
-                draftId={draftId}
-                onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
-                onTailor={tailorThisCv}
-                // Only offered when a job was actually supplied at build-start —
-                // otherwise there is nothing to match against.
-                onScan={cvData?.targetJob?.description ? runScan : null}
-                scanCost={scanCost}
-              />
-            )}
+              {/* Skills — the same consent → generate → SkillsCard → applySkills flow the
+                CV builder runs, grounded on the roles and projects just captured. */}
+              {ready && phase === 'build:skills' && (
+                <SkillsBuildCard
+                  key="skills"
+                  phase={skillsData ? 'card' : 'consent'}
+                  data={skillsData}
+                  hasJob={!!cvData?.targetJob?.description}
+                  existingSkills={(cvData?.skills || []).map((s) =>
+                    typeof s === 'string' ? s : s.name
+                  )}
+                  busy={roleBusy === 'skills'}
+                  cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
+                  onGenerate={generateBuildSkills}
+                  onAdd={addPickedSkills}
+                  onProveSkill={startHunt}
+                  onDecline={recordSkillDeclines}
+                  huntedRequirements={huntedRequirements}
+                  skillCount={skillCount}
+                  onSkillCount={setSkillCount}
+                  genModelId={genModelId}
+                  onGenModel={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                  onManual={addManualSkills}
+                  addedCount={manualSkillsAdded}
+                  onDone={finishManualSkills}
+                  onSkip={async () => {
+                    if (skillsData && !(await persistStudioPending(null))) return;
+                    setSkillsData(null);
+                    push({ who: 'skillsdone', skipped: true });
+                    setPhase('build:sections');
+                    ariaSays(t('ariaStudio.chat.skillsSkipSaid'));
+                  }}
+                />
+              )}
 
-            {/* Aria's three PROPOSALS, in front of the blank project. Reached only when
+              {/* Summary — LAST, so it can draw on everything above it. */}
+              {ready && phase === 'build:summary' && (
+                <SummaryFixCard
+                  key="buildsummary"
+                  draft={summaryDraft}
+                  generating={summaryBusy}
+                  applying={applyingFix}
+                  wasReroll={summaryWasReroll}
+                  careerStage={
+                    careerStage ||
+                    (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
+                  }
+                  cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
+                  genModelId={genModelId}
+                  onSelectGenModel={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                  onGenerate={generateBuildSummary}
+                  onApply={applyBuildSummary}
+                  onCancel={async () => {
+                    if (!(await persistStudioPending(null))) return;
+                    setSummaryDraft('');
+                    push({ who: 'summarydone', skipped: true });
+                    setPhase('build:done');
+                    ariaSays(t('ariaStudio.chat.summarySkipSaid'));
+                  }}
+                />
+              )}
+
+              {/* Build finish — CV health and contents, never a fabricated match score. */}
+              {ready && phase === 'build:done' && (
+                <FinishCard
+                  key="buildfinish"
+                  mode="build"
+                  scan={{ title: cvData?.title }}
+                  progress={progress}
+                  contents={{
+                    roles: (cvData?.experience || []).length,
+                    projects: (cvData?.projects || []).length,
+                    skills: (cvData?.skills || []).length,
+                  }}
+                  draftId={draftId}
+                  onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+                  onTailor={tailorThisCv}
+                  // Only offered when a job was actually supplied at build-start —
+                  // otherwise there is nothing to match against.
+                  onScan={cvData?.targetJob?.description ? runScan : null}
+                  scanCost={scanCost}
+                />
+              )}
+
+              {/* Aria's three PROPOSALS, in front of the blank project. Reached only when
                 the fetch actually returned ideas — every other outcome already fell
                 through to enterSection('project'). */}
-            {ready && phase === 'build:project-ideas' && !!projectIdeas?.length && (
-              <ProjectIdeasCard
-                key="buildideas"
-                ideas={projectIdeas}
-                onUse={(idea) => buildFromIdea(idea, 'build')}
-                onStartBlank={() => startBlankProject('build')}
-                onSkip={() => skipProjectIdeas('build')}
-              />
-            )}
+              {ready && phase === 'build:project-ideas' && !!projectIdeas?.length && (
+                <ProjectIdeasCard
+                  key="buildideas"
+                  ideas={projectIdeas}
+                  onUse={(idea) => buildFromIdea(idea, 'build')}
+                  onStartBlank={() => startBlankProject('build')}
+                  onSkip={() => skipProjectIdeas('build')}
+                />
+              )}
 
-            {/* Certifications — a light sub-list of education. No AI, no credits. */}
-            {ready && phase === 'build:certs' && (
-              <CertificationsCard
-                key="certs"
-                certifications={cvData?.certifications || []}
-                busy={roleBusy}
-                onAdd={addCertification}
-                onRemove={removeCertification}
-                onDone={() =>
-                  advance(() => {
-                    push({ who: 'certsdone' });
-                    setPhase('build:sections');
-                    ariaSays(t('ariaStudio.chat.certsDone'));
-                  }, t('ariaStudio.chat.thinking.certsSaved'))
-                }
-              />
-            )}
+              {/* Certifications — a light sub-list of education. No AI, no credits. */}
+              {ready && phase === 'build:certs' && (
+                <CertificationsCard
+                  key="certs"
+                  certifications={cvData?.certifications || []}
+                  busy={roleBusy}
+                  onAdd={addCertification}
+                  onRemove={removeCertification}
+                  onDone={() =>
+                    advance(() => {
+                      push({ who: 'certsdone' });
+                      setPhase('build:sections');
+                      ariaSays(t('ariaStudio.chat.certsDone'));
+                    }, t('ariaStudio.chat.thinking.certsSaved'))
+                  }
+                />
+              )}
 
-            {/* Capture — every scalar field for this entry, gathered in ONE form. */}
-            {ready && pinnedEntry && pinnedStage === 'form' && (
-              <EntryCaptureCard
-                key={`capture-${pinnedEntry._sortId}`}
-                entry={pinnedEntry}
-                section={pinnedSectionKey}
-                busy={roleBusy === 'field'}
-                onSubmit={captureRoleField}
-              />
-            )}
+              {/* Capture — every scalar field for this entry, gathered in ONE form. */}
+              {ready && pinnedEntry && pinnedStage === 'form' && (
+                <EntryCaptureCard
+                  key={`capture-${pinnedEntry._sortId}`}
+                  entry={pinnedEntry}
+                  section={pinnedSectionKey}
+                  busy={roleBusy === 'field'}
+                  onSubmit={captureRoleField}
+                />
+              )}
 
-            {/* A saved qualification is a FINISHED entry — education has no achievements
+              {/* A saved qualification is a FINISHED entry — education has no achievements
                 stage after its form, so this is where the conversation would otherwise
                 stop. Both actions call the same handlers the pinned card's buttons do;
                 the point is that they're visible, in the conversation, rather than behind
                 a card that starts collapsed. */}
-            {ready &&
-              pinnedEntry &&
-              pinnedSectionKey === 'education' &&
-              pinnedStage === 'complete' && (
-                <EducationSavedCard
-                  key={`edsaved-${pinnedEntry._sortId}`}
-                  heading={
-                    [pinnedEntry.degree, pinnedEntry.school].filter(Boolean).join(' · ')
-                  }
-                  busy={roleBusy}
-                  onAddAnother={nextEntry}
-                  onDone={finishSection}
+              {ready &&
+                pinnedEntry &&
+                pinnedSectionKey === 'education' &&
+                pinnedStage === 'complete' && (
+                  <EducationSavedCard
+                    key={`edsaved-${pinnedEntry._sortId}`}
+                    heading={[pinnedEntry.degree, pinnedEntry.school].filter(Boolean).join(' · ')}
+                    busy={roleBusy}
+                    onAddAnother={nextEntry}
+                    onDone={finishSection}
+                  />
+                )}
+
+              {ready && phase === 'build:contact' && (
+                <ContactConfirmCard
+                  key="contact"
+                  personalInfo={cvData?.personalInfo || {}}
+                  saving={applyingFix}
+                  onChange={(info) => updateCvData({ personalInfo: info })}
+                  onConfirm={confirmContact}
                 />
               )}
 
-            {ready && phase === 'build:contact' && (
-              <ContactConfirmCard
-                key="contact"
-                personalInfo={cvData?.personalInfo || {}}
-                saving={applyingFix}
-                onChange={(info) => updateCvData({ personalInfo: info })}
-                onConfirm={confirmContact}
-              />
-            )}
-
-            {/* "New CV" — V1 hands off to the CV builder rather than pretending to
+              {/* "New CV" — V1 hands off to the CV builder rather than pretending to
                 build in chat. The copy says so outright: an honest handoff beats a
                 half-working in-chat build, and the round trip back here is the point. */}
-            {ready && phase === 'build' && (
-              <AriaCard cardKey="build" key="build">
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                    {t('ariaStudio.chat.buildNewCvHeading')}
-                  </p>
-                  <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
-                    {t('ariaStudio.chat.buildNewCvBody')}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between gap-2">
+              {ready && phase === 'build' && (
+                <AriaCard cardKey="build" key="build">
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                      {t('ariaStudio.chat.buildNewCvHeading')}
+                    </p>
+                    <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
+                      {t('ariaStudio.chat.buildNewCvBody')}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPhase('mode')}
+                        className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+                      >
+                        {t('common.back')}
+                      </button>
+                      <a
+                        href="/cv-builder/new/target-job"
+                        className="btn-primary px-5 py-2 text-sm no-underline"
+                      >
+                        {t('ariaStudio.chat.openTheBuilder')} →
+                      </a>
+                    </div>
+                  </div>
+                </AriaCard>
+              )}
+
+              {ready && phase === 'job' && (
+                <JobCaptureCard
+                  key="job"
+                  initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
+                  initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
+                  model={genModelId}
+                  onSubmit={captureJob}
+                  onCancel={() => {
+                    if (editingJob) {
+                      setEditingJob(false);
+                      setPhase('brief');
+                    } else {
+                      setPhase('mode');
+                    }
+                  }}
+                />
+              )}
+
+              {ready && phase === 'brief' && (
+                <RoleBriefCard
+                  key="brief"
+                  brief={latestJob?.brief}
+                  jobTitle={latestJob?.jobTitle}
+                  onConfirm={confirmBrief}
+                  onEdit={editBrief}
+                />
+              )}
+
+              {ready && phase === 'cv' && (
+                <CvPickerCard
+                  key="cv"
+                  busyId={pickBusyId}
+                  onPick={pickCv}
+                  onCancel={() => setPhase('brief')}
+                />
+              )}
+
+              {/* The scan offer — the one charged action, priced before it's taken. */}
+              {ready && phase === 'scanoffer' && (
+                <AriaCard cardKey="scanoffer" key="scanoffer">
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                        {t('ariaStudio.chat.scanOffer.heading')}
+                      </p>
+                      <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        −{scanCost} cr
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+                      {t('ariaStudio.chat.scanOffer.body')}
+                    </p>
                     <button
                       type="button"
-                      onClick={() => setPhase('mode')}
-                      className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors"
+                      onClick={runScan}
+                      className="btn-primary w-full mt-3 py-2 text-sm"
                     >
-                      {t('common.back')}
+                      {t('ariaStudio.chat.scanOffer.cta')}
                     </button>
-                    <a
-                      href="/cv-builder/new/target-job"
-                      className="btn-primary px-5 py-2 text-sm no-underline"
-                    >
-                      {t('ariaStudio.chat.openTheBuilder')} →
-                    </a>
                   </div>
-                </div>
-              </AriaCard>
-            )}
+                </AriaCard>
+              )}
 
-            {ready && phase === 'job' && (
-              <JobCaptureCard
-                key="job"
-                initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
-                initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
-                model={genModelId}
-                onSubmit={captureJob}
-                onCancel={() => {
-                  if (editingJob) {
-                    setEditingJob(false);
-                    setPhase('brief');
-                  } else {
-                    setPhase('mode');
-                  }
-                }}
-              />
-            )}
-
-            {ready && phase === 'brief' && (
-              <RoleBriefCard
-                key="brief"
-                brief={latestJob?.brief}
-                jobTitle={latestJob?.jobTitle}
-                onConfirm={confirmBrief}
-                onEdit={editBrief}
-              />
-            )}
-
-            {ready && phase === 'cv' && (
-              <CvPickerCard
-                key="cv"
-                busyId={pickBusyId}
-                onPick={pickCv}
-                onCancel={() => setPhase('brief')}
-              />
-            )}
-
-            {/* The scan offer — the one charged action, priced before it's taken. */}
-            {ready && phase === 'scanoffer' && (
-              <AriaCard cardKey="scanoffer" key="scanoffer">
-                <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      {t('ariaStudio.chat.scanOffer.heading')}
-                    </p>
-                    <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      −{scanCost} cr
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
-                    {t('ariaStudio.chat.scanOffer.body')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={runScan}
-                    className="btn-primary w-full mt-3 py-2 text-sm"
-                  >
-                    {t('ariaStudio.chat.scanOffer.cta')}
-                  </button>
-                </div>
-              </AriaCard>
-            )}
-
-            {/* Results — the verdict, then the section-by-section breakdown. Both read
+              {/* Results — the verdict, then the section-by-section breakdown. Both read
                 the live snapshot, so a recompute refreshes them in place. */}
-            {ready && phase === 'results' && scan && (
-              <ScoreCard
-                key="score"
-                scan={scan}
-                isDrafted={cvData?.targetJob?.source === 'ai_drafted'}
-              />
-            )}
-            {ready && phase === 'results' && scan?.sections?.length > 0 && (
-              <SectionBreakdownCard
-                key="sections"
-                sections={scan.sections}
-                onFix={handleFix}
-                onRecompute={runRecompute}
-                // Which one is running drives only the LABELS; `busy` below is what
-                // disables them, so neither op can be started while the other is in
-                // flight and neither claims to be running when it isn't.
-                recomputing={scanKind === 'recompute'}
-                onRescan={runScan}
-                rescanning={scanKind === 'rescan'}
-                rescanCost={scanCost}
-                onDismissSection={dismissSection}
-                onRestoreSection={restoreSection}
-                busy={applyingFix || scanning}
-              />
-            )}
+              {ready && phase === 'results' && scan && (
+                <ScoreCard
+                  key="score"
+                  scan={scan}
+                  isDrafted={cvData?.targetJob?.source === 'ai_drafted'}
+                />
+              )}
+              {ready && phase === 'results' && scan?.sections?.length > 0 && (
+                <SectionBreakdownCard
+                  key="sections"
+                  sections={scan.sections}
+                  onFix={handleFix}
+                  onRecompute={runRecompute}
+                  // Which one is running drives only the LABELS; `busy` below is what
+                  // disables them, so neither op can be started while the other is in
+                  // flight and neither claims to be running when it isn't.
+                  recomputing={scanKind === 'recompute'}
+                  onRescan={runScan}
+                  rescanning={scanKind === 'rescan'}
+                  rescanCost={scanCost}
+                  onDismissSection={dismissSection}
+                  onRestoreSection={restoreSection}
+                  busy={applyingFix || scanning}
+                />
+              )}
 
-            {/* Finish — offered whenever there's a scan, and re-rendered after every
+              {/* Finish — offered whenever there's a scan, and re-rendered after every
                 re-score so the before → after stays current. */}
-            {ready && phase === 'results' && scan && (
-              <FinishCard
-                key="finish"
-                scan={{ ...scan, title: cvData?.title }}
-                draftId={draftId}
-                onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
-              />
-            )}
+              {ready && phase === 'results' && scan && (
+                <FinishCard
+                  key="finish"
+                  scan={{ ...scan, title: cvData?.title }}
+                  draftId={draftId}
+                  onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+                />
+              )}
 
-            {/* ── The fix loop ── */}
+              {/* ── The fix loop ── */}
 
-            {/* Projects, nothing to sharpen → PROPOSALS instead of an empty picker. A
+              {/* Projects, nothing to sharpen → PROPOSALS instead of an empty picker. A
                 "Build this" from here lands in the FIX loop, so finishFix still closes
                 the session and re-scores. Dismiss stays available: not everyone has
                 projects, and "not applicable" must not vanish because Aria had ideas. */}
-            {ready && phase === 'fix:pick' && showFixIdeas && (
-              <ProjectIdeasCard
-                key="fixideas"
-                ideas={projectIdeas || []}
-                busy={ideasBusy}
-                onUse={(idea) => buildFromIdea(idea, 'fix')}
-                onStartBlank={() => startBlankProject('fix')}
-                onSkip={() => skipProjectIdeas('fix')}
-                onDismissSection={dismissSection}
-              />
-            )}
+              {ready && phase === 'fix:pick' && showFixIdeas && (
+                <ProjectIdeasCard
+                  key="fixideas"
+                  ideas={projectIdeas || []}
+                  busy={ideasBusy}
+                  onUse={(idea) => buildFromIdea(idea, 'fix')}
+                  onStartBlank={() => startBlankProject('fix')}
+                  onSkip={() => skipProjectIdeas('fix')}
+                  onDismissSection={dismissSection}
+                />
+              )}
 
-            {/* experience / projects → pick the entry to sharpen */}
-            {ready && phase === 'fix:pick' && !showFixIdeas && (
-              <EntryPickerCard
-                key="fixpick"
-                entries={fixEntries}
-                missingKeywords={activeFix?.missingKeywords || []}
-                section={activeFix?.sectionKey}
-                draftId={draftId}
-                onPick={pickEntry}
-                onCancel={cancelFix}
-                onDismissSection={dismissSection}
-                busy={applyingFix}
-              />
-            )}
+              {/* experience / projects → pick the entry to sharpen */}
+              {ready && phase === 'fix:pick' && !showFixIdeas && (
+                <EntryPickerCard
+                  key="fixpick"
+                  entries={fixEntries}
+                  missingKeywords={activeFix?.missingKeywords || []}
+                  section={activeFix?.sectionKey}
+                  draftId={draftId}
+                  onPick={pickEntry}
+                  onCancel={cancelFix}
+                  onDismissSection={dismissSection}
+                  busy={applyingFix}
+                />
+              )}
 
-            {/* experience / projects → rewrite the entry's EXISTING bullets, before→after */}
-            {ready && phase === 'fix:rewrite' && rewriteTarget && (
-              <RewriteRoleCard
-                key={`rewrite-${rewriteTarget.sortId}`}
-                draftId={draftId}
-                section={rewriteTarget.section}
-                sortId={rewriteTarget.sortId}
-                model={genModelId}
-                rows={rewriteTarget.rows}
-                onLoaded={(rows) => {
-                  const next = { ...rewriteTarget, rows };
-                  setRewriteTarget(next);
-                  persistStudioPending(next);
-                }}
-                onApply={applyRewrite}
-                onInterview={rewriteInterviewInstead}
-                onBack={() => {
-                  clearRewrite();
-                  setPhase('fix:pick');
-                }}
-                applying={applyingFix}
-              />
-            )}
+              {/* experience / projects → rewrite the entry's EXISTING bullets, before→after */}
+              {ready && phase === 'fix:rewrite' && rewriteTarget && (
+                <RewriteRoleCard
+                  key={`rewrite-${rewriteTarget.sortId}`}
+                  draftId={draftId}
+                  section={rewriteTarget.section}
+                  sortId={rewriteTarget.sortId}
+                  model={genModelId}
+                  rows={rewriteTarget.rows}
+                  onLoaded={(rows) => {
+                    const next = { ...rewriteTarget, rows };
+                    setRewriteTarget(next);
+                    persistStudioPending(next);
+                  }}
+                  onApply={applyRewrite}
+                  onInterview={rewriteInterviewInstead}
+                  onBack={() => {
+                    clearRewrite();
+                    setPhase('fix:pick');
+                  }}
+                  applying={applyingFix}
+                />
+              )}
 
-            {/* skills → the SAME grounded card the build track uses.
+              {/* skills → the SAME grounded card the build track uses.
 
                 It replaces a checklist built from the scan's raw JD terms, which put
                 requirement SENTENCES ("Previous experience in a hospitality role") on the
                 CV as uncategorized "skills" — not skills, and not something an ATS reads
                 as one. Aria picks from THIS CV's own history instead, in real categories,
                 and the free "type your own" input sits right beside her paid button. */}
-            {ready && phase === 'fix:skills' && (
-              <SkillsBuildCard
-                key="fixskills"
-                phase={fixSkillsData ? 'card' : 'consent'}
-                data={fixSkillsData}
-                hasJob={!!cvData?.targetJob?.description}
-                existingSkills={(cvData?.skills || []).map((s) =>
-                  typeof s === 'string' ? s : s.name
-                )}
-                busy={roleBusy === 'skills' || applyingFix}
-                cost={costForActionTier('GENERATE_SKILLS', 'light') ?? 10}
-                onGenerate={generateFixSkills}
-                onAdd={addPickedFixSkills}
-                onProveSkill={startHunt}
-                huntedRequirements={huntedRequirements}
-                onManual={addManualFixSkills}
-                addedCount={fixSkillsAdded}
-                onDone={finishFixSkills}
-                onSkip={cancelFix}
-              />
-            )}
+              {ready && phase === 'fix:skills' && (
+                <SkillsBuildCard
+                  key="fixskills"
+                  phase={fixSkillsData ? 'card' : 'consent'}
+                  data={fixSkillsData}
+                  hasJob={!!cvData?.targetJob?.description}
+                  existingSkills={(cvData?.skills || []).map((s) =>
+                    typeof s === 'string' ? s : s.name
+                  )}
+                  busy={roleBusy === 'skills' || applyingFix}
+                  cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
+                  onGenerate={generateFixSkills}
+                  onAdd={addPickedFixSkills}
+                  onProveSkill={startHunt}
+                  onDecline={recordSkillDeclines}
+                  huntedRequirements={huntedRequirements}
+                  skillCount={skillCount}
+                  onSkillCount={setSkillCount}
+                  genModelId={genModelId}
+                  onGenModel={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                  onManual={addManualFixSkills}
+                  addedCount={fixSkillsAdded}
+                  onDone={finishFixSkills}
+                  onSkip={cancelFix}
+                />
+              )}
 
-            {/* summary → stage chips, then the draft */}
-            {ready && phase === 'fix:summary' && (
-              <SummaryFixCard
-                key="fixsummary"
-                draft={summaryDraft}
-                generating={summaryBusy}
-                applying={applyingFix}
-                wasReroll={summaryWasReroll}
-                careerStage={
-                  careerStage ||
-                  (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
-                }
-                cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
-                genModelId={genModelId}
-                onSelectGenModel={setGenModelId}
-                chatTier={tierOf(modelId)}
-                onGenerate={generateSummary}
-                onApply={applySummaryDraft}
-                onCancel={async () => {
-                  if (!(await persistStudioPending(null))) return;
-                  setSummaryDraft('');
-                  cancelFix();
-                }}
-              />
-            )}
+              {/* summary → stage chips, then the draft */}
+              {ready && phase === 'fix:summary' && (
+                <SummaryFixCard
+                  key="fixsummary"
+                  draft={summaryDraft}
+                  generating={summaryBusy}
+                  applying={applyingFix}
+                  wasReroll={summaryWasReroll}
+                  careerStage={
+                    careerStage ||
+                    (cvData?.studioPending?.kind === 'summary' ? cvData.studioPending.stage : null)
+                  }
+                  cost={costForActionTier('GENERATE_SUMMARY', tierOf(genModelId)) ?? 3}
+                  genModelId={genModelId}
+                  onSelectGenModel={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                  onGenerate={generateSummary}
+                  onApply={applySummaryDraft}
+                  onCancel={async () => {
+                    if (!(await persistStudioPending(null))) return;
+                    setSummaryDraft('');
+                    cancelFix();
+                  }}
+                />
+              )}
 
-            {/* education / contact → guidance only, no AI, no charge */}
-            {ready && phase === 'fix:guide' && (
-              <SectionGuidanceCard
-                key="fixguide"
-                section={activeFix?.sectionKey}
-                draftId={draftId}
-                note={sectionNote(
-                  t,
-                  scan?.sections?.find((s) => s.key === activeFix?.sectionKey)
-                )}
-                onBack={cancelFix}
-                onRescore={rescoreAfterGuide}
-                rescoring={scanning}
-              />
-            )}
-          </AnimatePresence>
+              {/* education / contact → guidance only, no AI, no charge */}
+              {ready && phase === 'fix:guide' && (
+                <SectionGuidanceCard
+                  key="fixguide"
+                  section={activeFix?.sectionKey}
+                  draftId={draftId}
+                  note={sectionNote(
+                    t,
+                    scan?.sections?.find((s) => s.key === activeFix?.sectionKey)
+                  )}
+                  onBack={cancelFix}
+                  onRescore={rescoreAfterGuide}
+                  rescoring={scanning}
+                />
+              )}
+            </AnimatePresence>
           </CardCollapseProvider>
 
           {/* Achievements for the pinned role — the SAME SectionCoach protocol the fix

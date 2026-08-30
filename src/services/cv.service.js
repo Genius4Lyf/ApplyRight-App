@@ -82,7 +82,18 @@ const CVService = {
   // `stage` ranks the result: coursework-only evidence is real, but for a grad it is not
   // a headline strength. Optional — the backend falls back to the pick persisted on the
   // draft, then to CV-shape inference.
-  generateSkills: async (education, experience, projects, targetJob, draftId, model, stage) => {
+  // `count` is the user-picked CEILING (10/15/20) — the server clamps it and still
+  // refuses to pad, so asking for 20 can legitimately return 8 proven plus questions.
+  generateSkills: async (
+    education,
+    experience,
+    projects,
+    targetJob,
+    draftId,
+    model,
+    stage,
+    count
+  ) => {
     const response = await api.post('/ai/generate-skills', {
       education,
       experience,
@@ -91,8 +102,17 @@ const CVService = {
       draftId,
       model,
       stage,
+      count,
     });
     return response.data; // { suggestions, bestForRole, reviewGroups, isPaid, fromCache, remainingCredits }
+  },
+
+  // Record skills the user says they have never done, so Aria stops offering them as
+  // questions on the next generation. Fire-and-forget from the caller's point of view —
+  // a failure here must never block skills actually landing on the CV.
+  declineSkills: async (draftId, declines) => {
+    const response = await api.post('/ai/skill-declines', { draftId, declines });
+    return response.data; // { declined }
   },
 
   // Suggest ATS keywords for the target job. Baseline is free; pass

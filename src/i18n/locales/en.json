@@ -1607,7 +1607,7 @@
       "heading": {
         "experience": "Write them with",
         "summary": "Draft it with",
-        "skills": "Find them with"
+        "skills": "Search with"
       },
       "eachCost": "{{n}} cr each",
       "flatCost": "{{n}} cr",
@@ -1653,7 +1653,7 @@
       "reroll": "↻ Re-roll · {{n}} cr",
       "differentStage": "Different stage",
       "summaryApplied": "Added it to your summary ✓ — edit any word to make it yours.",
-      "skillsConsent": "I’ll read your work history + projects and pull hard skills you can back up. This uses {{n}} credits.",
+      "skillsConsent": "I’ll read your work history and projects for hard skills you can back up — then ask you about the ones your roles usually involve but people rarely write down. This uses {{n}} credits.",
       "findThem": "Find them · {{n}} cr",
       "notNow": "Not now"
     },
@@ -1873,6 +1873,10 @@
       "langSetToast": "CV language set to {{name}} — section headings updated. Your existing text stays as written.",
       "langChangeError": "Couldn’t change the CV language — try again."
     },
+    "skillsOptions": {
+      "howMany": "How many should Aria look for?",
+      "ceilingNote": "A ceiling, not a promise — Aria stops at what she can actually back up, and asks you about the rest."
+    },
     "skillsCard": {
       "eyebrow": "Skills you can back up",
       "subtitle": "Pick the ones that are genuinely true for you.",
@@ -1882,8 +1886,10 @@
       "provenAdditional": "Proven additional skills",
       "coreSkills": "Core professional skills",
       "confirmFirst": "Confirm with me first",
-      "needsConfirmation": "Needs confirmation",
-      "confirmIntro": "These are plausible, not proven. Tell Aria what your real level was.",
+      "needsConfirmation": "Did you also do these?",
+      "confirmIntro": "Some are typical of the roles you have held, some are hinted at in your CV — none are proven. Nothing here reaches your CV until you say you did it.",
+      "typicalFor": "Typical for {{role}}",
+      "typicalQuestion": "This is standard for a {{role}}. Did you do it?",
       "confirmQuestion": "Did you use {{skill}} in this work? It’s completely fine if not.",
       "notDemonstrated": "Employer requirement not demonstrated",
       "gapsIntro": "These stay as honest gaps and cannot be added from this screen.",
@@ -4495,8 +4501,8 @@
       "deleteAria": "Delete {{heading}}"
     },
     "skillsBuild": {
-      "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. You pick which ones go in.",
-      "bodyNoJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up. You pick which ones go in.",
+      "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. Then I'll ask about the ones your roles usually involve but people rarely think to write down. You pick which ones go in.",
+      "bodyNoJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up. Then I'll ask about the ones people in your line of work usually have but rarely think to write down. You pick which ones go in.",
       "readingCv": "Reading your CV…",
       "findMySkills": "Find my skills · {{cost}} cr",
       "typeYourselfFree": "Or type them yourself — free",

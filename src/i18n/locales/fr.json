@@ -1603,7 +1603,7 @@
       "heading": {
         "experience": "Rédigez-les avec",
         "summary": "Rédigez-le avec",
-        "skills": "Trouvez-les avec"
+        "skills": "Chercher avec"
       },
       "eachCost": "{{n}} cr chacun",
       "flatCost": "{{n}} cr",
@@ -1649,7 +1649,7 @@
       "reroll": "↻ Régénérer · {{n}} cr",
       "differentStage": "Autre étape",
       "summaryApplied": "Ajouté à votre résumé ✓ — modifiez chaque mot pour vous l’approprier.",
-      "skillsConsent": "Je vais lire votre expérience et vos projets et en extraire des compétences techniques que vous pouvez justifier. Cela utilise {{n}} crédits.",
+      "skillsConsent": "Je vais lire votre expérience et vos projets pour en extraire des compétences techniques que vous pouvez justifier — puis vous interroger sur celles que vos postes impliquent d’ordinaire mais que l’on note rarement. Cela utilise {{n}} crédits.",
       "findThem": "Les trouver · {{n}} cr",
       "notNow": "Pas maintenant"
     },
@@ -1869,6 +1869,10 @@
       "langSetToast": "Langue du CV définie sur {{name}} — titres de sections mis à jour. Votre texte existant reste tel quel.",
       "langChangeError": "Je n’ai pas pu changer la langue du CV — réessayez."
     },
+    "skillsOptions": {
+      "howMany": "Combien Aria doit-elle en chercher ?",
+      "ceilingNote": "Un plafond, pas une promesse — Aria s’arrête à ce qu’elle peut étayer et vous interroge sur le reste."
+    },
     "skillsCard": {
       "eyebrow": "Des compétences que vous pouvez justifier",
       "subtitle": "Choisissez celles qui sont réellement vraies pour vous.",
@@ -1878,8 +1882,10 @@
       "provenAdditional": "Autres compétences démontrées",
       "coreSkills": "Compétences professionnelles principales",
       "confirmFirst": "À confirmer avec moi",
-      "needsConfirmation": "Confirmation nécessaire",
-      "confirmIntro": "Elles sont plausibles, mais non prouvées. Indiquez à Aria votre niveau réel.",
+      "needsConfirmation": "Les avez-vous faites aussi ?",
+      "confirmIntro": "Certaines sont typiques des postes que vous avez occupés, d’autres sont suggérées par votre CV — aucune n’est prouvée. Rien n’entre dans votre CV tant que vous ne l’avez pas confirmé.",
+      "typicalFor": "Typique pour {{role}}",
+      "typicalQuestion": "C’est courant pour un poste de {{role}}. L’avez-vous fait ?",
       "confirmQuestion": "Avez-vous utilisé {{skill}} dans ce travail ? Ce n’est pas grave si ce n’est pas le cas.",
       "notDemonstrated": "Exigence employeur non démontrée",
       "gapsIntro": "Elles restent des écarts honnêtes et ne peuvent pas être ajoutées depuis cet écran.",
@@ -4491,8 +4497,8 @@
       "deleteAria": "Supprimer {{heading}}"
     },
     "skillsBuild": {
-      "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Vous choisissez lesquelles ajouter.",
-      "bodyNoJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier. Vous choisissez lesquelles ajouter.",
+      "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Puis je vous interrogerai sur celles que vos postes impliquent d’ordinaire mais que l’on pense rarement à noter. Vous choisissez lesquelles ajouter.",
+      "bodyNoJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier. Puis je vous interrogerai sur celles que les gens de votre métier possèdent d’ordinaire mais pensent rarement à noter. Vous choisissez lesquelles ajouter.",
       "readingCv": "Lecture de votre CV…",
       "findMySkills": "Trouver mes compétences · {{cost}} cr",
       "typeYourselfFree": "Ou saisissez-les vous-même — gratuit",
