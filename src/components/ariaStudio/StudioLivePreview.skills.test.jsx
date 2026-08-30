@@ -29,11 +29,19 @@ vi.mock('../../context/AriaStudioContext', () => ({
     selectTemplate: mockSelectTemplate,
   }),
 }));
-// The block never imports sonner — these spies exist to keep it that way. A dupe add is a
-// quiet no-op by design, and the cheapest way for that to regress is a well-meaning toast.
+// sonner's toast is a callable with .error/.success/.info on it, and both halves matter
+// here: MOVING a skill announces itself with an Undo action (toast(...)), while a dupe ADD
+// stays a quiet no-op by design — and the cheapest way for that to regress is a
+// well-meaning success toast.
 // (vi.hoisted: the factory is hoisted ABOVE this const, and CvLanguageToggle also imports
 // sonner, so the mock resolves before `toastCalls` would otherwise exist.)
-const toastCalls = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
+const toastCalls = vi.hoisted(() => {
+  const fn = vi.fn();
+  fn.error = vi.fn();
+  fn.success = vi.fn();
+  fn.info = vi.fn();
+  return fn;
+});
 vi.mock('sonner', () => ({ toast: toastCalls }));
 // Preview mode renders the production template; neither renderer is under test here.
 vi.mock('../TemplatePreviewThumb', () => ({
@@ -50,7 +58,8 @@ beforeEach(() => {
   mockUpdateCvData = vi.fn();
   mockRequestStudioCommand = vi.fn();
   mockSelectTemplate = vi.fn().mockResolvedValue({ ok: true });
-  Object.values(toastCalls).forEach((spy) => spy.mockClear());
+  toastCalls.mockClear();
+  Object.values(toastCalls).forEach((spy) => spy.mockClear?.());
   // framer-motion's useReducedMotion reads matchMedia; jsdom lacks it.
   vi.stubGlobal('matchMedia', (q) => ({
     matches: false,
@@ -96,9 +105,9 @@ describe('StudioLivePreview — skills, grouped by category', () => {
     mockCvData = skillsCv;
     const { container } = render(<StudioLivePreview />);
 
-    const labels = [...container.querySelectorAll('p.font-mono')]
-      .map((p) => p.textContent)
-      .filter((text) => ['Frontend', 'Backend', 'Uncategorized'].includes(text));
+    const labels = [...container.querySelectorAll('[data-skill-group]')].map(
+      (node) => node.textContent
+    );
     expect(labels).toEqual(['Frontend', 'Backend', 'Uncategorized']);
 
     // React and TypeScript are entries 0 and 3 on the CV — same group all the same.
@@ -442,5 +451,193 @@ describe('StudioLivePreview — "Suggest skills with Aria"', () => {
 
     expect(mockRequestStudioCommand).toHaveBeenCalledWith('suggestSkills', 'skills', null);
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Rearranging: moving a skill between groups, and renaming a group ───
+//
+// Aria's grouping is wrong often enough to matter, and until now the only fix was to
+// delete the skill and retype it under a different category — losing its evidence and its
+// talking point along the way.
+//
+// Drag is exercised through the "Move to…" menu rather than through dnd-kit's pointer
+// events: jsdom has no layout, so a synthetic drag measures nothing. The menu is not a
+// stand-in for the real thing either — it is the path a phone user and a keyboard user
+// actually take, so it is the one worth holding.
+const openMenu = (name) =>
+  fireEvent.click(within(pill(name)).getByLabelText(`Move ${name} to another group`));
+// A group heading is a button too — that is what makes it renameable — so a destination
+// has to be found INSIDE the menu or "Backend" matches two things.
+const menu = () => screen.getByText('Move to').parentElement;
+const moveTo = (name, destination) => {
+  openMenu(name);
+  fireEvent.click(within(menu()).getByRole('button', { name: destination }));
+};
+const groupNames = (container) =>
+  [...container.querySelectorAll('[data-skill-group]')].map((node) => node.textContent);
+
+describe('StudioLivePreview — rearranging skills', () => {
+  it('offers the OTHER groups, never the one it is already in', () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+    openMenu('React');
+
+    expect(within(menu()).getByRole('button', { name: 'Backend' })).toBeTruthy();
+    expect(within(menu()).getByRole('button', { name: 'New group…' })).toBeTruthy();
+    // 'Frontend' is still on screen as React's own heading — but not as a destination.
+    expect(within(menu()).queryByText('Frontend')).toBeNull();
+  });
+
+  it('moves the skill and keeps every other group where it was', () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+    moveTo('React', 'Backend');
+
+    expect(mockReplaceSkills).toHaveBeenCalledTimes(1);
+    const next = mockReplaceSkills.mock.calls[0][0];
+    // Landed at the END of Backend, not at the front and not where it used to sit.
+    expect(next.map((s) => (typeof s === 'string' ? s : s.name))).toEqual([
+      'Node',
+      'React',
+      'Algorithms',
+      'TypeScript',
+    ]);
+    expect(next.find((s) => s.name === 'React').category).toBe('Backend');
+  });
+
+  it('keeps the evidence a move exists to preserve', async () => {
+    // The whole reason to move rather than delete-and-retype.
+    mockCvData = {
+      ...skillsCv,
+      skills: [
+        { name: 'React', category: 'Frontend', evidence: [{ refIndex: 0 }], talkingPoint: 'At X…' },
+        { name: 'Node', category: 'Backend' },
+      ],
+    };
+    render(<StudioLivePreview />);
+    moveTo('React', 'Backend');
+
+    const moved = mockReplaceSkills.mock.calls[0][0].find((s) => s.name === 'React');
+    expect(moved.evidence).toEqual([{ refIndex: 0 }]);
+    expect(moved.talkingPoint).toBe('At X…');
+  });
+
+  it('says so when the move empties a group, and Undo puts it back', async () => {
+    // Nothing is deleted — the heading is derived, so it disappears with no other trace.
+    // That is exactly why it has to be said out loud.
+    mockCvData = {
+      ...skillsCv,
+      skills: [
+        { name: 'React', category: 'Frontend' },
+        { name: 'Node', category: 'Backend' },
+      ],
+    };
+    render(<StudioLivePreview />);
+    const before = mockCvData.skills;
+    moveTo('Node', 'Frontend');
+
+    await waitFor(() => expect(toastCalls).toHaveBeenCalled());
+    const [message, options] = toastCalls.mock.calls[0];
+    expect(message).toMatch(/Backend was empty, so it is gone/);
+
+    options.action.onClick();
+    expect(mockReplaceSkills).toHaveBeenLastCalledWith(before);
+  });
+
+  it('stays quiet about a group that survives the move', async () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+    moveTo('React', 'Backend'); // Frontend still has TypeScript
+
+    await waitFor(() => expect(toastCalls).toHaveBeenCalled());
+    expect(toastCalls.mock.calls[0][0]).toBe('Moved to Backend.');
+  });
+
+  it('renames a group in place, rewriting every member', async () => {
+    mockCvData = skillsCv;
+    const { container } = render(<StudioLivePreview />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Frontend' }));
+    const input = screen.getByLabelText('Rename this group');
+    fireEvent.change(input, { target: { value: 'Client-side' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => expect(mockReplaceSkills).toHaveBeenCalledTimes(1));
+    const next = mockReplaceSkills.mock.calls[0][0];
+    expect(next.filter((s) => s.category === 'Client-side').map((s) => s.name)).toEqual([
+      'React',
+      'TypeScript',
+    ]);
+    // Nothing else moved.
+    expect(groupNames(container)).toEqual(['Frontend', 'Backend', 'Uncategorized']);
+  });
+
+  it('merges when renamed onto a group that already exists, and says so', async () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Backend' }));
+    const input = screen.getByLabelText('Rename this group');
+    fireEvent.change(input, { target: { value: 'Frontend' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => expect(toastCalls).toHaveBeenCalled());
+    expect(toastCalls.mock.calls[0][0]).toBe('Merged into Frontend.');
+  });
+
+  it('abandons a rename on Escape without writing', () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Frontend' }));
+    const input = screen.getByLabelText('Rename this group');
+    fireEvent.change(input, { target: { value: 'Client-side' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(mockReplaceSkills).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Frontend' })).toBeTruthy();
+  });
+
+  it('starts a rename of Uncategorized from EMPTY, not from its localized label', () => {
+    // 'Uncategorized' is a STORED sentinel whose display is translated. Seeding the field
+    // with the label would let a French user save a category no other surface groups by.
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: i18n.t('cvBuilder.skillsCard.uncategorized') })
+    );
+    expect(screen.getByLabelText('Rename this group').value).toBe('');
+  });
+
+  it('names a brand-new group before moving anything into it', async () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+    openMenu('React');
+    fireEvent.click(within(menu()).getByRole('button', { name: 'New group…' }));
+
+    // Nothing is written until the group has a name — a blank one would silently be
+    // 'Uncategorized', which is not what the user asked for.
+    expect(mockReplaceSkills).not.toHaveBeenCalled();
+
+    const input = screen.getByLabelText('Group name');
+    fireEvent.change(input, { target: { value: 'Languages' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => expect(mockReplaceSkills).toHaveBeenCalledTimes(1));
+    const moved = mockReplaceSkills.mock.calls[0][0].find((s) => s.name === 'React');
+    expect(moved.category).toBe('Languages');
+  });
+
+  it('hands out no rearranging affordances when the sheet is locked', () => {
+    // The build-track completeness lock. The groups still READ — only the controls go.
+    mockCvData = { ...skillsCv, studioKind: 'build', experience: [], education: [] };
+    const { container } = render(<StudioLivePreview />);
+
+    expect(container.querySelectorAll('[data-skill-group]').length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('Move React to another group')).toBeNull();
+    expect(screen.queryByLabelText('Drag React to another group')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Frontend' })).toBeNull();
+    expect(screen.queryByText('Drop a skill here to start a new group')).toBeNull();
   });
 });

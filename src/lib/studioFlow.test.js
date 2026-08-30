@@ -22,6 +22,7 @@ import {
   openFix,
   rankEntriesByGap,
   scoreDelta,
+  scoreSignature,
   FIX_MODE,
   ENTRY_SOURCE,
   STEP_FOR_FOCUS,
@@ -588,9 +589,7 @@ describe('roleStage — derived, so a refresh resumes correctly', () => {
     expect(roleStage({})).toBe('entryType');
     expect(roleStage({ entryType: 'full-time' })).toBe('form');
     expect(roleStage({ entryType: 'full-time', title: 'Operator' })).toBe('form');
-    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe(
-      'form'
-    );
+    expect(roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker' })).toBe('form');
     expect(
       roleStage({ entryType: 'full-time', title: 'Operator', company: 'Baker', startDate: '2021' })
     ).toBe('achievements');
@@ -1444,9 +1443,9 @@ describe('editorJustUnlocked — only the moment it changes is news', () => {
   it('stays silent on a session that was ALREADY complete when opened', () => {
     // The first reading has ready:null. Treating that as an unlock would override the
     // panel the user chose last time, every single time they reopen a finished CV.
-    expect(
-      editorJustUnlocked({ draftId: null, ready: null }, { draftId: 'd1', ready: true })
-    ).toBe(false);
+    expect(editorJustUnlocked({ draftId: null, ready: null }, { draftId: 'd1', ready: true })).toBe(
+      false
+    );
   });
 
   it('does not mistake a session SWITCH for an unlock', () => {
@@ -1457,15 +1456,15 @@ describe('editorJustUnlocked — only the moment it changes is news', () => {
   });
 
   it('does not fire twice for the same unlock', () => {
-    expect(
-      editorJustUnlocked({ draftId: 'd1', ready: true }, { draftId: 'd1', ready: true })
-    ).toBe(false);
+    expect(editorJustUnlocked({ draftId: 'd1', ready: true }, { draftId: 'd1', ready: true })).toBe(
+      false
+    );
   });
 
   it('stays silent while nothing is bound, and when the CV goes back to incomplete', () => {
-    expect(editorJustUnlocked({ draftId: 'd1', ready: false }, { draftId: null, ready: false })).toBe(
-      false
-    );
+    expect(
+      editorJustUnlocked({ draftId: 'd1', ready: false }, { draftId: null, ready: false })
+    ).toBe(false);
     expect(
       editorJustUnlocked({ draftId: 'd1', ready: true }, { draftId: 'd1', ready: false })
     ).toBe(false);
@@ -1473,5 +1472,55 @@ describe('editorJustUnlocked — only the moment it changes is news', () => {
 
   it('survives being called with nothing', () => {
     expect(editorJustUnlocked()).toBe(false);
+  });
+});
+
+// The signature exists to tell a CONTENT change from a REORDER — entries are sorted by
+// _sortId so dragging a role is score-neutral by construction. Skills were left unsorted
+// only because nothing could reorder them; they can be dragged between categories now, and
+// an unsorted join would make every rearrangement look like new content and fire a CHARGED
+// re-score for a change that cannot move the score.
+describe('scoreSignature — rearranging is not a content change', () => {
+  const cvWith = (skills) => ({ skills });
+
+  it('is unchanged when skills are reordered', () => {
+    const before = cvWith([
+      { name: 'Soldering', category: 'Pipework' },
+      { name: 'Pressure testing', category: 'Testing' },
+    ]);
+    const after = cvWith([
+      { name: 'Pressure testing', category: 'Pipework' },
+      { name: 'Soldering', category: 'Pipework' },
+    ]);
+
+    expect(scoreSignature(after)).toBe(scoreSignature(before));
+  });
+
+  it('is unchanged when only a category changes', () => {
+    // The scan reads skill NAMES; a category is presentation. Moving one between groups
+    // must not cost the user a re-score.
+    expect(scoreSignature(cvWith([{ name: 'Soldering', category: 'Testing' }]))).toBe(
+      scoreSignature(cvWith([{ name: 'Soldering', category: 'Pipework' }]))
+    );
+  });
+
+  it('still changes when a skill is added or removed', () => {
+    // The guard against over-correcting: real content changes must still re-score.
+    const one = cvWith([{ name: 'Soldering' }]);
+    const two = cvWith([{ name: 'Soldering' }, { name: 'Pressure testing' }]);
+
+    expect(scoreSignature(two)).not.toBe(scoreSignature(one));
+  });
+
+  it('still changes when a skill is renamed', () => {
+    expect(scoreSignature(cvWith([{ name: 'Soldering' }]))).not.toBe(
+      scoreSignature(cvWith([{ name: 'Brazing' }]))
+    );
+  });
+
+  it('treats a plain-string skill as the same content as its object form', () => {
+    expect(scoreSignature(cvWith(['Soldering']))).toBe(
+      scoreSignature(cvWith([{ name: 'Soldering', category: 'Pipework' }]))
+    );
   });
 });

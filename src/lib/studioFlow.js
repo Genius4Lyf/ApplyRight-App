@@ -39,7 +39,12 @@ export const BUILD_SECTIONS = [
     icon: '🎓',
   },
   { key: 'skills', labelKey: 'ariaStudio.studioFlow.sections.skills', cvKey: 'skills', icon: '🛠️' },
-  { key: 'summary', labelKey: 'ariaStudio.studioFlow.sections.summary', cvKey: 'summary', icon: '📝' },
+  {
+    key: 'summary',
+    labelKey: 'ariaStudio.studioFlow.sections.summary',
+    cvKey: 'summary',
+    icon: '📝',
+  },
 ];
 
 // Per-section emoji, keyed the same way as BUILD_SECTIONS plus the two sub-steps that
@@ -828,7 +833,16 @@ export function scoreSignature(cv = {}) {
     listSig(cv?.experience, ['entryType', 'title', 'company', 'description']),
     listSig(cv?.projects, ['entryType', 'title', 'description']),
     listSig(cv?.education, ['degree', 'field', 'school', 'description']),
-    (cv?.skills || []).map((s) => (typeof s === 'string' ? s : s?.name || '')).join(','),
+    // SORTED, for the same reason listSig sorts by _sortId: a skill has no _sortId, so
+    // its NAME is its identity, and the same set of skills must fold to the same string
+    // however they are arranged. Left unsorted this was harmless only because nothing
+    // could reorder skills — now that they can be dragged between categories, an
+    // unsorted join would make every rearrangement look like a content change and fire
+    // a charged re-score for a change that cannot move the score.
+    [...(cv?.skills || [])]
+      .map((s) => (typeof s === 'string' ? s : s?.name || ''))
+      .sort()
+      .join(','),
     cv?.professionalSummary || '',
   ].join(SECTION_SEP);
 }
