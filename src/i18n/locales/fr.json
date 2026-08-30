@@ -4145,6 +4145,16 @@
       "srNeedsWork": "à améliorer",
       "srPoor": "faible"
     },
+    "editModeGuide": {
+      "eyebrow": "Mode édition débloqué",
+      "title": "Votre CV est maintenant modifiable",
+      "buttonHint": "Touchez ceci dans la barre du haut. Le point vert signale que le mode édition est actif.",
+      "detailOne": "Modifiez le texte directement — inutile de passer par Aria.",
+      "detailTwo": "Demandez à Aria de réécrire un poste, ou faites-le vous-même. Tout est enregistré dans votre CV.",
+      "openIt": "L’ouvrir",
+      "later": "Plus tard",
+      "dismiss": "Fermer"
+    },
     "welcomeGuide": {
       "eyebrow": "ARIA Studio · guide rapide",
       "howItWorks": "Comment fonctionne ARIA Studio",
@@ -4888,6 +4898,7 @@
     "livePreview": {
       "heading": "Aperçu en direct",
       "headingLive": "Aperçu en direct — activé, mis à jour au fil de vos modifications",
+      "editModeUnlocked": "Mode édition débloqué",
       "headingEditable": "Aperçu en direct — votre CV est prêt à être modifié",
       "yourCv": "Votre CV",
       "closePreview": "Fermer l'aperçu",

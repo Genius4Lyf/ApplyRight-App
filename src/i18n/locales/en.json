@@ -4149,6 +4149,16 @@
       "srNeedsWork": "needs work",
       "srPoor": "poor"
     },
+    "editModeGuide": {
+      "eyebrow": "Edit mode unlocked",
+      "title": "Your CV is yours to edit now",
+      "buttonHint": "Tap this in the top bar. The green dot means edit mode is on.",
+      "detailOne": "Change any wording in place — no need to ask Aria first.",
+      "detailTwo": "Ask Aria to rewrite a role, or edit it yourself. Both save straight to your CV.",
+      "openIt": "Open it",
+      "later": "Later",
+      "dismiss": "Close"
+    },
     "welcomeGuide": {
       "eyebrow": "ARIA Studio · quick guide",
       "howItWorks": "How ARIA Studio works",
@@ -4897,6 +4907,7 @@
     "livePreview": {
       "heading": "Live preview",
       "headingLive": "Live preview — on, updating as you go",
+      "editModeUnlocked": "Edit mode unlocked",
       "headingEditable": "Live preview — your CV is ready to edit",
       "yourCv": "Your CV",
       "closePreview": "Close preview",

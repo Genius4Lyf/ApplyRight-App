@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { PanelLeft, FilePen, ListChecks, Briefcase } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
@@ -23,9 +25,15 @@ import SessionRail from '../../components/ariaStudio/SessionRail';
 import StudioOverlay from '../../components/ariaStudio/StudioOverlay';
 import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
 import StudioWelcomeGuide from '../../components/ariaStudio/StudioWelcomeGuide';
+import EditModeUnlockedGuide from '../../components/ariaStudio/EditModeUnlockedGuide';
 import TargetJobStrip from '../../components/ariaStudio/TargetJobStrip';
 
 const STUDIO_WELCOME_GUIDE_KEY = 'ariaStudio:welcome-guide-seen:v1';
+const STUDIO_EDIT_GUIDE_KEY = 'ariaStudio:edit-mode-guide-seen:v1';
+// How long the "edit mode unlocked" nudge sits on the toggle before fading. Long
+// enough to be read after looking away from the chat, short enough that it never
+// becomes furniture over the header.
+const EDIT_UNLOCK_NUDGE_MS = 6000;
 
 // The Studio desk. Three panes at full width — sessions · conversation · artifact —
 // collapsing to ONE pane on a phone, where the rail becomes a drawer and the artifact
@@ -34,6 +42,7 @@ const STUDIO_WELCOME_GUIDE_KEY = 'ariaStudio:welcome-guide-seen:v1';
 // thing always on screen.
 const StudioDesk = () => {
   const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -58,6 +67,11 @@ const StudioDesk = () => {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(null);
   const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
+  // The one-time teaching moment, and the lightweight recurring one. They are
+  // deliberately exclusive: the modal IS the notification the first time, so firing the
+  // pill underneath it would be the same news told twice.
+  const [showEditGuide, setShowEditGuide] = useState(false);
+  const [unlockNudge, setUnlockNudge] = useState(false);
 
   // This is deliberately a one-time orientation. It explains the boundary between
   // Studio (improve what's already there) and Builder (add structured CV entries)
@@ -67,6 +81,17 @@ const StudioDesk = () => {
       setShowWelcomeGuide(!window.localStorage.getItem(STUDIO_WELCOME_GUIDE_KEY));
     } catch {
       setShowWelcomeGuide(true);
+    }
+  }, []);
+
+  // Dismissing it is what marks it seen — including via Escape or the backdrop. Someone
+  // who closed it has been told; re-teaching them on the next CV would be nagging.
+  const completeEditGuide = useCallback(() => {
+    setShowEditGuide(false);
+    try {
+      window.localStorage.setItem(STUDIO_EDIT_GUIDE_KEY, '1');
+    } catch {
+      // A privacy-restricted browser still gets the guide dismissed for this visit.
     }
   }, []);
 
@@ -86,8 +111,11 @@ const StudioDesk = () => {
   // Live "how much of this job can my CV defend yet?". Free, no AI, no charge, and it
   // writes nothing — see useJobCoverage. Present whenever a brief with must-haves exists,
   // which on the build track is from the moment the JD is read.
-  const { coverage: jobCoverage, keywords: jobKeywords, ready: hasJobTarget } =
-    useJobCoverage(cvData);
+  const {
+    coverage: jobCoverage,
+    keywords: jobKeywords,
+    ready: hasJobTarget,
+  } = useJobCoverage(cvData);
   // ONE pill, never two. A scanned tailoring keeps its fit score exactly as before; the
   // tracker is for the build track, which never scans and so has shown nothing at all.
   const showJobTracker = score == null && hasJobTarget;
@@ -188,7 +216,9 @@ const StudioDesk = () => {
         await CVService.saveDraft({ _id: session._id, title });
       } catch (err) {
         console.error('Failed to rename session', err);
-        toast.error(t('ariaStudio.desk.toast.renameFailed', { defaultValue: 'Could not save the new name.' }));
+        toast.error(
+          t('ariaStudio.desk.toast.renameFailed', { defaultValue: 'Could not save the new name.' })
+        );
         return;
       }
     }
@@ -321,10 +351,31 @@ const StudioDesk = () => {
     const current = { draftId, ready: editorReady };
     editorReadyRef.current = current;
     if (!editorJustUnlocked(previous, current)) return;
+
+    // Say what happened, not just show it. The auto-open below only fires at inline
+    // widths, so on a phone this is the entire announcement; on desktop it names the
+    // panel that just appeared, which is otherwise a silent layout change.
+    let seenEditGuide = true;
+    try {
+      seenEditGuide = !!window.localStorage.getItem(STUDIO_EDIT_GUIDE_KEY);
+    } catch {
+      seenEditGuide = false;
+    }
+    if (seenEditGuide) setUnlockNudge(true);
+    else setShowEditGuide(true);
+
     if (!layout.panelInline) return;
     layout.setPanelView('preview');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canPreview, draftId, editorReady, layout.panelInline]);
+
+  // One shot, like the bullet-apply pulse it is modelled on: it announces a transition,
+  // and the permanent green dot is what carries the ongoing state afterwards.
+  useEffect(() => {
+    if (!unlockNudge) return undefined;
+    const timer = window.setTimeout(() => setUnlockNudge(false), EDIT_UNLOCK_NUDGE_MS);
+    return () => window.clearTimeout(timer);
+  }, [unlockNudge]);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-white dark:bg-slate-950">
@@ -371,7 +422,9 @@ const StudioDesk = () => {
             <div className="min-w-0 flex-1 flex items-center">
               {/* Model picker lives here now — no header title/subtitle to edit or read;
                   renaming a CV happens from its row in the Recents rail instead. */}
-              {draftId && <ModelPicker value={modelId} onSelect={selectModel} align="left" studio />}
+              {draftId && (
+                <ModelPicker value={modelId} onSelect={selectModel} align="left" studio />
+              )}
             </div>
 
             {/* The score stays in the top bar at EVERY width — on a phone it's the only
@@ -423,7 +476,7 @@ const StudioDesk = () => {
             {/* View switch — the WIDE Live preview vs the NARROW insights. Active view
                 gets the neutral active-state (matching the other header toggles); the
                 score pill stays to their right. */}
-            <div className="shrink-0 flex items-center gap-1">
+            <div className="relative shrink-0 flex items-center gap-1">
               {canPreview && (
                 <button
                   type="button"
@@ -456,6 +509,33 @@ const StudioDesk = () => {
                   <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
                 </button>
               )}
+
+              {/* The recurring nudge. role="status" rather than an alert: it is news, not
+                  a problem, and a screen reader should hear it without being interrupted. */}
+              <AnimatePresence>
+                {unlockNudge && (
+                  <motion.button
+                    type="button"
+                    key="unlock-nudge"
+                    role="status"
+                    onClick={() => {
+                      setUnlockNudge(false);
+                      selectView('preview');
+                    }}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="absolute right-0 top-full z-30 mt-1.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11.5px] font-semibold text-emerald-800 shadow-lg dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                  >
+                    <span
+                      className="studio-live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
+                      aria-hidden="true"
+                    />
+                    {t('ariaStudio.livePreview.editModeUnlocked')}
+                  </motion.button>
+                )}
+              </AnimatePresence>
               <button
                 type="button"
                 onClick={() => selectView('insights')}
@@ -574,6 +654,16 @@ const StudioDesk = () => {
 
       <StudioWelcomeGuide open={showWelcomeGuide} onComplete={completeWelcomeGuide} />
 
+      {/* Held back behind the welcome guide rather than dropped: a brand-new user who
+          finishes a CV while the orientation is still open should still be told. */}
+      <EditModeUnlockedGuide
+        open={showEditGuide && !showWelcomeGuide}
+        onOpenPreview={() => {
+          completeEditGuide();
+          layout.setPanelView('preview');
+        }}
+        onComplete={completeEditGuide}
+      />
     </div>
   );
 };
