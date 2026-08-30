@@ -642,69 +642,35 @@ describe('StudioLivePreview — rearranging skills', () => {
   });
 });
 
-// ─── The handle moves with the input device ───
+// ─── The drag handle ───
 //
-// Shipped first as a 14px grip, which is roughly a twelfth of the area SortableItem's own
-// comment calls the touch minimum ("≥40px hit area on touch … so reorder/delete are
-// actually tappable"). Inside a scrolling bottom sheet a finger that missed by 3px scrolled
-// the sheet instead of picking the chip up, which read as "the drag is janky" when it was
-// really "the target is unhittable".
-//
-// A 40px grip does not fit in a 26px chip, so the gesture changed rather than the size: on
-// a finger the whole chip is the handle, held for a moment. These tests hold the SWAP —
-// that the listeners really move — because a media query cannot express it and nothing else
-// would notice if it silently stopped happening.
-const asTouchDevice = (coarse) =>
-  vi.stubGlobal('matchMedia', (q) => ({
-    // The component asks '(hover: none)'; useStudioLayout asks about widths and must keep
-    // getting its own answer.
-    matches: q.includes('hover: none') ? coarse : false,
-    media: q,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-  }));
-
-describe('StudioLivePreview — dragging a skill on a touchscreen', () => {
-  it('puts the grip on the chip, not in it, when there is no hover', () => {
-    asTouchDevice(true);
-    mockCvData = skillsCv;
-    render(<StudioLivePreview />);
-
-    // The 14px grip is gone — there is nothing to aim at, because the chip IS the target.
-    expect(screen.queryByLabelText('Drag React to another group')).toBeNull();
-    // dnd-kit marks its draggable with a roledescription; that is what proves the
-    // listeners landed on the chip rather than simply vanishing with the grip.
-    expect(pill('React').getAttribute('aria-roledescription')).toBe('draggable');
-  });
-
-  it('keeps the grip where there IS a hover — a mouse has nothing to long-press', () => {
-    asTouchDevice(false);
+// One grip at the front of every chip, on every device — the long-press-the-whole-chip
+// gesture was tried on touch and reverted after it never became reliable. The "Move to…"
+// menu beside it is the path that always works, and on a phone it is one tap rather than a
+// hold and a drag.
+describe('StudioLivePreview — the drag handle', () => {
+  it('gives every editable chip a grip', () => {
     mockCvData = skillsCv;
     render(<StudioLivePreview />);
 
     expect(screen.getByLabelText('Drag React to another group')).toBeTruthy();
-    // …and the chip is not itself draggable, so it cannot fight the buttons inside it.
+    // The chip itself is NOT draggable: dragging from anywhere would fight the buttons
+    // inside it and the text selection around it.
     expect(pill('React').getAttribute('aria-roledescription')).toBeNull();
   });
 
-  it('leaves the sheet scrollable through the chips', () => {
-    // touch-action: none would trap a sheet whose content is mostly chips. The sensor's
-    // delay is what separates a hold from a scroll, so scrolling must stay possible.
-    asTouchDevice(true);
+  it('offers the menu beside it, so drag is never the only way', () => {
     mockCvData = skillsCv;
     render(<StudioLivePreview />);
 
-    expect(pill('React').className).toContain('touch-manipulation');
-    expect(pill('React').className).not.toContain('touch-none');
+    expect(screen.getByLabelText('Move React to another group')).toBeTruthy();
   });
 
-  it('never makes a locked chip draggable', () => {
-    asTouchDevice(true);
+  it('hands out neither when the sheet is locked', () => {
     mockCvData = { ...skillsCv, studioKind: 'build', experience: [], education: [] };
     render(<StudioLivePreview />);
 
-    expect(pill('React').getAttribute('aria-roledescription')).toBeNull();
+    expect(screen.queryByLabelText('Drag React to another group')).toBeNull();
+    expect(screen.queryByLabelText('Move React to another group')).toBeNull();
   });
 });

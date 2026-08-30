@@ -16,7 +16,6 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { useAriaStudio } from '../../context/AriaStudioContext';
-import { useCoarsePointer } from '../../hooks/useCoarsePointer';
 import AriaOrbit from '../cv/AriaOrbit';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 import {
@@ -104,9 +103,6 @@ const SkillGroupDrop = ({ id, disabled, children }) => {
 
 const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
   const { t } = useTranslation();
-  // Decides WHERE the drag listeners go, which CSS cannot do — a media query can hide the
-  // grip on touch, but moving a prop from the grip onto the whole chip is JavaScript.
-  const coarsePointer = useCoarsePointer();
   const { cvData, replaceSkills, applySkills } = useAriaStudio();
   const skills = useMemo(() => cvData?.skills || [], [cvData?.skills]);
 
@@ -378,26 +374,14 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
       destinations.push(UNCATEGORIZED);
     }
 
-    // On a finger the handle is the WHOLE chip, held for a moment — the gesture both
-    // mobile platforms use to reorder a list, so there is nothing to discover and nothing
-    // to aim at. The sensor's 200ms delay is what keeps ⊕ and × tappable through it, and
-    // its 5px tolerance is what lets a scroll win when the finger moves first.
-    //
-    // touch-action stays MANIPULATION rather than none: these chips fill the section, and
-    // blocking touch scrolling over them would trap the sheet.
-    const chipHandle = coarsePointer && !readOnly ? { ...attributes, ...listeners } : {};
-
     return (
-      <span
-        ref={setNodeRef}
-        {...chipHandle}
-        className={`relative ${pillBase} ${isDragging ? 'opacity-40' : ''} ${
-          coarsePointer && !readOnly ? 'touch-manipulation select-none' : ''
-        }`}
-      >
-        {/* Desktop only: with a mouse there is nothing to long-press, and a chip that
-            dragged from anywhere would fight text selection and the buttons inside it. */}
-        {!readOnly && !coarsePointer && (
+      <span ref={setNodeRef} className={`relative ${pillBase} ${isDragging ? 'opacity-40' : ''}`}>
+        {/* The grip is the ONLY drag handle, on every device.
+            A long-press on the whole chip was tried and reverted: it never became reliable
+            on a phone, and a gesture that works sometimes is worse than one control that
+            always does. The "Move to…" menu beside it is the path that always works —
+            especially on touch, where it is one tap rather than a hold and a drag. */}
+        {!readOnly && (
           <button
             type="button"
             {...attributes}
