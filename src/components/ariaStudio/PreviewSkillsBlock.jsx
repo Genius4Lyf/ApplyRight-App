@@ -15,6 +15,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { useAriaStudio } from '../../context/AriaStudioContext';
+import { useCoarsePointer } from '../../hooks/useCoarsePointer';
 import AriaOrbit from '../cv/AriaOrbit';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 import {
@@ -73,8 +74,11 @@ const revealOnHover =
   'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100';
 const field =
   'min-w-0 flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-[12px] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
+// The icon stays 10px; the TARGET grows to 24px on touch, where the grip's 14px was
+// unhittable. It costs nothing in width — the grip itself is gone on touch, since the
+// whole chip is the handle there.
 const iconButton =
-  'inline-flex h-3.5 w-3.5 items-center justify-center text-slate-400 transition-[opacity,color,background-color] hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200';
+  'inline-flex h-3.5 w-3.5 [@media(hover:none)]:h-6 [@media(hover:none)]:w-6 shrink-0 items-center justify-center text-slate-400 transition-[opacity,color,background-color] hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200';
 
 // A category name can be anything the user types, so it is carried whole after a fixed
 // prefix rather than interpolated into a structured id.
@@ -99,6 +103,9 @@ const SkillGroupDrop = ({ id, disabled, children }) => {
 
 const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
   const { t } = useTranslation();
+  // Decides WHERE the drag listeners go, which CSS cannot do — a media query can hide the
+  // grip on touch, but moving a prop from the grip onto the whole chip is JavaScript.
+  const coarsePointer = useCoarsePointer();
   const { cvData, replaceSkills, applySkills } = useAriaStudio();
   const skills = useMemo(() => cvData?.skills || [], [cvData?.skills]);
 
@@ -370,9 +377,26 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
       destinations.push(UNCATEGORIZED);
     }
 
+    // On a finger the handle is the WHOLE chip, held for a moment — the gesture both
+    // mobile platforms use to reorder a list, so there is nothing to discover and nothing
+    // to aim at. The sensor's 200ms delay is what keeps ⊕ and × tappable through it, and
+    // its 5px tolerance is what lets a scroll win when the finger moves first.
+    //
+    // touch-action stays MANIPULATION rather than none: these chips fill the section, and
+    // blocking touch scrolling over them would trap the sheet.
+    const chipHandle = coarsePointer && !readOnly ? { ...attributes, ...listeners } : {};
+
     return (
-      <span ref={setNodeRef} className={`relative ${pillBase} ${isDragging ? 'opacity-40' : ''}`}>
-        {!readOnly && (
+      <span
+        ref={setNodeRef}
+        {...chipHandle}
+        className={`relative ${pillBase} ${isDragging ? 'opacity-40' : ''} ${
+          coarsePointer && !readOnly ? 'touch-manipulation select-none' : ''
+        }`}
+      >
+        {/* Desktop only: with a mouse there is nothing to long-press, and a chip that
+            dragged from anywhere would fight text selection and the buttons inside it. */}
+        {!readOnly && !coarsePointer && (
           <button
             type="button"
             {...attributes}
