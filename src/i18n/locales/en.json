@@ -58,8 +58,8 @@
     "shell": {
       "valueProps": {
         "tailor": {
-          "title": "AI tailors every CV to a specific job",
-          "body": "Optimized bullets and keywords in 30-60 seconds, not hours."
+          "title": "A CV built around the job you want",
+          "body": "ARIA asks about your work and writes each section around what the role actually needs."
         },
         "score": {
           "title": "Score your fit before you apply",
@@ -89,7 +89,7 @@
       "title": "Welcome back",
       "subtitle": "Sign in to pick up where you left off.",
       "leftHeading": "Land more interviews with a CV that's actually built for the job.",
-      "leftSubcopy": "ApplyRight tailors your resume to every role you apply for, scores your fit, and writes the cover letter — all in minutes.",
+      "leftSubcopy": "ApplyRight builds your CV around the role you're going for, scores your fit, and writes the cover letter — all in one place.",
       "forgotPassword": "Forgot password?",
       "submitting": "Signing in...",
       "noAccount": "New to ApplyRight?",
@@ -98,7 +98,7 @@
     "register": {
       "title": "Create your account",
       "titleAgent": "Create your CV agent account",
-      "subtitle": "Start tailoring CVs in minutes — 10 free credits to play with.",
+      "subtitle": "Start building your CV in minutes — 10 free credits to play with.",
       "subtitleAgent": "Build and download CVs for your clients — pick an agent plan after signup.",
       "leftHeading": "Build a CV that gets past resume software.",
       "leftHeadingAgent": "Run your CV-writing business in one place.",
@@ -211,7 +211,7 @@
   "landing": {
     "seo": {
       "title": "ApplyRight - AI Resume Builder & CV Optimizer for Job Seekers",
-      "description": "Beat the ATS with ApplyRight. Our AI-driven resume builder tailors your CV to specific job descriptions, helping you land more interviews. Try it free."
+      "description": "Build your CV in a conversation. ARIA asks about your work, writes each section around the job you're going for, and scores your fit before you apply. Try it free."
     },
     "hero": {
       "introAriaLabel": "ApplyRight introduction",
@@ -226,12 +226,12 @@
       "introMorphThe": "the",
       "introMorphRight": "Right",
       "introMorphWay": "way.",
-      "introResolve": "Build it. Tailor it. Rehearse it — with ARIA beside you.",
+      "introResolve": "Build it. Check it. Rehearse it — with ARIA beside you.",
       "introScroll": "Scroll to meet ARIA",
       "kicker": "AI résumé · role match · live mock interview",
       "titleLead": "Win on paper. Then win",
       "titleAccent": "the room.",
-      "subcopy": "Build a real CV in about 20 minutes with ARIA, tailor it to the exact job you want, then put yourself through a real-time AI interview — so you walk in already rehearsed.",
+      "subcopy": "Build a real CV in about 20 minutes with ARIA — shaped around the exact job you want — then put yourself through a real-time AI interview, so you walk in already rehearsed.",
       "ctaSecondary": "Hear a sample interview",
       "freeNoteStrong": "1 free CV download",
       "freeNoteRest": "no card needed"
@@ -242,7 +242,7 @@
       "subcopy": "Watch ARIA collect the real story, keep the CV updated, and hand it straight into the design studio.",
       "ariaDeskStrap": "Build a CV with Aria",
       "livePreview": "Live preview",
-      "newTailoring": "New tailoring",
+      "newTailoring": "New CV",
       "newCv": "New CV",
       "newLabel": "New",
       "justNow": "Just now",
@@ -463,26 +463,26 @@
     },
     "fix": {
       "kicker": "The fix",
-      "title": "We tailor your CV for every single job.",
-      "subcopy": "Three moves that turn a generic résumé into one the software waves through.",
-      "step1Title": "We scan the job",
-      "step1Body": "Paste the job link. Our AI reads it like an ATS would, finding the critical keywords, skills, and requirements hidden in the text.",
-      "step2Title": "We re-write your CV",
-      "step2Body": "We don’t just add keywords. We rewrite your bullet points to highlight the <i>relevant</i> experience that matches <i>this specific job</i>.",
-      "step3Title": "You pass the filter",
-      "step3Body": "You get a tailored PDF for that specific application. The ATS sees a 95%+ match, and your résumé lands on the recruiter’s desk."
+      "title": "We build your CV around the job.",
+      "subcopy": "Three moves that turn a blank page into a CV written for the role.",
+      "step1Title": "We read the job",
+      "step1Body": "Paste the job description. ARIA reads it the way a recruiter searches it — pulling out the skills, keywords and requirements buried in the text.",
+      "step2Title": "She interviews you",
+      "step2Body": "One question at a time about what you <i>actually</i> did. You answer in your own words, she writes each section as you go — and she never invents a number you didn’t give her.",
+      "step3Title": "You see where you stand",
+      "step3Body": "A fit score against that job, section by section — strong, needs work, or missing — so you know exactly what to strengthen before you send it."
     },
     "features": {
       "kicker": "Advanced job-prep suite",
       "title": "Go beyond the simple resume.",
       "subcopy": "ApplyRight gives you a full toolkit designed by career experts to make sure you dominate every step of the hiring pipeline, from the first draft to the final call.",
       "studio": {
-        "kicker": "ARIA Studio · Tailor",
-        "title": "Tailor Your CV To The Job, In A Conversation",
-        "body": "Paste the job description and ARIA reworks a copy of your CV against it — your original is never touched. She marks every section strong, needs-tightening or missing, and a live preview beside the chat updates the instant a fix lands.",
-        "tag1": "Per-Section Verdicts",
+        "kicker": "ARIA Studio · Build",
+        "title": "Build Your CV In A Conversation",
+        "body": "ARIA asks about your work one question at a time and writes each section as you answer — with a job description in hand, or without one if you haven’t picked a role yet. A live preview beside the chat fills in as you talk, and once there’s a job set she scores the fit and marks every section strong, needs-tightening or missing.",
+        "tag1": "Built From Your Answers",
         "tag2": "Live Preview",
-        "tag3": "Your Original Stays Safe"
+        "tag3": "Per-Section Verdicts"
       },
       "voice": {
         "kicker": "Interview prep · Live voice",
@@ -536,7 +536,7 @@
       "dimSkills": "Skills",
       "dimExperience": "Experience",
       "dimEducation": "Education",
-      "studioLabel": "Tailoring",
+      "studioLabel": "Building",
       "studioJob": "Product Analyst · Paystack",
       "studioFit": "Overall fit",
       "studioSecSummary": "Summary",
@@ -657,7 +657,7 @@
         },
         "2": {
           "title": "Must Know",
-          "message": "Tailoring your CV for every single application is the #1 way to get more interviews.",
+          "message": "Building your CV around the specific job you're applying for is the #1 way to get more interviews.",
           "type": "GUIDE"
         },
         "3": {
@@ -732,7 +732,7 @@
       "uploadBody": "We’ll scan your PDF and auto-fill the builder with your details."
     },
     "setup": {
-      "checkCv": "Check your CV against a job — we’ll score the fit and tailor it to match.",
+      "checkCv": "Check your CV against a job — we’ll score the fit and show you what’s missing.",
       "step2": "Step 2 · Job listing",
       "step2Body": "Provide the job details for analysis",
       "uploadTitle": "Upload your Resume",
@@ -889,7 +889,7 @@
         "tagline": "Build, share and prep — free forever.",
         "features": {
           "0": "5-minute live interview taste — practice only, no AI report",
-          "1": "ARIA Studio — tailor your CV to any job description",
+          "1": "ARIA Studio — build a CV in a conversation, with or without a job in mind",
           "2": "Ask ARIA in the CV Builder — build it with her, section by section",
           "3": "Live CV Health & Role Match — free, always",
           "4": "Pick any AI model: GPT-4o mini, GPT-5.6 or Claude Sonnet 5",
@@ -1039,7 +1039,7 @@
     },
     "upgrade": {
       "headingSeeker": "Practice with a real AI interviewer",
-      "subcopySeeker": "Every plan includes <strong>AI credits</strong> for CV tailoring, cover letters and written prep, plus the live voice interview minutes that make you ready. Top up credits any time.",
+      "subcopySeeker": "Every plan includes <strong>AI credits</strong> for building your CV, cover letters and written prep, plus the live voice interview minutes that make you ready. Top up credits any time.",
       "statusAgentNone": "You don’t have an active agent plan yet — pick one below.",
       "statusFreeSeeker": "You’re on the Free plan — {{n}} of your {{total}} free interview minutes left.",
       "statusActive": "Active: {{plan}} · {{n}} credits",
@@ -1061,7 +1061,7 @@
     "pricing": {
       "eyebrow": "Pricing · one-time · no auto-renewal",
       "headingSeeker": "Land more interviews, for less",
-      "subcopySeeker": "Every plan includes <strong>AI credits</strong> for CV tailoring, cover letters and written prep, plus the live voice interview minutes that make you ready.",
+      "subcopySeeker": "Every plan includes <strong>AI credits</strong> for building your CV, cover letters and written prep, plus the live voice interview minutes that make you ready.",
       "forJobSeekers": "For job seekers",
       "forCvAgents": "For CV agents",
       "getStarted": "Get started",

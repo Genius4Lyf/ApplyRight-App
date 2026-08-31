@@ -54,8 +54,8 @@
     "shell": {
       "valueProps": {
         "tailor": {
-          "title": "L'IA adapte chaque CV à un poste précis",
-          "body": "Des points clés et des mots-clés optimisés en 30 à 60 secondes, au lieu de plusieurs heures."
+          "title": "Un CV construit autour du poste que vous visez",
+          "body": "Aria vous interroge sur votre parcours et rédige chaque section autour de ce que le poste demande vraiment."
         },
         "score": {
           "title": "Évaluez votre adéquation avant de postuler",
@@ -85,7 +85,7 @@
       "title": "Ravi de vous revoir",
       "subtitle": "Connectez-vous pour reprendre là où vous en étiez.",
       "leftHeading": "Décrochez plus d'entretiens avec un CV vraiment conçu pour le poste.",
-      "leftSubcopy": "ApplyRight adapte votre CV à chaque poste auquel vous postulez, évalue votre adéquation et rédige votre lettre de motivation — le tout en quelques minutes.",
+      "leftSubcopy": "ApplyRight construit votre CV autour du poste que vous visez, évalue votre adéquation et rédige votre lettre de motivation — le tout au même endroit.",
       "forgotPassword": "Mot de passe oublié ?",
       "submitting": "Connexion en cours...",
       "noAccount": "Nouveau sur ApplyRight ?",
@@ -94,7 +94,7 @@
     "register": {
       "title": "Créez votre compte",
       "titleAgent": "Créez votre compte rédacteur de CV",
-      "subtitle": "Commencez à adapter vos CV en quelques minutes — 10 crédits offerts pour essayer.",
+      "subtitle": "Commencez à construire votre CV en quelques minutes — 10 crédits offerts pour essayer.",
       "subtitleAgent": "Créez et téléchargez des CV pour vos clients — choisissez une formule rédacteur après l'inscription.",
       "leftHeading": "Créez un CV qui passe les logiciels de recrutement.",
       "leftHeadingAgent": "Gérez toute votre activité de rédaction de CV au même endroit.",
@@ -207,7 +207,7 @@
   "landing": {
     "seo": {
       "title": "ApplyRight – Créateur de CV par IA et optimisation ATS",
-      "description": "Passez le filtre ATS avec ApplyRight. Notre IA adapte votre CV à chaque offre d’emploi pour décrocher plus d’entretiens. Essai gratuit."
+      "description": "Construisez votre CV dans une conversation. Aria vous interroge sur votre parcours, rédige chaque section autour du poste que vous visez et évalue votre adéquation avant de postuler. Essai gratuit."
     },
     "hero": {
       "introAriaLabel": "Présentation d’ApplyRight",
@@ -222,12 +222,12 @@
       "introMorphThe": "the",
       "introMorphRight": "Right",
       "introMorphWay": "way.",
-      "introResolve": "Créez-le. Adaptez-le. Entraînez-vous — avec Aria à vos côtés.",
+      "introResolve": "Créez-le. Vérifiez-le. Entraînez-vous — avec Aria à vos côtés.",
       "introScroll": "Faites défiler pour rencontrer Aria",
       "kicker": "CV par IA · adéquation au poste · entretien blanc en direct",
       "titleLead": "Convainquez sur le papier. Puis dans",
       "titleAccent": "la salle.",
-      "subcopy": "Construisez un vrai CV en une vingtaine de minutes avec Aria, adaptez-le au poste exact que vous visez, puis passez un entretien avec une IA en temps réel — vous arrivez déjà entraîné.",
+      "subcopy": "Construisez un vrai CV en une vingtaine de minutes avec Aria — pensé autour du poste exact que vous visez — puis passez un entretien avec une IA en temps réel : vous arrivez déjà entraîné.",
       "ctaSecondary": "Écouter un entretien type",
       "freeNoteStrong": "1 CV à télécharger offert",
       "freeNoteRest": "sans carte bancaire"
@@ -238,7 +238,7 @@
       "subcopy": "Regardez Aria recueillir votre véritable parcours, mettre le CV à jour et le transmettre directement au studio de création.",
       "ariaDeskStrap": "Créez un CV avec Aria",
       "livePreview": "Aperçu en direct",
-      "newTailoring": "Nouvelle adaptation",
+      "newTailoring": "Nouveau CV",
       "newCv": "Nouveau CV",
       "newLabel": "Nouveau",
       "justNow": "À l’instant",
@@ -459,26 +459,26 @@
     },
     "fix": {
       "kicker": "La solution",
-      "title": "Nous adaptons votre CV à chaque offre.",
-      "subcopy": "Trois étapes pour transformer un CV générique en CV que le logiciel laisse passer.",
-      "step1Title": "Nous analysons l’offre",
-      "step1Body": "Collez le lien de l’offre. Notre IA la lit comme le ferait un ATS et repère les mots-clés, compétences et exigences décisifs cachés dans le texte.",
-      "step2Title": "Nous réécrivons votre CV",
-      "step2Body": "Nous n’ajoutons pas seulement des mots-clés. Nous reformulons vos points clés pour mettre en avant l’expérience <i>pertinente</i> pour <i>cette offre précise</i>.",
-      "step3Title": "Vous passez le filtre",
-      "step3Body": "Vous obtenez un PDF adapté à cette candidature précise. L’ATS voit plus de 95 % de correspondance et votre CV arrive sur le bureau du recruteur."
+      "title": "Nous construisons votre CV autour de l’offre.",
+      "subcopy": "Trois étapes pour transformer une page blanche en CV écrit pour le poste.",
+      "step1Title": "Nous lisons l’offre",
+      "step1Body": "Collez l’offre d’emploi. Aria la lit comme un recruteur la parcourt et repère les compétences, mots-clés et exigences enfouis dans le texte.",
+      "step2Title": "Elle vous interroge",
+      "step2Body": "Une question à la fois sur ce que vous avez <i>vraiment</i> fait. Vous répondez avec vos mots, elle rédige chaque section au fur et à mesure — et elle n’invente jamais un chiffre que vous ne lui avez pas donné.",
+      "step3Title": "Vous savez où vous en êtes",
+      "step3Body": "Un score d’adéquation face à cette offre, section par section — solide, à renforcer ou manquante — pour savoir exactement quoi améliorer avant d’envoyer."
     },
     "features": {
       "kicker": "Suite de préparation avancée",
       "title": "Allez plus loin qu’un simple CV.",
       "subcopy": "ApplyRight vous donne une boîte à outils complète, conçue par des experts en carrière, pour maîtriser chaque étape du recrutement — du premier brouillon jusqu’à l’entretien final.",
       "studio": {
-        "kicker": "Aria Studio · Adaptation",
-        "title": "Adaptez votre CV au poste, dans une conversation",
-        "body": "Collez l’offre d’emploi et Aria retravaille une copie de votre CV en face — votre original n’est jamais touché. Elle marque chaque section comme solide, à resserrer ou manquante, et un aperçu en direct se met à jour dès qu’une correction est appliquée.",
-        "tag1": "Verdict par section",
+        "kicker": "Aria Studio · Création",
+        "title": "Construisez votre CV dans une conversation",
+        "body": "Aria vous interroge sur votre parcours, une question à la fois, et rédige chaque section au fil de vos réponses — avec une offre d’emploi sous la main, ou sans si vous n’avez pas encore choisi de poste. Un aperçu en direct se remplit à côté de la conversation, et dès qu’une offre est renseignée elle évalue l’adéquation et marque chaque section comme solide, à resserrer ou manquante.",
+        "tag1": "Écrit d’après vos réponses",
         "tag2": "Aperçu en direct",
-        "tag3": "Votre original reste intact"
+        "tag3": "Verdict par section"
       },
       "voice": {
         "kicker": "Préparation · Voix en direct",
@@ -532,7 +532,7 @@
       "dimSkills": "Compétences",
       "dimExperience": "Expérience",
       "dimEducation": "Formation",
-      "studioLabel": "Adaptation",
+      "studioLabel": "Création",
       "studioJob": "Analyste produit · Paystack",
       "studioFit": "Adéquation globale",
       "studioSecSummary": "Résumé",
@@ -653,7 +653,7 @@
         },
         "2": {
           "title": "À savoir",
-          "message": "Adapter son CV à chaque candidature est le meilleur moyen d’obtenir plus d’entretiens.",
+          "message": "Construire son CV autour de l’offre visée est le meilleur moyen d’obtenir plus d’entretiens.",
           "type": "GUIDE"
         },
         "3": {
@@ -728,7 +728,7 @@
       "uploadBody": "Nous analysons votre PDF et pré-remplissons le créateur avec vos informations."
     },
     "setup": {
-      "checkCv": "Confrontez votre CV à une offre — nous évaluons l’adéquation et l’adaptons en conséquence.",
+      "checkCv": "Confrontez votre CV à une offre — nous évaluons l’adéquation et vous montrons ce qui manque.",
       "step2": "Étape 2 · Offre d’emploi",
       "step2Body": "Renseignez les détails de l’offre à analyser",
       "uploadTitle": "Importez votre CV",
@@ -885,7 +885,7 @@
         "tagline": "Créez, partagez et préparez-vous — gratuit à vie.",
         "features": {
           "0": "5 minutes d’entretien en direct — pratique uniquement, sans rapport IA",
-          "1": "Aria Studio — adaptez votre CV à n’importe quelle offre d’emploi",
+          "1": "Aria Studio — construisez un CV dans une conversation, avec ou sans offre en tête",
           "2": "Aria dans le créateur de CV — construisez-le avec elle, section par section",
           "3": "Santé du CV et Correspondance au poste en direct — gratuit, toujours",
           "4": "Choisissez votre modèle IA : GPT-4o mini, GPT-5.6 ou Claude Sonnet 5",
@@ -1035,7 +1035,7 @@
     },
     "upgrade": {
       "headingSeeker": "Entraînez-vous avec un vrai recruteur IA",
-      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour l’adaptation de CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment. Rechargez vos crédits à tout moment.",
+      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour la création de votre CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment. Rechargez vos crédits à tout moment.",
       "statusAgentNone": "Vous n’avez pas encore de formule rédacteur active — choisissez-en une ci-dessous.",
       "statusFreeSeeker": "Vous êtes sur la formule gratuite — il vous reste {{n}} de vos {{total}} minutes d’entretien offertes.",
       "statusActive": "Active : {{plan}} · {{n}} crédits",
@@ -1057,7 +1057,7 @@
     "pricing": {
       "eyebrow": "Tarifs · paiement unique · sans reconduction",
       "headingSeeker": "Décrochez plus d’entretiens, à moindre coût",
-      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour l’adaptation de CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment.",
+      "subcopySeeker": "Chaque formule inclut des <strong>crédits IA</strong> pour la création de votre CV, les lettres de motivation et la préparation écrite, ainsi que les minutes d’entretien vocal en direct qui vous préparent vraiment.",
       "forJobSeekers": "Pour les candidats",
       "forCvAgents": "Pour les rédacteurs de CV",
       "getStarted": "Commencer",
