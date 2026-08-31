@@ -1787,11 +1787,17 @@ const MockInterviewPage = () => {
 
   return (
     <div
-      // overflow-x-hidden: the live control dock's hairline goes full-bleed via
+      // overflow-x-clip: the live control dock's hairline goes full-bleed via
       // the w-screen/-ml-[50vw] trick below, and 100vw includes the scrollbar
       // gutter on desktop — without this it opens a few stray pixels of
       // horizontal scroll on every phase, not just the live one.
-      className={`min-h-screen flex flex-col overflow-x-hidden ${
+      //
+      // CLIP, not hidden. `overflow-x: hidden` promotes overflow-y to `auto`,
+      // which makes this div a scroll container and quietly breaks every
+      // position:sticky inside it — including this page's own header and the
+      // pre-flight's mobile footer. `clip` hides the same overflow (more
+      // strictly: it can't be scrolled to at all) without that side effect.
+      className={`min-h-screen flex flex-col overflow-x-clip ${
         immersive
           ? 'bg-[#f6f6f3] text-slate-900 dark:bg-slate-950 dark:text-slate-100'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'

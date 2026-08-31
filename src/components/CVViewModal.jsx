@@ -124,7 +124,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
       {/* Top bar */}
       <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2 min-w-0">
-          <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+          <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
           <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
             Your CV
           </span>
@@ -138,7 +138,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
             onClick={openFullPage}
             disabled={!hasCV}
             title={hasCV ? 'Open the full CV page' : 'Generate a CV first'}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-900 dark:disabled:hover:bg-white"
           >
             <span className="hidden sm:inline">Download / templates</span>
             <span className="sm:hidden">Download</span>
@@ -175,7 +175,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
           // Uploaded resume (no ApplyRight CV generated) — show the raw text.
           <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl">
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <FileText className="w-4 h-4 text-indigo-600" />
+              <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Your uploaded resume
               </p>
@@ -202,7 +202,7 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
             <button
               type="button"
               onClick={goGenerate}
-              className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+              className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100"
             >
               Generate your CV
             </button>

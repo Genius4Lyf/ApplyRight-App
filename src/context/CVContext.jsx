@@ -650,12 +650,12 @@ export const CVBuilderProvider = ({ children }) => {
 
   // Exit the wizard. Completed steps were already persisted by handleNext on
   // each transition; this just drops in-flight typing in the current step (if
-  // any) and sends the user to their CV listing where they can pick this draft
+  // any) and sends the user to the builder index, whose sidebar holds every draft
   // back up. Clears stepDirty so the beforeunload listener doesn't fire.
   const exitWizard = useCallback(() => {
     setStepDirty(false);
     // Agents return to their workspace; everyone else to their CV listing.
-    navigate(user?.role === 'agent' ? '/agent' : '/my-cvs');
+    navigate(user?.role === 'agent' ? '/agent' : '/cv-builder');
   }, [navigate, user]);
 
   // Saved CV data overlaid with the active step's live (unsaved) edits — what the

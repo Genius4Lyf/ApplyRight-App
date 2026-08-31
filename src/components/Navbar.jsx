@@ -7,7 +7,6 @@ import {
   User,
   Settings,
   ChevronDown,
-  MessageSquare,
   FileText,
   Crown,
   Clock,
@@ -23,6 +22,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import { hasWorkspaceSidebar } from '../utils/platform';
 import AriaOrbit from './cv/AriaOrbit';
 import SignOutConfirm from './SignOutConfirm';
 import { useAccountWallet } from '../hooks/useAccountWallet';
@@ -364,6 +364,9 @@ const Navbar = () => {
   };
 
   const isActive = (path) => location.pathname === path;
+  // See hasWorkspaceSidebar: on those four surfaces the sidebar owns the account block,
+  // so the mobile bar sheds its own.
+  const onWorkspace = hasWorkspaceSidebar(location.pathname);
 
   // Desktop masthead tab: full-height, underline active state (no filled pill).
   const deskTab = (active) =>
@@ -418,27 +421,28 @@ const Navbar = () => {
                   {t('nav.earnings')}
                 </Link>
               )}
-              <Link to="/my-cvs" className={deskTab(location.pathname.startsWith('/my-cvs'))}>
-                {deskUnderline(location.pathname.startsWith('/my-cvs'))}
-                <FileText className="w-4 h-4" />
-                {t('nav.myCvs')}
-              </Link>
+              {/* My CVs and Interview Prep both pointed at LIST pages. Those pages are
+                gone — each list lives in its workspace's own sidebar now — so the tabs
+                go with them, leaving Dashboard and Aria Studio.
+
+                Agents are the exception: they are held out of Aria Studio, so the
+                builder is their workspace and its index is the only list they have. */}
+              {isAgent && (
+                <Link
+                  to="/cv-builder"
+                  className={deskTab(location.pathname.startsWith('/cv-builder'))}
+                >
+                  {deskUnderline(location.pathname.startsWith('/cv-builder'))}
+                  <FileText className="w-4 h-4" />
+                  {t('nav.myCvs')}
+                </Link>
+              )}
               {!isAgent && (
-                <>
-                  <Link to="/aria-studio" className={deskTab(isActive('/aria-studio'))}>
-                    {deskUnderline(isActive('/aria-studio'))}
-                    <AriaOrbit size={16} />
-                    {t('nav.ariaStudio')}
-                  </Link>
-                  <Link
-                    to="/interview-prep"
-                    className={deskTab(location.pathname.startsWith('/interview-prep'))}
-                  >
-                    {deskUnderline(location.pathname.startsWith('/interview-prep'))}
-                    <MessageSquare className="w-4 h-4" />
-                    {t('nav.interviewPrep')}
-                  </Link>
-                </>
+                <Link to="/aria-studio" className={deskTab(isActive('/aria-studio'))}>
+                  {deskUnderline(isActive('/aria-studio'))}
+                  <AriaOrbit size={16} />
+                  {t('nav.ariaStudio')}
+                </Link>
               )}
             </>
           )}
@@ -528,7 +532,10 @@ const Navbar = () => {
           {/* Mobile chrome — the account avatar (authenticated) or auth CTAs
               (guests). Primary nav is the shared bottom tab bar (both platforms);
               the hamburger/drawer is retired. */}
-          <div className="md:hidden flex items-center gap-2">
+          {/* On a WORKSPACE surface this whole cluster stands down: the sidebar there
+              carries language, credits, account and sign-out in its own profile block,
+              and showing both on a 390px bar leaves neither room to be legible. */}
+          <div className={`md:hidden items-center gap-2 ${onWorkspace ? 'hidden' : 'flex'}`}>
             {/* Primary nav is the bottom tab bar; account lives in the avatar
               dropdown (both platforms). Guests get compact auth CTAs. */}
             <LanguageSwitcher />

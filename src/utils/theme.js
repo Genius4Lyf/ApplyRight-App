@@ -18,7 +18,6 @@ const DARK_ELIGIBLE_PREFIXES = [
   '/interview', // standalone "Interview Me" flow (/interview/start)
   '/interview-prep',
   '/resume',
-  '/my-cvs',
   '/cv-builder',
   '/aria-studio', // Aria Studio — the agentic tailor chat
   '/feedback/dashboard',

@@ -73,11 +73,15 @@ const HowToAceYourInterview = () => {
     };
   }, [t]);
 
-  // Logged in → straight to the prep list (the cleanest "start now" entry).
+  // Logged in → straight into a prep session in Aria Studio, which is where preparing
+  // for an interview now BEGINS: the analysis first, then the prep it feeds. This used to
+  // point at the prep list page, which showed you preps you had already made — the wrong
+  // answer to "start now" for anyone who had none.
   // Logged out → register first, then they land in the app.
   const startInterview = () => {
     const token = localStorage.getItem('token');
-    navigate(token ? '/interview-prep' : '/register');
+    if (!token) return navigate('/register');
+    return navigate('/aria-studio', { state: { start: 'prep' } });
   };
 
   return (
@@ -223,7 +227,9 @@ const HowToAceYourInterview = () => {
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-emerald-600 mb-4">
                 {t('howToAce.star.starLabel')}
               </p>
-              <p className="text-sm text-slate-400 italic mb-3">{t('howToAce.star.sameQuestion')}</p>
+              <p className="text-sm text-slate-400 italic mb-3">
+                {t('howToAce.star.sameQuestion')}
+              </p>
               <p className="text-slate-700 leading-relaxed">
                 <Trans
                   i18nKey="howToAce.star.starBody"
@@ -435,9 +441,7 @@ const HowToAceYourInterview = () => {
                   <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
                     {t(`howToAce.rounds.r${n}Title`)}
                   </h3>
-                  <p className="text-slate-600 leading-relaxed">
-                    {t(`howToAce.rounds.r${n}Body`)}
-                  </p>
+                  <p className="text-slate-600 leading-relaxed">{t(`howToAce.rounds.r${n}Body`)}</p>
                 </div>
               </motion.div>
             ))}

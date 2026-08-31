@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatRelative } from '../../lib/relativeDate';
-import { Plus, FilePlus2, Trash2, Pencil, MoreHorizontal, ClipboardCheck } from 'lucide-react';
+import { Plus, Trash2, Pencil, MoreHorizontal, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
-import { BAND_TEXT } from '../../lib/noteStyles';
+import { BAND_TEXT, TAG_TONE } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import AriaOrbit from '../cv/AriaOrbit';
 import StudioSidebarNav from './StudioSidebarNav';
 import StudioSidebarProfile from './StudioSidebarProfile';
+import RailFilter from '../workspace/RailFilter';
+import NewCvMenu from '../workspace/NewCvMenu';
 
 // The Studio sidebar, top to bottom: the ARIA mark, new-session actions, destinations +
 // wallet, the scrolling session list, and the pinned profile row. Recents is the ONLY
@@ -24,6 +26,10 @@ import StudioSidebarProfile from './StudioSidebarProfile';
 // Presentational only: it takes rows and callbacks (plus the stateful nav/profile
 // sub-components), so the same component serves both the inline rail (≥820px) and the
 // mobile drawer without a second implementation.
+// The tag's SHAPE, shared by both kinds; only the colour differs (TAG_TONE). Type alone —
+// no fill, no padding, no radius. See TAG_TONE for why.
+const TAG = 'shrink-0 font-mono text-[9px] font-bold uppercase tracking-wider';
+
 const SessionRail = ({
   sessions = [],
   loading,
@@ -33,6 +39,7 @@ const SessionRail = ({
   onDelete,
   onNewTailoring,
   onNewCv,
+  onNewBuilderCv,
   onNewPrep,
   onOpenGuide,
   onBeforeCreditStore,
@@ -45,6 +52,36 @@ const SessionRail = ({
   const renameInputRef = useRef(null);
   const actionMenuRef = useRef(null);
   const actionTriggerRefs = useRef(new Map());
+  // Which kinds of work Recents is showing.
+  //
+  // NOT persisted, deliberately: this rail is the only place a session can be found
+  // again, so a filter that survived a reload would hide work behind a choice nobody
+  // remembers making.
+  const [filter, setFilter] = useState('all');
+
+  const filterOptions = [
+    { key: 'all', label: t('ariaStudio.sessionRail.filters.all') },
+    { key: 'cv', label: t('ariaStudio.sessionRail.filters.cvs') },
+    { key: 'application', label: t('ariaStudio.sessionRail.filters.applications') },
+  ];
+
+  // 'cv' is everything that ISN'T an analysis rather than an allow-list of CV kinds, so a
+  // future session kind lands with the CVs instead of falling out of both slices.
+  const matchesFilter = (s) =>
+    filter === 'all' ||
+    (filter === 'application' ? s.kind === 'application' : s.kind !== 'application');
+
+  const visible = sessions.filter(matchesFilter);
+
+  // Creating or opening a session while a narrower filter is on would make it vanish at
+  // the moment it appeared. The list follows what you just did, not what you last picked.
+  useEffect(() => {
+    if (filter === 'all' || !activeId) return;
+    const active = sessions.find((s) => s._id === activeId);
+    if (active && !matchesFilter(active)) setFilter('all');
+    // matchesFilter is derived from `filter`, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, sessions, filter]);
 
   useEffect(() => {
     if (renamingId) {
@@ -96,60 +133,57 @@ const SessionRail = ({
         </span>
       </div>
 
-      {/* The two ways to start something. Stacked at desk width where there is room for
-        full labels; side by side on a phone, where this drawer is also carrying the
-        destinations and the wallet and vertical space is the scarce thing. */}
-      <div className="shrink-0 px-3 pt-2.5 pb-2 flex gap-2 sm:block sm:space-y-2">
-        {/* The system's primary and secondary. Sizing is COMPOSED on top (w-full, compact
-          padding, rail-scale text) rather than re-implementing the colours, so these
-          stay in step with every other button in the app. */}
+      {/* The ways to start something. New CV is a MENU — there are genuinely two ways
+        to build one, and which you want is a real choice; see NewCvMenu. */}
+      <div className="shrink-0 px-3 pt-2.5 pb-2 space-y-2">
         {STUDIO_TAILORING_ENABLED && (
           <button
             type="button"
             onClick={onNewTailoring}
-            className="btn-primary flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+            className="btn-primary w-full gap-2 px-3 py-2 text-[15px] sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
           >
             <Plus className="w-4 h-4 shrink-0" /> {t('ariaStudio.sessionRail.newTailoring')}
           </button>
         )}
-        {/* With tailoring hidden, this is the rail's only new-session action — so it
-          takes the primary weight, rather than leaving the region with no primary. */}
-        <button
-          type="button"
-          onClick={onNewCv}
-          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
-        >
-          <FilePlus2 className="w-4 h-4 shrink-0" /> {t('ariaStudio.sessionRail.newCv')}
-        </button>
-
-        {/* Secondary to New CV on purpose: preparing for an interview needs a CV to
-            analyse, so it is the second thing you do here, not the first. */}
-        <button
-          type="button"
-          onClick={onNewPrep}
-          className="btn-secondary flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
-        >
-          <ClipboardCheck className="w-4 h-4 shrink-0" />
-          {/* The full name at desk width; on a phone, beside an icon and sharing the row
-              with New CV, the short form is what fits without truncating. */}
-          <span className="sm:hidden">{t('ariaStudio.sessionRail.newPrepShort')}</span>
-          <span className="hidden sm:inline">{t('ariaStudio.sessionRail.newPrep')}</span>
-        </button>
+        {/* With tailoring hidden, New CV is the rail's primary — the region would
+          otherwise have none. */}
+        <NewCvMenu
+          onBuildWithAria={onNewCv}
+          onBuildWithBuilder={onNewBuilderCv}
+          onInterview={onNewPrep}
+          newCvPrimary={!STUDIO_TAILORING_ENABLED}
+        />
       </div>
 
       <StudioSidebarNav onBeforeNavigate={onBeforeCreditStore} />
 
-      <div className="shrink-0 px-3 pb-1.5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.sessionRail.recents')}
-        </span>
+      {/* The list header: what this region holds, and which slice of it you're reading.
+        The icon takes over from the word "Recents" once there is something to filter —
+        a label AND a picker is one more thing than a 248px row can carry. */}
+      <div className="shrink-0 flex items-center gap-2 px-3 pb-1.5">
+        <FileText
+          aria-hidden="true"
+          className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+        />
+        {sessions.length > 0 ? (
+          <RailFilter
+            value={filter}
+            onChange={setFilter}
+            options={filterOptions}
+            ariaLabel={t('ariaStudio.sessionRail.filterAria')}
+          />
+        ) : (
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            {t('ariaStudio.sessionRail.recents')}
+          </span>
+        )}
       </div>
 
       {/* Recents — the ONLY scrolling region. `chat-scroll` contains overscroll so
         exhausting this list can't chain-scroll the page behind it. */}
       <div
         className={`flex-1 min-h-0 chat-scroll pb-3 ${
-          loading || sessions.length === 0 ? 'flex items-center justify-center' : ''
+          loading || visible.length === 0 ? 'flex items-center justify-center' : ''
         }`}
       >
         {loading && (
@@ -172,9 +206,20 @@ const SessionRail = ({
           </div>
         )}
 
-        {sessions.length > 0 && (
+        {/* Empty because of the FILTER, not because there's nothing here. Saying which
+          slice is empty beats showing the first-run invitation to someone who plainly
+          isn't on their first run. */}
+        {!loading && sessions.length > 0 && visible.length === 0 && (
+          <p className="px-4 text-center text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+            {filter === 'application'
+              ? t('ariaStudio.sessionRail.noApplicationsYet')
+              : t('ariaStudio.sessionRail.noCvsYet')}
+          </p>
+        )}
+
+        {visible.length > 0 && (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
-            {sessions.map((s) => {
+            {visible.map((s) => {
               const active = s._id === activeId;
               const isBuild = s.kind === 'build';
               const isApplication = s.kind === 'application';
@@ -231,7 +276,10 @@ const SessionRail = ({
                         active ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       }`}
                     >
-                      <span className="flex items-baseline gap-2">
+                      {/* gap-1.5, not 2: the tag, the dash and the score read as one
+                        phrase — "Analysis – 63" — and 8px between each turns a phrase
+                        into three separate marks. */}
+                      <span className="flex items-baseline gap-1.5">
                         <span
                           className={`min-w-0 flex-1 truncate text-[17px] sm:text-[13px] ${
                             active
@@ -242,28 +290,47 @@ const SessionRail = ({
                           {heading}
                         </span>
 
-                        {/* A build session has no fit score to show — it isn't aimed at a job
-                        yet. Tags are CATEGORY labels, so they're neutral; the score pill
-                        keeps its band colour because that encodes meaning.
+                        {/* A build session has no fit score to show — it isn't aimed at a
+                        job yet. An analysis gets BOTH: the tag says what kind of thing it
+                        is, and the score is the number people come back for.
 
-                        An analysis gets BOTH: the tag says what kind of thing it is, and
-                        the score is the number people come back for. */}
+                        The tags carry a SOLID colour of their own now (see TAG_TONE).
+                        They used
+                        to be identical grey, which meant telling two kinds of row apart
+                        required READING them — and the whole job of a tag in a list this
+                        dense is to be recognised before it is read. The hues stay clear of
+                        the band palette so the tag never looks like it is grading the row
+                        the score is grading. */}
                         {isApplication && (
-                          <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <span className={`${TAG} ${TAG_TONE.analysis}`}>
                             {t('ariaStudio.sessionRail.applicationTag')}
                           </span>
                         )}
                         {isBuild ? (
-                          <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <span className={`${TAG} ${TAG_TONE.cv}`}>
                             {t('ariaStudio.sessionRail.newCv')}
                           </span>
                         ) : (
                           s.fitScore != null && (
-                            <span
-                              className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${BAND_TEXT[band]}`}
-                            >
-                              {s.fitScore}
-                            </span>
+                            <>
+                              {/* Separator, not decoration — and aria-hidden, so a screen
+                                reader hears "Analysis 63" as one phrase rather than
+                                spelling out a dash between them. Only when there IS a tag
+                                in front of it to separate from. */}
+                              {isApplication && (
+                                <span
+                                  aria-hidden="true"
+                                  className="shrink-0 text-slate-300 dark:text-slate-600"
+                                >
+                                  –
+                                </span>
+                              )}
+                              <span
+                                className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${BAND_TEXT[band]}`}
+                              >
+                                {s.fitScore}
+                              </span>
+                            </>
                           )
                         )}
                       </span>

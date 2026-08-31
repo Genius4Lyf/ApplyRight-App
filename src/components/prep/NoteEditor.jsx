@@ -96,7 +96,7 @@ const NoteEditor = ({ note, onAutosave, onSave, onDelete, onCancel }) => {
         rows={6}
         ref={(el) => el && note?.id === '__new__' && el.focus()}
         placeholder={t('interviewPrep.noteEditor.bodyPlaceholder')}
-        className="w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 resize-y"
+        className="w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/20 dark:focus:ring-white/20 focus:border-slate-900 dark:focus:border-white placeholder-slate-400 resize-y"
       />
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button

@@ -121,6 +121,7 @@ describe('locale files', () => {
       'footer.colGuides', // "Guides" is the same word in French
       'footer.contact', // "Contact" is the same word in French
       'dashboard.studio.kicker', // "Aria Studio" — product name
+      'workspace.cvStudio.title', // "CV Studio" — product name (see dashboard.studio.kicker)
       'dashboard.interviewCard.chip', // "Pro" — tier name, kept in English
       'landing.vignettes.compareLabel', // "CV A vs CV B" — labels + a Latin abbreviation
       'landing.vignettes.askTabAria', // "Aria" — product name (see dashboard.studio.kicker)

@@ -18,7 +18,6 @@ import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import MobileHomeRedirect from './components/MobileHomeRedirect';
 import MobileWelcome from './pages/mobile/MobileWelcome';
-import InterviewPrepList from './pages/InterviewPrepList';
 import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import InterviewPracticePage from './pages/InterviewPracticePage';
 import PreCallBrief from './pages/PreCallBrief';
@@ -35,9 +34,10 @@ import { hydrateModels } from './lib/models';
 import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
-import MyCVs from './pages/MyCVs';
 import AriaStudio from './pages/AriaStudio/AriaStudio';
 import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
+import CvBuilderIndex from './pages/CVBuilder/CvBuilderIndex';
+import InterviewPrepIndex from './pages/InterviewPrepIndex';
 import TargetJob from './pages/CVBuilder/TargetJob';
 import Heading from './pages/CVBuilder/Heading';
 import ProfessionalSummary from './pages/CVBuilder/ProfessionalSummary';
@@ -113,7 +113,7 @@ const SessionManager = ({ children }) => {
 };
 
 // Job-seeker-only routes that a CV agent should never land on (they have a
-// CV-only workspace at /agent). Agents keep access to /my-cvs, /cv-builder,
+// CV-only workspace at /agent). Agents keep access to /cv-builder,
 // /upgrade and /profile, which they need to build and pay for client CVs.
 const AGENT_BLOCKED_PREFIXES = ['/dashboard', '/history', '/interview-prep', '/jobs'];
 
@@ -457,12 +457,16 @@ const router = createBrowserRouter([
           </MaintenanceGuard>
         ),
       },
+      // Interview prep with nothing open — the counterpart of /cv-builder, and the
+      // address the prep sidebar's nav row points at. It briefly redirected to Aria
+      // Studio, which was fine while nothing linked here and wrong the moment something
+      // did: a row that returns you to the page you are on reads as broken.
       {
         path: '/interview-prep',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
-              <InterviewPrepList />
+              <InterviewPrepIndex />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),
@@ -517,12 +521,18 @@ const router = createBrowserRouter([
           </MaintenanceGuard>
         ),
       },
+      // Old bookmarks, and every link that used to say "my CVs". The list moved into the
+      // builder's sidebar, and /cv-builder is the address that opens it.
+      { path: '/my-cvs', element: <Navigate to="/cv-builder" replace /> },
+      // The builder with no CV open. "My CVs" needs an ADDRESS — the list lives in the
+      // sidebar now, and a sidebar is not something you can link to, redirect to, or land
+      // on after leaving the wizard.
       {
-        path: '/my-cvs',
+        path: '/cv-builder',
         element: (
           <MaintenanceGuard>
             <ProtectedRoute>
-              <MyCVs />
+              <CvBuilderIndex />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),

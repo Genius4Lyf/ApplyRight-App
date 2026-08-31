@@ -485,7 +485,7 @@ const StoryEditor = ({ applicationId, story, onChanged, onDone }) => {
   };
 
   const inputCls =
-    'w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder-slate-400 dark:placeholder-slate-500';
+    'w-full text-[16px] sm:text-sm text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/20 dark:focus:ring-white/20 focus:border-slate-900 dark:focus:border-white placeholder-slate-400 dark:placeholder-slate-500';
 
   return (
     <div className="pt-2 space-y-3">

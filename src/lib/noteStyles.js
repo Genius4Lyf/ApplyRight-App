@@ -18,6 +18,29 @@ export const BAND_RULEBG = {
   neutral: 'bg-slate-400',
 };
 
+// Kind → tag colour, for the Recents rows that hold more than one kind of work.
+//
+// The colour is on the TEXT. No fill, no border — the same move the analysis card's
+// per-dimension verdicts made: a box around two words sitting inside a line of plain text
+// reads as a control you could press, and the colour was already carrying the meaning on
+// its own.
+//
+// That constraint chose the pair. Once the fill goes, a mid-grey label just looks like
+// unstyled text, so the CV tag takes INK — the brand's own colour, and unmistakably
+// deliberate at 9px — while the analysis tag takes navy, which is the one that has to
+// stay tellable apart from the band-coloured score sitting next to it.
+//
+// What the pair avoids is as deliberate as what it is. No green: it was read as a verdict
+// rather than a label. No indigo: the rest of the product has been retiring it. And
+// nothing from the band palette — emerald/amber/rose all mean "how good is this" here, so
+// a tag borrowing one would look like it were grading the row its own score already
+// grades.
+
+export const TAG_TONE = {
+  cv: 'text-slate-900 dark:text-slate-100',
+  analysis: 'text-blue-800 dark:text-blue-400',
+};
+
 // Next-move tone → text color.
 export const NEXT_TONE = {
   accent: 'text-indigo-600 dark:text-indigo-300',

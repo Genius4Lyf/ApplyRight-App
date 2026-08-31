@@ -1,13 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, MessageSquare } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { shouldShowBottomNav, isMobile } from '../utils/platform';
 import AriaOrbit from './cv/AriaOrbit';
 
-// Four labeled tabs (icon + text below): Home / My CVs / Aria / Interview.
-// The single primary nav on both platforms — always visible on native, mobile-only
-// on the web (md:hidden). Account (profile, credits, billing) lives in the avatar
-// dropdown in the top bar, so it's no longer a tab here.
+// Two labeled tabs (icon + text below): Home / Aria.
+//
+// It was four. My CVs and Interview both pointed at LIST pages, and those pages are gone:
+// each list now lives in its own workspace's sidebar, reachable from the toggle in that
+// page's header. A tab that opened a list we no longer have would be a tab to nowhere,
+// and re-pointing them at the workspaces would duplicate what the sidebar already offers.
+//
+// The bar is suppressed entirely on those workspace surfaces (see WORKSPACE_PREFIXES) —
+// this is chrome for the pages you pass through, not the ones you settle into. Account
+// (profile, credits, billing) lives in the avatar dropdown in the top bar.
 const TABS = [
   {
     to: '/dashboard',
@@ -16,22 +22,10 @@ const TABS = [
     matches: ['/dashboard'],
   },
   {
-    to: '/my-cvs',
-    labelKey: 'nav.mobile.myCvs',
-    icon: <FileText className="w-5 h-5" strokeWidth={2} />,
-    matches: ['/my-cvs'],
-  },
-  {
     to: '/aria-studio',
     labelKey: 'nav.mobile.ariaStudio',
     icon: <AriaOrbit size={20} />,
     matches: ['/aria-studio'],
-  },
-  {
-    to: '/interview-prep',
-    labelKey: 'nav.mobile.interview',
-    icon: <MessageSquare className="w-5 h-5" strokeWidth={2} />,
-    matches: ['/interview-prep'],
   },
 ];
 

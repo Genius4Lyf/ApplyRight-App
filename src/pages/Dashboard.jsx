@@ -81,12 +81,14 @@ const Dashboard = () => {
     loadDrafts({ initial: true });
   }, []);
 
-  // Fetched for its TIMING, not its contents: this page no longer lists CVs (/my-cvs is
-  // their home), but the first resolve is what lifts the skeleton and releases the native
-  // splash — so it has to be a real request, not a guess at how long one takes.
+  // Fetched for its TIMING, not its contents: this page no longer lists CVs (the CV
+  // workspace sidebar is their home), but the first resolve is what lifts the skeleton and
+  // releases the native splash — so it has to be a real request, not a guess at how long
+  // one takes. The LEAN list, for the same reason the sidebar uses it: a whole-draft fetch
+  // ships megabytes to time a spinner.
   const loadDrafts = async ({ initial = false } = {}) => {
     try {
-      await CVService.getMyDrafts();
+      await CVService.listCvs();
     } catch (error) {
       console.error('Failed to load drafts', error);
     } finally {
@@ -509,7 +511,7 @@ const Dashboard = () => {
             document.body
           )}
 
-        {/* My Recent CVs widget was removed — /my-cvs is now the canonical
+        {/* My Recent CVs widget was removed — the CV workspace sidebar is now the canonical
             home for CV listings (linked from the Navbar and mobile bottom
             nav). Keeping it here duplicated the surface and competed with
             the workflow cards above it on the landing screen. */}

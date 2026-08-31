@@ -301,6 +301,18 @@ const StudioDesk = () => {
     },
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
+    // The OTHER build path — the step-by-step wizard. It lives on another route, so this
+    // one leaves the Studio; the chat is flushed first, exactly as the credit-store trip
+    // does, so nothing typed is lost on the way out.
+    onNewBuilderCv: async () => {
+      layout.setRailOverlay(false);
+      try {
+        await flushChats();
+      } catch {
+        // A best-effort flush must never strand the user on a page they asked to leave.
+      }
+      navigate('/cv-builder/new');
+    },
     onNewPrep: () => startSession('prep'),
     onOpenGuide: () => {
       // A guide is a foreground surface; on a phone it must replace, not sit beside,

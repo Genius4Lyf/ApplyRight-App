@@ -336,7 +336,7 @@ const History = () => {
                     id={`hist-${role._sortId}`}
                     className={`bg-white dark:bg-slate-900 rounded-xl border shadow-sm relative group overflow-hidden ${
                       ariaWroteId === role._sortId
-                        ? 'aria-wrote border-indigo-400 dark:border-indigo-500'
+                        ? 'aria-wrote border-emerald-400 dark:border-emerald-500'
                         : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -392,7 +392,7 @@ const History = () => {
                                   value={role.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
                                   placeholder={t('cvBuilder.history.phTitle')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div className="md:col-span-1 pr-8 md:pr-0">
@@ -408,7 +408,7 @@ const History = () => {
                                   value={role.company}
                                   onChange={(e) => handleChange(index, 'company', e.target.value)}
                                   placeholder={t('cvBuilder.history.phCompany')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div>
@@ -424,7 +424,7 @@ const History = () => {
                                   value={role.startDate}
                                   onChange={(e) => handleChange(index, 'startDate', e.target.value)}
                                   placeholder={t('cvBuilder.history.phStart')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div>
@@ -448,7 +448,7 @@ const History = () => {
                                         ? t('cvBuilder.history.present')
                                         : t('cvBuilder.history.phEnd')
                                     }
-                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500"
                                   />
                                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                                     <input
@@ -457,7 +457,7 @@ const History = () => {
                                       onChange={(e) =>
                                         handleChange(index, 'isCurrent', e.target.checked)
                                       }
-                                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                                      className="w-4 h-4 text-slate-900 dark:text-white rounded focus:ring-slate-900 dark:focus:ring-white"
                                     />
                                     <span className="text-xs text-slate-600 dark:text-slate-300">
                                       {t('cvBuilder.history.current')}
@@ -476,7 +476,7 @@ const History = () => {
                                   {t('cvBuilder.common.descriptionBullets')}
                                 </label>
                                 {ariaWroteId === role._sortId && (
-                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-in fade-in">
+                                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
                                     {t('cvBuilder.common.ariaFilledIn')}
                                   </span>
                                 )}
@@ -515,7 +515,7 @@ const History = () => {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
                                 placeholder={t('cvBuilder.history.phDescription')}
-                                className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm ${
+                                className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none resize-none leading-relaxed text-sm ${
                                   ariaWroteId === role._sortId ? 'aria-wrote-field' : ''
                                 }`}
                               />

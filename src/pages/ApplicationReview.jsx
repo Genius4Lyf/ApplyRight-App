@@ -67,8 +67,8 @@ const ApplicationReview = () => {
           },
         },
         particles: {
-          color: { value: '#4F46E5' }, // Indigo
-          links: { color: '#4F46E5', distance: 150, enable: true, opacity: 0.2, width: 1 },
+          color: { value: '#0f172a' }, // Ink
+          links: { color: '#0f172a', distance: 150, enable: true, opacity: 0.2, width: 1 },
           move: {
             enable: true,
             speed: 1,
@@ -92,7 +92,7 @@ const ApplicationReview = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-slate-900/10 selection:text-slate-900 overflow-x-hidden">
       {/* Navigation (Floating) */}
       <motion.nav
         initial={{
@@ -143,13 +143,13 @@ const ApplicationReview = () => {
           <div className="flex items-center gap-4">
             <Link
               to="/login"
-              className="hidden sm:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+              className="hidden sm:block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="btn-primary py-2 px-4 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="btn-primary py-2 px-4 text-sm transition-colors"
             >
               Get Started
             </Link>
@@ -159,7 +159,7 @@ const ApplicationReview = () => {
 
       {/* HERO SECTION */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[120px]"></div>
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-slate-900/5 rounded-full blur-[120px]"></div>
         <div className="absolute top-40 left-0 -translate-x-1/2 w-[600px] h-[600px] bg-purple-600/5 rounded-full blur-[100px]"></div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -168,15 +168,12 @@ const ApplicationReview = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/55 border border-indigo-200 text-indigo-700 text-xs font-bold uppercase tracking-wide mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wide mb-6">
               <img src={logoBlack} alt="ApplyRight Logo" className="w-4 h-4 object-contain" />
               ApplyRight AI Co-Pilot
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight font-heading">
-              How ApplyRight{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                AI Works
-              </span>
+              How ApplyRight <span className="italic">AI Works</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
               An inside look at how our AI analyzes job descriptions, extracts keyword requirements,
@@ -201,7 +198,7 @@ const ApplicationReview = () => {
                 <span className="font-bold text-xl">1</span>
               </div>
               <h2 className="text-3xl font-bold text-slate-900 mb-4">The Gatekeeper (ATS)</h2>
-              <h3 className="text-xl text-indigo-600 font-semibold mb-6">
+              <h3 className="text-xl italic text-slate-900 font-semibold mb-6">
                 "No Keywords? No Interview."
               </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
@@ -291,7 +288,7 @@ const ApplicationReview = () => {
                     cy="150"
                     r="138"
                     fill="none"
-                    stroke="#4f46e5"
+                    stroke="#0f172a"
                     strokeWidth="12"
                     strokeDasharray="867"
                     initial={{ strokeDashoffset: 867 }}
@@ -312,11 +309,11 @@ const ApplicationReview = () => {
               variants={fadeInUp}
               className="order-1 md:order-2"
             >
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-indigo-600/20">
+              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-slate-900/20">
                 <span className="font-bold text-xl">2</span>
               </div>
               <h2 className="text-3xl font-bold text-slate-900 mb-4">The Human Scan</h2>
-              <h3 className="text-xl text-indigo-600 font-semibold mb-6">
+              <h3 className="text-xl italic text-slate-900 font-semibold mb-6">
                 "Make point quickly, or lose them forever."
               </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
@@ -334,22 +331,22 @@ const ApplicationReview = () => {
       </section>
 
       {/* STEP 3: THE SOLUTION */}
-      <section className="py-24 bg-indigo-900 text-white relative overflow-hidden">
+      <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
         {/* Background Decor */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/30 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center mb-16">
           <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center border border-white/20 mx-auto mb-6">
             <img src={logoWhite} alt="ApplyRight Logo" className="w-full h-full object-contain" />
           </div>
-          <h2 className="text-indigo-400 font-bold tracking-widest uppercase text-sm mb-4">
+          <h2 className="text-slate-400 font-bold tracking-widest uppercase text-sm mb-4">
             How ApplyRight AI Works
           </h2>
           <h3 className="text-4xl md:text-6xl font-bold mb-6 text-white font-heading">
             The Three Pillars of AI Optimization
           </h3>
-          <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Our specialized AI agents work in tandem to rewrite, structure, and optimize your
             application materials.
           </p>
@@ -364,7 +361,7 @@ const ApplicationReview = () => {
               <Search size={28} />
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">1. Job Parsing</h4>
-            <p className="text-indigo-50 leading-relaxed mb-6">
+            <p className="text-slate-300 leading-relaxed mb-6">
               Our parser AI reads the target job posting to identify critical keywords, implicit
               skills, and core competencies that recruiters are actively searching for.
             </p>
@@ -377,15 +374,15 @@ const ApplicationReview = () => {
             whileHover={{ y: -10 }}
             className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
           >
-            <div className="w-14 h-14 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 mb-6">
+            <div className="w-14 h-14 bg-white/15 rounded-xl flex items-center justify-center text-white mb-6">
               <Sparkles size={28} />
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">2. Contextual Rewrite</h4>
-            <p className="text-indigo-50 leading-relaxed mb-6">
+            <p className="text-slate-300 leading-relaxed mb-6">
               The AI rewrites your rough accomplishments, seamlessly integrating keywords without
               stuffing, and structuring each line in high-impact professional formats.
             </p>
-            <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
               <CheckCircle size={16} /> ATS OPTIMIZED
             </div>
           </motion.div>
@@ -398,7 +395,7 @@ const ApplicationReview = () => {
               <Eye size={28} />
             </div>
             <h4 className="text-2xl font-bold mb-4 text-white">3. Format Verification</h4>
-            <p className="text-indigo-50 leading-relaxed mb-6">
+            <p className="text-slate-300 leading-relaxed mb-6">
               Validates that your CV uses parsing-friendly, single-column layouts and clean fonts
               that survive the ATS and win the 6-second recruiter skim.
             </p>
@@ -413,7 +410,7 @@ const ApplicationReview = () => {
       <section className="py-24 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="text-indigo-600 font-bold uppercase tracking-wider text-xs">
+            <span className="text-slate-500 font-bold uppercase tracking-wider text-xs">
               AI In Action
             </span>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-2 font-heading">
@@ -428,7 +425,7 @@ const ApplicationReview = () => {
             {/* Example 1 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                <span className="px-2 py-0.5 text-xs bg-slate-100 text-slate-700 rounded-full font-semibold">
                   1
                 </span>
                 Work History Bullet Point
@@ -458,9 +455,9 @@ const ApplicationReview = () => {
                     </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
                       "Managed{' '}
-                      <strong className="text-indigo-600 font-semibold">15+ key accounts</strong>{' '}
+                      <strong className="text-slate-900 font-semibold">15+ key accounts</strong>{' '}
                       and resolved billing inquiries, boosting quarterly{' '}
-                      <strong className="text-indigo-600 font-semibold">
+                      <strong className="text-slate-900 font-semibold">
                         customer retention by 18%
                       </strong>
                       ."
@@ -476,7 +473,7 @@ const ApplicationReview = () => {
             {/* Example 2 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                <span className="px-2 py-0.5 text-xs bg-slate-100 text-slate-700 rounded-full font-semibold">
                   2
                 </span>
                 Project Bullet Point
@@ -507,11 +504,11 @@ const ApplicationReview = () => {
                     </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
                       "Launched a local{' '}
-                      <strong className="text-indigo-600 font-semibold">
+                      <strong className="text-slate-900 font-semibold">
                         Facebook ad campaign
                       </strong>{' '}
                       and created weekly promotional content, driving a{' '}
-                      <strong className="text-indigo-600 font-semibold">
+                      <strong className="text-slate-900 font-semibold">
                         30% increase in store foot traffic
                       </strong>
                       ."
@@ -528,7 +525,7 @@ const ApplicationReview = () => {
             {/* Example 3 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 font-heading">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                <span className="px-2 py-0.5 text-xs bg-slate-100 text-slate-700 rounded-full font-semibold">
                   3
                 </span>
                 Professional Summary
@@ -559,10 +556,10 @@ const ApplicationReview = () => {
                     </span>
                     <p className="text-sm text-slate-800 font-medium leading-relaxed">
                       "Results-driven{' '}
-                      <strong className="text-indigo-600 font-semibold">Project Manager</strong>{' '}
+                      <strong className="text-slate-900 font-semibold">Project Manager</strong>{' '}
                       with 3+ years of experience directing cross-functional teams and operational
                       workflows. Proven track record of delivering complex projects{' '}
-                      <strong className="text-indigo-600 font-semibold">10% under budget</strong>."
+                      <strong className="text-slate-900 font-semibold">10% under budget</strong>."
                     </p>
                   </div>
                   <div className="text-xs text-emerald-600 font-medium mt-4 flex items-center gap-1.5">
@@ -589,7 +586,7 @@ const ApplicationReview = () => {
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link
               to="/register"
-              className="inline-flex items-center justify-center bg-indigo-600 text-white text-xl font-bold py-5 px-12 rounded-xl shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 hover:shadow-2xl transition-all"
+              className="inline-flex items-center justify-center bg-slate-900 text-white text-xl font-bold py-5 px-12 rounded-xl shadow-xl shadow-slate-900/30 hover:bg-slate-800 hover:shadow-2xl transition-all"
             >
               Start Your Journey <ArrowRight className="ml-3" size={24} />
             </Link>

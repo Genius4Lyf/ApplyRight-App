@@ -201,7 +201,7 @@ const Heading = () => {
             onChange={handleChange}
             required
             placeholder={t('cvBuilder.heading.phFullName')}
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-slate-900 dark:focus:border-white outline-none transition-all"
           />
         </div>
 
@@ -217,7 +217,7 @@ const Heading = () => {
             onChange={handleChange}
             required
             placeholder={t('cvBuilder.heading.phEmail')}
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-slate-900 dark:focus:border-white outline-none transition-all"
           />
         </div>
 
@@ -232,7 +232,7 @@ const Heading = () => {
             value={formData.phone || ''}
             onChange={handleChange}
             placeholder={t('cvBuilder.heading.phPhone')}
-            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-slate-900 dark:focus:border-white outline-none transition-all"
           />
         </div>
       </div>
@@ -302,7 +302,7 @@ const Heading = () => {
                 </button>
               </div>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+                <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="heading-address"
                   type="text"
@@ -310,7 +310,7 @@ const Heading = () => {
                   value={formData.address || ''}
                   onChange={handleChange}
                   placeholder={t('cvBuilder.heading.phLocation')}
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white outline-none"
                 />
               </div>
             </div>
@@ -334,7 +334,7 @@ const Heading = () => {
                 </button>
               </div>
               <div className="relative">
-                <Linkedin className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+                <Linkedin className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="heading-linkedin"
                   type="text"
@@ -343,7 +343,7 @@ const Heading = () => {
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
                   placeholder={t('cvBuilder.heading.phLinkedin')}
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white outline-none"
                 />
               </div>
             </div>
@@ -367,7 +367,7 @@ const Heading = () => {
                 </button>
               </div>
               <div className="relative">
-                <Globe className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+                <Globe className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="heading-website"
                   type="text"
@@ -376,7 +376,7 @@ const Heading = () => {
                   onChange={handleChange}
                   onBlur={handleUrlBlur}
                   placeholder={t('cvBuilder.heading.phWebsite')}
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white outline-none"
                 />
               </div>
             </div>
@@ -400,7 +400,7 @@ const Heading = () => {
                 </button>
               </div>
               <div className="relative">
-                <Flag className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+                <Flag className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="heading-nationality"
                   type="text"
@@ -408,7 +408,7 @@ const Heading = () => {
                   value={formData.nationality || ''}
                   onChange={handleChange}
                   placeholder={t('cvBuilder.heading.phNationality')}
-                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-9 p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-white outline-none"
                 />
               </div>
             </div>
@@ -488,9 +488,9 @@ const Heading = () => {
                     transition: all 0.2s;
                 }
                 .btn-chip:hover {
-                    border-color: #6366f1;
-                    color: #4f46e5;
-                    background-color: #eef2ff;
+                    border-color: #0f172a;
+                    color: #0f172a;
+                    background-color: #f1f5f9;
                 }
             `}</style>
     </form>

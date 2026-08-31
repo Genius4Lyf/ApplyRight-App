@@ -35,7 +35,12 @@ const SWIPE_THRESHOLD = 85;
  *   label?: string,
  *   sequence?: boolean,
  *   activeIndex?: number,
+ *   hint?: string,
+ *   dotLabel?: (n: number) => string,
  * }} props
+ *
+ * `hint` and `dotLabel` let a caller supply translated copy for the gesture
+ * hint and the dot buttons' aria-labels; both fall back to English.
  *
  * `sequence` (opt-in, default false) turns the deck into a step flow: a LEFT
  * drag advances (you push the sequence forward) instead of the browsing
@@ -54,6 +59,8 @@ export default function CardDeck({
   sequence = false,
   activeIndex,
   ariaLabel = 'Application deck',
+  hint,
+  dotLabel,
 }) {
   const reduceMotion = useReducedMotion();
   const count = items.length;
@@ -258,6 +265,53 @@ export default function CardDeck({
   const atStart = current <= 0;
   const atEnd = current >= count - 1;
 
+  // Dots + gesture hint. A browsing deck keeps them under the pile (you look at
+  // the cards first); a SEQUENCE puts them above it, because progress is
+  // orientation — on a phone the pane is taller than the screen, so dots parked
+  // at the bottom are a scroll away from the step they're meant to describe.
+  const dots = (
+    <div className={`flex items-center justify-center gap-1 ${sequence ? 'mb-0.5' : 'mt-4'}`}>
+      {items.map((item, index) => {
+        const active = index === current;
+        return (
+          <button
+            key={getKey ? getKey(item, index) : index}
+            type="button"
+            onClick={() => commit(index)}
+            aria-label={
+              dotLabel
+                ? dotLabel(index + 1)
+                : sequence
+                  ? `Go to step ${index + 1}`
+                  : `Go to card ${index + 1}`
+            }
+            aria-current={active ? 'true' : undefined}
+            className="flex items-center justify-center px-1 py-2"
+          >
+            <span
+              className={`block h-1.5 rounded-full transition-all duration-300 ${
+                active ? 'w-6 bg-slate-900 dark:bg-white' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
+              }`}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const hintRow = (
+    <div
+      className={`flex items-center justify-center gap-1.5 text-slate-400 dark:text-slate-500 ${
+        sequence ? 'mb-2.5' : 'mt-1'
+      }`}
+    >
+      <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
+      <span className="font-mono text-[10px] uppercase tracking-[0.12em]">
+        {hint ?? (sequence ? 'Swipe or tap a dot' : 'Swipe or use the arrows')}
+      </span>
+    </div>
+  );
+
   return (
     <div
       ref={rootRef}
@@ -309,6 +363,9 @@ export default function CardDeck({
         </div>
       )}
 
+      {sequence && dots}
+      {sequence && hintRow}
+
       {/* Stage wrapper — grows to fill the parent's height and centers the deck
           vertically. The stage itself sizes to the measured card height. */}
       <div className="flex flex-1 items-center">
@@ -355,36 +412,10 @@ export default function CardDeck({
         </div>
       </div>
 
-      {/* Dot indicators */}
-      <div className="mt-4 flex items-center justify-center gap-1">
-        {items.map((item, index) => {
-          const active = index === current;
-          return (
-            <button
-              key={getKey ? getKey(item, index) : index}
-              type="button"
-              onClick={() => commit(index)}
-              aria-label={sequence ? `Go to step ${index + 1}` : `Go to card ${index + 1}`}
-              aria-current={active ? 'true' : undefined}
-              className="flex items-center justify-center px-1 py-2"
-            >
-              <span
-                className={`block h-1.5 rounded-full transition-all duration-300 ${
-                  active ? 'w-6 bg-slate-900 dark:bg-white' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
-                }`}
-              />
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Hint */}
-      <div className="mt-1 flex items-center justify-center gap-1.5 text-slate-400 dark:text-slate-500">
-        <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em]">
-          {sequence ? 'Swipe or tap a dot' : 'Swipe or use the arrows'}
-        </span>
-      </div>
+      {/* A sequence shows its progress up top (see above); a browsing deck
+          shows it under the pile. */}
+      {!sequence && dots}
+      {!sequence && hintRow}
     </div>
   );
 }

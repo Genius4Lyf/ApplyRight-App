@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AriaLoader from '../components/ui/AriaLoader';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -24,7 +24,9 @@ import {
 import { toast } from 'sonner';
 import { useTranslation, Trans } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
-import Navbar from '../components/Navbar';
+import SidebarToggle from '../components/workspace/SidebarToggle';
+import { useWorkspaceSidebar } from '../hooks/useWorkspaceSidebar';
+import WorkspaceShell from '../components/workspace/WorkspaceShell';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { useMinVisible } from '../hooks/useMinVisible';
 import {
@@ -93,10 +95,38 @@ const PLACEHOLDER_SEATS = [
   },
 ];
 
+// The content pane's own top bar — no longer a full-bleed page header, since there is no
+// full-bleed navbar above it for one to sit under. `relative z-10` keeps it above the
+// content scrolling beneath; the inner row carries the same `max-w-5xl` measure as the
+// body, so the title stays aligned with the cards under it.
+const HEADER_BAR =
+  'relative z-10 shrink-0 border-b border-slate-200 dark:border-slate-700 xl:rounded-t-xl';
+const HEADER_ROW =
+  'max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3';
+
 const InterviewPrepDetail = () => {
   const { t } = useTranslation();
   const { applicationId } = useParams();
+
+  // Your other prepped applications. This REPLACES the list page that used to sit behind
+  // the back arrow: the same set, reached without leaving the dashboard you're reading.
+  // `persistent`: on a wide screen this list is a column of the page, not a drawer over
+  // it — see WorkspaceShell.
+  const { sidebar, inlineSidebar, railInline, openSidebar } = useWorkspaceSidebar({
+    scope: 'prep',
+    activeId: applicationId,
+    persistent: true,
+  });
   const navigate = useNavigate();
+
+  // The content pane scrolls, not the document — so App.jsx's window.scrollTo(0, 0) on
+  // route change is a no-op here, and switching applications from the sidebar would drop
+  // you at whatever offset you had left the last one at. Reset it ourselves.
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [applicationId]);
+
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -414,6 +444,19 @@ const InterviewPrepDetail = () => {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Re-armed on every applicationId change, not just the first mount.
+    //
+    // Without this, picking another application from the sidebar left `loading` false, so
+    // the previous prep stayed fully rendered — its title, its tabs, its readiness — until
+    // the new one landed and everything swapped at once. It read as the page reloading
+    // under you, which is exactly what an in-place sidebar is supposed to stop happening.
+    // Now the pane hands over to Aria's orbit while the shell, the sidebar and the header
+    // hold still.
+    setLoading(true);
+    // A failure on the one you just left must not sit over the one you just picked.
+    setError(null);
+
     (async () => {
       try {
         const app = await reload();
@@ -456,25 +499,43 @@ const InterviewPrepDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationId]);
 
+  // Just the toggle: the title belongs to an application we don't have yet. Keeping the
+  // bar means the pane doesn't grow a header when the fetch lands, and the way out of the
+  // page exists while you wait.
+  const bareHeader = (
+    <div className={HEADER_BAR}>
+      <div className={HEADER_ROW}>
+        {/* Only where the list isn't already a column beside you. */}
+        {!railInline && <SidebarToggle onClick={openSidebar} className="-ml-1.5" />}
+      </div>
+    </div>
+  );
+
   if (showLoader) {
     return (
-      <div className="min-h-screen bg-transparent">
-        <Navbar />
-        <AriaLoader fullscreen size={40} label={t('interviewPrep.detail.loading')} />
-      </div>
+      <WorkspaceShell sidebar={sidebar} inlineSidebar={inlineSidebar} header={bareHeader}>
+        {/* NOT `fullscreen` — that pins a fixed overlay to the viewport, which would now
+            cover the sidebar. The wait belongs to the pane, so it sits in the pane. */}
+        <div className="grid h-full place-items-center">
+          <AriaLoader size={40} label={t('interviewPrep.detail.loading')} />
+        </div>
+      </WorkspaceShell>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-transparent">
-        <Navbar />
+      <WorkspaceShell sidebar={sidebar} inlineSidebar={inlineSidebar} header={bareHeader}>
         <div className="text-center py-12 text-rose-600 dark:text-rose-300">{error}</div>
-      </div>
+      </WorkspaceShell>
     );
   }
 
-  if (!application) return null;
+  // Reachable when the fetch finishes with neither an application nor an error. The shell
+  // still renders, so the sidebar stays on screen and you can pick another one.
+  if (!application) {
+    return <WorkspaceShell sidebar={sidebar} inlineSidebar={inlineSidebar} header={bareHeader} />;
+  }
 
   const job = application.jobId || {};
   const isCvOnly = application.source === 'draft' || (!application.jobId && !application.jobTitle);
@@ -518,14 +579,26 @@ const InterviewPrepDetail = () => {
     { id: 'prepare', label: t('interviewPrep.detail.tabs.prepare') },
     { id: 'gameday', label: t('interviewPrep.detail.tabs.gameday') },
     { id: 'results', label: t('interviewPrep.detail.tabs.results'), count: resultsCount },
-    { id: 'recordings', label: t('interviewPrep.detail.tabs.recordings'), count: recordingsCount || 0 },
+    {
+      id: 'recordings',
+      label: t('interviewPrep.detail.tabs.recordings'),
+      count: recordingsCount || 0,
+    },
   ];
   // Secondary switcher (only under Prepare): show ONE section at a time.
   const prepSections = [
     ...(hasRoleBrief ? [{ id: 'role', label: t('interviewPrep.detail.tabs.role') }] : []),
-    { id: 'questions', label: t('interviewPrep.detail.tabs.questions'), count: jobQuestions.length },
+    {
+      id: 'questions',
+      label: t('interviewPrep.detail.tabs.questions'),
+      count: jobQuestions.length,
+    },
     { id: 'stories', label: t('interviewPrep.detail.tabs.stories'), count: stories.length },
-    { id: 'skills', label: t('interviewPrep.detail.tabs.skills'), count: skillsWithEvidence.length },
+    {
+      id: 'skills',
+      label: t('interviewPrep.detail.tabs.skills'),
+      count: skillsWithEvidence.length,
+    },
     { id: 'notes', label: t('interviewPrep.detail.tabs.notes') },
   ];
 
@@ -567,108 +640,202 @@ const InterviewPrepDetail = () => {
     goToPrep('notes');
   };
 
-  return (
-    <div className="min-h-screen bg-transparent flex flex-col">
-      <Navbar />
+  const header = (
+    <div className={HEADER_BAR}>
+      <div className={HEADER_ROW}>
+        {/* Was a back arrow to the prep LIST. That page is gone — the list it went to is
+            the sidebar now — so the same spot toggles it instead: it opens the drawer
+            where there is no room for a column, and collapses the column where there is. */}
+        {/* Only where the list isn't already a column beside you. */}
+        {!railInline && <SidebarToggle onClick={openSidebar} className="-ml-1.5" />}
 
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => navigate('/interview-prep')}
-              className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
-              aria-label={t('interviewPrep.detail.header.backToList')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <h1 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
-                  {title}
-                </h1>
-                {company && (
-                  <span className="hidden sm:inline text-sm text-slate-400 dark:text-slate-500 shrink-0">
-                    ·
-                  </span>
-                )}
-                {company && (
-                  <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400 truncate">
-                    {company}
-                  </span>
-                )}
-                <span
-                  className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                    isCvOnly
-                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                      : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  }`}
-                >
-                  {isCvOnly ? t('interviewPrep.common.fromCv') : t('interviewPrep.detail.header.jobRole')}
-                </span>
-              </div>
-              {company && (
-                <p className="sm:hidden text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                  {company}
-                </p>
-              )}
-              {isCvOnly && (
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('interviewPrep.detail.header.notAttached')}
-                </p>
-              )}
-            </div>
-
-            <Link
-              to={`/interview-prep/${applicationId}/brief`}
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
-              aria-label={t('interviewPrep.detail.header.briefAria')}
-            >
-              <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('interviewPrep.detail.header.brief')}</span>
-            </Link>
-
-            <Link
-              to="/how-to-ace-your-interview"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-              aria-label={t('interviewPrep.detail.header.howScoring')}
-            >
-              <HelpCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('interviewPrep.detail.header.howScoring')}</span>
-            </Link>
-
-            {isCvOnly ? (
-              <Link
-                to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
-                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-                aria-label={t('interviewPrep.detail.header.openCv')}
-              >
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('interviewPrep.detail.header.openCv')}</span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowCv(true)}
-                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-                aria-label={t('interviewPrep.detail.header.viewCv')}
-              >
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('interviewPrep.detail.header.viewCv')}</span>
-              </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+              {title}
+            </h1>
+            {company && (
+              <span className="hidden sm:inline text-sm text-slate-400 dark:text-slate-500 shrink-0">
+                ·
+              </span>
             )}
+            {company && (
+              <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400 truncate">
+                {company}
+              </span>
+            )}
+            <span
+              className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                isCvOnly
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+              }`}
+            >
+              {isCvOnly
+                ? t('interviewPrep.common.fromCv')
+                : t('interviewPrep.detail.header.jobRole')}
+            </span>
           </div>
+          {company && (
+            <p className="sm:hidden text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+              {company}
+            </p>
+          )}
+          {isCvOnly && (
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {t('interviewPrep.detail.header.notAttached')}
+            </p>
+          )}
         </div>
-      </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
+        <Link
+          to={`/interview-prep/${applicationId}/brief`}
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
+          aria-label={t('interviewPrep.detail.header.briefAria')}
+        >
+          <ClipboardList className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('interviewPrep.detail.header.brief')}</span>
+        </Link>
+
+        <Link
+          to="/how-to-ace-your-interview"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+          aria-label={t('interviewPrep.detail.header.howScoring')}
+        >
+          <HelpCircle className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('interviewPrep.detail.header.howScoring')}</span>
+        </Link>
+
+        {isCvOnly ? (
+          <Link
+            to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+            aria-label={t('interviewPrep.detail.header.openCv')}
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('interviewPrep.detail.header.openCv')}</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowCv(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+            aria-label={t('interviewPrep.detail.header.viewCv')}
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('interviewPrep.detail.header.viewCv')}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  // The page's modals. Handed to the shell as a slot so they mount OUTSIDE the scrolling
+  // pane — see WorkspaceShell.
+  const overlays = (
+    <>
+      {adForMoreOpen && adRewarded && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForMoreComplete}
+          onClose={() => setAdForMoreOpen(false)}
+          title={t('interviewPrep.detail.adPlayer.moreTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.moreSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.moreButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.moreTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.moreAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
+        />
+      )}
+
+      {adForStoriesOpen && adRewarded && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForStoriesComplete}
+          onClose={() => setAdForStoriesOpen(false)}
+          title={t('interviewPrep.detail.adPlayer.storiesTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.storiesSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.storiesButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.storiesTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.storiesAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
+        />
+      )}
+
+      {adEssentialKind && adRewarded && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForEssentialComplete}
+          onClose={() => setAdEssentialKind(null)}
+          title={t('interviewPrep.detail.adPlayer.essentialTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.essentialSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.essentialButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.essentialTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.essentialAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
+        />
+      )}
+
+      {adForDressOpen && adRewarded && (
+        <AdPlayer
+          userId={userId}
+          onComplete={handleAdForDressComplete}
+          onClose={() => setAdForDressOpen(false)}
+          title={t('interviewPrep.detail.adPlayer.dressTitle')}
+          subtitle={t('interviewPrep.detail.adPlayer.dressSubtitle')}
+          buttonText={t('interviewPrep.detail.adPlayer.dressButton')}
+          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          successMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
+          androidTitle={t('interviewPrep.detail.adPlayer.dressTitle')}
+          androidSubtitle={t('interviewPrep.detail.adPlayer.dressAndroidSubtitle')}
+          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
+          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
+          androidSuccessMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
+        />
+      )}
+
+      {!isCvOnly && (
+        <CVViewModal
+          applicationId={application._id}
+          isOpen={showCv}
+          onClose={() => setShowCv(false)}
+        />
+      )}
+    </>
+  );
+
+  return (
+    <WorkspaceShell
+      sidebar={sidebar}
+      inlineSidebar={inlineSidebar}
+      header={header}
+      scrollRef={scrollRef}
+      overlays={overlays}
+    >
+      {/* `max-w-5xl` is the page's measure, kept so the body stays aligned with the
+          header above it. The shell's own cap is one level up. `env()` still earns its
+          place: the pane's bottom edge is the viewport's now, so on iOS the home
+          indicator sits over it. */}
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
           {/* Left rail — the prep desk: start the interview + track readiness.
-              Stacks above the content on mobile. */}
-          <aside className="lg:sticky lg:top-4 flex flex-col gap-4">
+              Stacks above the content on mobile. `sticky` resolves against the pane that
+              scrolls, which is now the shell's, so it still holds. */}
+          <aside className="lg:sticky lg:top-0 flex flex-col gap-4">
             {/* Card A — Start + roster (the crown-jewel primary action) */}
             <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-card">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
@@ -840,8 +1007,8 @@ const InterviewPrepDetail = () => {
                     onClick={startPracticeWeak}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
                   >
-                    <PlayCircle className="w-3.5 h-3.5" /> {t('interviewPrep.detail.rail.practiceWeak')}{' '}
-                    <ArrowRight className="w-3 h-3" />
+                    <PlayCircle className="w-3.5 h-3.5" />{' '}
+                    {t('interviewPrep.detail.rail.practiceWeak')} <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               )}
@@ -1130,88 +1297,8 @@ const InterviewPrepDetail = () => {
             </AnimatePresence>
           </div>
         </div>
-      </main>
-
-      {adForMoreOpen && adRewarded && (
-        <AdPlayer
-          userId={userId}
-          onComplete={handleAdForMoreComplete}
-          onClose={() => setAdForMoreOpen(false)}
-          title={t('interviewPrep.detail.adPlayer.moreTitle')}
-          subtitle={t('interviewPrep.detail.adPlayer.moreSubtitle')}
-          buttonText={t('interviewPrep.detail.adPlayer.moreButton')}
-          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          successMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
-          androidTitle={t('interviewPrep.detail.adPlayer.moreTitle')}
-          androidSubtitle={t('interviewPrep.detail.adPlayer.moreAndroidSubtitle')}
-          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
-          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          androidSuccessMessage={t('interviewPrep.detail.adPlayer.moreSuccess')}
-        />
-      )}
-
-      {adForStoriesOpen && adRewarded && (
-        <AdPlayer
-          userId={userId}
-          onComplete={handleAdForStoriesComplete}
-          onClose={() => setAdForStoriesOpen(false)}
-          title={t('interviewPrep.detail.adPlayer.storiesTitle')}
-          subtitle={t('interviewPrep.detail.adPlayer.storiesSubtitle')}
-          buttonText={t('interviewPrep.detail.adPlayer.storiesButton')}
-          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          successMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
-          androidTitle={t('interviewPrep.detail.adPlayer.storiesTitle')}
-          androidSubtitle={t('interviewPrep.detail.adPlayer.storiesAndroidSubtitle')}
-          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
-          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          androidSuccessMessage={t('interviewPrep.detail.adPlayer.storiesSuccess')}
-        />
-      )}
-
-      {adEssentialKind && adRewarded && (
-        <AdPlayer
-          userId={userId}
-          onComplete={handleAdForEssentialComplete}
-          onClose={() => setAdEssentialKind(null)}
-          title={t('interviewPrep.detail.adPlayer.essentialTitle')}
-          subtitle={t('interviewPrep.detail.adPlayer.essentialSubtitle')}
-          buttonText={t('interviewPrep.detail.adPlayer.essentialButton')}
-          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          successMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
-          androidTitle={t('interviewPrep.detail.adPlayer.essentialTitle')}
-          androidSubtitle={t('interviewPrep.detail.adPlayer.essentialAndroidSubtitle')}
-          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
-          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          androidSuccessMessage={t('interviewPrep.detail.adPlayer.essentialSuccess')}
-        />
-      )}
-
-      {adForDressOpen && adRewarded && (
-        <AdPlayer
-          userId={userId}
-          onComplete={handleAdForDressComplete}
-          onClose={() => setAdForDressOpen(false)}
-          title={t('interviewPrep.detail.adPlayer.dressTitle')}
-          subtitle={t('interviewPrep.detail.adPlayer.dressSubtitle')}
-          buttonText={t('interviewPrep.detail.adPlayer.dressButton')}
-          successTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          successMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
-          androidTitle={t('interviewPrep.detail.adPlayer.dressTitle')}
-          androidSubtitle={t('interviewPrep.detail.adPlayer.dressAndroidSubtitle')}
-          androidButtonText={t('interviewPrep.detail.adPlayer.watchVideo')}
-          androidSuccessTitle={t('interviewPrep.detail.adPlayer.creditsEarned')}
-          androidSuccessMessage={t('interviewPrep.detail.adPlayer.dressSuccess')}
-        />
-      )}
-
-      {!isCvOnly && (
-        <CVViewModal
-          applicationId={application._id}
-          isOpen={showCv}
-          onClose={() => setShowCv(false)}
-        />
-      )}
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 };
 
@@ -1271,51 +1358,53 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
 const SkillCard = ({ skill, onPractice }) => {
   const { t } = useTranslation();
   return (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-4">
-    <div className="flex items-start gap-3">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{skill.name}</p>
-          {skill.category && (
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
-              {skill.category}
-            </span>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-card p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{skill.name}</p>
+            {skill.category && (
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+                {skill.category}
+              </span>
+            )}
+          </div>
+          {skill.talkingPoint && (
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mt-1.5">
+              {skill.talkingPoint}
+            </p>
+          )}
+          {Array.isArray(skill.evidence) && skill.evidence.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+                {t('interviewPrep.detail.skillsTab.from')}
+              </span>
+              {skill.evidence.map((ev, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
+                >
+                  {ev.type === 'experience'
+                    ? t('interviewPrep.detail.skillsTab.workHistory')
+                    : ev.type}
+                </span>
+              ))}
+            </div>
           )}
         </div>
-        {skill.talkingPoint && (
-          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mt-1.5">
-            {skill.talkingPoint}
-          </p>
-        )}
-        {Array.isArray(skill.evidence) && skill.evidence.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-2">
-            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-              {t('interviewPrep.detail.skillsTab.from')}
-            </span>
-            {skill.evidence.map((ev, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-semibold uppercase"
-              >
-                {ev.type === 'experience' ? t('interviewPrep.detail.skillsTab.workHistory') : ev.type}
-              </span>
-            ))}
-          </div>
-        )}
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button
+          type="button"
+          onClick={onPractice}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors"
+        >
+          <PlayCircle className="w-4 h-4" />
+          {t('interviewPrep.detail.skillsTab.rehearseThis')}
+        </button>
       </div>
     </div>
-
-    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-      <button
-        type="button"
-        onClick={onPractice}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors"
-      >
-        <PlayCircle className="w-4 h-4" />
-        {t('interviewPrep.detail.skillsTab.rehearseThis')}
-      </button>
-    </div>
-  </div>
   );
 };
 
@@ -1656,7 +1745,10 @@ const EssentialsSection = ({
               <button
                 type="button"
                 onClick={() =>
-                  onGoToNotes({ title: t(e.noteSeedKeys.titleKey), body: t(e.noteSeedKeys.bodyKey) })
+                  onGoToNotes({
+                    title: t(e.noteSeedKeys.titleKey),
+                    body: t(e.noteSeedKeys.bodyKey),
+                  })
                 }
                 className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
               >

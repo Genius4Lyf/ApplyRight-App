@@ -246,7 +246,7 @@ const Education = () => {
                                   value={edu.school}
                                   onChange={(e) => handleChange(index, 'school', e.target.value)}
                                   placeholder={t('cvBuilder.education.phSchool')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div>
@@ -262,7 +262,7 @@ const Education = () => {
                                   value={edu.degree}
                                   onChange={(e) => handleChange(index, 'degree', e.target.value)}
                                   placeholder={t('cvBuilder.education.phDegree')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div>
@@ -280,7 +280,7 @@ const Education = () => {
                                     handleChange(index, 'graduationDate', e.target.value)
                                   }
                                   placeholder={t('cvBuilder.education.phGrad')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div className="md:col-span-2">
@@ -298,7 +298,7 @@ const Education = () => {
                                     handleChange(index, 'description', e.target.value)
                                   }
                                   placeholder={t('cvBuilder.education.phAdditional')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                             </div>
@@ -363,21 +363,21 @@ const Education = () => {
                   value={cert.name}
                   onChange={(e) => handleCertChange(index, 'name', e.target.value)}
                   placeholder={t('cvBuilder.education.phCertName')}
-                  className="flex-[2] p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                  className="flex-[2] p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none text-sm"
                 />
                 <input
                   type="text"
                   value={cert.issuer}
                   onChange={(e) => handleCertChange(index, 'issuer', e.target.value)}
                   placeholder={t('cvBuilder.education.phCertIssuer')}
-                  className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                  className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none text-sm"
                 />
                 <input
                   type="text"
                   value={cert.date}
                   onChange={(e) => handleCertChange(index, 'date', e.target.value)}
                   placeholder={t('cvBuilder.education.phCertYear')}
-                  className="sm:w-24 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                  className="sm:w-24 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none text-sm"
                 />
                 <button
                   type="button"

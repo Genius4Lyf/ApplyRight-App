@@ -290,7 +290,12 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   const [analyzing, setAnalyzing] = useState(false);
   // Fetching a STORED analysis, which is a read — deliberately not `analyzing`, which
   // means "a charged analysis is running" and gates the entire card surface on it.
-  const [restoringPrep, setRestoringPrep] = useState(false);
+  // Seeded from restoreTarget rather than starting false. The effect that does the
+  // restoring cannot run until AFTER the first paint, so starting false meant one frame
+  // where nothing was loading and nothing had loaded — which rendered the opening welcome
+  // message, then replaced it with the orbit a frame later. That flash is the "blinking
+  // message" you see when you tap an analysis in Recents.
+  const [restoringPrep, setRestoringPrep] = useState(() => !!restoreTarget.id);
   const [prepApp, setPrepApp] = useState(null);
   const [buildingCv, setBuildingCv] = useState(false);
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
@@ -3520,6 +3525,9 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
     [cardStoodDown, collapsibleCardLabel]
   );
 
+  // Every phase of the prep track: pick a CV, capture the job, read the analysis.
+  const inPrepSession = typeof phase === 'string' && phase.startsWith('prep:');
+
   const ready =
     !studioTransition &&
     !thinking &&
@@ -4894,26 +4902,35 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
           and hidden outright while the coach has its own (which docks below). */}
       {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
           indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
-      <div className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}>
-        <AriaComposer
-          className="pb-[env(safe-area-inset-bottom)] relative z-20"
-          inputRef={inputRef}
-          value={input}
-          onChange={setInput}
-          onSend={send}
-          disabled={inputDisabled}
-          busy={thinking}
-          placeholder={
-            inputDisabled
-              ? t('ariaStudio.chat.useCardAbove')
-              : t('cvBuilder.ariaComposer.placeholder')
-          }
-          modelId={modelId}
-          onSelectModel={selectModel}
-          showModelPicker
-          showModelNotice
-        />
-      </div>
+      {/* Not rendered at all in a prep session, rather than hidden like the two cases
+        below it. Those keep the composer mounted because it is coming back — a coach
+        hands it over and takes it away again, and a transition ends. A prep session is
+        driven entirely by its cards from beginning to end: pick a CV, give the job, read
+        the analysis, take one of three actions. There is nothing to type in it, and the
+        composer said so — its placeholder read "Use the card above ↑", which is an input
+        explaining why it isn't one. */}
+      {!inPrepSession && (
+        <div className={`relative shrink-0 ${coachOwnsInput || studioTransition ? 'hidden' : ''}`}>
+          <AriaComposer
+            className="pb-[env(safe-area-inset-bottom)] relative z-20"
+            inputRef={inputRef}
+            value={input}
+            onChange={setInput}
+            onSend={send}
+            disabled={inputDisabled}
+            busy={thinking}
+            placeholder={
+              inputDisabled
+                ? t('ariaStudio.chat.useCardAbove')
+                : t('cvBuilder.ariaComposer.placeholder')
+            }
+            modelId={modelId}
+            onSelectModel={selectModel}
+            showModelPicker
+            showModelNotice
+          />
+        </div>
+      )}
 
       {/* Active-coach composer dock — a PINNED shrink-0 sibling below the scroll, mounted
           only while a coach drives (the default composer is hidden then). SectionCoach

@@ -11,7 +11,7 @@ import { STUDIO_PROJECT_IDEAS_ENABLED } from './studioFeatures';
  * The six sections a build session walks, in CV-builder order.
  *
  * `check` maps each one onto the CANONICAL completeness rules in cvCompleteness — the
- * same source /my-cvs and the Dashboard use. Nothing here stores "step 3 done": a
+ * same source the sidebar and the Dashboard use. Nothing here stores "step 3 done": a
  * separate progress flag is free to drift from the document it claims to describe, and
  * the moment it does, the user is told they've finished a section that's actually empty.
  * Deriving is slightly more work and cannot lie.
@@ -143,7 +143,7 @@ export function withoutBlankEntries(cv) {
 export function buildProgress(cv, msgs = []) {
   // Apply the canonical rules to a CLEANED view of the document.
   //
-  // The canonical list checks ask only "is this list non-empty?", which is fine on /my-cvs
+  // The canonical list checks ask only "is this list non-empty?", which is fine in a list
   // where rows arrive filled. The Studio CREATES a blank row up front — addRole() has to
   // persist an entry before /coach can write bullets into it by _sortId — so the raw
   // document would read as 100% complete the instant work history begins, ticking every

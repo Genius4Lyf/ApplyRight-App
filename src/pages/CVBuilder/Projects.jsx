@@ -242,7 +242,7 @@ const Projects = () => {
           <div className="mt-4">
             <button
               type="submit"
-              className="text-sm text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 underline underline-offset-4"
+              className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white underline underline-offset-4"
             >
               {t('cvBuilder.projects.skip')}
             </button>
@@ -275,7 +275,7 @@ const Projects = () => {
                     id={`proj-${proj._sortId}`}
                     className={`bg-white dark:bg-slate-900 rounded-xl border shadow-sm relative group overflow-hidden ${
                       ariaWroteId === proj._sortId
-                        ? 'aria-wrote border-indigo-400 dark:border-indigo-500'
+                        ? 'aria-wrote border-emerald-400 dark:border-emerald-500'
                         : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -327,7 +327,7 @@ const Projects = () => {
                                   value={proj.title}
                                   onChange={(e) => handleChange(index, 'title', e.target.value)}
                                   placeholder={t('cvBuilder.projects.phTitle')}
-                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                 />
                               </div>
                               <div>
@@ -346,7 +346,7 @@ const Projects = () => {
                                     onChange={(e) => handleChange(index, 'link', e.target.value)}
                                     onBlur={() => handleLinkBlur(index)}
                                     placeholder={t('cvBuilder.projects.phLink')}
-                                    className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    className="w-full pl-9 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none"
                                   />
                                 </div>
                               </div>
@@ -361,7 +361,7 @@ const Projects = () => {
                                   {t('cvBuilder.common.descriptionBullets')}
                                 </label>
                                 {ariaWroteId === proj._sortId && (
-                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-in fade-in">
+                                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
                                     {t('cvBuilder.common.ariaFilledIn')}
                                   </span>
                                 )}
@@ -384,7 +384,7 @@ const Projects = () => {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 onFocus={() => handleFocus(index)}
                                 placeholder={t('cvBuilder.projects.phDescription')}
-                                className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed text-sm ${
+                                className={`w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg h-32 focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none resize-none leading-relaxed text-sm ${
                                   ariaWroteId === proj._sortId ? 'aria-wrote-field' : ''
                                 }`}
                               />
@@ -447,7 +447,7 @@ const Projects = () => {
         <button
           type="button"
           onClick={addProject}
-          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> {t('cvBuilder.projects.addAnother')}
         </button>

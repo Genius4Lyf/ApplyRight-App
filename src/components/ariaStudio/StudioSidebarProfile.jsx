@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, User, Settings, CreditCard, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Settings, CreditCard, LogOut, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
@@ -9,13 +9,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import AriaOrbit from '../cv/AriaOrbit';
 import LanguageSwitcher from '../LanguageSwitcher';
 import SignOutConfirm from '../SignOutConfirm';
+import { useTheme } from '../../context/ThemeContext';
 import { useAccountWallet } from '../../hooks/useAccountWallet';
 import { planLabelFor } from '../../lib/planLabels';
 
 // Pinned to the bottom of the sidebar, above nothing. Clicking your own name is where
 // the top navbar's account dropdown lived, so everything it offered beyond the primary
 // destinations (which live in StudioSidebarNav) lands here too: view profile, manage
-// account, credits & billing, language, the guide, and sign-out. Positioned via
+// account, credits & billing, language, dark mode, the guide, and sign-out.
+//
+// Dark mode sits beside the language switcher rather than in the nav above, where it used
+// to be: those are destinations, and among them a toggle read as a fourth place to go.
+// Here it is what it is — one of two settings for how the app looks and speaks to you. Positioned via
 // ordinary relative/absolute layout — not a portal — so the popover stays confined to
 // the rail's own width and can't run off the side of a viewport the way a
 // viewport-fixed dropdown would.
@@ -35,6 +40,7 @@ const StudioSidebarProfile = ({ onOpenGuide, onBeforeNavigate }) => {
   } catch (e) {
     console.error('Failed to parse user from local storage', e);
   }
+  const { theme, toggleTheme } = useTheme();
   const { entitlement, isPaid } = useAccountWallet(isAuthenticated);
   const initials = ((user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')).toUpperCase();
 
@@ -133,6 +139,29 @@ const StudioSidebarProfile = ({ onOpenGuide, onBeforeNavigate }) => {
             <div className="px-2 py-1.5">
               <LanguageSwitcher />
             </div>
+            {/* Stays open on click — flipping the theme is something you may want to see
+                and undo, and closing the menu under you makes the second tap a hunt. */}
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={theme === 'dark'}
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[17px] sm:text-[13px] text-slate-600 dark:text-slate-300 text-left transition-colors"
+            >
+              <Moon className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <span className="flex-1">{t('nav.account.darkMode')}</span>
+              <span
+                className={`w-[34px] h-[19px] rounded-full relative transition-colors shrink-0 ${
+                  theme === 'dark' ? 'bg-slate-900 dark:bg-white' : 'bg-slate-200 dark:bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-[15px] h-[15px] rounded-full bg-white shadow transition-all ${
+                    theme === 'dark' ? 'left-[17px]' : 'left-0.5'
+                  }`}
+                />
+              </span>
+            </button>
             <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1.5 my-1" />
             <button
               type="button"

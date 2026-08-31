@@ -119,7 +119,7 @@ const TailorReviewModal = ({ isOpen, onClose, onEdit, atsScores, tailoredForJob 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2 shrink-0">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-500" />
+            <Sparkles className="w-5 h-5 text-slate-500 dark:text-slate-400" />
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
               {t('cvBuilder.finalize.reviewModal.title')}
             </h3>
@@ -379,7 +379,7 @@ const Finalize = () => {
             onClick={() => setShowReviewModal(true)}
             className="shrink-0 self-stretch sm:self-center inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             {t('cvBuilder.finalize.viewTailoringDetails')}
           </button>
         </div>

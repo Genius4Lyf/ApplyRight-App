@@ -39,7 +39,7 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
 
   // A build session has no job to match against yet, so the job-match block would be
   // six empty rows. It shows the document's own health instead — the same
-  // getCompletionStatus figure /my-cvs and the Dashboard use, derived live.
+  // getCompletionStatus figure the sidebar and the Dashboard use, derived live.
   const isBuild = cvData?.studioKind === 'build';
   const progress = buildProgress(cvData, cvData?.coachChats?.studio || []);
   const capturedCv = withoutBlankEntries(cvData);

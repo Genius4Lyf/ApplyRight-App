@@ -7,7 +7,7 @@ import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
 import AriaCard from './AriaCard';
 
 // Which of your CVs? Completion % + band come from the shared cvCompleteness helpers
-// (the same source /my-cvs and the dashboard use) — MyCVs' deriveCv is page-local, so the
+// (the same source the sidebar and the dashboard use) — the row derivation is local, so the
 // primitives are recomputed here rather than imported.
 //
 // Two callers, two questions: the tailor track asks which CV to tailor FROM, and a prep

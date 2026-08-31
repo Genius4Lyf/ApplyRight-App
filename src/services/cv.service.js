@@ -54,6 +54,14 @@ const CVService = {
     return response.data;
   },
 
+  // The SIDEBAR's list: the same CVs, projected down to what a row draws. scope 'builder'
+  // (the default) is CVs not born in Aria — the ones the wizard can open; 'all' is every
+  // CV, which is what the CV Studio shows.
+  listCvs: async (scope = 'builder') => {
+    const response = await api.get('/cv/list', { params: { scope } });
+    return response.data.cvs || [];
+  },
+
   // Get a single draft by ID
   getDraftById: async (id) => {
     const response = await api.get(`/cv/${id}`);

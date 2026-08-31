@@ -4,7 +4,7 @@ import { getCompletionStatus } from '../lib/cvCompleteness';
 
 // Shared card for a CV draft. `compact` mirrors the original dashboard widget
 // (icon + title + single CTA). `full` adds a progress bar and missing-sections
-// chip list for the dedicated /my-cvs listing.
+// chip list for the agent workspace listing.
 const CVCard = ({ draft, onDelete, layout = 'compact' }) => {
   const navigate = useNavigate();
   const status = getCompletionStatus(draft);

@@ -89,12 +89,12 @@ const ProfessionalSummary = () => {
             setSummary(e.target.value);
           }}
           placeholder={t('cvBuilder.professionalSummary.placeholder')}
-          className="w-full p-4 border border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 rounded-xl h-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
+          className="w-full p-4 border border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 rounded-xl h-64 focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-slate-900 dark:focus:border-white outline-none transition-all custom-scrollbar resize-none leading-relaxed text-slate-700 dark:text-slate-300"
         />
       </div>
 
       <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 rounded-lg flex items-start gap-3">
-        <div className="p-1 bg-indigo-100 dark:bg-indigo-500/20 rounded text-indigo-600 dark:text-indigo-300 mt-0.5">
+        <div className="p-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 mt-0.5">
           <MessageCircle className="w-3 h-3" />
         </div>
         <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">

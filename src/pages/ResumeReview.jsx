@@ -22,6 +22,8 @@ import {
   FileType,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import SidebarToggle from '../components/workspace/SidebarToggle';
+import { useWorkspaceSidebar } from '../hooks/useWorkspaceSidebar';
 import api from '../services/api';
 import { toast } from 'sonner';
 import ATSCleanTemplate from '../components/templates/ATSCleanTemplate';
@@ -147,6 +149,11 @@ const ResumeReview = () => {
   // Fullscreen-style focus mode: hides Navbar + page header + action bar so
   // the CV gets the whole viewport.
   const [immersive, setImmersive] = useState(false);
+
+  // Every CV you own, not just the ones the wizard built — this is where a finished CV
+  // lives, whoever wrote it, so the list here has to match. Drawn over the page: the
+  // studio spends its whole width on the document and its design controls.
+  const { openSidebar, sidebar } = useWorkspaceSidebar({ scope: 'cvStudio', activeId: id });
   const toggleImmersive = () => setImmersive((v) => !v);
 
   // Accuracy advisory — reminds users that AI-generated content can include
@@ -1042,7 +1049,7 @@ const ResumeReview = () => {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in-95 duration-300">
             {/* Locked Badge */}
-            <div className="relative mb-6 mx-auto w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <div className="relative mb-6 mx-auto w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-slate-900 dark:text-white">
               <Lock className="w-7 h-7 animate-pulse" />
               <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border border-white dark:border-slate-900">
                 !
@@ -1097,7 +1104,7 @@ const ResumeReview = () => {
 
             <button
               onClick={() => navigate(`/cv-builder/${application._id}`)}
-              className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10 font-bold text-sm"
+              className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 font-bold text-sm"
             >
               Return to CV Builder
             </button>
@@ -1175,7 +1182,7 @@ const ResumeReview = () => {
               <span className="text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold block mb-1">
                 New Balance
               </span>
-              <div className="flex items-center justify-center gap-2 font-heading text-3xl font-extrabold tabular-nums text-indigo-600 dark:text-indigo-300">
+              <div className="flex items-center justify-center gap-2 font-heading text-3xl font-extrabold tabular-nums text-slate-900 dark:text-white">
                 <AriaOrbit size={24} />
                 {userProfile?.credits || 0}
               </div>
@@ -1188,7 +1195,7 @@ const ResumeReview = () => {
                     setCreditSuccessModalOpen(false);
                     setUnlockModalOpen(true);
                   }}
-                  className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                  className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
                 >
                   Proceed to Unlock {templateToUnlock.name}
                 </button>
@@ -1375,9 +1382,19 @@ const ResumeReview = () => {
 
       {!immersive && <Navbar />}
 
+      {/* Portaled to the body, so where it sits in this tree doesn't matter — but it is
+        deliberately outside the immersive guard: dismissing fullscreen is not the same
+        gesture as closing the sidebar, and one shouldn't strand the other. */}
+      {sidebar}
+
       {/* Page header — gives job context, back button, and tab toggle. */}
       {!immersive && (
         <div className="relative h-14 flex items-center justify-end gap-3 px-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
+          {/* mr-auto, not a flex order change: the row is justify-end with an absolutely
+              centred title, and this is the least invasive way to pin one control left
+              without disturbing either. */}
+          <SidebarToggle onClick={openSidebar} className="mr-auto -ml-1" />
+
           {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-9rem)] lg:max-w-[calc(100%-26rem)]">
             {isDraftMode ? (
@@ -1687,9 +1704,7 @@ const ResumeReview = () => {
               // below (paperColor). The class was dead (inline wins) but read as if the
               // page were always white, which is the belief this whole fix removed.
               className={`cv-template-container shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none ${
-                activeTab === 'resume' && sidebarFill(templateId)
-                  ? 'cv-continuous-sidebar'
-                  : ''
+                activeTab === 'resume' && sidebarFill(templateId) ? 'cv-continuous-sidebar' : ''
               }`}
               style={{
                 width: paperWidth,
@@ -2180,7 +2195,7 @@ const ResumeReview = () => {
                   }}
                   onBlur={commitDraftTitle}
                   placeholder="Untitled draft"
-                  className="w-full text-sm font-semibold text-slate-900 dark:text-slate-100 bg-transparent rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                  className="w-full text-sm font-semibold text-slate-900 dark:text-slate-100 bg-transparent rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 outline-none focus:border-slate-900 dark:focus:border-white focus:ring-1 focus:ring-slate-900/20 dark:focus:ring-white/20 transition-colors"
                 />
               </div>
             )}
@@ -2222,7 +2237,7 @@ const ResumeReview = () => {
                         <button
                           type="button"
                           onClick={() => navigate('/upgrade')}
-                          className="inline-flex items-start gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 hover:underline text-left"
+                          className="inline-flex items-start gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline text-left"
                         >
                           <Crown className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           Upgrade to ApplyRight ATS for our sharpest, recruiter-grade analysis
@@ -2393,7 +2408,7 @@ const ResumeReview = () => {
                         onClick={() => setDesign((d) => ({ ...d, accent: '' }))}
                         className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
                           design.accent === ''
-                            ? 'border-indigo-600 ring-2 ring-indigo-600/30 text-slate-900 dark:text-slate-100'
+                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/30 dark:ring-white/30 text-slate-900 dark:text-slate-100'
                             : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
@@ -2415,7 +2430,7 @@ const ResumeReview = () => {
                           aria-label={sw.name}
                           className={`w-8 h-8 rounded-full transition-all ${
                             design.accent === sw.hex
-                              ? 'ring-2 ring-indigo-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                              ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
                               : 'ring-1 ring-black/10 dark:ring-white/10 hover:scale-105'
                           }`}
                           style={{ backgroundColor: sw.hex }}
@@ -2568,7 +2583,7 @@ const ResumeReview = () => {
                                           ? 'bg-emerald-500 text-white'
                                           : locked
                                             ? 'bg-slate-800 text-white'
-                                            : 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                            : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
                                       }`}
                                     >
                                       {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}

@@ -158,7 +158,7 @@ const AgentDashboard = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Recent CVs</h2>
             <Link
-              to="/my-cvs"
+              to="/cv-builder"
               className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1"
             >
               View all <ArrowRight className="w-3.5 h-3.5" />

@@ -108,8 +108,8 @@
 /* Base Variable Definitions */
 @layer base {
   :root {
-    --color-primary: #4f46e5;
-    /* Indigo 600 */
+    --color-primary: #0f172a;
+    /* Slate 900 (ink) */
     --color-secondary: #0f172a;
     /* Slate 900 */
     --color-accent: #f59e0b;
@@ -142,7 +142,7 @@
   }
 
   body {
-    @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-indigo-100 selection:text-indigo-900 dark:text-slate-100 dark:selection:bg-indigo-500/30 dark:selection:text-indigo-100;
+    @apply font-sans antialiased text-slate-900 bg-background min-h-screen selection:bg-slate-900/10 selection:text-slate-900 dark:text-slate-100 dark:selection:bg-white/20 dark:selection:text-white;
     /* Stylistic-set + character variants for a cleaner humanist sans. */
     font-feature-settings:
       'ss01' on,
@@ -320,18 +320,19 @@
     }
   }
 
-  /* "Aria wrote here" reveal (indigo = Aria's action) — a one-shot glow on the entry
-     CARD + an inset ring flash on the FIELD when Aria appends bullets. Reduced motion
-     disables both (the card still auto-expands + scrolls). */
+  /* "Aria wrote here" reveal (emerald = Aria's action, matching the "added" chip
+     elsewhere in the coach flow) — a one-shot glow on the entry CARD + an inset ring
+     flash on the FIELD when Aria appends bullets. Reduced motion disables both (the
+     card still auto-expands + scrolls). */
   .aria-wrote {
     animation: ariaWrote 1.8s ease-out;
   }
   @keyframes ariaWrote {
     0% {
-      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.55);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
     }
     100% {
-      box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+      box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
     }
   }
   .aria-wrote-field {
@@ -339,10 +340,10 @@
   }
   @keyframes ariaWroteField {
     0% {
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.6) inset;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6) inset;
     }
     100% {
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0) inset;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0) inset;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -798,11 +799,11 @@
 }
 
 .job-description li::marker {
-  @apply text-indigo-400 dark:text-indigo-300;
+  @apply text-slate-400 dark:text-slate-500;
 }
 
 .job-description a {
-  @apply text-indigo-600 underline hover:text-indigo-800 transition-colors dark:text-indigo-400 dark:hover:text-indigo-300;
+  @apply text-slate-900 underline hover:text-slate-600 transition-colors dark:text-white dark:hover:text-slate-300;
 }
 
 /* Custom styling for Jobberman metadata tags converted to spans */

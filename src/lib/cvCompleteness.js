@@ -1,5 +1,5 @@
 // Single source of truth for what counts as a "complete" CV draft. Used by the
-// dashboard widget and the /my-cvs listing page so both surfaces show the same
+// dashboard widget and the workspace sidebar so both surfaces show the same
 // progress state and missing-section labels.
 
 export const CV_SECTIONS = [

@@ -3359,7 +3359,9 @@
       "back": "Back",
       "continue": "Continue",
       "stepOf": "Step {{current}} of {{total}}",
-      "stepAria": "Step {{n}}: {{label}}"
+      "stepAria": "Step {{n}}: {{label}}",
+      "swipeHint": "Swipe or tap a dot",
+      "goToStep": "Go to step {{n}}"
     },
     "recordings": {
       "onThisDevice": "On this device",
@@ -4041,6 +4043,52 @@
       "showAgain": "Show Best Choices again"
     }
   },
+  "workspace": {
+    "newCv": {
+      "label": "New CV",
+      "aria": "Start a new CV",
+      "withAria": "Build with Aria",
+      "withAriaHint": "A conversation that writes it with you",
+      "withBuilder": "Build with CV Studio",
+      "withBuilderHint": "The step-by-step form"
+    },
+    "untitledCv": "Untitled CV",
+    "openSidebar": "Open the sidebar",
+    "delete": {
+      "ask": "Delete this CV?"
+    },
+    "list": {
+      "filterAria": "Filter this list"
+    },
+    "builder": {
+      "indexTitle": "Your CVs",
+      "indexBlurb": "Pick one from the sidebar to carry on, or start a new one.",
+      "title": "CV Builder",
+      "listLabel": "Your CVs",
+      "empty": "No CVs here yet. Start one above and it'll live here.",
+      "emptyFiltered": "Nothing in this slice yet.",
+      "filters": {
+        "all": "All",
+        "inProgress": "In progress",
+        "complete": "Complete"
+      }
+    },
+    "cvStudio": {
+      "title": "CV Studio",
+      "listLabel": "Your CVs"
+    },
+    "prep": {
+      "title": "Interview prep",
+      "indexTitle": "Your interviews",
+      "indexBlurb": "Pick one from the sidebar to carry on, or analyse a job to start a new one.",
+      "listLabel": "Applications",
+      "empty": "No interview prep yet. Run a job analysis in Aria Studio and it'll appear here."
+    },
+    "interview": {
+      "label": "Prepare for an interview",
+      "short": "Interview"
+    }
+  },
   "ariaStudio": {
     "studioFlow": {
       "sections": {
@@ -4574,7 +4622,15 @@
       "deleteAria": "Delete {{heading}}",
       "newPrep": "Prepare for an interview",
       "newPrepShort": "Interview",
-      "applicationTag": "Analysis"
+      "applicationTag": "Analysis",
+      "filterAria": "Filter recents",
+      "filters": {
+        "all": "All",
+        "cvs": "CVs",
+        "applications": "Applications"
+      },
+      "noCvsYet": "No CVs here yet.",
+      "noApplicationsYet": "No job analyses here yet."
     },
     "skillsBuild": {
       "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. Then I'll ask about the ones your roles usually involve but people rarely think to write down. You pick which ones go in.",

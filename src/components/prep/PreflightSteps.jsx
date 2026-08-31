@@ -5,14 +5,16 @@ import CardDeck from '../ui/CardDeck';
 // The live-interview pre-flight, as a paced three-step sequence rather than a
 // page you scroll: what this is → who's interviewing you → start.
 //
-// The point of the whole thing is that the CHROME NEVER MOVES. The rail and the
-// footer are fixed; only the pane body scrolls. That's what stops "Start
-// interview" scrolling away under a long brief.
+// The point of the whole thing is that the CHROME NEVER MOVES — not between
+// steps, not under a long brief. The rail/step name above and the footer below
+// are fixed, the pane between them is a fixed-height box on both viewports, and
+// only that box scrolls. Nothing about paging through the steps changes the
+// size or position of anything you're aiming at.
 //
 // One set of panes, two presentations: a clickable step rail + centred pane on
-// lg+, a swipe deck + dots below it. Only one is mounted at a time (matchMedia,
-// not `hidden lg:block`) so a pane's DOM — ids, media permissions, AI panels —
-// exists exactly once.
+// lg+, a named step + swipe deck below it. Only one is mounted at a time
+// (matchMedia, not `hidden lg:block`) so a pane's DOM — ids, media permissions,
+// AI panels — exists exactly once.
 
 const LG = '(min-width: 1024px)';
 
@@ -38,11 +40,68 @@ const useIsDesktop = () => {
   return isDesktop;
 };
 
-// The scrolling pane body: tall enough to read in, capped so the footer stays
-// put. `custom-scrollbar` swaps the chunky native bar for the app's 6px ink
-// one, and the radius on the body itself means that bar is clipped by the
-// card's corner instead of squaring it off.
-const BODY = 'custom-scrollbar overflow-y-auto max-h-[clamp(260px,52vh,430px)]';
+// The pane body is a FIXED-height reading box on both viewports, not a capped
+// one. Height that follows the content means the card — and the footer under
+// it — changes size as you page through the steps, which reads as the layout
+// jumping rather than as a step advancing. Same box every step, content scrolls
+// inside it.
+//
+// Desktop takes a share of the window; mobile takes what's left of the screen
+// after the chrome, so the box is as tall as a phone can make it (the old 52vh
+// cap showed about a third of the brief and left dead space under the buttons).
+// `svh`, not `dvh`: the small-viewport unit doesn't change when a mobile URL
+// bar hides, so the card can't resize under your thumb mid-scroll.
+const DESKTOP_BODY_H = 'h-[clamp(300px,52vh,430px)]';
+const MOBILE_BODY_H = 'max(280px, calc(100svh - 15.5rem - env(safe-area-inset-bottom)))';
+
+// The fade that says "there's more below". Applied only while the box actually
+// has somewhere left to scroll, so it always MEANS something — a permanent
+// fade would soften the last line of a pane that had already ended.
+const FADE = 'linear-gradient(to bottom, #000 calc(100% - 28px), transparent)';
+
+// `custom-scrollbar` swaps the chunky native bar for the app's 6px ink one, and
+// the radius on the box itself means that bar is clipped by the card's corner
+// instead of squaring it off.
+const ScrollPane = ({ resetKey, className = '', style, inert, children }) => {
+  const ref = useRef(null);
+  const [more, setMore] = useState(false);
+
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 8);
+  }, []);
+
+  // Every step starts at the top of its box — a body left scrolled halfway down
+  // by the previous step reads as a broken jump.
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = 0;
+    update();
+  }, [resetKey, update]);
+
+  // Panes grow after mount (a panel finishes loading, a picker opens), which
+  // changes whether there's anything left to scroll to.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => ro.disconnect();
+  }, [update]);
+
+  return (
+    <div
+      ref={ref}
+      onScroll={update}
+      inert={inert}
+      className={`custom-scrollbar overflow-y-auto ${className}`}
+      style={{ ...style, ...(more ? { maskImage: FADE, WebkitMaskImage: FADE } : null) }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const PANE_CARD =
   'rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card';
@@ -89,12 +148,16 @@ const PreflightSteps = ({
     [clamp]
   );
 
-  // Every step change starts at the top of its pane — a body scrolled halfway
-  // down from the previous step reads as a broken jump.
-  const bodyRef = useRef(null);
+  // The pane keeps a fixed height now, so nothing below it moves between steps
+  // and the page shouldn't be left scrolled where the previous step put it.
+  // (ScrollPane resets its own scrollTop; this is the window's.)
   useEffect(() => {
-    if (bodyRef.current) bodyRef.current.scrollTop = 0;
-  }, [current]);
+    if (isDesktop) return;
+    // document.scrollingElement, not window.scrollTo — same effect, and it
+    // stays silent under jsdom in tests.
+    const doc = typeof document === 'undefined' ? null : document.scrollingElement;
+    if (doc) doc.scrollTop = 0;
+  }, [current, isDesktop]);
 
   if (!steps.length) return null;
 
@@ -140,7 +203,7 @@ const PreflightSteps = ({
                   aria-current={state === 'current' ? 'step' : undefined}
                   // Without this the numeral runs into the label — "3Start".
                   aria-label={t('interviewPrep.preflight.stepAria', { n: i + 1, label: s.label })}
-                  className="flex shrink-0 cursor-pointer select-none items-center gap-2.5 rounded-lg px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                  className="flex shrink-0 cursor-pointer select-none items-center gap-2.5 rounded-lg px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                 >
                   <span
                     aria-hidden="true"
@@ -172,9 +235,12 @@ const PreflightSteps = ({
         <div className={`mx-auto max-w-3xl ${PANE_CARD}`}>
           {/* rounded-t-2xl: the body is the card's top section, so it has to
               carry the same corner or the scrollbar squares it off. */}
-          <div ref={bodyRef} className={`rounded-t-2xl px-5 py-5 sm:px-6 ${BODY}`}>
+          <ScrollPane
+            resetKey={current}
+            className={`rounded-t-2xl px-5 py-5 sm:px-6 ${DESKTOP_BODY_H}`}
+          >
             {active?.node}
-          </div>
+          </ScrollPane>
           {/* Fixed footer — it belongs to the frame, not to the pane, so it
               can't be scrolled away by a long step. */}
           <div className="flex items-center justify-between gap-3 rounded-b-2xl border-t border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/40">
@@ -195,6 +261,17 @@ const PreflightSteps = ({
   // ── < lg : the same three panes as a swipe deck ─────────────────────────
   return (
     <div className="text-left">
+      {/* The rail is a desktop luxury, but its ORIENTATION isn't: dots alone
+          never say what the pane you're looking at is. Name the step. */}
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h2 className="min-w-0 truncate text-sm font-bold text-slate-900 dark:text-white">
+          {active?.label}
+        </h2>
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          {t('interviewPrep.preflight.stepOf', { current: current + 1, total: steps.length })}
+        </span>
+      </div>
+
       <CardDeck
         sequence
         items={steps}
@@ -202,25 +279,36 @@ const PreflightSteps = ({
         onIndexChange={go}
         getKey={(s) => s.key}
         ariaLabel={ariaText}
+        hint={t('interviewPrep.preflight.swipeHint')}
+        dotLabel={(n) => t('interviewPrep.preflight.goToStep', { n })}
         cardClassName={PANE_CARD}
         renderItem={(s, i, isFront) => (
-          <div
-            ref={isFront ? bodyRef : null}
+          <ScrollPane
+            resetKey={current}
             // The body IS the whole mobile pane, so it carries the full radius.
-            className={`rounded-2xl px-4 py-4 ${BODY}`}
+            className="rounded-2xl px-4 py-4"
+            style={{ height: MOBILE_BODY_H }}
             // Only the pane in front is reachable; the others are parked
             // off-stage and must not collect tab stops.
             inert={!isFront}
           >
             {s.node}
-          </div>
+          </ScrollPane>
         )}
       />
-      {/* Footer sits under the dots, outside the deck — the buttons stay put
-          while the pane above them scrolls or swipes. */}
-      <div className="mt-3 flex items-center gap-2.5">
-        {backBtn('flex-1')}
-        {forwardBtn('flex-[2] justify-center')}
+
+      {/* Footer sits outside the deck and sticks to the bottom of the viewport:
+          the pane above it is now as long as its content, so the buttons have
+          to follow you down it. Full-bleed (-mx) with an opaque ground so the
+          brief scrolls UNDER the bar rather than beside it, and safe-area
+          padding so it clears a phone's home indicator. */}
+      <div
+        className="sticky bottom-0 z-10 -mx-4 mt-3 flex items-center gap-2.5 border-t border-slate-200/70 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-slate-800/80 dark:bg-slate-950/95"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+      >
+        {/* 44px floor: these are the only two tap targets on the pane. */}
+        {backBtn('min-h-[44px] flex-1')}
+        {forwardBtn('min-h-[44px] flex-[2] justify-center')}
       </div>
     </div>
   );

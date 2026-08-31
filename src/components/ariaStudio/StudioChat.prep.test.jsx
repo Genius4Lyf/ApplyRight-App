@@ -450,3 +450,39 @@ describe('an analysis already in play', () => {
     expect(ctx.applicationId).toBeNull();
   });
 });
+
+describe('the composer', () => {
+  // Queried by placeholder, not by role: the job step's own title and description fields
+  // are textboxes too, and this has to tell the chat's input apart from the form's.
+  const composer = () => screen.queryByPlaceholderText(/use the card above|ask aria/i);
+
+  it('is absent for the whole prep session', async () => {
+    const { container } = renderStudio();
+    await waitFor(() => expect(ctx).toBeTruthy());
+    await ctx.newSession('prep');
+    await screen.findByText(SAVED_CV.title);
+
+    // Step one: pick a CV. Nothing to type.
+    expect(composer()).toBeNull();
+
+    fireEvent.click(screen.getByText(SAVED_CV.title));
+    await waitFor(() => expect(container.querySelector('#studio-job-title')).toBeTruthy());
+    expect(composer()).toBeNull();
+
+    await captureJob(container);
+
+    // …and the results, where the three actions are cards too.
+    await screen.findByText(/What next/i);
+    expect(composer()).toBeNull();
+  });
+
+  it('is still there in a build session', async () => {
+    // The guard. A prep session is the exception, not the new rule — take the composer
+    // away from a build and Aria has no way to be spoken to at all.
+    renderStudio();
+    await waitFor(() => expect(ctx).toBeTruthy());
+    await ctx.newSession('build');
+
+    await waitFor(() => expect(composer()).toBeTruthy());
+  });
+});

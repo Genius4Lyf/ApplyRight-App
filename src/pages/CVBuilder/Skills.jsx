@@ -355,7 +355,7 @@ const Skills = () => {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder={t('cvBuilder.skills.categoryName')}
-                className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none text-sm"
               />
               <button
                 type="button"
@@ -463,7 +463,7 @@ const Skills = () => {
               }
             }}
             placeholder={t('cvBuilder.skills.addSkillPlaceholder')}
-            className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+            className="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-lg focus:ring-1 focus:ring-slate-900 dark:focus:ring-white outline-none text-sm"
           />
 
           <button
@@ -665,7 +665,7 @@ const Skills = () => {
 
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider mb-0.5">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                       {t('cvBuilder.skills.whereComesFrom')}
                     </p>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -690,7 +690,7 @@ const Skills = () => {
                           ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                           : ev.type === 'education'
                             ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                            : 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300';
+                            : 'bg-slate-100 dark:bg-slate-500/15 text-slate-700 dark:text-slate-300';
                       return (
                         <div key={i} className="flex gap-3">
                           <span
@@ -710,7 +710,7 @@ const Skills = () => {
                 {skillsData[openEvidenceIndex].talkingPoint && (
                   <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
                     <div className="flex items-center gap-1.5 mb-2">
-                      <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+                      <BookOpen className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         {t('cvBuilder.skills.interviewTalkingPoint')}
                       </p>
@@ -758,7 +758,7 @@ const Skills = () => {
                       <Lock className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider mb-0.5">
+                      <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">
                         {t('cvBuilder.skills.proFeature')}
                       </p>
                       <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100">

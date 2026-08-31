@@ -462,7 +462,7 @@ const Profile = () => {
                   <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-sm">
                     <button
                       type="button"
-                      onClick={() => navigate('/interview-prep')}
+                      onClick={() => navigate('/aria-studio', { state: { start: 'prep' } })}
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
                       <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 flex items-center justify-center shrink-0">

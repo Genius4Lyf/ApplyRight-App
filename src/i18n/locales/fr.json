@@ -3355,7 +3355,9 @@
       "back": "Retour",
       "continue": "Continuer",
       "stepOf": "Étape {{current}} sur {{total}}",
-      "stepAria": "Étape {{n}} : {{label}}"
+      "stepAria": "Étape {{n}} : {{label}}",
+      "swipeHint": "Balayez ou touchez un point",
+      "goToStep": "Aller à l’étape {{n}}"
     },
     "recordings": {
       "onThisDevice": "Sur cet appareil",
@@ -4037,6 +4039,52 @@
       "showAgain": "Afficher à nouveau les meilleurs choix"
     }
   },
+  "workspace": {
+    "newCv": {
+      "label": "Nouveau CV",
+      "aria": "Créer un nouveau CV",
+      "withAria": "Créer avec Aria",
+      "withAriaHint": "Une conversation qui l'écrit avec vous",
+      "withBuilder": "Créer avec CV Studio",
+      "withBuilderHint": "Le formulaire étape par étape"
+    },
+    "untitledCv": "CV sans titre",
+    "openSidebar": "Ouvrir la barre latérale",
+    "delete": {
+      "ask": "Supprimer ce CV ?"
+    },
+    "list": {
+      "filterAria": "Filtrer cette liste"
+    },
+    "builder": {
+      "indexTitle": "Vos CV",
+      "indexBlurb": "Choisissez-en un dans la barre latérale pour continuer, ou créez-en un nouveau.",
+      "title": "Créateur de CV",
+      "listLabel": "Vos CV",
+      "empty": "Aucun CV ici pour l'instant. Lancez-en un ci-dessus et il apparaîtra ici.",
+      "emptyFiltered": "Rien dans cette sélection pour l'instant.",
+      "filters": {
+        "all": "Tous",
+        "inProgress": "En cours",
+        "complete": "Complets"
+      }
+    },
+    "cvStudio": {
+      "title": "CV Studio",
+      "listLabel": "Vos CV"
+    },
+    "prep": {
+      "title": "Préparation d'entretien",
+      "indexTitle": "Vos entretiens",
+      "indexBlurb": "Choisissez-en un dans la barre latérale pour continuer, ou analysez un poste pour en démarrer un.",
+      "listLabel": "Candidatures",
+      "empty": "Aucune préparation d'entretien. Lancez une analyse de poste dans Aria Studio et elle apparaîtra ici."
+    },
+    "interview": {
+      "label": "Préparer un entretien",
+      "short": "Entretien"
+    }
+  },
   "ariaStudio": {
     "studioFlow": {
       "sections": {
@@ -4570,7 +4618,15 @@
       "deleteAria": "Supprimer {{heading}}",
       "newPrep": "Préparer un entretien",
       "newPrepShort": "Entretien",
-      "applicationTag": "Analyse"
+      "applicationTag": "Analyse",
+      "filterAria": "Filtrer les récents",
+      "filters": {
+        "all": "Tous",
+        "cvs": "CV",
+        "applications": "Candidatures"
+      },
+      "noCvsYet": "Aucun CV ici pour l'instant.",
+      "noApplicationsYet": "Aucune analyse de poste ici pour l'instant."
     },
     "skillsBuild": {
       "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Puis je vous interrogerai sur celles que vos postes impliquent d’ordinaire mais que l’on pense rarement à noter. Vous choisissez lesquelles ajouter.",

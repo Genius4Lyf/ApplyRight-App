@@ -87,8 +87,8 @@ const CVPicker = ({
                     onClick={() => onSelectDraft(d._id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
                       selected
-                        ? 'border-indigo-400 dark:border-indigo-500/60 bg-indigo-50 dark:bg-indigo-500/15 shadow-sm'
-                        : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/20 hover:border-indigo-200 dark:hover:border-indigo-500/40 hover:bg-white dark:hover:bg-slate-800/40'
+                        ? 'border-slate-900 dark:border-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/20 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-white dark:hover:bg-slate-800/40'
                     }`}
                   >
                     <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
@@ -97,7 +97,7 @@ const CVPicker = ({
                     <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                       {label}
                     </span>
-                    {selected && <CheckCircle className="w-5 h-5 text-indigo-500 shrink-0" />}
+                    {selected && <CheckCircle className="w-5 h-5 text-slate-900 dark:text-white shrink-0" />}
                   </button>
                 );
               })}
@@ -116,7 +116,7 @@ const CVPicker = ({
             </div>
             <button
               onClick={() => onUploadedResume(null)}
-              className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 hover:underline shrink-0"
+              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:underline shrink-0"
             >
               Change
             </button>

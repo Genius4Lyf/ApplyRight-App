@@ -23,7 +23,6 @@ export const markOnboardingComplete = () => {
 // allow-list ("it is part of the user experience").
 const APP_PREFIXES = [
   '/dashboard',
-  '/my-cvs',
   '/history',
   '/interview-prep',
   '/interview',
@@ -39,13 +38,19 @@ const APP_PREFIXES = [
   '/jobs',
 ];
 
-// Full-height, immersive sub-routes that already own the bottom of the screen —
-// either their own persistent exit control (Aria Studio, the CV Builder wizard,
-// both locked to h-dvh/100dvh at every breakpoint) or their own fixed action bar
-// (CV Studio's mobile download/save bar, the live-interview + flash-card
-// practice control bars). The bottom nav would sit on top of or fight with
-// those, so it's suppressed on all of them.
-const IMMERSIVE_PREFIXES = ['/cv-builder', '/aria-studio', '/resume'];
+// The four workspace surfaces — each carries the app sidebar, which holds its own
+// destinations, wallet and account block.
+//
+// This is ALSO the immersive set, and not by coincidence: a page earns the sidebar by
+// being a workspace you settle into rather than a page you pass through, and that is the
+// same property that makes a bottom tab bar wrong there. Each already owns the bottom of
+// the screen — a persistent exit control (Aria Studio, the CV Builder wizard, both locked
+// to h-dvh at every breakpoint) or a fixed action bar (CV Studio's mobile download/save
+// bar, the prep dashboard's practice controls) — so a tab bar would sit on top of, or
+// fight with, what is already there.
+export const WORKSPACE_PREFIXES = ['/cv-builder', '/aria-studio', '/resume', '/interview-prep'];
+
+const IMMERSIVE_PREFIXES = WORKSPACE_PREFIXES;
 const IMMERSIVE_PATH_RE = /\/(mock|practice)$/;
 
 const matchesPrefix = (pathname, prefixes) =>
@@ -53,6 +58,11 @@ const matchesPrefix = (pathname, prefixes) =>
 
 // Shown on BOTH web-mobile and native (MobileBottomNav applies md:hidden on web
 // so it's mobile-only there).
+// Does this page carry the app sidebar? The top bar sheds its mobile account cluster
+// there — language, credits and sign-out all live in the sidebar's own profile block, and
+// showing them twice on a 390px bar means neither has room to be legible.
+export const hasWorkspaceSidebar = (pathname) => matchesPrefix(pathname, WORKSPACE_PREFIXES);
+
 export const shouldShowBottomNav = (pathname) =>
   matchesPrefix(pathname, APP_PREFIXES) &&
   !matchesPrefix(pathname, IMMERSIVE_PREFIXES) &&
