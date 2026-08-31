@@ -32,7 +32,9 @@ describe('BuildRoadmapCard — the upload fork', () => {
     render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
 
     expect(
-      screen.getByText(t('ariaStudio.buildRoadmap.uploadCost', { n: CREDIT_COSTS.CREATE_FROM_UPLOAD }))
+      screen.getByText(
+        t('ariaStudio.buildRoadmap.uploadCost', { n: CREDIT_COSTS.CREATE_FROM_UPLOAD })
+      )
     ).toBeTruthy();
   });
 

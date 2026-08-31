@@ -84,7 +84,6 @@ describe('SectionCoach composer — the back button follows onBack, not onDone',
     // The overload is gone: backing out no longer pretends to be a finished interview.
     expect(onDone).not.toHaveBeenCalled();
   });
-
 });
 
 // The turn budget belongs to the AI CONVERSATION, not the CV — the server turns it into a

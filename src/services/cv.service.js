@@ -402,6 +402,56 @@ const CVService = {
     }
   },
 
+  // ─── Prepare me for an interview ───
+  //
+  // A prep session runs a job analysis against a CV and creates an Application. These
+  // are the SAME endpoints the home page's analysis used before it moved into the
+  // Studio — nothing here is new server-side except the cover letter's model choice.
+
+  // Mint (or refresh) the Job record the analysis needs. Free. Takes a link OR pasted
+  // text; on the text path a title the user typed wins over the AI's inference.
+  extractJob: async ({ jobUrl, description, title } = {}) => {
+    const res = await api.post('/jobs/extract', jobUrl ? { jobUrl } : { description, title });
+    return res.data;
+  },
+
+  // The charged analysis. The CV is EITHER a saved draft or an uploaded resume — never
+  // both, which is why the caller passes one id and this picks the matching field.
+  analyzeFit: async ({ jobId, draftCVId, resumeId }) => {
+    const res = await api.post('/analysis/analyze', {
+      jobId,
+      ...(draftCVId ? { draftCVId } : { resumeId }),
+    });
+    return res.data;
+  },
+
+  // Reopening a past analysis from Recents. The prep conversation is rebuilt from this
+  // record rather than from a stored transcript.
+  getApplication: async (id) => {
+    const res = await api.get(`/applications/${id}`);
+    return res.data;
+  },
+
+  deleteApplication: async (id) => {
+    const res = await api.delete(`/applications/${id}`);
+    return res.data;
+  },
+
+  // `model` is the Standard | Pro pick. Omitted → the server's own default, and the
+  // free daily letter still applies; a Pro pick always meters.
+  generateCoverLetter: async (applicationId, model) => {
+    const res = await api.post(
+      `/analysis/${applicationId}/generate-cover-letter`,
+      model ? { model } : {}
+    );
+    return res.data;
+  },
+
+  generateInterviewPrep: async (applicationId) => {
+    const res = await api.post(`/analysis/${applicationId}/generate-interview`);
+    return res.data;
+  },
+
   // Generate a Word (.docx) from the CV data (server-side via the `docx` lib).
   // Mirrors generatePdf: same download paywall (402 → typed Error with
   // `.code === 'NEED_DOWNLOAD'`), and every other error status is decoded out of

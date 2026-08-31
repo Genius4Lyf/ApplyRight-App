@@ -42,13 +42,19 @@ import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { toast } from 'sonner';
+import api from '../../services/api';
 import CVService from '../../services/cv.service';
+import { getPrepId, mergeInterviewPrepResponse } from '../../utils/interviewPrep';
+import { decodeEntities } from '../../lib/decodeEntities';
 import AriaComposer from '../cv/AriaComposer';
 import AriaOrbit from '../cv/AriaOrbit';
 import AriaThinking from '../cv/AriaThinking';
 import RewriteRoleCard from './RewriteRoleCard';
 import ProjectIdeasCard from './ProjectIdeasCard';
 import ModeChooser from './ModeChooser';
+import PrepAnalyzingCard from './PrepAnalyzingCard';
+import PrepCvCard from './PrepCvCard';
+import PrepResultsCard from './PrepResultsCard';
 
 import JobCaptureCard from './JobCaptureCard';
 import RoleBriefCard from './RoleBriefCard';
@@ -132,7 +138,12 @@ const loadSession = () => {
 // marker only records that one happened, so the cards always render the current
 // snapshot (including after a free recompute) rather than a stale copy of it.
 
-const StudioChat = ({ onPaywall }) => {
+// `onPaywall` and `onNavigate` are both here for the same reason: THE PAGE OWNS THE
+// ROUTER. The chat knows when a cover letter is ready to read or an interview prep has
+// been generated, but it does not know how this app moves between pages — and reaching
+// for a router hook in here would put a Router requirement on a component that is
+// otherwise pure conversation.
+const StudioChat = ({ onPaywall, onNavigate }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const {
@@ -155,6 +166,12 @@ const StudioChat = ({ onPaywall }) => {
     setPendingKind,
     pendingSource,
     setPendingSource,
+    pendingApplicationId,
+    setPendingApplicationId,
+    pendingJob,
+    setPendingJob,
+    setApplicationId,
+    applicationId,
     // The delete/undo pair, and the command channel the Live Preview asks through.
     removeEntry,
     restoreEntry,
@@ -175,6 +192,10 @@ const StudioChat = ({ onPaywall }) => {
 
   // The scan cost, priced at the SESSION's selected model tier (flagship scan costs more).
   const scanCost = costForActionTier('FIT_ANALYSIS', tierOf(cvData?.studioModelId)) ?? 10;
+  // The prep analysis is priced at the LIGHT tier and always: /analysis/analyze takes no
+  // model, so the session's flagship pick can't reach it and quoting the flagship rate
+  // would over-charge on the label.
+  const analysisCost = costForActionTier('FIT_ANALYSIS', 'light') ?? 10;
 
   // A session started from the rail already declared its kind, so it opens on that
   // kind's FIRST STEP — the mode chooser would be asking a question already answered.
@@ -184,7 +205,9 @@ const StudioChat = ({ onPaywall }) => {
       ? t('ariaStudio.chat.kindOpenerBuild')
       : pendingKind === 'tailor'
         ? t('ariaStudio.chat.kindOpenerTailor')
-        : t(OPENER_KEY);
+        : pendingKind === 'prep'
+          ? t('ariaStudio.chat.kindOpenerPrep')
+          : t(OPENER_KEY);
 
   const [messages, setMessages] = useState(() => [
     { who: 'aria', text: kindOpener, _opening: true },
@@ -204,12 +227,39 @@ const StudioChat = ({ onPaywall }) => {
   // A source handed over from a finished build ("now tailor it"). Kept in a ref because
   // the provider's copy is cleared immediately below — this session owns it from here.
   const preSourceRef = useRef(pendingSource);
+  // A job to carry INTO a build — handed over exactly once by the provider and owned by
+  // this session from here, for the same reason preSourceRef exists: the provider clears
+  // its copy on the very next effect.
+  const preJobRef = useRef(pendingJob);
+
+  // WHICH analysis this session should be showing, decided once at mount. Two ways in:
+  //
+  //   · `pendingApplicationId` — the rail (or a deep link) handed one over. Nothing is on
+  //     screen yet, so the conversation is REBUILT from the record.
+  //   · a `prepresult` marker in the restored transcript — this is a refresh. The
+  //     conversation came back on its own; only its subject needs re-attaching, because
+  //     `prepApp` is component state and did not survive with it.
+  //
+  // Resolved in a lazy initialiser rather than inside the effect so that StrictMode's
+  // double-invoke sees the same answer both times — see the note on the effect below.
+  const [restoreTarget] = useState(() => {
+    const marker = [...loadSession()].reverse().find((m) => m?.who === 'prepresult');
+    return {
+      id: pendingApplicationId || marker?.applicationId || applicationId || null,
+      // Rebuild only when there is no transcript describing this analysis already. A
+      // refresh HAS one, and replacing it would throw away the user's own history to say
+      // the same thing back to them.
+      rebuild: !marker,
+    };
+  });
 
   // The kind + source are consumed once — a refresh after this point re-derives from
   // markers, and a pre-selected source that was never used simply lapses.
   useEffect(() => {
     if (pendingKind) setPendingKind(null);
     if (pendingSource) setPendingSource(null);
+    if (pendingApplicationId) setPendingApplicationId(null);
+    if (pendingJob) setPendingJob(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -227,6 +277,25 @@ const StudioChat = ({ onPaywall }) => {
   // ops should lock the stream; this only decides which button gets to say it's working,
   // so the FREE re-score can no longer make the PAID re-check look like it's running.
   const [scanKind, setScanKind] = useState(null); // null | 'recompute' | 'rescan'
+
+  // ─── Prepare me for an interview ───
+  //
+  // A prep session runs a job analysis and binds no draft, so none of this lives on
+  // cvData: the CV under analysis, the analysis itself, and the in-flight state of the
+  // three things you can do with it.
+  // { source: { draftCVId } | { resumeId }, title }. The id is kept in its own object
+  // because it is spread STRAIGHT into the analyze request — a display title sitting
+  // beside it would ride along into the payload as a phantom field.
+  const [prepCv, setPrepCv] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  // Fetching a STORED analysis, which is a read — deliberately not `analyzing`, which
+  // means "a charged analysis is running" and gates the entire card surface on it.
+  const [restoringPrep, setRestoringPrep] = useState(false);
+  const [prepApp, setPrepApp] = useState(null);
+  const [buildingCv, setBuildingCv] = useState(false);
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
+  const [generatingPrep, setGeneratingPrep] = useState(false);
+  const [coverLetterFreeRemaining, setCoverLetterFreeRemaining] = useState(0);
   // ─── Auto re-score plumbing (the silent path) ───
   //
   // A SILENT recompute deliberately does not touch `scanning`: that flag gates `ready`,
@@ -838,13 +907,25 @@ const StudioChat = ({ onPaywall }) => {
   };
 
   // ─── Step 1: mode ───
+  // Declared above pickMode because pickMode calls it: the prep track's other handlers
+  // live further down with the rest of the track, but this one is its entry point.
+  const startPrep = () => {
+    push({ who: 'prepstart' });
+    setPhase('prep:cv');
+  };
+
   const pickMode = (mode) => {
     push({ who: 'modepick', mode });
     // Build goes to the SAME roadmap the rail's "New CV" opens — one build entry point,
-    // reached two ways.
+    // reached two ways. Prep works the same way: one track, two doors.
     if (mode === 'build') {
       setPhase('build:roadmap');
       ariaSays(t('ariaStudio.chat.pickModeBuild'));
+      return;
+    }
+    if (mode === 'prep') {
+      startPrep();
+      ariaSays(t('ariaStudio.chat.pickModePrep'));
       return;
     }
     setPhase('job');
@@ -986,6 +1067,280 @@ const StudioChat = ({ onPaywall }) => {
     setEditingJob(true);
     setPhase('job');
   };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Prepare me for an interview
+  //
+  // A job analysis, run in the chat. It creates an Application, never a DraftCV — a
+  // document only exists here if the user asks for one at the end.
+  //
+  // The CV comes first, then the job: someone who has just chosen "prepare me" already
+  // knows which CV they mean, and asking for the JD first would make them find a file
+  // while holding a posting in their head.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // The analyze response and a fetched Application carry the same facts under different
+  // ids. Normalised on the way in so nothing downstream has to know which one it got.
+  const shapePrepApp = (raw, fallbackId = null) => ({
+    ...raw,
+    applicationId: raw?.applicationId || raw?._id || fallbackId,
+  });
+
+  // The free daily cover letter is only knowable from the wallet, and quoting a price for
+  // something that is free today is a small lie. Best-effort: a failure just means the
+  // letter is quoted at full price, which is the safe direction to be wrong in.
+  const refreshCoverLetterAllowance = async () => {
+    try {
+      const { data } = await api.get('/billing/balance');
+      if (typeof data?.coverLetterFreeRemaining === 'number') {
+        setCoverLetterFreeRemaining(data.coverLetterFreeRemaining);
+      }
+    } catch {
+      /* quoted at full price — never blocks the flow */
+    }
+  };
+
+  // Step 1a: a CV already on the profile.
+  const prepPickSavedCv = (draft) => {
+    if (analyzing) return;
+    const title = draft.title || t('ariaStudio.cvPicker.untitledCv');
+    setPrepCv({ source: { draftCVId: draft._id }, title });
+    push({ who: 'prepcv', title });
+    setPhase('prep:job');
+    ariaSays(t('ariaStudio.chat.prep.gotCv', { title }));
+  };
+
+  // Step 1b: a CV that isn't on the profile yet. /resumes/upload only extracts text — no
+  // CV is created and nothing is charged, so an upload here costs exactly as much as
+  // picking a saved one.
+  const prepUploadedCv = (resume) => {
+    if (!resume?._id) {
+      toast.error(t('ariaStudio.chat.prep.uploadFailed'));
+      return;
+    }
+    const title = resume.fileName || resume.originalName || t('ariaStudio.chat.prep.uploadedCv');
+    setPrepCv({ source: { resumeId: resume._id }, title });
+    push({ who: 'prepcv', title });
+    setPhase('prep:job');
+    ariaSays(t('ariaStudio.chat.prep.gotCv', { title }));
+  };
+
+  // Step 2: the job, then the analysis. One beat, not two — the extract exists only to
+  // give the analysis something to point at, and pausing to announce it would be
+  // narrating our own plumbing.
+  const prepCaptureJob = async ({ jobTitle, jobDescription, jobId }) => {
+    if (!prepCv || analyzing) return;
+    setAnalyzing(true);
+    push({ who: 'prepjob', jobTitle, jobDescription });
+    try {
+      // A job read from a link is ALREADY a Job record — re-extracting it would scrape
+      // the same posting a second time and leave a duplicate behind.
+      const job = jobId
+        ? { _id: jobId, title: jobTitle }
+        : await CVService.extractJob({ description: jobDescription, title: jobTitle });
+
+      const result = await CVService.analyzeFit({ jobId: job._id, ...prepCv.source });
+      const app = shapePrepApp(result);
+      setPrepApp(app);
+      setApplicationId(app.applicationId);
+      if (typeof result.remainingCredits === 'number') {
+        window.dispatchEvent(
+          new CustomEvent('credit_updated', { detail: result.remainingCredits })
+        );
+      }
+      push({
+        who: 'prepresult',
+        applicationId: app.applicationId,
+        jobTitle: result.job?.title || jobTitle,
+        company: result.job?.company || '',
+      });
+      setPhase('prep:results');
+      refreshCoverLetterAllowance();
+      ariaSays(t('ariaStudio.chat.prep.analysisDone', { score: Math.round(result.fitScore ?? 0) }));
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (err?.response?.status === 403 && code === 'INSUFFICIENT_CREDITS') {
+        push({ who: 'aria', text: t('ariaStudio.chat.prep.insufficientCredits') });
+      } else if (err?.response?.status === 503 && code === 'AI_UNAVAILABLE') {
+        push({ who: 'aria', text: t('ariaStudio.chat.prep.aiUnavailable') });
+      } else {
+        console.error('analysis failed', err);
+        push({ who: 'aria', text: t('ariaStudio.chat.prep.analysisFailed') });
+      }
+      // Back to the job form with what they typed still in it. Nothing was charged: the
+      // analysis is the only paid step and it did not complete.
+      setPhase('prep:job');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // ─── The three things worth doing with an analysis ───
+
+  // 1. A CV aimed at this role. The JD travels with it, so the new session opens already
+  //    knowing the target instead of asking for it a second time.
+  const prepBuildCv = async () => {
+    if (buildingCv) return;
+    setBuildingCv(true);
+    const job = [...messages].reverse().find((m) => m.who === 'prepjob');
+    const ok = await newSession('build', null, {
+      job: job ? { jobTitle: job.jobTitle, jobDescription: job.jobDescription } : null,
+    });
+    if (!ok) setBuildingCv(false);
+  };
+
+  // 2. The letter. `model` is the Standard | Pro pick from the card.
+  const prepCoverLetter = async (model) => {
+    const id = prepApp?.applicationId;
+    if (!id || generatingCoverLetter) return;
+    setGeneratingCoverLetter(true);
+    try {
+      const data = await CVService.generateCoverLetter(id, model);
+      setPrepApp((previous) => ({ ...previous, ...data }));
+      if (typeof data.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.remainingCredits }));
+      }
+      if (typeof data.coverLetterFreeRemaining === 'number') {
+        setCoverLetterFreeRemaining(data.coverLetterFreeRemaining);
+      }
+      const warnings = data.coverLetterWarnings || [];
+      if (warnings.length > 0) {
+        // Surfaced immediately so the letter is checked before it is sent. Non-blocking —
+        // the letter is written and saved either way.
+        toast.warning(t('dashboard.toasts.coverLetterWarning', { count: warnings.length }), {
+          duration: 8000,
+        });
+      }
+      ariaSays(t('ariaStudio.chat.prep.coverLetterDone'));
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      toast.error(
+        code === 'INSUFFICIENT_CREDITS'
+          ? t('ariaStudio.chat.prep.insufficientCredits')
+          : t('dashboard.toasts.coverLetterFailed')
+      );
+    } finally {
+      setGeneratingCoverLetter(false);
+    }
+  };
+
+  // 3. Interview prep. The prep dashboard is a destination in its own right, so this one
+  //    generates here and opens there.
+  const prepInterviewPrep = async () => {
+    const id = prepApp?.applicationId;
+    if (!id || generatingPrep) return;
+    setGeneratingPrep(true);
+    try {
+      const data = await CVService.generateInterviewPrep(id);
+      const merged = mergeInterviewPrepResponse(prepApp, data);
+      setPrepApp(merged);
+      if (typeof data.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: data.remainingCredits }));
+      }
+      const prepId = getPrepId(merged);
+      if (prepId) onNavigate?.(`/interview-prep/${prepId}`);
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      toast.error(
+        code === 'INSUFFICIENT_CREDITS'
+          ? t('ariaStudio.chat.prep.insufficientCredits')
+          : t('dashboard.toasts.interviewPrepFailed')
+      );
+    } finally {
+      setGeneratingPrep(false);
+    }
+  };
+
+  const viewCoverLetter = () => {
+    const id = prepApp?.applicationId;
+    if (id) onNavigate?.(`/resume/${id}?tab=cover-letter`);
+  };
+
+  const viewInterviewPrep = () => {
+    const prepId = getPrepId(prepApp);
+    if (prepId) onNavigate?.(`/interview-prep/${prepId}`);
+  };
+
+  // Putting an analysis back on screen — see `restoreTarget` above for which one and why.
+  //
+  // NOTE ON STRICTMODE: this effect is invoked twice on mount in development, and the
+  // first invocation's cleanup runs before its own fetch resolves. That is fine ONLY
+  // because the target is resolved outside the effect and the second invocation repeats
+  // the work — an idempotent GET. Nothing in here may consume state the second pass needs.
+  //
+  //   REOPENED  — the rail (or a deep link) handed over an id. Nothing is on screen yet,
+  //               so the conversation is REBUILT from the Application. It is never stored:
+  //               a prep session has no draft to hold a transcript, and it doesn't need
+  //               one, because every line of it is a function of the record.
+  //
+  //   REFRESHED — the transcript came back from localStorage on its own, but `prepApp` is
+  //               component state and did not. Without this, derivePhase lands on
+  //               'prep:results' and the results card renders NOTHING, because it has no
+  //               analysis to render — the page looked like it had lost the work. Here the
+  //               transcript is already right; only its subject needs re-attaching.
+  //
+  // The id comes from the `prepresult` marker in preference to the provider's binding: it
+  // is the one that matches the conversation actually on screen.
+  useEffect(() => {
+    const { id, rebuild } = restoreTarget;
+    if (!id) return undefined;
+
+    let alive = true;
+    (async () => {
+      setRestoringPrep(true);
+      try {
+        const raw = await CVService.getApplication(id);
+        if (!alive) return;
+        const app = shapePrepApp(raw, id);
+        const jobTitle = raw?.jobId?.title || raw?.jobTitle || '';
+        const company = raw?.jobId?.company || raw?.jobCompany || '';
+        setPrepApp(app);
+        setApplicationId(app.applicationId);
+        setPrepCv(
+          raw?.draftCVId
+            ? { source: { draftCVId: raw.draftCVId }, title: '' }
+            : raw?.resumeId
+              ? { source: { resumeId: raw.resumeId }, title: '' }
+              : null
+        );
+        if (rebuild) {
+          setMessages([
+            { who: 'aria', text: t('ariaStudio.chat.prep.reopened', { jobTitle }), _opening: true },
+            { who: 'prepstart' },
+            {
+              who: 'prepjob',
+              jobTitle,
+              jobDescription: raw?.jobId?.description || '',
+            },
+            { who: 'prepresult', applicationId: app.applicationId, jobTitle, company },
+          ]);
+        }
+        setPhase('prep:results');
+        refreshCoverLetterAllowance();
+      } catch (err) {
+        if (!alive) return;
+        console.error('Failed to reopen that analysis', err);
+        toast.error(t('ariaStudio.chat.prep.reopenFailed'));
+        // Whichever way we got here, leave the user somewhere they can act rather than on
+        // a results step with no result. The transcript stays on the refresh path — it is
+        // their history, and a network blip is no reason to erase it.
+        setPhase('prep:cv');
+        setApplicationId(null);
+        if (rebuild) {
+          setMessages([{ who: 'aria', text: t('ariaStudio.chat.kindOpenerPrep'), _opening: true }]);
+        }
+      } finally {
+        // NOT guarded on `alive`. An abandoned pass must still put the flag down —
+        // stranding it true is exactly what left a reopened session showing an empty
+        // screen behind a locked composer.
+        setRestoringPrep(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoreTarget]);
 
   // The CV as the SCAN sees it, folded to one string (studioFlow.scoreSignature). Read
   // through a ref by anything asynchronous, so a recompute records the document it
@@ -1695,22 +2050,48 @@ const StudioChat = ({ onPaywall }) => {
     if (working) return;
     setWorking(true);
     try {
-      const res = await startBuild({ model: modelId });
+      // A build launched from a finished analysis already knows the job. build-start takes
+      // the JD and reads the Role Brief from it server-side, so the session opens aimed at
+      // the role rather than asking for a posting the user just pasted a moment ago.
+      const seedJob = preJobRef.current;
+      const res = await startBuild({
+        model: modelId,
+        ...(seedJob?.jobDescription
+          ? { jobTitle: seedJob.jobTitle, jobDescription: seedJob.jobDescription }
+          : {}),
+      });
       if (res?.paywall) {
         onPaywall?.();
         return;
       }
       if (!res) return; // startBuild already surfaced the failure
+      preJobRef.current = null;
       push(
         { who: 'buildintro' },
         { who: 'buildstart', draftId: res.draftId },
+        // The job marker is what makes derivePhase skip the build's own job step on a
+        // refresh; without it a reload would ask for the JD that is already on the draft.
+        ...(seedJob?.jobDescription
+          ? [
+              {
+                who: 'jobcard',
+                jobTitle: seedJob.jobTitle,
+                jobDescription: seedJob.jobDescription,
+                brief: res.brief || null,
+                keywords: [],
+              },
+              { who: 'buildjobdone', carried: true },
+            ]
+          : []),
         ...(intent === 'upload' ? [{ who: 'uploadintent' }] : [])
       );
       setPhase('build:career-stage');
       ariaSays(
-        intent === 'upload'
-          ? t('ariaStudio.chat.beginBuildUpload')
-          : t('ariaStudio.chat.beginBuild')
+        seedJob?.jobDescription
+          ? t('ariaStudio.chat.beginBuildWithJob', { jobTitle: seedJob.jobTitle })
+          : intent === 'upload'
+            ? t('ariaStudio.chat.beginBuildUpload')
+            : t('ariaStudio.chat.beginBuild')
       );
     } finally {
       setWorking(false);
@@ -2803,6 +3184,10 @@ const StudioChat = ({ onPaywall }) => {
   // The brief rides on the jobcard marker, so the confirm card re-renders from history
   // after a refresh without re-previewing.
   const latestJob = [...messages].reverse().find((m) => m.who === 'jobcard');
+  // The prep track's own job marker. Deliberately separate from `jobcard` above — see
+  // studioFlow.derivePhase for why the two tracks cannot share one marker name.
+  const latestPrepJob = [...messages].reverse().find((m) => m.who === 'prepjob');
+  const latestPrepResult = [...messages].reverse().find((m) => m.who === 'prepresult');
   // The live snapshot off the draft — NOT off a marker, so a free recompute updates
   // every card without rewriting history.
   const scan = cvData?.studioScan;
@@ -2815,7 +3200,7 @@ const StudioChat = ({ onPaywall }) => {
     Array.isArray(savedStudioThread) &&
     savedStudioThread.length > 0 &&
     messages.every((message) => message._opening);
-  const restoringSession = !working && (loading || waitingForSavedThread);
+  const restoringSession = !working && (loading || waitingForSavedThread || restoringPrep);
   const studioTransition = restoringSession ? 'restore' : openingStudio ? 'opening' : null;
   // The fix session in play, read from the markers — so it survives a refresh exactly
   // the way the phase does.
@@ -3141,6 +3526,7 @@ const StudioChat = ({ onPaywall }) => {
     !working &&
     !reading &&
     !scanning &&
+    !analyzing &&
     !roleBusy &&
     !transitionLabel;
 
@@ -3348,8 +3734,58 @@ const StudioChat = ({ onPaywall }) => {
                 <SelectedAnswerBubble key={i} reduce={reduce}>
                   {m.mode === 'build'
                     ? t('ariaStudio.modeChooser.buildTitle')
-                    : t('ariaStudio.modeChooser.tailorTitle')}
+                    : m.mode === 'prep'
+                      ? t('ariaStudio.modeChooser.prepTitle')
+                      : t('ariaStudio.modeChooser.tailorTitle')}
                 </SelectedAnswerBubble>
+              );
+            }
+
+            // ── Prep track markers ──
+
+            // The track opener. Like buildintro/buildstart it exists for derivePhase, not
+            // for the reader — the conversation above it already said what is happening.
+            if (m.who === 'prepstart') return null;
+
+            // The CV under analysis — an answer the user gave, so it reads as theirs.
+            if (m.who === 'prepcv') {
+              return (
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {m.title}
+                </SelectedAnswerBubble>
+              );
+            }
+
+            // The job. Its text lives on the marker (latestPrepJob reads it back when the
+            // form reopens); the role name is all that needs to be visible.
+            if (m.who === 'prepjob') {
+              return (
+                <SelectedAnswerBubble key={i} reduce={reduce}>
+                  {decodeEntities(m.jobTitle)}
+                </SelectedAnswerBubble>
+              );
+            }
+
+            // The analysis landed. The RESULT is not stored here — PrepResultsCard renders
+            // the live record, so a letter generated afterwards updates the card without
+            // rewriting history.
+            if (m.who === 'prepresult') {
+              // Decoded on the way out: analyses captured before the scraper learned to do
+              // it are stored with their entities intact. The company is dropped when the
+              // title already names it — scraped titles usually do.
+              const role = decodeEntities(m.jobTitle);
+              const employer = decodeEntities(m.company);
+              const repeatsEmployer =
+                !!employer && role.toLowerCase().includes(employer.toLowerCase());
+              return (
+                <StudioPhaseDivider key={i} reduce={reduce}>
+                  {employer && !repeatsEmployer
+                    ? t('ariaStudio.chat.prep.dividerWithCompany', {
+                        jobTitle: role,
+                        company: employer,
+                      })
+                    : t('ariaStudio.chat.prep.divider', { jobTitle: role })}
+                </StudioPhaseDivider>
               );
             }
 
@@ -3699,6 +4135,61 @@ const StudioChat = ({ onPaywall }) => {
           <CardCollapseProvider value={cardCollapse}>
             <AnimatePresence>
               {ready && phase === 'mode' && <ModeChooser key="mode" onPick={pickMode} />}
+
+              {/* ── Prepare me for an interview ── */}
+
+              {ready && phase === 'prep:cv' && (
+                <PrepCvCard
+                  key="prep-cv"
+                  onPick={prepPickSavedCv}
+                  onUploaded={prepUploadedCv}
+                  busyId={analyzing ? 'busy' : null}
+                />
+              )}
+
+              {ready && phase === 'prep:job' && (
+                <JobCaptureCard
+                  key="prep-job"
+                  initialTitle={latestPrepJob?.jobTitle || ''}
+                  initialDescription={latestPrepJob?.jobDescription || ''}
+                  model={genModelId}
+                  allowLink
+                  // This button spends credits and starts the analysis. "Add" would be a
+                  // quiet lie about both.
+                  submitLabel={t('ariaStudio.prep.analyzeCta', { cost: analysisCost })}
+                  onSubmit={prepCaptureJob}
+                  onCancel={() => setPhase('prep:cv')}
+                />
+              )}
+
+              {/* Outside the `ready` gate on purpose: `analyzing` is what CLOSES that gate,
+                  so a card waiting on it would never appear. Scoped to the job step so
+                  reopening a past analysis — which also sets `analyzing` — doesn't claim to
+                  be running one. */}
+              {analyzing && phase === 'prep:job' && (
+                <PrepAnalyzingCard key="prep-analyzing" jobTitle={latestPrepJob?.jobTitle || ''} />
+              )}
+
+              {ready && phase === 'prep:results' && prepApp && (
+                <PrepResultsCard
+                  key="prep-results"
+                  application={prepApp}
+                  jobTitle={latestPrepResult?.jobTitle || latestPrepJob?.jobTitle || ''}
+                  company={latestPrepResult?.company || ''}
+                  onBuildCv={prepBuildCv}
+                  onCoverLetter={prepCoverLetter}
+                  onViewCoverLetter={viewCoverLetter}
+                  onInterviewPrep={prepInterviewPrep}
+                  onViewInterviewPrep={viewInterviewPrep}
+                  buildingCv={buildingCv}
+                  generatingCoverLetter={generatingCoverLetter}
+                  generatingPrep={generatingPrep}
+                  coverLetterFreeRemaining={coverLetterFreeRemaining}
+                  genModelId={genModelId}
+                  onGenModel={setGenModelId}
+                  chatTier={tierOf(modelId)}
+                />
+              )}
 
               {/* ── Build track ── */}
 

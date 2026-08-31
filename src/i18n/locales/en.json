@@ -186,8 +186,10 @@
       "home": "Home",
       "myCvs": "My CVs",
       "applications": "Applications",
-      "interview": "Interview"
-    }
+      "interview": "Interview",
+      "ariaStudio": "Aria"
+    },
+    "ariaStudio": "Aria Studio"
   },
   "errors": {
     "loginFailed": "Login failed",
@@ -1607,7 +1609,8 @@
       "heading": {
         "experience": "Write them with",
         "summary": "Draft it with",
-        "skills": "Search with"
+        "skills": "Search with",
+        "coverLetter": "Write it with"
       },
       "eachCost": "{{n}} cr each",
       "flatCost": "{{n}} cr",
@@ -1630,6 +1633,10 @@
         "skills": {
           "light": "Pulls the hard skills out of your history.",
           "flagship": "Catches skills you never thought to write down."
+        },
+        "coverLetter": {
+          "light": "Clear, direct, and grounded in your CV.",
+          "flagship": "The most natural, human writing feel. Worth it when the letter is doing the work."
         }
       }
     },
@@ -2010,48 +2017,72 @@
         "contact": {
           "title": "Contact Information",
           "requirements": {
-            "0": { "label": "Full name" },
-            "1": { "label": "Email address" },
-            "2": { "label": "Phone number" },
-            "3": { "label": "LinkedIn URL" }
+            "0": {
+              "label": "Full name"
+            },
+            "1": {
+              "label": "Email address"
+            },
+            "2": {
+              "label": "Phone number"
+            },
+            "3": {
+              "label": "LinkedIn URL"
+            }
           }
         },
         "history": {
           "title": "Work History",
           "requirements": {
-            "0": { "label": "Add at least 2 roles" },
-            "1": { "label": "2–3 bullet points per role" },
-            "2": { "label": "Quantify achievements with numbers" }
+            "0": {
+              "label": "Add at least 2 roles"
+            },
+            "1": {
+              "label": "2–3 bullet points per role"
+            },
+            "2": {
+              "label": "Quantify achievements with numbers"
+            }
           }
         },
         "projects": {
           "title": "Projects",
           "requirements": {
-            "0": { "label": "Add a project to showcase hands-on work" }
+            "0": {
+              "label": "Add a project to showcase hands-on work"
+            }
           }
         },
         "education": {
           "title": "Education",
           "requirements": {
-            "0": { "label": "Add at least one qualification" }
+            "0": {
+              "label": "Add at least one qualification"
+            }
           }
         },
         "certifications": {
           "title": "Certifications",
           "requirements": {
-            "0": { "label": "Add any licences, certificates, or training" }
+            "0": {
+              "label": "Add any licences, certificates, or training"
+            }
           }
         },
         "skills": {
           "title": "Skills",
           "requirements": {
-            "0": { "label": "List at least 8 relevant skills" }
+            "0": {
+              "label": "List at least 8 relevant skills"
+            }
           }
         },
         "summary": {
           "title": "Professional Summary",
           "requirements": {
-            "0": { "label": "A 3–4 sentence summary (100+ characters)" }
+            "0": {
+              "label": "A 3–4 sentence summary (100+ characters)"
+            }
           }
         }
       },
@@ -2546,7 +2577,7 @@
     "skillsMatchedToggle_other": "{{count}} skills matched",
     "readFromResume": "Read from your résumé",
     "whatStoodOut": "What stood out",
-    "theMath": "The math · fixed weights",
+    "theMath": "The math",
     "whyWeights": "Why these weights?",
     "weightsExplainer": "Skills (40%) are the strongest predictor of fit, followed by experience (25%) and education (15%). Seniority and profile strength (10% each) round out the picture. Fixed across every analysis so scores are directly comparable.",
     "scoreBreakdown": "Score breakdown",
@@ -2584,7 +2615,11 @@
       "saveFailed": "Couldn't save feedback",
       "helpfulAria": "Helpful",
       "notHelpfulAria": "Not helpful"
-    }
+    },
+    "evidenceCount_one": "{{count}} line from your CV",
+    "evidenceCount_other": "{{count}} lines from your CV",
+    "actionCount_one": "{{count}} thing to fix",
+    "actionCount_other": "{{count}} things to fix"
   },
   "interviewPrep": {
     "common": {
@@ -4335,7 +4370,9 @@
       "removeKeepCv": "Remove from Studio · keep the CV",
       "deleting": "Deleting…",
       "deleteEntirely": "Delete CV entirely",
-      "deleteOnly": "Delete"
+      "deleteOnly": "Delete",
+      "deleteThisAnalysis": "Delete this analysis?",
+      "applicationBody": "This removes the analysis for <b>{{name}}</b>, along with any cover letter and interview prep saved with it. Running it again costs credits."
     },
     "entryPicker": {
       "whichOne": "Which one should we sharpen?",
@@ -4373,7 +4410,31 @@
       "draftedNote": "AI-generated role profile based on the job title. It may not reflect a specific employer's requirements. Replace it with the real job posting when available.",
       "draftedTag": "AI-generated role profile · not a real posting",
       "draftInsufficientCredits": "Not enough credits to generate a role profile.",
-      "draftFailed": "Couldn't generate a role profile for that job title. Please try again."
+      "draftFailed": "Couldn't generate a role profile for that job title. Please try again.",
+      "linkLabel": "Paste a job link",
+      "linkPlaceholder": "https://…",
+      "linkRead": "Read it",
+      "linkReading": "Reading…",
+      "linkOrType": "or fill it in yourself",
+      "linkFailed": "I couldn't read that page. Paste the description in below instead.",
+      "linkBlocked": "That site blocks us from reading it. Paste the description in below instead.",
+      "linkTooThin": "There wasn't much on that page — it may need a login. Paste the description in below instead.",
+      "guide": {
+        "partialTitle": "Only part of it came through",
+        "partialBody": "That link gave me a summary rather than the full description. I can still work from it, but the analysis is only ever as good as what it reads.",
+        "blockedTitle": "I couldn't read that page",
+        "blockedBody": "Some sites — LinkedIn especially — block us from reading them. Nothing is wrong with your link.",
+        "copyStep": "Open the posting, copy the description, and paste it below.",
+        "openPosting": "Open the posting",
+        "draftStep": "Haven't got it to hand?",
+        "draftNote": "A typical description is a stand-in: the analysis then tells you how you match the ROLE rather than this exact posting.",
+        "pasteHere": "Paste it in"
+      },
+      "fetching": "Reading the posting…",
+      "summary": {
+        "eyebrow": "What I found",
+        "untitledRole": "This role"
+      }
     },
     "modeChooser": {
       "whatAreWeDoing": "What are we doing?",
@@ -4387,7 +4448,9 @@
       "buildStepTwo": "Shape each section together",
       "buildStepThree": "Review a polished CV live",
       "buildCta": "Start creating my CV",
-      "buildNote": "Complete your CV, edit, and return whenever you need."
+      "buildNote": "Complete your CV, edit, and return whenever you need.",
+      "prepTitle": "Prepare me for an interview",
+      "prepBody": "Check a CV you already have against a job, and get what you need to apply."
     },
     "roleBrief": {
       "ariasRead": "ARIA's read",
@@ -4508,7 +4571,10 @@
       "rename": "Rename",
       "removeOrDeleteCv": "Remove or delete this CV",
       "deleteTailoring": "Delete this tailoring",
-      "deleteAria": "Delete {{heading}}"
+      "deleteAria": "Delete {{heading}}",
+      "newPrep": "Prepare for an interview",
+      "newPrepShort": "Interview",
+      "applicationTag": "Analysis"
     },
     "skillsBuild": {
       "bodyWithJob": "I'll read the roles and projects you just described and pull out the hard skills you can actually back up, weighted toward what this job asks for. Then I'll ask about the ones your roles usually involve but people rarely think to write down. You pick which ones go in.",
@@ -4776,11 +4842,6 @@
         "rateLimited": "That was a lot of messages quickly — give it a minute.",
         "notSent": "Not sent"
       },
-      "failed": {
-        "retry": "Retry",
-        "rateLimited": "That was a lot of messages quickly — give it a minute.",
-        "notSent": "Not sent"
-      },
       "freeTypingResults": "Your scan's above. Walking you through each fix is what I'm learning next.",
       "freeTypingOther": "Use the card above and I'll take it from there.",
       "nextUp": "Next up",
@@ -4880,6 +4941,23 @@
         "downloadFailed": "Download failed",
         "pdfDownloaded": "PDF downloaded",
         "wordDownloaded": "Word document downloaded"
+      },
+      "kindOpenerPrep": "Let's get you ready for this one. I'll read your CV against the job, tell you where you stand, and set up what you need to apply.",
+      "pickModePrep": "Good — first, which CV are we working from?",
+      "beginBuildWithJob": "I've got the {{jobTitle}} role saved, so I'll keep it in mind throughout. First, a bit about where you are in your career.",
+      "prep": {
+        "gotCv": "Got it — {{title}}. Now, what are you going for?",
+        "uploadedCv": "Your uploaded CV",
+        "uploadFailed": "That upload didn't come through. Try again?",
+        "analysisDone": "Here's how you're standing at {{score}} out of 100 — and the three things worth doing next.",
+        "analysisFailed": "The analysis didn't go through, and you haven't been charged. Try again?",
+        "insufficientCredits": "You don't have enough credits for that just yet.",
+        "aiUnavailable": "The AI isn't reachable right now, so nothing was charged. Try again shortly.",
+        "coverLetterDone": "Your cover letter is ready — read it through before you send it.",
+        "reopened": "Here's your analysis for {{jobTitle}}.",
+        "reopenFailed": "I couldn't open that analysis.",
+        "divider": "Analysis · {{jobTitle}}",
+        "dividerWithCompany": "Analysis · {{jobTitle}} at {{company}}"
       }
     },
     "sectionCoach": {
@@ -5008,6 +5086,34 @@
       "panel": "Panel",
       "studioSessions": "Studio sessions",
       "tailoredCopy": "Tailored copy"
+    },
+    "prep": {
+      "whichCv": "Which CV are we checking?",
+      "uploadTitle": "Not one of these?",
+      "uploadBody": "Upload a CV instead — it's free, and I'll only read it.",
+      "uploadSubmit": "Use this CV",
+      "uploadBusy": "Reading it…",
+      "whatNext": "What next",
+      "whatNextBody": "Three things worth doing about {{jobTitle}}.",
+      "whatNextBodyCompany": "Three things worth doing about {{jobTitle}} at {{company}}.",
+      "buildCvTitle": "Build a CV for this role",
+      "buildCvBody": "We'll start a new one together, with this job already in mind.",
+      "buildCvCta": "Start",
+      "opening": "Opening…",
+      "coverLetterTitle": "Cover letter",
+      "coverLetterBody": "Written from your CV and this job description.",
+      "interviewPrepTitle": "Interview prep",
+      "interviewPrepBody": "The questions this role is likely to ask, and how to answer them.",
+      "viewAndDownload": "View & download",
+      "view": "View",
+      "analyzeCta": "Analyze · {{cost}} cr",
+      "analyzing": {
+        "readingCv": "Reading your CV…",
+        "readingJob": "Reading the job description…",
+        "matching": "Matching your experience against what they asked for…",
+        "weighing": "Weighing it all up…",
+        "note": "This takes a few seconds. Stay on this screen."
+      }
     }
   }
 }

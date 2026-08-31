@@ -202,8 +202,7 @@ describe('StudioChat — addEntry in a BUILD session', () => {
       });
 
       await waitFor(
-        () =>
-          expect(ariaTexts()).toContain('Next one — what kind of experience was this?'),
+        () => expect(ariaTexts()).toContain('Next one — what kind of experience was this?'),
         { timeout: 2500 }
       );
       expect(ariaTexts().some((line) => line.includes("Let's start with your most recent"))).toBe(

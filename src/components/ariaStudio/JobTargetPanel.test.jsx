@@ -77,9 +77,7 @@ describe('JobTargetPanel — the target is the must-haves', () => {
   it('counts must-haves only, with nice-to-haves outside the total', () => {
     setup();
     expect(screen.getByText('1')).toBeTruthy();
-    expect(
-      screen.getByText(i18n.t('ariaStudio.jobTarget.ofTarget', { total: 2 }))
-    ).toBeTruthy();
+    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.ofTarget', { total: 2 }))).toBeTruthy();
   });
 
   it('splits the two groups and labels the bonus as not required', () => {

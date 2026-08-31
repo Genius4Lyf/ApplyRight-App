@@ -126,9 +126,7 @@ describe('a message that failed to send', () => {
     await mountStudio();
     await ask();
 
-    expect(
-      await screen.findByText(i18n.t('ariaStudio.chat.failed.rateLimited'))
-    ).toBeTruthy();
+    expect(await screen.findByText(i18n.t('ariaStudio.chat.failed.rateLimited'))).toBeTruthy();
     expect(screen.queryByText(i18n.t('ariaStudio.chat.chatUnreachable'))).toBeNull();
   });
 

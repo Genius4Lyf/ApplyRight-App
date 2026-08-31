@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import AriaLoader from '../ui/AriaLoader';
 import { Eye } from 'lucide-react';
 
-// Shared toolkit primitives so the "My CV toolkit" card looks identical
-// wherever it appears (Dashboard results + JobHistory detail).
+// Shared toolkit primitives so the generated-artifact rows look identical
+// wherever they appear (the Studio's prep results, and any future artifact list).
 
 // Emerald "Ready" status chip (dot + label).
 export const ReadyChip = () => {

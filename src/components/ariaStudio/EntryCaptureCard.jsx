@@ -49,9 +49,7 @@ const EntryCaptureCard = ({ section = 'experience', entry, onSubmit, busy }) => 
       ? title.trim().length > 1 && company.trim().length > 1 && !!startDate.trim()
       : section === 'project'
         ? title.trim().length > 1
-        : degree.trim().length > 1 &&
-          school.trim().length > 1 &&
-          graduationDate.trim().length > 1;
+        : degree.trim().length > 1 && school.trim().length > 1 && graduationDate.trim().length > 1;
 
   const submit = () => {
     if (!canSave || busy) return;
@@ -110,7 +108,9 @@ const EntryCaptureCard = ({ section = 'experience', entry, onSubmit, busy }) => 
                 />
               </div>
               <div>
-                <span className={labelClass}>{t('ariaStudio.studioFlow.fields.experience.dates')}</span>
+                <span className={labelClass}>
+                  {t('ariaStudio.studioFlow.fields.experience.dates')}
+                </span>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <input
                     value={startDate}

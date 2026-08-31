@@ -30,10 +30,7 @@ export const evidenceForStage = (stage) => {
   return {
     headlineKey: `${base}.headline`,
     bodyKey: `${base}.body`,
-    sourceKeys: Array.from(
-      { length: EVIDENCE_SOURCE_COUNT[s] },
-      (_, i) => `${base}.sources.${i}`
-    ),
+    sourceKeys: Array.from({ length: EVIDENCE_SOURCE_COUNT[s] }, (_, i) => `${base}.sources.${i}`),
     closerKey: `${base}.closer`,
   };
 };

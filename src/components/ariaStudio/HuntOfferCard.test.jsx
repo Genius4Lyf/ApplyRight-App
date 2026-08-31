@@ -22,9 +22,7 @@ describe('HuntOfferCard', () => {
   it('names the requirement the job asked for', () => {
     render(<HuntOfferCard name={NAME} onAccept={vi.fn()} onDecline={vi.fn()} />);
 
-    expect(
-      screen.getByText(i18n.t('ariaStudio.chat.huntOffer.body', { name: NAME }))
-    ).toBeTruthy();
+    expect(screen.getByText(i18n.t('ariaStudio.chat.huntOffer.body', { name: NAME }))).toBeTruthy();
     expect(screen.getByText(i18n.t('ariaStudio.chat.huntOffer.eyebrow'))).toBeTruthy();
   });
 

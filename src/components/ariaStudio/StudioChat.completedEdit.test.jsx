@@ -144,9 +144,9 @@ describe('StudioChat — applying edits to a completed build', () => {
 
     await screen.findByText('Ready to send');
     await waitFor(() =>
-      expect(ctx.cvData.coachChats.studio.filter((message) => message.who === 'unpinrole')).toHaveLength(
-        1
-      )
+      expect(
+        ctx.cvData.coachChats.studio.filter((message) => message.who === 'unpinrole')
+      ).toHaveLength(1)
     );
   });
 

@@ -148,8 +148,9 @@ const JobTargetPanel = ({ coverage, keywords = [], onClose }) => {
             {t('ariaStudio.jobTarget.eyebrow')}
           </p>
           <p className="mt-0.5 text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-            {[brief?.role || cvData?.targetJob?.title, brief?.company].filter(Boolean).join(' · ') ||
-              t('ariaStudio.jobTarget.thisJob')}
+            {[brief?.role || cvData?.targetJob?.title, brief?.company]
+              .filter(Boolean)
+              .join(' · ') || t('ariaStudio.jobTarget.thisJob')}
           </p>
         </div>
         {onClose && (

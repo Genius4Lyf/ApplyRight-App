@@ -6,10 +6,18 @@ import { getCompletionStatus, cvBand } from '../../lib/cvCompleteness';
 import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
 import AriaCard from './AriaCard';
 
-// Which CV are we tailoring FROM? Completion % + band come from the shared
-// cvCompleteness helpers (the same source /my-cvs and the dashboard use) — MyCVs'
-// deriveCv is page-local, so the primitives are recomputed here rather than imported.
-const CvPickerCard = ({ onPick, onCancel, busyId }) => {
+// Which of your CVs? Completion % + band come from the shared cvCompleteness helpers
+// (the same source /my-cvs and the dashboard use) — MyCVs' deriveCv is page-local, so the
+// primitives are recomputed here rather than imported.
+//
+// Two callers, two questions: the tailor track asks which CV to tailor FROM, and a prep
+// session asks which CV to analyse. Same list, same rows — so `eyebrow` swaps the
+// question rather than a second copy of this component existing to change one line.
+//
+// `extra` renders BELOW the list: the prep session puts its upload there, which is
+// exactly what someone with no saved CVs needs to see. Back is omitted when there is no
+// `onCancel` — a first step has nothing to go back to.
+const CvPickerCard = ({ onPick, onCancel, busyId, eyebrow, extra }) => {
   const { t } = useTranslation();
   const [drafts, setDrafts] = useState(null); // null = loading
   const [error, setError] = useState(false);
@@ -36,7 +44,7 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
     <AriaCard cardKey="cvpicker">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.cvPicker.whichCv')}
+          {eyebrow || t('ariaStudio.cvPicker.whichCv')}
         </p>
 
         {drafts === null && (
@@ -57,9 +65,7 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
               const { percent, isComplete } = getCompletionStatus(d);
               const band = cvBand(percent, isComplete);
               const name = d.personalInfo?.fullName || t('ariaStudio.cvPicker.draft');
-              const relative = d.updatedAt
-                ? formatRelative(new Date(d.updatedAt))
-                : '';
+              const relative = d.updatedAt ? formatRelative(new Date(d.updatedAt)) : '';
               const busy = busyId === d._id;
 
               return (
@@ -77,7 +83,9 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
                     </span>
                     <span className="block text-[12px] text-slate-500 dark:text-slate-400 truncate">
                       {name}
-                      {relative ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}` : ''}
+                      {relative
+                        ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}`
+                        : ''}
                     </span>
                   </span>
                   <span className={`shrink-0 font-mono text-[12px] font-bold ${BAND_TEXT[band]}`}>
@@ -89,16 +97,20 @@ const CvPickerCard = ({ onPick, onCancel, busyId }) => {
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-start">
-          <button
-            type="button"
-            onClick={() => onCancel?.()}
-            disabled={!!busyId}
-            className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {t('common.back')}
-          </button>
-        </div>
+        {extra}
+
+        {onCancel && (
+          <div className="mt-4 flex items-center justify-start">
+            <button
+              type="button"
+              onClick={() => onCancel()}
+              disabled={!!busyId}
+              className="text-[14px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {t('common.back')}
+            </button>
+          </div>
+        )}
       </div>
     </AriaCard>
   );

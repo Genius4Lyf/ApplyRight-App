@@ -9,13 +9,7 @@ import {
   subscribeModelConfig,
   getModelConfigVersion,
 } from '../../lib/models';
-
-const ACTION_KEY = {
-  experience: 'GENERATE_BULLET',
-  project: 'GENERATE_BULLET',
-  summary: 'GENERATE_SUMMARY',
-  skills: 'GENERATE_SKILLS',
-};
+import { ACTION_KEY } from '../../lib/generationActions';
 
 // A per-MODEL picker for ONE generation action (bullets/summary/skills) — deliberately
 // separate from ModelPicker, which chooses the CHAT model. One tile per exposed model

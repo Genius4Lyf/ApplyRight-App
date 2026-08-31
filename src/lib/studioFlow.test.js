@@ -1581,3 +1581,86 @@ describe('languages and the job title are optional', () => {
     ).toBe(scoreSignature(completeCv));
   });
 });
+
+// ─── The prep track ───
+//
+// A job analysis binds no draft, so its whole conversation lives in the pre-clone
+// transcript and these three markers are the only thing derivePhase has to go on.
+describe('derivePhase — prepare me for an interview', () => {
+  const PREP = [
+    { who: 'modepick', mode: 'prep' },
+    { who: 'prepstart' },
+    { who: 'prepcv', title: 'Ernest CV' },
+    { who: 'prepjob', jobTitle: 'Rig Electrician', jobDescription: 'x' },
+    { who: 'prepresult', applicationId: 'a1', jobTitle: 'Rig Electrician' },
+  ];
+  const upToPrep = (marker) => PREP.slice(0, PREP.findIndex((m) => m.who === marker) + 1);
+
+  it('advances one step per milestone marker', () => {
+    expect(derivePhase(upToPrep('prepstart'))).toBe('prep:cv');
+    expect(derivePhase(upToPrep('prepcv'))).toBe('prep:job');
+    expect(derivePhase(upToPrep('prepresult'))).toBe('prep:results');
+  });
+
+  it('does NOT confuse a prep session with the tailor track', () => {
+    // Both tracks capture a JD. They use different marker names precisely so that
+    // has('jobcard') can't be true on a prep session and derive it onto 'brief' — a
+    // screen a prep session has no card for.
+    expect(derivePhase(PREP)).toBe('prep:results');
+    expect(derivePhase(PREP)).not.toBe('brief');
+  });
+
+  it('outranks the mode pick it started from', () => {
+    // A modepick of 'prep' alone would otherwise fall through to the tailor track's
+    // fallback, which reads any non-build pick as 'job'.
+    expect(derivePhase(upToPrep('prepstart'))).toBe('prep:cv');
+  });
+
+  it('ignores ordinary chat turns between the markers', () => {
+    const chatty = [
+      { who: 'prepstart' },
+      { who: 'aria', text: 'which CV?' },
+      { who: 'prepcv', title: 'Ernest CV' },
+      { who: 'user', text: 'that one' },
+    ];
+    expect(derivePhase(chatty)).toBe('prep:job');
+  });
+});
+
+describe('phaseForNewSession — prep', () => {
+  it('opens on the CV step, not the job', () => {
+    // The CV comes first: someone who just chose "prepare me" knows which CV they mean,
+    // and asking for the JD first makes them find a file while holding a posting in head.
+    expect(phaseForNewSession('prep')).toBe('prep:cv');
+  });
+
+  it('ignores any restored transcript, like the other declared kinds', () => {
+    expect(phaseForNewSession('prep', [{ who: 'scan' }])).toBe('prep:cv');
+  });
+});
+
+describe('sessionRow — an analysis', () => {
+  const analysis = {
+    _id: 'a1',
+    kind: 'application',
+    title: 'Rig Electrician',
+    jobTitle: 'Rig Electrician',
+    company: 'Seadrill',
+    fitScore: 58,
+  };
+
+  it('is flagged as an application and always shows its score', () => {
+    const r = sessionRow(analysis);
+    expect(r.isApplication).toBe(true);
+    expect(r.isBuild).toBe(false);
+    expect(r.showScore).toBe(true);
+    expect(r.fitScore).toBe(58);
+    expect(r.heading).toBe('Rig Electrician');
+    expect(r.sub).toBe('Seadrill');
+  });
+
+  it('leaves CV sessions unflagged', () => {
+    expect(sessionRow({ _id: 'd1', kind: 'build' }).isApplication).toBe(false);
+    expect(sessionRow({ _id: 'd2', kind: 'tailor' }).isApplication).toBe(false);
+  });
+});

@@ -51,7 +51,14 @@ describe('PinnedEntryCard inline field editing', () => {
   });
 
   it('seeds the editor with the value already captured', () => {
-    render(<PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={vi.fn()} />);
+    render(
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onFieldSave={vi.fn()}
+      />
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Role' }));
 
@@ -63,7 +70,12 @@ describe('PinnedEntryCard inline field editing', () => {
   it('saves ONLY the field that changed', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onFieldSave={onFieldSave}
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Role' }));
@@ -84,7 +96,12 @@ describe('PinnedEntryCard inline field editing', () => {
   it('sends the three date keys together so a current role keeps no stale end date', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onFieldSave={onFieldSave}
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Dates' }));
@@ -107,7 +124,12 @@ describe('PinnedEntryCard inline field editing', () => {
   it('writes nothing on Cancel or Escape', () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={onFieldSave} />
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onFieldSave={onFieldSave}
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Company' }));
@@ -129,7 +151,14 @@ describe('PinnedEntryCard inline field editing', () => {
   });
 
   it('leaves the chip-picked type and the bullet list alone', () => {
-    render(<PinnedEntryCard entry={experienceEntry} section="experience" defaultExpanded onFieldSave={vi.fn()} />);
+    render(
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onFieldSave={vi.fn()}
+      />
+    );
 
     // entryType drives what Aria asks next, and achievements are a generated LIST applied
     // through the bullet diff. Neither belongs behind a single-line text box.
@@ -169,7 +198,12 @@ describe('PinnedEntryCard — education CGPA', () => {
   it('saves an edited CGPA value', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={educationEntry} section="education" defaultExpanded onFieldSave={onFieldSave} />
+      <PinnedEntryCard
+        entry={educationEntry}
+        section="education"
+        defaultExpanded
+        onFieldSave={onFieldSave}
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
@@ -185,7 +219,12 @@ describe('PinnedEntryCard — education CGPA', () => {
   it('accepts an EMPTY CGPA on save — it is optional, unlike degree/school', async () => {
     const onFieldSave = vi.fn().mockResolvedValue({ ok: true });
     render(
-      <PinnedEntryCard entry={educationEntry} section="education" defaultExpanded onFieldSave={onFieldSave} />
+      <PinnedEntryCard
+        entry={educationEntry}
+        section="education"
+        defaultExpanded
+        onFieldSave={onFieldSave}
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit CGPA / Grade' }));
@@ -226,8 +265,8 @@ describe('the "something landed here" pulse', () => {
   // Filtered in JS, not by selector: the Tailwind arbitrary-value class contains
   // brackets and dots, and jsdom rejects them inside an attribute-value selector.
   const pulsing = (container) =>
-    [...container.querySelectorAll("*")].filter((node) =>
-      String(node.className || "").includes("animate-[bounce")
+    [...container.querySelectorAll('*')].filter((node) =>
+      String(node.className || '').includes('animate-[bounce')
     );
 
   it('pulses the counter for a section with no bullets', () => {

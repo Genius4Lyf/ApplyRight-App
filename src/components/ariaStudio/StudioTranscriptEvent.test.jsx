@@ -3,11 +3,7 @@ import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import i18n from '../../i18n';
-import {
-  SelectedAnswerBubble,
-  StudioPhaseDivider,
-  StudioReceipt,
-} from './StudioTranscriptEvent';
+import { SelectedAnswerBubble, StudioPhaseDivider, StudioReceipt } from './StudioTranscriptEvent';
 
 afterEach(cleanup);
 

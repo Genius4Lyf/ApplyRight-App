@@ -284,8 +284,7 @@ describe('StudioChat — editWithAria in a BUILD session', () => {
       });
 
       await waitFor(
-        () =>
-          expect(ariaTexts().some((line) => line.includes('is already filled in'))).toBe(true),
+        () => expect(ariaTexts().some((line) => line.includes('is already filled in'))).toBe(true),
         { timeout: 2500 }
       );
     });

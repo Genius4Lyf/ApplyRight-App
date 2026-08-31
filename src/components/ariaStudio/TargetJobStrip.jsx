@@ -82,14 +82,10 @@ const TargetJobStrip = ({ model }) => {
         </span>
         <span
           className={`hidden shrink-0 text-[10px] sm:inline ${
-            hasJd
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-amber-600 dark:text-amber-400'
+            hasJd ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
           }`}
         >
-          {hasJd
-            ? t('ariaStudio.targetJobStrip.jdAdded')
-            : t('ariaStudio.targetJobStrip.noJd')}
+          {hasJd ? t('ariaStudio.targetJobStrip.jdAdded') : t('ariaStudio.targetJobStrip.noJd')}
         </span>
         <button
           type="button"
@@ -97,9 +93,7 @@ const TargetJobStrip = ({ model }) => {
           className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10.5px] font-semibold text-slate-500 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <PencilLine className="h-3 w-3" aria-hidden="true" />
-          {hasJd
-            ? t('ariaStudio.targetJobStrip.edit')
-            : t('ariaStudio.targetJobStrip.add')}
+          {hasJd ? t('ariaStudio.targetJobStrip.edit') : t('ariaStudio.targetJobStrip.add')}
         </button>
       </motion.div>
 

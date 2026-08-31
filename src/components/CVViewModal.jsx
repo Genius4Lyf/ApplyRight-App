@@ -116,9 +116,8 @@ const CVViewModal = ({ applicationId, isOpen, onClose }) => {
 
   const hasCV = app && app.optimizedCV;
   const openFullPage = () => navigate(`/resume/${applicationId}`);
-  // No CV yet → send them to the application (History) page with this app
-  // preselected, where the "Generate CV" action lives.
-  const goGenerate = () => navigate(`/history?app=${applicationId}`);
+  // No CV yet → reopen this analysis in Aria Studio, where the actions for it live now.
+  const goGenerate = () => navigate('/aria-studio', { state: { openApplication: applicationId } });
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex flex-col bg-slate-900/70 backdrop-blur-sm">

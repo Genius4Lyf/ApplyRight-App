@@ -204,9 +204,7 @@ describe('reaching the upload card by answering the job question', () => {
 
   it('still goes to contact when the session never asked to upload', async () => {
     const scratch = atJobQuestion();
-    scratch.coachChats.studio = scratch.coachChats.studio.filter(
-      (m) => m.who !== 'uploadintent'
-    );
+    scratch.coachChats.studio = scratch.coachChats.studio.filter((m) => m.who !== 'uploadintent');
     await mountStudio(scratch);
 
     fireEvent.click(await screen.findByText(i18n.t('ariaStudio.targetJobAsk.notYet')));
@@ -242,8 +240,9 @@ describe('the Studio upload step', () => {
     await mountStudio(awaitingUpload());
 
     await screen.findByText(i18n.t('ariaStudio.chat.upload.prompt'));
-    expect(screen.getAllByText(i18n.t('ariaStudio.buildRoadmap.uploadCost', { n: 15 })).length)
-      .toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(i18n.t('ariaStudio.buildRoadmap.uploadCost', { n: 15 })).length
+    ).toBeGreaterThan(0);
   });
 
   it('opens the editor when the imported CV covers enough', async () => {

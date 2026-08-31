@@ -17,7 +17,11 @@ export const SelectedAnswerBubble = ({ children, reduce = false }) => {
       <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
         {t('ariaStudio.chat.respondedToAriaInterview')}
       </span>
-      <span className="block whitespace-pre-wrap text-[17px] leading-6">{children}</span>
+      {/* `break-words` so an unbroken 60-character string (a scraped title, a URL) wraps
+          instead of forcing the bubble wider than the column. */}
+      <span className="block whitespace-pre-wrap break-words text-[17px] leading-6">
+        {children}
+      </span>
     </motion.div>
   );
 };
@@ -51,14 +55,20 @@ export const StudioReceipt = ({ title, detail, reduce = false }) => (
 export const StudioPhaseDivider = ({ children, reduce = false }) => (
   <motion.div
     data-transcript-kind="phase"
-    className="self-stretch my-2 flex items-center gap-2 px-1"
+    className="my-2 flex w-full min-w-0 items-center gap-2 self-stretch px-1"
     {...bubbleAnim('aria', reduce)}
     role="separator"
   >
-    <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
-    <span className="shrink-0 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+    <span className="h-px min-w-[8px] flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+    {/* TRUNCATES, and must. A divider is one line by definition, and a job title can run
+        to eighty characters — left un-shrinkable it pushed the rules to zero width and
+        then stretched the whole page sideways. `title` keeps the full text reachable. */}
+    <span
+      title={typeof children === 'string' ? children : undefined}
+      className="min-w-0 truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400"
+    >
       ✓ {children}
     </span>
-    <span className="h-px flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
+    <span className="h-px min-w-[8px] flex-1 bg-slate-200/80 dark:bg-slate-700/60" />
   </motion.div>
 );

@@ -13,7 +13,7 @@ const tt = (key, params) => {
   const str = getByPath(en, key);
   if (typeof str !== 'string') throw new Error(`Missing key in en.json: ${key}`);
   if (!params) return str;
-  return str.replace(/\{\{(\w+)\}\}/g, (_, k) => (params[k] ?? ''));
+  return str.replace(/\{\{(\w+)\}\}/g, (_, k) => params[k] ?? '');
 };
 
 describe('what counts as evidence — career-stage aware', () => {
@@ -77,9 +77,7 @@ describe('the brief describes the room that will actually run', () => {
   });
 
   it('falls back to the interview style when there is no panel', () => {
-    expect(tt(buildRoomBrief({ style: 'technical' }).kind.labelKey)).toMatch(
-      /Technical deep-dive/
-    );
+    expect(tt(buildRoomBrief({ style: 'technical' }).kind.labelKey)).toMatch(/Technical deep-dive/);
     expect(tt(buildRoomBrief({ style: 'screening' }).kind.labelKey)).toMatch(/screening/i);
     expect(tt(buildRoomBrief({}).kind.labelKey)).toMatch(/General interview/);
   });

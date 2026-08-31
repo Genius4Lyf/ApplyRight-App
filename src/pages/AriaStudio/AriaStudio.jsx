@@ -48,7 +48,9 @@ const StudioDesk = () => {
   const {
     cvData,
     draftId,
+    applicationId,
     loadSession,
+    openApplication,
     newSession,
     flushChats,
     sessionNonce,
@@ -133,9 +135,11 @@ const StudioDesk = () => {
     }
   }, []);
 
+  // Re-run on either binding: a brand-new analysis has to appear in Recents the moment
+  // it exists, exactly as a new CV session does.
   useEffect(() => {
     refreshSessions();
-  }, [refreshSessions, draftId]);
+  }, [refreshSessions, draftId, applicationId]);
 
   // This page is `fixed inset-0` (own full-screen scroll region), but the document
   // behind it is still scrollable — on mobile that's what let a chat's exhausted
@@ -148,17 +152,29 @@ const StudioDesk = () => {
   // sheet was open: whichever one unwound LAST clobbered the other's restore.
   useBodyScrollLock(true);
 
-  // Arrived from an analysis with a source CV already decided — open a tailor
-  // session with it pre-selected, so Aria doesn't ask which CV to use. Consumed
-  // once (the state is cleared) so a refresh doesn't restart the session.
+  // Arrived with a session already decided. Three ways that happens, all consumed ONCE
+  // (the router state is cleared) so a refresh doesn't restart the session:
+  //
+  //   start: 'prep'   → the home page's card, which now leads here instead of unfolding
+  //                     a workflow of its own.
+  //   seedSource      → a tailoring whose source CV is already chosen.
+  //   openApplication → an analysis to reopen, from a link outside the Studio.
+  //
+  // Each STARTS A NEW SESSION rather than resuming the remembered one: arriving through a
+  // door that names what you came to do should not drop you back into last week's CV.
   const seededRef = useRef(false);
   useEffect(() => {
+    if (seededRef.current) return;
     const seed = location.state?.seedSource;
-    if (!seed?.id || seededRef.current) return;
+    const reopen = location.state?.openApplication;
+    const start = location.state?.start;
+    if (!seed?.id && !reopen && !start) return;
     seededRef.current = true;
     window.history.replaceState({}, '');
-    newSession('tailor', seed);
-  }, [location.state, newSession]);
+    if (reopen) openApplication(reopen);
+    else if (start) newSession(start);
+    else newSession('tailor', seed);
+  }, [location.state, newSession, openApplication]);
 
   // The unsaved tail of a conversation is the easiest thing in this design to lose —
   // the autosave is debounced, so a tab close mid-sentence would drop it.
@@ -181,9 +197,22 @@ const StudioDesk = () => {
     navigate('/upgrade');
   };
 
-  const openSession = async (id) => {
+  // Recents holds two kinds of row, and they open two different ways: a CV session binds
+  // a draft, an analysis binds an Application and rebuilds its conversation from the
+  // record. The row itself says which, so the rail hands over the whole session rather
+  // than just an id.
+  const openSession = async (session) => {
     layout.setRailOverlay(false);
-    await loadSession(id);
+    if (session.kind === 'application') {
+      // Deliberately NOT short-circuited on "it is already the active one". The provider
+      // remembers the binding across a refresh but the chat's copy of the analysis does
+      // not survive with it, so the row a user clicks to recover from that is exactly the
+      // one an equality check would refuse. Reopening is a single GET; correctness is
+      // worth more than saving it.
+      await openApplication(session._id);
+      return;
+    }
+    await loadSession(session._id);
   };
 
   // "New CV" now opens a real build session in the Studio rather than handing off to the
@@ -195,9 +224,12 @@ const StudioDesk = () => {
   };
 
   // Deleting the ACTIVE session has to unbind first, or the provider stays pointed at a
-  // draft that no longer exists and every autosave 404s.
+  // draft that no longer exists and every autosave 404s. The same applies to an analysis:
+  // a bound applicationId pointing at a deleted record would 404 the next reopen.
   const finishRemoval = async (session) => {
-    if (session._id === draftId) await newSession(STUDIO_TAILORING_ENABLED ? 'tailor' : 'build');
+    if (session._id === draftId || session._id === applicationId) {
+      await newSession(STUDIO_TAILORING_ENABLED ? 'tailor' : 'build');
+    }
     setPendingDelete(null);
     setDeleteBusy(null);
     await refreshSessions();
@@ -241,7 +273,12 @@ const StudioDesk = () => {
   const deleteSession = async (session) => {
     setDeleteBusy('delete');
     try {
-      await CVService.deleteDraft(session._id);
+      // Two collections behind one list — an analysis is an Application, not a DraftCV.
+      if (session.kind === 'application') {
+        await CVService.deleteApplication(session._id);
+      } else {
+        await CVService.deleteDraft(session._id);
+      }
       toast.success(t('ariaStudio.desk.toast.deleted'));
       await finishRemoval(session);
     } catch (err) {
@@ -254,7 +291,8 @@ const StudioDesk = () => {
   const railProps = {
     sessions,
     loading: loadingSessions,
-    activeId: draftId,
+    // One of the two is always null — a session is either a document or an analysis.
+    activeId: draftId || applicationId,
     onSelect: openSession,
     onRename: renameSession,
     onDelete: (s) => {
@@ -263,6 +301,7 @@ const StudioDesk = () => {
     },
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
+    onNewPrep: () => startSession('prep'),
     onOpenGuide: () => {
       // A guide is a foreground surface; on a phone it must replace, not sit beside,
       // the sessions drawer that launched it.
@@ -557,7 +596,7 @@ const StudioDesk = () => {
 
           {/* Remounted per session — a stale phase or in-flight coach state from the
               previous session must never bleed into the next one. */}
-          <StudioChat key={sessionNonce} onPaywall={handlePaywall} />
+          <StudioChat key={sessionNonce} onPaywall={handlePaywall} onNavigate={navigate} />
         </div>
 
         {/* Right panel — inline only at the widest layout. The WIDE Live preview shares

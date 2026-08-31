@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, History, FileText, MessageSquare } from 'lucide-react';
+import { Home, FileText, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { shouldShowBottomNav, isMobile } from '../utils/platform';
+import AriaOrbit from './cv/AriaOrbit';
 
-// Four labeled tabs (icon + text below): Home / My CVs / Applications / Interview.
+// Four labeled tabs (icon + text below): Home / My CVs / Aria / Interview.
 // The single primary nav on both platforms — always visible on native, mobile-only
 // on the web (md:hidden). Account (profile, credits, billing) lives in the avatar
 // dropdown in the top bar, so it's no longer a tab here.
@@ -21,10 +22,10 @@ const TABS = [
     matches: ['/my-cvs'],
   },
   {
-    to: '/history',
-    labelKey: 'nav.mobile.applications',
-    icon: <History className="w-5 h-5" strokeWidth={2} />,
-    matches: ['/history'],
+    to: '/aria-studio',
+    labelKey: 'nav.mobile.ariaStudio',
+    icon: <AriaOrbit size={20} />,
+    matches: ['/aria-studio'],
   },
   {
     to: '/interview-prep',

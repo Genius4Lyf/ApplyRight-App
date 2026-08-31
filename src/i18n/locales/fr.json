@@ -182,8 +182,10 @@
       "home": "Accueil",
       "myCvs": "Mes CV",
       "applications": "Candidatures",
-      "interview": "Entretien"
-    }
+      "interview": "Entretien",
+      "ariaStudio": "Aria"
+    },
+    "ariaStudio": "Aria Studio"
   },
   "errors": {
     "loginFailed": "Échec de la connexion",
@@ -1603,7 +1605,8 @@
       "heading": {
         "experience": "Rédigez-les avec",
         "summary": "Rédigez-le avec",
-        "skills": "Chercher avec"
+        "skills": "Chercher avec",
+        "coverLetter": "Rédiger avec"
       },
       "eachCost": "{{n}} cr chacun",
       "flatCost": "{{n}} cr",
@@ -1626,6 +1629,10 @@
         "skills": {
           "light": "Extrait les compétences techniques de votre parcours.",
           "flagship": "Repère des compétences que vous n'auriez pas pensé à noter."
+        },
+        "coverLetter": {
+          "light": "Clair, direct, et ancré dans votre CV.",
+          "flagship": "L'écriture la plus naturelle, la plus humaine. Utile quand c'est la lettre qui doit convaincre."
         }
       }
     },
@@ -2006,48 +2013,72 @@
         "contact": {
           "title": "Coordonnées",
           "requirements": {
-            "0": { "label": "Nom complet" },
-            "1": { "label": "Adresse e-mail" },
-            "2": { "label": "Numéro de téléphone" },
-            "3": { "label": "URL LinkedIn" }
+            "0": {
+              "label": "Nom complet"
+            },
+            "1": {
+              "label": "Adresse e-mail"
+            },
+            "2": {
+              "label": "Numéro de téléphone"
+            },
+            "3": {
+              "label": "URL LinkedIn"
+            }
           }
         },
         "history": {
           "title": "Expérience professionnelle",
           "requirements": {
-            "0": { "label": "Ajoutez au moins 2 postes" },
-            "1": { "label": "2 à 3 points par poste" },
-            "2": { "label": "Quantifiez vos résultats avec des chiffres" }
+            "0": {
+              "label": "Ajoutez au moins 2 postes"
+            },
+            "1": {
+              "label": "2 à 3 points par poste"
+            },
+            "2": {
+              "label": "Quantifiez vos résultats avec des chiffres"
+            }
           }
         },
         "projects": {
           "title": "Projets",
           "requirements": {
-            "0": { "label": "Ajoutez un projet pour illustrer votre pratique" }
+            "0": {
+              "label": "Ajoutez un projet pour illustrer votre pratique"
+            }
           }
         },
         "education": {
           "title": "Formation",
           "requirements": {
-            "0": { "label": "Ajoutez au moins un diplôme" }
+            "0": {
+              "label": "Ajoutez au moins un diplôme"
+            }
           }
         },
         "certifications": {
           "title": "Certifications",
           "requirements": {
-            "0": { "label": "Ajoutez vos licences, certificats ou formations" }
+            "0": {
+              "label": "Ajoutez vos licences, certificats ou formations"
+            }
           }
         },
         "skills": {
           "title": "Compétences",
           "requirements": {
-            "0": { "label": "Listez au moins 8 compétences pertinentes" }
+            "0": {
+              "label": "Listez au moins 8 compétences pertinentes"
+            }
           }
         },
         "summary": {
           "title": "Résumé professionnel",
           "requirements": {
-            "0": { "label": "Un résumé de 3 à 4 phrases (100 caractères ou plus)" }
+            "0": {
+              "label": "Un résumé de 3 à 4 phrases (100 caractères ou plus)"
+            }
           }
         }
       },
@@ -2542,7 +2573,7 @@
     "skillsMatchedToggle_other": "{{count}} compétences correspondantes",
     "readFromResume": "Extrait de votre CV",
     "whatStoodOut": "Ce qui a retenu l'attention",
-    "theMath": "Le calcul · pondération fixe",
+    "theMath": "Le calcul",
     "whyWeights": "Pourquoi cette pondération ?",
     "weightsExplainer": "Les compétences (40 %) sont le meilleur indicateur de correspondance, suivies de l'expérience (25 %) et de la formation (15 %). L'ancienneté et la solidité du profil (10 % chacune) complètent le tableau. Fixe pour chaque analyse afin que les scores soient directement comparables.",
     "scoreBreakdown": "Détail du score",
@@ -2580,7 +2611,11 @@
       "saveFailed": "Impossible d'enregistrer le retour",
       "helpfulAria": "Utile",
       "notHelpfulAria": "Pas utile"
-    }
+    },
+    "evidenceCount_one": "{{count}} ligne de votre CV",
+    "evidenceCount_other": "{{count}} lignes de votre CV",
+    "actionCount_one": "{{count}} point à corriger",
+    "actionCount_other": "{{count}} points à corriger"
   },
   "interviewPrep": {
     "common": {
@@ -4331,7 +4366,9 @@
       "removeKeepCv": "Retirer du Studio · garder le CV",
       "deleting": "Suppression…",
       "deleteEntirely": "Supprimer le CV entièrement",
-      "deleteOnly": "Supprimer"
+      "deleteOnly": "Supprimer",
+      "deleteThisAnalysis": "Supprimer cette analyse ?",
+      "applicationBody": "Cela supprime l'analyse pour <b>{{name}}</b>, ainsi que la lettre de motivation et la préparation d'entretien enregistrées avec elle. La relancer coûte des crédits."
     },
     "entryPicker": {
       "whichOne": "Lequel devrions-nous affiner ?",
@@ -4369,7 +4406,31 @@
       "draftedNote": "Profil de poste généré par l'IA à partir de l'intitulé. Il peut ne pas correspondre aux exigences d'un employeur précis. Remplacez-le par l'offre réelle dès que possible.",
       "draftedTag": "Profil généré par l'IA · pas une offre réelle",
       "draftInsufficientCredits": "Crédits insuffisants pour générer un profil de poste.",
-      "draftFailed": "Impossible de générer un profil pour cet intitulé de poste. Veuillez réessayer."
+      "draftFailed": "Impossible de générer un profil pour cet intitulé de poste. Veuillez réessayer.",
+      "linkLabel": "Collez le lien de l'offre",
+      "linkPlaceholder": "https://…",
+      "linkRead": "Lire",
+      "linkReading": "Lecture…",
+      "linkOrType": "ou remplissez vous-même",
+      "linkFailed": "Je n'ai pas pu lire cette page. Collez plutôt la description ci-dessous.",
+      "linkBlocked": "Ce site nous empêche de le lire. Collez plutôt la description ci-dessous.",
+      "linkTooThin": "Il n'y avait pas grand-chose sur cette page — elle demande peut-être une connexion. Collez plutôt la description ci-dessous.",
+      "guide": {
+        "partialTitle": "Je n'ai eu qu'une partie",
+        "partialBody": "Ce lien m'a donné un résumé plutôt que la description complète. Je peux travailler avec, mais l'analyse ne vaut jamais mieux que ce qu'elle lit.",
+        "blockedTitle": "Je n'ai pas pu lire cette page",
+        "blockedBody": "Certains sites — LinkedIn en particulier — nous empêchent de les lire. Votre lien n'a rien d'anormal.",
+        "copyStep": "Ouvrez l'offre, copiez la description, et collez-la ci-dessous.",
+        "openPosting": "Ouvrir l'offre",
+        "draftStep": "Vous ne l'avez pas sous la main ?",
+        "draftNote": "Une description type sert de substitut : l'analyse vous dira alors comment vous correspondez au POSTE, et non à cette offre précise.",
+        "pasteHere": "Coller ici"
+      },
+      "fetching": "Lecture de l'offre…",
+      "summary": {
+        "eyebrow": "Ce que j'ai trouvé",
+        "untitledRole": "Ce poste"
+      }
     },
     "modeChooser": {
       "whatAreWeDoing": "Que faisons-nous ?",
@@ -4383,7 +4444,9 @@
       "buildStepTwo": "Construisons chaque section ensemble",
       "buildStepThree": "Consultez votre CV finalisé en direct",
       "buildCta": "Commencer mon CV",
-      "buildNote": "Complétez votre CV, modifiez-le et revenez quand vous le souhaitez."
+      "buildNote": "Complétez votre CV, modifiez-le et revenez quand vous le souhaitez.",
+      "prepTitle": "Préparez-moi à un entretien",
+      "prepBody": "Comparez un CV que vous avez déjà à une offre, et repartez avec de quoi postuler."
     },
     "roleBrief": {
       "ariasRead": "La lecture d'Aria",
@@ -4504,7 +4567,10 @@
       "rename": "Renommer",
       "removeOrDeleteCv": "Retirer ou supprimer ce CV",
       "deleteTailoring": "Supprimer cette adaptation",
-      "deleteAria": "Supprimer {{heading}}"
+      "deleteAria": "Supprimer {{heading}}",
+      "newPrep": "Préparer un entretien",
+      "newPrepShort": "Entretien",
+      "applicationTag": "Analyse"
     },
     "skillsBuild": {
       "bodyWithJob": "Je vais lire les postes et projets que vous venez de décrire et en tirer les compétences techniques que vous pouvez réellement justifier, en priorisant ce que ce poste demande. Puis je vous interrogerai sur celles que vos postes impliquent d’ordinaire mais que l’on pense rarement à noter. Vous choisissez lesquelles ajouter.",
@@ -4871,6 +4937,23 @@
         "downloadFailed": "Échec du téléchargement",
         "pdfDownloaded": "PDF téléchargé",
         "wordDownloaded": "Document Word téléchargé"
+      },
+      "kindOpenerPrep": "Préparons celui-ci. Je vais lire votre CV au regard de l'offre, vous dire où vous en êtes, et préparer ce qu'il vous faut pour postuler.",
+      "pickModePrep": "Très bien — d'abord, quel CV utilisons-nous ?",
+      "beginBuildWithJob": "J'ai enregistré le poste de {{jobTitle}}, je le garderai en tête tout du long. D'abord, un mot sur où vous en êtes dans votre parcours.",
+      "prep": {
+        "gotCv": "Parfait — {{title}}. Maintenant, quel poste visez-vous ?",
+        "uploadedCv": "Votre CV importé",
+        "uploadFailed": "L'import n'a pas abouti. On réessaie ?",
+        "analysisDone": "Voici où vous en êtes : {{score}} sur 100 — et les trois choses à faire ensuite.",
+        "analysisFailed": "L'analyse n'a pas abouti, et vous n'avez pas été débité. On réessaie ?",
+        "insufficientCredits": "Vous n'avez pas encore assez de crédits pour cela.",
+        "aiUnavailable": "L'IA est injoignable pour le moment, rien n'a été débité. Réessayez dans un instant.",
+        "coverLetterDone": "Votre lettre de motivation est prête — relisez-la avant de l’envoyer.",
+        "reopened": "Voici votre analyse pour {{jobTitle}}.",
+        "reopenFailed": "Je n'ai pas pu ouvrir cette analyse.",
+        "divider": "Analyse · {{jobTitle}}",
+        "dividerWithCompany": "Analyse · {{jobTitle}} chez {{company}}"
       }
     },
     "sectionCoach": {
@@ -4999,6 +5082,34 @@
       "panel": "Panneau",
       "studioSessions": "Sessions du Studio",
       "tailoredCopy": "Copie adaptée"
+    },
+    "prep": {
+      "whichCv": "Quel CV analysons-nous ?",
+      "uploadTitle": "Aucun de ceux-ci ?",
+      "uploadBody": "Importez plutôt un CV — c'est gratuit, et je ne fais que le lire.",
+      "uploadSubmit": "Utiliser ce CV",
+      "uploadBusy": "Lecture…",
+      "whatNext": "Et ensuite",
+      "whatNextBody": "Trois choses à faire pour {{jobTitle}}.",
+      "whatNextBodyCompany": "Trois choses à faire pour {{jobTitle}} chez {{company}}.",
+      "buildCvTitle": "Créer un CV pour ce poste",
+      "buildCvBody": "Nous en commençons un nouveau ensemble, avec cette offre déjà en tête.",
+      "buildCvCta": "Commencer",
+      "opening": "Ouverture…",
+      "coverLetterTitle": "Lettre de motivation",
+      "coverLetterBody": "Rédigée à partir de votre CV et de cette offre.",
+      "interviewPrepTitle": "Préparation à l'entretien",
+      "interviewPrepBody": "Les questions probables pour ce poste, et comment y répondre.",
+      "viewAndDownload": "Voir et télécharger",
+      "view": "Voir",
+      "analyzeCta": "Analyser · {{cost}} cr",
+      "analyzing": {
+        "readingCv": "Lecture de votre CV…",
+        "readingJob": "Lecture de l'offre…",
+        "matching": "Comparaison de votre expérience à ce qu'ils demandent…",
+        "weighing": "Pesée de l’ensemble…",
+        "note": "Cela prend quelques secondes. Restez sur cet écran."
+      }
     }
   }
 }

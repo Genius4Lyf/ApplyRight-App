@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatRelative } from '../../lib/relativeDate';
-import { Plus, FilePlus2, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
+import { Plus, FilePlus2, Trash2, Pencil, MoreHorizontal, ClipboardCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT } from '../../lib/noteStyles';
@@ -12,6 +12,10 @@ import StudioSidebarProfile from './StudioSidebarProfile';
 // The Studio sidebar, top to bottom: the ARIA mark, new-session actions, destinations +
 // wallet, the scrolling session list, and the pinned profile row. Recents is the ONLY
 // region that scrolls; everything else stays put.
+//
+// Recents holds TWO kinds of row — CV sessions and job analyses — because to the person
+// looking at it they are two kinds of the same thing: work they did here, most recent
+// first. They are told apart by their tag, not by being filed separately.
 //
 // Renaming a session lives HERE (per Recents row) now — the chat's own top bar dropped
 // its editable title in favour of the model picker, so this is the only place a CV's
@@ -29,6 +33,7 @@ const SessionRail = ({
   onDelete,
   onNewTailoring,
   onNewCv,
+  onNewPrep,
   onOpenGuide,
   onBeforeCreditStore,
 }) => {
@@ -91,7 +96,10 @@ const SessionRail = ({
         </span>
       </div>
 
-      <div className="shrink-0 px-3 pt-2.5 pb-2 space-y-2">
+      {/* The two ways to start something. Stacked at desk width where there is room for
+        full labels; side by side on a phone, where this drawer is also carrying the
+        destinations and the wallet and vertical space is the scarce thing. */}
+      <div className="shrink-0 px-3 pt-2.5 pb-2 flex gap-2 sm:block sm:space-y-2">
         {/* The system's primary and secondary. Sizing is COMPOSED on top (w-full, compact
           padding, rail-scale text) rather than re-implementing the colours, so these
           stay in step with every other button in the app. */}
@@ -99,9 +107,9 @@ const SessionRail = ({
           <button
             type="button"
             onClick={onNewTailoring}
-            className="btn-primary w-full gap-2 px-3 py-2 text-[17px] sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+            className="btn-primary flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
           >
-            <Plus className="w-4 h-4" /> {t('ariaStudio.sessionRail.newTailoring')}
+            <Plus className="w-4 h-4 shrink-0" /> {t('ariaStudio.sessionRail.newTailoring')}
           </button>
         )}
         {/* With tailoring hidden, this is the rail's only new-session action — so it
@@ -109,9 +117,23 @@ const SessionRail = ({
         <button
           type="button"
           onClick={onNewCv}
-          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} w-full gap-2 px-3 py-2 text-[17px] sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
+          className={`${STUDIO_TAILORING_ENABLED ? 'btn-secondary' : 'btn-primary'} flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100`}
         >
-          <FilePlus2 className="w-4 h-4" /> {t('ariaStudio.sessionRail.newCv')}
+          <FilePlus2 className="w-4 h-4 shrink-0" /> {t('ariaStudio.sessionRail.newCv')}
+        </button>
+
+        {/* Secondary to New CV on purpose: preparing for an interview needs a CV to
+            analyse, so it is the second thing you do here, not the first. */}
+        <button
+          type="button"
+          onClick={onNewPrep}
+          className="btn-secondary flex-1 gap-2 px-3 py-2 text-[15px] sm:w-full sm:text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+        >
+          <ClipboardCheck className="w-4 h-4 shrink-0" />
+          {/* The full name at desk width; on a phone, beside an icon and sharing the row
+              with New CV, the short form is what fits without truncating. */}
+          <span className="sm:hidden">{t('ariaStudio.sessionRail.newPrepShort')}</span>
+          <span className="hidden sm:inline">{t('ariaStudio.sessionRail.newPrep')}</span>
         </button>
       </div>
 
@@ -155,6 +177,7 @@ const SessionRail = ({
             {sessions.map((s) => {
               const active = s._id === activeId;
               const isBuild = s.kind === 'build';
+              const isApplication = s.kind === 'application';
               const band = bandOf(s.fitScore);
               const when = s.updatedAt ? formatRelative(new Date(s.updatedAt)) : '';
               const heading =
@@ -202,7 +225,7 @@ const SessionRail = ({
                   ) : (
                     <button
                       type="button"
-                      onClick={() => onSelect?.(s._id)}
+                      onClick={() => onSelect?.(s)}
                       aria-current={active ? 'true' : undefined}
                       className={`w-full text-left pl-4 pr-10 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 ${
                         active ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
@@ -220,8 +243,16 @@ const SessionRail = ({
                         </span>
 
                         {/* A build session has no fit score to show — it isn't aimed at a job
-                        yet. The tag is a CATEGORY label, so it's neutral; the score pill
-                        keeps its band colour because that encodes meaning. */}
+                        yet. Tags are CATEGORY labels, so they're neutral; the score pill
+                        keeps its band colour because that encodes meaning.
+
+                        An analysis gets BOTH: the tag says what kind of thing it is, and
+                        the score is the number people come back for. */}
+                        {isApplication && (
+                          <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {t('ariaStudio.sessionRail.applicationTag')}
+                          </span>
+                        )}
                         {isBuild ? (
                           <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             {t('ariaStudio.sessionRail.newCv')}

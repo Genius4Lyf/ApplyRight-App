@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LogOut,
-  History,
   LayoutDashboard,
   User,
   Settings,
@@ -388,7 +387,12 @@ const Navbar = () => {
             className="flex items-center gap-2.5 z-50 shrink-0"
           >
             <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto dark:hidden" />
-            <img src={logoWhite} alt="" aria-hidden="true" className="hidden h-7 w-auto dark:block" />
+            <img
+              src={logoWhite}
+              alt=""
+              aria-hidden="true"
+              className="hidden h-7 w-auto dark:block"
+            />
             <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
               ApplyRight
             </span>
@@ -421,10 +425,10 @@ const Navbar = () => {
               </Link>
               {!isAgent && (
                 <>
-                  <Link to="/history" className={deskTab(isActive('/history'))}>
-                    {deskUnderline(isActive('/history'))}
-                    <History className="w-4 h-4" />
-                    {t('nav.myApplications')}
+                  <Link to="/aria-studio" className={deskTab(isActive('/aria-studio'))}>
+                    {deskUnderline(isActive('/aria-studio'))}
+                    <AriaOrbit size={16} />
+                    {t('nav.ariaStudio')}
                   </Link>
                   <Link
                     to="/interview-prep"

@@ -70,7 +70,10 @@ export function buildDownloadFilename(userProfile, kind, ext) {
  * @param {{ paperWidth: string, paperHeight: string, paper: string, isDarkTemplate: boolean, templateId: string }} opts
  * @returns {string} a complete HTML document
  */
-export function buildPrintHtml(element, { paperWidth, paperHeight, paper, isDarkTemplate, templateId }) {
+export function buildPrintHtml(
+  element,
+  { paperWidth, paperHeight, paper, isDarkTemplate, templateId }
+) {
   const clone = element.cloneNode(true);
   const sidebar = clone.querySelector('[data-cv-sidebar]');
   if (sidebar) {

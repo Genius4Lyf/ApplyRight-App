@@ -31,11 +31,26 @@ const currentUserId = () => {
 // Owned by StudioChat, but cleared here too: starting a new session must not inherit
 // the previous one's unsaved intake. Kept in sync with StudioChat's LS_KEY.
 const PRECLONE_KEY = 'ariaStudio:session';
+// The Application a PREP session is bound to. A prep session (Prepare me for an
+// interview) runs a job analysis and never creates a DraftCV, so it has no ACTIVE_KEY to
+// be remembered by — this is its equivalent, and the two are mutually exclusive by
+// construction (binding a draft clears this; see setCvData).
+const ACTIVE_APP_KEY = 'ariaStudio:applicationId';
 
 export const AriaStudioProvider = ({ children }) => {
   // null until a CV is cloned (Phase 1). Every writer below is a no-op-safe read off
   // `cvData?.…` so the shell can mount before there's a document.
   const [cvData, setCvDataRaw] = useState(null);
+  // The bound Application id for a prep session, or null. Read by the rail to mark the
+  // active row (a prep session has no draftId to mark it with) and restored on mount so
+  // a refresh keeps the analysis you were looking at.
+  const [applicationId, setApplicationIdRaw] = useState(() => {
+    try {
+      return localStorage.getItem(ACTIVE_APP_KEY) || null;
+    } catch {
+      return null;
+    }
+  });
   // A LIVE mirror of cvData, for writers whose caller may be holding a closure older than
   // the current state. The undo in a removal toast is exactly that: the callback is built
   // BEFORE removeEntry's state change lands, so by the time it runs, the `cvData` captured
@@ -60,9 +75,18 @@ export const AriaStudioProvider = ({ children }) => {
   // switching sessions REMOUNTS the chat — no phase, coach transient or in-flight
   // build can leak from session A into session B.
   const [sessionNonce, setSessionNonce] = useState(0);
-  // Which first step a brand-new session should open on ('tailor' | 'build'), or null
-  // for a normal cold start. Consumed by the chat, which skips the mode chooser.
+  // Which first step a brand-new session should open on ('tailor' | 'build' | 'prep'),
+  // or null for a normal cold start. Consumed by the chat, which skips the mode chooser.
   const [pendingKind, setPendingKind] = useState(null);
+  // An EXISTING analysis to reopen, handed to a brand-new prep session. The chat fetches
+  // it and rebuilds the conversation from the record — a prep session's transcript is a
+  // pure function of its Application, so there is no second copy to fall out of step.
+  const [pendingApplicationId, setPendingApplicationId] = useState(null);
+  // A job handed forward from a finished analysis to the build session it launches, so
+  // "Build a new CV for this role" starts with the JD already read rather than asking for
+  // it again. { jobTitle, jobDescription } | null — consumed once, exactly like
+  // pendingSource below.
+  const [pendingJob, setPendingJob] = useState(null);
   // A CV pre-selected as the SOURCE for a new tailoring — set when a build session hands
   // off to "now tailor it". { id, title }, or null.
   const [pendingSource, setPendingSource] = useState(null);
@@ -135,6 +159,10 @@ export const AriaStudioProvider = ({ children }) => {
   const setCvData = useCallback((draft) => {
     setCvDataRaw(draft);
     setStudioPhase(null);
+    // A draft binding and an analysis binding are mutually exclusive: one session is one
+    // piece of work. Cleared on unbind too, so a new session never inherits the previous
+    // one's analysis.
+    setApplicationIdRaw(null);
     // RESET the echo guard on every bind. Seeding it with the incoming draft's own
     // chats is what stops the autosave immediately re-writing what we just loaded —
     // and clearing it on unbind (null) means the next session's FIRST write is never
@@ -150,8 +178,21 @@ export const AriaStudioProvider = ({ children }) => {
         localStorage.removeItem(ACTIVE_KEY);
         localStorage.removeItem(ACTIVE_OWNER_KEY);
       }
+      localStorage.removeItem(ACTIVE_APP_KEY);
     } catch {
       /* storage unavailable — the session just won't survive a reload */
+    }
+  }, []);
+
+  // Bind a prep session to its analysis. The counterpart of setCvData, and remembered the
+  // same way so a refresh returns to the same analysis.
+  const setApplicationId = useCallback((id) => {
+    setApplicationIdRaw(id || null);
+    try {
+      if (id) localStorage.setItem(ACTIVE_APP_KEY, id);
+      else localStorage.removeItem(ACTIVE_APP_KEY);
+    } catch {
+      /* storage unavailable — the binding just won't survive a reload */
     }
   }, []);
 
@@ -258,7 +299,7 @@ export const AriaStudioProvider = ({ children }) => {
   // showing the previous unsaved intake. `kind` decides which first step opens; the
   // chat reads it and skips the mode chooser entirely.
   const newSession = useCallback(
-    async (kind = 'tailor', source = null) => {
+    async (kind = 'tailor', source = null, { applicationId: appId = null, job = null } = {}) => {
       if (!(await flushChats())) return false;
       sessionEpochRef.current += 1;
       setCvData(null); // unbinds + clears ariaStudio:draftId
@@ -269,11 +310,22 @@ export const AriaStudioProvider = ({ children }) => {
       }
       setPendingKind(kind);
       setPendingSource(source);
+      // Set in the SAME batch as the kind, so the remounted chat sees both at once. Handing
+      // them over in a second call after the remount would be a race the chat would lose.
+      setPendingApplicationId(appId);
+      setPendingJob(job);
       setSessionNonce((n) => n + 1);
       setLoading(false);
       return true;
     },
     [flushChats, setCvData]
+  );
+
+  // Reopen a past analysis as a prep session. Not a variant of loadSession: there is no
+  // draft to fetch and bind — the chat rebuilds the conversation from the Application.
+  const openApplication = useCallback(
+    (id) => newSession('prep', null, { applicationId: id }),
+    [newSession]
   );
 
   // Start a BUILD session — a real, empty draft created up front rather than a local
@@ -995,6 +1047,7 @@ export const AriaStudioProvider = ({ children }) => {
     // Sessions
     loadSession,
     newSession,
+    openApplication,
     startBuild,
     addRole,
     addProject,
@@ -1005,6 +1058,13 @@ export const AriaStudioProvider = ({ children }) => {
     setPendingKind,
     pendingSource,
     setPendingSource,
+    pendingApplicationId,
+    setPendingApplicationId,
+    pendingJob,
+    setPendingJob,
+    // A prep session's binding — the analysis equivalent of draftId.
+    applicationId,
+    setApplicationId,
     // Command channel
     studioCommand,
     requestStudioCommand,

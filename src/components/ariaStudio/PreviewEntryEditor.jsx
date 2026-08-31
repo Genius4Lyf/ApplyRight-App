@@ -206,7 +206,11 @@ const PreviewEntryEditor = ({ section = 'experience', entry, onClose }) => {
       type="text"
       value={form[key]}
       onChange={set(key)}
-      onBlur={key === 'link' ? () => setForm((prev) => ({ ...prev, link: normalizeLink(prev.link) })) : undefined}
+      onBlur={
+        key === 'link'
+          ? () => setForm((prev) => ({ ...prev, link: normalizeLink(prev.link) }))
+          : undefined
+      }
       onKeyDown={lineKeyDown}
       disabled={saving}
       aria-label={t(labelKey)}

@@ -2,17 +2,21 @@ import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 
-// Deleting a Studio session deletes a real DraftCV — the session IS the CV. What that
-// costs the user depends entirely on which kind it is, so the confirm does too:
+// What deleting a row actually destroys depends entirely on which kind it is, so the
+// confirm does too:
 //
-//   TAILORING → a disposable copy, regenerable in two minutes from its source. Plain
-//               delete, named so they know which one.
-//   BUILD     → the master CV they may have spent twenty minutes writing. Deleting it
-//               from a hover trash icon would be a trap, so the SAFE option
-//               ("Remove from Studio" — keeps the CV, drops it from the rail) is the
-//               default, with the real delete demoted to a secondary destructive action.
+//   TAILORING   → a disposable copy, regenerable in two minutes from its source. Plain
+//                 delete, named so they know which one.
+//   BUILD       → the master CV they may have spent twenty minutes writing. Deleting it
+//                 from a hover trash icon would be a trap, so the SAFE option
+//                 ("Remove from Studio" — keeps the CV, drops it from the rail) is the
+//                 default, with the real delete demoted to a secondary destructive action.
+//   APPLICATION → a job analysis. It costs credits to run again, which is worth saying,
+//                 but it holds no writing of the user's — so a plain delete, and no
+//                 "remove from Studio": an analysis has no life outside the Studio to be
+//                 removed to.
 //
-// The asymmetry is deliberate: the two objects genuinely differ in value, and a single
+// The asymmetry is deliberate: the three objects genuinely differ in value, and a single
 // uniform confirm would either over-warn on copies or under-warn on masters.
 const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => {
   const { t } = useTranslation();
@@ -30,6 +34,7 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
   if (!session) return null;
 
   const isBuild = session.kind === 'build';
+  const isApplication = session.kind === 'application';
   const name = session.jobTitle || session.title || t('ariaStudio.deleteSession.untitledSession');
 
   return (
@@ -59,15 +64,30 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
             >
               {isBuild
                 ? t('ariaStudio.deleteSession.removeThisCv')
-                : t('ariaStudio.deleteSession.deleteThisTailoring')}
+                : isApplication
+                  ? t('ariaStudio.deleteSession.deleteThisAnalysis')
+                  : t('ariaStudio.deleteSession.deleteThisTailoring')}
             </h3>
 
-            {isBuild ? (
+            {isApplication ? (
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <Trans
+                  i18nKey="ariaStudio.deleteSession.applicationBody"
+                  values={{ name }}
+                  components={{
+                    b: <span className="font-semibold text-slate-800 dark:text-slate-100" />,
+                  }}
+                />{' '}
+                {t('ariaStudio.deleteSession.cannotUndo')}
+              </p>
+            ) : isBuild ? (
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                 <Trans
                   i18nKey="ariaStudio.deleteSession.buildBody"
                   values={{ name }}
-                  components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                  components={{
+                    b: <span className="font-semibold text-slate-800 dark:text-slate-100" />,
+                  }}
                 />
               </p>
             ) : (
@@ -75,7 +95,9 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
                 <Trans
                   i18nKey="ariaStudio.deleteSession.tailorBody"
                   values={{ name }}
-                  components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                  components={{
+                    b: <span className="font-semibold text-slate-800 dark:text-slate-100" />,
+                  }}
                 />
                 {session.sourceTitle ? (
                   <>
@@ -83,7 +105,9 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
                     <Trans
                       i18nKey="ariaStudio.deleteSession.originalNotAffected"
                       values={{ source: session.sourceTitle }}
-                      components={{ b: <span className="font-semibold text-slate-800 dark:text-slate-100" /> }}
+                      components={{
+                        b: <span className="font-semibold text-slate-800 dark:text-slate-100" />,
+                      }}
                     />
                   </>
                 ) : null}{' '}
@@ -127,7 +151,9 @@ const DeleteSessionModal = ({ session, busy, onCancel, onRemove, onDelete }) => 
                 ? t('ariaStudio.deleteSession.deleting')
                 : isBuild
                   ? t('ariaStudio.deleteSession.deleteEntirely')
-                  : t('ariaStudio.deleteSession.deleteOnly')}
+                  : isApplication
+                    ? t('common.delete')
+                    : t('ariaStudio.deleteSession.deleteOnly')}
             </button>
           </div>
         </div>

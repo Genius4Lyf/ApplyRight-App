@@ -582,7 +582,8 @@ export function openFix(msgs = []) {
  * reached decides, newest first.
  *
  * @param {Array<object>} msgs the studio transcript
- * @returns {string} one of: mode | job | brief | cv | scanoffer | results | fix:<mode>
+ * @returns {string} one of: mode | job | brief | cv | scanoffer | results | prep:<step>
+ *                    | build:<step> | fix:<mode>
  */
 export function derivePhase(msgs = [], cvData = {}) {
   const has = (who) => msgs.some((m) => m?.who === who);
@@ -615,6 +616,22 @@ export function derivePhase(msgs = [], cvData = {}) {
   if (cvData?.studioPending?.kind === 'skills' && cvData.studioPending.workflow === 'fix')
     return 'fix:skills';
   if (fix) return `fix:${fix.mode}`;
+
+  // ── Prep track: a job analysis, not a CV.
+  //
+  // Checked FIRST among the tracks because it is the only one that binds no draft. Its
+  // whole conversation lives in the pre-clone transcript, so these three markers are all
+  // there is to go on — there is no cvData to cross-check against, and no pendings,
+  // pins or fixes a prep session could ever have.
+  //
+  // It uses its own marker names rather than the tailor track's `jobcard`: both capture
+  // a JD, but a shared marker would make `has('jobcard')` true on a prep session and
+  // derive it onto the tailor track's 'brief' step — a screen it has no card for.
+  if (has('prepstart')) {
+    if (has('prepresult')) return 'prep:results';
+    if (has('prepcv')) return 'prep:job';
+    return 'prep:cv';
+  }
 
   // ── Build track. Checked before the tailor milestones because a build session's
   //    markers are its own sequence; the two tracks never interleave in one session.
@@ -708,16 +725,19 @@ export function rankEntriesByGap(list = [], missingKeywords = []) {
 /**
  * The phase a BRAND-NEW session opens on, given the kind the user picked in the rail.
  *
- * Picking "New Tailoring" or "New CV" has already answered the mode chooser's question,
- * so a new session lands on that kind's first step. A cold start with no declared kind
- * still gets the chooser.
+ * Picking "New CV" or "Prepare me for an interview" has already answered the mode
+ * chooser's question, so a new session lands on that kind's first step. A cold start with
+ * no declared kind still gets the chooser.
  *
- * @param {'tailor'|'build'|null|undefined} kind
+ * @param {'tailor'|'build'|'prep'|null|undefined} kind
  * @param {Array<object>} msgs restored transcript, used only when no kind was declared
  */
 export function phaseForNewSession(kind, msgs = []) {
   if (kind === 'tailor') return 'job';
   if (kind === 'build') return 'build:roadmap';
+  // The CV comes before the job: Aria offers to pull one from your profile (or take an
+  // upload) and only then asks what you're aiming it at.
+  if (kind === 'prep') return 'prep:cv';
   return derivePhase(msgs);
 }
 
@@ -725,16 +745,21 @@ export function phaseForNewSession(kind, msgs = []) {
  * Shape one /studio/sessions row for the rail.
  *
  * A 'build' session has no fit score — it isn't aimed at a job yet — so it gets a tag
- * rather than a dash that would read as "scored zero".
+ * rather than a dash that would read as "scored zero". An 'application' row is a job
+ * analysis rather than a CV: it always has a score, and it is not a document, so it
+ * cannot be renamed.
  */
 export function sessionRow(s = {}) {
   const isBuild = s.kind === 'build';
+  const isApplication = s.kind === 'application';
   return {
     id: s._id,
     isBuild,
+    isApplication,
     heading: s.jobTitle || s.title || 'Untitled session',
     sub: [s.company, s.sourceTitle && `from ${s.sourceTitle}`].filter(Boolean).join(' · '),
-    // Only a tailoring can show a score, and only once it has actually been scanned.
+    // Only a scored thing shows a score: a tailoring once it has been scanned, and an
+    // analysis always.
     showScore: !isBuild && s.fitScore != null,
     fitScore: s.fitScore ?? null,
   };

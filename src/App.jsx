@@ -14,8 +14,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import JobSearch from './pages/JobSearch';
-import JobHistory from './pages/JobHistory';
-import Compare from './pages/Compare';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import MobileHomeRedirect from './components/MobileHomeRedirect';
@@ -401,26 +399,13 @@ const router = createBrowserRouter([
         path: '/jobs',
         element: <JobSearch />,
       },
-      {
-        path: '/history',
-        element: (
-          <MaintenanceGuard>
-            <ProtectedRoute>
-              <JobHistory />
-            </ProtectedRoute>
-          </MaintenanceGuard>
-        ),
-      },
-      {
-        path: '/compare/:idA/:idB',
-        element: (
-          <MaintenanceGuard>
-            <ProtectedRoute>
-              <Compare />
-            </ProtectedRoute>
-          </MaintenanceGuard>
-        ),
-      },
+      // Job analyses live in Aria Studio now — they are sessions in its Recents list
+      // rather than a separate Applications page. These two routes are kept as redirects
+      // rather than deleted: they were linked from the navbar, the mobile nav and a CV
+      // modal for long enough to be in people's history and bookmarks, and a dead link is
+      // a worse answer than the place the thing actually went.
+      { path: '/history', element: <Navigate to="/aria-studio" replace /> },
+      { path: '/compare/:idA/:idB', element: <Navigate to="/aria-studio" replace /> },
       {
         path: '/profile',
         element: (

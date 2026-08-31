@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { ACTION_KEY } from '../lib/generationActions';
 import en from './locales/en.json';
 import fr from './locales/fr.json';
 
@@ -73,6 +74,36 @@ describe('locale files', () => {
       }
     }
     expect([...new Set(offenders)]).toEqual([]);
+  });
+
+  it('every generation action the model picker offers has copy for both tiers', () => {
+    // GenerationModelRow builds its keys from the action name, so adding an action to its
+    // ACTION_KEY map without adding copy puts the RAW KEY on screen —
+    // "cvBuilder.genModel.blurb.coverLetter.light" — which is exactly what shipped when
+    // cover letters became model-selectable. Read from the component's own map, so the two
+    // cannot drift apart.
+    const actions = Object.keys(ACTION_KEY);
+    expect(actions.length).toBeGreaterThan(0);
+
+    const missing = [];
+    for (const [file, table] of [
+      ['en', en],
+      ['fr', fr],
+    ]) {
+      for (const action of actions) {
+        for (const tier of ['light', 'flagship']) {
+          if (!table.cvBuilder?.genModel?.blurb?.[action]?.[tier]) {
+            missing.push(`${file}:cvBuilder.genModel.blurb.${action}.${tier}`);
+          }
+        }
+        // 'project' deliberately borrows experience's heading; everything else needs one.
+        const headingKey = action === 'project' ? 'experience' : action;
+        if (!table.cvBuilder?.genModel?.heading?.[headingKey]) {
+          missing.push(`${file}:cvBuilder.genModel.heading.${headingKey}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
   });
 
   it('French copy is not left as untranslated English', () => {
@@ -192,6 +223,10 @@ describe('locale files', () => {
       'landing.cta.rightWord',
       'landing.cta.wayWord',
       'landing.journey.interviewInterviewerName', // "Amaka Okafor" — a person's name
+      // Round 5 (Aria Studio absorbs job analysis) — language-neutral, not missed:
+      'nav.ariaStudio', // "Aria Studio" — product name (see dashboard.studio.kicker)
+      'nav.mobile.ariaStudio', // "Aria" — product name (see landing.vignettes.askTabAria)
+      'ariaStudio.jobCapture.linkPlaceholder', // "https://…" — a URL scheme, not prose
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);
