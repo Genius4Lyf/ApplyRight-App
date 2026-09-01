@@ -1645,6 +1645,10 @@ const MockInterviewPage = () => {
     phase === 'grading' ||
     (phase === 'connecting' && mode === 'conversational');
 
+  // Below lg the live-interview pre-flight is a full-screen step flow that
+  // fills the main row rather than sitting centred in it (see <main> below).
+  const fullScreenPreflight = phase === 'intro' && mode === 'conversational';
+
   // ── Live-interview pre-flight, as three steps ────────────────────────────
   // What this is → who's interviewing you → start. One source of truth per
   // pane; PreflightSteps owns both the desktop rail and the mobile deck, and
@@ -1797,7 +1801,10 @@ const MockInterviewPage = () => {
       // position:sticky inside it — including this page's own header and the
       // pre-flight's mobile footer. `clip` hides the same overflow (more
       // strictly: it can't be scrolled to at all) without that side effect.
-      className={`min-h-screen flex flex-col overflow-x-clip ${
+      // min-h-dvh, not min-h-screen: `100vh` on a mobile browser is taller than
+      // what you can see while the URL bar is up, which would push the
+      // pre-flight's pinned action row below the fold on the phone shape.
+      className={`min-h-dvh flex flex-col overflow-x-clip ${
         immersive
           ? 'bg-[#f6f6f3] text-slate-900 dark:bg-slate-950 dark:text-slate-100'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100'
@@ -1878,9 +1885,22 @@ const MockInterviewPage = () => {
           content is taller than the viewport it simply grows and the page
           scrolls — centring only ever consumes genuinely spare room, it can't
           push the top of a tall card out of reach. Mobile used to pin content to
-          the top, which left a dead half-screen under the preflight cards. */}
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3.5">
-        <div className="w-full max-w-3xl transition-all duration-300">
+          the top, which left a dead half-screen under the preflight cards.
+
+          The one exception is the phone pre-flight, which is a SCREEN, not a
+          card on a page: it fills the row instead of being centred in it, and
+          that stretch is what gives its `auto 1fr auto` shell a height to
+          divide. Centring it would leave it no height to fill. */}
+      <main
+        className={`flex-1 flex justify-center px-4 sm:px-6 py-2 sm:py-3.5 ${
+          fullScreenPreflight ? 'items-center max-lg:items-stretch' : 'items-center'
+        }`}
+      >
+        <div
+          className={`w-full max-w-3xl transition-all duration-300 ${
+            fullScreenPreflight ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-col' : ''
+          }`}
+        >
           {phase === 'choose' &&
             (simQuestions.length === 0 ? (
               <IntroView

@@ -3330,9 +3330,7 @@
       "back": "Back",
       "continue": "Continue",
       "stepOf": "Step {{current}} of {{total}}",
-      "stepAria": "Step {{n}}: {{label}}",
-      "swipeHint": "Swipe or tap a dot",
-      "goToStep": "Go to step {{n}}"
+      "stepAria": "Step {{n}}: {{label}}"
     },
     "recordings": {
       "onThisDevice": "On this device",

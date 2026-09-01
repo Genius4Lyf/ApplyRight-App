@@ -86,14 +86,40 @@ describe('PreflightSteps (rail)', () => {
   });
 });
 
-describe('PreflightSteps (deck)', () => {
+describe('PreflightSteps (phone screen)', () => {
   beforeEach(() => stubMatchMedia(false));
 
-  it('renders the deck with clickable dots and the same footer', () => {
+  it('names the step it is on and advances from the pinned action', () => {
     setup({ initialStep: 0 });
-    fireEvent.click(screen.getByRole('button', { name: 'Go to step 3' }));
+    expect(screen.getByText('What this is')).toBeTruthy();
+    expect(screen.getByText('Step 1 of 3')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByText('panel body')).toBeTruthy();
+    expect(screen.getByText('Step 2 of 3')).toBeTruthy();
+  });
+
+  it('mounts one step at a time — it is a step flow, not a carousel', () => {
+    setup({ initialStep: 0 });
+    expect(screen.getByText('brief body')).toBeTruthy();
+    expect(screen.queryByText('panel body')).toBeNull();
+    expect(screen.queryByText('start body')).toBeNull();
+    // The swipe deck is gone: no carousel, and no dots rivalling the footer.
+    expect(screen.queryByRole('group', { name: 'Interview setup steps' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Go to step 3' })).toBeNull();
+  });
+
+  it('Back walks the flow backwards, and Cancel leaves it from step 1', () => {
+    const onCancel = vi.fn();
+    setup({ initialStep: 2, onCancel });
     expect(screen.getByRole('button', { name: 'Start interview' })).toBeTruthy();
-    // No rival next/prev arrows in sequence mode.
-    expect(screen.queryByRole('button', { name: 'Next card' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText('panel body')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText('brief body')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });

@@ -209,11 +209,55 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
           ? t('ariaStudio.chat.kindOpenerPrep')
           : t(OPENER_KEY);
 
-  const [messages, setMessages] = useState(() => [
-    { who: 'aria', text: kindOpener, _opening: true },
-    ...(pendingKind ? [] : loadSession()),
-  ]);
-  const [phase, setPhase] = useState(() => phaseForNewSession(pendingKind, loadSession()));
+  // Is the PRE-DRAFT transcript this session's to read?
+  //
+  // Only when there is genuinely no draft in play. `LS_KEY` holds a conversation that has
+  // nowhere else to live yet; a draft-backed session's belongs on the draft, in
+  // coachChats.studio, and reading the shared key there is how the last analysis ended up
+  // displayed — and then saved — under a CV's name.
+  //
+  // Three conditions, each covering a different way in:
+  //   · pendingKind — a session declared from the rail starts clean by definition.
+  //   · draftId     — available synchronously here: loadSession sets cvData BEFORE it
+  //                   bumps sessionNonce, so the remounted chat already sees the draft.
+  //   · loading     — the cold-refresh case, where a remembered draft is still being
+  //                   fetched and draftId has not arrived yet (the provider seeds this
+  //                   from ACTIVE_KEY, so it is true on the very first render).
+  const ownsLocalTranscript = !pendingKind && !draftId && !loading;
+
+  // The draft's OWN thread, in hand at mount for a session opened from the rail —
+  // loadSession sets cvData before bumping sessionNonce.
+  const savedThread =
+    !pendingKind && draftId && Array.isArray(cvData?.coachChats?.studio)
+      ? cvData.coachChats.studio
+      : null;
+
+  // Seeded here rather than in the rehydrate effect below, for the same reason the phase
+  // is: an effect cannot run until after the first paint, so opening a saved CV painted
+  // the WELCOME message first and swapped in the conversation a frame later. That swap is
+  // the flicker. The effect still runs and still owns the cold-refresh path — it lands on
+  // the identical array here, so React bails out of the re-render.
+  const [messages, setMessages] = useState(() =>
+    savedThread?.length
+      ? savedThread
+      : [
+          { who: 'aria', text: kindOpener, _opening: true },
+          ...(ownsLocalTranscript ? loadSession() : []),
+        ]
+  );
+  // Decided at MOUNT, not in an effect. A session opened from the rail already has its
+  // draft — loadSession sets cvData before bumping sessionNonce — so waiting for an effect
+  // to work out the phase meant painting one frame of the DEFAULT first. That default is
+  // the mode chooser, which is why opening any saved CV flashed "create a CV / prepare me
+  // for a job" before settling. Deriving it here means the first paint is already right.
+  const [phase, setPhase] = useState(() => {
+    if (pendingKind) return phaseForNewSession(pendingKind);
+    if (ownsLocalTranscript) return derivePhase(loadSession());
+    if (draftId) return derivePhase(cvData?.coachChats?.studio || [], cvData);
+    // Still fetching a remembered draft. `ready` holds every card back until it lands, so
+    // this value is never painted; it only has to be a phase.
+    return 'mode';
+  });
 
   // Publish the already-derived chat phase for sibling UI. The transcript remains the
   // source of truth; this merely prevents contextual chrome from guessing where Aria is.
@@ -243,7 +287,13 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // Resolved in a lazy initialiser rather than inside the effect so that StrictMode's
   // double-invoke sees the same answer both times — see the note on the effect below.
   const [restoreTarget] = useState(() => {
-    const marker = [...loadSession()].reverse().find((m) => m?.who === 'prepresult');
+    // Scanned only when the local transcript is this session's to read. A draft-backed
+    // session must NEVER restore an analysis: a stale `prepresult` marker left in the
+    // shared key by the last prep session was being taken as "restore this", which is
+    // what set the orbit spinning over a CV nobody had asked an analysis about.
+    const marker = ownsLocalTranscript
+      ? [...loadSession()].reverse().find((m) => m?.who === 'prepresult')
+      : null;
     return {
       id: pendingApplicationId || marker?.applicationId || applicationId || null,
       // Rebuild only when there is no transcript describing this analysis already. A
@@ -420,6 +470,10 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   const [coachDock, setCoachDock] = useState(null);
   // One-shot guard for the localStorage → coachChats migration.
   const migratedRef = useRef(false);
+  // Did this mount START a session (rail click), as opposed to OPENING an existing one?
+  // Captured because `pendingKind` is consumed and nulled by an effect on mount, so by the
+  // time the rehydration effect runs it is gone.
+  const declaredKindRef = useRef(pendingKind);
 
   // DOM nodes for the plain typed/response bubbles, keyed by their `messages` index —
   // populated by the two bubble branches below. Cards/markers don't register here, so
@@ -436,7 +490,9 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // thread — that's a history LOAD, not a new turn, so it should land at the bottom
   // (the most recent point) instead of anchoring to the top of the oldest restored
   // message the way a live reply does.
-  const hydratingRef = useRef(false);
+  // True when the transcript on screen is restored history rather than a live turn, so
+  // the scroll lands at the BOTTOM of it. Seeded for the mount-time restore above.
+  const hydratingRef = useRef(!!savedThread?.length);
 
   // Anchors the view to the TOP of whatever just arrived — your own message when you
   // send it, then Aria's reply when it lands — rather than chasing every new line with
@@ -485,10 +541,31 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   useEffect(() => {
     if (!draftId) return;
     const saved = cvData?.coachChats?.studio;
-    if (!Array.isArray(saved) || !saved.length) return;
+    if (!Array.isArray(saved) || !saved.length) {
+      // A bound build draft with NO conversation is, in practice, one whose thread was
+      // just repaired (lib/studioThread) — the analysis that had overwritten it has been
+      // taken off. Falling through to the default phase would put the mode chooser in
+      // front of a CV that plainly already exists; the roadmap is the honest landing,
+      // and it reads its section status from the DOCUMENT, so it is accurate with no
+      // transcript at all.
+      //
+      // Not for a session started from the rail: startBuild binds its draft mid-flow
+      // without remounting the chat, so this effect fires while a build is already
+      // underway and would drag it back to the roadmap.
+      if (!declaredKindRef.current) setPhase(derivePhase([], cvData));
+      return;
+    }
     setMessages((prev) => {
       const localPersisted = prev.filter((m) => !m._opening);
-      if (localPersisted.length) return prev; // local thread wins; nothing to restore
+      // "Local wins" is for ONE case: an intake conversation that began before any draft
+      // existed and created one mid-flow. That is precisely what `ownsLocalTranscript`
+      // describes, so it is the condition — not "there happen to be messages in memory",
+      // which is how a stale analysis transcript held the floor here and was then written
+      // over the draft's real thread by the migration below.
+      //
+      // A session that arrived already bound to a draft has no intake to protect: the
+      // draft is the authority on its own history.
+      if (localPersisted.length && ownsLocalTranscript) return prev;
       migratedRef.current = true; // came FROM the backend — don't migrate back over it
       setPhase(derivePhase(saved, cvData));
       hydratingRef.current = true; // land the scroll at the bottom, not the top of history
@@ -1335,10 +1412,20 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
           setMessages([{ who: 'aria', text: t('ariaStudio.chat.kindOpenerPrep'), _opening: true }]);
         }
       } finally {
-        // NOT guarded on `alive`. An abandoned pass must still put the flag down —
-        // stranding it true is exactly what left a reopened session showing an empty
-        // screen behind a locked composer.
-        setRestoringPrep(false);
+        // GUARDED on `alive`, and the guard is load-bearing.
+        //
+        // StrictMode mounts this twice in development: pass one starts, is cleaned up,
+        // pass two starts, and both fetch. Unguarded, pass ONE's finally lowered the flag
+        // while pass TWO was still in flight — which uncovered the transcript for a frame
+        // and flashed the prep opener ("Let's get you ready for this one…") over an
+        // analysis the user had already opened. That is the flicker.
+        //
+        // It was unguarded on purpose once, to stop the flag stranding true. That risk
+        // belonged to an older shape of this effect, where the first pass CONSUMED the
+        // application id and the second returned early with nothing to do. The target is
+        // resolved outside the effect now and both passes do identical work, so the live
+        // pass always reaches this line and always puts the flag down.
+        if (alive) setRestoringPrep(false);
       }
     })();
     return () => {
@@ -3528,7 +3615,12 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // Every phase of the prep track: pick a CV, capture the job, read the analysis.
   const inPrepSession = typeof phase === 'string' && phase.startsWith('prep:');
 
+  // The COLD-REFRESH guard, and only that: until a remembered draft arrives the phase
+  // cannot be known, and the mode chooser painted in the gap. Deliberately NOT while
+  // switching sessions — there a draft is already bound, and blanking its cards for the
+  // length of the fetch replaces one flicker with another.
   const ready =
+    !(loading && !draftId) &&
     !studioTransition &&
     !thinking &&
     !working &&

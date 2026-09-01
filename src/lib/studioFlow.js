@@ -155,7 +155,21 @@ export function buildProgress(cv, msgs = []) {
   const passed = new Set(CV_SECTIONS.filter((s) => s.check(cleaned)).map((s) => s.key));
   // A profile name is copied into a new draft before the user reaches Contact. In Studio,
   // that section is complete only after ContactConfirmCard validates and saves the form.
-  const contactConfirmed = msgs.some((m) => m?.who === 'contactdone');
+  // The marker is the ONLY thing that tells a confirmed contact step apart from the
+  // profile details copied into every new draft (studioBuildStart seeds name, email and
+  // phone from the account), so the document cannot answer this on its own.
+  //
+  // With no transcript at all there is no marker to consult — a thread taken off a draft
+  // as foreign (lib/studioThread) leaves exactly that, and the section then read NOT
+  // STARTED forever on a CV whose contact block was plainly filled. So the question
+  // becomes whether the CV evidently got PAST the contact step, which is the first one the
+  // build asks, so a CV that is otherwise COMPLETE cannot have skipped it. That is a
+  // deliberately narrow test — a half-built draft with no transcript still reads NOT
+  // STARTED, because there it genuinely is not knowable — and it leaves every case that
+  // HAS a transcript decided by the marker, exactly as before.
+  const contactConfirmed = msgs.length
+    ? msgs.some((m) => m?.who === 'contactdone')
+    : finishableNow(cv);
 
   const status = {};
   BUILD_SECTIONS.forEach((s) => {
@@ -638,7 +652,18 @@ export function derivePhase(msgs = [], cvData = {}) {
   //
   // A pinned role outranks the section list: mid-role is where the user actually is, and
   // a refresh must put them back on that card rather than at the top of the section menu.
-  if (has('buildstart')) {
+  //
+  // A build draft with NO transcript at all reads its position off the DOCUMENT. That
+  // happens when a thread has been taken off a draft as foreign (lib/studioThread): the
+  // markers are gone but the CV plainly is not, and falling through to the mode chooser
+  // would ask "what would you like to do?" about a CV that is five sections deep. Every
+  // rule inside this branch already has a document-derived answer — finishableNow,
+  // cvData.careerStage — so it lands where the CV actually is.
+  //
+  // The roadmap rule moves ABOVE the branch to keep its meaning: a session that chose to
+  // build but has not accepted the plan yet belongs on the plan, not on its first step.
+  if (has('buildintro') && !has('buildstart')) return 'build:roadmap';
+  if (has('buildstart') || cvData?.studioKind === 'build') {
     if (pinnedSortId(msgs)) return `build:${pinnedSection(msgs)}`;
     if (cvData?.studioPending?.kind === 'summary' && cvData.studioPending.workflow === 'build')
       return 'build:summary';
@@ -676,7 +701,6 @@ export function derivePhase(msgs = [], cvData = {}) {
     if (has('careerstage') || cvData?.careerStage) return 'build:job';
     return 'build:career-stage';
   }
-  if (has('buildintro')) return 'build:roadmap'; // kind chosen → show the plan
 
   // ── Tailor track.
   if (has('scan')) return 'results'; // scanned → showing the verdict

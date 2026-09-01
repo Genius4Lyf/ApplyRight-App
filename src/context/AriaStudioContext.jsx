@@ -4,6 +4,7 @@ import CVService from '../services/cv.service';
 import { newSortId } from '../lib/sortId';
 import { startCvErrorMessage } from '../lib/startCvError';
 import { SECTION_LIST, hasSubstance } from '../lib/studioFlow';
+import { repairStudioThread } from '../lib/studioThread';
 
 // Aria Studio's state brain — a decoupled sibling of CVContext. It carries the SAME
 // CV-mutation invariants (functional coachChats merge, debounced chats autosave as the
@@ -156,7 +157,12 @@ export const AriaStudioProvider = ({ children }) => {
 
   // Bind the Studio to a draft: hold it in state, remember it across reloads, and mark
   // its conversation as already-persisted so the autosave below doesn't echo it back.
-  const setCvData = useCallback((draft) => {
+  const setCvData = useCallback((incoming) => {
+    // Every Studio draft binding passes through here, so this is where a draft carrying an
+    // analysis's transcript instead of its own gets it taken back off (lib/studioThread).
+    // `repaired` is used a few lines down to write the repair back rather than only hide
+    // it from this session.
+    const { draft, repaired } = repairStudioThread(incoming);
     setCvDataRaw(draft);
     setStudioPhase(null);
     // A draft binding and an analysis binding are mutually exclusive: one session is one
@@ -167,7 +173,14 @@ export const AriaStudioProvider = ({ children }) => {
     // chats is what stops the autosave immediately re-writing what we just loaded —
     // and clearing it on unbind (null) means the next session's FIRST write is never
     // suppressed by a stale comparison against the previous session's transcript.
-    lastSavedChatsRef.current = draft ? JSON.stringify(draft.coachChats || {}) : null;
+    //
+    // On a REPAIRED draft it is seeded from what the SERVER still holds, not from what we
+    // just bound. The two now differ, so the autosave sees a real change and persists the
+    // repair through its narrow { _id, coachChats } patch — the record heals once, on the
+    // next open, instead of every session having to strip it again.
+    lastSavedChatsRef.current = draft
+      ? JSON.stringify((repaired ? incoming?.coachChats : draft.coachChats) || {})
+      : null;
     pendingChatsRef.current = null;
     try {
       if (draft?._id) {
@@ -280,6 +293,19 @@ export const AriaStudioProvider = ({ children }) => {
       try {
         const draft = await CVService.getDraftById(id);
         if (!draft?._id) throw new Error('session not found');
+        // Retire the pre-draft transcript, exactly as newSession does. This draft carries
+        // its own conversation in coachChats.studio, and PRECLONE_KEY is by contract only
+        // the home for one that has nowhere else to live yet.
+        //
+        // Leaving it was how an analysis ended up under a CV's name: a prep session never
+        // gets a draft, so its transcript sat in this key until something else picked it
+        // up — and the chat, seeing no declared kind, seeded itself from it and then
+        // migrated it onto the draft.
+        try {
+          localStorage.removeItem(PRECLONE_KEY);
+        } catch {
+          /* storage unavailable — nothing to clear */
+        }
         setCvData(draft);
         setSessionNonce((n) => n + 1);
         return draft;

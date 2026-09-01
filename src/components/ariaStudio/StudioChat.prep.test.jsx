@@ -489,3 +489,44 @@ describe('the composer', () => {
     await waitFor(() => expect(composer()).toBeTruthy());
   });
 });
+
+describe('reopening an analysis does not flash the opener', () => {
+  // The bug this pins, exactly: StrictMode mounts the restore effect twice, so TWO
+  // fetches go out. The first pass is abandoned by its own cleanup — and if its `finally`
+  // still lowered the "restoring" flag, the covering orbit came down while the second pass
+  // was in flight, showing "Let's get you ready for this one…" over an analysis the user
+  // had already opened.
+  //
+  // Reproduced by letting the FIRST call settle while the second hangs: that is the exact
+  // window, held open so a test can look at it.
+  //
+  // NOTE what is asserted. The cover is an opaque overlay, not an unmount — the transcript
+  // stays in the DOM underneath it, and jsdom applies no CSS, so the opener's text is
+  // findable either way. The question that actually distinguishes the bug from the fix is
+  // whether the COVER is still up.
+  const STORED_APPLICATION = {
+    _id: 'a1',
+    fitScore: 61,
+    fitAnalysis: { overallFeedback: 'Solid.', recommendation: 'good_match' },
+    actionPlan: [],
+    jobId: { title: 'Rig Electrician', company: 'Seadrill' },
+    draftCVId: 'd1',
+  };
+
+  it('keeps the cover up while the live pass is still fetching', async () => {
+    let calls = 0;
+    CVService.getApplication.mockImplementation(() => {
+      calls += 1;
+      // Call 1 = the abandoned StrictMode pass. Call 2 = the live one, held open.
+      return calls === 1 ? Promise.resolve(STORED_APPLICATION) : new Promise(() => {});
+    });
+
+    renderStudio();
+    await waitFor(() => expect(ctx).toBeTruthy());
+    await ctx.openApplication('a1');
+    await waitFor(() => expect(calls).toBeGreaterThan(1));
+
+    // Aria is still working. An abandoned pass must not say otherwise on her behalf.
+    expect(screen.getByRole('status')).toBeTruthy();
+  });
+});

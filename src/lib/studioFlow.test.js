@@ -386,6 +386,72 @@ describe('sessionRow', () => {
   });
 });
 
+// A build draft can end up with NO transcript at all: lib/studioThread takes a thread off
+// a draft when it turns out to be an analysis's rather than the CV's own. Every rule that
+// keys off a transcript MARKER goes blind at that moment, and the CV — which is right there
+// — has to answer for itself.
+describe('a build draft with no transcript', () => {
+  const FINISHED = {
+    studioKind: 'build',
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'A summary.',
+    experience: [{ title: 'Operator' }],
+    education: [{ degree: 'BSc' }],
+    skills: [{ name: 'Python' }],
+    projects: [{ title: 'Pipeline' }],
+  };
+
+  it('ticks contact from the document once the CV plainly got past it', () => {
+    // Contact is the first step the build asks, so substance in a later section is proof
+    // it was answered. Without this the section read NOT STARTED on a CV whose contact
+    // block was filled, and the CV could never reach 100%.
+    const progress = buildProgress(FINISHED, []);
+    expect(progress.status.contact).toBe(true);
+    expect(progress.percent).toBe(100);
+    expect(progress.isComplete).toBe(true);
+  });
+
+  it('leaves a half-built draft alone — there it is genuinely unknowable', () => {
+    // Narrow on purpose: only an otherwise-COMPLETE CV can be said to have passed contact.
+    const half = {
+      studioKind: 'build',
+      personalInfo: { fullName: 'E' },
+      experience: [{ title: 'T' }],
+    };
+    expect(buildProgress(half, []).status.contact).toBe(false);
+  });
+
+  it('does not tick contact on a freshly created draft', () => {
+    // studioBuildStart copies name, email and phone from the ACCOUNT into every new draft,
+    // which is why the marker existed in the first place: the details alone prove nothing.
+    expect(buildProgress({ personalInfo: { fullName: 'Ernest Akibor' } }, []).status.contact).toBe(
+      false
+    );
+  });
+
+  it('opens a finished CV on its finish card, not the mode chooser', () => {
+    expect(derivePhase([], FINISHED)).toBe('build:done');
+  });
+
+  it('resumes an unfinished one where the document says it is', () => {
+    const partial = { studioKind: 'build', personalInfo: { fullName: 'E' } };
+    expect(derivePhase([], partial)).toBe('build:career-stage');
+    expect(derivePhase([], { ...partial, careerStage: 'student' })).toBe('build:job');
+  });
+
+  it('leaves the other tracks alone', () => {
+    // Only a BUILD draft can be positioned from the document — a tailor session's steps
+    // are about a job and a source CV, neither of which the draft alone can answer for.
+    expect(derivePhase([], { studioKind: 'tailor' })).toBe('mode');
+    expect(derivePhase([], {})).toBe('mode');
+  });
+
+  it('still shows the plan to someone who chose to build but has not started', () => {
+    // The roadmap rule moved above the widened branch; it must keep its meaning.
+    expect(derivePhase([{ who: 'buildintro' }], { studioKind: 'build' })).toBe('build:roadmap');
+  });
+});
+
 describe('buildProgress — derived, never stored', () => {
   const CONTACT_DONE = [{ who: 'contactdone' }];
   const FULL = {

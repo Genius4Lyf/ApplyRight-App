@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LogOut,
   LayoutDashboard,
+  Home,
   User,
   Settings,
   ChevronDown,

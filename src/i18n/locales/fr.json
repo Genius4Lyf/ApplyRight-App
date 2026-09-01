@@ -3326,9 +3326,7 @@
       "back": "Retour",
       "continue": "Continuer",
       "stepOf": "Étape {{current}} sur {{total}}",
-      "stepAria": "Étape {{n}} : {{label}}",
-      "swipeHint": "Balayez ou touchez un point",
-      "goToStep": "Aller à l’étape {{n}}"
+      "stepAria": "Étape {{n}} : {{label}}"
     },
     "recordings": {
       "onThisDevice": "Sur cet appareil",

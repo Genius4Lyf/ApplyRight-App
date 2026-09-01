@@ -1,20 +1,26 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import CardDeck from '../ui/CardDeck';
+import { motion, useReducedMotion } from 'framer-motion';
+import { SPRING_CARD } from '../../lib/ariaMotion';
 
 // The live-interview pre-flight, as a paced three-step sequence rather than a
 // page you scroll: what this is → who's interviewing you → start.
 //
 // The point of the whole thing is that the CHROME NEVER MOVES — not between
-// steps, not under a long brief. The rail/step name above and the footer below
-// are fixed, the pane between them is a fixed-height box on both viewports, and
-// only that box scrolls. Nothing about paging through the steps changes the
-// size or position of anything you're aiming at.
+// steps, not under a long brief. Bar above, actions below, one scrolling region
+// between them, and paging through the steps changes nothing about the size or
+// position of what you're aiming at.
 //
-// One set of panes, two presentations: a clickable step rail + centred pane on
-// lg+, a named step + swipe deck below it. Only one is mounted at a time
-// (matchMedia, not `hidden lg:block`) so a pane's DOM — ids, media permissions,
-// AI panels — exists exactly once.
+// One set of panes, two shapes. On lg+ this genuinely IS a dialog floating on a
+// page, so it keeps the step rail and a centred card with a capped body. Below
+// lg it's a screen, so it's built like one: full-bleed content, a bar that names
+// the step, and a pinned action row — the app-shell layout (`auto 1fr auto`,
+// middle row `min-h-0`) that every native step flow uses. Only one shape is
+// mounted at a time (matchMedia, not `hidden lg:block`) so a pane's DOM — ids,
+// media permissions, AI panels — exists exactly once.
+//
+// The mobile shape needs its parent to give it a height (it fills, it doesn't
+// grow): MockInterviewPage stretches the preflight's row for exactly this.
 
 const LG = '(min-width: 1024px)';
 
@@ -40,19 +46,12 @@ const useIsDesktop = () => {
   return isDesktop;
 };
 
-// The pane body is a FIXED-height reading box on both viewports, not a capped
-// one. Height that follows the content means the card — and the footer under
-// it — changes size as you page through the steps, which reads as the layout
-// jumping rather than as a step advancing. Same box every step, content scrolls
-// inside it.
-//
-// Desktop takes a share of the window; mobile takes what's left of the screen
-// after the chrome, so the box is as tall as a phone can make it (the old 52vh
-// cap showed about a third of the brief and left dead space under the buttons).
-// `svh`, not `dvh`: the small-viewport unit doesn't change when a mobile URL
-// bar hides, so the card can't resize under your thumb mid-scroll.
+// Desktop's card body is a fixed height, not a cap: a body that sizes to its
+// content makes the card — and the footer under it — resize as you page
+// through, which reads as the layout jumping rather than as a step advancing.
+// Mobile needs no such constant; there the content region is simply whatever
+// the bars leave.
 const DESKTOP_BODY_H = 'h-[clamp(300px,52vh,430px)]';
-const MOBILE_BODY_H = 'max(280px, calc(100svh - 15.5rem - env(safe-area-inset-bottom)))';
 
 // The fade that says "there's more below". Applied only while the box actually
 // has somewhere left to scroll, so it always MEANS something — a permanent
@@ -62,7 +61,7 @@ const FADE = 'linear-gradient(to bottom, #000 calc(100% - 28px), transparent)';
 // `custom-scrollbar` swaps the chunky native bar for the app's 6px ink one, and
 // the radius on the box itself means that bar is clipped by the card's corner
 // instead of squaring it off.
-const ScrollPane = ({ resetKey, className = '', style, inert, children }) => {
+const ScrollPane = ({ resetKey, className = '', style, children }) => {
   const ref = useRef(null);
   const [more, setMore] = useState(false);
 
@@ -94,7 +93,6 @@ const ScrollPane = ({ resetKey, className = '', style, inert, children }) => {
     <div
       ref={ref}
       onScroll={update}
-      inert={inert}
       className={`custom-scrollbar overflow-y-auto ${className}`}
       style={{ ...style, ...(more ? { maskImage: FADE, WebkitMaskImage: FADE } : null) }}
     >
@@ -138,18 +136,28 @@ const PreflightSteps = ({
   const last = Math.max(steps.length - 1, 0);
   const clamp = useCallback((i) => Math.min(Math.max(i, 0), last), [last]);
 
-  const [step, setStep] = useState(() => clamp(initialStep));
-  const current = clamp(step);
+  // Step and travel direction move together, as one value: a step reached by
+  // Back has to slide back in from the left, or the motion lies about where you
+  // are in the flow. Deriving the direction later — from a ref, or by comparing
+  // against a previous render — is where that goes wrong.
+  const [nav, setNav] = useState(() => ({ step: clamp(initialStep), dir: 1 }));
+  const current = clamp(nav.step);
   const isLast = current === last;
   const active = steps[current];
+  const reduceMotion = useReducedMotion();
 
   const go = useCallback(
-    (i) => setStep((prev) => clamp(typeof i === 'function' ? i(prev) : i)),
+    (i) =>
+      setNav((prev) => {
+        const target = clamp(typeof i === 'function' ? i(prev.step) : i);
+        return { step: target, dir: target < prev.step ? -1 : 1 };
+      }),
     [clamp]
   );
 
-  // The pane keeps a fixed height now, so nothing below it moves between steps
-  // and the page shouldn't be left scrolled where the previous step put it.
+  // The phone shape fills the viewport and scrolls inside itself, so the page
+  // behind it shouldn't be left scrolled where a previous screen put it. Belt
+  // and braces: the shell shouldn't produce page scroll at all.
   // (ScrollPane resets its own scrollTop; this is the window's.)
   useEffect(() => {
     if (isDesktop) return;
@@ -258,55 +266,67 @@ const PreflightSteps = ({
     );
   }
 
-  // ── < lg : the same three panes as a swipe deck ─────────────────────────
+  // ── < lg : one full-screen step ─────────────────────────────────────────
+  // Three rows — bar, content, actions — and the middle one is `flex-1
+  // min-h-0`. That pair is the whole layout: the bars take their natural
+  // height, the content region takes what's left, and NOTHING here measures
+  // the chrome in pixels. It's the same box on every step by construction, not
+  // by a number someone tuned.
+  //
+  // No card and no deck down here. A card frames content against a page around
+  // it, and there is no page around it on a phone; a deck is for peer content
+  // you browse, not for required steps of unequal length.
   return (
-    <div className="text-left">
-      {/* The rail is a desktop luxury, but its ORIENTATION isn't: dots alone
-          never say what the pane you're looking at is. Name the step. */}
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h2 className="min-w-0 truncate text-sm font-bold text-slate-900 dark:text-white">
-          {active?.label}
-        </h2>
-        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('interviewPrep.preflight.stepOf', { current: current + 1, total: steps.length })}
-        </span>
+    <div className="flex h-full min-h-0 flex-1 flex-col text-left">
+      {/* The bar. Names the step, counts it, and shows the same progress the
+          desktop rail shows — without pretending you can jump around. */}
+      <div className="shrink-0 pb-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="min-w-0 truncate text-[15px] font-bold text-slate-900 dark:text-white">
+            {active?.label}
+          </h2>
+          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            {t('interviewPrep.preflight.stepOf', { current: current + 1, total: steps.length })}
+          </span>
+        </div>
+        <div className="mt-2 flex gap-1" aria-hidden="true">
+          {steps.map((s, i) => (
+            <span
+              key={s.key}
+              className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                i <= current ? 'bg-slate-900 dark:bg-white' : 'bg-slate-200 dark:bg-slate-800'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
-      <CardDeck
-        sequence
-        items={steps}
-        activeIndex={current}
-        onIndexChange={go}
-        getKey={(s) => s.key}
-        ariaLabel={ariaText}
-        hint={t('interviewPrep.preflight.swipeHint')}
-        dotLabel={(n) => t('interviewPrep.preflight.goToStep', { n })}
-        cardClassName={PANE_CARD}
-        renderItem={(s, i, isFront) => (
-          <ScrollPane
-            resetKey={current}
-            // The body IS the whole mobile pane, so it carries the full radius.
-            className="rounded-2xl px-4 py-4"
-            style={{ height: MOBILE_BODY_H }}
-            // Only the pane in front is reachable; the others are parked
-            // off-stage and must not collect tab stops.
-            inert={!isFront}
-          >
-            {s.node}
+      {/* The only scrolling region on the screen. The step slides in from the
+          side it came from — the nav-stack push, not a card thrown off a pile.
+          Keying on the step remounts it, so there's one pane in the DOM at a
+          time, exactly as on desktop. */}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <motion.div
+          key={active?.key}
+          className="h-full"
+          initial={reduceMotion ? false : { opacity: 0, x: nav.dir * 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={SPRING_CARD}
+        >
+          <ScrollPane resetKey={current} className="h-full pb-4">
+            {active?.node}
           </ScrollPane>
-        )}
-      />
+        </motion.div>
+      </div>
 
-      {/* Footer sits outside the deck and sticks to the bottom of the viewport:
-          the pane above it is now as long as its content, so the buttons have
-          to follow you down it. Full-bleed (-mx) with an opaque ground so the
-          brief scrolls UNDER the bar rather than beside it, and safe-area
+      {/* Pinned actions. Outside the scroll region, so it can't be scrolled
+          away and doesn't need to be sticky; full-bleed hairline, and safe-area
           padding so it clears a phone's home indicator. */}
       <div
-        className="sticky bottom-0 z-10 -mx-4 mt-3 flex items-center gap-2.5 border-t border-slate-200/70 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-slate-800/80 dark:bg-slate-950/95"
-        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+        className="-mx-4 flex shrink-0 items-center gap-2.5 border-t border-slate-200 bg-slate-50 px-4 pt-3 sm:-mx-6 sm:px-6 dark:border-slate-800 dark:bg-slate-950"
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
-        {/* 44px floor: these are the only two tap targets on the pane. */}
+        {/* 44px floor: these are the only two tap targets on the screen. */}
         {backBtn('min-h-[44px] flex-1')}
         {forwardBtn('min-h-[44px] flex-[2] justify-center')}
       </div>
