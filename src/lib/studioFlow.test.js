@@ -411,6 +411,43 @@ describe('a build draft with no transcript', () => {
     expect(progress.isComplete).toBe(true);
   });
 
+  it('gives the chat and the artifact panel the SAME number', () => {
+    // The reported split: CV Health read 100% while the finish card beside it read 83% on
+    // the same CV. StudioArtifactPanel passes the PERSISTED thread — empty, once a foreign
+    // transcript has been taken off the draft — and StudioChat passes its IN-MEMORY
+    // messages, which always open with Aria's greeting. Anything that asks whether the
+    // array is EMPTY therefore answers differently for the two callers.
+    const opener = [{ who: 'aria', text: 'Welcome back.', _opening: true }];
+    expect(buildProgress(FINISHED, opener).percent).toBe(100);
+    expect(buildProgress(FINISHED, opener).percent).toBe(buildProgress(FINISHED, []).percent);
+  });
+
+  it('holds that answer once the user starts talking again', () => {
+    // The wiped transcript is gone for good, so the marker is never coming back. A rule
+    // that survives only until the next message would drop the CV to 83% mid-sentence.
+    const chatting = [
+      { who: 'aria', text: 'Welcome back.', _opening: true },
+      { who: 'user', text: 'can you tighten my summary' },
+      { who: 'aria', text: 'Of course.' },
+    ];
+    expect(buildProgress(FINISHED, chatting).percent).toBe(100);
+  });
+
+  it('still refuses the document reading on a half-built CV mid-conversation', () => {
+    // The guard on the above: a live build session with plenty of messages and no
+    // contactdone marker must still read NOT STARTED, or the marker stops meaning anything.
+    const half = {
+      studioKind: 'build',
+      personalInfo: { fullName: 'E' },
+      experience: [{ title: 'T' }],
+    };
+    const chatty = [
+      { who: 'aria', text: 'hi' },
+      { who: 'user', text: 'ok' },
+    ];
+    expect(buildProgress(half, chatty).status.contact).toBe(false);
+  });
+
   it('leaves a half-built draft alone — there it is genuinely unknowable', () => {
     // Narrow on purpose: only an otherwise-COMPLETE CV can be said to have passed contact.
     const half = {

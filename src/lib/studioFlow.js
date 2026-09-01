@@ -159,17 +159,23 @@ export function buildProgress(cv, msgs = []) {
   // profile details copied into every new draft (studioBuildStart seeds name, email and
   // phone from the account), so the document cannot answer this on its own.
   //
-  // With no transcript at all there is no marker to consult — a thread taken off a draft
-  // as foreign (lib/studioThread) leaves exactly that, and the section then read NOT
-  // STARTED forever on a CV whose contact block was plainly filled. So the question
-  // becomes whether the CV evidently got PAST the contact step, which is the first one the
-  // build asks, so a CV that is otherwise COMPLETE cannot have skipped it. That is a
-  // deliberately narrow test — a half-built draft with no transcript still reads NOT
-  // STARTED, because there it genuinely is not knowable — and it leaves every case that
-  // HAS a transcript decided by the marker, exactly as before.
-  const contactConfirmed = msgs.length
-    ? msgs.some((m) => m?.who === 'contactdone')
-    : finishableNow(cv);
+  // The marker is not the ONLY way to answer, though, or the section would read NOT
+  // STARTED forever on a CV whose contact block is plainly filled — a thread taken off a
+  // draft as foreign (lib/studioThread) leaves exactly that. So the document gets a say:
+  // contact is the FIRST step the build asks, so a CV that is otherwise content-complete
+  // cannot have skipped it.
+  //
+  // That second reading deliberately does NOT key off an EMPTY transcript, which is what
+  // it did first and what made this worth writing down. The live chat passes its
+  // IN-MEMORY messages, and those always hold at least Aria's opening line, so "no
+  // messages" was true in the artifact panel (which passes the persisted thread) and
+  // false in the chat — which is exactly how CV Health read 100% while the finish card
+  // beside it read 83% on the same CV. Asking the document gives both the same answer,
+  // and keeps giving it once the user starts a fresh conversation on that CV.
+  //
+  // It cannot fire early: finishableNow needs every required section filled, and a draft
+  // sitting on the contact step has nothing but the name copied from the account.
+  const contactConfirmed = msgs.some((m) => m?.who === 'contactdone') || finishableNow(cv);
 
   const status = {};
   BUILD_SECTIONS.forEach((s) => {
