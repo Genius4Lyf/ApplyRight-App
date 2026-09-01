@@ -7,6 +7,7 @@ import StudioSidebarNav from '../ariaStudio/StudioSidebarNav';
 import StudioSidebarProfile from '../ariaStudio/StudioSidebarProfile';
 import NewCvMenu from './NewCvMenu';
 import RailFilter from './RailFilter';
+import CvOriginIcon from './CvOriginIcon';
 
 // The app sidebar for every surface OUTSIDE Aria Studio: the CV builder, the CV Studio,
 // and an interview prep dashboard.
@@ -161,6 +162,8 @@ const WorkspaceSidebar = ({
                       >
                         {row.heading}
                       </span>
+                      {/* Null on an application row, which has no author to name. */}
+                      <CvOriginIcon origin={row.origin} />
                       {row.value && (
                         <span
                           className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${

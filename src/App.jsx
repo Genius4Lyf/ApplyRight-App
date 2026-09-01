@@ -22,16 +22,13 @@ import InterviewPrepDetail from './pages/InterviewPrepDetail';
 import InterviewPracticePage from './pages/InterviewPracticePage';
 import PreCallBrief from './pages/PreCallBrief';
 import MockInterviewPage from './pages/MockInterviewPage';
-import InterviewStart from './pages/InterviewStart';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { isMobile, shouldShowBottomNav } from './utils/platform';
 import { waitForReady } from './utils/splash';
 import api from './services/api';
 import { hydrateCreditCosts } from './lib/credits';
 import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
-import MobileBottomNav from './components/MobileBottomNav';
 import ApplicationReview from './pages/ApplicationReview';
 import ResumeReview from './pages/ResumeReview';
 import AriaStudio from './pages/AriaStudio/AriaStudio';
@@ -63,6 +60,7 @@ import CVTips from './pages/CVTips';
 import HowToAceYourInterview from './pages/HowToAceYourInterview';
 import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
+import { isMobile } from './utils/platform';
 import MaintenanceGuard from './components/MaintenanceGuard';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
@@ -196,31 +194,19 @@ const RootLayout = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const showNav = shouldShowBottomNav(location.pathname);
-
   return (
     <SessionManager>
       <TopProgressBar />
 
-      <div
-        className={`relative z-0 ${
-          showNav
-            ? // The bottom bar clears the content: on native it's always visible;
-              // on web it's mobile-only (md:hidden), so drop the padding at md+.
-              `pb-[calc(4rem+env(safe-area-inset-bottom))]${isMobile() ? '' : ' md:pb-0'}`
-            : ''
-        }`}
-      >
+      {/* No bottom tab bar, on either platform. It began as four tabs; two pointed at list
+          pages that are sidebars now, and the last two were a whole bar for Home and Aria
+          Studio — both of which every page already reaches from its top bar. Nothing to
+          clear at the bottom of the page any more, so the padding went with it. */}
+      <div className="relative z-0">
         <AnimatePresence mode="wait">
           {element && cloneElement(element, { key: getPageKey(location.pathname) })}
         </AnimatePresence>
       </div>
-
-      {/* Sibling of the z-0 page-content wrapper (not inside it) so page content
-          can never paint over the tabs — content scrolls cleanly underneath.
-          Modals are portaled to document.body at z-50, so they still stack above
-          this z-40 nav. */}
-      <MobileBottomNav />
     </SessionManager>
   );
 };
@@ -447,15 +433,13 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      // The standalone "interview me" flow — upload a CV, paste a job, talk to an
+      // interviewer that had studied neither. Retired: the same live mock is a step of
+      // the prep path, which arrives there having actually read the role. An old link
+      // lands on that path with its first step already begun.
       {
         path: '/interview/start',
-        element: (
-          <MaintenanceGuard>
-            <ProtectedRoute>
-              <InterviewStart />
-            </ProtectedRoute>
-          </MaintenanceGuard>
-        ),
+        element: <Navigate to="/aria-studio" state={{ start: 'prep' }} replace />,
       },
       // Interview prep with nothing open — the counterpart of /cv-builder, and the
       // address the prep sidebar's nav row points at. It briefly redirected to Aria

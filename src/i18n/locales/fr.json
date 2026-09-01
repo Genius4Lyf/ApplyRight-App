@@ -598,10 +598,6 @@
     "disclaimerBody": "ApplyRight est un outil de préparation aux entretiens. Les simulations, conversations vocales et questions générées servent uniquement à s’entraîner et à gagner en confiance. Les questions simulées dans l’application sont données à titre d’exemple et ne préjugent pas des questions réellement posées lors de votre processus de recrutement."
   },
   "onboarding": {
-    "progress": {
-      "basicInfo": "Infos de base",
-      "education": "Formation"
-    },
     "step1": {
       "heading": "Faisons connaissance",
       "subheading": "Parlez-nous un peu de vous pour commencer.",
@@ -619,18 +615,7 @@
         "other": "Autre"
       }
     },
-    "step2": {
-      "heading": "Votre parcours académique",
-      "subheading": "Aidez-nous à adapter nos ressources à votre domaine d’études.",
-      "universityLabel": "Université / Établissement",
-      "universityPlaceholder": "ex. Université Félix Houphouët-Boigny",
-      "disciplineLabel": "Discipline / Filière",
-      "disciplinePlaceholder": "ex. Informatique",
-      "graduationYearLabel": "Année de fin d’études (prévue)",
-      "graduationYearPlaceholder": "ex. 2026"
-    },
     "actions": {
-      "next": "Suivant",
       "complete": "Finaliser mon profil",
       "completing": "Finalisation du profil..."
     },
@@ -677,12 +662,8 @@
     "recommendedOther": "Alignons votre parcours singulier sur le poste que vous visez.",
     "yourField": "votre domaine",
     "banner": {
-      "enhanceAria": "Compléter votre profil",
-      "enhanceTitle": "Enrichissez votre profil",
-      "enhanceBody": "Complétez votre profil pour améliorer l’optimisation de votre CV.",
-      "completeAria": "Compléter votre profil",
-      "completeTitle": "Complétez votre profil",
-      "completeBody": "Parlez-nous de vos objectifs pour recevoir des conseils personnalisés."
+      "completeBody": "Parlez-nous de vos objectifs pour recevoir des conseils personnalisés.",
+      "completeCta": "Terminer la configuration"
     },
     "workspace": "Votre espace",
     "loading": {
@@ -695,8 +676,6 @@
       "body": "Créez votre CV en discutant avec Aria — elle pose les questions, vous répondez, et elle le rédige au fil de l’échange. Collez une offre d’emploi et elle orientera chaque section vers ce poste, ou créez un CV général sans offre.",
       "cta": "Ouvrir Aria Studio"
     },
-    "pillarApplication": "Votre candidature",
-    "pillarInterview": "Entraînement",
     "tailorCard": {
       "aria": "Préparez-moi pour un poste",
       "chip": "Conseillé",
@@ -710,14 +689,6 @@
       "title": "Créer un nouveau CV",
       "body": "Partez de zéro avec un assistant guidé, ou importez un CV existant et laissez l’IA faire le gros du travail.",
       "cta": "Créer un CV"
-    },
-    "interviewCard": {
-      "aria": "Démarrer un entretien direct",
-      "chip": "Pro",
-      "title": "Passer un entretien",
-      "body": "Passez directement à un entretien blanc oral, en direct, à partir de n’importe quelle offre d’emploi.",
-      "cta": "Démarrer",
-      "companion": "Ou préparez-vous d’abord — chaque candidature adaptée donne accès à un espace de préparation complet : questions, anecdotes et entretien en direct."
     },
     "createModal": {
       "title": "Par où souhaitez-vous commencer ?",
@@ -4053,6 +4024,10 @@
     "delete": {
       "ask": "Supprimer ce CV ?"
     },
+    "origin": {
+      "aria": "Créé avec Aria",
+      "builder": "Créé dans le créateur de CV"
+    },
     "list": {
       "filterAria": "Filtrer cette liste"
     },
@@ -4400,6 +4375,8 @@
       "noneYet": "Vous n'avez pas encore de CV enregistré. Créez-en un ou importez-en un d'abord, et je l'adapterai.",
       "draft": "Brouillon",
       "untitledCv": "CV sans titre",
+      "scrollHint_one": "{{count}} CV — faites défiler pour voir plus",
+      "scrollHint_other": "{{count}} CV — faites défiler pour voir plus",
       "editedRelative": "modifié {{relative}}"
     },
     "deleteSession": {
@@ -4618,6 +4595,7 @@
       "deleteAria": "Supprimer {{heading}}",
       "newPrep": "Préparer un entretien",
       "newPrepShort": "Entretien",
+      "cvTag": "CV",
       "applicationTag": "Analyse",
       "filterAria": "Filtrer les récents",
       "filters": {

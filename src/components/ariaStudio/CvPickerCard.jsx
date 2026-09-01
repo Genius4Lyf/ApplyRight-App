@@ -3,8 +3,21 @@ import { formatRelative } from '../../lib/relativeDate';
 import { useTranslation } from 'react-i18next';
 import CVService from '../../services/cv.service';
 import { getCompletionStatus, cvBand } from '../../lib/cvCompleteness';
-import { BAND_TEXT, BAND_RULEBG } from '../../lib/noteStyles';
+import { BAND_TEXT } from '../../lib/noteStyles';
+import CvOriginIcon from '../workspace/CvOriginIcon';
 import AriaCard from './AriaCard';
+
+// How many rows stand before the list scrolls. Five is what fits without the card growing
+// taller than the conversation it sits in — past that the picker stops being a question
+// and becomes a page.
+//
+// ROW_HEIGHT is a MEASURE, not an imposed height: the rows size themselves from their
+// padding, and this only decides where to cut. The cap is deliberately set half a row past
+// the fifth, so the sixth is visibly sliced — a partially drawn row is the strongest
+// possible signal that there is more below, and far more reliable than a scrollbar that
+// only appears once you are already scrolling.
+const MAX_VISIBLE = 5;
+const ROW_HEIGHT = 57;
 
 // Which of your CVs? Completion % + band come from the shared cvCompleteness helpers
 // (the same source the sidebar and the dashboard use) — the row derivation is local, so the
@@ -26,7 +39,10 @@ const CvPickerCard = ({ onPick, onCancel, busyId, eyebrow, extra }) => {
     let alive = true;
     (async () => {
       try {
-        const list = await CVService.getMyDrafts();
+        // The LEAN list, not whole drafts: this card draws a title, a name, a date and a
+        // percentage, and getMyDrafts would ship every bullet of every CV to do it. It is
+        // also what carries `studioKind`, which is how a row knows who wrote it.
+        const list = await CVService.listCvs('all');
         if (alive) setDrafts(Array.isArray(list) ? list : []);
       } catch {
         if (alive) {
@@ -60,41 +76,83 @@ const CvPickerCard = ({ onPick, onCancel, busyId, eyebrow, extra }) => {
         )}
 
         {drafts?.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2 max-h-[280px] overflow-y-auto scrollbar-none">
-            {drafts.map((d) => {
-              const { percent, isComplete } = getCompletionStatus(d);
-              const band = cvBand(percent, isComplete);
-              const name = d.personalInfo?.fullName || t('ariaStudio.cvPicker.draft');
-              const relative = d.updatedAt ? formatRelative(new Date(d.updatedAt)) : '';
-              const busy = busyId === d._id;
+          <>
+            {/* ONE bordered container with hairline rules, not a stack of bordered cards.
+              Six separate boxes each with their own border, radius and shadow read as six
+              competing objects; the question is which of these, and a list answers that
+              better than a pile does.
 
-              return (
-                <button
-                  key={d._id}
-                  type="button"
-                  disabled={!!busyId}
-                  onClick={() => onPick?.(d)}
-                  className="relative overflow-hidden text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white bg-white dark:bg-slate-900 pl-4 pr-3 py-2.5 flex items-center gap-3 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white"
-                >
-                  <span className={`absolute left-0 inset-y-0 w-[3px] ${BAND_RULEBG[band]}`} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] font-semibold text-slate-800 dark:text-slate-100 truncate">
-                      {d.title || t('ariaStudio.cvPicker.untitledCv')}
-                    </span>
-                    <span className="block text-[12px] text-slate-500 dark:text-slate-400 truncate">
-                      {name}
-                      {relative
-                        ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}`
-                        : ''}
-                    </span>
-                  </span>
-                  <span className={`shrink-0 font-mono text-[12px] font-bold ${BAND_TEXT[band]}`}>
-                    {busy ? '…' : `${percent}%`}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+              The scrollbar is deliberately NOT hidden here (no `chat-scroll`): in a rail
+              you already know the list is long, but a card that quietly cuts off at five
+              with no visible edge is a card that looks like you only have five CVs. */}
+            {/* ONE bordered container with hairline rules, not a stack of bordered cards:
+              six boxes each with their own border, radius and shadow read as six competing
+              objects, and the question here is which of these.
+
+              Three columns, each doing one job — WHO WROTE IT, WHAT IT IS, HOW FAR ALONG.
+              The origin icon leads, in a fixed-width slot, the way a file-type icon leads
+              a row in any file list: identity first, and it scans as a column of its own.
+              The percentage is right-aligned and tabular so 0% and 100% line up and can be
+              compared down the list rather than read one at a time.
+
+              The band rule that used to run down the left edge is gone. It was a second,
+              louder encoding of exactly what the percentage already says, and with a
+              coloured number in the row it made every unfinished CV read as an error. */}
+            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+              <div
+                className="divide-y divide-slate-200 overflow-y-auto overscroll-contain dark:divide-slate-800"
+                style={{ maxHeight: MAX_VISIBLE * ROW_HEIGHT + Math.round(ROW_HEIGHT / 2) }}
+              >
+                {drafts.map((d) => {
+                  const { percent, isComplete } = getCompletionStatus(d);
+                  const band = cvBand(percent, isComplete);
+                  const name = d.personalInfo?.fullName || t('ariaStudio.cvPicker.draft');
+                  const relative = d.updatedAt ? formatRelative(new Date(d.updatedAt)) : '';
+                  const busy = busyId === d._id;
+
+                  return (
+                    <button
+                      key={d._id}
+                      type="button"
+                      disabled={!!busyId}
+                      onClick={() => onPick?.(d)}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 dark:hover:bg-slate-800/50 dark:focus-visible:ring-white"
+                    >
+                      <CvOriginIcon
+                        origin={d.studioKind ? 'aria' : 'builder'}
+                        size={15}
+                        className="w-5 justify-center"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
+                          {d.title || t('ariaStudio.cvPicker.untitledCv')}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[12px] text-slate-500 dark:text-slate-400">
+                          {name}
+                          {relative
+                            ? ` · ${t('ariaStudio.cvPicker.editedRelative', { relative })}`
+                            : ''}
+                        </span>
+                      </span>
+                      <span
+                        className={`w-10 shrink-0 text-right font-mono text-[12px] font-bold tabular-nums ${BAND_TEXT[band]}`}
+                      >
+                        {busy ? '…' : `${percent}%`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Says out loud that there is more below. A scrollbar alone is a thin hint on
+              a trackpad, where it only appears once you are already scrolling. */}
+            {drafts.length > MAX_VISIBLE && (
+              <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.cvPicker.scrollHint', { count: drafts.length })}
+              </p>
+            )}
+          </>
         )}
 
         {extra}

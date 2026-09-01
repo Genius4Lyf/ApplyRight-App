@@ -9,6 +9,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 import StudioSidebarNav from './StudioSidebarNav';
 import StudioSidebarProfile from './StudioSidebarProfile';
 import RailFilter from '../workspace/RailFilter';
+import CvOriginIcon from '../workspace/CvOriginIcon';
 import NewCvMenu from '../workspace/NewCvMenu';
 
 // The Studio sidebar, top to bottom: the ARIA mark, new-session actions, destinations +
@@ -307,8 +308,13 @@ const SessionRail = ({
                           </span>
                         )}
                         {isBuild ? (
-                          <span className={`${TAG} ${TAG_TONE.cv}`}>
-                            {t('ariaStudio.sessionRail.newCv')}
+                          // "CV", not "New CV" — the row is not new, and the button above
+                          // the list already owns that word. The orbit beside it says WHO
+                          // wrote it, which is the thing the CV Studio's mixed list needs
+                          // and which is learned here.
+                          <span className={`${TAG} ${TAG_TONE.cv} inline-flex items-center gap-1`}>
+                            <CvOriginIcon origin="aria" size={11} />
+                            {t('ariaStudio.sessionRail.cvTag')}
                           </span>
                         ) : (
                           s.fitScore != null && (

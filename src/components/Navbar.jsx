@@ -363,90 +363,51 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const isActive = (path) => location.pathname === path;
   // See hasWorkspaceSidebar: on those four surfaces the sidebar owns the account block,
   // so the mobile bar sheds its own.
   const onWorkspace = hasWorkspaceSidebar(location.pathname);
-
-  // Desktop masthead tab: full-height, underline active state (no filled pill).
-  const deskTab = (active) =>
-    `relative flex items-center gap-2 h-14 px-3 text-sm transition-colors ${
-      active
-        ? 'font-semibold text-slate-900 dark:text-slate-100'
-        : 'font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-    }`;
-  const deskUnderline = (active) =>
-    active ? (
-      <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-slate-900 dark:bg-white" />
-    ) : null;
+  // The one page whose own name is the right thing to show.
+  const atHome = location.pathname === homePath;
 
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 transition-colors duration-200">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center gap-4">
-        {/* LEFT — logo pinned to the left edge; flex-1 pushes the nav to true center */}
+        {/* LEFT — the wordmark on the home page, a way BACK to it everywhere else.
+          A logo that silently doubles as a home link is a convention people who already
+          know the product rely on and everyone else misses; on the pages where going home
+          is the only navigation left, it says so instead.
+
+          The centre tabs are gone. Two of the four pointed at list pages that no longer
+          exist, and the remaining two — Dashboard and Aria Studio — were a nav bar's worth
+          of chrome for one destination each, on pages that all carry the way home right
+          here. */}
         <div className="flex-1 flex items-center min-w-0">
-          <Link
-            to={isAuthenticated ? homePath : '/'}
-            className="flex items-center gap-2.5 z-50 shrink-0"
-          >
-            <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto dark:hidden" />
-            <img
-              src={logoWhite}
-              alt=""
-              aria-hidden="true"
-              className="hidden h-7 w-auto dark:block"
-            />
-            <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
-              ApplyRight
-            </span>
-          </Link>
-        </div>
-
-        {/* CENTER — desktop nav tabs */}
-        <nav className="hidden md:flex items-center gap-1 shrink-0">
-          {isAuthenticated && (
-            <>
-              <Link to={homePath} className={deskTab(isActive(homePath))}>
-                {deskUnderline(isActive(homePath))}
-                <LayoutDashboard className="w-4 h-4" />
-                {t('nav.dashboard')}
-              </Link>
-              {isAgent && (
-                <Link
-                  to="/agent/earnings"
-                  className={deskTab(location.pathname.startsWith('/agent/earnings'))}
-                >
-                  {deskUnderline(location.pathname.startsWith('/agent/earnings'))}
-                  <Wallet className="w-4 h-4" />
-                  {t('nav.earnings')}
-                </Link>
-              )}
-              {/* My CVs and Interview Prep both pointed at LIST pages. Those pages are
-                gone — each list lives in its workspace's own sidebar now — so the tabs
-                go with them, leaving Dashboard and Aria Studio.
-
-                Agents are the exception: they are held out of Aria Studio, so the
-                builder is their workspace and its index is the only list they have. */}
-              {isAgent && (
-                <Link
-                  to="/cv-builder"
-                  className={deskTab(location.pathname.startsWith('/cv-builder'))}
-                >
-                  {deskUnderline(location.pathname.startsWith('/cv-builder'))}
-                  <FileText className="w-4 h-4" />
-                  {t('nav.myCvs')}
-                </Link>
-              )}
-              {!isAgent && (
-                <Link to="/aria-studio" className={deskTab(isActive('/aria-studio'))}>
-                  {deskUnderline(isActive('/aria-studio'))}
-                  <AriaOrbit size={16} />
-                  {t('nav.ariaStudio')}
-                </Link>
-              )}
-            </>
+          {isAuthenticated && !atHome ? (
+            <Link
+              to={homePath}
+              className="z-50 flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 -ml-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            >
+              <Home className="h-4 w-4" />
+              {t('nav.mobile.home')}
+            </Link>
+          ) : (
+            <Link
+              to={isAuthenticated ? homePath : '/'}
+              className="flex items-center gap-2.5 z-50 shrink-0"
+            >
+              <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto dark:hidden" />
+              <img
+                src={logoWhite}
+                alt=""
+                aria-hidden="true"
+                className="hidden h-7 w-auto dark:block"
+              />
+              <span className="font-brand text-lg font-semibold tracking-tight text-black dark:text-white">
+                ApplyRight
+              </span>
+            </Link>
           )}
-        </nav>
+        </div>
 
         {/* RIGHT — desktop cluster + mobile chrome (flex-1 + justify-end mirrors LEFT) */}
         <div className="flex-1 flex items-center justify-end gap-3">

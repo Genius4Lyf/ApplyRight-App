@@ -176,7 +176,7 @@ describe('SessionRail — telling the two kinds apart', () => {
     // A filled pill around two words inside a line of plain text reads as a control you
     // could press — the same reason the analysis card's verdicts lost their borders.
     mount();
-    [tagIn('Rig Electrician', 'Analysis'), tagIn('Untitled CV', 'New CV')].forEach((tag) => {
+    [tagIn('Rig Electrician', 'Analysis'), tagIn('Untitled CV', 'CV')].forEach((tag) => {
       expect(tag.className).not.toMatch(/(^|s)bg-/);
       expect(tag.className).not.toMatch(/rounded|ring-|border/);
     });
@@ -186,7 +186,7 @@ describe('SessionRail — telling the two kinds apart', () => {
     // Identical grey tags meant telling a CV from an analysis required READING the row.
     mount();
     const analysis = tagIn('Rig Electrician', 'Analysis').className;
-    const cv = tagIn('Untitled CV', 'New CV').className;
+    const cv = tagIn('Untitled CV', 'CV').className;
 
     expect(analysis).not.toBe(cv);
     // No band colours, and no green or indigo either: green read as a verdict, and indigo

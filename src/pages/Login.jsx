@@ -46,7 +46,7 @@ const Login = () => {
       if (res.data.role === 'agent') {
         navigate('/agent');
       } else {
-        navigate('/dashboard', { state: { showProfilePrompt: true } });
+        navigate('/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || t('errors.loginFailed'));

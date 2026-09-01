@@ -15,7 +15,6 @@ const DARK_ELIGIBLE_PREFIXES = [
   '/profile',
   '/upgrade',
   '/credits',
-  '/interview', // standalone "Interview Me" flow (/interview/start)
   '/interview-prep',
   '/resume',
   '/cv-builder',

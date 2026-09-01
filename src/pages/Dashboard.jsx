@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import AriaLoader from '../components/ui/AriaLoader';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import CVUploader from '../components/CVUploader';
 import CVService from '../services/cv.service';
 import useInterstitial from '../hooks/useInterstitial';
@@ -11,12 +11,12 @@ import {
   User,
   Plus,
   Upload as UploadIcon,
+  FileSearch,
   PenTool,
   Trash2,
   Eye,
   X,
   PlayCircle,
-  Mic,
   ArrowRight,
 } from 'lucide-react';
 
@@ -32,17 +32,7 @@ import { toast } from 'sonner';
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { triggerInterstitial } = useInterstitial();
-  const [showProfileBanner, setShowProfileBanner] = useState(false);
-
-  useEffect(() => {
-    if (location.state?.showProfilePrompt) {
-      setShowProfileBanner(true);
-      // Clear the state without reloading to prevent persisting on refresh
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
 
   // 'create-upload' is the ONLY workflow this page still runs inline — turning an
   // uploaded CV into a draft. The job-analysis workflow that used to live here ('upload')
@@ -166,76 +156,6 @@ const Dashboard = () => {
           workflowMode ? 'pt-8 pb-12' : 'py-12'
         }`}
       >
-        {showProfileBanner && (
-          <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4">
-            <div
-              onClick={() => navigate('/profile')}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate('/profile');
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={t('dashboard.banner.enhanceAria')}
-              className="flex items-center gap-3 cursor-pointer flex-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg"
-            >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm group-hover:scale-110 transition-transform">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-heading font-bold text-slate-900 dark:text-slate-100">
-                  {t('dashboard.banner.enhanceTitle')}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {t('dashboard.banner.enhanceBody')}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowProfileBanner(false);
-              }}
-              className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {!user.onboardingCompleted && (
-          <div
-            onClick={() => navigate('/onboarding')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                navigate('/onboarding');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={t('dashboard.banner.completeAria')}
-            className="mb-8 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-heading font-bold text-slate-900 dark:text-slate-100">
-                  {t('dashboard.banner.completeTitle')}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {t('dashboard.banner.completeBody')}
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform" />
-          </div>
-        )}
-
         {!workflowMode && initialLoading && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
             <AriaLoader size={40} label={t('dashboard.loading.sr')} />
@@ -261,6 +181,28 @@ const Dashboard = () => {
             <p className="mt-3 text-lg text-slate-500 dark:text-slate-400 leading-relaxed">
               {getRecommendedAction()}
             </p>
+
+            {/* The one profile nudge, and it lives BELOW the page's own title rather than
+              above it. The slot over an H1 belongs to messages about the system — an
+              outage, a payment problem — which is what GlobalBanner is for; a suggestion
+              about your account is content, and it reads as content here.
+
+              A line, not a card: it competes with nothing, and it disappears the moment
+              onboarding is done, which is why it needs no dismiss. An X on a nudge you
+              can finish is an invitation to hide the task rather than do it. */}
+            {!user.onboardingCompleted && (
+              <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+                <span>{t('dashboard.banner.completeBody')}</span>
+                <button
+                  type="button"
+                  onClick={() => navigate('/onboarding')}
+                  className="inline-flex items-center gap-1 font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:text-slate-100 dark:decoration-slate-600 dark:hover:decoration-white dark:focus-visible:ring-white"
+                >
+                  {t('dashboard.banner.completeCta')}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </p>
+            )}
           </div>
         )}
 
@@ -298,22 +240,21 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Two intent pillars — "Your application" (tailor / build) and
-            "Interview practice" (live mock). Flat editorial cards; the flagship
-            Tailor card carries a single ink top-accent + "Recommended" chip.
+        {/* Two ways in — aim a CV at a job, or build one. Flat editorial cards; the
+            flagship Tailor card carries a single ink top-accent + "Recommended" chip.
             Consistent across web and the Android/Capacitor build — we're removing
-            paralysis, not removing choice. */}
+            paralysis, not removing choice.
+
+            There WAS a second pillar here, "Interview practice", offering a live mock
+            straight off the dashboard with no analysis behind it. It is gone: an
+            interview rehearsed against a job nothing has read is a rehearsal against
+            nothing, and the tailor path reaches the same live mock having studied the
+            role first. With one group left, the "Your application" eyebrow and its rule
+            went too — a label on a section only means something when there is a second
+            section to be told apart from. */}
         {!workflowMode && !initialLoading && (
           <div className="space-y-10 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Pillar A — Your application */}
             <section>
-              <div className="flex items-center gap-3 mb-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
-                  {t('dashboard.pillarApplication')}
-                </p>
-                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-4">
                 {/* Tailor my CV — the flagship */}
                 <div
@@ -330,7 +271,16 @@ const Dashboard = () => {
                   className="rounded-xl rounded-t-none border border-slate-200 dark:border-slate-800 border-t-[3px] border-t-slate-900 dark:border-t-white bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <div className="flex items-center justify-between gap-2 mb-4">
-                    <UploadIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                    {/* A document being EXAMINED. The card used to show an upload
+                        arrow, left over from when it began by asking for a file — it now
+                        begins in Aria's chat, where uploading is one of two ways to hand
+                        over a CV, not the action itself. Its own CTA says "Check your
+                        CV", so the icon says the same verb.
+
+                        It also has to pair with PenTool on the card beside it: same
+                        document family, opposite verbs — examine one, make one. A target
+                        or a gauge would have read as an unrelated object next to a pen. */}
+                    <FileSearch className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     <span className="inline-flex items-center rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
                       {t('dashboard.tailorCard.chip')}
                     </span>
@@ -380,56 +330,6 @@ const Dashboard = () => {
                   <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {t('dashboard.buildCard.cta')} <ArrowRight className="w-4 h-4" />
                   </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Pillar B — Interview practice */}
-            <section>
-              <div className="flex items-center gap-3 mb-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 shrink-0">
-                  {t('dashboard.pillarInterview')}
-                </p>
-                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-4">
-                {/* Interview me — standalone live mock */}
-                <div
-                  onClick={() => navigate('/interview/start')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      navigate('/interview/start');
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={t('dashboard.interviewCard.aria')}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card p-6 cursor-pointer flex flex-col transition-colors hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-                >
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <Mic className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                    <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      {t('dashboard.interviewCard.chip')}
-                    </span>
-                  </div>
-                  <h3 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
-                    {t('dashboard.interviewCard.title')}
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-1">
-                    {t('dashboard.interviewCard.body')}
-                  </p>
-                  <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
-                    {t('dashboard.interviewCard.cta')} <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* Quiet companion note — not a button */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-6 flex flex-col justify-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {t('dashboard.interviewCard.companion')}
-                  </p>
                 </div>
               </div>
             </section>

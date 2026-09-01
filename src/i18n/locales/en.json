@@ -602,10 +602,6 @@
     "disclaimerBody": "ApplyRight is an interview preparation tool. All mock sessions, voice conversations, and generated questions are designed solely for practice and confidence-building purposes. The questions simulated in our application are illustrative and do not guarantee the actual questions that will be encountered in your live hiring process."
   },
   "onboarding": {
-    "progress": {
-      "basicInfo": "Basic Info",
-      "education": "Education"
-    },
     "step1": {
       "heading": "Let's get to know you",
       "subheading": "Tell us a bit about yourself to get started.",
@@ -623,18 +619,7 @@
         "other": "Other"
       }
     },
-    "step2": {
-      "heading": "Your Academic Journey",
-      "subheading": "Help us tailor resources to your field of study.",
-      "universityLabel": "University / Institution",
-      "universityPlaceholder": "e.g. Stanford University",
-      "disciplineLabel": "Discipline / Major",
-      "disciplinePlaceholder": "e.g. Computer Science",
-      "graduationYearLabel": "Graduation Year (Expected)",
-      "graduationYearPlaceholder": "e.g. 2026"
-    },
     "actions": {
-      "next": "Next",
       "complete": "Complete Profile",
       "completing": "Completing Profile..."
     },
@@ -681,12 +666,8 @@
     "recommendedOther": "Let’s align your unique background with your target role.",
     "yourField": "your field",
     "banner": {
-      "enhanceAria": "Enhance your profile",
-      "enhanceTitle": "Enhance Your Profile",
-      "enhanceBody": "Complete setting up your profile to improve CV optimization.",
-      "completeAria": "Complete your profile",
-      "completeTitle": "Complete your profile",
-      "completeBody": "Tell us about your goals to get personalized recommendations."
+      "completeBody": "Tell us about your goals to get personalized recommendations.",
+      "completeCta": "Finish setting up"
     },
     "workspace": "Your workspace",
     "loading": {
@@ -699,8 +680,6 @@
       "body": "Build your CV by chatting with ARIA — she asks, you answer, and writes it up as you go. Paste a job description and she'll aim every section at that role, or build a general CV without one.",
       "cta": "Open ARIA Studio"
     },
-    "pillarApplication": "Your application",
-    "pillarInterview": "Interview practice",
     "tailorCard": {
       "aria": "Prepare me for a job",
       "chip": "Recommended",
@@ -714,14 +693,6 @@
       "title": "Build a new CV",
       "body": "Start from scratch with a guided wizard, or upload an existing CV and let AI do the heavy lifting.",
       "cta": "Start builder"
-    },
-    "interviewCard": {
-      "aria": "Start a direct interview",
-      "chip": "Pro",
-      "title": "Interview me",
-      "body": "Skip the analysis and jump straight into a live, spoken mock interview against any job description.",
-      "cta": "Start interview",
-      "companion": "Or prep first — every tailored application comes with a full interview-prep desk: questions, stories, and the live mock."
     },
     "createModal": {
       "title": "How would you like to start?",
@@ -4057,6 +4028,10 @@
     "delete": {
       "ask": "Delete this CV?"
     },
+    "origin": {
+      "aria": "Built with Aria",
+      "builder": "Built in the CV builder"
+    },
     "list": {
       "filterAria": "Filter this list"
     },
@@ -4404,6 +4379,8 @@
       "noneYet": "You don't have a CV saved yet. Build or upload one first and I'll tailor it.",
       "draft": "Draft",
       "untitledCv": "Untitled CV",
+      "scrollHint_one": "{{count}} CV — scroll for more",
+      "scrollHint_other": "{{count}} CVs — scroll for more",
       "editedRelative": "edited {{relative}}"
     },
     "deleteSession": {
@@ -4622,6 +4599,7 @@
       "deleteAria": "Delete {{heading}}",
       "newPrep": "Prepare for an interview",
       "newPrepShort": "Interview",
+      "cvTag": "CV",
       "applicationTag": "Analysis",
       "filterAria": "Filter recents",
       "filters": {

@@ -27,6 +27,11 @@ export const toCvRow = (draft, t) => {
     band: cvBand(percent, isComplete),
     // Which route opens it — the sidebar's host decides where that goes.
     isComplete,
+    // Who wrote it. `studioKind` is the marker: set means Aria built it in conversation,
+    // unset means the step-by-step builder (or an upload, or a generated CV — all of which
+    // are edited in that same form). See CvOriginIcon for why every list shows it, not
+    // just the one list that holds both.
+    origin: draft?.studioKind ? 'aria' : 'builder',
   };
 };
 

@@ -26,6 +26,7 @@ vi.mock('../../services/cv.service', () => ({
   default: {
     getDraftById: vi.fn(),
     getMyDrafts: vi.fn().mockResolvedValue([]),
+    listCvs: vi.fn().mockResolvedValue([]),
     saveDraft: vi.fn().mockResolvedValue({ _id: 'd1' }),
     studioRecompute: vi.fn().mockResolvedValue({ studioScan: null }),
     studioScan: vi.fn(),
@@ -147,7 +148,9 @@ beforeEach(() => {
   localStorage.clear();
   ctx = null;
   vi.clearAllMocks();
+  // CvPickerCard reads the LEAN list; getMyDrafts is still mocked for the other paths.
   CVService.getMyDrafts.mockResolvedValue([SAVED_CV]);
+  CVService.listCvs.mockResolvedValue([SAVED_CV]);
   CVService.extractJob.mockResolvedValue({ _id: 'job1', title: 'Rig Electrician' });
   CVService.analyzeFit.mockResolvedValue(ANALYSIS);
 });
