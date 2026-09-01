@@ -4048,7 +4048,8 @@
     },
     "cvStudio": {
       "title": "CV Studio",
-      "listLabel": "Your CVs"
+      "listLabel": "Completed CVs",
+      "empty": "No completed CVs yet. Finish one with Aria or in the CV builder and it'll appear here, ready to design and download."
     },
     "prep": {
       "title": "Interview prep",

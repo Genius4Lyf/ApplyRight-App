@@ -18,7 +18,7 @@ import { useWorkspaceLayout } from './useWorkspaceLayout';
 // its own would drift the moment one of those changed.
 //
 //   scope 'builder'  — CVs not born in Aria; a row resumes in the wizard
-//   scope 'cvStudio' — every CV; a row opens in the document studio
+//   scope 'cvStudio' — FINISHED CVs; a row opens in the document studio
 //   scope 'prep'     — applications with interview prep; a row opens its dashboard
 //
 // `persistent` opts a surface into the app-shell presentation: on a wide screen the
@@ -34,6 +34,7 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
   const [filter, setFilter] = useState('all');
 
   const isPrep = scope === 'prep';
+  const isStudio = scope === 'cvStudio';
 
   const { railInline } = useWorkspaceLayout({ enabled: persistent });
 
@@ -90,12 +91,25 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     const list = rows || [];
     if (isPrep) return list.map((app) => toPrepRow(app, t));
 
+    // The studio is where a FINISHED CV goes: you pick a template, adjust the design and
+    // download it. A half-written draft has no answer to any of those questions, so this
+    // list is fixed to complete CVs rather than offering a filter nobody would move off
+    // "complete" — the builder is the surface that holds work in progress.
+    if (isStudio)
+      return (
+        list
+          .filter((cv) => getCompletionStatus(cv).isComplete)
+          // Every row here is complete by definition, so the percent would be a column of
+          // identical 100%s — ink spent saying what the list header already said.
+          .map((cv) => ({ ...toCvRow(cv, t), value: '' }))
+      );
+
     const filtered =
       filter === 'all'
         ? list
         : list.filter((cv) => getCompletionStatus(cv).isComplete === (filter === 'complete'));
     return filtered.map((cv) => toCvRow(cv, t));
-  }, [rows, filter, isPrep, t]);
+  }, [rows, filter, isPrep, isStudio, t]);
 
   const openRow = useCallback(
     (row) => {
@@ -122,7 +136,7 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     [t]
   );
 
-  const copy = isPrep ? 'prep' : scope === 'cvStudio' ? 'cvStudio' : 'builder';
+  const copy = isPrep ? 'prep' : isStudio ? 'cvStudio' : 'builder';
 
   // One definition for both presentations, so the inline panel and the drawer cannot
   // drift into being two different lists. Only `onClose` differs: inline it collapses the
@@ -133,20 +147,23 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     activeId,
     filter,
     onFilterChange: setFilter,
-    filterOptions: isPrep
-      ? null
-      : [
-          { key: 'all', label: t('workspace.builder.filters.all') },
-          { key: 'inProgress', label: t('workspace.builder.filters.inProgress') },
-          { key: 'complete', label: t('workspace.builder.filters.complete') },
-        ],
+    filterOptions:
+      isPrep || isStudio
+        ? null
+        : [
+            { key: 'all', label: t('workspace.builder.filters.all') },
+            { key: 'inProgress', label: t('workspace.builder.filters.inProgress') },
+            { key: 'complete', label: t('workspace.builder.filters.complete') },
+          ],
     title: t(`workspace.${copy}.title`),
     listLabel: t(`workspace.${copy}.listLabel`),
     emptyLabel: isPrep
       ? t('workspace.prep.empty')
-      : filter === 'all'
-        ? t('workspace.builder.empty')
-        : t('workspace.builder.emptyFiltered'),
+      : isStudio
+        ? t('workspace.cvStudio.empty')
+        : filter === 'all'
+          ? t('workspace.builder.empty')
+          : t('workspace.builder.emptyFiltered'),
     onSelect: openRow,
     onDelete: isPrep ? undefined : deleteRow,
     onBuildWithAria: () => navigate('/aria-studio', { state: { start: 'build' } }),

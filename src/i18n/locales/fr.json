@@ -4044,7 +4044,8 @@
     },
     "cvStudio": {
       "title": "CV Studio",
-      "listLabel": "Vos CV"
+      "listLabel": "CV terminés",
+      "empty": "Aucun CV terminé pour l'instant. Finalisez-en un avec Aria ou dans le générateur de CV et il apparaîtra ici, prêt à être mis en forme et téléchargé."
     },
     "prep": {
       "title": "Préparation d'entretien",

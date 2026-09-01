@@ -48,6 +48,18 @@ const COMPLETE_CV = {
   skills: [{ _id: 's1' }],
 };
 
+const ARIA_CV = {
+  _id: 'cv-aria',
+  title: 'Aria Draft',
+  personalInfo: { fullName: 'Ernest A' },
+  professionalSummary: 'Written in conversation.',
+  experience: [{ _id: 'e1' }],
+  education: [{ _id: 'ed1' }],
+  skills: [{ _id: 's1' }],
+  // The marker that says Aria wrote it — see toCvRow.
+  studioKind: 'build',
+};
+
 const PARTIAL_CV = {
   _id: 'cv-wip',
   title: 'Graduate CV',
@@ -80,7 +92,7 @@ const open = () => fireEvent.click(screen.getByRole('button', { name: 'open' }))
 
 beforeEach(() => {
   vi.clearAllMocks();
-  CVService.listCvs.mockResolvedValue([COMPLETE_CV, PARTIAL_CV]);
+  CVService.listCvs.mockResolvedValue([COMPLETE_CV, ARIA_CV, PARTIAL_CV]);
   InterviewPrepService.list.mockResolvedValue({ items: [PREPPED_APPLICATION] });
 });
 
@@ -125,13 +137,17 @@ describe('useWorkspaceSidebar — a row keeps you where you are', () => {
     expect(navigate).toHaveBeenCalledWith('/cv-builder/cv-wip');
   });
 
-  it('opens the document from the studio — even one that is unfinished', async () => {
-    // The old rule sent an incomplete CV to the wizard. Here the surface wins: you asked
-    // for this list from the studio, so the row answers in the studio.
+  it('opens the document from the studio, whoever wrote it', async () => {
+    // The point of listing CVs here: a row answers where you asked from. Neither author
+    // is sent back to the surface it was written on — no detour through Aria Studio for
+    // one and the wizard for the other.
     mount('cvStudio');
     open();
-    fireEvent.click(await screen.findByText('Graduate CV'));
-    expect(navigate).toHaveBeenCalledWith('/resume/cv-wip');
+    fireEvent.click(await screen.findByText('Offshore Electrician'));
+    expect(navigate).toHaveBeenCalledWith('/resume/cv-done');
+
+    fireEvent.click(screen.getByText('Aria Draft'));
+    expect(navigate).toHaveBeenCalledWith('/resume/cv-aria');
   });
 
   it('opens the prep dashboard from a prep dashboard', async () => {
@@ -164,6 +180,38 @@ describe('useWorkspaceSidebar — what each scope offers', () => {
 
     expect(screen.queryByRole('button', { name: /filter this list/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
+  });
+
+  it('shows only FINISHED CVs in the studio, from both authors', async () => {
+    // The studio asks design questions — template, margins, download. A half-written
+    // draft has no answer to any of them, so it is not offered here; the builder is
+    // where unfinished work lives.
+    mount('cvStudio');
+    open();
+    expect(await screen.findByText('Offshore Electrician')).toBeTruthy();
+    // Written by Aria, and in the same list — one place for finished CVs, not two.
+    expect(screen.getByText('Aria Draft')).toBeTruthy();
+    expect(screen.queryByText('Graduate CV')).toBeNull();
+  });
+
+  it('offers no filter in the studio, because the list is already one slice', async () => {
+    mount('cvStudio');
+    open();
+    await screen.findByText('Offshore Electrician');
+
+    expect(screen.queryByRole('button', { name: /filter this list/i })).toBeNull();
+    expect(screen.getByText('Completed CVs')).toBeTruthy();
+    // Every row is complete, so a percent column would read 100% all the way down.
+    expect(screen.queryByText('100%')).toBeNull();
+  });
+
+  it('says why the studio list is empty when nothing is finished yet', async () => {
+    CVService.listCvs.mockResolvedValue([PARTIAL_CV]);
+    mount('cvStudio');
+    open();
+    // Not "no CVs" — there IS one, it just is not done. The copy has to point at the
+    // difference or it reads as data loss.
+    expect(await screen.findByText(/no completed cvs yet/i)).toBeTruthy();
   });
 
   it('asks before deleting a CV, and only then calls the endpoint', async () => {
