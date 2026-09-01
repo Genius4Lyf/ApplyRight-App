@@ -32,16 +32,16 @@ const InterviewerInfoModal = ({ person, onClose }) => {
             className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-200 dark:ring-slate-700 shrink-0"
           />
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 truncate">
+            <h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100 truncate">
               {person.name}
             </h3>
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[15px] font-semibold text-slate-500 dark:text-slate-400 truncate">
               {person.role}
             </p>
           </div>
         </div>
 
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
           {person.description || t('interviewPrep.mock.setupScreen.seatDescFallback')}
         </p>
       </div>

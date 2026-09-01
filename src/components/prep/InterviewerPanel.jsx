@@ -61,7 +61,7 @@ const InterviewerCard = ({ person, dark, active = false, dim = false, compact = 
           />
         ) : (
           <div
-            className={`w-12 h-12 sm:w-13 sm:h-13 rounded-xl flex items-center justify-center font-extrabold text-sm ring-2 ${SEAT_FALLBACK} ${
+            className={`w-12 h-12 sm:w-13 sm:h-13 rounded-xl flex items-center justify-center font-extrabold text-[15px] ring-2 ${SEAT_FALLBACK} ${
               active ? SEAT_RING_ACTIVE : SEAT_RING
             }`}
           >
@@ -70,12 +70,12 @@ const InterviewerCard = ({ person, dark, active = false, dim = false, compact = 
         )}
       </div>
       <h4
-        className={`text-sm sm:text-base font-bold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[1.25rem]'} ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}
+        className={`text-[15px] sm:text-[16px] font-bold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[1.25rem]'} ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}
       >
         {person.name}
       </h4>
       <p
-        className={`mt-0.5 text-xs sm:text-sm font-semibold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[2rem]'} ${dark ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}`}
+        className={`mt-0.5 text-[13px] sm:text-[15px] font-semibold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[2rem]'} ${dark ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}`}
       >
         {person.role}
       </p>
@@ -83,7 +83,7 @@ const InterviewerCard = ({ person, dark, active = false, dim = false, compact = 
           (free-tier teaser is blurred behind the lock, so it's never read). */}
       {person.focus && !compact && (
         <p
-          className={`mt-1 text-xs leading-snug min-h-[3rem] flex items-start justify-center ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}
+          className={`mt-1 text-[13px] leading-snug min-h-[3rem] flex items-start justify-center ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}
         >
           {person.focus}
         </p>
@@ -133,7 +133,7 @@ const InterviewerPanel = ({
             className={`w-4 h-4 ${dark ? 'text-slate-300' : 'text-slate-400 dark:text-slate-500'}`}
           />
           <span
-            className={`text-xs font-bold uppercase tracking-wider ${dark ? 'text-slate-300' : 'text-slate-400'}`}
+            className={`text-[13px] font-bold uppercase tracking-wider ${dark ? 'text-slate-300' : 'text-slate-400'}`}
           >
             {headingText}
           </span>
@@ -215,7 +215,7 @@ const InterviewerPanel = ({
         {/* Free-tier upsell: blur the panel and overlay a soft lock. */}
         {!loading && locked && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-white/55 dark:bg-slate-900/55 backdrop-blur-[3px]">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/85 text-white text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/85 text-white text-[13px] font-bold">
               <Lock className="w-3 h-3" /> {t('interviewPrep.interviewerPanel.paidPanel')}
             </div>
           </div>

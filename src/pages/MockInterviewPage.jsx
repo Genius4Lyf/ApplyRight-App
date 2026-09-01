@@ -2629,7 +2629,7 @@ const IntroView = ({
           >
             <div className="flex-grow flex flex-col justify-center">
               <div className="relative z-10 text-center mb-2.5">
-                <h1 className="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
+                <h1 className="font-heading text-[19px] sm:text-[22px] font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
                   <Briefcase className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" />
                   <span>
                     {title === t('interviewPrep.mock.interviewTitleFallback') ||
@@ -2642,14 +2642,14 @@ const IntroView = ({
 
               {count === 0 ? (
                 <>
-                  <p className="relative z-10 text-sm text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
+                  <p className="relative z-10 text-[15px] text-slate-500 dark:text-slate-400 mt-6 text-center leading-relaxed">
                     {t('interviewPrep.mock.intro.noQuestions')}
                   </p>
                   <div className="relative z-10 mt-6 text-center">
                     <button
                       type="button"
                       onClick={onCancel}
-                      className="btn-primary px-5 py-2.5 rounded-xl text-sm cursor-pointer select-none"
+                      className="btn-primary px-5 py-2.5 rounded-xl text-[15px] cursor-pointer select-none"
                     >
                       {t('interviewPrep.mock.intro.backToPrep')}
                     </button>
@@ -2658,7 +2658,7 @@ const IntroView = ({
               ) : (
                 <>
                   {mode === 'conversational' ? (
-                    <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed text-center">
+                    <p className="relative z-10 text-[13px] sm:text-[15px] text-slate-600 dark:text-slate-300 mt-2 leading-relaxed text-center">
                       <Trans
                         i18nKey="interviewPrep.mock.intro.ledeConversational"
                         values={{ name: firstName }}
@@ -2669,7 +2669,7 @@ const IntroView = ({
                       />
                     </p>
                   ) : (
-                    <p className="relative z-10 text-xs sm:text-sm text-slate-600 dark:text-slate-305 mt-2 leading-relaxed text-center">
+                    <p className="relative z-10 text-[13px] sm:text-[15px] text-slate-600 dark:text-slate-305 mt-2 leading-relaxed text-center">
                       <Trans
                         i18nKey="interviewPrep.mock.intro.ledeScripted"
                         values={{ name: firstName }}
@@ -2683,7 +2683,7 @@ const IntroView = ({
                   {mode === 'conversational' && (
                     <div className="relative z-10 mt-2 border-l-2 border-amber-400 pl-3 flex items-start gap-2">
                       <Mic className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">
                         <Trans
                           i18nKey="interviewPrep.mock.intro.quietSpot"
                           components={{
@@ -2706,7 +2706,7 @@ const IntroView = ({
                   {trend && trend.count >= 1 && (
                     <div className="relative z-10 mt-2 border-l-2 border-emerald-500 pl-3 flex items-start gap-2">
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">
+                      <p className="text-[13px] text-slate-650 dark:text-slate-350 leading-relaxed">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {t('interviewPrep.mock.intro.trendDone', { count: trend.count })}
                         </span>{' '}
@@ -2725,7 +2725,7 @@ const IntroView = ({
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 leading-none">
                         {t('interviewPrep.mock.intro.statsQuestions')}
                       </p>
-                      <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
+                      <p className="font-heading text-[16px] font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
                         {count}
                       </p>
                     </div>
@@ -2750,7 +2750,7 @@ const IntroView = ({
                           </span>
                         )}
                       </div>
-                      <p className="font-heading text-base font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
+                      <p className="font-heading text-[16px] font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">
                         {t('interviewPrep.mock.intro.minutesApprox', {
                           n: Math.round(plannedSec / 60),
                         })}
@@ -2758,7 +2758,7 @@ const IntroView = ({
                     </div>
                   </div>
                   {lastSession && (
-                    <div className="relative z-10 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2 text-xs text-slate-550 dark:text-slate-450 flex items-center gap-2">
+                    <div className="relative z-10 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2 text-[13px] text-slate-550 dark:text-slate-450 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
                       <div>
                         <span className="font-semibold text-slate-705 dark:text-slate-295">
@@ -2786,13 +2786,13 @@ const IntroView = ({
               <div className="mt-3 shrink-0">
                 {/* The quiet links stay wherever this view is used; only the
                     Start/Back pair below is dropped when a host owns them. */}
-                <div className="relative z-10 flex items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-550 mb-2.5 flex-wrap">
+                <div className="relative z-10 flex items-center justify-center gap-4 text-[13px] text-slate-400 dark:text-slate-550 mb-2.5 flex-wrap">
                   {mode === 'conversational' && (
                     <>
                       <button
                         type="button"
                         onClick={() => setActiveSubView('length')}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
+                        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                       >
                         <Clock className="w-3.5 h-3.5" />{' '}
                         {t('interviewPrep.mock.intro.adjustDuration')}
@@ -2803,7 +2803,7 @@ const IntroView = ({
                   <button
                     type="button"
                     onClick={() => setActiveSubView('mic')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
                     <Mic className="w-3.5 h-3.5" /> {t('interviewPrep.setup.testMicFirst')}
                   </button>
@@ -2811,7 +2811,7 @@ const IntroView = ({
                   <button
                     type="button"
                     onClick={() => setActiveSubView('breathe')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer select-none"
                   >
                     <Wind className="w-3.5 h-3.5" /> {t('interviewPrep.mock.intro.takeBreathFirst')}
                   </button>
@@ -2821,14 +2821,14 @@ const IntroView = ({
                     <button
                       type="button"
                       onClick={onStart}
-                      className="btn-primary px-6 py-2.5 rounded-xl text-sm select-none cursor-pointer"
+                      className="btn-primary px-6 py-2.5 rounded-xl text-[15px] select-none cursor-pointer"
                     >
                       {t('interviewPrep.preflight.startInterview')}
                     </button>
                     <button
                       type="button"
                       onClick={onCancel}
-                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors cursor-pointer select-none"
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[15px] font-semibold transition-colors cursor-pointer select-none"
                     >
                       {t('interviewPrep.preflight.back')}
                     </button>
@@ -2863,7 +2863,7 @@ const IntroView = ({
           >
             <div className="w-full flex flex-col justify-between h-full">
               <div>
-                <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-4 text-center">
+                <p className="text-[11px] sm:text-[13px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-4 text-center">
                   {t('interviewPrep.mock.intro.takeBreath')}
                 </p>
                 <div className="flex items-center justify-center py-4">
@@ -2874,7 +2874,7 @@ const IntroView = ({
                 <button
                   type="button"
                   onClick={() => setActiveSubView('main')}
-                  className="btn-primary px-4 py-1.5 rounded-lg text-xs cursor-pointer"
+                  className="btn-primary px-4 py-1.5 rounded-lg text-[13px] cursor-pointer"
                 >
                   {t('interviewPrep.setup.done')}
                 </button>
@@ -2893,7 +2893,7 @@ const IntroView = ({
             className="flex-grow flex flex-col justify-between h-full"
           >
             <div className="w-full flex-grow flex flex-col justify-center">
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-5 text-center">
+              <p className="text-[11px] sm:text-[13px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-5 text-center">
                 {t('interviewPrep.mock.intro.setLength')}
               </p>
 
@@ -2904,11 +2904,11 @@ const IntroView = ({
                       <div className="flex items-center justify-between mb-2">
                         <label
                           htmlFor="inline-interview-length"
-                          className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                          className="text-[15px] font-semibold text-slate-700 dark:text-slate-200"
                         >
                           {t('interviewPrep.mock.intro.duration')}
                         </label>
-                        <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        <span className="text-[15px] font-bold text-slate-900 dark:text-white">
                           {t('interviewPrep.mock.endModal.spentMinutes', {
                             n: Math.round((lengthSec || lengthMinSec) / 60),
                           })}
@@ -2933,7 +2933,7 @@ const IntroView = ({
                         onPointerDown={(e) => e.stopPropagation()}
                         className="w-full accent-slate-900 cursor-pointer"
                       />
-                      <p className="mt-1.5 text-xs text-slate-550 dark:text-slate-450">
+                      <p className="mt-1.5 text-[13px] text-slate-550 dark:text-slate-450">
                         {t('interviewPrep.mock.intro.lengthRange', {
                           min: Math.round(lengthMinSec / 60),
                           max: Math.round(lengthMaxSec / 60),
@@ -2946,7 +2946,7 @@ const IntroView = ({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
                     {entitlement?.tier === 'free'
                       ? t('interviewPrep.mock.intro.freeLength', {
                           n: Math.ceil((liveSecondsAvailable || 0) / 60),
@@ -2964,7 +2964,7 @@ const IntroView = ({
                     onChange={(e) => setWrapUp(e.target.checked)}
                     className="mt-0.5 h-4 w-4 accent-slate-900 cursor-pointer"
                   />
-                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                  <span className="text-[15px] text-slate-700 dark:text-slate-200">
                     {t('interviewPrep.mock.intro.allowWrapUp')}
                     <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5 leading-normal">
                       {wrapUp
@@ -2980,7 +2980,7 @@ const IntroView = ({
               <button
                 type="button"
                 onClick={() => setActiveSubView('main')}
-                className="btn-primary px-4.5 py-2 rounded-xl text-xs cursor-pointer"
+                className="btn-primary px-4.5 py-2 rounded-xl text-[13px] cursor-pointer"
               >
                 {t('interviewPrep.mock.intro.backToSetup')}
               </button>

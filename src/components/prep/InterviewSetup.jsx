@@ -97,11 +97,11 @@ export const VoiceStyleSelector = ({
           </div>
           {STYLES.filter((s) => s.id === style).map((sel) => (
             <div key={sel.id} className="mt-1.5 space-y-1">
-              <p className="text-xs text-slate-550 dark:text-slate-450 leading-relaxed">
+              <p className="text-[13px] text-slate-550 dark:text-slate-450 leading-relaxed">
                 {t(`interviewPrep.setup.styles.${sel.id}.blurb`)}
               </p>
               <details className="group cursor-pointer select-none">
-                <summary className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 list-none [&::-webkit-details-marker]:hidden flex items-center gap-0.5">
+                <summary className="text-[11px] sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 list-none [&::-webkit-details-marker]:hidden flex items-center gap-0.5">
                   <span>{t('interviewPrep.setup.viewExamples')}</span>
                   <span className="text-[8px] transition-transform duration-200 group-open:rotate-180">
                     ▼
@@ -111,7 +111,7 @@ export const VoiceStyleSelector = ({
                   {Array.from({ length: sel.exampleCount }).map((_, i) => (
                     <li
                       key={i}
-                      className="text-xs italic text-slate-500 dark:text-slate-400 leading-relaxed"
+                      className="text-[13px] italic text-slate-500 dark:text-slate-400 leading-relaxed"
                     >
                       “{t(`interviewPrep.setup.styles.${sel.id}.examples.${i}`)}”
                     </li>
@@ -125,7 +125,7 @@ export const VoiceStyleSelector = ({
       {/* Challenge level — how hard the panel pushes. Only shown when wired up. */}
       {onChallengeChange && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
             {t('interviewPrep.setup.challengeLevel')}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -138,7 +138,7 @@ export const VoiceStyleSelector = ({
           {CHALLENGES.filter((c) => c.id === challenge).map((sel) => (
             <p
               key={sel.id}
-              className="mt-1.5 text-xs text-slate-550 dark:text-slate-450 leading-relaxed"
+              className="mt-1.5 text-[13px] text-slate-550 dark:text-slate-450 leading-relaxed"
             >
               {t(`interviewPrep.setup.challenges.${sel.id}.blurb`)}
             </p>

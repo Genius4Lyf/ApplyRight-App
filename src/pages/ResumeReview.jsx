@@ -1380,9 +1380,14 @@ const ResumeReview = () => {
         </div>
       )}
 
-      {!immersive && <Navbar />}
+      {/* No app Navbar here. CV Studio is a workspace surface (/resume is in
+        WORKSPACE_PREFIXES), so Home, the CV list and the account row all live in the
+        sidebar the header's toggle opens — a second bar above the studio's own header was
+        two navigations stacked, saying different things about where you are. The locked
+        "draft incomplete" screen further up KEEPS its Navbar: it renders no sidebar, so
+        that bar is the only way off it.
 
-      {/* Portaled to the body, so where it sits in this tree doesn't matter — but it is
+        Portaled to the body, so where it sits in this tree doesn't matter — but it is
         deliberately outside the immersive guard: dismissing fullscreen is not the same
         gesture as closing the sidebar, and one shouldn't strand the other. */}
       {sidebar}

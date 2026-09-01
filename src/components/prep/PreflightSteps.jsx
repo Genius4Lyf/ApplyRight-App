@@ -178,7 +178,7 @@ const PreflightSteps = ({
     <button
       type="button"
       onClick={back}
-      className={`cursor-pointer select-none rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${className}`}
+      className={`cursor-pointer select-none rounded-lg border border-slate-200 bg-white px-4 py-2 text-[15px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${className}`}
     >
       {backLabel}
     </button>
@@ -188,7 +188,7 @@ const PreflightSteps = ({
     <button
       type="button"
       onClick={forward}
-      className={`btn-primary cursor-pointer select-none rounded-lg py-2 text-sm ${
+      className={`btn-primary cursor-pointer select-none rounded-lg py-2 text-[15px] ${
         isLast ? 'px-6' : 'px-5'
       } ${className}`}
     >

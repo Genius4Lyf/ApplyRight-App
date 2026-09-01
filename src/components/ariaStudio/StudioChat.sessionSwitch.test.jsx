@@ -344,6 +344,71 @@ describe('opening a CV that still has its conversation', () => {
   });
 });
 
+describe('opening the Studio cold, on a remembered session', () => {
+  it('never paints the welcome message over a conversation that exists', async () => {
+    // The OTHER half of the flicker, and the one you meet just by opening Aria Studio.
+    // Here the draft is not in hand at mount — it is still being fetched from the id in
+    // localStorage — so the mount-time seed has nothing to seed FROM, and the chat used to
+    // paint Aria's welcome while it waited, then swap it for the conversation.
+    localStorage.setItem('ariaStudio:draftId', 'draft-1');
+
+    const frames = [];
+    // Reads the context on purpose: the provider's children are the same element objects
+    // on every one of its renders, so a component that consumes nothing re-renders only at
+    // mount and would sample a fraction of the frames — passing for the wrong reason.
+    const Recorder = () => {
+      useAriaStudio();
+      useEffect(() => {
+        frames.push(document.body.textContent || '');
+      });
+      return null;
+    };
+
+    render(
+      <StrictMode>
+        <AriaStudioProvider>
+          <Handle />
+          <Desk />
+          <Recorder />
+        </AriaStudioProvider>
+      </StrictMode>
+    );
+
+    expect(await screen.findByText(/this line is the CV session talking/i)).toBeTruthy();
+
+    // Not one frame may show the welcome while the session it belongs to has a thread of
+    // its own. An empty chat area during the fetch is fine — a wrong one is not.
+    // Matched on a phrase with no typographic apostrophe in it — the opener uses a
+    // curly one, and a straight-quote regex silently matches nothing.
+    const welcome = frames.filter((f) => /tells your story with purpose/.test(f));
+    expect(welcome).toEqual([]);
+  });
+});
+
+describe('clicking an analysis in Recents', () => {
+  it('does not put the opening splash back on top of the analysis', async () => {
+    // Two covers, one screen. The analysis has its own ("restoring"), and the Studio has a
+    // cold-start splash on a FIXED two-second timer. Opening an analysis unbinds the draft
+    // and clears the pre-draft transcript — the exact shape of a cold start — so the
+    // splash armed itself, the analysis landed, its cover came down, and the splash came
+    // back over the finished analysis for the rest of its two seconds.
+    CVService.getApplication.mockResolvedValue({
+      _id: 'app-9',
+      fitScore: 61,
+      fitAnalysis: { overallFeedback: 'Solid.', recommendation: 'good_match' },
+      actionPlan: [],
+      jobId: { title: 'Field Operator', company: 'QatarEnergy LNG', description: 'Offshore.' },
+    });
+
+    renderStudio();
+    await waitFor(() => expect(ctx).toBeTruthy());
+    await ctx.openApplication('app-9');
+    await screen.findByText(/what next/i);
+
+    expect(document.body.textContent).not.toMatch(/Getting ARIA ready/i);
+  });
+});
+
 describe('the paths that must keep working', () => {
   it('still restores a real analysis when one is actually opened', async () => {
     CVService.getApplication.mockResolvedValue({

@@ -237,14 +237,19 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // the WELCOME message first and swapped in the conversation a frame later. That swap is
   // the flicker. The effect still runs and still owns the cold-refresh path — it lands on
   // the identical array here, so React bails out of the re-render.
-  const [messages, setMessages] = useState(() =>
-    savedThread?.length
-      ? savedThread
-      : [
-          { who: 'aria', text: kindOpener, _opening: true },
-          ...(ownsLocalTranscript ? loadSession() : []),
-        ]
-  );
+  const [messages, setMessages] = useState(() => {
+    if (savedThread?.length) return savedThread;
+    // A remembered draft is still being fetched, so we do not yet know whether this
+    // session HAS a conversation. Opening with the welcome line and swapping it for the
+    // thread a moment later is the flicker you get just by opening the Studio, so nothing
+    // is said until the answer arrives. An empty chat for the length of a fetch is
+    // honest; a wrong one is not. The effect below covers the draft that never comes.
+    if (loading && !draftId) return [];
+    return [
+      { who: 'aria', text: kindOpener, _opening: true },
+      ...(ownsLocalTranscript ? loadSession() : []),
+    ];
+  });
   // Decided at MOUNT, not in an effect. A session opened from the rail already has its
   // draft — loadSession sets cvData before bumping sessionNonce — so waiting for an effect
   // to work out the phase meant painting one frame of the DEFAULT first. That default is
@@ -259,13 +264,38 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
     return 'mode';
   });
 
+  // The remembered draft never arrived — deleted, or belonging to someone else, so the
+  // provider cleared it. This is a cold start after all, and it needs the opening line
+  // that was deliberately withheld above. Guarded on an EMPTY transcript, so it can never
+  // speak over a session that has one.
+  useEffect(() => {
+    if (loading || draftId) return;
+    setMessages((prev) =>
+      prev.length ? prev : [{ who: 'aria', text: kindOpener, _opening: true }]
+    );
+  }, [loading, draftId, kindOpener]);
+
   // Publish the already-derived chat phase for sibling UI. The transcript remains the
   // source of truth; this merely prevents contextual chrome from guessing where Aria is.
   useEffect(() => {
     setStudioPhase?.(phase);
   }, [phase, setStudioPhase]);
+  // The cold-start splash: the Studio opening on nothing in particular. It runs on a
+  // fixed timer, so it must only ever be ARMED for a session that has nothing to wait for
+  // — otherwise it outlives whatever it was covering and comes back on top of it.
+  //
+  // An ANALYSIS being opened is the case that broke: it unbinds the draft and clears the
+  // pre-draft transcript, which is exactly the shape of a cold start, so the splash armed
+  // itself. The analysis then loaded, its own cover came down, and the splash reappeared
+  // OVER the finished analysis for the remainder of its two seconds.
+  //
+  // These are restoreTarget's two id sources spelled out rather than read off it, because
+  // restoreTarget is declared below and a hook cannot be reordered around its neighbours
+  // for a one-line read. Its third source — a `prepresult` marker in the pre-draft
+  // transcript — needs no term here: a transcript holding one is not empty.
   const [openingStudio, setOpeningStudio] = useState(
-    () => !loading && !draftId && loadSession().length === 0
+    () =>
+      !loading && !draftId && !pendingApplicationId && !applicationId && loadSession().length === 0
   );
 
   // A source handed over from a finished build ("now tailor it"). Kept in a ref because
