@@ -65,3 +65,19 @@ export function hydrateCreditCosts(serverCosts) {
     CREDIT_COSTS[localKey] = value;
   });
 }
+
+// The signup bonus shown on the register page (Register.jsx's trust line and
+// subtitle). Same live-singleton pattern as CREDIT_COSTS above and for the same
+// reason: it is admin-editable (AdminSettings → Credits), resolved via
+// GET /auth/config's `credits.signupBonus`, and a copy string that hardcodes
+// the number silently goes stale the moment an admin changes it — which is
+// exactly what happened (the live value moved from 10 to 20 while the page
+// still read 10). The fallback below is today's real default; it is what
+// renders until the fetch resolves, or if it fails.
+export const SIGNUP_CREDITS = { value: 20 };
+
+export function hydrateSignupCredits(credits) {
+  const bonus = credits?.signupBonus;
+  if (typeof bonus !== 'number' || Number.isNaN(bonus)) return;
+  SIGNUP_CREDITS.value = bonus;
+}

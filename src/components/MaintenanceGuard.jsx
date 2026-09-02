@@ -5,35 +5,24 @@ import Maintenance from '../pages/Maintenance';
 const MaintenanceGuard = ({ children }) => {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        // Check local user role first
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const admin = user.role === 'admin';
-        setIsAdmin(admin);
-
-        // If admin, we can skip the maintenance check or just ignore it
-        // But let's check it anyway so we know the state (maybe show a banner?)
-        // For blocking purposes, if admin -> proceed immediately?
-        // Actually, admins should see the site.
-
-        if (admin) {
-          setLoading(false);
-          return;
-        }
-
-        // Check system status
+        // api.js attaches the bearer token itself, so a logged-in caller's request
+        // already carries it — the backend decides bypass from THAT, not from
+        // anything read here. Trusting the server's `bypass` (rather than a local
+        // `user.role === 'admin'` check, as this used to) is what makes a
+        // maintenanceAccess grant work: that user is not an admin, so a
+        // localStorage-only check would still show them the Maintenance page even
+        // though every real request they made would succeed.
         const { data } = await api.get('/system/status');
-        if (data.maintenance) {
+        if (data.maintenance && !data.bypass) {
           setIsMaintenance(true);
         }
       } catch (error) {
         console.error('Failed to check maintenance status:', error);
-        // Fail open or closed?
-        // If backend is down, maybe show maintenance?
+        // Fail open: an unreachable status check shouldn't lock everyone out.
       } finally {
         setLoading(false);
       }
@@ -50,7 +39,7 @@ const MaintenanceGuard = ({ children }) => {
     );
   }
 
-  if (isMaintenance && !isAdmin) {
+  if (isMaintenance) {
     return <Maintenance />;
   }
 

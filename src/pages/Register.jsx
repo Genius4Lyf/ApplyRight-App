@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Modal from '../components/Modal';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
+import { SIGNUP_CREDITS } from '../lib/credits';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { getLang, syncLangFromUser } from '../lib/lang';
@@ -234,7 +235,9 @@ const Register = () => {
     <>
       <AuthShell
         formTitle={t(isAgent ? 'auth.register.titleAgent' : 'auth.register.title')}
-        formSubtitle={t(isAgent ? 'auth.register.subtitleAgent' : 'auth.register.subtitle')}
+        formSubtitle={t(isAgent ? 'auth.register.subtitleAgent' : 'auth.register.subtitle', {
+          credits: SIGNUP_CREDITS.value,
+        })}
         leftHeading={t(isAgent ? 'auth.register.leftHeadingAgent' : 'auth.register.leftHeading')}
         leftSubcopy={t(isAgent ? 'auth.register.leftSubcopyAgent' : 'auth.register.leftSubcopy')}
         valueProps={isAgent ? AGENT_VALUE_PROPS : DEFAULT_VALUE_PROPS}
@@ -252,7 +255,11 @@ const Register = () => {
                 'common.trust.encrypted',
               ]
             : [
-                'auth.register.trustFreeCredits',
+                // Resolved here rather than passed as a bare key: the count is a
+                // LIVE value (lib/credits.js, hydrated from GET /auth/config), not
+                // part of the translation itself. AuthShell renders an already-
+                // resolved literal unchanged — see its trustSignals comment.
+                t('auth.register.trustFreeCredits', { credits: SIGNUP_CREDITS.value }),
                 'common.trust.noCardNeeded',
                 'common.trust.encrypted',
               ]

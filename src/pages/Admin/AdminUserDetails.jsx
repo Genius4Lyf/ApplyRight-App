@@ -26,6 +26,7 @@ const AdminUserDetails = () => {
   const [userData, setUserData] = useState(null);
   const [updatingPlan, setUpdatingPlan] = useState(false);
   const [updatingUnlock, setUpdatingUnlock] = useState(false);
+  const [updatingMaintenanceAccess, setUpdatingMaintenanceAccess] = useState(false);
 
   // Support grant: unlock ALL interview-loop interviewers for this user (bypass
   // the 65% gate). Used when a user reaches out asking to skip the gamification.
@@ -45,6 +46,28 @@ const AdminUserDetails = () => {
       toast.error('Failed to update interviewer unlock');
     } finally {
       setUpdatingUnlock(false);
+    }
+  };
+
+  // Support grant: this user reaches the app while maintenance mode is on for
+  // everyone else — the awareness-campaign / early-access allowlist. See
+  // User.maintenanceAccess and maintenance.middleware.js.
+  const handleMaintenanceAccess = async (access) => {
+    setUpdatingMaintenanceAccess(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await api.put(`/admin/users/${id}/maintenance-access`, { access }, config);
+      setUserData((prev) => ({
+        ...prev,
+        user: { ...prev.user, maintenanceAccess: access },
+      }));
+      toast.success(access ? 'Maintenance access granted' : 'Maintenance access removed');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to update maintenance access');
+    } finally {
+      setUpdatingMaintenanceAccess(false);
     }
   };
 
@@ -237,6 +260,31 @@ const AdminUserDetails = () => {
                       : 'Unlock all interviewers'}
                   </button>
                   {updatingUnlock && (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="w-4 h-4 text-slate-400 mt-1" />
+              <div className="flex-1">
+                <p className="text-xs text-slate-500">Maintenance mode</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleMaintenanceAccess(!user.maintenanceAccess)}
+                    disabled={updatingMaintenanceAccess}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
+                      user.maintenanceAccess
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {user.maintenanceAccess
+                      ? 'Bypasses maintenance mode — click to remove'
+                      : 'Grant maintenance-mode access'}
+                  </button>
+                  {updatingMaintenanceAccess && (
                     <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
                   )}
                 </div>

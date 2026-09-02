@@ -94,7 +94,7 @@
     "register": {
       "title": "Créez votre compte",
       "titleAgent": "Créez votre compte rédacteur de CV",
-      "subtitle": "Commencez à construire votre CV en quelques minutes — 10 crédits offerts pour essayer.",
+      "subtitle": "Commencez à construire votre CV en quelques minutes — {{credits}} crédits offerts pour essayer.",
       "subtitleAgent": "Créez et téléchargez des CV pour vos clients — choisissez une formule rédacteur après l'inscription.",
       "leftHeading": "Créez un CV qui passe les logiciels de recrutement.",
       "leftHeadingAgent": "Gérez toute votre activité de rédaction de CV au même endroit.",
@@ -102,7 +102,7 @@
       "leftSubcopyAgent": "Organisez les CV par client, adaptez chacun au poste visé et téléchargez sans limite des CV soignés avec une formule rédacteur.",
       "badgeJobSeeker": "Inscription candidat",
       "badgeAgent": "Inscription rédacteur de CV",
-      "trustFreeCredits": "10 crédits offerts",
+      "trustFreeCredits": "{{credits}} crédits offerts",
       "trustUnlimitedCvs": "CV illimités",
       "trustBuiltForClients": "Conçu pour vos clients",
       "accountTypeLegend": "Je m'inscris en tant que",

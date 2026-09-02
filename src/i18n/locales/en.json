@@ -98,7 +98,7 @@
     "register": {
       "title": "Create your account",
       "titleAgent": "Create your CV agent account",
-      "subtitle": "Start building your CV in minutes — 10 free credits to play with.",
+      "subtitle": "Start building your CV in minutes — {{credits}} free credits to play with.",
       "subtitleAgent": "Build and download CVs for your clients — pick an agent plan after signup.",
       "leftHeading": "Build a CV that gets past resume software.",
       "leftHeadingAgent": "Run your CV-writing business in one place.",
@@ -106,7 +106,7 @@
       "leftSubcopyAgent": "Organize CVs by client, tailor each to the job, and download unlimited polished CVs on an agent plan.",
       "badgeJobSeeker": "Job Seeker sign-up",
       "badgeAgent": "CV Agent sign-up",
-      "trustFreeCredits": "10 free credits",
+      "trustFreeCredits": "{{credits}} free credits",
       "trustUnlimitedCvs": "Unlimited CVs",
       "trustBuiltForClients": "Built for clients",
       "accountTypeLegend": "I'm signing up as",

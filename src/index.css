@@ -207,6 +207,23 @@
     @apply bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2.5 px-6 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700;
   }
 
+  /* Auth pages (login / register).
+
+     These two drop the white card and let the form sit directly on the page
+     ground, so the CONTROLS have to carry the weight the card used to: a taller
+     tap target, a softer corner, and a hairline instead of a shadow.
+
+     Scoped to .auth-surface rather than folded into .input-field itself because
+     every other form in the app still lives inside a card, where the tighter
+     density is the right call. */
+  .auth-surface .input-field {
+    @apply rounded-xl border-slate-200 py-3 shadow-none;
+  }
+
+  .auth-surface .btn-primary {
+    @apply rounded-xl py-3 shadow-none;
+  }
+
   .bg-300\% {
     background-size: 300% 300%;
   }

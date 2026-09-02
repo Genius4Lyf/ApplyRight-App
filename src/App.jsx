@@ -26,7 +26,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { waitForReady } from './utils/splash';
 import api from './services/api';
-import { hydrateCreditCosts } from './lib/credits';
+import { hydrateCreditCosts, hydrateSignupCredits } from './lib/credits';
 import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
 import ApplicationReview from './pages/ApplicationReview';
@@ -689,6 +689,7 @@ function App() {
           if (cancelled) return;
           hydrateCreditCosts(res?.data?.creditCosts);
           hydrateModels(res?.data?.aiModels);
+          hydrateSignupCredits(res?.data?.credits);
         })
         .catch(() => {
           // A local restart or Render cold start can make the first request lose the

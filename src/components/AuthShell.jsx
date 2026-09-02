@@ -36,6 +36,11 @@ import logoWhite from '../assets/logo/applyright-icon-white.png';
 // as its distinct accent (app-wide amber stays the paid-tier accent, untouched).
 // On the dark left panel the touches are a right-edge hairline + a value-prop
 // icon tint; never a glow.
+
+// The page ground is the HOME PAGE's warm off-white, so arriving at the login from the
+// landing page is one continuous surface rather than a step down onto a grey app screen.
+const PAGE_GROUND = '#f7f6f2';
+
 const ACCENTS = {
   ink: {
     hairline: 'via-white/15',
@@ -70,13 +75,34 @@ const AuthShell = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="min-h-screen bg-slate-50 flex flex-col lg:flex-row"
+      className="auth-surface min-h-screen flex flex-col lg:flex-row"
+      style={{ backgroundColor: PAGE_GROUND }}
     >
+      {/* Mobile brand bar — the mark sits in its OWN bar at the top of the page,
+          held there while the form scrolls under it, with a hairline and a faint
+          shadow to seat it. Above lg the left panel carries the brand, so this is
+          hidden and takes no part in the two-column row. */}
+      <header
+        className="lg:hidden sticky top-0 z-20 flex items-center justify-center px-5 py-3.5 border-b border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.05)]"
+        style={{ backgroundColor: PAGE_GROUND }}
+      >
+        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto" />
+          <span className="text-lg font-brand font-semibold tracking-tight text-slate-900">
+            ApplyRight
+          </span>
+        </Link>
+      </header>
+
       {/* Left brand panel — sticky on desktop so it stays put while the form
-          column scrolls. Deep slate-950 base with the app's editorial
-          diagonal-hairline texture for depth — no gradient hero light, no
-          brand glow. */}
-      <aside className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:w-1/2 xl:w-2/5 bg-slate-950 text-white relative overflow-hidden">
+          column scrolls, carrying the app's editorial diagonal-hairline texture for
+          depth — no gradient hero light, no brand glow.
+
+          NEUTRAL black, not slate-950. Every other dark surface in the app is the
+          slate family, which is deliberately blue-cast (#020617) — next to the warm
+          off-white ground on the right that cast reads as navy rather than as black.
+          neutral-950 is the same weight with the blue taken out. */}
+      <aside className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:w-1/2 xl:w-2/5 bg-neutral-950 text-white relative overflow-hidden">
         {/* Diagonal hairline field — flat, faint slate rules on the dark
             ground. The same understated device the app frame uses. */}
         <div
@@ -154,38 +180,43 @@ const AuthShell = ({
         </div>
       </aside>
 
-      {/* Right form panel — full width on mobile, half on desktop */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+      {/* Right form panel — full width on mobile, half on desktop. Centred
+          vertically only from lg: on a phone the brand bar already holds the top of
+          the screen, and centring the short login form under it opened a dead band
+          between the two. */}
+      <main className="flex-1 flex flex-col items-center justify-start lg:justify-center px-5 pt-12 pb-12 sm:px-8 sm:pt-14 lg:p-12">
         <div className="w-full max-w-md">
-          {/* Mobile-only brand mark — desktop has it in the left panel */}
-          <Link
-            to="/"
-            className="lg:hidden flex items-center justify-center gap-2.5 mb-6 hover:opacity-80 transition-opacity"
-          >
-            <img src={logoBlack} alt="ApplyRight" className="h-7 w-auto" />
-            <span className="text-lg font-brand font-semibold tracking-tight text-slate-900">
-              ApplyRight
-            </span>
-          </Link>
-
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-            <div className="mb-6">
+          {/* No card. The form sits directly on the page ground: the calm here comes
+              from space and a single centred column, not from a panel drawn around it.
+              The CONTROLS carry the weight the border used to — see `.auth-surface` in
+              index.css, which is scoped to this shell precisely because every other form
+              in the app still lives inside a card, where the tighter density is right. */}
+          <div>
+            <div className="mb-8 text-center">
               {badge && (
                 <span
-                  className={`inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.badgeLight}`}
+                  className={`inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.badgeLight}`}
                 >
                   {badge.icon}
                   {badge.label}
                 </span>
               )}
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{formTitle}</h2>
-              {formSubtitle && <p className="text-sm text-slate-500 mt-1.5">{formSubtitle}</p>}
+              {/* Headings are Gelasio app-wide (index.css), so this is the editorial
+                  serif at display size rather than a boxed form label. */}
+              <h2 className="text-[1.75rem] sm:text-[2rem] font-bold leading-[1.15] text-slate-900 text-balance">
+                {formTitle}
+              </h2>
+              {formSubtitle && (
+                <p className="mt-2.5 text-[15px] leading-relaxed text-slate-500 text-balance">
+                  {formSubtitle}
+                </p>
+              )}
             </div>
             {children}
           </div>
 
           {trustSignals.length > 0 && (
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-500">
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-500">
               {trustSignals.map((signal, i) => (
                 <li key={i} className="flex items-center gap-1.5">
                   <Check className="w-3 h-3 text-emerald-500" />
