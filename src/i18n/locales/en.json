@@ -95,6 +95,18 @@
       "noAccount": "New to ApplyRight?",
       "createAccount": "Create an account"
     },
+    "verify": {
+      "send": "Send code",
+      "resend": "Resend",
+      "sending": "Sending…",
+      "sent": "We sent a 6-digit code to {{email}}. It expires in 10 minutes.",
+      "codeLabel": "Enter the code",
+      "confirm": "Verify",
+      "checking": "Checking…",
+      "verified": "Email verified",
+      "sendFailed": "We could not send the code. Please try again.",
+      "codeFailed": "That code is not right. Please try again."
+    },
     "register": {
       "title": "Create your account",
       "titleAgent": "Create your CV agent account",
@@ -4010,6 +4022,22 @@
       "keepShowing": "Keep showing me Best Choices",
       "dontShow": "Don’t show me Best Choices",
       "showAgain": "Show Best Choices again"
+    }
+  },
+  "preLaunch": {
+    "title": "You're on the list",
+    "body": "We'll email you the moment ApplyRight opens.",
+    "bodyWithEmail": "We'll email {{email}} the moment ApplyRight opens.",
+    "liveTitle": "We're going live",
+    "liveBody": "Opening the doors now — this page will let you straight in as soon as it's ready.",
+    "creditsWaiting": "{{credits}} credits are waiting on your account",
+    "creditsHint": "They're already there. Use them on your CV, your fit score and your cover letter the day we open.",
+    "referralHint": "Share your code — the people you bring get in early too.",
+    "units": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Mins",
+      "seconds": "Secs"
     }
   },
   "workspace": {

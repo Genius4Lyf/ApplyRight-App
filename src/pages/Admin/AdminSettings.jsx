@@ -61,6 +61,22 @@ const CREDIT_COST_META = {
   TEMPLATE_UNLOCK: { label: 'Template Unlock', help: 'Unlock a premium CV template.' },
 };
 
+// <input type="datetime-local"> has no timezone: it reads and writes local wall-clock.
+// Converting through the Date object keeps the stored instant correct for an admin in
+// any timezone — slicing a UTC ISO string here would shift the launch by their offset.
+const toLocalInput = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (x) => String(x).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+};
+
+const fromLocalInput = (value) => (value ? new Date(value).toISOString() : null);
+
 const AdminSettings = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -459,9 +475,82 @@ const AdminSettings = () => {
                     <div>
                       <h4 className="font-bold text-red-700">Enable Maintenance Mode</h4>
                       <p className="text-sm text-red-600 mt-1">
-                        When enabled, only Admins can log in. All other users will see a "Service
-                        Unavailable" message. Use this during database updates or major deployments.
+                        When enabled, only admins and accounts granted maintenance access can get
+                        in. Everyone else sees the maintenance page — or, if the pre-launch campaign
+                        below is on, the launch countdown instead.
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pre-launch campaign. Separate from maintenance mode on purpose: the
+                    plain maintenance page has to stay available for an unplanned outage,
+                    where a launch countdown would be a lie. */}
+                <div className="pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Pre-launch campaign</h3>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-5">
+                    <div className="flex items-start gap-4">
+                      <div className="pt-1">
+                        <input
+                          type="checkbox"
+                          checked={settings.launch?.enabled || false}
+                          onChange={(e) => handleChange('launch', 'enabled', e.target.checked)}
+                          className="w-5 h-5 rounded"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-800">Show the launch countdown</h4>
+                        <p className="text-sm text-slate-600 mt-1">
+                          With maintenance mode ON, gated visitors see the countdown page instead of
+                          the maintenance page, and new signups receive the bonus below rather than
+                          the normal signup bonus.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="launch-date"
+                          className="text-sm font-semibold text-slate-700"
+                        >
+                          Launch date &amp; time
+                        </label>
+                        <input
+                          id="launch-date"
+                          type="datetime-local"
+                          value={toLocalInput(settings.launch?.date)}
+                          onChange={(e) =>
+                            handleChange('launch', 'date', fromLocalInput(e.target.value))
+                          }
+                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                        />
+                        <p className="text-xs text-slate-400">
+                          Set in your own timezone. Nothing opens automatically — turn maintenance
+                          off yourself on the day.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="launch-bonus-credits"
+                          className="text-sm font-semibold text-slate-700"
+                        >
+                          Bonus credits
+                        </label>
+                        <input
+                          id="launch-bonus-credits"
+                          type="number"
+                          value={settings.launch?.bonusCredits ?? 50}
+                          onChange={(e) =>
+                            handleChange('launch', 'bonusCredits', parseInt(e.target.value))
+                          }
+                          className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                        />
+                        <p className="text-xs text-slate-400">
+                          What a pre-launch signup receives, and what the grant on the Launch page
+                          hands existing accounts.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

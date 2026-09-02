@@ -27,6 +27,8 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { waitForReady } from './utils/splash';
 import api from './services/api';
 import { hydrateCreditCosts, hydrateSignupCredits } from './lib/credits';
+import { hydrateLaunch } from './lib/launch';
+import PreLaunch from './pages/PreLaunch';
 import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
 import ApplicationReview from './pages/ApplicationReview';
@@ -235,6 +237,7 @@ import AdminPayments from './pages/Admin/AdminPayments';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminUserDetails from './pages/Admin/AdminUserDetails';
 import AdminSettings from './pages/Admin/AdminSettings';
+import AdminLaunch from './pages/Admin/AdminLaunch';
 import AdminReportStudio from './pages/Admin/AdminReportStudio';
 import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
 import AdminAIFeedback from './pages/Admin/AdminAIFeedback';
@@ -370,6 +373,10 @@ const router = createBrowserRouter([
             </ProtectedRoute>
           </MaintenanceGuard>
         ),
+      },
+      {
+        path: '/pre-launch',
+        element: <PreLaunch />,
       },
       {
         path: '/onboarding',
@@ -638,6 +645,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: '/admin/launch',
+        element: (
+          <AdminRoute>
+            <AdminLaunch />
+          </AdminRoute>
+        ),
+      },
+      {
         path: '/admin/settings',
         element: (
           <AdminRoute>
@@ -690,6 +705,7 @@ function App() {
           hydrateCreditCosts(res?.data?.creditCosts);
           hydrateModels(res?.data?.aiModels);
           hydrateSignupCredits(res?.data?.credits);
+          hydrateLaunch(res?.data?.launch);
         })
         .catch(() => {
           // A local restart or Render cold start can make the first request lose the

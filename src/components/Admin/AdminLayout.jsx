@@ -13,6 +13,7 @@ import {
   ThumbsUp,
   Banknote,
   BarChart3,
+  Rocket,
 } from 'lucide-react';
 import applyRightIcon from '../../assets/logo/applyright-icon-black.png';
 import GlobalBanner from '../GlobalBanner';
@@ -30,6 +31,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/reports', icon: FileImage, label: 'Ad Reports' },
     { path: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/admin/ai-feedback', icon: ThumbsUp, label: 'AI Feedback' },
+    { path: '/admin/launch', icon: Rocket, label: 'Launch' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 

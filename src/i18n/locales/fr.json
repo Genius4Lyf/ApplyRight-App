@@ -91,6 +91,18 @@
       "noAccount": "Nouveau sur ApplyRight ?",
       "createAccount": "Créer un compte"
     },
+    "verify": {
+      "send": "Envoyer le code",
+      "resend": "Renvoyer",
+      "sending": "Envoi…",
+      "sent": "Nous avons envoyé un code à 6 chiffres à {{email}}. Il expire dans 10 minutes.",
+      "codeLabel": "Saisissez le code",
+      "confirm": "Vérifier",
+      "checking": "Vérification…",
+      "verified": "E-mail vérifié",
+      "sendFailed": "Impossible d'envoyer le code. Veuillez réessayer.",
+      "codeFailed": "Ce code n'est pas correct. Veuillez réessayer."
+    },
     "register": {
       "title": "Créez votre compte",
       "titleAgent": "Créez votre compte rédacteur de CV",
@@ -4006,6 +4018,22 @@
       "keepShowing": "Continuer à afficher les meilleurs choix",
       "dontShow": "Ne plus afficher les meilleurs choix",
       "showAgain": "Afficher à nouveau les meilleurs choix"
+    }
+  },
+  "preLaunch": {
+    "title": "Vous êtes sur la liste",
+    "body": "Nous vous préviendrons par e-mail dès l'ouverture d'ApplyRight.",
+    "bodyWithEmail": "Nous écrirons à {{email}} dès l'ouverture d'ApplyRight.",
+    "liveTitle": "C'est le grand jour",
+    "liveBody": "Nous ouvrons les portes — cette page vous laissera entrer dès que tout sera prêt.",
+    "creditsWaiting": "{{credits}} crédits vous attendent sur votre compte",
+    "creditsHint": "Ils y sont déjà. Utilisez-les pour votre CV, votre score d'adéquation et votre lettre de motivation dès l'ouverture.",
+    "referralHint": "Partagez votre code — les personnes que vous invitez entrent aussi en avant-première.",
+    "units": {
+      "days": "Jours",
+      "hours": "Heures",
+      "minutes": "Min",
+      "seconds": "Sec"
     }
   },
   "workspace": {

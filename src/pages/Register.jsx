@@ -12,10 +12,12 @@ import {
   ShieldCheck,
   User,
   HelpCircle,
+  Check,
 } from 'lucide-react';
 import Modal from '../components/Modal';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { SIGNUP_CREDITS } from '../lib/credits';
+import { LAUNCH } from '../lib/launch';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { getLang, syncLangFromUser } from '../lib/lang';
@@ -93,6 +95,15 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, labelKey: '', color: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Email verification. The account cannot be created until a code sent to this
+  // address has been entered back, so the rest of the form stays locked until then —
+  // progressive disclosure rather than a multi-page wizard, so nobody loses their
+  // place. Steps: idle -> sent -> verified.
+  const [verifyStep, setVerifyStep] = useState('idle');
+  const [code, setCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyNote, setVerifyNote] = useState('');
   // Agent signup mode (/register?as=agent) — creates a CV-agent account that
   // lands on the CV-only workspace instead of the job-seeker dashboard.
   const [isAgent, setIsAgent] = useState(false);
@@ -189,6 +200,46 @@ const Register = () => {
     return null;
   };
 
+  // Changing the email after verifying has to invalidate it — otherwise someone could
+  // verify one address and register a different one.
+  const onEmailChange = (e) => {
+    onChange(e);
+    if (verifyStep !== 'idle') {
+      setVerifyStep('idle');
+      setCode('');
+      setVerifyNote('');
+    }
+  };
+
+  const sendCode = async () => {
+    setError('');
+    setVerifyNote('');
+    setSendingCode(true);
+    try {
+      await api.post('/auth/request-verification', { email });
+      setVerifyStep('sent');
+      setVerifyNote(t('auth.verify.sent', { email }));
+    } catch (err) {
+      setError(err.response?.data?.message || t('auth.verify.sendFailed'));
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const submitCode = async () => {
+    setError('');
+    setVerifying(true);
+    try {
+      await api.post('/auth/verify-code', { email, code });
+      setVerifyStep('verified');
+      setVerifyNote('');
+    } catch (err) {
+      setError(err.response?.data?.message || t('auth.verify.codeFailed'));
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
 
@@ -224,7 +275,14 @@ const Register = () => {
       // Server truth (it echoes interfaceLang back) becomes the local language.
       syncLangFromUser(res.data);
       // Agents skip the job-seeker onboarding and go straight to their workspace.
-      navigate(res.data.role === 'agent' ? '/agent' : '/onboarding');
+      // During the campaign the countdown is the destination, and it gets its own URL
+      // rather than being swapped in under /onboarding — that URL would lie about what
+      // is on screen, and the onboarding form would silently never be collected.
+      // MaintenanceGuard remains the catch-all, so a stale singleton costs a redirect
+      // at worst, never access.
+      navigate(
+        res.data.role === 'agent' ? '/agent' : LAUNCH.enabled ? '/pre-launch' : '/onboarding'
+      );
     } catch (err) {
       setError(err.response?.data?.message || t('errors.registrationFailed'));
       setIsLoading(false);
@@ -341,17 +399,78 @@ const Register = () => {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               {t('common.emailLabel')}
             </label>
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className="input-field w-full"
-              placeholder={t('common.emailPlaceholder')}
-              value={email}
-              onChange={onChange}
-              disabled={isLoading}
-            />
+            <div className="flex gap-2">
+              <input
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="input-field w-full"
+                placeholder={t('common.emailPlaceholder')}
+                value={email}
+                onChange={onEmailChange}
+                // Deliberately NOT locked after verifying: a typo'd address would
+                // otherwise strand you with no way back but a page reload. Editing it
+                // resets the step (onEmailChange), and the server re-checks the record
+                // against whatever address is actually submitted.
+                disabled={isLoading}
+              />
+              {verifyStep !== 'verified' && (
+                <button
+                  type="button"
+                  onClick={sendCode}
+                  disabled={!email || sendingCode || isLoading}
+                  className="shrink-0 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {sendingCode
+                    ? t('auth.verify.sending')
+                    : verifyStep === 'sent'
+                      ? t('auth.verify.resend')
+                      : t('auth.verify.send')}
+                </button>
+              )}
+            </div>
+
+            {verifyStep === 'verified' && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                <Check className="h-3.5 w-3.5" />
+                {t('auth.verify.verified')}
+              </p>
+            )}
+
+            {verifyStep === 'sent' && (
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <label
+                  htmlFor="verification-code"
+                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                >
+                  {t('auth.verify.codeLabel')}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="verification-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    className="input-field w-full font-mono tracking-[0.3em]"
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    disabled={verifying}
+                  />
+                  <button
+                    type="button"
+                    onClick={submitCode}
+                    disabled={code.length !== 6 || verifying}
+                    className="shrink-0 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {verifying ? t('auth.verify.checking') : t('auth.verify.confirm')}
+                  </button>
+                </div>
+                {verifyNote && <p className="mt-2 text-xs text-slate-500">{verifyNote}</p>}
+              </div>
+            )}
           </div>
 
           <div>
@@ -467,7 +586,9 @@ const Register = () => {
 
           <button
             type="submit"
-            disabled={isLoading}
+            // The server refuses an unverified email anyway (EMAIL_NOT_VERIFIED); this
+            // just stops someone filling in a whole form only to be bounced at the end.
+            disabled={isLoading || verifyStep !== 'verified'}
             className={`w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed ${
               isAgent
                 ? 'py-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-colors'
