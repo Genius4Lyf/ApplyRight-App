@@ -4038,7 +4038,14 @@
       "hours": "Heures",
       "minutes": "Min",
       "seconds": "Sec"
-    }
+    },
+    "guestTitle": "ApplyRight ouvre bientôt",
+    "guestBody": "Inscrivez-vous avant l'ouverture et vous serez là dès la première minute.",
+    "guestLiveBody": "Les portes ouvrent. Créez votre compte et commencez dès maintenant.",
+    "guestCredits": "{{credits}} crédits offerts à l’inscription",
+    "guestCreditsHint": "Inscrivez-vous avant l'ouverture et ils seront sur votre compte le jour du lancement — pour votre CV, votre score d'adéquation et votre lettre de motivation.",
+    "ctaSignUp": "Créer votre compte",
+    "ctaHaveAccount": "Vous avez déjà un compte ?"
   },
   "workspace": {
     "newCv": {

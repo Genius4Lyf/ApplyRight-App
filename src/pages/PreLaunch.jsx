@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, Copy } from 'lucide-react';
 import api from '../services/api';
 import { LAUNCH, msUntil, countdownParts } from '../lib/launch';
+import SignOutConfirm from '../components/SignOutConfirm';
 import logo from '../assets/logo/applyright-icon-black.png';
 
 // Where a gated visitor lands during the pre-launch campaign, instead of the blank
@@ -70,6 +72,18 @@ const PreLaunch = ({ launch }) => {
 
   const [copied, setCopied] = useState(false);
 
+  // Signed-in visitors only. Someone who followed the shared /pre-launch link without
+  // an account has nothing to sign out OF, and offering it would imply they had one.
+  const signedIn = typeof window !== 'undefined' && !!localStorage.getItem('token');
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const navigate = useNavigate();
+
+  const signOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   // The interval exists only to force a re-render each second; the remaining time is
   // DERIVED during render from the absolute instant. Keeping it out of state is what
   // makes it correct: there is nothing to go stale when the date arrives after mount,
@@ -131,16 +145,28 @@ const PreLaunch = ({ launch }) => {
           </span>
         </div>
 
+        {/* This page has TWO audiences: a registrant waiting, and a stranger who followed
+            the shared link. Telling the stranger they are "on the list" with credits
+            "waiting on your account" is three claims that are simply not true of them —
+            and it wastes the one link the campaign is spending money to circulate. */}
         <h1 className="text-[1.75rem] sm:text-[2rem] font-bold leading-[1.15] text-slate-900 text-balance">
-          {isLive ? t('preLaunch.liveTitle') : t('preLaunch.title')}
+          {isLive
+            ? t('preLaunch.liveTitle')
+            : signedIn
+              ? t('preLaunch.title')
+              : t('preLaunch.guestTitle')}
         </h1>
 
         <p className="mt-2.5 text-[15px] leading-relaxed text-slate-500 text-balance">
           {isLive
-            ? t('preLaunch.liveBody')
-            : user.email
-              ? t('preLaunch.bodyWithEmail', { email: user.email })
-              : t('preLaunch.body')}
+            ? signedIn
+              ? t('preLaunch.liveBody')
+              : t('preLaunch.guestLiveBody')
+            : signedIn
+              ? user.email
+                ? t('preLaunch.bodyWithEmail', { email: user.email })
+                : t('preLaunch.body')
+              : t('preLaunch.guestBody')}
         </p>
 
         {/* No date configured → no timer at all, rather than a row of NaNs. */}
@@ -155,12 +181,36 @@ const PreLaunch = ({ launch }) => {
 
         <div className="mt-8 rounded-xl border border-slate-200 bg-white/70 px-5 py-4">
           <p className="text-[15px] font-semibold text-slate-900">
-            {t('preLaunch.creditsWaiting', { credits: bonusCredits })}
+            {signedIn
+              ? t('preLaunch.creditsWaiting', { credits: bonusCredits })
+              : t('preLaunch.guestCredits', { credits: bonusCredits })}
           </p>
           <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-            {t('preLaunch.creditsHint')}
+            {t(signedIn ? 'preLaunch.creditsHint' : 'preLaunch.guestCreditsHint')}
           </p>
         </div>
+
+        {/* The whole reason /pre-launch is a public URL rather than something only the
+            gate can render: a link shared on social has to be able to convert. */}
+        {!signedIn && (
+          <div className="mt-6">
+            <Link
+              to="/register"
+              className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-slate-800"
+            >
+              {t('preLaunch.ctaSignUp')}
+            </Link>
+            <p className="mt-3 text-[13px] text-slate-500">
+              {t('preLaunch.ctaHaveAccount')}{' '}
+              <Link
+                to="/login"
+                className="font-semibold text-slate-900 underline-offset-4 hover:underline"
+              >
+                {t('common.signIn')}
+              </Link>
+            </p>
+          </div>
+        )}
 
         {user.referralCode && (
           <div className="mt-5">
@@ -181,7 +231,31 @@ const PreLaunch = ({ launch }) => {
             </button>
           </div>
         )}
+
+        {/* Quiet, and last. This page is a waiting room, so the way out is offered
+            rather than advertised — but it has to BE here: without it a signed-in
+            visitor is sealed in with no way to switch accounts or leave, since every
+            other route sends them straight back to this page. */}
+        {signedIn && (
+          <div className="mt-10 border-t border-slate-200 pt-5">
+            <button
+              type="button"
+              onClick={() => setConfirmSignOut(true)}
+              className="text-[13px] font-medium text-slate-400 underline-offset-4 transition-colors hover:text-slate-600 hover:underline focus:outline-none focus-visible:text-slate-600 focus-visible:underline"
+            >
+              {t('nav.logout.confirm')}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* The same confirm the navbar and the studio sidebar use — one sign-out dialog
+          for the whole product, not a third variant invented here. */}
+      <SignOutConfirm
+        open={confirmSignOut}
+        onCancel={() => setConfirmSignOut(false)}
+        onConfirm={signOut}
+      />
     </div>
   );
 };

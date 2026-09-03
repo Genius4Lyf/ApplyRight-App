@@ -4042,7 +4042,14 @@
       "hours": "Hours",
       "minutes": "Mins",
       "seconds": "Secs"
-    }
+    },
+    "guestTitle": "ApplyRight opens soon",
+    "guestBody": "Sign up before we open and you will be in from the first minute.",
+    "guestLiveBody": "The doors are opening. Create your account and start now.",
+    "guestCredits": "{{credits}} free credits when you sign up",
+    "guestCreditsHint": "Join before we open and they will be on your account the day we launch — for your CV, your fit score and your cover letter.",
+    "ctaSignUp": "Create your account",
+    "ctaHaveAccount": "Already have an account?"
   },
   "workspace": {
     "newCv": {

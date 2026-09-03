@@ -36,7 +36,7 @@ const SessionTimeoutModal = ({ isOpen, remainingTime, onExtendSession, onLogout 
               <div className="flex flex-col gap-3 w-full">
                 <button
                   onClick={onExtendSession}
-                  className="w-full px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all hover:scale-[1.02] shadow-lg shadow-indigo-200"
+                  className="w-full px-6 py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl font-bold transition-all hover:scale-[1.02] shadow-lg shadow-slate-900/20"
                 >
                   I'm Still Here
                 </button>
